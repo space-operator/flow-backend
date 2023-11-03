@@ -1,0 +1,17 @@
+[package]
+name = "utils"
+version = "0.0.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tower = { version = "0.4", features = ["buffer", "util"] }
+actix = "0.13"
+hashbrown = "0.14"
+futures-util = { version = "0.3", features = ["sink"] }
+serde = "1"
+bs58 = "0.4"
+thiserror = "1"
+base64 = "0.21"
+bytes = "1"

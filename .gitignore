@@ -1,0 +1,8 @@
+target
+.vscode
+_data
+guest_local_storage
+local_storage
+config.toml
+.env
+.ipynb_checkpoints

@@ -1,0 +1,27 @@
+{
+  "name": "Bubble Gum",
+  "symbol": "BGUM",
+  "uri": "https://bubblegum.com",
+  "seller_fee_basis_points": 500,
+  "primary_sale_happened": false,
+  "is_mutable": false,
+  "edition_nonce": 0,
+  "token_standard": "NonFungible",
+  "collection": {
+    "verified": false,
+    "key": "CqnbStqccanSFCs7cexXySzTTyFsJG8wKrikR4LbxCai"
+  },
+  "uses": {
+    "use_method": "Single",
+    "remaining": 1,
+    "total": 1
+  },
+  "token_program_version": "Original",
+  "creators": [
+    {
+      "address": "DpfvhHU7z1CK8eP5xbEz8c4WBNHUfqUVtAE7opP2kJBc",
+      "verified": true,
+      "share": 100
+    }
+  ]
+}

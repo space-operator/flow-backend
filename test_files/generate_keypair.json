@@ -1,0 +1,531 @@
+{
+  "flow": {
+    "id": 0,
+    "user_id": "3b93d159-b9d1-4230-ad4b-e498d7f1b796",
+    "name": "generate_keypair",
+    "mosaic": {
+      "direction": "row",
+      "first": "SidePanel",
+      "second": {
+        "direction": "row",
+        "first": "Flow",
+        "second": {
+          "direction": "column",
+          "first": "PropertyPanel",
+          "second": "",
+          "splitPercentage": 100
+        },
+        "splitPercentage": 80
+      },
+      "splitPercentage": 0,
+      "prevSplitPercentage": 10
+    },
+    "isPublic": false,
+    "description": "Flow Description",
+    "tags": [],
+    "state": "edit",
+    "startFlowTime": null,
+    "created_at": "2023-01-11",
+    "parent_flow": null,
+    "viewport": {
+      "x": 340.57708035867427,
+      "y": 240.4346397026846,
+      "zoom": 1.032398535483242
+    },
+    "nodes": [
+      {
+        "width": 300,
+        "height": 180,
+        "selected": false,
+        "id": "ab76fedd-ed20-43c3-b356-a6f38a8f1f4f",
+        "type": "native",
+        "position": {
+          "x": -480,
+          "y": 75
+        },
+        "style": {
+          "height": 180,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "8c64a0c7-10bc-4120-a0a1-ef6afa361217",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "version": "0.1",
+          "description": "",
+          "name": "Const",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "string",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "2770cfa3-e1f3-4ccb-a6c0-028f6209573c"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": {
+                "S": "letter advice cage absurd amount doctor acoustic avoid letter advice cage above"
+              },
+              "type": "String"
+            },
+            "extra": {
+              "supabase_id": 117
+            }
+          }
+        },
+        "draggable": true,
+        "dragging": false,
+        "positionAbsolute": {
+          "x": -480,
+          "y": 75
+        }
+      },
+      {
+        "width": 250,
+        "height": 100,
+        "selected": false,
+        "id": "63a087dd-0406-4678-ad24-fcf5e1415d58",
+        "type": "native",
+        "position": {
+          "x": -435,
+          "y": 315
+        },
+        "style": {
+          "height": 100,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "615eb36e-66ac-49e8-b3de-aa688aa0dd7e",
+          "unique_node_id": "flow_input.0.1",
+          "node_id": "flow_input",
+          "version": "0.1",
+          "description": "",
+          "name": "Flow Input",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#f2fcff",
+          "sources": [
+            {
+              "name": "password",
+              "type": "free",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "737c7b47-2b93-41d1-9d9d-49039c1a68e6"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Label the input parameter",
+                  "default": ""
+                },
+                "form_label": {
+                  "type": "string",
+                  "title": "password"
+                }
+              }
+            },
+            "ui_schema": {
+              "label": {
+                "ui:emptyValue": ""
+              }
+            },
+            "form_data": {
+              "label": "password",
+              "form_label": "Hunter1!"
+            },
+            "extra": {
+              "supabase_id": 138
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -435,
+          "y": 315
+        },
+        "dragging": false
+      },
+      {
+        "width": 250,
+        "height": 200,
+        "selected": false,
+        "id": "710dba45-ee24-4252-8d37-4feccb80659b",
+        "type": "native",
+        "position": {
+          "x": -135,
+          "y": 165
+        },
+        "style": {
+          "height": 200,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "4f8f9327-46bb-4377-8d46-cbb12cfd8e33",
+          "unique_node_id": "generate_keypair.0.1",
+          "node_id": "generate_keypair",
+          "version": "0.1",
+          "description": "Generate or load a keypair and it's pubkey.\n\nWill generate a random keypair every run if no inputs are provided. This is useful for testing purpose.",
+          "name": "Generate Keypair",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "pubkey",
+              "type": "pubkey",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "01e3e80b-4247-4296-a00d-fe42b1589802"
+            },
+            {
+              "name": "keypair",
+              "type": "keypair",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "14c1e090-c304-4021-98f0-6ea13825a1ab"
+            }
+          ],
+          "targets": [
+            {
+              "name": "seed",
+              "type_bounds": ["string"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "12 word BIP39 mnemonic seed phrase",
+              "passthrough": false,
+              "id": "e9a16ec4-f45c-4600-b55b-e85ca3006c99"
+            },
+            {
+              "name": "private_key",
+              "type_bounds": ["string"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "Load using a base 58 string, ignores seed/passphrase",
+              "passthrough": false,
+              "id": "5a390ab6-9544-4d62-ba8f-1da6f528786d"
+            },
+            {
+              "name": "passphrase",
+              "type_bounds": ["string"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "700375cc-69fd-41c2-a58b-3328dc44c09e"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {},
+            "extra": {
+              "supabase_id": 110
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -135,
+          "y": 165
+        },
+        "dragging": false
+      },
+      {
+        "width": 250,
+        "height": 100,
+        "selected": false,
+        "id": "e8891849-db4b-4d90-aa20-3e324600779c",
+        "type": "native",
+        "position": {
+          "x": 150,
+          "y": 165
+        },
+        "style": {
+          "height": 100,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "72ad5888-9b69-4d28-a4df-7631fb2150dd",
+          "unique_node_id": "get_balance.0.1",
+          "node_id": "get_balance",
+          "version": "0.1",
+          "description": "Get the balance of the account",
+          "name": "Get Balance",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "balance",
+              "type": "u64",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "b7235930-7af7-4633-938b-59dd1f6be6a8"
+            }
+          ],
+          "targets": [
+            {
+              "name": "pubkey",
+              "type_bounds": ["pubkey", "keypair", "string"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "a97488db-10a5-4e25-bce5-5b9499aada18"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {},
+            "extra": {
+              "supabase_id": 112
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": 150,
+          "y": 165
+        },
+        "dragging": false
+      },
+      {
+        "width": 250,
+        "height": 100,
+        "selected": false,
+        "id": "87cdf699-fa1f-4cea-a91c-8752ec738326",
+        "type": "native",
+        "position": {
+          "x": 435,
+          "y": 165
+        },
+        "style": {
+          "height": 100,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "a4b4518c-3253-446b-b951-c4581c48d4a0",
+          "unique_node_id": "flow_output.0.1",
+          "node_id": "flow_output",
+          "version": "0.1",
+          "description": "",
+          "name": "Flow Output",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#f2fcff",
+          "sources": [],
+          "targets": [
+            {
+              "name": "balance",
+              "type_bounds": ["free"],
+              "required": true,
+              "defaultValue": "",
+              "tooltip": "",
+              "passthrough": false,
+              "id": "34a2873b-f9fc-4aee-bd46-1b001c9359f3"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Output Label",
+                  "default": ""
+                }
+              }
+            },
+            "ui_schema": {
+              "label": {
+                "ui:emptyValue": ""
+              }
+            },
+            "form_data": {
+              "label": "balance"
+            },
+            "extra": {
+              "supabase_id": 137
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": 435,
+          "y": 165
+        },
+        "dragging": false
+      },
+      {
+        "width": 250,
+        "height": 100,
+        "selected": false,
+        "id": "3efdad71-4231-41e2-9d80-a7f819876e48",
+        "type": "native",
+        "position": {
+          "x": 150,
+          "y": 270
+        },
+        "style": {
+          "height": 100,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "29f94810-97a8-438e-9076-a7292f49a11b",
+          "unique_node_id": "flow_output.0.1",
+          "node_id": "flow_output",
+          "version": "0.1",
+          "description": "",
+          "name": "Flow Output",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#f2fcff",
+          "sources": [],
+          "targets": [
+            {
+              "name": "key",
+              "type_bounds": ["free"],
+              "required": true,
+              "defaultValue": "",
+              "tooltip": "",
+              "passthrough": false,
+              "id": "0a04fa35-db60-4e38-a353-c1bffc212ff8"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Output Label",
+                  "default": ""
+                }
+              }
+            },
+            "ui_schema": {
+              "label": {
+                "ui:emptyValue": ""
+              }
+            },
+            "form_data": {
+              "label": "key"
+            },
+            "extra": {
+              "supabase_id": 137
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": 150,
+          "y": 270
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "ab76fedd-ed20-43c3-b356-a6f38a8f1f4f",
+        "sourceHandle": "2770cfa3-e1f3-4ccb-a6c0-028f6209573c",
+        "target": "710dba45-ee24-4252-8d37-4feccb80659b",
+        "targetHandle": "e9a16ec4-f45c-4600-b55b-e85ca3006c99",
+        "id": "reactflow__edge-ab76fedd-ed20-43c3-b356-a6f38a8f1f4f2770cfa3-e1f3-4ccb-a6c0-028f6209573c-710dba45-ee24-4252-8d37-4feccb80659be9a16ec4-f45c-4600-b55b-e85ca3006c99"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "63a087dd-0406-4678-ad24-fcf5e1415d58",
+        "sourceHandle": "737c7b47-2b93-41d1-9d9d-49039c1a68e6",
+        "target": "710dba45-ee24-4252-8d37-4feccb80659b",
+        "targetHandle": "700375cc-69fd-41c2-a58b-3328dc44c09e",
+        "id": "reactflow__edge-63a087dd-0406-4678-ad24-fcf5e1415d58737c7b47-2b93-41d1-9d9d-49039c1a68e6-710dba45-ee24-4252-8d37-4feccb80659b700375cc-69fd-41c2-a58b-3328dc44c09e"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "710dba45-ee24-4252-8d37-4feccb80659b",
+        "sourceHandle": "01e3e80b-4247-4296-a00d-fe42b1589802",
+        "target": "e8891849-db4b-4d90-aa20-3e324600779c",
+        "targetHandle": "a97488db-10a5-4e25-bce5-5b9499aada18",
+        "id": "reactflow__edge-710dba45-ee24-4252-8d37-4feccb80659b01e3e80b-4247-4296-a00d-fe42b1589802-e8891849-db4b-4d90-aa20-3e324600779ca97488db-10a5-4e25-bce5-5b9499aada18"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "e8891849-db4b-4d90-aa20-3e324600779c",
+        "sourceHandle": "b7235930-7af7-4633-938b-59dd1f6be6a8",
+        "target": "87cdf699-fa1f-4cea-a91c-8752ec738326",
+        "targetHandle": "34a2873b-f9fc-4aee-bd46-1b001c9359f3",
+        "id": "reactflow__edge-e8891849-db4b-4d90-aa20-3e324600779cb7235930-7af7-4633-938b-59dd1f6be6a8-87cdf699-fa1f-4cea-a91c-8752ec73832634a2873b-f9fc-4aee-bd46-1b001c9359f3"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "710dba45-ee24-4252-8d37-4feccb80659b",
+        "sourceHandle": "14c1e090-c304-4021-98f0-6ea13825a1ab",
+        "target": "3efdad71-4231-41e2-9d80-a7f819876e48",
+        "targetHandle": "0a04fa35-db60-4e38-a353-c1bffc212ff8",
+        "id": "reactflow__edge-710dba45-ee24-4252-8d37-4feccb80659b14c1e090-c304-4021-98f0-6ea13825a1ab-3efdad71-4231-41e2-9d80-a7f819876e480a04fa35-db60-4e38-a353-c1bffc212ff8"
+      }
+    ],
+    "uuid": "9b4d23da-1354-4805-8d56-54e770885189",
+    "network": "devnet",
+    "updated_at": "2023-01-11T13:12:01.174599",
+    "lastest_flow_run_id": "cce0f6b7-0eb6-488b-9a3e-e7d6aabaf378",
+    "environment": null,
+    "current_rpc": null,
+    "custom_rpc": null
+  },
+  "bookmarks": []
+}

@@ -1,0 +1,35 @@
+[package]
+name = "cmds-std"
+version = "0.0.0"
+edition = "2021"
+
+[[bench]]
+name = "postgrest"
+harness = false
+
+[dependencies]
+value = { workspace = true }
+flow-lib = { workspace = true }
+
+async-trait = "0.1"
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["raw_value"] }
+anyhow = { workspace = true }
+bs58 = { workspace = true }
+thiserror = "1"
+reqwest = { version = "0.12", features = ["multipart"] }
+futures-util = "0.3.29"
+rust_decimal = { version = "1.32.0", features = ["serde-with-float"] }
+tracing = "0.1.40"
+bytes = "1.5.0"
+mime_guess = "2.0.4"
+postgrest = { workspace = true }
+tokio = "1.33.0"
+once_cell = "1.17"
+url = { version = "2.5.0", features = ["serde"] }
+hyper = { version = "0.14.26", default-features = false, features = ["client"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }
+criterion = "0.5"
+futures-executor = "0.3"

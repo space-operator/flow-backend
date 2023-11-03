@@ -1,0 +1,97 @@
+{
+  "type": "native",
+  "data": {
+    "node_definition_version": "0.1",
+    "unique_id": "",
+    "node_id": "postgrest_new_query",
+    "version": "0.1",
+    "display_name": "New Query",
+    "description": "https://docs.rs/postgrest/latest/postgrest/struct.Postgrest.html#method.from",
+    "tags": ["database", "postgrest", "supabase"],
+    "related_to": [
+      {
+        "id": "",
+        "type": "",
+        "relationship": ""
+      }
+    ],
+    "resources": {
+      "source_code_url": "",
+      "documentation_url": ""
+    },
+    "usage": {
+      "license": "Apache-2.0",
+      "license_url": "",
+      "pricing": {
+        "currency": "USDC",
+        "purchase_price": 0,
+        "price_per_run": 0,
+        "custom": {
+          "unit": "monthly",
+          "value": "0"
+        }
+      }
+    },
+    "authors": [
+      {
+        "name": "Space Operator",
+        "contact": ""
+      }
+    ],
+    "design": {
+      "width": 0,
+      "height": 0,
+      "icon_url": "",
+      "backgroundColorDark": "#000000",
+      "backgroundColor": "#fff"
+    },
+    "options": {}
+  },
+  "targets": [
+    {
+      "name": "url",
+      "type_bounds": ["string"],
+      "required": false,
+      "defaultValue": "https://base.spaceoperator.com/rest/v1/",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "schema",
+      "type_bounds": ["string"],
+      "required": false,
+      "defaultValue": "public",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "table",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    }
+  ],
+  "sources": [
+    {
+      "name": "query",
+      "type": "object",
+      "defaultValue": "",
+      "tooltip": ""
+    }
+  ],
+  "targets_form.json_schema": {
+    "type": "object",
+    "title": "New Query",
+    "properties": {
+      "table": {
+        "title": "table",
+        "type": "string"
+      }
+    }
+  },
+  "targets_form.ui_schema": {
+    "ui:order": ["table"]
+  }
+}

@@ -1,0 +1,15 @@
+[package]
+name = "manual"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+lto = true
+strip = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+rmp-serde = "1.1"
+serde = { version = "1.0", features = ["derive"] }

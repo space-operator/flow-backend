@@ -1,0 +1,152 @@
+{
+  "flow": {
+    "id": 95,
+    "user_id": "ad3dedf8-7b31-4baf-85a2-c336db90ad7f",
+    "name": "interflow_simple",
+    "mosaic": {
+      "direction": "row",
+      "first": "SidePanel",
+      "second": {
+        "direction": "row",
+        "first": "Flow",
+        "second": {
+          "direction": "column",
+          "first": "PropertyPanel",
+          "second": "",
+          "splitPercentage": 100
+        },
+        "splitPercentage": 72.22803347280335
+      },
+      "splitPercentage": 0,
+      "prevSplitPercentage": 10
+    },
+    "isPublic": false,
+    "description": "Flow Description",
+    "tags": [],
+    "state": "edit",
+    "startFlowTime": null,
+    "created_at": "2022-10-29",
+    "parent_flow": null,
+    "viewport": {
+      "x": 509.9395723573103,
+      "y": -43.31380762122933,
+      "zoom": 1.2869892473012707
+    },
+    "nodes": [
+      {
+        "width": 400,
+        "height": 145,
+        "selected": false,
+        "id": "eec5911d-962b-4cab-865e-d480ac8e66ad",
+        "type": "native",
+        "style": {
+          "height": 145,
+          "width": 400,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "37d42c3a-4e5c-4739-b87c-d656f82ecf31",
+          "node_id": "interflow",
+          "name": "Interflow",
+          "sources": [],
+          "targets": [
+            {
+              "name": "flow",
+              "type_bounds": ["string"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "0ae558e5-96c1-49da-8bf5-5e19f15da898"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "id": 94
+            }
+          }
+        },
+        "position": {
+          "x": -15,
+          "y": 240
+        },
+        "positionAbsolute": {
+          "x": -15,
+          "y": 240
+        },
+        "dragging": false
+      },
+      {
+        "width": 301,
+        "height": 200,
+        "selected": false,
+        "id": "2fbcd854-6a92-4362-a634-3acc636a5327",
+        "type": "native",
+        "style": {
+          "height": 200,
+          "width": 301,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "703cbb24-7439-495c-a121-5f6626d07947",
+          "node_id": "const",
+          "name": "Const",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "string",
+              "defaultValue": "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu",
+              "tooltip": "",
+              "id": "0469bf25-b896-4f7f-93cd-8a526a1024b1",
+              "value": "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu"
+          }
+        },
+        "position": {
+          "x": -390,
+          "y": 240
+        },
+        "positionAbsolute": {
+          "x": -390,
+          "y": 240
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "2fbcd854-6a92-4362-a634-3acc636a5327",
+        "sourceHandle": "0469bf25-b896-4f7f-93cd-8a526a1024b1",
+        "target": "eec5911d-962b-4cab-865e-d480ac8e66ad",
+        "targetHandle": "7ef80a10-7a88-4fa1-8d6c-77a7ab3da5c2",
+        "id": "reactflow__edge-2fbcd854-6a92-4362-a634-3acc636a53270469bf25-b896-4f7f-93cd-8a526a1024b1-eec5911d-962b-4cab-865e-d480ac8e66ad7ef80a10-7a88-4fa1-8d6c-77a7ab3da5c2"
+      }
+    ],
+    "uuid": "5e384ce6-0a56-479e-bfd0-5c5ff715002c",
+    "network": "devnet",
+    "updated_at": "2022-10-31T06:20:58.496357",
+    "lastest_flow_run_id": null
+  },
+  "bookmarks": []
+}

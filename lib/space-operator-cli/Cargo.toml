@@ -1,0 +1,47 @@
+[package]
+name = "space-operator-cli"
+version = "0.6.0"
+edition = "2021"
+description = "CLI for Space Operator"
+license = "AGPL-3.0-only"
+repository = "https://github.com/space-operator/flow-backend"
+homepage = "https://spaceoperator.com"
+readme = "README.md"
+
+[workspace]
+
+[[bin]]
+path = "src/main.rs"
+name = "spo"
+
+[dependencies]
+bon = "2.3.0"
+cargo_metadata = "0.18.1"
+chrono = { version = "0.4.38", features = ["serde"] }
+clap = { version = "=4.5.18", features = ["derive"] }
+console = "0.15.8"
+directories = "5.0.1"
+error-stack = "0.5.0"
+futures = "0.3.30"
+gix = { version = "0.66.0", default-features = false, features = ["status"] }
+postgrest = { package = "spo-postgrest", version = "1.6.0" }
+prettyplease = "0.2.22"
+proc-macro2 = "1.0.87"
+quote = { version = "1.0.37" }
+regex = "1.11.0"
+reqwest = { version = "0.12.8", features = ["json"] }
+semver = "1.0.23"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = { version = "1.0.128", features = ["preserve_order"] }
+similar = { version = "2.6.0", features = ["inline"] }
+strum = { version = "0.26.3", features = ["derive"] }
+syn = "2.0.79"
+thiserror = "1.0.64"
+tokio = { version = "1.40.0", features = ["macros", "fs"] }
+toml = { version = "0.8.19", features = ["preserve_order"] }
+url = { version = "2.5.2", features = ["serde"] }
+uuid = { version = "1.10.0", features = ["serde"] }
+xshell = "0.2.6"
+
+[dev-dependencies]
+clap-markdown = "0.1.4"

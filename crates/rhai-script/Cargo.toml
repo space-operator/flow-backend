@@ -1,0 +1,20 @@
+[package]
+name = "rhai-script"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "gen"
+
+[dependencies]
+anyhow.workspace = true
+bs58.workspace = true
+flow-lib.workspace = true
+rhai = { version = "1.17.2", features = ["decimal", "indexmap"] }
+rhai-rand = { version = "0.1.6", features = ["decimal"] }
+serde.workspace = true
+serde_json.workspace = true
+thiserror = "1.0.50"
+tracing = "0.1.40"
+chrono = "0.4"
+rust_decimal = "1.36.0"

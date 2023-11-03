@@ -1,0 +1,54 @@
+{
+  "type": "native",
+  "data": {
+    "node_id": "storage_delete",
+    "version": "0.1",
+    "display_name": "Delete File",
+    "description": "Delete 1 file.",
+    "width": 0,
+    "height": 0,
+    "backgroundColor": "#fff"
+  },
+  "sources": [
+    {
+      "name": "key",
+      "type": "string",
+      "defaultValue": null,
+      "tooltip": ""
+    }
+  ],
+  "targets": [
+    {
+      "name": "key",
+      "type_bounds": [
+        "string"
+      ],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Full path to file, including bucket name. This is the value returned in 'Upload File''s key output.",
+      "passthrough": false
+    },
+    {
+      "name": "bucket",
+      "type_bounds": [
+        "string"
+      ],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Using 'key' often require knowing current user' ID. If you don't have this value, you can use 'bucket' + 'path' and the server will automatically insert user ID into the path.",
+      "passthrough": false
+    },
+    {
+      "name": "path",
+      "type_bounds": [
+        "string"
+      ],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Using 'key' often require knowing current user' ID. If you don't have this value, you can use 'bucket' + 'path' and the server will automatically insert user ID into the path.",
+      "passthrough": false
+    }
+  ],
+  "targets_form.json_schema": {},
+  "targets_form.ui_schema": {}
+}

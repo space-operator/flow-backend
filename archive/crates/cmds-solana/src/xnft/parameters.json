@@ -1,0 +1,17 @@
+{
+        "creators": [
+            {
+                "address": "DpfvhHU7z1CK8eP5xbEz8c4WBNHUfqUVtAE7opP2kJBc",
+                "share": 100
+            }
+        ],
+        "curator": null,
+        "install_authority": null,
+        "install_price": 0,
+        "install_vault": "DpfvhHU7z1CK8eP5xbEz8c4WBNHUfqUVtAE7opP2kJBc",
+        "seller_fee_basis_points": 275,
+        "supply": 10,
+        "symbol": "xNFT",
+        "tag": "None",
+        "uri": "https://www.example.com"
+    }

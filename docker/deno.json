@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "@solana/web3.js": "npm:@solana/web3.js@^1.91.8",
+    "@std/crypto": "jsr:@std/crypto@^0.224.0",
+    "@std/dotenv": "jsr:@std/dotenv@^0.224.0",
+    "@std/encoding": "jsr:@std/encoding@^0.224.2",
+    "@std/fs": "jsr:@std/fs@^0.229.1",
+    "@std/toml": "jsr:@std/toml@^0.224.0",
+    "tweetnacl": "npm:tweetnacl@^1.0.3"
+  }
+}

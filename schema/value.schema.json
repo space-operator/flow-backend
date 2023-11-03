@@ -1,0 +1,255 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://schema.spaceoperator.com/value.schema.json",
+    "type": "object",
+    "oneOf": [
+        {
+            "$ref": "#/definitions/N"
+        },
+        {
+            "$ref": "#/definitions/S"
+        },
+        {
+            "$ref": "#/definitions/B"
+        },
+        {
+            "$ref": "#/definitions/U"
+        },
+        {
+            "$ref": "#/definitions/I"
+        },
+        {
+            "$ref": "#/definitions/U1"
+        },
+        {
+            "$ref": "#/definitions/I1"
+        },
+        {
+            "$ref": "#/definitions/F"
+        },
+        {
+            "$ref": "#/definitions/D"
+        },
+        {
+            "$ref": "#/definitions/B3"
+        },
+        {
+            "$ref": "#/definitions/B6"
+        },
+        {
+            "$ref": "#/definitions/BY"
+        },
+        {
+            "$ref": "#/definitions/A"
+        },
+        {
+            "$ref": "#/definitions/M"
+        }
+    ],
+    "definitions": {
+        "N": {
+            "title": "Null",
+            "description": "Null value",
+            "type": "object",
+            "properties": {
+                "N": {
+                    "const": 0
+                }
+            },
+            "required": [
+                "N"
+            ],
+            "additionalProperties": false
+        },
+        "S": {
+            "title": "String",
+            "description": "String value",
+            "type": "object",
+            "properties": {
+                "S": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "S"
+            ],
+            "additionalProperties": false
+        },
+        "B": {
+            "title": "Boolean",
+            "description": "Boolean value",
+            "type": "object",
+            "properties": {
+                "B": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "B"
+            ],
+            "additionalProperties": false
+        },
+        "U": {
+            "title": "U64",
+            "description": "Unsigned 64-bit integer",
+            "type": "object",
+            "properties": {
+                "U": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "U"
+            ],
+            "additionalProperties": false
+        },
+        "I": {
+            "title": "I64",
+            "description": "64-bit integer",
+            "type": "object",
+            "properties": {
+                "I": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "I"
+            ],
+            "additionalProperties": false
+        },
+        "U1": {
+            "title": "U128",
+            "description": "Unsigned 128-bit integer",
+            "type": "object",
+            "properties": {
+                "U1": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "U1"
+            ],
+            "additionalProperties": false
+        },
+        "I1": {
+            "title": "I128",
+            "description": "128-bit integer",
+            "type": "object",
+            "properties": {
+                "I1": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "I1"
+            ],
+            "additionalProperties": false
+        },
+        "F": {
+            "title": "Float",
+            "description": "64-bit floating-point number",
+            "type": "object",
+            "properties": {
+                "F": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "F"
+            ],
+            "additionalProperties": false
+        },
+        "D": {
+            "title": "Decimal",
+            "description": "Decimal using rust_decimal library",
+            "type": "object",
+            "properties": {
+                "D": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "D"
+            ],
+            "additionalProperties": false
+        },
+        "B3": {
+            "title": "32-bytes",
+            "description": "32-bytes binary value",
+            "type": "object",
+            "properties": {
+                "B3": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "B3"
+            ],
+            "additionalProperties": false
+        },
+        "B6": {
+            "title": "64-bytes",
+            "description": "64-bytes binary value",
+            "type": "object",
+            "properties": {
+                "B6": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "B6"
+            ],
+            "additionalProperties": false
+        },
+        "BY": {
+            "title": "Bytes",
+            "description": "Binary value",
+            "type": "object",
+            "properties": {
+                "BY": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "BY"
+            ],
+            "additionalProperties": false
+        },
+        "A": {
+            "title": "Array",
+            "description": "Array of values",
+            "type": "object",
+            "properties": {
+                "A": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#"
+                    }
+                }
+            },
+            "required": [
+                "A"
+            ],
+            "additionalProperties": false
+        },
+        "M": {
+            "title": "Map",
+            "description": "Key-value map",
+            "type": "object",
+            "properties": {
+                "M": {
+                    "type": "object",
+                    "patternProperties": {
+                        "": {
+                            "$ref": "#"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "M"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

@@ -1,0 +1,27 @@
+name: Docker
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    if: contains(github.event.pull_request.labels.*.name, 'docker')
+    name: Build docker image
+    runs-on: self-hosted
+    env:
+      BRANCH: ${{ github.head_ref || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Build
+        run: ./scripts/build_images.bash
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
+      - name: Push
+        run: ./scripts/ecr-push.bash login
+      - name: Clean up
+        run: podman image prune -f

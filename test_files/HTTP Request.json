@@ -1,0 +1,1506 @@
+{
+    "flow": {
+        "id": 0,
+        "user_id": "00000000-0000-0000-0000-000000000000",
+        "name": "HTTP Request",
+        "isPublic": true,
+        "description": "Flow Description",
+        "tags": [],
+        "created_at": "2025-01-22",
+        "parent_flow": null,
+        "viewport": {
+            "x": 463.2111171121666,
+            "y": -312.6008430652921,
+            "zoom": 0.6800149394278289
+        },
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "updated_at": "2025-01-22T19:39:26.28098",
+        "lastest_flow_run_id": null,
+        "custom_networks": [],
+        "current_network": {
+            "id": "01000000-0000-8000-8000-000000000000",
+            "url": "https://api.devnet.solana.com",
+            "type": "default",
+            "wallet": "Solana",
+            "cluster": "devnet"
+        },
+        "instructions_bundling": "Off",
+        "guide": null,
+        "environment": {
+            "RUST_LOG": "trace"
+        },
+        "nodes": [
+            {
+                "width": 192,
+                "height": 280,
+                "id": "3c2f2360-6a27-4826-b843-c126eac73764",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [
+                        "std",
+                        "network"
+                    ],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#fff",
+                        "backgroundColorDark": "#000000"
+                    },
+                    "node_id": "http_request",
+                    "sources": [
+                        {
+                            "id": "f2fef5a5-04f6-471c-acc1-58dbfe24ebac",
+                            "name": "body",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": ""
+                        },
+                        {
+                            "id": "c00fc2d4-8326-4c26-9c5b-be1ebacf6d3e",
+                            "name": "headers",
+                            "type": "object",
+                            "tooltip": "",
+                            "defaultValue": ""
+                        }
+                    ],
+                    "targets": [
+                        {
+                            "id": "6c81e32d-75b9-4f90-b799-19b56655a438",
+                            "name": "url",
+                            "tooltip": "Request's URL",
+                            "required": true,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "string"
+                            ],
+                            "defaultValue": null
+                        },
+                        {
+                            "id": "21cec176-911d-4de2-b246-0b24501d7835",
+                            "name": "method",
+                            "tooltip": "GET, POST, PATCH, etc.",
+                            "required": false,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "string"
+                            ],
+                            "defaultValue": "GET"
+                        },
+                        {
+                            "id": "0c71b2cb-324c-4f4a-b45c-fe315c101657",
+                            "name": "headers",
+                            "tooltip": "",
+                            "required": false,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "kv"
+                            ],
+                            "defaultValue": null
+                        },
+                        {
+                            "id": "1bc8288d-b001-4568-93f0-91d85817949b",
+                            "name": "basic_auth",
+                            "tooltip": "e.g. {\"user\": \"<username>\", \"password\": \"<password>\"}",
+                            "required": false,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "object"
+                            ],
+                            "defaultValue": null
+                        },
+                        {
+                            "id": "35355c7b-8439-469f-9aa1-45b28138afd7",
+                            "name": "query_params",
+                            "tooltip": "",
+                            "required": false,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "array"
+                            ],
+                            "defaultValue": null
+                        },
+                        {
+                            "id": "81501de7-4ee6-4434-a220-02619dfb72a1",
+                            "name": "body",
+                            "tooltip": "Request's JSON body",
+                            "required": false,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "json"
+                            ],
+                            "defaultValue": null
+                        },
+                        {
+                            "id": "64187369-5198-4373-ab6e-b5b4cfd3ad8a",
+                            "name": "form",
+                            "tooltip": "content-type will be automatically set to multipart/form-data",
+                            "required": false,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "kv"
+                            ],
+                            "defaultValue": null
+                        }
+                    ],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "HTTP Request",
+                    "targets_form": {
+                        "extra": {
+                            "supabase_id": 618
+                        },
+                        "form_data": {},
+                        "ui_schema": {},
+                        "json_schema": {}
+                    },
+                    "unique_node_id": "http_request.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "extent": null,
+                "dragging": false,
+                "position": {
+                    "x": 781.700477593937,
+                    "y": 626.3791554701614
+                },
+                "selected": false,
+                "parentNode": null,
+                "positionAbsolute": {
+                    "x": 781.700477593937,
+                    "y": 626.3791554701614
+                }
+            },
+            {
+                "width": 428,
+                "height": 302,
+                "id": "7f4d02b0-8720-432e-8f90-17b1a157764c",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#f2fcff",
+                        "backgroundColorDark": "#0491d6"
+                    },
+                    "node_id": "flow_input",
+                    "sources": [
+                        {
+                            "id": "b6f75a55-555a-4603-81df-bc043df305ab",
+                            "name": "headers",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": []
+                        }
+                    ],
+                    "targets": [],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "Flow Input",
+                    "targets_form": {
+                        "extra": {
+                            "type": "kv",
+                            "selectType": false,
+                            "supabase_id": 138
+                        },
+                        "form_data": {
+                            "label": "headers",
+                            "form_label": []
+                        },
+                        "ui_schema": {
+                            "label": {
+                                "ui:emptyValue": ""
+                            }
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "title": "Label the input parameter",
+                                    "default": "headers"
+                                },
+                                "form_label": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "array",
+                                        "items": [
+                                            {
+                                                "type": "string",
+                                                "title": "Key"
+                                            },
+                                            {
+                                                "type": "string",
+                                                "title": "Value"
+                                            }
+                                        ],
+                                        "maxItems": 2,
+                                        "minItems": 2
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "flow_input.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "dragging": false,
+                "position": {
+                    "x": -566.0665112031566,
+                    "y": 178.74588890043174
+                },
+                "selected": false,
+                "draggable": true,
+                "positionAbsolute": {
+                    "x": -566.0665112031566,
+                    "y": 178.74588890043174
+                }
+            },
+            {
+                "width": 428,
+                "height": 330,
+                "id": "0f0e0d37-4862-42f1-8d78-a692529efef4",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#f2fcff",
+                        "backgroundColorDark": "#0491d6"
+                    },
+                    "node_id": "flow_input",
+                    "sources": [
+                        {
+                            "id": "2f953f56-65f7-4fbb-9448-9fe23fbf249f",
+                            "name": "url",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": "https://dev-api.spaceoperator.com/flow/start_unverified/2941"
+                        }
+                    ],
+                    "targets": [],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "Flow Input",
+                    "targets_form": {
+                        "extra": {
+                            "type": "string",
+                            "selectType": false,
+                            "supabase_id": 138
+                        },
+                        "form_data": {
+                            "label": "url",
+                            "form_label": "https://dev-api.spaceoperator.com/flow/start_unverified/2941"
+                        },
+                        "ui_schema": {
+                            "label": {
+                                "ui:emptyValue": ""
+                            }
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "title": "Label the input parameter",
+                                    "default": "url"
+                                },
+                                "form_label": {
+                                    "type": "string",
+                                    "title": "Value"
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "flow_input.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "dragging": false,
+                "position": {
+                    "x": 158.3710469668755,
+                    "y": -55.67612459202242
+                },
+                "selected": false,
+                "draggable": true,
+                "positionAbsolute": {
+                    "x": 158.3710469668755,
+                    "y": -55.67612459202242
+                }
+            },
+            {
+                "width": 428,
+                "height": 330,
+                "id": "ddfaecf7-5fc8-4f4e-8967-108256579118",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#f2fcff",
+                        "backgroundColorDark": "#0491d6"
+                    },
+                    "node_id": "flow_input",
+                    "sources": [
+                        {
+                            "id": "ea260d0e-031c-4074-a4df-4d13dd18194b",
+                            "name": "method",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": "POST"
+                        }
+                    ],
+                    "targets": [],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "Flow Input",
+                    "targets_form": {
+                        "extra": {
+                            "type": "string",
+                            "selectType": false,
+                            "supabase_id": 138
+                        },
+                        "form_data": {
+                            "label": "method",
+                            "form_label": "POST"
+                        },
+                        "ui_schema": {
+                            "label": {
+                                "ui:emptyValue": ""
+                            }
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "title": "Label the input parameter",
+                                    "default": "method"
+                                },
+                                "form_label": {
+                                    "type": "string",
+                                    "title": "Value"
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "flow_input.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "dragging": false,
+                "position": {
+                    "x": 134.25212266465292,
+                    "y": 298.59213121729806
+                },
+                "selected": false,
+                "draggable": true,
+                "positionAbsolute": {
+                    "x": 134.25212266465292,
+                    "y": 298.59213121729806
+                }
+            },
+            {
+                "width": 311,
+                "height": 200,
+                "id": "3b207d18-7bf7-4bf7-81fd-f9d44f8c2ae7",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#f2fcff",
+                        "backgroundColorDark": "#dea10a"
+                    },
+                    "node_id": "flow_output",
+                    "sources": [],
+                    "targets": [
+                        {
+                            "id": "55b11abd-a5e1-4f47-abdb-bb43160b1a50",
+                            "name": "body",
+                            "tooltip": "",
+                            "required": true,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "free"
+                            ],
+                            "defaultValue": ""
+                        }
+                    ],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "Flow Output",
+                    "targets_form": {
+                        "extra": {
+                            "type": "free",
+                            "supabase_id": 137
+                        },
+                        "form_data": {
+                            "label": "body"
+                        },
+                        "ui_schema": {
+                            "label": {
+                                "ui:emptyValue": ""
+                            }
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "title": "Output Label",
+                                    "default": ""
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "flow_output.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "dragging": false,
+                "position": {
+                    "x": 1047.3193710269059,
+                    "y": 203.44140818157342
+                },
+                "selected": false,
+                "positionAbsolute": {
+                    "x": 1047.3193710269059,
+                    "y": 203.44140818157342
+                }
+            },
+            {
+                "width": 311,
+                "height": 200,
+                "id": "2c301028-007e-495d-9f63-16f23ca7534c",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#f2fcff",
+                        "backgroundColorDark": "#dea10a"
+                    },
+                    "node_id": "flow_output",
+                    "sources": [],
+                    "targets": [
+                        {
+                            "id": "94973509-2530-4be9-8c63-5f0a46de365e",
+                            "name": "headers",
+                            "tooltip": "",
+                            "required": true,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "free"
+                            ],
+                            "defaultValue": ""
+                        }
+                    ],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "Flow Output",
+                    "targets_form": {
+                        "extra": {
+                            "type": "free",
+                            "supabase_id": 137
+                        },
+                        "form_data": {
+                            "label": "headers"
+                        },
+                        "ui_schema": {
+                            "label": {
+                                "ui:emptyValue": ""
+                            }
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "title": "Output Label",
+                                    "default": ""
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "flow_output.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "dragging": false,
+                "position": {
+                    "x": 1188.432165078095,
+                    "y": 502.38987665886714
+                },
+                "selected": false,
+                "positionAbsolute": {
+                    "x": 1188.432165078095,
+                    "y": 502.38987665886714
+                }
+            },
+            {
+                "width": 428,
+                "height": 500,
+                "id": "4437cbc3-a204-4e1b-aecf-1f88dbf199f1",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#f2fcff",
+                        "backgroundColorDark": "#0491d6"
+                    },
+                    "node_id": "flow_input",
+                    "sources": [
+                        {
+                            "id": "98d07043-55be-4297-9fb3-d2ce7a1cd9eb",
+                            "name": "basic_auth",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": ""
+                        }
+                    ],
+                    "targets": [],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "Flow Input",
+                    "targets_form": {
+                        "extra": {
+                            "type": "json",
+                            "selectType": true,
+                            "supabase_id": 138
+                        },
+                        "form_data": {
+                            "label": "basic_auth",
+                            "option": "json",
+                            "form_label": ""
+                        },
+                        "ui_schema": {
+                            "label": {
+                                "ui:classNames": "items-title-mui nodrag"
+                            }
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "title": "Label the input parameter",
+                                    "default": ""
+                                },
+                                "form_label": {
+                                    "type": "string",
+                                    "title": "Value",
+                                    "option": "json"
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "flow_input.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "dragging": false,
+                "position": {
+                    "x": -548.9652313387705,
+                    "y": 725.4487042745988
+                },
+                "selected": false,
+                "draggable": true,
+                "positionAbsolute": {
+                    "x": -548.9652313387705,
+                    "y": 725.4487042745988
+                }
+            },
+            {
+                "width": 428,
+                "height": 321,
+                "id": "4f0f2577-4b33-4cb3-b268-77f859331ba4",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#f2fcff",
+                        "backgroundColorDark": "#0491d6"
+                    },
+                    "node_id": "flow_input",
+                    "sources": [
+                        {
+                            "id": "3a746c36-e4f9-4e9c-8eaf-c025ffdbf68d",
+                            "name": "query_params",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": []
+                        }
+                    ],
+                    "targets": [],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "Flow Input",
+                    "targets_form": {
+                        "extra": {
+                            "type": "array",
+                            "selectType": false,
+                            "supabase_id": 138
+                        },
+                        "form_data": {
+                            "label": "query_params",
+                            "form_label": []
+                        },
+                        "ui_schema": {
+                            "label": {
+                                "ui:emptyValue": ""
+                            }
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "title": "Label the input parameter",
+                                    "default": "query_params"
+                                },
+                                "form_label": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "title": "value"
+                                    },
+                                    "title": "Array of strings"
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "flow_input.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "dragging": false,
+                "position": {
+                    "x": -439.65560942043305,
+                    "y": 1265.0009431505846
+                },
+                "selected": false,
+                "draggable": true,
+                "positionAbsolute": {
+                    "x": -439.65560942043305,
+                    "y": 1265.0009431505846
+                }
+            },
+            {
+                "width": 428,
+                "height": 450,
+                "id": "a41eb155-824e-4e5c-a2d6-10af84a2a3c0",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#f2fcff",
+                        "backgroundColorDark": "#0491d6"
+                    },
+                    "node_id": "flow_input",
+                    "sources": [
+                        {
+                            "id": "77c44eae-7baf-42cc-b972-281feed3deb6",
+                            "name": "form",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": []
+                        }
+                    ],
+                    "targets": [],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "Flow Input",
+                    "targets_form": {
+                        "extra": {
+                            "type": "unknown",
+                            "selectType": true,
+                            "supabase_id": 138
+                        },
+                        "form_data": {
+                            "label": "form",
+                            "form_label": []
+                        },
+                        "ui_schema": {
+                            "label": {
+                                "ui:emptyValue": ""
+                            }
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "title": "Label the input parameter",
+                                    "default": "form"
+                                },
+                                "form_label": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "array",
+                                        "items": [
+                                            {
+                                                "type": "string",
+                                                "title": "Key"
+                                            },
+                                            {
+                                                "type": "string",
+                                                "title": "Value"
+                                            }
+                                        ],
+                                        "maxItems": 2,
+                                        "minItems": 2
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "flow_input.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "dragging": false,
+                "position": {
+                    "x": 490.29918087829367,
+                    "y": 1620.7151968814044
+                },
+                "selected": false,
+                "draggable": true,
+                "positionAbsolute": {
+                    "x": 490.29918087829367,
+                    "y": 1620.7151968814044
+                }
+            },
+            {
+                "width": 240,
+                "height": 253,
+                "id": "153d07d6-9100-4a3f-ae09-a684d2df2af7",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#fff",
+                        "backgroundColorDark": "#000000"
+                    },
+                    "node_id": "rhai_script_1x1",
+                    "sources": [
+                        {
+                            "id": "8254fa95-2103-45e0-8f74-d364ce6bc38b",
+                            "name": "u",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": ""
+                        }
+                    ],
+                    "targets": [
+                        {
+                            "id": "cfe41f63-1a95-4447-abdd-b7c23c20a309",
+                            "name": "source",
+                            "tooltip": "Script's source code",
+                            "required": true,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "string"
+                            ],
+                            "defaultValue": null
+                        },
+                        {
+                            "id": "04a82909-c51f-4655-8422-b02a728d3ff3",
+                            "name": "a",
+                            "tooltip": "",
+                            "required": false,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "free"
+                            ],
+                            "defaultValue": null
+                        }
+                    ],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "RHAI Script 1x1",
+                    "targets_form": {
+                        "extra": {
+                            "supabase_id": 1037
+                        },
+                        "form_data": {
+                            "source": "let u;\n\nif a ==\"\"{\n    u =();\n} else {\n    u = a;\n}"
+                        },
+                        "ui_schema": {
+                            "source": {
+                                "ui:widget": "textarea"
+                            },
+                            "ui:order": [
+                                "source"
+                            ]
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "title": "RHAI script",
+                            "properties": {
+                                "source": {
+                                    "type": "string",
+                                    "title": "source"
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "rhai_script_1x1.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "extent": null,
+                "dragging": false,
+                "position": {
+                    "x": -66.69996279446153,
+                    "y": 800.309185469744
+                },
+                "selected": false,
+                "draggable": true,
+                "parentNode": null,
+                "positionAbsolute": {
+                    "x": -66.69996279446153,
+                    "y": 800.309185469744
+                }
+            },
+            {
+                "width": 240,
+                "height": 273,
+                "id": "dbf139ba-3239-4096-8930-9293bcfeaec1",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#fff",
+                        "backgroundColorDark": "#000000"
+                    },
+                    "node_id": "rhai_script_1x1",
+                    "sources": [
+                        {
+                            "id": "4ff9cf6f-cd26-4e4a-97fc-826cfe075f1d",
+                            "name": "u",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": ""
+                        }
+                    ],
+                    "targets": [
+                        {
+                            "id": "b77c8fa0-608a-4303-a3c0-f9d899512105",
+                            "name": "source",
+                            "tooltip": "Script's source code",
+                            "required": true,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "string"
+                            ],
+                            "defaultValue": null
+                        },
+                        {
+                            "id": "9384d43d-d5fa-4e84-85f9-0ee5000225f5",
+                            "name": "a",
+                            "tooltip": "",
+                            "required": false,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "free"
+                            ],
+                            "defaultValue": null
+                        }
+                    ],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "cloned_RHAI Script 1x1",
+                    "targets_form": {
+                        "extra": {
+                            "supabase_id": 1037
+                        },
+                        "form_data": {
+                            "source": "let u;\n\nif a ==\"\"{\n    u =();\n} else {\n    u = a;\n}"
+                        },
+                        "ui_schema": {
+                            "source": {
+                                "ui:widget": "textarea"
+                            },
+                            "ui:order": [
+                                "source"
+                            ]
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "title": "RHAI script",
+                            "properties": {
+                                "source": {
+                                    "type": "string",
+                                    "title": "source"
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "rhai_script_1x1.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "extent": null,
+                "dragging": false,
+                "position": {
+                    "x": 176.24334598705815,
+                    "y": 1034.1275779506286
+                },
+                "selected": false,
+                "draggable": true,
+                "parentNode": null,
+                "positionAbsolute": {
+                    "x": 176.24334598705815,
+                    "y": 1034.1275779506286
+                }
+            },
+            {
+                "width": 240,
+                "height": 273,
+                "id": "8de554a3-9bc2-4fac-9342-5de755dce619",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#fff",
+                        "backgroundColorDark": "#000000"
+                    },
+                    "node_id": "rhai_script_1x1",
+                    "sources": [
+                        {
+                            "id": "06d019c7-e91f-402b-a4c6-9369f1b061c9",
+                            "name": "u",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": ""
+                        }
+                    ],
+                    "targets": [
+                        {
+                            "id": "fe4562f6-37d0-4f1f-9159-15c38d94575b",
+                            "name": "source",
+                            "tooltip": "Script's source code",
+                            "required": true,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "string"
+                            ],
+                            "defaultValue": null
+                        },
+                        {
+                            "id": "e60e398a-c98d-440b-9b45-23fc733c0ae0",
+                            "name": "a",
+                            "tooltip": "",
+                            "required": false,
+                            "passthrough": false,
+                            "type_bounds": [
+                                "free"
+                            ],
+                            "defaultValue": null
+                        }
+                    ],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "cloned_cloned_RHAI Script 1x1",
+                    "targets_form": {
+                        "extra": {
+                            "supabase_id": 1037
+                        },
+                        "form_data": {
+                            "source": "let u;\n\nif a ==\"\"{\n    u =();\n} else {\n    u = a;\n}"
+                        },
+                        "ui_schema": {
+                            "source": {
+                                "ui:widget": "textarea"
+                            },
+                            "ui:order": [
+                                "source"
+                            ]
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "title": "RHAI script",
+                            "properties": {
+                                "source": {
+                                    "type": "string",
+                                    "title": "source"
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "rhai_script_1x1.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "extent": null,
+                "dragging": false,
+                "position": {
+                    "x": 708.8861724964662,
+                    "y": 1213.535401112062
+                },
+                "selected": false,
+                "draggable": true,
+                "parentNode": null,
+                "positionAbsolute": {
+                    "x": 708.8861724964662,
+                    "y": 1213.535401112062
+                }
+            },
+            {
+                "width": 428,
+                "height": 447,
+                "id": "dc3e0fcb-df6b-4e73-9a1c-6b1879255beb",
+                "data": {
+                    "flow": {
+                        "minimized": false
+                    },
+                    "tags": [],
+                    "type": "native",
+                    "design": {
+                        "backgroundColor": "#f2fcff",
+                        "backgroundColorDark": "#0491d6"
+                    },
+                    "node_id": "flow_input",
+                    "sources": [
+                        {
+                            "id": "f41b2dfd-e8c8-4d5e-9e34-97ac559bed02",
+                            "name": "body",
+                            "type": "free",
+                            "tooltip": "",
+                            "defaultValue": {
+                                "url": {
+                                    "S": "https://dev-api.spaceoperator.com/flow/start_unverified/2941"
+                                },
+                                "body": {
+                                    "M": {
+                                        "inputs": {
+                                            "M": {
+                                                "uri": {
+                                                    "S": "https://j45eekk7guujcl6hxt4xxjkaceqhomvgkgnda6uz76hrmymj7zea.arweave.net/TzpCKV81KJEvx7z5e6VAESB3MqZRmjB6mf-PFmGJ_kg"
+                                                },
+                                                "supply": {
+                                                    "D": "100000"
+                                                },
+                                                "decimals": {
+                                                    "D": "9"
+                                                },
+                                                "fee_payer": {
+                                                    "S": "98BTD7A8WKPz6CnZZrV5tBkdGQtqfjJwigW2V6daAihi"
+                                                },
+                                                "is_mutable": {
+                                                    "B": false
+                                                },
+                                                "mint_authority": {
+                                                    "S": "98BTD7A8WKPz6CnZZrV5tBkdGQtqfjJwigW2V6daAihi"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "method": {
+                                    "S": "POST"
+                                },
+                                "headers": {
+                                    "M": {
+                                        "Content-Type": {
+                                            "S": "application/json"
+                                        },
+                                        "Authorization": {
+                                            "S": "98BTD7A8WKPz6CnZZrV5tBkdGQtqfjJwigW2V6daAihi"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "targets": [],
+                    "version": "0.1",
+                    "related_to": [
+                        {
+                            "id": "",
+                            "type": "",
+                            "relationship": ""
+                        }
+                    ],
+                    "description": "",
+                    "display_name": "Flow Input",
+                    "targets_form": {
+                        "extra": {
+                            "type": "json",
+                            "selectType": false,
+                            "supabase_id": 138
+                        },
+                        "form_data": {
+                            "label": "body",
+                            "form_label": {
+                                "url": {
+                                    "S": "https://dev-api.spaceoperator.com/flow/start_unverified/2941"
+                                },
+                                "body": {
+                                    "M": {
+                                        "inputs": {
+                                            "M": {
+                                                "uri": {
+                                                    "S": "https://j45eekk7guujcl6hxt4xxjkaceqhomvgkgnda6uz76hrmymj7zea.arweave.net/TzpCKV81KJEvx7z5e6VAESB3MqZRmjB6mf-PFmGJ_kg"
+                                                },
+                                                "supply": {
+                                                    "D": "100000"
+                                                },
+                                                "decimals": {
+                                                    "D": "9"
+                                                },
+                                                "fee_payer": {
+                                                    "S": "98BTD7A8WKPz6CnZZrV5tBkdGQtqfjJwigW2V6daAihi"
+                                                },
+                                                "is_mutable": {
+                                                    "B": false
+                                                },
+                                                "mint_authority": {
+                                                    "S": "98BTD7A8WKPz6CnZZrV5tBkdGQtqfjJwigW2V6daAihi"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "method": {
+                                    "S": "POST"
+                                },
+                                "headers": {
+                                    "M": {
+                                        "Content-Type": {
+                                            "S": "application/json"
+                                        },
+                                        "Authorization": {
+                                            "S": "98BTD7A8WKPz6CnZZrV5tBkdGQtqfjJwigW2V6daAihi"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "ui_schema": {
+                            "label": {
+                                "ui:emptyValue": ""
+                            }
+                        },
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string",
+                                    "title": "Label the input parameter",
+                                    "default": "body"
+                                },
+                                "form_label": {
+                                    "type": "string",
+                                    "title": "Value",
+                                    "option": "json"
+                                }
+                            }
+                        }
+                    },
+                    "unique_node_id": "flow_input.0.1",
+                    "node_definition_version": "0.1"
+                },
+                "type": "native",
+                "extent": null,
+                "dragging": false,
+                "position": {
+                    "x": 51.912134022193925,
+                    "y": 1472.328515159905
+                },
+                "selected": false,
+                "draggable": true,
+                "parentNode": null,
+                "positionAbsolute": {
+                    "x": 51.912134022193925,
+                    "y": 1472.328515159905
+                }
+            }
+        ],
+        "edges": [
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "8e347422-2337-4470-ae8c-5e0388441d2d",
+                "source": "7f4d02b0-8720-432e-8f90-17b1a157764c",
+                "target": "3c2f2360-6a27-4826-b843-c126eac73764",
+                "selected": false,
+                "sourceHandle": "b6f75a55-555a-4603-81df-bc043df305ab",
+                "targetHandle": "0c71b2cb-324c-4f4a-b45c-fe315c101657"
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "014c308d-e7eb-45b3-aeed-73749f51c376",
+                "source": "ddfaecf7-5fc8-4f4e-8967-108256579118",
+                "target": "3c2f2360-6a27-4826-b843-c126eac73764",
+                "selected": false,
+                "sourceHandle": "ea260d0e-031c-4074-a4df-4d13dd18194b",
+                "targetHandle": "21cec176-911d-4de2-b246-0b24501d7835"
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "742ff413-819e-47bb-a2b0-7f50b483a2e8",
+                "source": "3c2f2360-6a27-4826-b843-c126eac73764",
+                "target": "3b207d18-7bf7-4bf7-81fd-f9d44f8c2ae7",
+                "selected": false,
+                "sourceHandle": "f2fef5a5-04f6-471c-acc1-58dbfe24ebac",
+                "targetHandle": "55b11abd-a5e1-4f47-abdb-bb43160b1a50"
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "68c42bdb-645c-4e32-bcaa-e796754ef15b",
+                "source": "3c2f2360-6a27-4826-b843-c126eac73764",
+                "target": "2c301028-007e-495d-9f63-16f23ca7534c",
+                "selected": false,
+                "sourceHandle": "c00fc2d4-8326-4c26-9c5b-be1ebacf6d3e",
+                "targetHandle": "94973509-2530-4be9-8c63-5f0a46de365e"
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "0f91bf5b-ba6b-4fe7-bb8a-f3e69856f612",
+                "source": "4437cbc3-a204-4e1b-aecf-1f88dbf199f1",
+                "target": "153d07d6-9100-4a3f-ae09-a684d2df2af7",
+                "zIndex": 5,
+                "selected": false,
+                "sourceHandle": "98d07043-55be-4297-9fb3-d2ce7a1cd9eb",
+                "targetHandle": "04a82909-c51f-4655-8422-b02a728d3ff3"
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "0a0f7cbd-202b-4dec-868d-f2dceddd819a",
+                "source": "153d07d6-9100-4a3f-ae09-a684d2df2af7",
+                "target": "3c2f2360-6a27-4826-b843-c126eac73764",
+                "zIndex": 5,
+                "selected": false,
+                "sourceHandle": "8254fa95-2103-45e0-8f74-d364ce6bc38b",
+                "targetHandle": "1bc8288d-b001-4568-93f0-91d85817949b"
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "f1bdaa3c-0f9d-4dde-9283-8fa43c5cabc4",
+                "source": "4f0f2577-4b33-4cb3-b268-77f859331ba4",
+                "target": "dbf139ba-3239-4096-8930-9293bcfeaec1",
+                "zIndex": 5,
+                "selected": false,
+                "sourceHandle": "3a746c36-e4f9-4e9c-8eaf-c025ffdbf68d",
+                "targetHandle": "9384d43d-d5fa-4e84-85f9-0ee5000225f5"
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "9ac9a2a4-1aba-4c96-8072-3a2268e5cf8c",
+                "source": "dbf139ba-3239-4096-8930-9293bcfeaec1",
+                "target": "3c2f2360-6a27-4826-b843-c126eac73764",
+                "zIndex": 5,
+                "selected": false,
+                "sourceHandle": "4ff9cf6f-cd26-4e4a-97fc-826cfe075f1d",
+                "targetHandle": "35355c7b-8439-469f-9aa1-45b28138afd7"
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "f3067a4d-6427-4700-996b-05899885f61a",
+                "source": "a41eb155-824e-4e5c-a2d6-10af84a2a3c0",
+                "target": "8de554a3-9bc2-4fac-9342-5de755dce619",
+                "zIndex": 5,
+                "selected": false,
+                "sourceHandle": "77c44eae-7baf-42cc-b972-281feed3deb6",
+                "targetHandle": "e60e398a-c98d-440b-9b45-23fc733c0ae0"
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "979622bc-adab-4de2-b444-d58f500ab879",
+                "source": "8de554a3-9bc2-4fac-9342-5de755dce619",
+                "target": "3c2f2360-6a27-4826-b843-c126eac73764",
+                "zIndex": 5,
+                "selected": false,
+                "sourceHandle": "06d019c7-e91f-402b-a4c6-9369f1b061c9",
+                "targetHandle": "64187369-5198-4373-ab6e-b5b4cfd3ad8a"
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "6bfba016-8a80-44b0-a68f-9e23d2254259",
+                "source": "0f0e0d37-4862-42f1-8d78-a692529efef4",
+                "target": "3c2f2360-6a27-4826-b843-c126eac73764",
+                "zIndex": 5,
+                "sourceHandle": "2f953f56-65f7-4fbb-9448-9fe23fbf249f",
+                "targetHandle": "6c81e32d-75b9-4f90-b799-19b56655a438",
+                "selected": false
+            },
+            {
+                "style": {
+                    "stroke": "#fef08a",
+                    "strokeWidth": 2
+                },
+                "type": "custom",
+                "id": "ee6f832b-095b-4fb5-80a4-5810f9a9c49e",
+                "source": "dc3e0fcb-df6b-4e73-9a1c-6b1879255beb",
+                "target": "3c2f2360-6a27-4826-b843-c126eac73764",
+                "zIndex": 5,
+                "sourceHandle": "f41b2dfd-e8c8-4d5e-9e34-97ac559bed02",
+                "targetHandle": "81501de7-4ee6-4434-a220-02619dfb72a1",
+                "selected": false
+            }
+        ],
+        "mosaic": null,
+        "start_shared": true,
+        "start_unverified": true,
+        "gg_marketplace": null
+    },
+    "bookmarks": []
+}
