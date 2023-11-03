@@ -1,0 +1,30 @@
+[package]
+name = "space-wasm"
+version = "0.0.0"
+edition = "2021"
+authors = ["Knarkzel <knarkzel@gmail.com>"]
+description = "WebAssembly runtime Space Operator"
+
+[features]
+default = ["cranelift"]
+cranelift = ["wasmer/cranelift"]
+singlepass = ["wasmer/singlepass"]
+
+[dependencies]
+space-lib = { workspace = true }
+
+ureq = "2.6"
+serde = "1.0"
+anyhow = "1.0"
+rmp-serde = "1.1"
+byteorder = "1.4"
+wasmer-cache = "3.1"
+wasmer = { version = "3.1", default-features = false, features = ["sys"] }
+wasmer-wasi = { version = "3.1", default-features = false, features = [
+    "sys",
+    "host-fs",
+] }
+
+[dev-dependencies]
+serde_json = "1.0"
+pretty_assertions = "1.3"

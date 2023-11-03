@@ -1,0 +1,71 @@
+{
+  "type": "native",
+  "data": {
+    "node_definition_version": "0.1",
+    "unique_id": "",
+    "node_id": "chart",
+    "version": "0.1",
+    "display_name": "Chart",
+    "description": "Chart, bar chart to start",
+    "tags": ["display", "chart"],
+    "related_to": [
+      {
+        "id": "",
+        "type": "",
+        "relationship": ""
+      }
+    ],
+    "resources": {
+      "source_code_url": "",
+      "documentation_url": ""
+    },
+    "usage": {
+      "license": "Apache-2.0",
+      "license_url": "",
+      "pricing": {
+        "currency": "USDC",
+        "purchase_price": 0,
+        "price_per_run": 0,
+        "custom": {
+          "unit": "monthly",
+          "value": "0"
+        }
+      }
+    },
+    "authors": [
+      {
+        "name": "Space Operator",
+        "contact": ""
+      }
+    ],
+    "design": {
+      "width": 0,
+      "height": 0,
+      "icon_url": "",
+      "backgroundColorDark": "#000000",
+      "backgroundColor": "#fff"
+    },
+    "options": {}
+  },
+  "targets": [
+    {
+      "name": "data",
+      "type_bounds": ["json"],
+      "required": true,
+      "defaultValue": "",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "columns",
+      "type_bounds": ["json"],
+      "required": true,
+      "defaultValue": "",
+      "tooltip": "['column_A', 'column_B', etc.]",
+      "passthrough": false
+    }
+  ],
+  "sources": [],
+  "targets_form.json_schema": {},
+  "targets_form.ui_schema": {}
+}

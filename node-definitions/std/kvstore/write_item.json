@@ -1,0 +1,86 @@
+{
+  "type": "native",
+  "data": {
+    "node_definition_version": "0.1",
+    "unique_id": "",
+    "node_id": "kv_write_item",
+    "version": "0.1",
+    "display_name": "Write Item",
+    "description": "Insert an item to the store, replace and return the old value if exists.",
+    "tags": [],
+    "related_to": [
+      {
+        "id": "",
+        "type": "",
+        "relationship": ""
+      }
+    ],
+    "resources": {
+      "source_code_url": "",
+      "documentation_url": ""
+    },
+    "usage": {
+      "license": "Apache-2.0",
+      "license_url": "",
+      "pricing": {
+        "currency": "USDC",
+        "purchase_price": 0,
+        "price_per_run": 0,
+        "custom": {
+          "unit": "monthly",
+          "value": "0"
+        }
+      }
+    },
+    "authors": [
+      {
+        "name": "Space Operator",
+        "contact": ""
+      }
+    ],
+    "design": {
+      "width": 0,
+      "height": 0,
+      "icon_url": "",
+      "backgroundColorDark": "#000000",
+      "backgroundColor": "#fff"
+    },
+    "options": {}
+  },
+  "sources": [
+    {
+      "name": "old_value",
+      "type": "free",
+      "defaultValue": null,
+      "tooltip": ""
+    }
+  ],
+  "targets": [
+    {
+      "name": "store",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "Name of the store.",
+      "passthrough": true
+    },
+    {
+      "name": "key",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": true
+    },
+    {
+      "name": "value",
+      "type_bounds": ["free"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": true
+    }
+  ],
+  "targets_form.json_schema": {},
+  "targets_form.ui_schema": {}
+}

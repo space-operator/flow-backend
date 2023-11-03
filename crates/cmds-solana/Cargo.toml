@@ -1,0 +1,121 @@
+[package]
+name = "cmds-solana"
+version = "0.0.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+value = { workspace = true }
+flow-lib = { workspace = true }
+
+async-trait = "0.1"
+tiny-bip39 = "0.8"
+inventory = "0.3"
+serde = { version = "1", features = ["derive"] }
+rust_decimal = { version = "1", features = ["maths"] }
+bincode = "1"
+base64 = "0.13"
+serde_json = "1"
+reqwest = { version = "0.11", default-features = false, features = [
+    "json",
+    "rustls-tls",
+    "gzip",
+    "multipart",
+] }
+tokio = { version = "1", features = ["time", "macros"] }
+mime_guess = "2"
+borsh = "0.9.3"
+bytes = "1"
+ed25519-dalek = "1"
+futures = "0.3"
+thiserror = "1"
+anyhow = "1"
+serde_with = "3.1.0"
+rhai = "1.10.1"
+bs58 = "0.4"
+fasteval = "0.2.4"
+tracing = "0.1"
+once_cell = "1.17"
+rand = "0.7.3"
+hex = "0.4.3"
+byteorder = "1.4.3"
+primitive-types = { version = "0.9.0", default-features = false }
+hyper = { version = "0.14.26", default-features = false, features = ["client"] }
+url = { version = "2.3.1", features = ["serde"] }
+tracing-log = "0.1.3"
+
+# solana libs
+solana-sdk = "=1.16.14"
+solana-client = "=1.16.14"
+solana-program = "=1.16.14"
+spl-token = { version = "=4.0.0", features = ["no-entrypoint"] }
+spl-memo = { version = "=4.0.0", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "=2.2.0", features = [
+    "no-entrypoint",
+] }
+spl-account-compression = "0.2.0"
+spl-noop = "=0.2.0"
+mpl-token-auth-rules = "=1.4.3"
+mpl-token-metadata = "=3.1.0"
+mpl-candy-machine-core = { version = "=2.0.1", features = ["no-entrypoint"] }
+mpl-candy-guard = { version = "=2.0.0", features = ["no-entrypoint"] }
+mpl-bubblegum = { version = "=0.11.0", features = ["no-entrypoint"] }
+bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
+    "solana",
+] }
+anchor-lang = "=0.28.0"
+anchor-spl = "=0.28.0"
+# clockwork-client = "=2.0.1"
+# clockwork-utils = "=2.0.1"
+# clockwork-thread-program = "=2.0.1"
+# clockwork-sdk = "=2.0.1"
+spl-token-2022 = "=0.9.0"
+
+[dependencies.anchor-lang-26]
+package = "anchor-lang"
+version = "=0.26.0"
+
+[dependencies.anchor-spl-26]
+package = "anchor-spl"
+version = "=0.26.0"
+
+# [dependencies.clockwork-thread-program]
+# git = "https://github.com/space-operator/clockwork.git"
+# rev = "efd73675f670bfc0aab551d89c741e18c8cfed10"
+# [dependencies.clockwork-thread-program]
+# git = "https://github.com/space-operator/clockwork.git"
+# rev = "efd73675f670bfc0aab551d89c741e18c8cfed10"
+
+# [dependencies.payments]
+# git = "https://github.com/clockwork-xyz/examples.git"
+# rev = "1b65e8185796b4eac009750c0a0b8128576201ad"
+
+# [dependencies.metaboss_utils]
+# git = "https://github.com/space-operator/metaboss_utils.git"
+# rev = "5e0a4c9bcd16d2f062549e190e928bebb135537f"
+
+# [dependencies.space-wrapper]
+# git = "https://github.com/space-operator/space-wrapper"
+# rev = "eb257a070de0545d9051d9b9bb530df3e8736570"
+# features = ["cpi"]
+
+# [dependencies.xnft]
+# git = "https://github.com/coral-xyz/xnft"
+# rev = "6ff7a8e7b1bfa0024cdea8269df92bca681d68ec"
+# features = ["no-entrypoint"]
+
+[dependencies.wormhole-sdk]
+git = "https://github.com/space-operator/wormhole"
+rev = "b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1"
+
+[dependencies.serde_wormhole]
+git = "https://github.com/space-operator/wormhole"
+rev = "b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1"
+
+# [dependencies.wormhole-anchor-sdk]
+# git = "https://github.com/wormhole-foundation/wormhole-scaffolding.git"
+# rev = "7756f517fd63abae4be9b41ed82723def22bad09"
+
+[dev-dependencies]
+rust_decimal_macros = "1.26"

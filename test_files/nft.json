@@ -1,0 +1,1968 @@
+{
+  "flow": {
+    "id": 0,
+    "user_id": "3b93d159-b9d1-4230-ad4b-e498d7f1b796",
+    "name": "Bundling NFT",
+    "mosaic": {
+      "direction": "row",
+      "first": "SidePanel",
+      "second": {
+        "direction": "row",
+        "first": "Flow",
+        "second": {
+          "direction": "column",
+          "first": "PropertyPanel",
+          "second": "",
+          "splitPercentage": 100
+        },
+        "splitPercentage": 80
+      },
+      "splitPercentage": 0,
+      "prevSplitPercentage": 10
+    },
+    "isPublic": false,
+    "description": "Create an NFT",
+    "tags": [],
+    "state": "edit",
+    "startFlowTime": null,
+    "created_at": "2023-03-24",
+    "parent_flow": null,
+    "viewport": {
+      "x": 424.49235618247883,
+      "y": 447.7630881588299,
+      "zoom": 0.3789291416276035
+    },
+    "nodes": [
+      {
+        "width": 300,
+        "height": 155,
+        "selected": false,
+        "id": "48e9220e-0190-4978-8a0a-98ee765c9727",
+        "type": "native",
+        "position": {
+          "x": -1425,
+          "y": -75
+        },
+        "style": {
+          "height": 155,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "26994e10-f687-4e19-9f39-3477877372d8",
+          "unique_node_id": "wallet.0.1",
+          "node_id": "wallet",
+          "version": "0.1",
+          "description": "",
+          "name": "Wallet",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#baf2b1",
+          "sources": [
+            {
+              "name": "pubkey",
+              "type": "string",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "2b24b9b8-5021-490c-8528-0b9ae7a694f2"
+            },
+            {
+              "name": "keypair",
+              "type": "keypair",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "a5355d4b-c499-4a73-9f0a-8fefa8112d83"
+            }
+          ],
+          "targets": [
+            {
+              "name": "name",
+              "type_bounds": ["string"],
+              "required": false,
+              "defaultValue": "",
+              "tooltip": "",
+              "passthrough": false,
+              "id": "66b476c8-4698-40c5-80e4-1a6bf1094b42"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "wallet_id": 65,
+              "wallet_data": "HJbqSuV94woJfyxFNnJyfQdACvvJYaNWsW1x6wmJ8kiq",
+              "wallet_type": "ADAPTER"
+            },
+            "extra": {
+              "supabase_id": 152
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -1425,
+          "y": -75
+        },
+        "dragging": false
+      },
+      {
+        "width": 300,
+        "height": 180,
+        "selected": false,
+        "id": "265dd31e-e612-4427-ba04-7dbe844e7715",
+        "type": "native",
+        "position": {
+          "x": -1425,
+          "y": 90
+        },
+        "style": {
+          "height": 180,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "36b974f1-55b7-4166-99ca-b4b32e57200d",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "version": "0.1",
+          "description": "",
+          "name": "Const",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "decimal",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "1bc18588-c866-4c15-a676-f419707c6481"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": {
+                "D": "0"
+              },
+              "type": "Decimal"
+            },
+            "extra": {
+              "supabase_id": 117
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -1425,
+          "y": 90
+        },
+        "dragging": false,
+        "draggable": true
+      },
+      {
+        "width": 250,
+        "height": 200,
+        "selected": false,
+        "id": "dfbeff0c-9272-4986-9a41-4c2148be7a81",
+        "type": "native",
+        "position": {
+          "x": -1380,
+          "y": 285
+        },
+        "style": {
+          "height": 200,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "c9940f16-4e8b-4e6c-9b8e-fe205aed092f",
+          "unique_node_id": "generate_keypair.0.1",
+          "node_id": "generate_keypair",
+          "version": "0.1",
+          "description": "Generate or load a keypair and it's pubkey.\n\nWill generate a random keypair every run if no inputs are provided. This is useful for testing purpose.",
+          "name": "Generate Keypair",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "pubkey",
+              "type": "pubkey",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "e1d7dcf5-93c8-4666-863c-64ab5559c0e3"
+            },
+            {
+              "name": "keypair",
+              "type": "keypair",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "06d0b4d1-3a3c-4074-8f26-b97a35ece188"
+            }
+          ],
+          "targets": [
+            {
+              "name": "seed",
+              "type_bounds": ["string"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "12 word BIP39 mnemonic seed phrase",
+              "passthrough": false,
+              "id": "b2925e9a-e4df-49d0-850c-bf69f400dd18"
+            },
+            {
+              "name": "private_key",
+              "type_bounds": ["keypair"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "Load using a base 58 string, ignores seed/passphrase",
+              "passthrough": false,
+              "id": "87886882-af0f-41aa-b5b7-1ae08cc61382"
+            },
+            {
+              "name": "passphrase",
+              "type_bounds": ["string"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "d9f51c3c-a798-4710-97ff-f23b921d9853"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {},
+            "extra": {
+              "supabase_id": 110
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -1380,
+          "y": 285
+        },
+        "dragging": false
+      },
+      {
+        "width": 265,
+        "height": 400,
+        "selected": false,
+        "id": "86674f72-cb64-4309-b22f-f4e6d415fa8e",
+        "type": "native",
+        "position": {
+          "x": -960,
+          "y": -90
+        },
+        "style": {
+          "height": 400,
+          "width": 265,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "c4ba6ee9-44a9-4357-814c-8b233bc05cc3",
+          "unique_node_id": "transfer_token.0.1",
+          "node_id": "create_mint_account",
+          "version": "0.1",
+          "description": "",
+          "name": "Create Mint Account",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "signature",
+              "type": "signature",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "066a0c4f-77a1-493c-9d7f-a60542ad23a7"
+            }
+          ],
+          "targets": [
+            {
+              "name": "fee_payer",
+              "type_bounds": ["keypair"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "Who pays for account rent and transaction fees",
+              "passthrough": true,
+              "id": "ec4c83aa-0ff6-47f9-8009-9808118e0851"
+            },
+            {
+              "name": "decimals",
+              "type_bounds": ["u8"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "NFTs should have decimal = 0\nUS dollars have 2 decimals\nFrom Metaplex documentation:\n'If the token has a master edition it is a NonFungible. If the token has no master edition(ensuring its supply can be > 1) and decimals of 0 it is a FungibleAsset. If the token has no master edition(ensuring its supply can be > 1) and decimals of > 0 it is a Fungible. If the token is a limited edition of a MasterEditon it is a NonFungibleEdition.'",
+              "passthrough": false,
+              "id": "42a42512-aed3-4590-9273-da1844ebb74e"
+            },
+            {
+              "name": "mint_authority",
+              "type_bounds": ["keypair"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "Mint authority - who can mint more tokens",
+              "passthrough": true,
+              "id": "cf909643-3dd8-45d0-b6c3-90e29ee2bb0e"
+            },
+            {
+              "name": "freeze_authority",
+              "type_bounds": ["pubkey"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "59360957-e2a6-418c-833f-88cdd64b249b"
+            },
+            {
+              "name": "mint_account",
+              "type_bounds": ["keypair"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "acc313e1-f602-4fbe-815e-29bfae9e0992"
+            },
+            {
+              "name": "memo",
+              "type_bounds": ["string"],
+              "required": false,
+              "defaultValue": "",
+              "tooltip": "Additional notes",
+              "passthrough": false,
+              "id": "795421e4-b1aa-42a8-b400-8ff91be2c449"
+            },
+            {
+              "name": "submit",
+              "type_bounds": ["bool"],
+              "required": false,
+              "defaultValue": true,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "a8b14cfb-3d9e-47ec-8174-2200794d98c7"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {},
+            "extra": {
+              "supabase_id": 107
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -960,
+          "y": -90
+        },
+        "dragging": false
+      },
+      {
+        "width": 320,
+        "height": 300,
+        "selected": false,
+        "id": "6095bf21-70c9-49de-8a03-d8d54b533ca6",
+        "type": "native",
+        "position": {
+          "x": -570,
+          "y": -180
+        },
+        "style": {
+          "height": 300,
+          "width": 320,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "bd65823a-d407-4fc0-a017-f6781cd4c31f",
+          "unique_node_id": "associated_token_account.0.1",
+          "node_id": "associated_token_account",
+          "version": "0.1",
+          "description": "",
+          "name": "Associated Token Account",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "associated_token_account",
+              "type": "pubkey",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "782e3ec6-a953-4526-b870-5997318a496e"
+            },
+            {
+              "name": "signature",
+              "type": "signature",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "3bf3b99d-0a07-4417-a117-589e92742acf"
+            }
+          ],
+          "targets": [
+            {
+              "name": "owner",
+              "type_bounds": ["pubkey"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "333a3e3e-a6aa-4a75-8e2d-1876217aacca"
+            },
+            {
+              "name": "fee_payer",
+              "type_bounds": ["keypair"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "e1997b9a-6808-4eca-b049-759da4ae946c"
+            },
+            {
+              "name": "mint_account",
+              "type_bounds": ["pubkey"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "634900ee-4a76-4bc8-818e-ee14c1cc74f7"
+            },
+            {
+              "name": "submit",
+              "type_bounds": ["bool"],
+              "required": false,
+              "defaultValue": true,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "b40e5b52-daad-428d-bdf7-99f1d361ee92"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {},
+            "extra": {
+              "supabase_id": 386
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -570,
+          "y": -180
+        },
+        "dragging": false
+      },
+      {
+        "width": 300,
+        "height": 180,
+        "selected": false,
+        "id": "93eff255-3b27-450c-9d4f-f0a9af3c37a3",
+        "type": "native",
+        "position": {
+          "x": -555,
+          "y": 195
+        },
+        "style": {
+          "height": 180,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "c69b3301-ba3b-4d44-adce-1bc921b3f81b",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "version": "0.1",
+          "description": "",
+          "name": "Const",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "decimal",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "ef9affce-2589-4d01-9b42-a8e1b6081de5"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": {
+                "D": "1"
+              },
+              "type": "Decimal"
+            },
+            "extra": {
+              "supabase_id": 117
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -555,
+          "y": 195
+        },
+        "dragging": false,
+        "draggable": true
+      },
+      {
+        "width": 255,
+        "height": 400,
+        "selected": false,
+        "id": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "type": "native",
+        "position": {
+          "x": -30,
+          "y": -180
+        },
+        "style": {
+          "height": 400,
+          "width": 255,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "77753c6e-8cfc-4b56-ac36-f1f31aeacb9d",
+          "unique_node_id": "mint_token.0.1",
+          "node_id": "mint_token",
+          "version": "0.1",
+          "description": "Identifies the token, determines who can mint, and how many",
+          "name": "Mint Token",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "signature",
+              "type": "signature",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "7699caf5-c436-4d6b-b879-29fcc18a5f90"
+            }
+          ],
+          "targets": [
+            {
+              "name": "fee_payer",
+              "type_bounds": ["keypair"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "adb834b2-a746-4f2b-9c5e-7b3adf9afda6"
+            },
+            {
+              "name": "mint_authority",
+              "type_bounds": ["keypair"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "fd8d4517-173f-4c94-bcf9-cbf338da672f"
+            },
+            {
+              "name": "mint_account",
+              "type_bounds": ["pubkey"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "f516f6f8-1fa6-4814-9ddc-2c85ff85bce6"
+            },
+            {
+              "name": "recipient",
+              "type_bounds": ["pubkey"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "4e589bf1-ef57-4c49-bedf-93287c4fdbce"
+            },
+            {
+              "name": "amount",
+              "type_bounds": ["f64"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "NFTs should have amount = 1",
+              "passthrough": false,
+              "id": "6477ff46-be51-44a6-a494-aa556f4d2188"
+            },
+            {
+              "name": "decimals",
+              "type_bounds": ["u8"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "NFTs should have decimals = 0",
+              "passthrough": false,
+              "id": "fb6179ba-2d0e-4dcf-b733-8c5bbd0fabc7"
+            },
+            {
+              "name": "submit",
+              "type_bounds": ["bool"],
+              "required": false,
+              "defaultValue": true,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "e86a5a01-b5f8-456d-a633-ac7d4ed45fd6"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {},
+            "extra": {
+              "supabase_id": 113
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -30,
+          "y": -180
+        },
+        "dragging": false
+      },
+      {
+        "width": 300,
+        "height": 180,
+        "selected": false,
+        "id": "4f4a55db-0bde-4c6f-a269-2d7d825db34c",
+        "type": "native",
+        "position": {
+          "x": -540,
+          "y": 675
+        },
+        "style": {
+          "height": 180,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "ac01b201-85ba-4cfa-afb5-f2e40c5d6338",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "version": "0.1",
+          "description": "",
+          "name": "Const",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "pubkey",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "db4486e2-7973-4f6f-963d-36ba44913622"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": {
+                "B3": "thisdoesntmatteriiiiiiiiiiiiiiiiiiiiiiiiiii"
+              },
+              "type": "Pubkey"
+            },
+            "extra": {
+              "supabase_id": 117
+            }
+          }
+        },
+        "dragging": false,
+        "positionAbsolute": {
+          "x": -540,
+          "y": 675
+        },
+        "draggable": true
+      },
+      {
+        "width": 300,
+        "height": 120,
+        "selected": false,
+        "id": "52641dce-61c8-4ac4-b842-de3d68e115a2",
+        "type": "native",
+        "position": {
+          "x": -540,
+          "y": 855
+        },
+        "style": {
+          "height": 120,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "630b9c21-ea5f-453f-9eff-7125070c7797",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "version": "0.1",
+          "description": "",
+          "name": "Const",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "bool",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "0ed9dbcc-5d76-46f7-8330-f8112549079c"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": {
+                "B": true
+              },
+              "type": "BoolTrue"
+            },
+            "extra": {
+              "supabase_id": 117
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -540,
+          "y": 855
+        },
+        "dragging": false
+      },
+      {
+        "width": 300,
+        "height": 180,
+        "selected": false,
+        "id": "50c873d4-508c-4d66-9603-5878fc4a028c",
+        "type": "native",
+        "position": {
+          "x": -540,
+          "y": 975
+        },
+        "style": {
+          "height": 180,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "b2ba3cb4-3051-4836-9116-1d94b02d3c84",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "version": "0.1",
+          "description": "",
+          "name": "Const",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "free",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "1de4f7d3-5f86-43bf-b552-a52f0d3885a7"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": "{\n    \"name\": \"SO #11111\",\n    \"symbol\": \"SPOP\",\n    \"description\": \"Space Operator is a dynamic PFP collection\",\n    \"seller_fee_basis_points\": 250,\n    \"image\": \"https://arweave.net/vb1tD7tfAyrhZceA1MOYvvyqzZWgzHGDVZF37yDNH1Q\",\n    \"attributes\": [\n        {\n            \"trait_type\": \"Season\",\n            \"value\": \"Fall\"\n        },\n        {\n            \"trait_type\": \"Light Color\",\n            \"value\": \"Orange\"\n        }\n    ],\n    \"properties\": {\n        \"files\": [\n            {\n                \"uri\": \"https://arweave.net/vb1tD7tfAyrhZceA1MOYvvyqzZWgzHGDVZF37yDNH1Q\",\n                \"type\": \"image/jpeg\"\n            }\n        ],\n        \"category\": null\n    }\n}",
+              "type": "JSON"
+            },
+            "extra": {
+              "supabase_id": 117
+            }
+          }
+        },
+        "dragging": false,
+        "draggable": true,
+        "positionAbsolute": {
+          "x": -540,
+          "y": 975
+        }
+      },
+      {
+        "width": 300,
+        "height": 180,
+        "selected": false,
+        "id": "bced4640-b481-4306-a416-cd64cbd60d4e",
+        "type": "native",
+        "position": {
+          "x": -540,
+          "y": 1320
+        },
+        "style": {
+          "height": 180,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "a59baaab-9a05-4cac-acd6-ce61d0972468",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "version": "0.1",
+          "description": "",
+          "name": "Const",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "string",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "2280b59d-4232-479f-8330-b5558de154e2"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": {
+                "S": "https://arweave.net/3FxpIIbpySnfTTXIrpojhF2KHHjevI8Mrt3pACmEbSY"
+              },
+              "type": "String"
+            },
+            "extra": {
+              "supabase_id": 117
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -540,
+          "y": 1320
+        },
+        "dragging": false,
+        "draggable": true
+      },
+      {
+        "width": 300,
+        "height": 180,
+        "selected": false,
+        "id": "dbdf31eb-1cfd-4cee-a220-d017cf4eab96",
+        "type": "native",
+        "position": {
+          "x": -540,
+          "y": 1545
+        },
+        "style": {
+          "height": 180,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "cee37c4f-796e-4b77-aedf-915a09609810",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "version": "0.1",
+          "description": "",
+          "name": "Const",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "free",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "0a64a373-ea8c-4e57-89ff-174fe26dcefa"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": "{\n\"use_method\":\"Burn\", \"remaining\":500,\n\"total\":500\n}",
+              "type": "JSON"
+            },
+            "extra": {
+              "supabase_id": 117
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -540,
+          "y": 1545
+        },
+        "dragging": false,
+        "draggable": false
+      },
+      {
+        "width": 300,
+        "height": 180,
+        "selected": false,
+        "id": "40650e03-3613-4fc4-8168-9e00cb03cf7b",
+        "type": "native",
+        "position": {
+          "x": -540,
+          "y": 1815
+        },
+        "style": {
+          "height": 180,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "006737e8-df76-4e85-b2d0-997e9692bbcc",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "version": "0.1",
+          "description": "",
+          "name": "Const",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "free",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "8eb7708d-386e-4b5d-8d45-17b22d3d528e"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": "[{\n\"address\":\"DpfvhHU7z1CK8eP5xbEz8c4WBNHUfqUVtAE7opP2kJBc\",\"share\":100\n}]",
+              "type": "JSON"
+            },
+            "extra": {
+              "supabase_id": 117
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": -540,
+          "y": 1815
+        },
+        "dragging": false,
+        "draggable": true
+      },
+      {
+        "width": 345,
+        "height": 700,
+        "selected": false,
+        "id": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "type": "native",
+        "position": {
+          "x": 510,
+          "y": -240
+        },
+        "style": {
+          "height": 700,
+          "width": 345,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "3ce9b6bf-9c06-4e8d-a1a4-7d942d945a72",
+          "unique_node_id": "create_metadata_account.0.1",
+          "node_id": "create_metadata_account",
+          "version": "0.1",
+          "description": "",
+          "name": "Create Metadata Account",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "signature",
+              "type": "signature",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "cb34e27e-c348-4630-ab8e-4213ee09fb81"
+            },
+            {
+              "name": "metadata_account",
+              "type": "pubkey",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "8922ffd8-3694-4fdd-a98d-d74a72680825"
+            }
+          ],
+          "targets": [
+            {
+              "name": "proxy_as_update_authority",
+              "type_bounds": ["pubkey"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "Whether a Proxy Authority is signing the Update Authority",
+              "passthrough": true,
+              "id": "189507f9-7bc3-405f-9051-f9cc369c328e"
+            },
+            {
+              "name": "update_authority",
+              "type_bounds": ["keypair"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "Who can update the on-chain metadata",
+              "passthrough": false,
+              "id": "177ebfc7-bcf6-475b-a21a-6abcf1610856"
+            },
+            {
+              "name": "is_mutable",
+              "type_bounds": ["bool"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "Whether Metadata Account can be updated",
+              "passthrough": true,
+              "id": "33fb83aa-f6ed-468d-b28b-2c28a146d203"
+            },
+            {
+              "name": "mint_account",
+              "type_bounds": ["pubkey"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "Token Mint Account",
+              "passthrough": false,
+              "id": "aaa65d26-79c5-4c83-bf59-ab5c9fc3db99"
+            },
+            {
+              "name": "mint_authority",
+              "type_bounds": ["pubkey"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "e626ccea-0fce-4c02-8f55-1ba71b305748"
+            },
+            {
+              "name": "fee_payer",
+              "type_bounds": ["keypair"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "c30d0382-c2bb-4752-b7d9-adf499109272"
+            },
+            {
+              "name": "metadata",
+              "type_bounds": ["json"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "1358a2fe-3f6c-4bf0-be6c-aa5d0d4a8f10"
+            },
+            {
+              "name": "metadata_uri",
+              "type_bounds": ["string"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "4a515a39-1a39-4379-9027-84c49ceb08b9"
+            },
+            {
+              "name": "uses",
+              "type_bounds": ["json"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "How many and which type of uses each NFT will have.\nUses:\nBurn is a single-time use and is burned after use.\nSingle is a single-time use and does not burn the token.\nMultiple allows up to the specified number of uses",
+              "passthrough": false,
+              "id": "e2095192-6e8e-4669-a520-d20c1720b0aa"
+            },
+            {
+              "name": "collection_mint_account",
+              "type_bounds": ["pubkey"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "9826ceec-5556-4d52-81db-495aa492c3ae"
+            },
+            {
+              "name": "collection_details",
+              "type_bounds": ["u64"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "Only applies to Collection NFTs and is automatically set. To facility migration, set the collection size manually.",
+              "passthrough": false,
+              "id": "1683321c-02e9-46db-876d-f0a5e1c69cd1"
+            },
+            {
+              "name": "creators",
+              "type_bounds": ["json"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "Creators and their share of royalties. Limited to 5 creators",
+              "passthrough": false,
+              "id": "756bd81f-5cf8-4a93-96ca-cba48f5961dd"
+            },
+            {
+              "name": "submit",
+              "type_bounds": ["bool"],
+              "required": false,
+              "defaultValue": true,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "06049348-e56f-45f6-b558-13d9dc68499d"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {},
+            "extra": {
+              "supabase_id": 124
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": 510,
+          "y": -240
+        },
+        "dragging": false
+      },
+      {
+        "width": 375,
+        "height": 400,
+        "selected": false,
+        "id": "2d2cf9c1-be1d-416e-8c46-ce75cad34389",
+        "type": "native",
+        "position": {
+          "x": 1005,
+          "y": -195
+        },
+        "style": {
+          "height": 400,
+          "width": 375,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "085dc469-04d5-4619-9001-8b7ffce892e6",
+          "unique_node_id": "create_master_edition.0.1",
+          "node_id": "create_master_edition",
+          "version": "0.1",
+          "description": "",
+          "name": "Create Master Edition",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "signature",
+              "type": "signature",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "627678a0-5fa5-47e8-a392-46207b552241"
+            },
+            {
+              "name": "metadata_account",
+              "type": "pubkey",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "56eecb95-16c2-49c1-b61c-8cccd8069146"
+            },
+            {
+              "name": "master_edition_account",
+              "type": "pubkey",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "a05a3810-00d5-4d23-9ac5-c5b6c581722f"
+            }
+          ],
+          "targets": [
+            {
+              "name": "proxy_as_update_authority",
+              "type_bounds": ["pubkey"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "Whether a Proxy Authority is signing the Update Authority",
+              "passthrough": true,
+              "id": "71b4b44f-df44-4269-a4bd-eebae8ec1828"
+            },
+            {
+              "name": "update_authority",
+              "type_bounds": ["keypair"],
+              "required": false,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "ae811dfc-8a25-44e8-b272-a5f413dadbca"
+            },
+            {
+              "name": "mint_account",
+              "type_bounds": ["pubkey"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "688d2ef3-3579-418d-a9db-e29b9a10ab58"
+            },
+            {
+              "name": "mint_authority",
+              "type_bounds": ["pubkey"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "b2040c56-449d-4baf-8851-7bbe4d398031"
+            },
+            {
+              "name": "fee_payer",
+              "type_bounds": ["keypair"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": true,
+              "id": "bc59de87-d186-4ce5-a84a-9c6b312809a3"
+            },
+            {
+              "name": "max_supply",
+              "type_bounds": ["u64"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "How many copies you can print. Leave empty for unlimited\n1/1 NFTs should have supply 0",
+              "passthrough": false,
+              "id": "2ab51b92-7cd7-4318-a989-66deb379833c"
+            },
+            {
+              "name": "submit",
+              "type_bounds": ["bool"],
+              "required": false,
+              "defaultValue": true,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "dd84bc4a-e337-42e0-ba0d-ef72527c3d04"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {},
+            "extra": {
+              "supabase_id": 123
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": 1005,
+          "y": -195
+        },
+        "dragging": false
+      },
+      {
+        "width": 300,
+        "height": 180,
+        "selected": false,
+        "id": "4752f3b0-63e7-4395-bcda-152a5f6ae989",
+        "type": "native",
+        "position": {
+          "x": 585,
+          "y": 525
+        },
+        "style": {
+          "height": 180,
+          "width": 300,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "5b131953-b6ae-4874-bf86-abdcf04c9a58",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "version": "0.1",
+          "description": "",
+          "name": "Const",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#fff",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "decimal",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "b44b8f0a-fc2d-4cce-96ec-8a299a9f7062"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": {
+                "D": "0"
+              },
+              "type": "Decimal"
+            },
+            "extra": {
+              "supabase_id": 117
+            }
+          }
+        },
+        "dragging": false,
+        "positionAbsolute": {
+          "x": 585,
+          "y": 525
+        }
+      },
+      {
+        "width": 250,
+        "height": 100,
+        "selected": false,
+        "id": "e2f47397-67ed-42f4-8e8d-312a80875e80",
+        "type": "native",
+        "position": {
+          "x": 1530,
+          "y": -150
+        },
+        "style": {
+          "height": 100,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "fa9e141a-dc1f-4748-804c-4c29465fbccf",
+          "unique_node_id": "flow_output.0.1",
+          "node_id": "flow_output",
+          "version": "0.1",
+          "description": "",
+          "name": "Flow Output",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#f2fcff",
+          "sources": [],
+          "targets": [
+            {
+              "name": "",
+              "type_bounds": ["free"],
+              "required": true,
+              "defaultValue": "",
+              "tooltip": "",
+              "passthrough": false,
+              "id": "c8af03a3-36ae-4480-aac3-744a4e64dac3"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Output Label",
+                  "default": ""
+                }
+              }
+            },
+            "ui_schema": {
+              "label": {
+                "ui:emptyValue": ""
+              }
+            },
+            "form_data": {
+              "label": "pubkey"
+            },
+            "extra": {
+              "supabase_id": 137
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": 1530,
+          "y": -150
+        },
+        "dragging": false
+      },
+      {
+        "width": 250,
+        "height": 100,
+        "selected": false,
+        "id": "e365c49a-eb07-4619-8794-ce76195b69bd",
+        "type": "native",
+        "position": {
+          "x": 1530,
+          "y": 60
+        },
+        "style": {
+          "height": 100,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "fa3cdbba-2e3a-45ef-941f-eb9776d1b033",
+          "unique_node_id": "flow_output.0.1",
+          "node_id": "flow_output",
+          "version": "0.1",
+          "description": "",
+          "name": "Flow Output",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#f2fcff",
+          "sources": [],
+          "targets": [
+            {
+              "name": "",
+              "type_bounds": ["free"],
+              "required": true,
+              "defaultValue": "",
+              "tooltip": "",
+              "passthrough": false,
+              "id": "34b10d45-56e1-41c6-bc8e-d03fda5be5ea"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Output Label",
+                  "default": ""
+                }
+              }
+            },
+            "ui_schema": {
+              "label": {
+                "ui:emptyValue": ""
+              }
+            },
+            "form_data": {
+              "label": "master_edition"
+            },
+            "extra": {
+              "supabase_id": 137
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": 1530,
+          "y": 60
+        },
+        "dragging": false
+      },
+      {
+        "width": 250,
+        "height": 100,
+        "selected": false,
+        "id": "ef8d8a40-c1ad-4b09-97b6-8a3b3588a09a",
+        "type": "native",
+        "position": {
+          "x": 1530,
+          "y": -45
+        },
+        "style": {
+          "height": 100,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "0d12a910-8ee4-40d6-a06f-9f3c1629a10f",
+          "unique_node_id": "flow_output.0.1",
+          "node_id": "flow_output",
+          "version": "0.1",
+          "description": "",
+          "name": "Flow Output",
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "#f2fcff",
+          "sources": [],
+          "targets": [
+            {
+              "name": "",
+              "type_bounds": ["free"],
+              "required": true,
+              "defaultValue": "",
+              "tooltip": "",
+              "passthrough": false,
+              "id": "5f4072b3-33a9-4362-a567-23defb402dca"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Output Label",
+                  "default": ""
+                }
+              }
+            },
+            "ui_schema": {
+              "label": {
+                "ui:emptyValue": ""
+              }
+            },
+            "form_data": {
+              "label": "metadata_account"
+            },
+            "extra": {
+              "supabase_id": 137
+            }
+          }
+        },
+        "positionAbsolute": {
+          "x": 1530,
+          "y": -45
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "265dd31e-e612-4427-ba04-7dbe844e7715",
+        "sourceHandle": "1bc18588-c866-4c15-a676-f419707c6481",
+        "target": "86674f72-cb64-4309-b22f-f4e6d415fa8e",
+        "targetHandle": "42a42512-aed3-4590-9273-da1844ebb74e",
+        "id": "reactflow__edge-265dd31e-e612-4427-ba04-7dbe844e77151bc18588-c866-4c15-a676-f419707c6481-86674f72-cb64-4309-b22f-f4e6d415fa8e42a42512-aed3-4590-9273-da1844ebb74e"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "dfbeff0c-9272-4986-9a41-4c2148be7a81",
+        "sourceHandle": "06d0b4d1-3a3c-4074-8f26-b97a35ece188",
+        "target": "86674f72-cb64-4309-b22f-f4e6d415fa8e",
+        "targetHandle": "acc313e1-f602-4fbe-815e-29bfae9e0992",
+        "id": "reactflow__edge-dfbeff0c-9272-4986-9a41-4c2148be7a8106d0b4d1-3a3c-4074-8f26-b97a35ece188-86674f72-cb64-4309-b22f-f4e6d415fa8eacc313e1-f602-4fbe-815e-29bfae9e0992"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "48e9220e-0190-4978-8a0a-98ee765c9727",
+        "sourceHandle": "a5355d4b-c499-4a73-9f0a-8fefa8112d83",
+        "target": "86674f72-cb64-4309-b22f-f4e6d415fa8e",
+        "targetHandle": "ec4c83aa-0ff6-47f9-8009-9808118e0851",
+        "id": "reactflow__edge-48e9220e-0190-4978-8a0a-98ee765c9727a5355d4b-c499-4a73-9f0a-8fefa8112d83-86674f72-cb64-4309-b22f-f4e6d415fa8eec4c83aa-0ff6-47f9-8009-9808118e0851"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "48e9220e-0190-4978-8a0a-98ee765c9727",
+        "sourceHandle": "a5355d4b-c499-4a73-9f0a-8fefa8112d83",
+        "target": "86674f72-cb64-4309-b22f-f4e6d415fa8e",
+        "targetHandle": "cf909643-3dd8-45d0-b6c3-90e29ee2bb0e",
+        "id": "reactflow__edge-48e9220e-0190-4978-8a0a-98ee765c9727a5355d4b-c499-4a73-9f0a-8fefa8112d83-86674f72-cb64-4309-b22f-f4e6d415fa8ecf909643-3dd8-45d0-b6c3-90e29ee2bb0e"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "48e9220e-0190-4978-8a0a-98ee765c9727",
+        "sourceHandle": "a5355d4b-c499-4a73-9f0a-8fefa8112d83",
+        "target": "86674f72-cb64-4309-b22f-f4e6d415fa8e",
+        "targetHandle": "59360957-e2a6-418c-833f-88cdd64b249b",
+        "id": "reactflow__edge-48e9220e-0190-4978-8a0a-98ee765c9727a5355d4b-c499-4a73-9f0a-8fefa8112d83-86674f72-cb64-4309-b22f-f4e6d415fa8e59360957-e2a6-418c-833f-88cdd64b249b"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "86674f72-cb64-4309-b22f-f4e6d415fa8e",
+        "sourceHandle": "passthrough-ec4c83aa-0ff6-47f9-8009-9808118e0851",
+        "target": "6095bf21-70c9-49de-8a03-d8d54b533ca6",
+        "targetHandle": "333a3e3e-a6aa-4a75-8e2d-1876217aacca",
+        "id": "reactflow__edge-86674f72-cb64-4309-b22f-f4e6d415fa8epassthrough-ec4c83aa-0ff6-47f9-8009-9808118e0851-6095bf21-70c9-49de-8a03-d8d54b533ca6333a3e3e-a6aa-4a75-8e2d-1876217aacca"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "86674f72-cb64-4309-b22f-f4e6d415fa8e",
+        "sourceHandle": "passthrough-ec4c83aa-0ff6-47f9-8009-9808118e0851",
+        "target": "6095bf21-70c9-49de-8a03-d8d54b533ca6",
+        "targetHandle": "e1997b9a-6808-4eca-b049-759da4ae946c",
+        "id": "reactflow__edge-86674f72-cb64-4309-b22f-f4e6d415fa8epassthrough-ec4c83aa-0ff6-47f9-8009-9808118e0851-6095bf21-70c9-49de-8a03-d8d54b533ca6e1997b9a-6808-4eca-b049-759da4ae946c"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "6095bf21-70c9-49de-8a03-d8d54b533ca6",
+        "sourceHandle": "passthrough-e1997b9a-6808-4eca-b049-759da4ae946c",
+        "target": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "targetHandle": "adb834b2-a746-4f2b-9c5e-7b3adf9afda6",
+        "id": "reactflow__edge-6095bf21-70c9-49de-8a03-d8d54b533ca6passthrough-e1997b9a-6808-4eca-b049-759da4ae946c-3ea2d568-b188-4a4a-a2a3-27a0f0aba3fcadb834b2-a746-4f2b-9c5e-7b3adf9afda6"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "6095bf21-70c9-49de-8a03-d8d54b533ca6",
+        "sourceHandle": "782e3ec6-a953-4526-b870-5997318a496e",
+        "target": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "targetHandle": "4e589bf1-ef57-4c49-bedf-93287c4fdbce",
+        "id": "reactflow__edge-6095bf21-70c9-49de-8a03-d8d54b533ca6782e3ec6-a953-4526-b870-5997318a496e-3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc4e589bf1-ef57-4c49-bedf-93287c4fdbce",
+        "selected": false
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "93eff255-3b27-450c-9d4f-f0a9af3c37a3",
+        "sourceHandle": "ef9affce-2589-4d01-9b42-a8e1b6081de5",
+        "target": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "targetHandle": "6477ff46-be51-44a6-a494-aa556f4d2188",
+        "id": "reactflow__edge-93eff255-3b27-450c-9d4f-f0a9af3c37a3ef9affce-2589-4d01-9b42-a8e1b6081de5-3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc6477ff46-be51-44a6-a494-aa556f4d2188"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "265dd31e-e612-4427-ba04-7dbe844e7715",
+        "sourceHandle": "1bc18588-c866-4c15-a676-f419707c6481",
+        "target": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "targetHandle": "fb6179ba-2d0e-4dcf-b733-8c5bbd0fabc7",
+        "id": "reactflow__edge-265dd31e-e612-4427-ba04-7dbe844e77151bc18588-c866-4c15-a676-f419707c6481-3ea2d568-b188-4a4a-a2a3-27a0f0aba3fcfb6179ba-2d0e-4dcf-b733-8c5bbd0fabc7"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "52641dce-61c8-4ac4-b842-de3d68e115a2",
+        "sourceHandle": "0ed9dbcc-5d76-46f7-8330-f8112549079c",
+        "target": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "targetHandle": "33fb83aa-f6ed-468d-b28b-2c28a146d203",
+        "id": "reactflow__edge-52641dce-61c8-4ac4-b842-de3d68e115a20ed9dbcc-5d76-46f7-8330-f8112549079c-71589427-479e-49d1-aa99-a1c3eb2abbe033fb83aa-f6ed-468d-b28b-2c28a146d203"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "50c873d4-508c-4d66-9603-5878fc4a028c",
+        "sourceHandle": "1de4f7d3-5f86-43bf-b552-a52f0d3885a7",
+        "target": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "targetHandle": "1358a2fe-3f6c-4bf0-be6c-aa5d0d4a8f10",
+        "id": "reactflow__edge-50c873d4-508c-4d66-9603-5878fc4a028c1de4f7d3-5f86-43bf-b552-a52f0d3885a7-71589427-479e-49d1-aa99-a1c3eb2abbe01358a2fe-3f6c-4bf0-be6c-aa5d0d4a8f10"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "bced4640-b481-4306-a416-cd64cbd60d4e",
+        "sourceHandle": "2280b59d-4232-479f-8330-b5558de154e2",
+        "target": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "targetHandle": "4a515a39-1a39-4379-9027-84c49ceb08b9",
+        "id": "reactflow__edge-bced4640-b481-4306-a416-cd64cbd60d4e2280b59d-4232-479f-8330-b5558de154e2-71589427-479e-49d1-aa99-a1c3eb2abbe04a515a39-1a39-4379-9027-84c49ceb08b9"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "dbdf31eb-1cfd-4cee-a220-d017cf4eab96",
+        "sourceHandle": "0a64a373-ea8c-4e57-89ff-174fe26dcefa",
+        "target": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "targetHandle": "e2095192-6e8e-4669-a520-d20c1720b0aa",
+        "id": "reactflow__edge-dbdf31eb-1cfd-4cee-a220-d017cf4eab960a64a373-ea8c-4e57-89ff-174fe26dcefa-71589427-479e-49d1-aa99-a1c3eb2abbe0e2095192-6e8e-4669-a520-d20c1720b0aa"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "40650e03-3613-4fc4-8168-9e00cb03cf7b",
+        "sourceHandle": "8eb7708d-386e-4b5d-8d45-17b22d3d528e",
+        "target": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "targetHandle": "756bd81f-5cf8-4a93-96ca-cba48f5961dd",
+        "id": "reactflow__edge-40650e03-3613-4fc4-8168-9e00cb03cf7b8eb7708d-386e-4b5d-8d45-17b22d3d528e-71589427-479e-49d1-aa99-a1c3eb2abbe0756bd81f-5cf8-4a93-96ca-cba48f5961dd"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "sourceHandle": "passthrough-c30d0382-c2bb-4752-b7d9-adf499109272",
+        "target": "2d2cf9c1-be1d-416e-8c46-ce75cad34389",
+        "targetHandle": "bc59de87-d186-4ce5-a84a-9c6b312809a3",
+        "id": "reactflow__edge-71589427-479e-49d1-aa99-a1c3eb2abbe0passthrough-c30d0382-c2bb-4752-b7d9-adf499109272-2d2cf9c1-be1d-416e-8c46-ce75cad34389bc59de87-d186-4ce5-a84a-9c6b312809a3"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "sourceHandle": "passthrough-e626ccea-0fce-4c02-8f55-1ba71b305748",
+        "target": "2d2cf9c1-be1d-416e-8c46-ce75cad34389",
+        "targetHandle": "b2040c56-449d-4baf-8851-7bbe4d398031",
+        "id": "reactflow__edge-71589427-479e-49d1-aa99-a1c3eb2abbe0passthrough-e626ccea-0fce-4c02-8f55-1ba71b305748-2d2cf9c1-be1d-416e-8c46-ce75cad34389b2040c56-449d-4baf-8851-7bbe4d398031",
+        "selected": false
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "2d2cf9c1-be1d-416e-8c46-ce75cad34389",
+        "sourceHandle": "a05a3810-00d5-4d23-9ac5-c5b6c581722f",
+        "target": "e365c49a-eb07-4619-8794-ce76195b69bd",
+        "targetHandle": "34b10d45-56e1-41c6-bc8e-d03fda5be5ea",
+        "id": "reactflow__edge-2d2cf9c1-be1d-416e-8c46-ce75cad34389a05a3810-00d5-4d23-9ac5-c5b6c581722f-e365c49a-eb07-4619-8794-ce76195b69bd34b10d45-56e1-41c6-bc8e-d03fda5be5ea"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "2d2cf9c1-be1d-416e-8c46-ce75cad34389",
+        "sourceHandle": "56eecb95-16c2-49c1-b61c-8cccd8069146",
+        "target": "ef8d8a40-c1ad-4b09-97b6-8a3b3588a09a",
+        "targetHandle": "5f4072b3-33a9-4362-a567-23defb402dca",
+        "id": "reactflow__edge-2d2cf9c1-be1d-416e-8c46-ce75cad3438956eecb95-16c2-49c1-b61c-8cccd8069146-ef8d8a40-c1ad-4b09-97b6-8a3b3588a09a5f4072b3-33a9-4362-a567-23defb402dca"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "6095bf21-70c9-49de-8a03-d8d54b533ca6",
+        "sourceHandle": "passthrough-e1997b9a-6808-4eca-b049-759da4ae946c",
+        "target": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "targetHandle": "fd8d4517-173f-4c94-bcf9-cbf338da672f",
+        "id": "reactflow__edge-6095bf21-70c9-49de-8a03-d8d54b533ca6passthrough-e1997b9a-6808-4eca-b049-759da4ae946c-3ea2d568-b188-4a4a-a2a3-27a0f0aba3fcfd8d4517-173f-4c94-bcf9-cbf338da672f"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "sourceHandle": "passthrough-f516f6f8-1fa6-4814-9ddc-2c85ff85bce6",
+        "target": "2d2cf9c1-be1d-416e-8c46-ce75cad34389",
+        "targetHandle": "688d2ef3-3579-418d-a9db-e29b9a10ab58",
+        "id": "reactflow__edge-3ea2d568-b188-4a4a-a2a3-27a0f0aba3fcpassthrough-f516f6f8-1fa6-4814-9ddc-2c85ff85bce6-2d2cf9c1-be1d-416e-8c46-ce75cad34389688d2ef3-3579-418d-a9db-e29b9a10ab58",
+        "selected": false
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "86674f72-cb64-4309-b22f-f4e6d415fa8e",
+        "sourceHandle": "passthrough-acc313e1-f602-4fbe-815e-29bfae9e0992",
+        "target": "6095bf21-70c9-49de-8a03-d8d54b533ca6",
+        "targetHandle": "634900ee-4a76-4bc8-818e-ee14c1cc74f7",
+        "id": "reactflow__edge-86674f72-cb64-4309-b22f-f4e6d415fa8epassthrough-acc313e1-f602-4fbe-815e-29bfae9e0992-6095bf21-70c9-49de-8a03-d8d54b533ca6634900ee-4a76-4bc8-818e-ee14c1cc74f7"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "4f4a55db-0bde-4c6f-a269-2d7d825db34c",
+        "sourceHandle": "db4486e2-7973-4f6f-963d-36ba44913622",
+        "target": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "targetHandle": "189507f9-7bc3-405f-9051-f9cc369c328e",
+        "id": "reactflow__edge-4f4a55db-0bde-4c6f-a269-2d7d825db34cdb4486e2-7973-4f6f-963d-36ba44913622-71589427-479e-49d1-aa99-a1c3eb2abbe0189507f9-7bc3-405f-9051-f9cc369c328e"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "4752f3b0-63e7-4395-bcda-152a5f6ae989",
+        "sourceHandle": "b44b8f0a-fc2d-4cce-96ec-8a299a9f7062",
+        "target": "2d2cf9c1-be1d-416e-8c46-ce75cad34389",
+        "targetHandle": "2ab51b92-7cd7-4318-a989-66deb379833c",
+        "id": "reactflow__edge-4752f3b0-63e7-4395-bcda-152a5f6ae989b44b8f0a-fc2d-4cce-96ec-8a299a9f7062-2d2cf9c1-be1d-416e-8c46-ce75cad343892ab51b92-7cd7-4318-a989-66deb379833c"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "sourceHandle": "passthrough-f516f6f8-1fa6-4814-9ddc-2c85ff85bce6",
+        "target": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "targetHandle": "aaa65d26-79c5-4c83-bf59-ab5c9fc3db99",
+        "id": "reactflow__edge-3ea2d568-b188-4a4a-a2a3-27a0f0aba3fcpassthrough-f516f6f8-1fa6-4814-9ddc-2c85ff85bce6-71589427-479e-49d1-aa99-a1c3eb2abbe0aaa65d26-79c5-4c83-bf59-ab5c9fc3db99"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "sourceHandle": "passthrough-adb834b2-a746-4f2b-9c5e-7b3adf9afda6",
+        "target": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "targetHandle": "e626ccea-0fce-4c02-8f55-1ba71b305748",
+        "id": "reactflow__edge-3ea2d568-b188-4a4a-a2a3-27a0f0aba3fcpassthrough-adb834b2-a746-4f2b-9c5e-7b3adf9afda6-71589427-479e-49d1-aa99-a1c3eb2abbe0e626ccea-0fce-4c02-8f55-1ba71b305748"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "6095bf21-70c9-49de-8a03-d8d54b533ca6",
+        "sourceHandle": "passthrough-634900ee-4a76-4bc8-818e-ee14c1cc74f7",
+        "target": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "targetHandle": "f516f6f8-1fa6-4814-9ddc-2c85ff85bce6",
+        "id": "reactflow__edge-6095bf21-70c9-49de-8a03-d8d54b533ca6passthrough-634900ee-4a76-4bc8-818e-ee14c1cc74f7-3ea2d568-b188-4a4a-a2a3-27a0f0aba3fcf516f6f8-1fa6-4814-9ddc-2c85ff85bce6"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "sourceHandle": "passthrough-189507f9-7bc3-405f-9051-f9cc369c328e",
+        "target": "2d2cf9c1-be1d-416e-8c46-ce75cad34389",
+        "targetHandle": "71b4b44f-df44-4269-a4bd-eebae8ec1828",
+        "id": "reactflow__edge-71589427-479e-49d1-aa99-a1c3eb2abbe0passthrough-189507f9-7bc3-405f-9051-f9cc369c328e-2d2cf9c1-be1d-416e-8c46-ce75cad3438971b4b44f-df44-4269-a4bd-eebae8ec1828"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "3ea2d568-b188-4a4a-a2a3-27a0f0aba3fc",
+        "sourceHandle": "passthrough-adb834b2-a746-4f2b-9c5e-7b3adf9afda6",
+        "target": "71589427-479e-49d1-aa99-a1c3eb2abbe0",
+        "targetHandle": "c30d0382-c2bb-4752-b7d9-adf499109272",
+        "id": "reactflow__edge-3ea2d568-b188-4a4a-a2a3-27a0f0aba3fcpassthrough-adb834b2-a746-4f2b-9c5e-7b3adf9afda6-71589427-479e-49d1-aa99-a1c3eb2abbe0c30d0382-c2bb-4752-b7d9-adf499109272"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "2d2cf9c1-be1d-416e-8c46-ce75cad34389",
+        "sourceHandle": "passthrough-688d2ef3-3579-418d-a9db-e29b9a10ab58",
+        "target": "e2f47397-67ed-42f4-8e8d-312a80875e80",
+        "targetHandle": "c8af03a3-36ae-4480-aac3-744a4e64dac3",
+        "id": "reactflow__edge-2d2cf9c1-be1d-416e-8c46-ce75cad34389passthrough-688d2ef3-3579-418d-a9db-e29b9a10ab58-e2f47397-67ed-42f4-8e8d-312a80875e80c8af03a3-36ae-4480-aac3-744a4e64dac3"
+      }
+    ],
+    "uuid": "41d883f9-6900-4462-b727-480e96d40b45",
+    "network": "devnet",
+    "updated_at": "2023-04-03T15:42:57.451925",
+    "lastest_flow_run_id": "3073f5fc-0d0a-4f41-8da9-8d3ad3d5b41a",
+    "environment": null,
+    "current_rpc": null,
+    "custom_rpc": null,
+    "custom_networks": [],
+    "current_network": {
+      "id": "01000000-0000-8000-8000-000000000000",
+      "url": "https://api.devnet.solana.com",
+      "type": "default",
+      "wallet": "Solana",
+      "cluster": "devnet"
+    },
+    "used_by": [],
+    "instructions_bundling": "Automatic"
+  },
+  "bookmarks": []
+}

@@ -1,0 +1,338 @@
+{
+  "flow": {
+    "id": 111,
+    "user_id": "ad3dedf8-7b31-4baf-85a2-c336db90ad7f",
+    "name": "file_upload",
+    "mosaic": {
+      "direction": "row",
+      "first": "SidePanel",
+      "second": {
+        "direction": "row",
+        "first": "Flow",
+        "second": {
+          "direction": "column",
+          "first": "PropertyPanel",
+          "second": "",
+          "splitPercentage": 100
+        },
+        "splitPercentage": 80
+      },
+      "splitPercentage": 0,
+      "prevSplitPercentage": 10
+    },
+    "isPublic": false,
+    "description": "Flow Description",
+    "tags": [],
+    "state": "edit",
+    "startFlowTime": null,
+    "created_at": "2022-11-02",
+    "parent_flow": null,
+    "viewport": {
+      "x": 1052.7430352078377,
+      "y": -17.95044120031298,
+      "zoom": 1.042465760841123
+    },
+    "nodes": [
+      {
+        "width": 250,
+        "height": 200,
+        "selected": false,
+        "id": "afd3cef5-1d56-444e-bba1-31d6885de41f",
+        "type": "native",
+        "style": {
+          "height": 200,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "b0404679-20e6-4f24-b1b1-326a49fd9a53",
+          "unique_node_id": "arweave_file_upload.0.1",
+          "node_id": "arweave_file_upload",
+          "name": "Arweave File Upload",
+          "sources": [
+            {
+              "name": "file_url",
+              "type": "string",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "e431b4e9-80a7-447f-8a9e-b8a6c83c9052"
+            }
+          ],
+          "targets": [
+            {
+              "name": "fee_payer",
+              "type_bounds": ["keypair", "string"],
+              "required": true,
+              "defaultValue": "",
+              "tooltip": "",
+              "passthrough": true,
+              "id": "719ebf09-e1e2-4508-87e4-784b623f76b0"
+            },
+            {
+              "name": "file_path",
+              "type_bounds": ["string"],
+              "required": true,
+              "defaultValue": "",
+              "tooltip": "",
+              "passthrough": false,
+              "id": "260d8474-0049-4c2c-b398-4cbaf8824e1e"
+            },
+            {
+              "name": "fund_bundlr",
+              "type_bounds": ["bool"],
+              "required": true,
+              "defaultValue": true,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "66e196c5-8b30-4764-b02a-854d0e0fe2aa"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {},
+            "extra": {
+              "supabase_id": 120
+            }
+          }
+        },
+        "position": {
+          "x": 45,
+          "y": 225
+        },
+        "positionAbsolute": {
+          "x": 45,
+          "y": 225
+        },
+        "dragging": false
+      },
+      {
+        "width": 250,
+        "height": 100,
+        "selected": false,
+        "id": "a364764a-a92a-46b1-a171-cf49807dfa69",
+        "type": "native",
+        "style": {
+          "height": 100,
+          "width": 250,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "4a09f605-3bf3-49f2-904b-9e672157626f",
+          "unique_node_id": null,
+          "node_id": "foreach",
+          "name": "Foreach",
+          "sources": [
+            {
+              "name": "element",
+              "type": "json",
+              "defaultValue": null,
+              "tooltip": "",
+              "id": "eb503929-71dd-4f93-9aad-a9e323e2e137"
+            }
+          ],
+          "targets": [
+            {
+              "name": "array",
+              "type_bounds": ["json"],
+              "required": true,
+              "defaultValue": null,
+              "tooltip": "",
+              "passthrough": false,
+              "id": "c0722160-34b4-4558-828c-c6625237c336"
+            }
+          ],
+          "targets_form": {
+            "json_schema": {
+              "type": "object",
+              "title": "Foreach",
+              "properties": {
+                "array": {
+                  "title": "array",
+                  "type": "string",
+                  "default": "[]"
+                }
+              }
+            },
+            "ui_schema": {
+              "array": {
+                "ui:widget": "textarea"
+              },
+              "ui:order": ["array"]
+            },
+            "form_data": {
+              "array": "[]"
+            },
+            "extra": {
+              "supabase_id": 302
+            }
+          }
+        },
+        "position": {
+          "x": -450,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": -450,
+          "y": 300
+        },
+        "dragging": false
+      },
+      {
+        "width": 301,
+        "height": 200,
+        "selected": false,
+        "id": "df8e0259-75f4-4ffe-b98b-50d72f2b50c1",
+        "type": "native",
+        "style": {
+          "height": 200,
+          "width": 301,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "e3ed992f-3348-45ab-ac32-9c70f94368e2",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "name": "Const",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "string",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "e3c51d79-c4f7-4e11-8389-82c58193ab92",
+              "value": ""
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": {
+                "S": "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu"
+              },
+              "type": "String"
+            }
+          }
+        },
+        "position": {
+          "x": -495,
+          "y": 90
+        },
+        "positionAbsolute": {
+          "x": -495,
+          "y": 90
+        },
+        "dragging": false
+      },
+      {
+        "width": 350,
+        "height": 200,
+        "selected": false,
+        "id": "24b18410-1f44-42d0-813d-bd00b62e5370",
+        "type": "native",
+        "style": {
+          "height": 200,
+          "width": 350,
+          "backgroundColorDark": "#000000",
+          "backgroundColor": "transparent"
+        },
+        "className": "",
+        "data": {
+          "className": "",
+          "type": "native",
+          "id": "393924ae-103e-439d-a1d6-f2b6a7dfc016",
+          "unique_node_id": "const.0.1",
+          "node_id": "const",
+          "name": "Const",
+          "sources": [
+            {
+              "name": "Source",
+              "type": "free",
+              "defaultValue": "",
+              "tooltip": "",
+              "id": "7e9703bf-1531-4edb-9c1b-43094d4be124"
+            }
+          ],
+          "targets": [],
+          "targets_form": {
+            "json_schema": {},
+            "ui_schema": {},
+            "form_data": {
+              "value": [
+                "https://hyjboblkjeevkzaqsyxe.supabase.co/storage/v1/object/public/flow-files/24b18410-1f44-42d0-813d-bd00b62e5370/file_upload.json",
+                "https://hyjboblkjeevkzaqsyxe.supabase.co/storage/v1/object/public/flow-files/24b18410-1f44-42d0-813d-bd00b62e5370/subflow.json"
+              ],
+              "type": "File"
+            }
+          }
+        },
+        "position": {
+          "x": -855,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": -855,
+          "y": 300
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "a364764a-a92a-46b1-a171-cf49807dfa69",
+        "sourceHandle": "eb503929-71dd-4f93-9aad-a9e323e2e137",
+        "target": "afd3cef5-1d56-444e-bba1-31d6885de41f",
+        "targetHandle": "260d8474-0049-4c2c-b398-4cbaf8824e1e",
+        "id": "reactflow__edge-a364764a-a92a-46b1-a171-cf49807dfa69eb503929-71dd-4f93-9aad-a9e323e2e137-afd3cef5-1d56-444e-bba1-31d6885de41f260d8474-0049-4c2c-b398-4cbaf8824e1e"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "df8e0259-75f4-4ffe-b98b-50d72f2b50c1",
+        "sourceHandle": "e3c51d79-c4f7-4e11-8389-82c58193ab92",
+        "target": "afd3cef5-1d56-444e-bba1-31d6885de41f",
+        "targetHandle": "719ebf09-e1e2-4508-87e4-784b623f76b0",
+        "id": "reactflow__edge-df8e0259-75f4-4ffe-b98b-50d72f2b50c1e3c51d79-c4f7-4e11-8389-82c58193ab92-afd3cef5-1d56-444e-bba1-31d6885de41f719ebf09-e1e2-4508-87e4-784b623f76b0"
+      },
+      {
+        "style": {
+          "stroke": "#fef08a",
+          "strokeWidth": 2
+        },
+        "type": "custom",
+        "source": "24b18410-1f44-42d0-813d-bd00b62e5370",
+        "sourceHandle": "7e9703bf-1531-4edb-9c1b-43094d4be124",
+        "target": "a364764a-a92a-46b1-a171-cf49807dfa69",
+        "targetHandle": "c0722160-34b4-4558-828c-c6625237c336",
+        "id": "reactflow__edge-24b18410-1f44-42d0-813d-bd00b62e53707e9703bf-1531-4edb-9c1b-43094d4be124-a364764a-a92a-46b1-a171-cf49807dfa69c0722160-34b4-4558-828c-c6625237c336"
+      }
+    ],
+    "uuid": "cacedd35-ab09-4b22-aa9e-f1fb63371016",
+    "network": "devnet",
+    "updated_at": "2022-11-02T11:45:38.041142",
+    "lastest_flow_run_id": null
+  },
+  "bookmarks": []
+}

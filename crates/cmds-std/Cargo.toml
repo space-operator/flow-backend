@@ -1,0 +1,16 @@
+[package]
+name = "cmds-std"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+flow-lib = { workspace = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+bs58 = { workspace = true }
+thiserror = "1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }

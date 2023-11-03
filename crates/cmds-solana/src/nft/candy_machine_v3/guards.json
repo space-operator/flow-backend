@@ -1,0 +1,77 @@
+{
+  "default": {
+    "bot_tax": {
+      "lamports": 100,
+      "last_instruction": true
+    },
+    "sol_payment": {
+      "lamports": 100,
+      "destination": "some_pubkey"
+    },
+    "token_payment": {
+      "amount": 100,
+      "mint": "some_pubkey",
+      "destination_ata": "some_pubkey"
+    },
+    "start_date": {
+      "date": "shoud be i64 unix timestamp"
+    },
+    "third_party_signer": {
+      "signer_key": "some_pubkey"
+    },
+    "token_gate": {
+      "amount": 100,
+      "mint": "some_pubkey"
+    },
+    "gatekeeper": {
+      "gatekeeper_network": "some_pubkey",
+      "expire_on_use": true
+    },
+    "end_date": {
+      "date": "shoud be i64 unix timestamp"
+    },
+    "allow_list": {
+      "merkle_root": "[u8; 32] merkle_root of addresses"
+    },
+    "mint_limit": {
+      "id": 1,
+      "limit": 3
+    },
+    "nft_payment": {
+      "required_collection": "some_pubkey",
+      "destination": "some_pubkey"
+    },
+    "redeemed_amount": {
+      "maximum": 1000
+    },
+    "address_gate": {
+      "address": "some_pubkey The only address that is allowed to mint from the Candy Machine"
+    },
+    "nft_gate": {
+      "required_collection": "some_pubkey"
+    },
+    "nft_burn": {
+      "required_collection": "some_pubkey"
+    },
+    "token_burn": {
+      "amount": 100,
+      "mint": "some_pubkey"
+    },
+    "freeze_sol_payment": {
+      "lamports": 100,
+      "destination": "some_pubkey"
+    },
+    "freeze_token_payment": {
+      "amount": 100,
+      "mint": "some_pubkey",
+      "destination_ata": "some_pubkey"
+    },
+    "program_gate": {
+      "additional": ["some_pubkey", "some_pubkey"]
+    },
+    "allocation": {
+      "id": 1,
+      "size": 100
+    }
+  }
+}

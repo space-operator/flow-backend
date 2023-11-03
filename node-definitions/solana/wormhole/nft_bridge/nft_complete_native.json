@@ -1,0 +1,116 @@
+{
+  "type": "native",
+  "data": {
+    "node_definition_version": "0.1",
+    "unique_id": "",
+    "node_id": "nft_complete_native",
+    "version": "0.1",
+    "display_name": "NFT Complete Native",
+    "description": "",
+    "tags": [],
+    "related_to": [
+      {
+        "id": "",
+        "type": "",
+        "relationship": ""
+      }
+    ],
+    "resources": {
+      "source_code_url": "node-registry/crates/cmds-solana/src/wormhole/nft_bridge/complete_native.rs",
+      "documentation_url": ""
+    },
+    "usage": {
+      "license": "Apache-2.0",
+      "license_url": "",
+      "pricing": {
+        "currency": "USDC",
+        "purchase_price": 0,
+        "price_per_run": 0,
+        "custom": {
+          "unit": "monthly",
+          "value": "0"
+        }
+      }
+    },
+    "authors": [
+      {
+        "name": "Space Operator",
+        "contact": ""
+      }
+    ],
+    "design": {
+      "width": 0,
+      "height": 0,
+      "icon_url": "",
+      "backgroundColorDark": "#000000",
+      "backgroundColor": "#fff"
+    },
+    "options": {}
+  },
+  "sources": [
+    {
+      "name": "token",
+      "type": "pubkey",
+      "defaultValue": null,
+      "tooltip": ""
+    },
+    {
+      "name": "signature",
+      "type": "signature",
+      "defaultValue": null,
+      "tooltip": ""
+    }
+  ],
+  "targets": [
+    {
+      "name": "payer",
+      "type_bounds": ["keypair"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": true
+    },
+    {
+      "name": "vaa",
+      "type_bounds": ["bytes"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "payload",
+      "type_bounds": ["json"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "vaa_hash",
+      "type_bounds": ["bytes"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "to_authority",
+      "type_bounds": ["pubkey"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "submit",
+      "type_bounds": ["bool"],
+      "required": false,
+      "defaultValue": true,
+      "tooltip": "",
+      "passthrough": false
+    }
+  ],
+  "targets_form.json_schema": {},
+  "targets_form.ui_schema": {}
+}

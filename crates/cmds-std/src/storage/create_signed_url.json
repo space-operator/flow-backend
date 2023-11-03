@@ -1,0 +1,85 @@
+{
+  "type": "native",
+  "data": {
+    "node_id": "storage_create_signed_url",
+    "version": "0.1",
+    "display_name": "Create Signed URL",
+    "description": "Creates a signed URL. Use a signed URL to share a file for a fixed amount of time.\nSee: https://supabase.com/docs/reference/javascript/storage-from-createsignedurl",
+    "width": 0,
+    "height": 0,
+    "backgroundColor": "#fff"
+  },
+  "sources": [
+    {
+      "name": "url",
+      "type": "string",
+      "defaultValue": null,
+      "tooltip": ""
+    }
+  ],
+  "targets": [
+    {
+      "name": "key",
+      "type_bounds": [
+        "string"
+      ],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Full path to file, including bucket name. This is the value returned in 'Upload File''s key output.",
+      "passthrough": false
+    },
+    {
+      "name": "bucket",
+      "type_bounds": [
+        "string"
+      ],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Using 'key' often require knowing current user' ID. If you don't have this value, you can use 'bucket' + 'path' and the server will automatically insert user ID into the path.",
+      "passthrough": false
+    },
+    {
+      "name": "path",
+      "type_bounds": [
+        "string"
+      ],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Using 'key' often require knowing current user' ID. If you don't have this value, you can use 'bucket' + 'path' and the server will automatically insert user ID into the path.",
+      "passthrough": false
+    },
+    {
+      "name": "expires_in",
+      "type_bounds": [
+        "decimal"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "The number of seconds until the signed URL expires. For example, `60` for a URL which is valid for one minute.",
+      "passthrough": false
+    },
+    {
+      "name": "transform",
+      "type_bounds": [
+        "json"
+      ],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Transform the asset before serving it to the client. See: https://supabase.com/docs/reference/javascript/storage-from-createsignedurl",
+      "passthrough": false
+    },
+    {
+      "name": "download",
+      "type_bounds": [
+        "bool",
+        "string"
+      ],
+      "required": false,
+      "defaultValue": false,
+      "tooltip": "Triggers the file as a download if set to true. Set this parameter as the name of the file if you want to trigger the download with a different filename.",
+      "passthrough": false
+    }
+  ],
+  "targets_form.json_schema": {},
+  "targets_form.ui_schema": {}
+}

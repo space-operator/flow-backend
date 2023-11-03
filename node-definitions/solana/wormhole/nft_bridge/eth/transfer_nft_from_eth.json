@@ -1,0 +1,114 @@
+{
+  "type": "native",
+  "data": {
+    "node_definition_version": "0.1",
+    "unique_id": "",
+    "node_id": "transfer_nft_from_eth",
+    "version": "0.1",
+    "display_name": "Transfer NFT From ETH",
+    "description": "",
+    "tags": [],
+    "related_to": [
+      {
+        "id": "",
+        "type": "",
+        "relationship": ""
+      }
+    ],
+    "resources": {
+      "source_code_url": "node-registry/crates/cmds-solana/src/wormhole/nft_bridge/eth/transfer_nft_from_eth.rs",
+      "documentation_url": ""
+    },
+    "usage": {
+      "license": "Apache-2.0",
+      "license_url": "",
+      "pricing": {
+        "currency": "USDC",
+        "purchase_price": 0,
+        "price_per_run": 0,
+        "custom": {
+          "unit": "monthly",
+          "value": "0"
+        }
+      }
+    },
+    "authors": [
+      {
+        "name": "Space Operator",
+        "contact": ""
+      }
+    ],
+    "design": {
+      "width": 0,
+      "height": 0,
+      "icon_url": "",
+      "backgroundColorDark": "#0d2e51",
+      "backgroundColor": "#8DB7FB"
+    },
+    "options": {}
+  },
+  "sources": [
+    {
+      "name": "response",
+      "type": "json",
+      "defaultValue": null,
+      "tooltip": ""
+    },
+    {
+      "name": "emitter",
+      "type": "address",
+      "defaultValue": null,
+      "tooltip": ""
+    },
+    {
+      "name": "sequence",
+      "type": "u32",
+      "defaultValue": null,
+      "tooltip": ""
+    }
+  ],
+  "targets": [
+    {
+      "name": "keypair",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": true
+    },
+    {
+      "name": "network_name",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "token",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "token_id",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "recipient",
+      "type_bounds": ["pubkey"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    }
+  ],
+  "targets_form.json_schema": {},
+  "targets_form.ui_schema": {}
+}

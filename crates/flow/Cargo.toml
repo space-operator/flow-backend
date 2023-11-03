@@ -1,0 +1,41 @@
+[package]
+name = "flow"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+flow-lib = { workspace = true }
+value = { workspace = true }
+utils = { workspace = true }
+space-wasm = { workspace = true }
+
+anyhow = "1.0"
+bs58 = "0.4"
+chrono = "0.4"
+bytes = "1.2.1"
+futures = "0.3.21"
+petgraph = "0.6.2"
+inventory = "0.3"
+thiserror = "1.0.31"
+async-trait = "0.1.56"
+solana-sdk = { version = "1.14", default-features = false }
+tokio = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+hashbrown = { version = "0.13", features = ["serde"] }
+tower = "0.4"
+tokio-util = "0.7"
+tracing = "0.1"
+actix = "0.13"
+derive_more = "0.99"
+indexmap = "2"
+rust_decimal = { version = "1", features = ["serde-with-float"] }
+reqwest = { version = "0.11.18", features = ["json"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-log = "0.1.3"
+mime_guess = "2.0.4"
+
+[dev-dependencies]
+cmds-std = { workspace = true }
+cmds-solana = { workspace = true }

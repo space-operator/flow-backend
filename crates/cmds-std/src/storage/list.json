@@ -1,0 +1,44 @@
+{
+  "type": "native",
+  "data": {
+    "node_id": "storage_list",
+    "version": "0.1",
+    "display_name": "List Files",
+    "description": "",
+    "width": 0,
+    "height": 0,
+    "backgroundColor": "#fff"
+  },
+  "sources": [
+    {
+      "name": "files",
+      "type": "array",
+      "defaultValue": null,
+      "tooltip": ""
+    }
+  ],
+  "targets": [
+    {
+      "name": "bucket",
+      "type_bounds": [
+        "string"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "path",
+      "type_bounds": [
+        "string"
+      ],
+      "required": false,
+      "defaultValue": "",
+      "tooltip": "",
+      "passthrough": false
+    }
+  ],
+  "targets_form.json_schema": {},
+  "targets_form.ui_schema": {}
+}
