@@ -1,0 +1,35 @@
+host = "0.0.0.0"
+port = 8080
+
+# Path to store local storage
+local_storage = "_data/guest_local_storage"
+
+# Allow CORS from these origins
+cors_origins = [
+    "https://spaceoperator.com",
+    "https://www.spaceoperator.com",
+    "http://localhost:3000",
+]
+
+[supabase]
+# Supabase project's ID
+project_id = ""
+# Supabase JWT secret
+jwt_key = ""
+# Supabase service_role key
+service_key = ""
+# Supabase anon key
+anon_key = ""
+# (Optional) Custom URL for Supabase project
+endpoint = "https://base.spaceoperator.com"
+
+[db]
+host = ""
+port = 5432
+user = ""
+password = ""
+dbname = ""
+
+[db.ssl]
+# (Optional) Path to certificate file for TLS connection
+cert = "prod-ca-2021.crt"
