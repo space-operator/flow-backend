@@ -10,7 +10,7 @@ use std::io::Write;
 const NAME: &str = "verify_signatures";
 
 const DEFINITION: &str =
-    include_str!("../../../../node-definitions/solana/wormhole/verify_signatures.json");
+    include_str!("../../node-definitions/solana/wormhole/verify_signatures.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

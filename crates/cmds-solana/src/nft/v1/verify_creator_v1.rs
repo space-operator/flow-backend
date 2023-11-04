@@ -6,7 +6,7 @@ use solana_program::{system_program, sysvar};
 const NAME: &str = "verify_creator_v1";
 
 const DEFINITION: &str =
-    include_str!("../../../../../node-definitions/solana/NFT/v1/verify_creator_v1.json");
+    include_str!("../../../node-definitions/solana/NFT/v1/verify_creator_v1.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

@@ -14,7 +14,7 @@ use super::{Address, CompleteWrappedMetaData, NFTBridgeInstructions, PayloadTran
 const NAME: &str = "nft_complete_wrapped_meta";
 
 const DEFINITION: &str = include_str!(
-    "../../../../../node-definitions/solana/wormhole/nft_bridge/nft_complete_wrapped_meta.json"
+    "../../../node-definitions/solana/wormhole/nft_bridge/nft_complete_wrapped_meta.json"
 );
 
 fn build() -> BuildResult {

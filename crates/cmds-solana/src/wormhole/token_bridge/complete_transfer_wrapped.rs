@@ -14,7 +14,7 @@ use super::{Address, CompleteWrappedData, PayloadTransfer, TokenBridgeInstructio
 const NAME: &str = "complete_transfer_wrapped";
 
 const DEFINITION: &str = include_str!(
-    "../../../../../node-definitions/solana/wormhole/token_bridge/complete_transfer_wrapped.json"
+    "../../../node-definitions/solana/wormhole/token_bridge/complete_transfer_wrapped.json"
 );
 
 fn build() -> BuildResult {

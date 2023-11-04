@@ -12,9 +12,8 @@ use super::{CompleteNativeData, NFTBridgeInstructions, PayloadTransfer};
 // Command Name
 const NAME: &str = "nft_complete_native";
 
-const DEFINITION: &str = include_str!(
-    "../../../../../node-definitions/solana/wormhole/nft_bridge/nft_complete_native.json"
-);
+const DEFINITION: &str =
+    include_str!("../../../node-definitions/solana/wormhole/nft_bridge/nft_complete_native.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

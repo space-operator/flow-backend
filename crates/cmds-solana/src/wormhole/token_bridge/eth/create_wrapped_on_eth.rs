@@ -12,7 +12,7 @@ use super::Receipt;
 const NAME: &str = "create_wrapped_on_eth";
 
 const DEFINITION: &str = include_str!(
-    "../../../../../../node-definitions/solana/wormhole/token_bridge/eth/create_wrapped_on_eth.json"
+    "../../../../node-definitions/solana/wormhole/token_bridge/eth/create_wrapped_on_eth.json"
 );
 
 fn build() -> BuildResult {

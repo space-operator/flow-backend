@@ -7,7 +7,7 @@ use crate::{
 const NAME: &str = "redeem_on_eth";
 
 const DEFINITION: &str = include_str!(
-    "../../../../../../node-definitions/solana/wormhole/token_bridge/eth/redeem_on_eth.json"
+    "../../../../node-definitions/solana/wormhole/token_bridge/eth/redeem_on_eth.json"
 );
 
 fn build() -> BuildResult {

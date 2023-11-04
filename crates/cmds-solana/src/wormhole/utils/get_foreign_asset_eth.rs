@@ -3,9 +3,8 @@ use crate::{prelude::*, wormhole::token_bridge::eth::GetForeignAddress};
 // Command Name
 const NAME: &str = "get_foreign_asset_eth";
 
-const DEFINITION: &str = include_str!(
-    "../../../../../node-definitions/solana/wormhole/utils/get_foreign_asset_eth.json"
-);
+const DEFINITION: &str =
+    include_str!("../../../node-definitions/solana/wormhole/utils/get_foreign_asset_eth.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

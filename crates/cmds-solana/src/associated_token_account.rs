@@ -4,8 +4,7 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 
 const SOLANA_ASSOCIATED_TOKEN_ACCOUNT: &str = "associated_token_account";
 
-const DEFINITION: &str =
-    include_str!("../../../node-definitions/solana/associated_token_account.json");
+const DEFINITION: &str = include_str!("../node-definitions/solana/associated_token_account.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

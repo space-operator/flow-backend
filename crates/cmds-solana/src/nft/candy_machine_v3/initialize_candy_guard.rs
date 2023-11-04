@@ -8,7 +8,7 @@ use solana_sdk::pubkey::Pubkey;
 const INITIALIZE_CANDY_GUARD: &str = "initialize_candy_guard";
 
 const DEFINITION: &str = include_str!(
-    "../../../../../node-definitions/solana/NFT/candy_machine/initialize_candy_guard.json"
+    "../../../node-definitions/solana/NFT/candy_machine/initialize_candy_guard.json"
 );
 
 fn build() -> BuildResult {

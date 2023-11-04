@@ -11,7 +11,7 @@ use std::mem::size_of;
 const CREATE_TREE: &str = "create_tree";
 
 const DEFINITION: &str =
-    include_str!("../../../../node-definitions/solana/compression/create_tree.json");
+    include_str!("../../node-definitions/solana/compression/create_tree.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

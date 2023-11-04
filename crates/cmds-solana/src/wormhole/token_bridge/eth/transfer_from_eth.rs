@@ -4,7 +4,7 @@ use crate::{prelude::*, wormhole::token_bridge::eth::Response as ServerlessOutpu
 const NAME: &str = "transfer_from_eth";
 
 const DEFINITION: &str = include_str!(
-    "../../../../../../node-definitions/solana/wormhole/token_bridge/eth/transfer_from_eth.json"
+    "../../../../node-definitions/solana/wormhole/token_bridge/eth/transfer_from_eth.json"
 );
 
 fn build() -> BuildResult {

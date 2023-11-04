@@ -4,7 +4,7 @@ use crate::prelude::*;
 const NAME: &str = "set_token_standard";
 
 const DEFINITION: &str =
-    include_str!("../../../../node-definitions/solana/NFT/set_token_standard.json");
+    include_str!("../../node-definitions/solana/NFT/set_token_standard.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

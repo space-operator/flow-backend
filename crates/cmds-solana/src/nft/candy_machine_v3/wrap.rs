@@ -7,7 +7,7 @@ use solana_sdk::pubkey::Pubkey;
 const WRAP: &str = "wrap";
 
 const DEFINITION: &str =
-    include_str!("../../../../../node-definitions/solana/NFT/candy_machine/wrap.json");
+    include_str!("../../../node-definitions/solana/NFT/candy_machine/wrap.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

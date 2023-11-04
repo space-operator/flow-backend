@@ -5,7 +5,7 @@ const NAME: &str = "request_airdrop";
 inventory::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = include_str!("../../../node-definitions/solana/request_airdrop.json");
+    const DEFINITION: &str = include_str!("../node-definitions/solana/request_airdrop.json");
     static CACHE: BuilderCache =
         BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))

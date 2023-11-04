@@ -4,7 +4,7 @@ use crate::prelude::*;
 const NAME: &str = "verify_collection";
 
 const DEFINITION: &str =
-    include_str!("../../../../node-definitions/solana/NFT/verify_collection.json");
+    include_str!("../../node-definitions/solana/NFT/verify_collection.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

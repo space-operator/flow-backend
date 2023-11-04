@@ -11,7 +11,7 @@ use super::{get_sequence_number, AttestTokenData, SequenceTracker, TokenBridgeIn
 const NAME: &str = "attest_token";
 
 const DEFINITION: &str =
-    include_str!("../../../../../node-definitions/solana/wormhole/token_bridge/attest.json");
+    include_str!("../../../node-definitions/solana/wormhole/token_bridge/attest.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

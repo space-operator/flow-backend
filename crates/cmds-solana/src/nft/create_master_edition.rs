@@ -9,7 +9,7 @@ use solana_program::system_program;
 const NAME: &str = "create_master_edition";
 
 const DEFINITION: &str =
-    include_str!("../../../../node-definitions/solana/NFT/create_master_edition.json");
+    include_str!("../../node-definitions/solana/NFT/create_master_edition.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

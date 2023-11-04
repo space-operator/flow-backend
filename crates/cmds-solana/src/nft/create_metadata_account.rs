@@ -8,7 +8,7 @@ use solana_sdk::pubkey::Pubkey;
 const NAME: &str = "create_metadata_account";
 
 const DEFINITION: &str =
-    include_str!("../../../../node-definitions/solana/NFT/create_metadata_account.json");
+    include_str!("../../node-definitions/solana/NFT/create_metadata_account.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

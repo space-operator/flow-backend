@@ -10,8 +10,7 @@ use super::{BridgeData, PostMessageData};
 // Command Name
 const NAME: &str = "post_message";
 
-const DEFINITION: &str =
-    include_str!("../../../../node-definitions/solana/wormhole/post_message.json");
+const DEFINITION: &str = include_str!("../../node-definitions/solana/wormhole/post_message.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

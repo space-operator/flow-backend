@@ -7,7 +7,7 @@ use solana_sdk::pubkey::Pubkey;
 const DELETE_INSTALL: &str = "delete_install";
 
 const DEFINITION: &str =
-    include_str!("../../../../node-definitions/solana/xnft/delete_install.json");
+    include_str!("../../node-definitions/solana/xnft/delete_install.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;
