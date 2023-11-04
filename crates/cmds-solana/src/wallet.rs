@@ -93,10 +93,12 @@ impl CommandTrait for Wallet {
             CmdOutput {
                 name: "pubkey".into(),
                 r#type: ValueType::Pubkey,
+                optional: false,
             },
             CmdOutput {
                 name: "keypair".into(),
                 r#type: ValueType::Keypair,
+                optional: false,
             },
         ]
         .to_vec()

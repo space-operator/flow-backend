@@ -7,7 +7,7 @@ use solana_sdk::pubkey::Pubkey;
 const CREATE_INSTALL: &str = "create_install";
 
 const DEFINITION: &str =
-    include_str!("../../../../node-definitions/solana/xnft/create_install.json");
+    flow_lib::node_definition!("solana/xnft/create_install.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

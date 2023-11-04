@@ -7,7 +7,7 @@ use spl_token::instruction::transfer_checked;
 
 const SOLANA_TRANSFER_TOKEN: &str = "transfer_token";
 
-const DEFINITION: &str = include_str!("../../../node-definitions/solana/transfer_token.json");
+const DEFINITION: &str = flow_lib::node_definition!("solana/transfer_token.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

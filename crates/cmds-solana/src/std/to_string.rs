@@ -36,6 +36,7 @@ impl CommandTrait for ToString {
         [CmdOutput {
             name: RESULT.into(),
             r#type: ValueType::String,
+            optional: false,
         }]
         .to_vec()
     }

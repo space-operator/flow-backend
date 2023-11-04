@@ -1664,11 +1664,17 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "bs58 0.4.0",
+ "bytes",
  "flow-lib",
+ "futures-util",
+ "mime_guess",
+ "reqwest",
+ "rust_decimal",
  "serde",
  "serde_json",
  "thiserror",
  "tokio",
+ "tracing",
 ]
 
 [[package]]

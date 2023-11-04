@@ -56,14 +56,17 @@ impl CommandTrait for Interflow {
             Output {
                 name: "fee_payer".into(),
                 r#type: ValueType::Pubkey,
+                optional: false,
             },
             Output {
                 name: "signers".into(),
                 r#type: ValueType::Array,
+                optional: false,
             },
             Output {
                 name: "instructions".into(),
                 r#type: ValueType::Array,
+                optional: false,
             },
         ]
         .into()

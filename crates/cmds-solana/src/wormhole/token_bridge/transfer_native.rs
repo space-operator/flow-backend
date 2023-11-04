@@ -13,9 +13,8 @@ use super::{
 // Command Name
 const NAME: &str = "transfer_native";
 
-const DEFINITION: &str = include_str!(
-    "../../../../../node-definitions/solana/wormhole/token_bridge/transfer_native.json"
-);
+const DEFINITION: &str =
+    flow_lib::node_definition!("solana/wormhole/token_bridge/transfer_native.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

@@ -6,7 +6,7 @@ inventory::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
     const DEFINITION: &str =
-        include_str!("../../../../node-definitions/solana/NFT/update_metadata_account.json");
+        flow_lib::node_definition!("solana/NFT/update_metadata_account.json");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?

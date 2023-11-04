@@ -741,8 +741,12 @@ impl<'a> serde::Serialize for Bytes<'a> {
 }
 
 pub mod default {
-    pub fn bool_true() -> bool {
+    pub const fn bool_true() -> bool {
         true
+    }
+
+    pub const fn bool_false() -> bool {
+        false
     }
 }
 

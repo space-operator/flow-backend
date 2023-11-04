@@ -62,6 +62,7 @@ impl CommandTrait for ArweaveFileUpload {
         [CmdOutput {
             name: FILE_URL.into(),
             r#type: ValueType::String,
+            optional: false,
         }]
         .to_vec()
     }

@@ -770,7 +770,7 @@ impl FlowGraph {
                     .command
                     .outputs()
                     .iter()
-                    .filter(|o| !output.contains_key(&o.name))
+                    .filter(|o| !o.optional && !output.contains_key(&o.name))
                     .map(|o| o.name.clone())
                     .collect::<Vec<String>>();
                 if !missing.is_empty() {

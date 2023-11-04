@@ -1,4 +1,4 @@
-use crate::command::prelude::*;
+use flow_lib::command::prelude::*;
 
 pub const FIRE_EXPLORER: &str = "fileexplorer";
 
@@ -16,6 +16,7 @@ impl ExplorerCommand {
             .map(|o| Output {
                 name: o.name.clone(),
                 r#type: o.r#type.clone(),
+                optional: false,
             })
             .collect();
         Self {
@@ -53,6 +54,6 @@ impl CommandTrait for ExplorerCommand {
     }
 }
 
-inventory::submit!(CommandDescription::new(FIRE_EXPLORER, |data: &NodeData| {
+flow_lib::submit!(CommandDescription::new(FIRE_EXPLORER, |data: &NodeData| {
     Ok(Box::new(ExplorerCommand::new(data)))
 }));

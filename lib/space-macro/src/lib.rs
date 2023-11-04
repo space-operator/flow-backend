@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Error, FnArg, ItemFn, PatType, Pat, PatIdent};
+use syn::{Error, FnArg, ItemFn, Pat, PatIdent, PatType};
 
 #[proc_macro_attribute]
 pub fn space(_: TokenStream, input: TokenStream) -> TokenStream {
@@ -16,7 +16,9 @@ pub fn space(_: TokenStream, input: TokenStream) -> TokenStream {
     let body = ast.block.stmts;
     let stub = match ast.sig.inputs.first() {
         Some(FnArg::Typed(PatType { pat, ty, .. })) => match &**pat {
-            Pat::Ident(PatIdent { mutability, ident, ..}) => quote! {
+            Pat::Ident(PatIdent {
+                mutability, ident, ..
+            }) => quote! {
                 let #ident = ::space_lib::rmp_serde::from_slice::<#ty>(__input_bytes).unwrap();
 
                 // Actual code

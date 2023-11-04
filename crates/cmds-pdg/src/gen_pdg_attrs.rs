@@ -13,7 +13,7 @@ const GEN_PDG_ATTRS: &str = "gen_pdg_attrs";
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(include_str!("./gen_pdg_attrs.json"))?.check_name(GEN_PDG_ATTRS)
+        CmdBuilder::new(flow_lib::node_definition!("gen_pdg_attrs.json"))?.check_name(GEN_PDG_ATTRS)
     });
     Ok(CACHE.clone()?.build(run))
 }

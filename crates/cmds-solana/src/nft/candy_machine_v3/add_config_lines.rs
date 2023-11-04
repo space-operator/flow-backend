@@ -11,7 +11,7 @@ use super::ConfigLine;
 const ADD_CONFIG_LINES: &str = "add_config_lines";
 
 const DEFINITION: &str =
-    include_str!("../../../../../node-definitions/solana/NFT/candy_machine/add_config_lines.json");
+    flow_lib::node_definition!("solana/NFT/candy_machine/add_config_lines.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

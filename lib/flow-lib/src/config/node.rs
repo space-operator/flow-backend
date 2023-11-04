@@ -26,6 +26,8 @@ pub struct Data {
 pub struct Source {
     pub name: String,
     pub r#type: super::ValueType,
+    #[serde(default = "value::default::bool_false")]
+    pub optional: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

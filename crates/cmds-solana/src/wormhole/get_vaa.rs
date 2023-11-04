@@ -6,7 +6,7 @@ use tokio::time::sleep;
 // Command Name
 const NAME: &str = "get_vaa";
 
-const DEFINITION: &str = include_str!("../../../../node-definitions/solana/wormhole/get_vaa.json");
+const DEFINITION: &str = flow_lib::node_definition!("solana/wormhole/get_vaa.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

@@ -1,7 +1,7 @@
 use super::FileSpec;
-use crate::command::{prelude::*, supabase_error};
+use crate::supabase_error;
 use anyhow::anyhow;
-use flow_lib::config::node::Permissions;
+use flow_lib::command::prelude::*;
 use reqwest::{
     header::{AUTHORIZATION, CONTENT_TYPE, LAST_MODIFIED},
     StatusCode,
@@ -9,7 +9,7 @@ use reqwest::{
 
 pub const NAME: &str = "storage_get_file_metadata";
 
-const DEFINITION: &str = include_str!("get_file_metadata.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/get_file_metadata.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -21,7 +21,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(NAME, |_| build()));
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 #[derive(Serialize)]
 struct Output {

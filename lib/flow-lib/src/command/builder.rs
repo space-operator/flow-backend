@@ -223,6 +223,7 @@ impl CmdBuilder {
                 .map(|x| crate::CmdOutputDescription {
                     name: x.name,
                     r#type: x.r#type,
+                    optional: x.optional,
                 })
                 .collect(),
             instruction_info: None,

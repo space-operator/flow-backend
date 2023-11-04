@@ -16,8 +16,8 @@ pub mod delete_apikey;
 pub mod kvstore;
 
 pub mod auth_proxy;
-pub mod db_rpc;
 pub mod db_push_logs;
+pub mod db_rpc;
 pub mod ws_auth_proxy;
 
 pub mod prelude {

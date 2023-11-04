@@ -13,9 +13,8 @@ use super::{CreateWrappedData, PayloadAssetMeta, TokenBridgeInstructions};
 // Command Name
 const NAME: &str = "create_wrapped";
 
-const DEFINITION: &str = include_str!(
-    "../../../../../node-definitions/solana/wormhole/token_bridge/create_wrapped.json"
-);
+const DEFINITION: &str =
+    flow_lib::node_definition!("solana/wormhole/token_bridge/create_wrapped.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

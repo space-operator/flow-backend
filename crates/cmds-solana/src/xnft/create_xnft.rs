@@ -9,7 +9,7 @@ use super::CreateXnftParams;
 // Command Name
 const CREATE_XNFT: &str = "create_xnft";
 
-const DEFINITION: &str = include_str!("../../../../node-definitions/solana/xnft/create_xnft.json");
+const DEFINITION: &str = flow_lib::node_definition!("solana/xnft/create_xnft.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

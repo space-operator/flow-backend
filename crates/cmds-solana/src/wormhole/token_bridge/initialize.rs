@@ -9,8 +9,7 @@ use super::TokenBridgeInstructions;
 // Command Name
 const NAME: &str = "initialize_token_bridge";
 
-const DEFINITION: &str =
-    include_str!("../../../../../node-definitions/solana/wormhole/token_bridge/initialize.json");
+const DEFINITION: &str = flow_lib::node_definition!("solana/wormhole/token_bridge/initialize.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

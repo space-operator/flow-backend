@@ -51,6 +51,7 @@
     {
       "name": "old_value",
       "type": "free",
+      "optional": true,
       "defaultValue": null,
       "tooltip": ""
     }

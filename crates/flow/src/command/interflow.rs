@@ -37,6 +37,7 @@ impl Interflow {
             .map(|x| Output {
                 name: x.name.clone(),
                 r#type: ValueType::Free,
+                optional: false,
             })
             .collect();
 

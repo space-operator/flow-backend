@@ -5,7 +5,7 @@ const NAME: &str = "transfer_sol";
 inventory::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = include_str!("../../../node-definitions/solana/transfer_sol.json");
+    const DEFINITION: &str = flow_lib::node_definition!("solana/transfer_sol.json");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?

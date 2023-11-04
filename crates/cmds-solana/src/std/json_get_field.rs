@@ -58,10 +58,12 @@ impl CommandTrait for JsonGetField {
             CmdOutput {
                 name: RESULT_JSON.into(),
                 r#type: ValueType::Json,
+                optional: false,
             },
             CmdOutput {
                 name: RESULT_STRING.into(),
                 r#type: ValueType::String,
+                optional: false,
             },
         ]
         .to_vec()

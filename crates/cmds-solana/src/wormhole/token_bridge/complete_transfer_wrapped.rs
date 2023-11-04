@@ -13,9 +13,8 @@ use super::{Address, CompleteWrappedData, PayloadTransfer, TokenBridgeInstructio
 // Command Name
 const NAME: &str = "complete_transfer_wrapped";
 
-const DEFINITION: &str = include_str!(
-    "../../../../../node-definitions/solana/wormhole/token_bridge/complete_transfer_wrapped.json"
-);
+const DEFINITION: &str =
+    flow_lib::node_definition!("solana/wormhole/token_bridge/complete_transfer_wrapped.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

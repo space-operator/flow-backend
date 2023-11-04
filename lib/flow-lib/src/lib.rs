@@ -25,3 +25,20 @@ pub use config::{
 pub use context::{Context, User};
 pub use inventory::submit;
 pub use value::{self, Error as ValueError, Value};
+
+/// Helper macro to read node definition file at compile-time.
+///
+/// `node_definition!("node.json")` will expand to read file at
+/// `$CARGO_MANIFEST_DIR/node-definitions/node.json`.
+///
+/// See: [CARGO_MANIFEST_DIR](https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates).
+#[macro_export]
+macro_rules! node_definition {
+    ($file:expr $(,)?) => {
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/node-definitions/",
+            $file
+        ))
+    };
+}

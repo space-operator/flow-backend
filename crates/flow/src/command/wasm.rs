@@ -43,6 +43,7 @@ impl CommandTrait for WasmCommand {
             .map(|it| Output {
                 name: it.name.clone(),
                 r#type: it.r#type.clone(),
+                optional: false,
             })
             .collect()
     }

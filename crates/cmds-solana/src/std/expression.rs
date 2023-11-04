@@ -55,6 +55,7 @@ impl CommandTrait for ScriptCommand {
         [CmdOutput {
             name: OUTPUT.into(),
             r#type: ValueType::Free,
+            optional: false,
         }]
         .to_vec()
     }

@@ -29,6 +29,7 @@ impl CommandTrait for Collect {
         [Output {
             name: ARRAY.into(),
             r#type: ValueType::Free,
+            optional: false,
         }]
         .to_vec()
     }

@@ -96,6 +96,8 @@ pub struct CmdInputDescription {
 pub struct CmdOutputDescription {
     pub name: Name,
     pub r#type: ValueType,
+    #[serde(default = "value::default::bool_false")]
+    pub optional: bool,
 }
 
 /// An input or output gate of a node

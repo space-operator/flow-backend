@@ -1,13 +1,13 @@
 use super::FileSpec;
-use crate::command::{prelude::*, supabase_error};
-use flow_lib::config::node::Permissions;
+use crate::supabase_error;
+use flow_lib::command::prelude::*;
 use reqwest::{header::AUTHORIZATION, StatusCode};
 use rust_decimal::Decimal;
 use std::borrow::Cow;
 
 pub const NAME: &str = "storage_create_signed_url";
 
-const DEFINITION: &str = include_str!("create_signed_url.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/create_signed_url.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -19,7 +19,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(NAME, |_| build()));
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 #[derive(Serialize, Deserialize, Default)]
 struct Transform {
