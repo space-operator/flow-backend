@@ -15,7 +15,7 @@ const NAME: &str = "gen_metaplex_attrs";
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(include_str!("./gen_metaplex_attrs.json"))?.check_name(NAME)
+        CmdBuilder::new(flow_lib::node_definition!("gen_metaplex_attrs.json"))?.check_name(NAME)
     });
     Ok(CACHE.clone()?.build(run))
 }

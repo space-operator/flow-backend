@@ -23,7 +23,7 @@ const PDG_RENDER: &str = "pdg_render";
 
 fn build() -> BuildResult {
     static CACHE: Lazy<Result<CmdBuilder, BuilderError>> =
-        Lazy::new(|| CmdBuilder::new(include_str!("pdg_render.json"))?.check_name(PDG_RENDER));
+        Lazy::new(|| CmdBuilder::new(flow_lib::node_definition!("pdg_render.json"))?.check_name(PDG_RENDER));
     Ok(CACHE.clone()?.build(run))
 }
 

@@ -12,7 +12,7 @@ const PARSE_PDG_ATTRS: &str = "parse_pdg_attrs";
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(include_str!("./parse_pdg_attrs.json"))?.check_name(PARSE_PDG_ATTRS)
+        CmdBuilder::new(flow_lib::node_definition!("parse_pdg_attrs.json"))?.check_name(PARSE_PDG_ATTRS)
     });
     Ok(CACHE.clone()?.build(run))
 }
