@@ -24,7 +24,7 @@ pub mod prelude {
             builder::{BuildResult, BuilderCache, CmdBuilder},
             CommandDescription, CommandError, CommandTrait,
         },
-        config::client::NodeData,
+        config::{client::NodeData, node::Permissions},
         context::Context,
         CmdInputDescription as Input, CmdOutputDescription as Output, FlowId, Name, ValueSet,
         ValueType,

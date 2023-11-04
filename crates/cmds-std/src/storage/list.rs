@@ -1,12 +1,12 @@
-use crate::command::{prelude::*, supabase_error};
-use flow_lib::config::node::Permissions;
+use crate::supabase_error;
+use flow_lib::command::prelude::*;
 use reqwest::{header::AUTHORIZATION, StatusCode};
 use serde_json::json;
 use std::path::PathBuf;
 
 pub const NAME: &str = "storage_list";
 
-const DEFINITION: &str = flow_lib::node_definition!("kvstore/list.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/list.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -18,7 +18,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(NAME, |_| build()));
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 #[derive(Serialize, Deserialize)]
 struct Input {

@@ -1,6 +1,6 @@
-use crate::command::{prelude::*, supabase_error};
+use crate::supabase_error;
 use anyhow::anyhow;
-use flow_lib::config::node::Permissions;
+use flow_lib::command::prelude::*;
 use reqwest::{header::AUTHORIZATION, StatusCode};
 
 pub const NAME: &str = "kv_delete_store";
@@ -17,7 +17,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(NAME, |_| build()));
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 #[derive(Serialize, Deserialize)]
 struct Input {

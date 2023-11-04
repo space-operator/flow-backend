@@ -1,7 +1,7 @@
 use super::read_item::SuccessBody;
-use crate::command::{prelude::*, supabase_error};
-use flow_lib::config::node::Permissions;
-use futures::future::join_all;
+use crate::supabase_error;
+use flow_lib::command::prelude::*;
+use futures_util::future::join_all;
 use reqwest::{header::AUTHORIZATION, StatusCode};
 
 pub const KV_EXPLORER: &str = "kvexplorer";
@@ -29,6 +29,7 @@ impl ExplorerCommand {
             .map(|o| Output {
                 name: o.name.clone(),
                 r#type: o.r#type.clone(),
+                optional: false,
             })
             .collect();
         let pinned = serde_json::from_value::<Vec<String>>(
@@ -141,6 +142,6 @@ impl CommandTrait for ExplorerCommand {
     }
 }
 
-inventory::submit!(CommandDescription::new(KV_EXPLORER, |data: &NodeData| {
+flow_lib::submit!(CommandDescription::new(KV_EXPLORER, |data: &NodeData| {
     Ok(Box::new(ExplorerCommand::new(data)?))
 }));

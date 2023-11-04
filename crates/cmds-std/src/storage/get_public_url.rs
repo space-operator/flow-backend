@@ -1,9 +1,9 @@
 use super::FileSpec;
-use crate::command::prelude::*;
+use flow_lib::command::prelude::*;
 
 pub const NAME: &str = "storage_get_public_url";
 
-const DEFINITION: &str = flow_lib::node_definition!("kvstore/get_public_url.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/get_public_url.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
@@ -12,7 +12,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(NAME, |_| build()));
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 #[derive(Serialize)]
 struct Output {
