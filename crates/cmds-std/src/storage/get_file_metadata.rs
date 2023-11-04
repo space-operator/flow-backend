@@ -9,7 +9,7 @@ use reqwest::{
 
 pub const NAME: &str = "storage_get_file_metadata";
 
-const DEFINITION: &str = include_str!("get_file_metadata.json");
+const DEFINITION: &str = flow_lib::node_definition!("kvstore/get_file_metadata.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

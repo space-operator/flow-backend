@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 pub const NAME: &str = "storage_list";
 
-const DEFINITION: &str = include_str!("list.json");
+const DEFINITION: &str = flow_lib::node_definition!("kvstore/list.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

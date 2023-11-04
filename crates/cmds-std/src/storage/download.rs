@@ -8,7 +8,7 @@ use reqwest::{
 
 pub const NAME: &str = "storage_download";
 
-const DEFINITION: &str = include_str!("download.json");
+const DEFINITION: &str = flow_lib::node_definition!("kvstore/download.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
