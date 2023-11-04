@@ -13,7 +13,7 @@ use super::{CompleteNativeData, PayloadTransfer, TokenBridgeInstructions};
 const NAME: &str = "complete_native";
 
 const DEFINITION: &str =
-    include_str!("../../../node-definitions/solana/wormhole/token_bridge/complete_native.json");
+    flow_lib::node_definition!("solana/wormhole/token_bridge/complete_native.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

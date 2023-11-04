@@ -3,7 +3,7 @@ use spl_token::instruction::mint_to_checked;
 
 const SOLANA_MINT_TOKEN: &str = "mint_token";
 
-const DEFINITION: &str = include_str!("../node-definitions/solana/mint_token.json");
+const DEFINITION: &str = flow_lib::node_definition!("solana/mint_token.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

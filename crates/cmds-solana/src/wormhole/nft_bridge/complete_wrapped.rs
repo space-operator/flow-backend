@@ -12,7 +12,7 @@ use super::{CompleteWrappedData, NFTBridgeInstructions, PayloadTransfer};
 const NAME: &str = "nft_complete_wrapped";
 
 const DEFINITION: &str =
-    include_str!("../../../node-definitions/solana/wormhole/nft_bridge/nft_complete_wrapped.json");
+    flow_lib::node_definition!("solana/wormhole/nft_bridge/nft_complete_wrapped.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

@@ -13,7 +13,7 @@ use super::{get_sequence_number, SequenceTracker, TokenBridgeInstructions, Trans
 const NAME: &str = "transfer_wrapped";
 
 const DEFINITION: &str =
-    include_str!("../../../node-definitions/solana/wormhole/token_bridge/transfer_wrapped.json");
+    flow_lib::node_definition!("solana/wormhole/token_bridge/transfer_wrapped.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

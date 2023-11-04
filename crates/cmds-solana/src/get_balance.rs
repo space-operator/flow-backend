@@ -5,7 +5,7 @@ const NAME: &str = "get_balance";
 inventory::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = include_str!("../node-definitions/solana/get_balance.json");
+    const DEFINITION: &str = flow_lib::node_definition!("solana/get_balance.json");
     static CACHE: BuilderCache =
         BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))

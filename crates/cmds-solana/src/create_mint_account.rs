@@ -5,7 +5,7 @@ use spl_token::state::Mint;
 
 const SOLANA_CREATE_MINT_ACCOUNT: &str = "create_mint_account";
 
-const DEFINITION: &str = include_str!("../node-definitions/solana/create_mint_account.json");
+const DEFINITION: &str = flow_lib::node_definition!("solana/create_mint_account.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

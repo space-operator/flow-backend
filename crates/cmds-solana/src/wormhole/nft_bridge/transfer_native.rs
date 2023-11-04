@@ -15,7 +15,7 @@ use super::{NFTBridgeInstructions, TransferNativeData};
 const NAME: &str = "nft_transfer_native";
 
 const DEFINITION: &str =
-    include_str!("../../../node-definitions/solana/wormhole/nft_bridge/nft_transfer_native.json");
+    flow_lib::node_definition!("solana/wormhole/nft_bridge/nft_transfer_native.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

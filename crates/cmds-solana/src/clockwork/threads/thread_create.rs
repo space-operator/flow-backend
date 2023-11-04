@@ -10,7 +10,7 @@ use solana_program::instruction::Instruction;
 const THREAD_CREATE: &str = "thread_create";
 
 const DEFINITION: &str =
-    include_str!("../../../node-definitions/solana/clockwork/threads/thread_create.json");
+    flow_lib::node_definition!("solana/clockwork/threads/thread_create.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

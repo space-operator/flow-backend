@@ -7,7 +7,7 @@ use solana_sdk::pubkey::Pubkey;
 const REMOVE_ACCESS: &str = "revoke_access";
 
 const DEFINITION: &str =
-    include_str!("../../node-definitions/solana/xnft/revoke_access.json");
+    flow_lib::node_definition!("solana/xnft/revoke_access.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

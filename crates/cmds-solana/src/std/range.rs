@@ -3,7 +3,7 @@ use crate::prelude::*;
 // Command Name
 const NAME: &str = "range";
 
-const DEFINITION: &str = include_str!("../../node-definitions/std/range.json");
+const DEFINITION: &str = flow_lib::node_definition!("std/range.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

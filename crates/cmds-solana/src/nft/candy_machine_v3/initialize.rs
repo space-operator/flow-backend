@@ -14,7 +14,7 @@ use mpl_token_metadata::{
 const INITIALIZE_CANDY_MACHINE: &str = "initialize_candy_machine";
 
 const DEFINITION: &str =
-    include_str!("../../../node-definitions/solana/NFT/candy_machine/initialize.json");
+    flow_lib::node_definition!("solana/NFT/candy_machine/initialize.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;
