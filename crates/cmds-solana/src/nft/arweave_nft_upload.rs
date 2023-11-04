@@ -113,10 +113,12 @@ impl CommandTrait for ArweaveNftUpload {
             CmdOutput {
                 name: METADATA_URL.into(),
                 r#type: ValueType::String,
+                optional: false,
             },
             CmdOutput {
                 name: UPDATED_METADATA.into(),
                 r#type: ValueType::Free,
+                optional: false,
             },
         ]
         .to_vec()

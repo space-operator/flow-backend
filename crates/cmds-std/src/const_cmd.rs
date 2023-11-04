@@ -127,6 +127,7 @@ impl CommandTrait for ConstCommand {
         [Output {
             name: SOURCE.into(),
             r#type: self.inner.r#type.clone(),
+            optional: false,
         }]
         .to_vec()
     }

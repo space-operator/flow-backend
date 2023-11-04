@@ -5,7 +5,7 @@ use reqwest::{header::AUTHORIZATION, StatusCode};
 
 pub const NAME: &str = "kv_create_store";
 
-const DEFINITION: &str = include_str!("create_store.json");
+const DEFINITION: &str = flow_lib::node_definition!("kvstore/create_store.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

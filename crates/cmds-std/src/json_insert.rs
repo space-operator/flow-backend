@@ -25,7 +25,7 @@ async fn run(_: Context, mut input: Input) -> Result<Output, CommandError> {
 
 fn build() -> BuildResult {
     Ok(
-        CmdBuilder::new(crate::node_definition!("json_insert.json"))?
+        CmdBuilder::new(flow_lib::node_definition!("json_insert.json"))?
             .check_name(JSON_INSERT)?
             .build(run),
     )

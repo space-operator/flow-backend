@@ -41,6 +41,7 @@ impl CommandTrait for FlowOutputCommand {
         [Output {
             name: self.rename.clone(),
             r#type: ValueType::Free,
+            optional: false,
         }]
         .to_vec()
     }

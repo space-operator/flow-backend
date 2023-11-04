@@ -37,6 +37,7 @@ impl CommandTrait for FlowInputCommand {
         [Output {
             name: OUTPUT.into(),
             r#type: ValueType::Free,
+            optional: false,
         }]
         .to_vec()
     }

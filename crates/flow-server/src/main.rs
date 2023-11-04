@@ -16,9 +16,9 @@ use std::convert::Infallible;
 use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
+use cmds_pdg as _;
 use cmds_solana as _;
 use cmds_std as _;
-use cmds_pdg as _;
 
 #[actix::main]
 async fn main() {

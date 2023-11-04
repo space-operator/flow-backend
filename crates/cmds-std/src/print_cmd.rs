@@ -32,6 +32,7 @@ impl CommandTrait for PrintCommand {
         [Output {
             name: PRINT_OUTPUT.into(),
             r#type: ValueType::String,
+            optional: false,
         }]
         .to_vec()
     }

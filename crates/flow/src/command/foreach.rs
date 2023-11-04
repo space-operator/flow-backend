@@ -29,6 +29,7 @@ impl CommandTrait for Foreach {
         [Output {
             name: ELEMENT.into(),
             r#type: ValueType::Free,
+            optional: false,
         }]
         .to_vec()
     }

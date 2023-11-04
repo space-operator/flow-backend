@@ -77,6 +77,7 @@ impl CommandTrait for FindPDA {
         [CmdOutput {
             name: PDA.into(),
             r#type: ValueType::Pubkey,
+            optional: false,
         }]
         .to_vec()
     }

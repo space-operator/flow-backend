@@ -52,6 +52,7 @@ impl CommandTrait for ToVec {
         [CmdOutput {
             name: RESULT.into(),
             r#type: ValueType::Array,
+            optional: false,
         }]
         .to_vec()
     }

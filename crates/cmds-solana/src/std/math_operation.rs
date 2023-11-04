@@ -76,18 +76,22 @@ impl CommandTrait for MathOperation {
             CmdOutput {
                 name: RESULT_F64.into(),
                 r#type: ValueType::F64,
+                optional: false,
             },
             CmdOutput {
                 name: RESULT_U64.into(),
                 r#type: ValueType::U64,
+                optional: false,
             },
             CmdOutput {
                 name: RESULT_I64.into(),
                 r#type: ValueType::I64,
+                optional: false,
             },
             CmdOutput {
                 name: RESULT_STRING.into(),
                 r#type: ValueType::String,
+                optional: false,
             },
         ]
         .to_vec()
