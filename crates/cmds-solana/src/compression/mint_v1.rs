@@ -21,7 +21,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(MINT_COMPRESSED_NFT, |_| {
+flow_lib::submit!(CommandDescription::new(MINT_COMPRESSED_NFT, |_| {
     build()
 }));
 

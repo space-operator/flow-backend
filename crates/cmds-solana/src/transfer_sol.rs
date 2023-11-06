@@ -2,7 +2,7 @@ use crate::{prelude::*, utils::sol_to_lamports};
 
 const NAME: &str = "transfer_sol";
 
-inventory::submit!(CommandDescription::new(NAME, |_| build()));
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
     const DEFINITION: &str = flow_lib::node_definition!("solana/transfer_sol.json");

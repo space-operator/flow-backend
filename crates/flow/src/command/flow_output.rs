@@ -54,6 +54,6 @@ impl CommandTrait for FlowOutputCommand {
     }
 }
 
-inventory::submit!(CommandDescription::new(FLOW_OUTPUT, |data: &NodeData| {
+flow_lib::submit!(CommandDescription::new(FLOW_OUTPUT, |data: &NodeData| {
     Ok(Box::new(FlowOutputCommand::new(data)))
 }));

@@ -13,7 +13,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(HTTP_REQUEST, |_| build()));
+flow_lib::submit!(CommandDescription::new(HTTP_REQUEST, |_| build()));
 
 fn default_method() -> String {
     "GET".to_owned()

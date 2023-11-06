@@ -112,7 +112,7 @@ impl CommandTrait for Wallet {
     }
 }
 
-inventory::submit!(CommandDescription::new(WALLET, |nd| {
+flow_lib::submit!(CommandDescription::new(WALLET, |nd| {
     Ok(Box::new(Wallet::new(nd)))
 }));
 

@@ -134,4 +134,4 @@ impl CommandTrait for FindPDA {
     }
 }
 
-inventory::submit!(CommandDescription::new(FIND_PDA, |_| Ok(Box::new(FindPDA))));
+flow_lib::submit!(CommandDescription::new(FIND_PDA, |_| Ok(Box::new(FindPDA))));

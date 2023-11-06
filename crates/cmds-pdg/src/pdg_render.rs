@@ -28,7 +28,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(PDG_RENDER, |_| build()));
+flow_lib::submit!(CommandDescription::new(PDG_RENDER, |_| build()));
 
 fn default_url() -> String {
     // "ws://127.0.0.1:8081/render".to_owned()

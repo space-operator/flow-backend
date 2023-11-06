@@ -118,7 +118,7 @@ impl CommandTrait for Interflow {
     }
 }
 
-inventory::submit!(CommandDescription::new(
+flow_lib::submit!(CommandDescription::new(
     INTERFLOW_INSTRUCTIONS,
     |data: &NodeData| { Ok(Box::new(Interflow::new(data)?)) }
 ));

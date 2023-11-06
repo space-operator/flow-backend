@@ -70,4 +70,4 @@ impl CommandTrait for ToVec {
     }
 }
 
-inventory::submit!(CommandDescription::new(TO_VEC, |_| Ok(Box::new(ToVec {}))));
+flow_lib::submit!(CommandDescription::new(TO_VEC, |_| Ok(Box::new(ToVec {}))));

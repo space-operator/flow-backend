@@ -1,5 +1,6 @@
 [workspace]
 members = ["lib/*", "crates/*"]
+exclude = ["crates/space-wasm/tests"]
 resolver = "2"
 
 [profile.dev]

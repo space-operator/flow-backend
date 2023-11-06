@@ -88,6 +88,6 @@ impl CommandTrait for UpdateName {
     }
 }
 
-inventory::submit!(CommandDescription::new(UPDATE_NAME, |_| Ok(Box::new(
+flow_lib::submit!(CommandDescription::new(UPDATE_NAME, |_| Ok(Box::new(
     UpdateName
 ))));

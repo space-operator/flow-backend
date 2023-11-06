@@ -152,6 +152,6 @@ impl CommandTrait for UpdatePayment {
     }
 }
 
-inventory::submit!(CommandDescription::new(UPDATE_PAYMENT, |_| {
+flow_lib::submit!(CommandDescription::new(UPDATE_PAYMENT, |_| {
     Ok(Box::new(UpdatePayment))
 }));

@@ -18,7 +18,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(GRANT_ACCESS, |_| { build() }));
+flow_lib::submit!(CommandDescription::new(GRANT_ACCESS, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {

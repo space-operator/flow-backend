@@ -23,7 +23,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(ADD_CONFIG_LINES, |_| { build() }));
+flow_lib::submit!(CommandDescription::new(ADD_CONFIG_LINES, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {

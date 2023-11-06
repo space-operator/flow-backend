@@ -63,6 +63,6 @@ impl CommandTrait for ToString {
     }
 }
 
-inventory::submit!(CommandDescription::new(TO_STRING, |_| Ok(Box::new(
+flow_lib::submit!(CommandDescription::new(TO_STRING, |_| Ok(Box::new(
     ToString
 ))));

@@ -127,6 +127,6 @@ impl CommandTrait for CreateProxyAuthority {
     }
 }
 
-inventory::submit!(CommandDescription::new(CREATE_PROXY_AUTHORITY, |_| {
+flow_lib::submit!(CommandDescription::new(CREATE_PROXY_AUTHORITY, |_| {
     Ok(Box::new(CreateProxyAuthority))
 }));

@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 const NAME: &str = "request_airdrop";
 
-inventory::submit!(CommandDescription::new(NAME, |_| build()));
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
     const DEFINITION: &str = flow_lib::node_definition!("solana/request_airdrop.json");

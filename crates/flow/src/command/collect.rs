@@ -50,6 +50,6 @@ impl CommandTrait for Collect {
     }
 }
 
-inventory::submit!(CommandDescription::new(COLLECT, |_| {
+flow_lib::submit!(CommandDescription::new(COLLECT, |_| {
     Ok(Box::new(Collect))
 }));

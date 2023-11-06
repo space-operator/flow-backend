@@ -116,6 +116,6 @@ impl CommandTrait for ThreadDelete {
     }
 }
 
-inventory::submit!(CommandDescription::new(THREAD_DELETE, |_| {
+flow_lib::submit!(CommandDescription::new(THREAD_DELETE, |_| {
     Ok(Box::new(ThreadDelete))
 }));

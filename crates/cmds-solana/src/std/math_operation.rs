@@ -175,7 +175,7 @@ impl CommandTrait for MathOperation {
     }
 }
 
-inventory::submit!(CommandDescription::new(MATH_OPERATION, |_| Ok(Box::new(
+flow_lib::submit!(CommandDescription::new(MATH_OPERATION, |_| Ok(Box::new(
     MathOperation {}
 ))));
 

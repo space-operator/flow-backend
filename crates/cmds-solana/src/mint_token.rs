@@ -14,7 +14,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(SOLANA_MINT_TOKEN, |_| build()));
+flow_lib::submit!(CommandDescription::new(SOLANA_MINT_TOKEN, |_| build()));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {

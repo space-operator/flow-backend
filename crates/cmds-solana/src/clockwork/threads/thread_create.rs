@@ -22,7 +22,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(THREAD_CREATE, |_| { build() }));
+flow_lib::submit!(CommandDescription::new(THREAD_CREATE, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {

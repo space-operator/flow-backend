@@ -19,7 +19,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(DELETE_INSTALL, |_| { build() }));
+flow_lib::submit!(CommandDescription::new(DELETE_INSTALL, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
