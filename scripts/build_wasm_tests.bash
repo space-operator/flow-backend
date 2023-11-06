@@ -6,7 +6,7 @@ TARGET_DIR="$PWD/target/"
 for d in ./crates/space-wasm/tests/* ; do
     if [ -d "$d" ]; then
         pushd "$d" > /dev/null
-        if ! [ -d "target/" ] && [ "$1" = "sub" ]; then
+        if ! [ -d "target/" ] && [ "${1-}" = "sub" ]; then
             btrfs subvolume create target/
         fi
         cargo build --release --quiet
