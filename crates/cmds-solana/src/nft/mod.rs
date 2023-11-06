@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 // pub mod approve_use_authority;
 pub mod arweave_file_upload;
 pub mod arweave_nft_upload;
-// pub mod candy_machine_v3;
+pub mod candy_machine_v3;
 pub mod create_master_edition;
 pub mod create_metadata_account;
 pub mod v1;
