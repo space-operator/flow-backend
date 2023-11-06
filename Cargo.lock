@@ -1620,6 +1620,7 @@ dependencies = [
  "futures",
  "hex",
  "hyper",
+ "inventory",
  "mime_guess",
  "mpl-bubblegum",
  "mpl-candy-guard",
