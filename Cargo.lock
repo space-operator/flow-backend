@@ -1585,7 +1585,6 @@ version = "0.0.0"
 dependencies = [
  "flow-lib",
  "futures",
- "inventory",
  "once_cell",
  "pdg-common",
  "reqwest",
@@ -1621,7 +1620,6 @@ dependencies = [
  "futures",
  "hex",
  "hyper",
- "inventory",
  "mime_guess",
  "mpl-bubblegum",
  "mpl-candy-guard",
@@ -2683,7 +2681,6 @@ dependencies = [
  "hashbrown 0.13.2",
  "hex",
  "hmac 0.12.1",
- "inventory",
  "once_cell",
  "rand 0.8.5",
  "regex",
