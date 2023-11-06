@@ -2682,6 +2682,7 @@ dependencies = [
  "hashbrown 0.13.2",
  "hex",
  "hmac 0.12.1",
+ "inventory",
  "once_cell",
  "rand 0.8.5",
  "regex",
