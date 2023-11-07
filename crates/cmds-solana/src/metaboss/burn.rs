@@ -79,4 +79,4 @@ impl CommandTrait for Burn {
     }
 }
 
-inventory::submit!(CommandDescription::new(BURN, |_| Ok(Box::new(Burn))));
+flow_lib::submit!(CommandDescription::new(BURN, |_| Ok(Box::new(Burn))));

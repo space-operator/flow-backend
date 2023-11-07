@@ -51,6 +51,6 @@ impl CommandTrait for Foreach {
     }
 }
 
-inventory::submit!(CommandDescription::new(FOREACH, |_| {
+flow_lib::submit!(CommandDescription::new(FOREACH, |_| {
     Ok(Box::new(Foreach))
 }));

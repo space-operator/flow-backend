@@ -96,6 +96,6 @@ impl CommandTrait for ThreadReset {
     }
 }
 
-inventory::submit!(CommandDescription::new(THREAD_RESET, |_| {
+flow_lib::submit!(CommandDescription::new(THREAD_RESET, |_| {
     Ok(Box::new(ThreadReset))
 }));

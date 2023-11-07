@@ -18,7 +18,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(SOLANA_TRANSFER_TOKEN, |_| build()));
+flow_lib::submit!(CommandDescription::new(SOLANA_TRANSFER_TOKEN, |_| build()));
 
 async fn get_decimals(client: &RpcClient, token_account: Pubkey) -> crate::Result<u8> {
     let source_account = client

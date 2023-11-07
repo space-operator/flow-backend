@@ -96,6 +96,6 @@ impl CommandTrait for ThreadPause {
     }
 }
 
-inventory::submit!(CommandDescription::new(THREAD_PAUSE, |_| {
+flow_lib::submit!(CommandDescription::new(THREAD_PAUSE, |_| {
     Ok(Box::new(ThreadPause))
 }));

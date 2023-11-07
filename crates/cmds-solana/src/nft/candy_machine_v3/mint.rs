@@ -27,7 +27,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(MINT, |_| { build() }));
+flow_lib::submit!(CommandDescription::new(MINT, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {

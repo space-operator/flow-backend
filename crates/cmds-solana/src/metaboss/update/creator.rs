@@ -98,6 +98,6 @@ impl CommandTrait for UpdateCreators {
     }
 }
 
-inventory::submit!(CommandDescription::new(UPDATE_CREATORS, |_| Ok(Box::new(
+flow_lib::submit!(CommandDescription::new(UPDATE_CREATORS, |_| Ok(Box::new(
     UpdateCreators
 ))));

@@ -1585,7 +1585,6 @@ version = "0.0.0"
 dependencies = [
  "flow-lib",
  "futures",
- "inventory",
  "once_cell",
  "pdg-common",
  "reqwest",

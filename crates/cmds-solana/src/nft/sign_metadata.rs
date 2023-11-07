@@ -132,6 +132,6 @@ impl CommandTrait for SignMetadata {
     }
 }
 
-inventory::submit!(CommandDescription::new(SIGN_METADATA, |_| Ok(Box::new(
+flow_lib::submit!(CommandDescription::new(SIGN_METADATA, |_| Ok(Box::new(
     SignMetadata
 ))));

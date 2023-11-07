@@ -154,7 +154,7 @@ impl CommandTrait for DisbursePaymentIx {
     }
 }
 
-inventory::submit!(CommandDescription::new(DISBURSE_PAYMENT_IX, |_| Ok(
+flow_lib::submit!(CommandDescription::new(DISBURSE_PAYMENT_IX, |_| Ok(
     Box::new(DisbursePaymentIx {})
 )));
 

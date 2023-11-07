@@ -59,4 +59,4 @@ impl CommandTrait for Decode {
     }
 }
 
-inventory::submit!(CommandDescription::new(DECODE, |_| Ok(Box::new(Decode))));
+flow_lib::submit!(CommandDescription::new(DECODE, |_| Ok(Box::new(Decode))));

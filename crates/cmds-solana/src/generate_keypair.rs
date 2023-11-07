@@ -13,7 +13,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(GENERATE_KEYPAIR, |_| build()));
+flow_lib::submit!(CommandDescription::new(GENERATE_KEYPAIR, |_| build()));
 
 fn random_seed() -> String {
     Mnemonic::new(MnemonicType::Words12, Language::English).into_phrase()

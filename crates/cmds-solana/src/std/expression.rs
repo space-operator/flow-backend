@@ -209,7 +209,7 @@ impl CommandTrait for ScriptCommand {
     }
 }
 
-inventory::submit!(CommandDescription::new(SCRIPT_CMD, |_| {
+flow_lib::submit!(CommandDescription::new(SCRIPT_CMD, |_| {
     Ok(Box::new(ScriptCommand {}))
 }));
 

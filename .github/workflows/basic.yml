@@ -1,0 +1,51 @@
+name: Rust
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+
+jobs:
+  clippy-rust:
+    name: Clippy lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: default
+          override: true
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+      - uses: Swatinem/rust-cache@v1
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --tests --
+            -D clippy::dbg_macro
+            -D clippy::print_stdout
+            -D clippy::print_stderr
+            -A clippy::too_many_arguments
+  unit-test:
+    name: Unit test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: default
+          override: true
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+      - uses: Swatinem/rust-cache@v1
+      - name: Install wasm32-wasi
+        run: rustup target add wasm32-wasi
+      - name: Build WASM
+        run: ./scripts/build_wasm_tests.bash
+      - name: Build tests
+        run: cargo build --quiet --tests
+      - name: Run tests
+        run: cargo test -- --skip need_key_

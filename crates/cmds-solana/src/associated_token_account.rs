@@ -15,7 +15,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(
+flow_lib::submit!(CommandDescription::new(
     SOLANA_ASSOCIATED_TOKEN_ACCOUNT,
     |_| { build() }
 ));
