@@ -18,7 +18,6 @@ const INITIALIZE_CANDY_MACHINE: &str = "initialize_candy_machine";
 const DEFINITION: &str = flow_lib::node_definition!("solana/NFT/candy_machine/initialize.json");
 
 fn build() -> BuildResult {
-    use once_cell::sync::Lazy;
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(INITIALIZE_CANDY_MACHINE)?

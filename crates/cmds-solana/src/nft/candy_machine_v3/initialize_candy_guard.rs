@@ -7,11 +7,10 @@ use solana_sdk::pubkey::Pubkey;
 // Command Name
 const INITIALIZE_CANDY_GUARD: &str = "initialize_candy_guard";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/NFT/candy_machine/initialize_candy_guard.json"
-);
+const DEFINITION: &str =
+    flow_lib::node_definition!("solana/NFT/candy_machine/initialize_candy_guard.json");
 
 fn build() -> BuildResult {
-    use once_cell::sync::Lazy;
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(INITIALIZE_CANDY_GUARD)?
