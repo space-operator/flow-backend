@@ -11,8 +11,9 @@ use flow_server::{
     user::{SignatureAuth, SupabaseAuth},
     wss, Config,
 };
-use futures_util::future::ok;
-use std::convert::Infallible;
+use futures_util::{future::ok, TryFutureExt};
+use hashbrown::HashSet;
+use std::{borrow::Cow, convert::Infallible};
 use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
@@ -83,6 +84,32 @@ async fn main() {
         }
     };
 
+    if let DbPool::Real(db) = &db {
+        let res = db
+            .get_admin_conn()
+            .and_then(move |conn| async move {
+                let names = conn.get_natives_commands().await?;
+                let mut missing = HashSet::new();
+                for name in names {
+                    if !natives.contains(&&Cow::Borrowed(name.as_str())) {
+                        missing.insert(name);
+                    }
+                }
+                Ok(missing)
+            })
+            .await;
+        match res {
+            Ok(missing) => {
+                if !missing.is_empty() {
+                    tracing::warn!("missing native commands: {:?}", missing);
+                }
+            }
+            Err(error) => {
+                tracing::error!("{}", error);
+            }
+        }
+    }
+
     let db_worker = db_worker::DBWorker::new(db.clone(), config.clone(), actors).start();
 
     let sig_auth = SignatureAuth::new(rand::random());
@@ -133,11 +160,18 @@ async fn main() {
             .service(api::kvstore::write_item::service(&config, db.clone()))
             .service(api::kvstore::delete_item::service(&config, db.clone()))
             .service(api::kvstore::read_item::service(&config, db.clone()));
-        let db_route = web::scope("/proxy")
-            .service(api::db_rpc::service(&config, db.clone()))
-            .service(api::db_push_logs::service(&config, db.clone()))
-            .service(api::auth_proxy::service(&config, db.clone()))
-            .service(api::ws_auth_proxy::service(&config, db.clone()));
+
+        let db_proxy = if matches!(db, DbPool::Real(_)) {
+            Some(
+                web::scope("/proxy")
+                    .service(api::db_rpc::service(&config, db.clone()))
+                    .service(api::db_push_logs::service(&config, db.clone()))
+                    .service(api::auth_proxy::service(&config, db.clone()))
+                    .service(api::ws_auth_proxy::service(&config, db.clone())),
+            )
+        } else {
+            None
+        };
 
         let app = App::new()
             .wrap(Logger::new(r#""%r" %s %b %Dms"#).exclude("/healthcheck"))
@@ -153,12 +187,15 @@ async fn main() {
             app = app.service(auth);
         }
 
+        if let Some(db_proxy) = db_proxy {
+            app = app.service(db_proxy);
+        }
+
         app.service(flow)
             .service(signature)
             .service(apikeys)
             .service(websocket)
             .service(kvstore)
-            .service(db_route)
             .service(healthcheck)
     })
     .bind((host, port))
