@@ -6,11 +6,9 @@ use solana_sdk::pubkey::Pubkey;
 // Command Name
 const WRAP: &str = "wrap";
 
-const DEFINITION: &str =
-    flow_lib::node_definition!("solana/NFT/candy_machine/wrap.json");
+const DEFINITION: &str = flow_lib::node_definition!("solana/NFT/candy_machine/wrap.json");
 
 fn build() -> BuildResult {
-    use once_cell::sync::Lazy;
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(WRAP)?

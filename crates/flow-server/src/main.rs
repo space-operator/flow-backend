@@ -12,8 +12,7 @@ use flow_server::{
     wss, Config,
 };
 use futures_util::{future::ok, TryFutureExt};
-use hashbrown::HashSet;
-use std::{borrow::Cow, convert::Infallible};
+use std::{borrow::Cow, collections::BTreeSet, convert::Infallible};
 use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
@@ -89,7 +88,7 @@ async fn main() {
             .get_admin_conn()
             .and_then(move |conn| async move {
                 let names = conn.get_natives_commands().await?;
-                let mut missing = HashSet::new();
+                let mut missing = BTreeSet::new();
                 for name in names {
                     if !natives.contains(&&Cow::Borrowed(name.as_str())) {
                         missing.insert(name);

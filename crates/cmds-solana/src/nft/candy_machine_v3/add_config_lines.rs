@@ -14,7 +14,6 @@ const DEFINITION: &str =
     flow_lib::node_definition!("solana/NFT/candy_machine/add_config_lines.json");
 
 fn build() -> BuildResult {
-    use once_cell::sync::Lazy;
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(ADD_CONFIG_LINES)?
