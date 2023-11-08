@@ -28,6 +28,20 @@ impl AdminConn {
         Self { conn }
     }
 
+    pub async fn get_natives_commands(self) -> crate::Result<Vec<String>> {
+        self.conn
+            .query(
+                r#"SELECT data->>'node_id' FROM nodes WHERE type = 'native' AND "isPublic""#,
+                &[],
+            )
+            .await
+            .map_err(Error::exec("get_natives_commands"))?
+            .into_iter()
+            .map(|r| r.try_get::<_, String>(0))
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(Error::data("nodes.data->>'node_id'"))
+    }
+
     pub async fn copy_in_flow_run_logs<I>(&self, rows: I) -> crate::Result<u64>
     where
         I: IntoIterator,

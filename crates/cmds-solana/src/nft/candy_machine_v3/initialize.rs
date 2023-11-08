@@ -1,4 +1,7 @@
-use crate::{nft::CandyMachineDataAlias, prelude::*};
+use crate::{
+    nft::{CandyMachineDataAlias, TokenStandard},
+    prelude::*,
+};
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_program::{instruction::Instruction, system_instruction, system_program};
 use solana_sdk::pubkey::Pubkey;
@@ -6,15 +9,13 @@ use solana_sdk::pubkey::Pubkey;
 use mpl_candy_machine_core::{instruction::InitializeV2, CandyMachineData};
 use mpl_token_metadata::{
     accounts::{MasterEdition, Metadata},
-    instruction::MetadataDelegateRole,
-    state::TokenStandard,
+    types::MetadataDelegateRole,
 };
 
 // Command Name
 const INITIALIZE_CANDY_MACHINE: &str = "initialize_candy_machine";
 
-const DEFINITION: &str =
-    flow_lib::node_definition!("solana/NFT/candy_machine/initialize.json");
+const DEFINITION: &str = flow_lib::node_definition!("solana/NFT/candy_machine/initialize.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;
@@ -82,7 +83,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     // Collection Delegate Record PDA
     let collection_delegate_record =
-        mpl_token_metadata::pda::find_metadata_delegate_record_account(
+        mpl_token_metadata::accounts::MetadataDelegateRecord::find_pda(
             &input.collection_mint,
             MetadataDelegateRole::Collection,
             &input.collection_update_authority.pubkey(),

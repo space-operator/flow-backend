@@ -6,7 +6,7 @@ use solana_sdk::{compute_budget::ComputeBudgetInstruction, pubkey::Pubkey};
 
 use mpl_token_metadata::{
     accounts::{MasterEdition, Metadata},
-    instructions::MetadataDelegateRole,
+    types::MetadataDelegateRole,
 };
 
 use super::CandyGuardData;
@@ -14,8 +14,7 @@ use super::CandyGuardData;
 // Command Name
 const MINT: &str = "mint";
 
-const DEFINITION: &str =
-    flow_lib::node_definition!("solana/NFT/candy_machine/mint.json");
+const DEFINITION: &str = flow_lib::node_definition!("solana/NFT/candy_machine/mint.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;
@@ -71,7 +70,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let token_metadata_program = mpl_token_metadata::id();
+    let token_metadata_program = mpl_token_metadata::ID;
     let candy_machine_program = mpl_candy_machine_core::id();
     let candy_guard_program = mpl_candy_guard::id();
 
@@ -96,7 +95,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     );
 
     // Metadata TokenRecord Account
-    let nft_token_record = mpl_token_metadata::pda::find_token_record_account(
+    let nft_token_record = mpl_token_metadata::accounts::TokenRecord::find_pda(
         &input.mint_account,
         &nft_associated_token_account,
     )
@@ -104,7 +103,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     // Collection Delegate Record PDA
     let collection_delegate_record =
-        mpl_token_metadata::pda::find_metadata_delegate_record_account(
+        mpl_token_metadata::accounts::MetadataDelegateRecord::find_pda(
             &input.collection_mint,
             MetadataDelegateRole::Collection,
             &input.collection_update_authority,
