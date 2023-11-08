@@ -90,6 +90,6 @@ impl CommandTrait for ArweaveFileUpload {
     }
 }
 
-inventory::submit!(CommandDescription::new(ARWEAVE_FILE_UPLOAD, |_| Ok(
+flow_lib::submit!(CommandDescription::new(ARWEAVE_FILE_UPLOAD, |_| Ok(
     Box::new(ArweaveFileUpload)
 )));

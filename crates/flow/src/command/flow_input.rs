@@ -61,6 +61,6 @@ impl CommandTrait for FlowInputCommand {
     }
 }
 
-inventory::submit!(CommandDescription::new(FLOW_INPUT, |data: &NodeData| {
+flow_lib::submit!(CommandDescription::new(FLOW_INPUT, |data: &NodeData| {
     Ok(Box::new(FlowInputCommand::new(data)))
 }));

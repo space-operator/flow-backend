@@ -18,7 +18,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(GEN_PDG_ATTRS, |_| build()));
+flow_lib::submit!(CommandDescription::new(GEN_PDG_ATTRS, |_| build()));
 
 const fn bool_true() -> bool {
     true

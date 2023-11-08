@@ -96,6 +96,6 @@ impl CommandTrait for ThreadResume {
     }
 }
 
-inventory::submit!(CommandDescription::new(THREAD_RESUME, |_| {
+flow_lib::submit!(CommandDescription::new(THREAD_RESUME, |_| {
     Ok(Box::new(ThreadResume))
 }));

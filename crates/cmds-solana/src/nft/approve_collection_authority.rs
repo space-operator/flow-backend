@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 const NAME: &str = "approve_collection_authority";
 
-inventory::submit!(CommandDescription::new(NAME, |_| build()));
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
     const DEFINITION: &str =

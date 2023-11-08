@@ -27,7 +27,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(CREATE_PAYMENT, |_| { build() }));
+flow_lib::submit!(CommandDescription::new(CREATE_PAYMENT, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]

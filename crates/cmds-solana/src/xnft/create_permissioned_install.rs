@@ -19,7 +19,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(CREATE_PERMISSIONED_INSTALL, |_| {
+flow_lib::submit!(CommandDescription::new(CREATE_PERMISSIONED_INSTALL, |_| {
     build()
 }));
 

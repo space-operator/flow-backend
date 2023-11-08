@@ -89,6 +89,6 @@ impl CommandTrait for BurnPrint {
     }
 }
 
-inventory::submit!(CommandDescription::new(BURN_PRINT, |_| Ok(Box::new(
+flow_lib::submit!(CommandDescription::new(BURN_PRINT, |_| Ok(Box::new(
     BurnPrint
 ))));

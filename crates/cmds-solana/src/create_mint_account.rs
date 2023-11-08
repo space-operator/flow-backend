@@ -16,7 +16,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(SOLANA_CREATE_MINT_ACCOUNT, |_| {
+flow_lib::submit!(CommandDescription::new(SOLANA_CREATE_MINT_ACCOUNT, |_| {
     build()
 }));
 

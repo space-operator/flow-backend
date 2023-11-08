@@ -68,6 +68,6 @@ impl CommandTrait for GetLeftUses {
     }
 }
 
-inventory::submit!(CommandDescription::new(GET_LEFT_USES, |_| Ok(Box::new(
+flow_lib::submit!(CommandDescription::new(GET_LEFT_USES, |_| Ok(Box::new(
     GetLeftUses
 ))));

@@ -119,6 +119,6 @@ impl CommandTrait for ThreadUpdate {
     }
 }
 
-inventory::submit!(CommandDescription::new(THREAD_UPDATE, |_| {
+flow_lib::submit!(CommandDescription::new(THREAD_UPDATE, |_| {
     Ok(Box::new(ThreadUpdate))
 }));

@@ -20,7 +20,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-inventory::submit!(CommandDescription::new(INITIALIZE_CANDY_GUARD, |_| {
+flow_lib::submit!(CommandDescription::new(INITIALIZE_CANDY_GUARD, |_| {
     build()
 }));
 

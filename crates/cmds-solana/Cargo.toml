@@ -11,7 +11,6 @@ flow-lib = { workspace = true }
 
 async-trait = "0.1"
 tiny-bip39 = "0.8"
-inventory = "0.3"
 serde = { version = "1", features = ["derive"] }
 rust_decimal = { version = "1", features = ["maths"] }
 bincode = "1"
@@ -119,3 +118,4 @@ rev = "b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1"
 
 [dev-dependencies]
 rust_decimal_macros = "1.26"
+inventory = "0.3"
