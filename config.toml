@@ -22,6 +22,8 @@ service_key = ""
 anon_key = ""
 # (Optional) Custom URL for Supabase project
 endpoint = "https://base.spaceoperator.com"
+# Allow all pubkeys
+open_whitelists = false
 
 [db]
 host = ""

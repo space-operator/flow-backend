@@ -120,6 +120,7 @@ pub struct SupabaseAuth {
     login_url: Url,
     create_user_url: Url,
     admin_token: HeaderValue,
+    open_whitelists: bool,
 }
 
 #[derive(ThisError, Debug)]
@@ -213,6 +214,7 @@ impl SupabaseAuth {
             create_user_url,
             admin_token,
             pool,
+            open_whitelists: config.open_whitelists,
         })
     }
 
@@ -273,7 +275,15 @@ impl SupabaseAuth {
 
     pub async fn create_user(&self, pk: &[u8; 32]) -> Result<PasswordLogin, LoginError> {
         let body = CreateUser::new(pk);
+        let mut conn = self
+            .pool
+            .get_admin_conn()
+            .await
+            .map_err(|_| login_error())?;
         tracing::info!("creating user {}", body.user_metadata.pub_key);
+        if self.open_whitelists {
+            conn.insert_whitelist(&body.user_metadata.pub_key).await?;
+        }
         let resp = self
             .client
             .post(self.create_user_url.clone())
@@ -289,11 +299,6 @@ impl SupabaseAuth {
         let CreateUserResponse { id } = resp.json().await.map_err(|_| login_error())?;
 
         let pw = rand_password();
-        let mut conn = self
-            .pool
-            .get_admin_conn()
-            .await
-            .map_err(|_| login_error())?;
         conn.reset_password(&id, &pw).await?;
 
         Ok(PasswordLogin {
