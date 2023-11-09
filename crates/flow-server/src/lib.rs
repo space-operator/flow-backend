@@ -64,11 +64,17 @@ pub struct SupabaseConfig {
     #[serde(default = "SupabaseConfig::default_bucket")]
     pub wasm_bucket: String,
     pub endpoint: Option<String>,
+    #[serde(default = "SupabaseConfig::default_open_whitelists")]
+    pub open_whitelists: bool,
 }
 
 impl SupabaseConfig {
     pub fn default_bucket() -> String {
         "node-files".to_owned()
+    }
+
+    pub fn default_open_whitelists() -> bool {
+        false
     }
 
     pub fn get_endpoint(&self) -> String {
@@ -87,6 +93,7 @@ impl Default for SupabaseConfig {
             project_id: String::new(),
             wasm_bucket: Self::default_bucket(),
             endpoint: None,
+            open_whitelists: Self::default_open_whitelists(),
         }
     }
 }

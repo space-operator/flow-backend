@@ -1,6 +1,7 @@
 use crate::{Error, FlowRunLogsRow};
 use anyhow::anyhow;
 use bytes::Bytes;
+use chrono::Utc;
 use deadpool_postgres::Object as Connection;
 use flow_lib::UserId;
 use rand::distributions::{Alphanumeric, DistString};
@@ -26,6 +27,23 @@ pub struct Password {
 impl AdminConn {
     pub fn new(conn: Connection) -> AdminConn {
         Self { conn }
+    }
+
+    pub async fn insert_whitelist(&self, pk_bs58: &str) -> crate::Result<()> {
+        let stmt = self
+            .conn
+            .prepare_cached(
+                "INSERT INTO pubkey_whitelists (pubkey, info) VALUES ($1, $2)
+                ON CONFLICT (pubkey) DO NOTHING",
+            )
+            .await
+            .map_err(Error::exec("prepare insert_whitelist"))?;
+        let info = format!("inserted at {}", Utc::now().to_string());
+        self.conn
+            .execute(&stmt, &[&pk_bs58, &info])
+            .await
+            .map_err(Error::exec("insert_whitelist"))?;
+        Ok(())
     }
 
     pub async fn get_natives_commands(self) -> crate::Result<Vec<String>> {
