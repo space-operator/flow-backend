@@ -14,7 +14,7 @@ pub struct Output {
 }
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
-    let auth = web::Data::new(config.apikey_auth(db));
+    let auth = web::Data::new(config.all_auth(db));
     web::resource("/ws_auth")
         .app_data(auth)
         .wrap(config.cors())

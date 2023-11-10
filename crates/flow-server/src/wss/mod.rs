@@ -22,7 +22,7 @@ use serde_json::json;
 use std::sync::Arc;
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
-    let auth = web::Data::new(config.apikey_auth(db));
+    let auth = web::Data::new(config.all_auth(db));
     web::resource("")
         .app_data(auth)
         .wrap(config.cors())

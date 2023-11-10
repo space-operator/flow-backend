@@ -212,7 +212,7 @@ impl Config {
 
     /// Build a middleware to validate `Authorization` header
     /// with Supabase's JWT secret and API key.
-    pub fn apikey_auth(&self, pool: DbPool) -> auth::ApiAuth {
+    pub fn all_auth(&self, pool: DbPool) -> auth::ApiAuth {
         match (self.supabase.jwt_key.as_ref(), pool) {
             (Some(key), DbPool::Real(pool)) => {
                 auth::ApiAuth::real(key.as_bytes(), self.supabase.anon_key.clone(), pool)
