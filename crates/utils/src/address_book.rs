@@ -206,58 +206,65 @@ impl AnyID {
     }
 }
 
-struct StringActor0 {
-    id: String,
-}
+/*
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl Actor for StringActor0 {
-    type Context = actix::Context<Self>;
-}
+    struct StringActor0 {
+        id: String,
+    }
 
-impl ManagableActor for StringActor0 {
-    type ID = String;
-    fn id(&self) -> String {
-        self.id.clone()
+    impl Actor for StringActor0 {
+        type Context = actix::Context<Self>;
+    }
+
+    impl ManagableActor for StringActor0 {
+        type ID = String;
+        fn id(&self) -> String {
+            self.id.clone()
+        }
+    }
+
+    struct StringActor1 {
+        id: String,
+    }
+
+    impl Actor for StringActor1 {
+        type Context = actix::Context<Self>;
+    }
+
+    impl ManagableActor for StringActor1 {
+        type ID = String;
+        fn id(&self) -> String {
+            self.id.clone()
+        }
+    }
+
+    struct I32Actor0 {
+        id: i32,
+    }
+
+    impl Actor for I32Actor0 {
+        type Context = actix::Context<Self>;
+    }
+
+    impl ManagableActor for I32Actor0 {
+        type ID = i32;
+        fn id(&self) -> i32 {
+            self.id
+        }
+    }
+
+    struct UnitActor0 {}
+
+    impl Actor for UnitActor0 {
+        type Context = actix::Context<Self>;
+    }
+
+    impl ManagableActor for UnitActor0 {
+        type ID = ();
+        fn id(&self) -> Self::ID {}
     }
 }
-
-struct StringActor1 {
-    id: String,
-}
-
-impl Actor for StringActor1 {
-    type Context = actix::Context<Self>;
-}
-
-impl ManagableActor for StringActor1 {
-    type ID = String;
-    fn id(&self) -> String {
-        self.id.clone()
-    }
-}
-
-struct I32Actor0 {
-    id: i32,
-}
-
-impl Actor for I32Actor0 {
-    type Context = actix::Context<Self>;
-}
-
-impl ManagableActor for I32Actor0 {
-    type ID = i32;
-    fn id(&self) -> i32 {
-        self.id
-    }
-}
-
-struct UnitActor0 {}
-
-impl Actor for UnitActor0 {
-    type Context = actix::Context<Self>;
-}
-
-impl ManagableActor for UnitActor0 {
-    type ID = ();
-    fn id(&self) -> Self::ID {}
-}
+*/
