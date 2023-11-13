@@ -8,12 +8,8 @@ pub struct Wallet {
 }
 
 #[derive(Deserialize)]
-#[serde(tag = "wallet_type")]
-enum FormData {
-    #[serde(rename = "HARDCODED")]
-    HardCoded { wallet_data: String },
-    #[serde(rename = "ADAPTER")]
-    Adapter { wallet_data: String },
+struct FormData {
+    public_key: String,
 }
 
 #[derive(ThisError, Debug)]
@@ -33,29 +29,11 @@ fn adapter_wallet(pubkey: Pubkey) -> Output {
 
 impl FormData {
     fn into_output(self) -> Result<Output, WalletError> {
-        match self {
-            FormData::Adapter { wallet_data } => {
-                let pubkey = wallet_data
-                    .parse::<Pubkey>()
-                    .map_err(|_| WalletError::InvalidBase58)?;
-                Ok(adapter_wallet(pubkey))
-            }
-            FormData::HardCoded { wallet_data } => {
-                let mut buf = [0u8; 64];
-                let size = bs58::decode(wallet_data.trim())
-                    .into(&mut buf)
-                    .map_err(|_| WalletError::InvalidBase58)?;
-                if size != buf.len() {
-                    return Err(WalletError::InvalidBase58);
-                }
-                let keypair = Keypair::from_bytes(&buf).expect("correct size, never fail");
-
-                Ok(Output {
-                    pubkey: keypair.pubkey(),
-                    keypair,
-                })
-            }
-        }
+        let pubkey = self
+            .public_key
+            .parse::<Pubkey>()
+            .map_err(|_| WalletError::InvalidBase58)?;
+        Ok(adapter_wallet(pubkey))
     }
 }
 
@@ -134,8 +112,6 @@ mod tests {
             targets: Vec::new(),
             targets_form: TargetsForm {
                 form_data: json!({
-                    // there is also "wallet_id", but it is not used
-                    "wallet_type": "ADAPTER",
                     "wallet_data": PUBKEY_STR,
                 }),
                 extra: Extra::default(),
@@ -143,29 +119,5 @@ mod tests {
             },
         };
         assert_eq!(Wallet::new(&nd).form.unwrap().pubkey, PUBKEY);
-    }
-
-    #[test]
-    fn hardcoded() {
-        const KEYPAIR: &str = "oLXLpXdGn6RjMHz3fvcPdGNUDQxXu91t7YAFbtRew3TFVPHAU1UrZJpgiHDLKDtrWZRQg6trQFFp6zEX2TQ1S3k";
-
-        let nd = NodeData {
-            r#type: flow_lib::CommandType::Native,
-            node_id: WALLET.into(),
-            sources: Vec::new(),
-            targets: Vec::new(),
-            targets_form: TargetsForm {
-                form_data: json!({
-                    // there is also "wallet_id", but it is not used
-                    "wallet_type": "HARDCODED",
-                    "wallet_data": KEYPAIR,
-                }),
-                extra: Extra::default(),
-                wasm_bytes: None,
-            },
-        };
-        let wallet = Wallet::new(&nd).form.unwrap();
-        assert_eq!(wallet.keypair.to_base58_string(), KEYPAIR);
-        assert_eq!(wallet.keypair.pubkey(), wallet.pubkey);
     }
 }
