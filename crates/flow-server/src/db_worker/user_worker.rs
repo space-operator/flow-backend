@@ -1,8 +1,6 @@
 use super::{
-    flow_run_worker::FlowRunWorker,
-    messages::SubscribeError,
-    signer::{SignerType, SignerWorker},
-    Counter, DBWorker, GetTokenWorker, StartActor,
+    flow_run_worker::FlowRunWorker, messages::SubscribeError, signer::SignerWorker, Counter,
+    DBWorker, GetTokenWorker, StartActor,
 };
 use crate::error::ErrorBody;
 use actix::{
@@ -22,11 +20,7 @@ use flow_lib::{
 use futures_channel::oneshot;
 use futures_util::future::BoxFuture;
 use hashbrown::HashMap;
-use solana_sdk::{
-    pubkey::Pubkey,
-    signature::{Keypair, Signature},
-    signer::Signer,
-};
+use solana_sdk::signature::Signature;
 use std::future::ready;
 use thiserror::Error as ThisError;
 use utils::address_book::ManagableActor;
@@ -481,37 +475,8 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 })
                 .await??;
 
-            let conn = db.get_user_conn(user_id).await?;
-            let wallets = conn.get_wallets().await?;
-            let mut signers = HashMap::new();
-            for w in wallets {
-                let pk = Pubkey::new_from_array(w.pubkey);
-                if !pk.is_on_curve() {
-                    tracing::warn!("invalid wallet");
-                    continue;
-                }
-                let s = match w.keypair {
-                    None => SignerType::UserWallet {
-                        sender: addr.clone().recipient(),
-                    },
-                    Some(keypair) => {
-                        let keypair = Keypair::from_bytes(&keypair).ok().and_then(|k| {
-                            let pubkey: ed25519_dalek::PublicKey = k.secret().into();
-                            (k.pubkey().to_bytes() == pubkey.to_bytes())
-                                .then_some(SignerType::Keypair(k))
-                        });
-                        match keypair {
-                            None => {
-                                tracing::warn!("invalid wallet");
-                                continue;
-                            }
-                            Some(signer) => signer,
-                        }
-                    }
-                };
-                signers.insert(pk, s);
-            }
-            let signer = SignerWorker { signers }.start();
+            let signer =
+                SignerWorker::fetch_and_start(db, &[(user_id, addr.clone().recipient())]).await?;
 
             let r = FlowRegistry::from_actix(
                 msg.user,
