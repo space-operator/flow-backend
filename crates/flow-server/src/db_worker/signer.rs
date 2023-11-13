@@ -55,7 +55,7 @@ impl SignerWorker {
             for w in wallets {
                 let pk = Pubkey::new_from_array(w.pubkey);
                 if !pk.is_on_curve() {
-                    tracing::warn!("invalid wallet");
+                    tracing::warn!("invalid wallet: pubkey is not on curve");
                     continue;
                 }
                 let s = match w.keypair {
@@ -70,7 +70,7 @@ impl SignerWorker {
                         });
                         match keypair {
                             None => {
-                                tracing::warn!("invalid wallet");
+                                tracing::warn!("invalid keypair: mismatch");
                                 continue;
                             }
                             Some(signer) => signer,
