@@ -92,8 +92,8 @@ pub mod signer {
 
     #[derive(ThisError, Debug)]
     pub enum Error {
-        #[error("can't sign for this pubkey")]
-        Pubkey,
+        #[error("can't sign for pubkey: {}", .0)]
+        Pubkey(String),
         #[error("can't sign for this user")]
         User,
         #[error("timeout")]

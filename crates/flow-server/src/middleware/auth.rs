@@ -72,7 +72,7 @@ pub struct Token {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct JWTPayload {
     pub user_id: Uuid,
-    #[serde(with = "crate::api::serde_bs58")]
+    #[serde(with = "utils::serde_bs58")]
     pub pubkey: [u8; 32],
 }
 

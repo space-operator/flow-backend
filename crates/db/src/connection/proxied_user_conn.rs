@@ -85,6 +85,10 @@ impl ProxiedUserConn {
 
 #[async_trait::async_trait]
 impl UserConnectionTrait for ProxiedUserConn {
+    async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
+        self.send::<[(); 0], _>("get_wallets", &[]).await
+    }
+
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>> {
         self.send("clone_flow", &(flow_id,)).await
     }
@@ -230,6 +234,10 @@ impl UserConnection {
     pub async fn process_rpc(&mut self, req_json: &str) -> Result<Box<RawValue>, BoxError> {
         let req: RpcRequest<'_, &'_ RawValue> = serde_json::from_str(req_json)?;
         match req.method {
+            "get_wallets" => {
+                let res = self.get_wallets().await?;
+                Ok(serde_json::value::to_raw_value(&res)?)
+            }
             "clone_flow" => {
                 let (flow_id,) = serde_json::from_str(req.params.get())?;
                 let res = self.clone_flow(flow_id).await?;

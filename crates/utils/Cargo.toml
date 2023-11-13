@@ -10,3 +10,6 @@ tower = { version = "0.4", features = ["buffer", "util"] }
 actix = "0.13"
 hashbrown = "0.13"
 futures-util = { version = "0.3", features = ["sink"] }
+serde = "1"
+bs58 = "0.4"
+thiserror = "1"

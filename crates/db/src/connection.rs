@@ -1,4 +1,4 @@
-use crate::{Error, WasmStorage};
+use crate::{Error, Wallet, WasmStorage};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use deadpool_postgres::Object as Connection;
@@ -28,6 +28,8 @@ pub struct UserConnection {
 #[async_trait]
 pub trait UserConnectionTrait: Any + 'static {
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>>;
+
+    async fn get_wallets(&self) -> crate::Result<Vec<Wallet>>;
 
     async fn new_flow_run(
         &self,
@@ -118,6 +120,10 @@ pub trait UserConnectionTrait: Any + 'static {
 
 #[async_trait]
 impl UserConnectionTrait for UserConnection {
+    async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
+        self.get_wallets().await
+    }
+
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>> {
         self.clone_flow(flow_id).await
     }

@@ -1,14 +1,13 @@
+use super::prelude::*;
 use crate::db_worker::{
     user_worker::{SubmitError, SubmitSignature},
     FindActor, UserWorker,
 };
 
-use super::prelude::*;
-
 #[derive(Deserialize)]
 pub struct Params {
     id: i64,
-    #[serde(deserialize_with = "super::bs58_decode")]
+    #[serde(with = "utils::serde_bs58")]
     signature: [u8; 64],
 }
 

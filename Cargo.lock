@@ -2200,6 +2200,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "url",
+ "utils",
  "uuid 1.5.0",
  "x509-parser",
 ]
@@ -7861,8 +7862,11 @@ name = "utils"
 version = "0.0.0"
 dependencies = [
  "actix",
+ "bs58 0.4.0",
  "futures-util",
  "hashbrown 0.13.2",
+ "serde",
+ "thiserror",
  "tower",
 ]
 

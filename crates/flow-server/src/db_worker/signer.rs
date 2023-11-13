@@ -14,7 +14,7 @@ pub enum SignerType {
 }
 
 pub struct SignerWorker {
-    signers: HashMap<Pubkey, SignerType>,
+    pub signers: HashMap<Pubkey, SignerType>,
 }
 
 impl Actor for SignerWorker {
@@ -26,7 +26,7 @@ impl actix::Handler<signer::SignatureRequest> for SignerWorker {
 
     fn handle(&mut self, msg: signer::SignatureRequest, _: &mut Self::Context) -> Self::Result {
         match self.signers.get(&msg.pubkey) {
-            None => ready(Err(signer::Error::Pubkey)).boxed(),
+            None => ready(Err(signer::Error::Pubkey(msg.pubkey.to_string()))).boxed(),
             Some(SignerType::Keypair(keypair)) => ready(Ok(signer::SignatureResponse {
                 signature: keypair.sign_message(&msg.message),
             }))
