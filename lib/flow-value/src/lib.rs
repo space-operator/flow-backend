@@ -4,8 +4,8 @@
 //! Common operations:
 //! - Converting [`Value`] to Rust types.
 //! - Converting Rust types to [`Value`].
-//! - Receiving [`value::Map`][Map] as node's input.
-//! - Returning [`value::Map`][Map] as node's output.
+//! - Receiving [`flow_value::Map`][Map] as node's input.
+//! - Returning [`flow_value::Map`][Map] as node's output.
 //! - Converting [`Value`] to/from JSON to use in HTTP APIs and database.
 //! - Getting and updating nested values with JSON Pointer syntax.
 
@@ -43,17 +43,17 @@ pub mod signature;
 /// ```
 /// use solana_sdk::pubkey::Pubkey;
 /// use solana_sdk::pubkey;
-/// use value::Value;
+/// use flow_value::Value;
 ///
 /// #[derive(serde::Deserialize)]
 /// pub struct User {
 ///     pubkey: Pubkey,
 /// }
 ///
-/// let value = Value::Map(value::map! {
+/// let value = Value::Map(flow_value::map! {
 ///     "pubkey" => pubkey!("My11111111111111111111111111111111111111111"),
 /// });
-/// value::from_value::<User>(value).unwrap();
+/// flow_value::from_value::<User>(value).unwrap();
 /// ```
 pub fn from_value<T>(value: Value) -> Result<T, Error>
 where
@@ -69,17 +69,17 @@ where
 /// ```
 /// use solana_sdk::pubkey::Pubkey;
 /// use solana_sdk::pubkey;
-/// use value::Value;
+/// use flow_value::Value;
 ///
 /// #[derive(serde::Deserialize)]
 /// pub struct User {
 ///     pubkey: Pubkey,
 /// }
 ///
-/// let map = value::map! {
+/// let map = flow_value::map! {
 ///     "pubkey" => pubkey!("My11111111111111111111111111111111111111111"),
 /// };
-/// value::from_map::<User>(map).unwrap();
+/// flow_value::from_map::<User>(map).unwrap();
 /// ```
 pub fn from_map<T>(map: Map) -> Result<T, Error>
 where
@@ -94,9 +94,9 @@ where
 ///
 /// ```
 /// use solana_sdk::signature::Signature;
-/// use value::Value;
+/// use flow_value::Value;
 ///
-/// let val = value::to_value(&Signature::new_unique()).unwrap();
+/// let val = flow_value::to_value(&Signature::new_unique()).unwrap();
 /// assert!(matches!(val, Value::B64(_)));
 /// ```
 pub fn to_value<T>(t: &T) -> Result<Value, Error>
@@ -111,10 +111,10 @@ where
 /// # Example
 ///
 /// ```
-/// use value::Value;
+/// use flow_value::Value;
 ///
-/// let map = value::to_map(&serde_json::json!({"A": "B"})).unwrap();
-/// assert_eq!(map, value::map! { "A" => "B" });
+/// let map = flow_value::to_map(&serde_json::json!({"A": "B"})).unwrap();
+/// assert_eq!(map, flow_value::map! { "A" => "B" });
 /// ```
 pub fn to_map<T>(t: &T) -> Result<Map, Error>
 where
@@ -153,30 +153,30 @@ pub type Map = self::HashMap<Key, Value>;
 ///
 /// # Node Input
 ///
-/// Node receives a [`value::Map`][Map] as its input. It is possible to use the map directly, but
+/// Node receives a [`flow_value::Map`][Map] as its input. It is possible to use the map directly, but
 /// it is often preferred to convert it to structs or enums of your choice.
 ///
 /// [`Value`] implements [`Deserializer`][serde::Deserializer], therefore it can be converted to
 /// any types supported by Serde. We provide 2 helpers:
 ///
-/// - [`value::from_value`][from_value] - [`Value`] to any `T: Deserialize`.
-/// - [`value::from_map`][from_map] - [`Map`] to any `T: Deserialize`.
+/// - [`flow_value::from_value`][from_value] - [`Value`] to any `T: Deserialize`.
+/// - [`flow_value::from_map`][from_map] - [`Map`] to any `T: Deserialize`.
 ///
 /// # Node Output
 ///
-/// Node returns a [`value::Map`][Map] as its output.
+/// Node returns a [`flow_value::Map`][Map] as its output.
 ///
-/// Building the output directly with [`value::map!`][macro@map] and
-/// [`value::array!`][macro@array] macros:
+/// Building the output directly with [`flow_value::map!`][macro@map] and
+/// [`flow_value::array!`][macro@array] macros:
 /// ```
-/// let value = value::map! {
+/// let value = flow_value::map! {
 ///     "customer_name" => "John",
-///     "items" => value::array![1, 2, 3],
+///     "items" => flow_value::array![1, 2, 3],
 /// };
 /// ```
 ///
 /// [`Value`] also implements [`Serializer`][serde::Serializer], you can use
-/// [`value::to_map`][to_map] to convert any type `T: Serialize` into [`value::Map`][Map].
+/// [`flow_value::to_map`][to_map] to convert any type `T: Serialize` into [`value::Map`][Map].
 ///
 /// ```
 /// #[derive(serde::Serialize)]
@@ -185,7 +185,7 @@ pub type Map = self::HashMap<Key, Value>;
 ///     items: Vec<i32>,
 /// }
 ///
-/// value::to_map(&Order {
+/// flow_value::to_map(&Order {
 ///     customer_name: "John".to_owned(),
 ///     items: [1, 2, 3].into(),
 /// })
@@ -222,7 +222,7 @@ pub type Map = self::HashMap<Key, Value>;
 ///
 /// Use [`serde_json`] to encode and decode [`Value`] as JSON:
 /// ```
-/// use value::Value;
+/// use flow_value::Value;
 ///
 /// let value = Value::U64(10);
 ///
