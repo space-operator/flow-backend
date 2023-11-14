@@ -112,7 +112,7 @@ mod tests {
             targets: Vec::new(),
             targets_form: TargetsForm {
                 form_data: json!({
-                    "wallet_data": PUBKEY_STR,
+                    "public_key": PUBKEY_STR,
                 }),
                 extra: Extra::default(),
                 wasm_bytes: None,
