@@ -1,10 +1,9 @@
-use super::bs58_decode;
 use super::prelude::*;
 use crate::user::SignatureAuth;
 
 #[derive(Deserialize)]
 pub struct Params {
-    #[serde(deserialize_with = "bs58_decode")]
+    #[serde(with = "utils::serde_bs58")]
     pub pubkey: [u8; 32],
 }
 

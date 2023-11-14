@@ -5,7 +5,7 @@ use regex::Regex;
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
     web::resource("/create_store")
-        .wrap(config.apikey_auth(db))
+        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(create_store))
 }

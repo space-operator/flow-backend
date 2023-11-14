@@ -231,6 +231,7 @@ mod tests {
         dbg!(get_new_pose(poses));
 
         // adjust pose
+        #[allow(dead_code)]
         fn adjust_pose(poses: HashSet<Pose>, selected_pose: Pose) -> Option<Pose> {
             // check poses is not empty
             if poses.is_empty() | !poses.contains(&selected_pose) {
@@ -315,29 +316,30 @@ mod tests {
         //
 
         // add new fx
+        #[allow(dead_code)]
         fn add_new_effect_to_base(mut base: RenderParams, new_effect: &str) -> RenderParams {
             //find the new_effect in the RenderParams enum
             match new_effect {
-                stringify!(Hologram) => base.fx0 = Fx0::Hologram,
-                stringify!(Xray) => base.fx0 = Fx0::Xray,
-                stringify!(SoapBubble) => base.fx0 = Fx0::SoapBubble,
-                stringify!(Pixel) => base.fx0 = Fx0::Pixel,
-                stringify!(Melted) => base.fx1 = Fx1::Melted,
-                stringify!(Disintegration) => base.fx1 = Fx1::Disintegration,
-                stringify!(Butterflies) => base.fx2 = Fx2::Butterflies,
-                stringify!(Underwater) => base.fx2 = Fx2::Underwater,
-                stringify!(Fireflyies) => base.fx2 = Fx2::Fireflyies,
-                stringify!(Fall) => base.fx2 = Fx2::Fall,
-                stringify!(Ladybag) => base.fx2 = Fx2::Ladybag,
-                stringify!(Spring) => base.fx2 = Fx2::Spring,
-                stringify!(Frozen) => base.fx4 = Fx4::Frozen,
-                stringify!(Rain) => base.fx4 = Fx4::Rain,
-                stringify!(Fungi) => base.fx5 = Fx5::Fungi,
-                stringify!(GrowFlower) => base.fx5 = Fx5::GrowFlower,
-                stringify!(Gold) => base.fx6 = Fx6::Gold,
-                stringify!(Silver) => base.fx6 = Fx6::Silver,
-                stringify!(LineartMinimalistic) => base.fx1a = Fx1a::LineartMinimalistic,
-                stringify!(LineartHeavy) => base.fx1a = Fx1a::LineartHeavy,
+                "Hologram" => base.fx0 = Fx0::Hologram,
+                "Xray" => base.fx0 = Fx0::Xray,
+                "SoapBubble" => base.fx0 = Fx0::SoapBubble,
+                "Pixel" => base.fx0 = Fx0::Pixel,
+                "Melted" => base.fx1 = Fx1::Melted,
+                "Disintegration" => base.fx1 = Fx1::Disintegration,
+                "Butterflies" => base.fx2 = Fx2::Butterflies,
+                "Underwater" => base.fx2 = Fx2::Underwater,
+                "Fireflyies" => base.fx2 = Fx2::Fireflyies,
+                "Fall" => base.fx2 = Fx2::Fall,
+                "Ladybag" => base.fx2 = Fx2::Ladybag,
+                "Spring" => base.fx2 = Fx2::Spring,
+                "Frozen" => base.fx4 = Fx4::Frozen,
+                "Rain" => base.fx4 = Fx4::Rain,
+                "Fungi" => base.fx5 = Fx5::Fungi,
+                "GrowFlower" => base.fx5 = Fx5::GrowFlower,
+                "Gold" => base.fx6 = Fx6::Gold,
+                "Silver" => base.fx6 = Fx6::Silver,
+                "LineartMinimalistic" => base.fx1a = Fx1a::LineartMinimalistic,
+                "LineartHeavy" => base.fx1a = Fx1a::LineartHeavy,
                 _ => {}
             }
 

@@ -33,6 +33,13 @@ pub enum Error<E = anyhow::Error> {
         context: &'static str,
         location: &'static Location<'static>,
     },
+    #[error("parsing error: {error}, context {context:?}, at {location}")]
+    Parsing {
+        #[source]
+        error: anyhow::Error,
+        context: &'static str,
+        location: &'static Location<'static>,
+    },
     #[error("{kind} not found: {id}, at {location}")]
     ResourceNotFound {
         kind: &'static str,
@@ -123,6 +130,15 @@ impl<E: Into<anyhow::Error>> Error<E> {
                 location,
             },
             Error::ProxyError(e) => Error::ProxyError(e),
+            Error::Parsing {
+                error,
+                context,
+                location,
+            } => Error::Parsing {
+                error,
+                context,
+                location,
+            },
         }
     }
 
@@ -162,7 +178,7 @@ impl<E: Into<anyhow::Error>> Error<E> {
         }
     }
 
-    /// Error when parsing data from the database, usually for JSON deserialize error.
+    /// Error when parsing JSON data from the database.
     #[track_caller]
     pub fn json(context: &'static str) -> impl FnOnce(serde_json::Error) -> Self {
         let location = std::panic::Location::caller();
@@ -171,6 +187,20 @@ impl<E: Into<anyhow::Error>> Error<E> {
             context,
             location,
             error,
+        }
+    }
+
+    /// Error when parsing data from the database.
+    #[track_caller]
+    pub fn parsing<E1: std::error::Error + Send + Sync + 'static>(
+        context: &'static str,
+    ) -> impl FnOnce(E1) -> Self {
+        let location = std::panic::Location::caller();
+
+        move |error: E1| Error::Parsing {
+            context,
+            location,
+            error: error.into(),
         }
     }
 

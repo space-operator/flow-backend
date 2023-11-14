@@ -29,3 +29,15 @@ pub struct FlowRunLogsRow {
     pub content: String,
     pub module: Option<String>,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct Wallet {
+    #[serde(with = "utils::serde_bs58")]
+    pub pubkey: [u8; 32],
+    #[serde(
+        default,
+        with = "utils::serde_bs58::opt",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub keypair: Option<[u8; 64]>,
+}

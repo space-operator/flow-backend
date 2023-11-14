@@ -17,7 +17,7 @@ pub struct Output {
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
     web::resource("/stop/{id}")
-        .wrap(config.apikey_auth(db))
+        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(stop_flow))
 }

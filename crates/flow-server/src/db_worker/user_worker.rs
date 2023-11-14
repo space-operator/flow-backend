@@ -1,6 +1,6 @@
 use super::{
-    flow_run_worker::FlowRunWorker, messages::SubscribeError, Counter, DBWorker, GetTokenWorker,
-    StartActor,
+    flow_run_worker::FlowRunWorker, messages::SubscribeError, signer::SignerWorker, Counter,
+    DBWorker, GetTokenWorker, StartActor,
 };
 use crate::error::ErrorBody;
 use actix::{
@@ -401,6 +401,8 @@ pub enum StartError {
     Jwt(#[from] get_jwt::Error),
     #[error(transparent)]
     Mailbox(#[from] actix::MailboxError),
+    #[error(transparent)]
+    Db(#[from] db::Error),
 }
 
 impl ResponseError for StartError {
@@ -436,6 +438,7 @@ impl ResponseError for StartError {
                 | get_jwt::Error::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
             },
             StartError::Mailbox(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            StartError::Db(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -456,6 +459,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
         let addr = ctx.address();
         let endpoints = self.endpoints.clone();
         let root = self.root.clone();
+        let db = self.db.clone();
         Box::pin(async move {
             if msg.user.id != user_id {
                 return Err(StartError::Unauthorized);
@@ -471,10 +475,13 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 })
                 .await??;
 
+            let signer =
+                SignerWorker::fetch_and_start(db, &[(user_id, addr.clone().recipient())]).await?;
+
             let r = FlowRegistry::from_actix(
                 msg.user,
                 msg.flow_id,
-                addr.clone().recipient(),
+                signer.recipient(),
                 addr.clone().recipient(),
                 addr.clone().recipient(),
                 addr.clone().recipient(),

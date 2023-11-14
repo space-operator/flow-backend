@@ -2,7 +2,7 @@ use super::super::prelude::*;
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
     web::resource("/delete_store")
-        .wrap(config.apikey_auth(db))
+        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(delete_store))
 }

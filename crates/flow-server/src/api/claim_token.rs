@@ -14,7 +14,7 @@ pub struct Output {
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
     web::resource("/claim_token")
-        .wrap(config.apikey_auth(db))
+        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .app_data(web::Data::new(config.endpoints()))
         .route(web::post().to(claim_token))

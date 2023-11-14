@@ -1617,6 +1617,7 @@ dependencies = [
  "ed25519-dalek",
  "fasteval",
  "flow-lib",
+ "flow-value",
  "futures",
  "hex",
  "hyper",
@@ -1653,7 +1654,6 @@ dependencies = [
  "tracing",
  "tracing-log",
  "url",
- "value",
  "wormhole-sdk",
 ]
 
@@ -2179,6 +2179,7 @@ dependencies = [
  "either",
  "flow",
  "flow-lib",
+ "flow-value",
  "futures-util",
  "hashbrown 0.13.2",
  "kv",
@@ -2199,8 +2200,8 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "url",
+ "utils",
  "uuid 1.5.0",
- "value",
  "x509-parser",
 ]
 
@@ -2674,6 +2675,7 @@ dependencies = [
  "cmds-std",
  "derive_more",
  "flow-lib",
+ "flow-value",
  "futures",
  "hashbrown 0.13.2",
  "indexmap 2.1.0",
@@ -2695,17 +2697,17 @@ dependencies = [
  "tracing-subscriber",
  "utils",
  "uuid 1.5.0",
- "value",
 ]
 
 [[package]]
 name = "flow-lib"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "actix",
  "anyhow",
  "async-trait",
  "bytes",
+ "flow-value",
  "futures",
  "inventory",
  "once_cell",
@@ -2721,7 +2723,6 @@ dependencies = [
  "tower",
  "tracing",
  "uuid 1.5.0",
- "value",
 ]
 
 [[package]]
@@ -2748,6 +2749,7 @@ dependencies = [
  "either",
  "flow",
  "flow-lib",
+ "flow-value",
  "futures-channel",
  "futures-util",
  "hashbrown 0.13.2",
@@ -2772,7 +2774,24 @@ dependencies = [
  "tracing-subscriber",
  "utils",
  "uuid 1.5.0",
- "value",
+]
+
+[[package]]
+name = "flow-value"
+version = "0.1.0"
+dependencies = [
+ "base64 0.13.1",
+ "bs58 0.4.0",
+ "bytes",
+ "indexmap 2.1.0",
+ "itoa",
+ "rust_decimal",
+ "rust_decimal_macros",
+ "ryu",
+ "serde",
+ "serde_json",
+ "solana-sdk",
+ "thiserror",
 ]
 
 [[package]]
@@ -7843,8 +7862,11 @@ name = "utils"
 version = "0.0.0"
 dependencies = [
  "actix",
+ "bs58 0.4.0",
  "futures-util",
  "hashbrown 0.13.2",
+ "serde",
+ "thiserror",
  "tower",
 ]
 
@@ -7873,24 +7895,6 @@ name = "valuable"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
-
-[[package]]
-name = "value"
-version = "0.0.1"
-dependencies = [
- "base64 0.13.1",
- "bs58 0.4.0",
- "bytes",
- "indexmap 2.1.0",
- "itoa",
- "rust_decimal",
- "rust_decimal_macros",
- "ryu",
- "serde",
- "serde_json",
- "solana-sdk",
- "thiserror",
-]
 
 [[package]]
 name = "vcpkg"

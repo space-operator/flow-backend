@@ -6,14 +6,14 @@ use crate::{
     },
     Error, LocalStorage, WasmStorage,
 };
-use deadpool_postgres::{
-    ClientWrapper, Hook, HookError, Metrics, Object as Connection, Pool, SslMode,
-};
+use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, SslMode};
 use flow_lib::{context::get_jwt, UserId};
 use futures_util::FutureExt;
 use hashbrown::HashMap;
 use ring::signature::{UnparsedPublicKey, RSA_PSS_2048_8192_SHA256};
 use std::{sync::Arc, time::Duration};
+
+pub use deadpool_postgres::Object as Connection;
 
 #[derive(Clone)]
 pub enum DbPool {

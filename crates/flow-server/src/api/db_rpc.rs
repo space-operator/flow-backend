@@ -3,7 +3,7 @@ use serde_json::value::RawValue;
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
     web::resource("/db_rpc")
-        .wrap(config.apikey_auth(db))
+        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(db_rpc))
 }

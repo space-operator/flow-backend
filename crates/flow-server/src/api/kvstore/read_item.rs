@@ -3,7 +3,7 @@ use value::Value;
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
     web::resource("/read_item")
-        .wrap(config.apikey_auth(db))
+        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(read_item))
 }

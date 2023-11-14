@@ -1,4 +1,5 @@
 use flow_lib::config::client::NodeDataSkipWasm;
+use utils::bs58_decode;
 
 use super::*;
 
@@ -9,6 +10,37 @@ impl UserConnection {
             user_id,
             wasm_storage,
         }
+    }
+
+    pub async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
+        let stmt = self
+            .conn
+            .prepare_cached("SELECT public_key, keypair FROM wallets WHERE user_id = $1")
+            .await
+            .map_err(Error::exec("prepare get_wallets"))?;
+        self.conn
+            .query(&stmt, &[&self.user_id])
+            .await
+            .map_err(Error::exec("get wallets"))?
+            .into_iter()
+            .map(|r| {
+                let pubkey_str = r
+                    .try_get::<_, String>(0)
+                    .map_err(Error::data("wallets.public_key"))?;
+                let pubkey =
+                    bs58_decode(&pubkey_str).map_err(Error::parsing("wallets.public_key"))?;
+
+                let keypair_str = r
+                    .try_get::<_, Option<String>>(1)
+                    .map_err(Error::data("wallets.keypair"))?;
+                let keypair = keypair_str
+                    .map(|s| utils::bs58_decode(&s))
+                    .transpose()
+                    .map_err(Error::parsing("wallets.keypair"))?;
+
+                Ok(Wallet { pubkey, keypair })
+            })
+            .collect()
     }
 
     pub async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>> {
