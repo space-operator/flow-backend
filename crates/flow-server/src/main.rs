@@ -142,6 +142,7 @@ async fn main() {
         let flow = web::scope("/flow")
             .service(api::start_flow::service(&config, db.clone()))
             .service(api::stop_flow::service(&config, db.clone()))
+            .service(api::start_flow_shared::service(&config, db.clone()))
             .service(api::clone_flow::service(&config, db.clone()));
         let websocket = web::scope("/ws").service(wss::service(&config, db.clone()));
         let signature =
