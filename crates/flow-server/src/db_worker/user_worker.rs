@@ -247,17 +247,27 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                 return Err(new_flow_run::Error::Unauthorized);
             }
 
-            let run_id = db
+            let conn = db
                 .get_user_conn(user_id)
                 .await
-                .map_err(|e| new_flow_run::Error::Other(e.into()))?
+                .map_err(new_flow_run::Error::other)?;
+            let run_id = conn
                 .new_flow_run(&msg.config, &msg.inputs)
                 .await
-                .map_err(|e| new_flow_run::Error::Other(e.into()))?;
+                .map_err(new_flow_run::Error::other)?;
+
+            for id in &msg.shared_with {
+                if *id != user_id {
+                    conn.share_flow_run(run_id, *id)
+                        .await
+                        .map_err(new_flow_run::Error::other)?;
+                }
+            }
 
             let actor = FlowRunWorker::new(
                 run_id,
                 user_id,
+                msg.shared_with,
                 counter,
                 msg.stream,
                 db.clone(),
@@ -480,6 +490,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
 
             let r = FlowRegistry::from_actix(
                 msg.user,
+                Vec::new(),
                 msg.flow_id,
                 signer.recipient(),
                 addr.clone().recipient(),
@@ -499,6 +510,82 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     false,
                     FlowRunOrigin::Start {},
                 )
+                .await?
+                .0;
+
+            Ok(run_id)
+        })
+    }
+}
+
+pub struct StartFlowShared {
+    pub flow_id: FlowId,
+    pub input: value::Map,
+    pub started_by: (UserId, actix::Addr<UserWorker>),
+}
+
+impl actix::Message for StartFlowShared {
+    type Result = Result<FlowRunId, StartError>;
+}
+
+impl actix::Handler<StartFlowShared> for UserWorker {
+    type Result = ResponseFuture<<StartFlowShared as actix::Message>::Result>;
+
+    fn handle(&mut self, msg: StartFlowShared, ctx: &mut Self::Context) -> Self::Result {
+        if msg.started_by.0 == self.user_id {
+            return self.handle(
+                StartFlowFresh {
+                    user: User { id: self.user_id },
+                    flow_id: msg.flow_id,
+                    input: msg.input,
+                    partial_config: None,
+                    environment: <_>::default(),
+                },
+                ctx,
+            );
+        }
+
+        let user_id = self.user_id;
+        let addr = ctx.address();
+        let endpoints = self.endpoints.clone();
+        let root = self.root.clone();
+        let db = self.db.clone();
+        Box::pin(async move {
+            let wrk = root
+                .send(GetTokenWorker {
+                    user_id,
+                    rt: actix::Arbiter::try_current().unwrap_or_else(|| {
+                        tracing::warn!("starting new arbiter");
+                        actix::Arbiter::new().handle()
+                    }),
+                })
+                .await??;
+
+            let signer = SignerWorker::fetch_and_start(
+                db,
+                &[
+                    (user_id, addr.clone().recipient()),
+                    (msg.started_by.0, msg.started_by.1.recipient()),
+                ],
+            )
+            .await?;
+
+            let r = FlowRegistry::from_actix(
+                User { id: user_id },
+                [msg.started_by.0].into(),
+                msg.flow_id,
+                signer.recipient(),
+                addr.clone().recipient(),
+                addr.clone().recipient(),
+                addr.clone().recipient(),
+                wrk.recipient(),
+                <_>::default(),
+                endpoints,
+            )
+            .await?;
+
+            let run_id = r
+                .start(msg.flow_id, msg.input, None, false, FlowRunOrigin::Start {})
                 .await?
                 .0;
 

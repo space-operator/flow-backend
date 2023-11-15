@@ -4,6 +4,7 @@ pub mod init_auth;
 
 pub mod start_flow;
 pub mod stop_flow;
+pub mod start_flow_shared;
 
 pub mod clone_flow;
 

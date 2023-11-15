@@ -72,7 +72,7 @@
     },
     {
       "name": "private_key",
-      "type_bounds": ["keypair"],
+      "type_bounds": ["keypair", "pubkey"],
       "required": false,
       "defaultValue": null,
       "tooltip": "Load using a base 58 string, ignores seed/passphrase",

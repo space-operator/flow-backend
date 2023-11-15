@@ -12,6 +12,56 @@ impl UserConnection {
         }
     }
 
+    pub async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
+        // Same user, not doing anything
+        if user == self.user_id {
+            return Ok(());
+        }
+
+        let stmt = self
+            .conn
+            .prepare_cached("SELECT 1 FROM flow_run WHERE id = $1 AND user_id = $2")
+            .await
+            .map_err(Error::exec("prepare"))?;
+        self.conn
+            .query_one(&stmt, &[&id, &self.user_id])
+            .await
+            .map_err(Error::exec("check conn permission"))?;
+
+        let stmt = self
+            .conn
+            .prepare_cached(
+                "INSERT INTO flow_run_shared (flow_run_id, user_id)
+                VALUES ($1, $2)
+                ON CONFLICT (flow_run_id, user_id) DO NOTHING",
+            )
+            .await
+            .map_err(Error::exec("prepare"))?;
+        self.conn
+            .execute(&stmt, &[&id, &user])
+            .await
+            .map_err(Error::exec("insert flow_run_shared"))?;
+
+        Ok(())
+    }
+
+    pub async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
+        let stmt = self
+            .conn
+            .prepare_cached(
+                r#"SELECT user_id, start_shared FROM flows
+                WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
+            )
+            .await
+            .map_err(Error::exec("prepare"))?;
+        self.conn
+            .query_opt(&stmt, &[&flow_id, &self.user_id])
+            .await
+            .map_err(Error::exec("get_flow_info"))?
+            .ok_or_else(|| Error::not_found("flow", flow_id))?
+            .try_into()
+    }
+
     pub async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
         let stmt = self
             .conn

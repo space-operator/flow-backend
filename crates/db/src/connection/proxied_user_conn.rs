@@ -1,13 +1,11 @@
+use super::*;
+use crate::FlowRunLogsRow;
 use flow_lib::{context::get_jwt, BoxError, UserId};
 use reqwest::header::AUTHORIZATION;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::value::RawValue;
 use thiserror::Error as ThisError;
 use value::ConstBytes;
-
-use crate::FlowRunLogsRow;
-
-use super::*;
 
 #[derive(ThisError, Debug)]
 pub enum Error {
@@ -85,6 +83,14 @@ impl ProxiedUserConn {
 
 #[async_trait::async_trait]
 impl UserConnectionTrait for ProxiedUserConn {
+    async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
+        self.send("share_flow_run", &(id, user)).await
+    }
+
+    async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
+        self.send("get_flow_info", &(flow_id,)).await
+    }
+
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
         self.send::<[(); 0], _>("get_wallets", &[]).await
     }
@@ -234,6 +240,17 @@ impl UserConnection {
     pub async fn process_rpc(&mut self, req_json: &str) -> Result<Box<RawValue>, BoxError> {
         let req: RpcRequest<'_, &'_ RawValue> = serde_json::from_str(req_json)?;
         match req.method {
+            "share_flow_run" => {
+                let (id, user) = serde_json::from_str(req.params.get())?;
+                let res = self.share_flow_run(id, user).await?;
+                Ok(serde_json::value::to_raw_value(&res)?)
+            }
+
+            "get_flow_info" => {
+                let (id,) = serde_json::from_str(req.params.get())?;
+                let res = self.get_flow_info(id).await?;
+                Ok(serde_json::value::to_raw_value(&res)?)
+            }
             "get_wallets" => {
                 let res = self.get_wallets().await?;
                 Ok(serde_json::value::to_raw_value(&res)?)
