@@ -23,6 +23,7 @@ use utils::address_book::ManagableActor;
 pub struct FlowRunWorker {
     root: actix::Addr<DBWorker>,
     user_id: UserId,
+    shared_with: Vec<UserId>,
     run_id: FlowRunId,
     stop_signal: StopSignal,
     counter: Counter,
@@ -102,7 +103,7 @@ impl actix::Handler<SubscribeEvents> for FlowRunWorker {
     type Result = Result<(SubscriptionID, Vec<Event>), SubscribeError>;
 
     fn handle(&mut self, msg: SubscribeEvents, _: &mut Self::Context) -> Self::Result {
-        if msg.user_id != self.user_id {
+        if msg.user_id != self.user_id && self.shared_with.contains(&msg.user_id) {
             return Err(SubscribeError::Unauthorized);
         }
         msg.receiver
@@ -176,6 +177,7 @@ impl FlowRunWorker {
     pub fn new(
         run_id: FlowRunId,
         user_id: UserId,
+        shared_with: Vec<UserId>,
         counter: Counter,
         stream: BoxStream<'static, flow_run_events::Event>,
         db: DbPool,
@@ -184,6 +186,7 @@ impl FlowRunWorker {
         FlowRunWorker {
             root,
             user_id,
+            shared_with,
             run_id,
             stop_signal: StopSignal::new(),
             counter,

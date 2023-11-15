@@ -33,6 +33,7 @@ pub enum StopError {
 pub struct FlowRegistry {
     depth: u32,
     user: User,
+    shared_with: Vec<UserId>,
     flows: Arc<HashMap<FlowId, ClientConfig>>,
     endpoints: Endpoints,
     signer: signer::Svc,
@@ -50,6 +51,7 @@ impl Default for FlowRegistry {
         Self {
             depth: 0,
             user: User::new(UserId::nil()),
+            shared_with: <_>::default(),
             flows: Arc::new(HashMap::new()),
             endpoints: <_>::default(),
             signer,
@@ -117,6 +119,7 @@ async fn get_all_flows(
 impl FlowRegistry {
     pub async fn new(
         user: User,
+        shared_with: Vec<UserId>,
         entrypoint: FlowId,
         signer: signer::Svc,
         new_flow_run: new_flow_run::Svc,
@@ -130,6 +133,7 @@ impl FlowRegistry {
         Ok(Self {
             depth: 0,
             user,
+            shared_with,
             flows: Arc::new(flows),
             signer,
             new_flow_run,
@@ -141,6 +145,7 @@ impl FlowRegistry {
 
     pub async fn from_actix(
         user: User,
+        shared_with: Vec<UserId>,
         entrypoint: FlowId,
         signer: actix::Recipient<signer::SignatureRequest>,
         new_flow_run: actix::Recipient<new_flow_run::Request>,
@@ -152,6 +157,7 @@ impl FlowRegistry {
     ) -> Result<Self, get_flow::Error> {
         Self::new(
             user,
+            shared_with,
             entrypoint,
             TowerClient::from_service(ActixService::from(signer), signer::Error::Worker, 16),
             TowerClient::from_service(
@@ -198,6 +204,7 @@ impl FlowRegistry {
             .new_flow_run
             .call_ref(new_flow_run::Request {
                 user_id: self.user.id,
+                shared_with: self.shared_with.clone(),
                 config: ClientConfig {
                     call_depth: self.depth,
                     origin,
@@ -299,6 +306,7 @@ pub mod new_flow_run {
     pub struct Request {
         pub user_id: UserId,
         pub config: ClientConfig,
+        pub shared_with: Vec<UserId>,
         pub inputs: ValueSet,
         pub stream: BoxStream<'static, flow_run_events::Event>,
     }

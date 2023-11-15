@@ -289,6 +289,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
             let actor = FlowRunWorker::new(
                 run_id,
                 user_id,
+                msg.shared_with,
                 counter,
                 msg.stream,
                 db.clone(),
@@ -511,6 +512,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
 
             let r = FlowRegistry::from_actix(
                 msg.user,
+                Vec::new(),
                 msg.flow_id,
                 signer.recipient(),
                 addr.clone().recipient(),
@@ -592,6 +594,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
 
             let r = FlowRegistry::from_actix(
                 User { id: user_id },
+                [msg.started_by.0].into(),
                 msg.flow_id,
                 signer.recipient(),
                 addr.clone().recipient(),
