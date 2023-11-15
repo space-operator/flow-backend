@@ -327,6 +327,12 @@ pub mod new_flow_run {
         Other(#[from] BoxError),
     }
 
+    impl Error {
+        pub fn other<E: Into<BoxError>>(e: E) -> Self {
+            Self::Other(e.into())
+        }
+    }
+
     pub struct Response {
         pub flow_run_id: FlowRunId,
         pub stop_signal: StopSignal,

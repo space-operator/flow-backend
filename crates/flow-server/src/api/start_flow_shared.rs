@@ -1,8 +1,5 @@
 use super::prelude::*;
-use crate::db_worker::{
-    user_worker::{StartFlowFresh, StartFlowShared},
-    GetUserWorker,
-};
+use crate::db_worker::{user_worker::StartFlowShared, GetUserWorker};
 use db::pool::DbPool;
 use hashbrown::HashMap;
 use value::Value;
@@ -30,6 +27,7 @@ async fn start_flow_shared(
     params: Option<web::Json<Params>>,
     user: web::ReqData<auth::JWTPayload>,
     db_worker: web::Data<actix::Addr<DBWorker>>,
+    db: web::Data<DbPool>,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let user = user.into_inner();
@@ -38,21 +36,37 @@ async fn start_flow_shared(
         .unwrap_or_default();
     let inputs = inputs.into_iter().collect::<ValueSet>();
 
-    let flow_run_id = db_worker
+    let flow = db
+        .get_user_conn(user.user_id)
+        .await?
+        .get_flow_info(flow_id)
+        .await?;
+    if !flow.start_shared {
+        return Err(Error::custom(StatusCode::FORBIDDEN, "not allowed"));
+    }
+
+    let rt = actix::Arbiter::try_current().unwrap_or_else(|| {
+        tracing::warn!("starting new arbiter");
+        actix::Arbiter::new().handle()
+    });
+    let starter = db_worker
         .send(GetUserWorker {
             user_id: user.user_id,
-            rt: actix::Arbiter::try_current().unwrap_or_else(|| {
-                tracing::warn!("starting new arbiter");
-                actix::Arbiter::new().handle()
-            }),
+            rt: rt.clone(),
         })
-        .await?
-        .send(StartFlowFresh {
-            user: flow_lib::User { id: user.user_id },
+        .await?;
+    let owner = db_worker
+        .send(GetUserWorker {
+            user_id: flow.user_id,
+            rt,
+        })
+        .await?;
+
+    let flow_run_id = owner
+        .send(StartFlowShared {
             flow_id,
             input: inputs,
-            partial_config: None,
-            environment: HashMap::new(),
+            started_by: (user.user_id, starter),
         })
         .await??;
 

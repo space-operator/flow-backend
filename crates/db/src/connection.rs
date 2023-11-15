@@ -45,6 +45,8 @@ impl TryFrom<Row> for FlowInfo {
 
 #[async_trait]
 pub trait UserConnectionTrait: Any + 'static {
+    async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()>;
+
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo>;
 
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>>;
@@ -140,6 +142,10 @@ pub trait UserConnectionTrait: Any + 'static {
 
 #[async_trait]
 impl UserConnectionTrait for UserConnection {
+    async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
+        self.share_flow_run(id, user).await
+    }
+
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
         self.get_flow_info(flow_id).await
     }
