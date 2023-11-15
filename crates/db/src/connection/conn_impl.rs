@@ -12,11 +12,11 @@ impl UserConnection {
         }
     }
 
-    pub async fn get_flow_owner(&self, flow_id: FlowId) -> crate::Result<UserId> {
+    pub async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
         let stmt = self
             .conn
             .prepare_cached(
-                r#"SELECT user_id FROM flows
+                r#"SELECT user_id, start_shared FROM flows
                 WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
             )
             .await
@@ -24,10 +24,9 @@ impl UserConnection {
         self.conn
             .query_opt(&stmt, &[&flow_id, &self.user_id])
             .await
-            .map_err(Error::exec("get_flow_owner"))?
+            .map_err(Error::exec("get_flow_info"))?
             .ok_or_else(|| Error::not_found("flow", flow_id))?
-            .try_get::<_, UserId>(0)
-            .map_err(Error::data("flow.user_id"))
+            .try_into()
     }
 
     pub async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {

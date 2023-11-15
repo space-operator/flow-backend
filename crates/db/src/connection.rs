@@ -9,7 +9,7 @@ use flow_lib::{
 use hashbrown::{HashMap, HashSet};
 use serde_json::Value as JsonValue;
 use std::any::Any;
-use tokio_postgres::types::Json;
+use tokio_postgres::{types::Json, Row};
 use uuid::Uuid;
 use value::Value;
 
@@ -25,9 +25,27 @@ pub struct UserConnection {
     pub user_id: Uuid,
 }
 
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct FlowInfo {
+    pub user_id: Uuid,
+    pub start_shared: bool,
+}
+
+impl TryFrom<Row> for FlowInfo {
+    type Error = crate::Error;
+    fn try_from(r: Row) -> Result<Self, Self::Error> {
+        Ok(Self {
+            user_id: r.try_get("user_id").map_err(Error::data("flow.user_id"))?,
+            start_shared: r
+                .try_get("start_shared")
+                .map_err(Error::data("flow.start_shared"))?,
+        })
+    }
+}
+
 #[async_trait]
 pub trait UserConnectionTrait: Any + 'static {
-    async fn get_flow_owner(&self, flow_id: FlowId) -> crate::Result<UserId>;
+    async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo>;
 
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>>;
 
@@ -122,8 +140,8 @@ pub trait UserConnectionTrait: Any + 'static {
 
 #[async_trait]
 impl UserConnectionTrait for UserConnection {
-    async fn get_flow_owner(&self, flow_id: FlowId) -> crate::Result<UserId> {
-        self.get_flow_owner(flow_id).await
+    async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
+        self.get_flow_info(flow_id).await
     }
 
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
