@@ -103,7 +103,7 @@ impl actix::Handler<SubscribeEvents> for FlowRunWorker {
     type Result = Result<(SubscriptionID, Vec<Event>), SubscribeError>;
 
     fn handle(&mut self, msg: SubscribeEvents, _: &mut Self::Context) -> Self::Result {
-        if msg.user_id != self.user_id && self.shared_with.contains(&msg.user_id) {
+        if msg.user_id != self.user_id && !self.shared_with.contains(&msg.user_id) {
             return Err(SubscribeError::Unauthorized);
         }
         msg.receiver

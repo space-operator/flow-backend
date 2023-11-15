@@ -234,37 +234,6 @@ impl actix::Handler<get_flow::Request> for UserWorker {
     }
 }
 
-struct ShareFlowRun {
-    worker: actix::Recipient<new_flow_run::Request>,
-    flow_owner: UserId,
-    share_with: UserId,
-    db: DbPool,
-}
-
-impl Actor for ShareFlowRun {
-    type Context = actix::Context<Self>;
-}
-
-impl actix::Handler<new_flow_run::Request> for ShareFlowRun {
-    type Result = ResponseFuture<Result<new_flow_run::Response, new_flow_run::Error>>;
-    fn handle(&mut self, msg: new_flow_run::Request, _: &mut Self::Context) -> Self::Result {
-        let worker = self.worker.clone();
-        let flow_owner = self.flow_owner;
-        let db = self.db.clone();
-        let share_with = self.share_with;
-        Box::pin(async move {
-            let res = worker.send(msg).await??;
-            db.get_user_conn(flow_owner)
-                .await
-                .map_err(new_flow_run::Error::other)?
-                .share_flow_run(res.flow_run_id, share_with)
-                .await
-                .map_err(new_flow_run::Error::other)?;
-            Ok(res)
-        })
-    }
-}
-
 impl actix::Handler<new_flow_run::Request> for UserWorker {
     type Result = ResponseFuture<Result<new_flow_run::Response, new_flow_run::Error>>;
 
@@ -278,13 +247,22 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                 return Err(new_flow_run::Error::Unauthorized);
             }
 
-            let run_id = db
+            let conn = db
                 .get_user_conn(user_id)
                 .await
-                .map_err(new_flow_run::Error::other)?
+                .map_err(new_flow_run::Error::other)?;
+            let run_id = conn
                 .new_flow_run(&msg.config, &msg.inputs)
                 .await
                 .map_err(new_flow_run::Error::other)?;
+
+            for id in &msg.shared_with {
+                if *id != user_id {
+                    conn.share_flow_run(run_id, *id)
+                        .await
+                        .map_err(new_flow_run::Error::other)?;
+                }
+            }
 
             let actor = FlowRunWorker::new(
                 run_id,
