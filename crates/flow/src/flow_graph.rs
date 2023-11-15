@@ -888,11 +888,9 @@ impl FlowGraph {
                     let res = s
                         .stop
                         .race(
-                            std::pin::pin!(ins.execute(
-                                &self.ctx.solana_client,
-                                self.ctx.signer.clone(),
-                                self.ctx.user.id,
-                            )),
+                            std::pin::pin!(
+                                ins.execute(&self.ctx.solana_client, self.ctx.signer.clone(),)
+                            ),
                             execute::Error::Canceled,
                         )
                         .await;

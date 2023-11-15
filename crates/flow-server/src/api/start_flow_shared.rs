@@ -1,5 +1,8 @@
 use super::prelude::*;
-use crate::db_worker::{user_worker::StartFlowFresh, GetUserWorker};
+use crate::db_worker::{
+    user_worker::{StartFlowFresh, StartFlowShared},
+    GetUserWorker,
+};
 use db::pool::DbPool;
 use hashbrown::HashMap;
 use value::Value;

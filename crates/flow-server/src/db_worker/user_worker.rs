@@ -381,6 +381,12 @@ impl actix::Handler<SubmitSignature> for UserWorker {
     }
 }
 
+pub struct StartFlowShared {
+    pub user: User,
+    pub flow_id: FlowId,
+    pub input: value::Map,
+}
+
 pub struct StartFlowFresh {
     pub user: User,
     pub flow_id: FlowId,

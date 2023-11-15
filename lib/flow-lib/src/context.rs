@@ -85,7 +85,7 @@ pub mod get_jwt {
 
 /// Request Solana signature from external wallets.
 pub mod signer {
-    use crate::{utils::TowerClient, BoxError, UserId};
+    use crate::{utils::TowerClient, BoxError};
     use solana_sdk::{pubkey::Pubkey, signature::Signature};
     use std::time::Duration;
     use thiserror::Error as ThisError;
@@ -110,7 +110,6 @@ pub mod signer {
 
     #[derive(Debug, Clone)]
     pub struct SignatureRequest {
-        pub user_id: UserId,
         pub pubkey: Pubkey,
         pub message: bytes::Bytes,
         pub timeout: Duration,
@@ -220,13 +219,12 @@ pub mod execute {
     pub fn simple(ctx: &super::Context, size: usize) -> Svc {
         let rpc = ctx.solana_client.clone();
         let signer = ctx.signer.clone();
-        let user_id = ctx.user.id;
         let handle = move |req: Request| {
             let rpc = rpc.clone();
             let signer = signer.clone();
             async move {
                 Ok(Response {
-                    signature: Some(req.instructions.execute(&rpc, signer, user_id).await?),
+                    signature: Some(req.instructions.execute(&rpc, signer).await?),
                 })
             }
         };
@@ -370,13 +368,11 @@ impl Context {
         timeout: Duration,
     ) -> Result<Signature, anyhow::Error> {
         let mut s = self.signer.clone();
-        let user_id = self.user.id;
 
         let signer::SignatureResponse { signature } = s
             .ready()
             .await?
             .call(signer::SignatureRequest {
-                user_id,
                 pubkey,
                 message,
                 timeout,

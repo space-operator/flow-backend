@@ -1,4 +1,4 @@
-use crate::{context::execute::Error, context::signer, UserId};
+use crate::{context::execute::Error, context::signer};
 use bytes::Bytes;
 use futures::TryStreamExt;
 use solana_client::{
@@ -105,12 +105,7 @@ impl Instructions {
         Ok(())
     }
 
-    pub async fn execute(
-        self,
-        rpc: &RpcClient,
-        signer: signer::Svc,
-        user_id: UserId,
-    ) -> Result<Signature, Error> {
+    pub async fn execute(self, rpc: &RpcClient, signer: signer::Svc) -> Result<Signature, Error> {
         let recent_blockhash = rpc.get_latest_blockhash().await?;
         let balance: u64 = rpc.get_balance(&self.fee_payer).await?;
 
@@ -148,7 +143,6 @@ impl Instructions {
         let reqs = wallets
             .iter()
             .map(|&pubkey| signer::SignatureRequest {
-                user_id,
                 pubkey,
                 message: msg.clone(),
                 timeout: SIGNATURE_TIMEOUT,
