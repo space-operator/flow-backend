@@ -1,13 +1,11 @@
+use super::*;
+use crate::FlowRunLogsRow;
 use flow_lib::{context::get_jwt, BoxError, UserId};
 use reqwest::header::AUTHORIZATION;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::value::RawValue;
 use thiserror::Error as ThisError;
 use value::ConstBytes;
-
-use crate::FlowRunLogsRow;
-
-use super::*;
 
 #[derive(ThisError, Debug)]
 pub enum Error {
@@ -85,6 +83,10 @@ impl ProxiedUserConn {
 
 #[async_trait::async_trait]
 impl UserConnectionTrait for ProxiedUserConn {
+    async fn get_flow_owner(&self, flow_id: FlowId) -> crate::Result<UserId> {
+        self.send("get_flow_owner", &(flow_id,)).await
+    }
+
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
         self.send::<[(); 0], _>("get_wallets", &[]).await
     }
@@ -234,6 +236,11 @@ impl UserConnection {
     pub async fn process_rpc(&mut self, req_json: &str) -> Result<Box<RawValue>, BoxError> {
         let req: RpcRequest<'_, &'_ RawValue> = serde_json::from_str(req_json)?;
         match req.method {
+            "get_flow_owner" => {
+                let (id,) = serde_json::from_str(req.params.get())?;
+                let res = self.get_flow_owner(id).await?;
+                Ok(serde_json::value::to_raw_value(&res)?)
+            }
             "get_wallets" => {
                 let res = self.get_wallets().await?;
                 Ok(serde_json::value::to_raw_value(&res)?)

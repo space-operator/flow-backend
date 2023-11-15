@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use deadpool_postgres::Object as Connection;
 use flow_lib::{
     config::client::{self, ClientConfig},
-    CommandType, FlowId, FlowRunId, NodeId, ValueSet,
+    CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
 };
 use hashbrown::{HashMap, HashSet};
 use serde_json::Value as JsonValue;
@@ -27,6 +27,8 @@ pub struct UserConnection {
 
 #[async_trait]
 pub trait UserConnectionTrait: Any + 'static {
+    async fn get_flow_owner(&self, flow_id: FlowId) -> crate::Result<UserId>;
+
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>>;
 
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>>;
@@ -120,6 +122,10 @@ pub trait UserConnectionTrait: Any + 'static {
 
 #[async_trait]
 impl UserConnectionTrait for UserConnection {
+    async fn get_flow_owner(&self, flow_id: FlowId) -> crate::Result<UserId> {
+        self.get_flow_owner(flow_id).await
+    }
+
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
         self.get_wallets().await
     }
