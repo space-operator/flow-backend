@@ -72,7 +72,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             decimals,
         )?]
         .into(),
-        minimum_balance_for_rent_exemption: 0,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

@@ -84,7 +84,6 @@ impl KeypairExt for Keypair {
 pub struct Instructions {
     pub fee_payer: Pubkey,
     pub signers: Vec<Keypair>,
-    pub minimum_balance_for_rent_exemption: u64,
     pub instructions: Vec<Instruction>,
 }
 
@@ -93,9 +92,6 @@ impl Instructions {
         if next.fee_payer != self.fee_payer {
             return Err(next);
         }
-
-        // TODO: is += the right operation
-        self.minimum_balance_for_rent_exemption += next.minimum_balance_for_rent_exemption;
 
         // TODO: sort and dedup?
         self.signers.extend(next.signers);
@@ -107,20 +103,12 @@ impl Instructions {
 
     pub async fn execute(self, rpc: &RpcClient, signer: signer::Svc) -> Result<Signature, Error> {
         let recent_blockhash = rpc.get_latest_blockhash().await?;
-        let balance: u64 = rpc.get_balance(&self.fee_payer).await?;
 
         let message = Message::new_with_blockhash(
             &self.instructions,
             Some(&self.fee_payer),
             &recent_blockhash,
         );
-
-        let needed =
-            self.minimum_balance_for_rent_exemption + rpc.get_fee_for_message(&message).await?;
-
-        if balance < needed {
-            return Err(Error::InsufficientSolanaBalance { balance, needed });
-        }
 
         let mut tx = Transaction::new_unsigned(message);
 

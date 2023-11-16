@@ -52,20 +52,13 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         collection_master_edition = Some(master_edition);
     }
 
-    let minimum_balance_for_rent_exemption = ctx
-        .solana_client
-        .get_minimum_balance_for_rent_exemption(std::mem::size_of::<
-            mpl_token_metadata::accounts::MasterEdition,
-        >())
-        .await?;
-
     let accounts = mpl_token_metadata::instructions::VerifyCreatorV1 {
         authority: input.authority.pubkey(),
         delegate_record: input.delegate_record,
         metadata: input.metadata,
         collection_mint: input.collection_mint_account,
-        collection_metadata: collection_metadata,
-        collection_master_edition: collection_master_edition,
+        collection_metadata,
+        collection_master_edition,
         system_program: system_program::id(),
         sysvar_instructions: sysvar::instructions::id(),
     };
@@ -80,7 +73,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         ]
         .into(),
         instructions: [ins].into(),
-        minimum_balance_for_rent_exemption,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use solana_program::program_pack::Pack;
 use spl_associated_token_account::instruction::create_associated_token_account;
 
 const SOLANA_ASSOCIATED_TOKEN_ACCOUNT: &str = "associated_token_account";
@@ -39,11 +38,6 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let minimum_balance_for_rent_exemption = ctx
-        .solana_client
-        .get_minimum_balance_for_rent_exemption(spl_token::state::Account::LEN)
-        .await?;
-
     let instruction = create_associated_token_account(
         &input.fee_payer.pubkey(),
         &input.owner,
@@ -57,7 +51,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         Instructions {
             fee_payer: input.fee_payer.pubkey(),
             signers: [input.fee_payer.clone_keypair()].into(),
-            minimum_balance_for_rent_exemption,
             instructions: [instruction].into(),
         }
     } else {

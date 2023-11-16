@@ -21,19 +21,10 @@ pub async fn execute(
     client: &RpcClient,
     fee_payer: &Pubkey,
     instructions: &[Instruction],
-    minimum_balance_for_rent_exemption: u64,
 ) -> crate::Result<(Transaction, Hash)> {
     let recent_blockhash = client.get_latest_blockhash().await?;
 
     let message = Message::new_with_blockhash(instructions, Some(fee_payer), &recent_blockhash);
-
-    let balance = client.get_balance(fee_payer).await?;
-
-    let needed = minimum_balance_for_rent_exemption + client.get_fee_for_message(&message).await?;
-
-    if balance < needed {
-        return Err(crate::Error::InsufficientSolanaBalance { balance, needed });
-    }
 
     let transaction = Transaction::new_unsigned(message);
 

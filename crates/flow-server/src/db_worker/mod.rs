@@ -12,9 +12,9 @@ use utils::address_book::{AddressBook, ManagableActor};
 
 pub mod flow_run_worker;
 pub mod messages;
+pub mod signer;
 pub mod token_worker;
 pub mod user_worker;
-pub mod signer;
 
 pub use flow_run_worker::FlowRunWorker;
 pub use user_worker::UserWorker;

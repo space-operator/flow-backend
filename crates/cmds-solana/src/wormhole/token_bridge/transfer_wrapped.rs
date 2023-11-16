@@ -128,13 +128,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         data: (TokenBridgeInstructions::TransferWrapped, wrapped_data).try_to_vec()?,
     };
 
-    let minimum_balance_for_rent_exemption = ctx
-        .solana_client
-        .get_minimum_balance_for_rent_exemption(std::mem::size_of::<
-            mpl_bubblegum::accounts::CreateTree,
-        >())
-        .await?;
-
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [
@@ -156,7 +149,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             ix,
         ]
         .into(),
-        minimum_balance_for_rent_exemption,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

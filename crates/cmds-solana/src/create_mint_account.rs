@@ -44,7 +44,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let minimum_balance_for_rent_exemption = ctx
+    let lamports = ctx
         .solana_client
         .get_minimum_balance_for_rent_exemption(Mint::LEN)
         .await?;
@@ -61,7 +61,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             system_instruction::create_account(
                 &input.fee_payer.pubkey(),
                 &input.mint_account.pubkey(),
-                minimum_balance_for_rent_exemption,
+                lamports,
                 Mint::LEN as u64,
                 &spl_token::id(),
             ),
@@ -75,7 +75,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             spl_memo::build_memo(input.memo.as_bytes(), &[&input.fee_payer.pubkey()]),
         ]
         .into(),
-        minimum_balance_for_rent_exemption,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
