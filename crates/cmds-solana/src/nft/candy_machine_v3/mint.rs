@@ -156,13 +156,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     }
     .data();
 
-    let minimum_balance_for_rent_exemption = ctx
-        .solana_client
-        .get_minimum_balance_for_rent_exemption(std::mem::size_of::<
-            mpl_candy_machine_core::accounts::MintV2,
-        >())
-        .await?;
-
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [
@@ -180,7 +173,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             },
         ]
         .into(),
-        minimum_balance_for_rent_exemption,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

@@ -42,7 +42,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         Instructions {
             fee_payer: input.sender.pubkey(),
             signers: vec![input.sender.clone_keypair()],
-            minimum_balance_for_rent_exemption: 0,
+
             instructions: [instruction].into(),
         }
     } else {

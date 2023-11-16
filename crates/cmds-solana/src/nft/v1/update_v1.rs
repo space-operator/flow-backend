@@ -78,11 +78,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             .expect("update_authority field must be set")
     });
 
-    let minimum_balance_for_rent_exemption = ctx
-        .solana_client
-        .get_minimum_balance_for_rent_exemption(std::mem::size_of::<UpdateAsDelegateV1>())
-        .await?;
-
     let delegate_v1 = UpdateAsDelegateV1 {
         authority: authority_or_delegate.pubkey(),
         delegate_record: input.delegate_record,
@@ -109,7 +104,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         ]
         .into(),
         instructions: [create_ix].into(),
-        minimum_balance_for_rent_exemption,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

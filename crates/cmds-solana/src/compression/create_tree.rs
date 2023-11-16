@@ -10,8 +10,7 @@ use std::mem::size_of;
 // Command Name
 const CREATE_TREE: &str = "create_tree";
 
-const DEFINITION: &str =
-    flow_lib::node_definition!("solana/compression/create_tree.json");
+const DEFINITION: &str = flow_lib::node_definition!("solana/compression/create_tree.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;
@@ -254,13 +253,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     }
     .data();
 
-    let minimum_balance_for_rent_exemption = ctx
-        .solana_client
-        .get_minimum_balance_for_rent_exemption(std::mem::size_of::<
-            mpl_bubblegum::accounts::CreateTree,
-        >())
-        .await?;
-
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [
@@ -278,7 +270,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             },
         ]
         .into(),
-        minimum_balance_for_rent_exemption,
+       
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

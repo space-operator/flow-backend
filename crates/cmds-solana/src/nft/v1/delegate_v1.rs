@@ -114,11 +114,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         DelegateType::Token(..) => TokenRecord::find_pda(&input.mint_account, &token_account).0,
     };
 
-    let minimum_balance_for_rent_exemption = ctx
-        .solana_client
-        .get_minimum_balance_for_rent_exemption(std::mem::size_of::<DelegateV1>())
-        .await?;
-
     let delegate_v1 = DelegateV1 {
         delegate_record: Some(delegate_record),
         delegate: input.delegate.pubkey(),
@@ -147,7 +142,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         ]
         .into(),
         instructions: [create_ix].into(),
-        minimum_balance_for_rent_exemption,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

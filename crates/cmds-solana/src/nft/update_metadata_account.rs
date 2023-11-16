@@ -53,7 +53,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output1, CommandError> {
                     input.update_authority.clone_keypair(),
                 ]
                 .into(),
-                minimum_balance_for_rent_exemption: 0,
+               
                 instructions: [
                     mpl_token_metadata::instruction::update_metadata_accounts_v2(
                         mpl_token_metadata::id(),

@@ -88,7 +88,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
                 input.token_account.clone_keypair(),
             ]
             .into(),
-            minimum_balance_for_rent_exemption,
+
             instructions,
         }
     } else {

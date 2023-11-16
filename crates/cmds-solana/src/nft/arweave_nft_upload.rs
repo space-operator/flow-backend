@@ -328,7 +328,7 @@ impl Uploader {
         let instruction =
             solana_sdk::system_instruction::transfer(&self.fee_payer.pubkey(), &recipient, amount);
         let (mut tx, recent_blockhash) =
-            execute(&self.client, &self.fee_payer.pubkey(), &[instruction], 0).await?;
+            execute(&self.client, &self.fee_payer.pubkey(), &[instruction]).await?;
 
         try_sign_wallet(signer, &mut tx, &[&self.fee_payer], recent_blockhash).await?;
 

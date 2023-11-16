@@ -86,13 +86,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             .try_to_vec()?,
     };
 
-    let minimum_balance_for_rent_exemption = ctx
-        .solana_client
-        .get_minimum_balance_for_rent_exemption(std::mem::size_of::<
-            mpl_bubblegum::accounts::CreateTree,
-        >())
-        .await?;
-
     // Get message fee
     let bridge_config_account = ctx.solana_client.get_account(&bridge).await?;
     let bridge_config = BridgeData::try_from_slice(bridge_config_account.data.as_slice())?;
@@ -111,7 +104,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             ix,
         ]
         .into(),
-        minimum_balance_for_rent_exemption,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

@@ -44,7 +44,7 @@ async fn command_transfer_token(
     allow_unfunded_recipient: bool,
     fund_recipient: bool,
     memo: String,
-) -> crate::Result<(u64, Vec<Instruction>, Pubkey)> {
+) -> crate::Result<(Vec<Instruction>, Pubkey)> {
     let sender = if let Some(sender) = sender {
         sender
     } else {
@@ -78,7 +78,6 @@ async fn command_transfer_token(
     };
 
     let mut recipient_token_account = recipient;
-    let mut minimum_balance_for_rent_exemption = 0;
 
     let recipient_is_token_account = {
         let recipient_account_info = client
@@ -123,9 +122,6 @@ async fn command_transfer_token(
 
         if needs_funding {
             if fund_recipient {
-                minimum_balance_for_rent_exemption += client
-                    .get_minimum_balance_for_rent_exemption(spl_token::state::Account::LEN)
-                    .await?;
                 instructions.push(instruction::create_associated_token_account(
                     fee_payer,
                     &recipient,
@@ -152,11 +148,7 @@ async fn command_transfer_token(
 
     instructions.push(spl_memo::build_memo(memo.as_bytes(), &[fee_payer]));
 
-    Ok((
-        minimum_balance_for_rent_exemption,
-        instructions,
-        recipient_token_account,
-    ))
+    Ok((instructions, recipient_token_account))
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -191,21 +183,20 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let (minimum_balance_for_rent_exemption, instructions, recipient_token_account) =
-        command_transfer_token(
-            &ctx.solana_client,
-            &input.fee_payer.pubkey(),
-            input.mint_account,
-            input.amount,
-            input.decimals,
-            input.recipient,
-            input.sender_token_account,
-            input.sender_owner.pubkey(),
-            input.allow_unfunded,
-            input.fund_recipient,
-            input.memo,
-        )
-        .await?;
+    let (instructions, recipient_token_account) = command_transfer_token(
+        &ctx.solana_client,
+        &input.fee_payer.pubkey(),
+        input.mint_account,
+        input.amount,
+        input.decimals,
+        input.recipient,
+        input.sender_token_account,
+        input.sender_owner.pubkey(),
+        input.allow_unfunded,
+        input.fund_recipient,
+        input.memo,
+    )
+    .await?;
 
     let instructions = if input.submit {
         Instructions {
@@ -215,7 +206,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
                 input.sender_owner.clone_keypair(),
             ]
             .into(),
-            minimum_balance_for_rent_exemption,
             instructions,
         }
     } else {

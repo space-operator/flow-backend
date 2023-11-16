@@ -3,8 +3,8 @@ pub mod confirm_auth;
 pub mod init_auth;
 
 pub mod start_flow;
-pub mod stop_flow;
 pub mod start_flow_shared;
+pub mod stop_flow;
 
 pub mod clone_flow;
 
