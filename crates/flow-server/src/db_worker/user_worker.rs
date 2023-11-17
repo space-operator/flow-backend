@@ -445,6 +445,7 @@ impl ResponseError for StartError {
                 get_jwt::Error::WrongRecipient
                 | get_jwt::Error::Worker(_)
                 | get_jwt::Error::MailBox(_)
+                | get_jwt::Error::Supabase { .. }
                 | get_jwt::Error::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
             },
             StartError::Mailbox(_) => StatusCode::INTERNAL_SERVER_ERROR,

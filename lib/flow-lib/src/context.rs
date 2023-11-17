@@ -24,9 +24,10 @@ use tower::{Service, ServiceExt};
 /// [`user_token`][crate::config::node::Permissions::user_tokens] permission.
 pub mod get_jwt {
     use crate::{utils::TowerClient, BoxError, UserId};
-    use std::sync::Arc;
+    use std::{future::Ready, sync::Arc};
     use thiserror::Error as ThisError;
 
+    #[derive(Clone, Copy)]
     pub struct Request {
         pub user_id: UserId,
     }
@@ -48,6 +49,11 @@ pub mod get_jwt {
         Worker(Arc<BoxError>),
         #[error(transparent)]
         MailBox(#[from] Arc<actix::MailboxError>),
+        #[error("{}: {}", error, error_description)]
+        Supabase {
+            error: String,
+            error_description: String,
+        },
         #[error(transparent)]
         Other(#[from] Arc<BoxError>),
     }
@@ -80,6 +86,35 @@ pub mod get_jwt {
 
     pub fn not_allowed() -> Svc {
         Svc::unimplemented(|| Error::NotAllowed, Error::worker)
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    pub struct RetryPolicy(pub usize);
+
+    impl Default for RetryPolicy {
+        fn default() -> Self {
+            Self(1)
+        }
+    }
+
+    impl tower::retry::Policy<Request, Response, Error> for RetryPolicy {
+        type Future = Ready<Self>;
+
+        fn retry(&self, _: &Request, result: Result<&Response, &Error>) -> Option<Self::Future> {
+            match result {
+                Err(Error::Supabase {
+                    error_description, ..
+                }) if error_description.contains("Refresh Token") && self.0 > 0 => {
+                    tracing::error!("get_jwt error: {}, retrying", error_description);
+                    Some(std::future::ready(Self(self.0 - 1)))
+                }
+                _ => None,
+            }
+        }
+
+        fn clone_request(&self, req: &Request) -> Option<Request> {
+            Some(req.clone())
+        }
     }
 }
 

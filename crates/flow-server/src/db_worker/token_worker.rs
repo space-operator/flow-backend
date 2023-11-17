@@ -1,7 +1,7 @@
 use crate::{
     api::{apikey_info, claim_token},
     auth::X_API_KEY,
-    user::{PasswordLogin, SupabaseError},
+    user::PasswordLogin,
 };
 use actix::{Actor, ActorFutureExt, Addr, AsyncContext, ResponseFuture, WrapFuture};
 use actix_web::http::StatusCode;
@@ -178,13 +178,25 @@ impl Actor for TokenWorker {
     }
 }
 
+#[derive(Deserialize, Debug)]
+struct GoTrueError {
+    error: String,
+    error_description: String,
+}
+
 async fn supabase_error(resp: reqwest::Response) -> get_jwt::Error {
     let bytes = match resp.bytes().await {
         Ok(bytes) => bytes,
         Err(error) => return get_jwt::Error::other(error),
     };
-    match serde_json::from_slice::<SupabaseError>(&bytes) {
-        Ok(error) => get_jwt::Error::other(error.message),
+    match serde_json::from_slice::<GoTrueError>(&bytes) {
+        Ok(GoTrueError {
+            error,
+            error_description,
+        }) => get_jwt::Error::Supabase {
+            error,
+            error_description,
+        },
         Err(_) => get_jwt::Error::other(String::from_utf8_lossy(&bytes)),
     }
 }
@@ -404,4 +416,24 @@ pub async fn token_from_apikeys(
         })
         .collect::<HashMap<UserId, get_jwt::Svc>>();
     (services, actors)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn need_key_refresh() {
+        let error = refresh(
+            "Hello".to_owned(),
+            Endpoints {
+                flow_server: String::new(),
+                supabase: "https://base.spaceoperator.com".to_owned(),
+                supabase_anon_key: std::env::var("ANON_KEY").unwrap(),
+            },
+        )
+        .await
+        .unwrap_err();
+        dbg!(error);
+    }
 }

@@ -171,7 +171,14 @@ impl FlowRegistry {
                 get_previous_values::Error::Worker,
                 16,
             ),
-            TowerClient::from_service(ActixService::from(token), get_jwt::Error::worker, 16),
+            TowerClient::from_service(
+                tower::retry::Retry::new(
+                    get_jwt::RetryPolicy::default(),
+                    ActixService::from(token),
+                ),
+                get_jwt::Error::worker,
+                16,
+            ),
             environment,
             endpoints,
         )
