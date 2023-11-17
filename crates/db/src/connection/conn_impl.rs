@@ -256,14 +256,15 @@ impl UserConnection {
                     nodes,
                     edges,
                     collect_instructions,
-                    partial_config)
+                    partial_config,
+                    signers)
                 VALUES (
                     gen_random_uuid(),
                     $1, $2,
                     jsonb_build_object('M', $3::JSONB),
                     $4, $5,
                     jsonb_build_object('SOL', $6::JSONB),
-                    $7, $8, $9, $10, $11, $12)
+                    $7, $8, $9, $10, $11, $12, $13)
                 RETURNING id",
             )
             .await
@@ -294,6 +295,7 @@ impl UserConnection {
                     &config.edges.iter().map(Json).collect::<Vec<_>>(),
                     &config.collect_instructions,
                     &config.partial_config.as_ref().map(Json),
+                    &Json(&config.signers),
                 ],
             )
             .await

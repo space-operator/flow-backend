@@ -6,6 +6,7 @@ use flow_lib::{
 };
 use futures_util::FutureExt;
 use hashbrown::{hash_map::Entry, HashMap};
+use serde_json::Value as JsonValue;
 use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
 use std::future::ready;
 
@@ -118,12 +119,27 @@ impl SignerWorker {
         Ok(Self { signers })
     }
 
-    pub async fn fetch_and_start<'a, I>(db: DbPool, users: I) -> Result<actix::Addr<Self>, DbError>
+    pub async fn fetch_and_start<'a, I>(
+        db: DbPool,
+        users: I,
+    ) -> Result<(actix::Addr<Self>, JsonValue), DbError>
     where
         I: IntoIterator<Item = &'a (UserId, actix::Recipient<SignatureRequest>)>,
     {
         let signer = Self::fetch(db, users).await?;
-        tracing::debug!("using signers: {:#?}", signer.signers);
-        Ok(signer.start())
+        let signers_info = signer
+            .signers
+            .iter()
+            .map(|(pk, w)| {
+                (
+                    pk.to_string(),
+                    match w {
+                        SignerType::Keypair(_) => "HARDCODED".to_owned(),
+                        SignerType::UserWallet { user_id, .. } => user_id.to_string(),
+                    },
+                )
+            })
+            .collect::<JsonValue>();
+        Ok((signer.start(), signers_info.into()))
     }
 }

@@ -29,6 +29,8 @@ pub struct ClientConfig {
     pub call_depth: u32,
     #[serde(default = "default_origin")]
     pub origin: FlowRunOrigin,
+    #[serde(default)]
+    pub signers: JsonValue,
 }
 
 const fn default_origin() -> FlowRunOrigin {
