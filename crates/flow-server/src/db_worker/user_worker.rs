@@ -586,7 +586,15 @@ impl actix::Handler<StartFlowShared> for UserWorker {
             .await?;
 
             let run_id = r
-                .start(msg.flow_id, msg.input, None, false, FlowRunOrigin::Start {})
+                .start(
+                    msg.flow_id,
+                    msg.input,
+                    None,
+                    false,
+                    FlowRunOrigin::StartShared {
+                        started_by: msg.started_by.0,
+                    },
+                )
                 .await?
                 .0;
 
