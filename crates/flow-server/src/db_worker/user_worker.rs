@@ -564,8 +564,8 @@ impl actix::Handler<StartFlowShared> for UserWorker {
             let signer = SignerWorker::fetch_and_start(
                 db,
                 &[
-                    (user_id, addr.clone().recipient()),
                     (msg.started_by.0, msg.started_by.1.recipient()),
+                    (user_id, addr.clone().recipient()),
                 ],
             )
             .await?;
