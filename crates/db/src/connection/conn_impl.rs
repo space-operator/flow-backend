@@ -65,7 +65,7 @@ impl UserConnection {
     pub async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
         let stmt = self
             .conn
-            .prepare_cached("SELECT public_key, keypair FROM wallets WHERE user_id = $1")
+            .prepare_cached("SELECT public_key, keypair, id FROM wallets WHERE user_id = $1")
             .await
             .map_err(Error::exec("prepare get_wallets"))?;
         self.conn
@@ -88,7 +88,13 @@ impl UserConnection {
                     .transpose()
                     .map_err(Error::parsing("wallets.keypair"))?;
 
-                Ok(Wallet { pubkey, keypair })
+                let id = r.try_get(2).map_err(Error::data("wallets.id"))?;
+
+                Ok(Wallet {
+                    id,
+                    pubkey,
+                    keypair,
+                })
             })
             .collect()
     }

@@ -32,6 +32,7 @@ pub struct FlowRunLogsRow {
 
 #[derive(Serialize, Deserialize)]
 pub struct Wallet {
+    pub id: i64,
     #[serde(with = "utils::serde_bs58")]
     pub pubkey: [u8; 32],
     #[serde(
