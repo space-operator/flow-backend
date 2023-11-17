@@ -107,6 +107,7 @@ impl SignerWorker {
                             (slot.get(), &s),
                             (SignerType::UserWallet { .. }, SignerType::Keypair(_))
                         ) {
+                            tracing::warn!("replacing wallet {}", pk);
                             slot.insert(s);
                         }
                     }
