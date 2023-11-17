@@ -13,6 +13,7 @@ use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, UserId, ValueSet,
 };
 use hashbrown::HashMap;
+use serde_json::Value as JsonValue;
 use std::sync::Arc;
 use thiserror::Error as ThisError;
 use tracing::instrument::WithSubscriber;
@@ -35,6 +36,7 @@ pub struct FlowRegistry {
     user: User,
     shared_with: Vec<UserId>,
     flows: Arc<HashMap<FlowId, ClientConfig>>,
+    signers_info: JsonValue,
     endpoints: Endpoints,
     signer: signer::Svc,
     token: get_jwt::Svc,
@@ -54,6 +56,7 @@ impl Default for FlowRegistry {
             shared_with: <_>::default(),
             flows: Arc::new(HashMap::new()),
             endpoints: <_>::default(),
+            signers_info: <_>::default(),
             signer,
             token,
             new_flow_run,
@@ -121,7 +124,7 @@ impl FlowRegistry {
         user: User,
         shared_with: Vec<UserId>,
         entrypoint: FlowId,
-        signer: signer::Svc,
+        (signer, signers_info): (signer::Svc, JsonValue),
         new_flow_run: new_flow_run::Svc,
         get_flow: get_flow::Svc,
         get_previous_values: get_previous_values::Svc,
@@ -136,6 +139,7 @@ impl FlowRegistry {
             shared_with,
             flows: Arc::new(flows),
             signer,
+            signers_info,
             new_flow_run,
             get_previous_values,
             token,
@@ -147,7 +151,7 @@ impl FlowRegistry {
         user: User,
         shared_with: Vec<UserId>,
         entrypoint: FlowId,
-        signer: actix::Recipient<signer::SignatureRequest>,
+        (signer, signers_info): (actix::Recipient<signer::SignatureRequest>, JsonValue),
         new_flow_run: actix::Recipient<new_flow_run::Request>,
         get_flow: actix::Recipient<get_flow::Request>,
         get_previous_values: actix::Recipient<get_previous_values::Request>,
@@ -159,7 +163,10 @@ impl FlowRegistry {
             user,
             shared_with,
             entrypoint,
-            TowerClient::from_service(ActixService::from(signer), signer::Error::Worker, 16),
+            (
+                TowerClient::from_service(ActixService::from(signer), signer::Error::Worker, 16),
+                signers_info,
+            ),
             TowerClient::from_service(
                 ActixService::from(new_flow_run),
                 new_flow_run::Error::Worker,
@@ -171,7 +178,14 @@ impl FlowRegistry {
                 get_previous_values::Error::Worker,
                 16,
             ),
-            TowerClient::from_service(ActixService::from(token), get_jwt::Error::worker, 16),
+            TowerClient::from_service(
+                tower::retry::Retry::new(
+                    get_jwt::RetryPolicy::default(),
+                    ActixService::from(token),
+                ),
+                get_jwt::Error::worker,
+                16,
+            ),
             environment,
             endpoints,
         )
@@ -217,6 +231,7 @@ impl FlowRegistry {
                     } else {
                         config.instructions_bundling.clone()
                     },
+                    signers: self.signers_info.clone(),
                     ..config.clone()
                 },
                 inputs: inputs.clone(),

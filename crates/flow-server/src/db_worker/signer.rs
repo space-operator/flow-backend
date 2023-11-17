@@ -5,16 +5,33 @@ use flow_lib::{
     UserId,
 };
 use futures_util::FutureExt;
-use hashbrown::HashMap;
+use hashbrown::{hash_map::Entry, HashMap};
+use serde_json::Value as JsonValue;
 use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
 use std::future::ready;
 
 pub enum SignerType {
-    Keypair(Keypair),
+    Keypair(Box<Keypair>),
     UserWallet {
         // Forward to UserWorker
+        user_id: UserId,
         sender: actix::Recipient<SignatureRequest>,
     },
+}
+
+impl std::fmt::Debug for SignerType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Keypair(k) => f
+                .debug_tuple("SignerType::Keypair")
+                .field(&k.pubkey())
+                .finish(),
+            Self::UserWallet { user_id, .. } => f
+                .debug_tuple("SignerType::UserWallet")
+                .field(&user_id)
+                .finish(),
+        }
+    }
 }
 
 pub struct SignerWorker {
@@ -35,7 +52,7 @@ impl actix::Handler<SignatureRequest> for SignerWorker {
                 signature: keypair.sign_message(&msg.message),
             }))
             .boxed(),
-            Some(SignerType::UserWallet { sender }) => {
+            Some(SignerType::UserWallet { sender, .. }) => {
                 let fut = sender.send(msg);
                 async move { fut.await? }.boxed()
             }
@@ -44,42 +61,85 @@ impl actix::Handler<SignatureRequest> for SignerWorker {
 }
 
 impl SignerWorker {
-    pub async fn fetch_and_start<'a, I>(db: DbPool, users: I) -> Result<actix::Addr<Self>, DbError>
+    pub async fn fetch<'a, I>(db: DbPool, users: I) -> Result<Self, DbError>
     where
         I: IntoIterator<Item = &'a (UserId, actix::Recipient<SignatureRequest>)>,
     {
         let mut signers = HashMap::new();
-        for (user, sender) in users {
-            let conn = db.get_user_conn(*user).await?;
+
+        for (user_id, sender) in users {
+            let conn = db.get_user_conn(*user_id).await?;
             let wallets = conn.get_wallets().await?;
             for w in wallets {
                 let pk = Pubkey::new_from_array(w.pubkey);
                 if !pk.is_on_curve() {
-                    tracing::warn!("invalid wallet: pubkey is not on curve");
+                    tracing::warn!("invalid wallet: pubkey is not on curve; id={}", w.id);
                     continue;
                 }
                 let s = match w.keypair {
                     None => SignerType::UserWallet {
+                        user_id: *user_id,
                         sender: sender.clone(),
                     },
                     Some(keypair) => {
-                        let keypair = Keypair::from_bytes(&keypair).ok().and_then(|k| {
-                            let pubkey: ed25519_dalek::PublicKey = k.secret().into();
-                            (k.pubkey().to_bytes() == pubkey.to_bytes())
-                                .then_some(SignerType::Keypair(k))
-                        });
-                        match keypair {
-                            None => {
-                                tracing::warn!("invalid keypair: mismatch");
+                        let keypair = match Keypair::from_bytes(&keypair) {
+                            Ok(keypair) => keypair,
+                            Err(error) => {
+                                tracing::warn!("invalid keypair: {}; id={}", error, w.id);
                                 continue;
                             }
-                            Some(signer) => signer,
+                        };
+                        // check to prevent https://github.com/advisories/GHSA-w5vr-6qhr-36cc
+                        if keypair.pubkey().to_bytes()
+                            != ed25519_dalek::PublicKey::from(keypair.secret()).to_bytes()
+                        {
+                            tracing::warn!("invalid keypair: mismatch; id={}", w.id);
+                            continue;
                         }
+                        SignerType::Keypair(Box::new(keypair))
                     }
                 };
-                signers.insert(pk, s);
+                match signers.entry(pk) {
+                    Entry::Vacant(slot) => {
+                        slot.insert(s);
+                    }
+                    Entry::Occupied(mut slot) => {
+                        if matches!(
+                            (slot.get(), &s),
+                            (SignerType::UserWallet { .. }, SignerType::Keypair(_))
+                        ) {
+                            tracing::warn!("replacing wallet {}", pk);
+                            slot.insert(s);
+                        }
+                    }
+                }
             }
         }
-        Ok(Self { signers }.start())
+
+        Ok(Self { signers })
+    }
+
+    pub async fn fetch_and_start<'a, I>(
+        db: DbPool,
+        users: I,
+    ) -> Result<(actix::Addr<Self>, JsonValue), DbError>
+    where
+        I: IntoIterator<Item = &'a (UserId, actix::Recipient<SignatureRequest>)>,
+    {
+        let signer = Self::fetch(db, users).await?;
+        let signers_info = signer
+            .signers
+            .iter()
+            .map(|(pk, w)| {
+                (
+                    pk.to_string(),
+                    match w {
+                        SignerType::Keypair(_) => "HARDCODED".to_owned(),
+                        SignerType::UserWallet { user_id, .. } => user_id.to_string(),
+                    },
+                )
+            })
+            .collect::<JsonValue>();
+        Ok((signer.start(), signers_info.into()))
     }
 }

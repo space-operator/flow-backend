@@ -1,6 +1,6 @@
 //! Parse JS front-end flow config into back-end flow config
 
-use crate::{CommandType, FlowId, FlowRunId, NodeId, SolanaNet, ValueType};
+use crate::{CommandType, FlowId, FlowRunId, NodeId, SolanaNet, UserId, ValueType};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use serde_with::serde_as;
@@ -29,6 +29,8 @@ pub struct ClientConfig {
     pub call_depth: u32,
     #[serde(default = "default_origin")]
     pub origin: FlowRunOrigin,
+    #[serde(default)]
+    pub signers: JsonValue,
 }
 
 const fn default_origin() -> FlowRunOrigin {
@@ -38,6 +40,9 @@ const fn default_origin() -> FlowRunOrigin {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FlowRunOrigin {
     Start {},
+    StartShared {
+        started_by: UserId,
+    },
     Interflow {
         flow_run_id: FlowRunId,
         node_id: NodeId,

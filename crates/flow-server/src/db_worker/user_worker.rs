@@ -445,6 +445,7 @@ impl ResponseError for StartError {
                 get_jwt::Error::WrongRecipient
                 | get_jwt::Error::Worker(_)
                 | get_jwt::Error::MailBox(_)
+                | get_jwt::Error::Supabase { .. }
                 | get_jwt::Error::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
             },
             StartError::Mailbox(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -485,14 +486,14 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 })
                 .await??;
 
-            let signer =
+            let (signer, signers_info) =
                 SignerWorker::fetch_and_start(db, &[(user_id, addr.clone().recipient())]).await?;
 
             let r = FlowRegistry::from_actix(
                 msg.user,
                 Vec::new(),
                 msg.flow_id,
-                signer.recipient(),
+                (signer.recipient(), signers_info),
                 addr.clone().recipient(),
                 addr.clone().recipient(),
                 addr.clone().recipient(),
@@ -561,11 +562,11 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                 })
                 .await??;
 
-            let signer = SignerWorker::fetch_and_start(
+            let (signer, signers_info) = SignerWorker::fetch_and_start(
                 db,
                 &[
-                    (user_id, addr.clone().recipient()),
                     (msg.started_by.0, msg.started_by.1.recipient()),
+                    (user_id, addr.clone().recipient()),
                 ],
             )
             .await?;
@@ -574,7 +575,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                 User { id: user_id },
                 [msg.started_by.0].into(),
                 msg.flow_id,
-                signer.recipient(),
+                (signer.recipient(), signers_info),
                 addr.clone().recipient(),
                 addr.clone().recipient(),
                 addr.clone().recipient(),
@@ -585,7 +586,15 @@ impl actix::Handler<StartFlowShared> for UserWorker {
             .await?;
 
             let run_id = r
-                .start(msg.flow_id, msg.input, None, false, FlowRunOrigin::Start {})
+                .start(
+                    msg.flow_id,
+                    msg.input,
+                    None,
+                    false,
+                    FlowRunOrigin::StartShared {
+                        started_by: msg.started_by.0,
+                    },
+                )
                 .await?
                 .0;
 

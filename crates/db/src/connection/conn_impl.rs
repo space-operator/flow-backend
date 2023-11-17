@@ -65,7 +65,7 @@ impl UserConnection {
     pub async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
         let stmt = self
             .conn
-            .prepare_cached("SELECT public_key, keypair FROM wallets WHERE user_id = $1")
+            .prepare_cached("SELECT public_key, keypair, id FROM wallets WHERE user_id = $1")
             .await
             .map_err(Error::exec("prepare get_wallets"))?;
         self.conn
@@ -88,7 +88,13 @@ impl UserConnection {
                     .transpose()
                     .map_err(Error::parsing("wallets.keypair"))?;
 
-                Ok(Wallet { pubkey, keypair })
+                let id = r.try_get(2).map_err(Error::data("wallets.id"))?;
+
+                Ok(Wallet {
+                    id,
+                    pubkey,
+                    keypair,
+                })
             })
             .collect()
     }
@@ -250,14 +256,15 @@ impl UserConnection {
                     nodes,
                     edges,
                     collect_instructions,
-                    partial_config)
+                    partial_config,
+                    signers)
                 VALUES (
                     gen_random_uuid(),
                     $1, $2,
                     jsonb_build_object('M', $3::JSONB),
                     $4, $5,
                     jsonb_build_object('SOL', $6::JSONB),
-                    $7, $8, $9, $10, $11, $12)
+                    $7, $8, $9, $10, $11, $12, $13)
                 RETURNING id",
             )
             .await
@@ -288,6 +295,7 @@ impl UserConnection {
                     &config.edges.iter().map(Json).collect::<Vec<_>>(),
                     &config.collect_instructions,
                     &config.partial_config.as_ref().map(Json),
+                    &Json(&config.signers),
                 ],
             )
             .await
