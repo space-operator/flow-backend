@@ -51,9 +51,9 @@ impl serde::Serializer for Serializer {
     type Ok = Value;
     type Error = Error;
 
-    type SerializeSeq = SerializeSeq;
-    type SerializeTuple = SerializeSeq;
-    type SerializeTupleStruct = SerializeSeq;
+    type SerializeSeq = SerializeSeqNoBytes;
+    type SerializeTuple = SerializeSeqNoBytes;
+    type SerializeTupleStruct = SerializeSeqNoBytes;
     type SerializeTupleVariant = SerializeTupleVariant;
     type SerializeMap = SerializeMap;
     type SerializeStruct = SerializeMap;
@@ -170,7 +170,7 @@ impl serde::Serializer for Serializer {
     }
 
     fn serialize_seq(self, _: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-        Ok(SerializeSeq::new())
+        Ok(SerializeSeqNoBytes::default())
     }
 
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {

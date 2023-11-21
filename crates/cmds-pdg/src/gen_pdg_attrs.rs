@@ -51,3 +51,26 @@ async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
 
     Ok(Output { attributes })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use flow_lib::value;
+
+    #[tokio::test]
+    async fn test_generate() {
+        let output = build()
+            .unwrap()
+            .run(
+                <_>::default(),
+                value::map! {
+                    "flag" => "base",
+                },
+            )
+            .await
+            .unwrap();
+        let attrs = &output["attributes"];
+        let pose = value::crud::get(attrs, &["Pose", "value"]).unwrap();
+        assert!(matches!(pose, flow_lib::Value::Array(_)));
+    }
+}
