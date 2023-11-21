@@ -312,3 +312,35 @@ impl serde::Serializer for SerializeSeqNoBytes {
         Err(Error::ExpectedArray)
     }
 }
+
+impl serde::ser::SerializeTuple for SerializeSeqNoBytes {
+    type Ok = Value;
+    type Error = Error;
+
+    fn serialize_element<T>(&mut self, value: &T) -> Result<(), Error>
+    where
+        T: ?Sized + serde::Serialize,
+    {
+        serde::ser::SerializeSeq::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<Value, Error> {
+        serde::ser::SerializeSeq::end(self)
+    }
+}
+
+impl serde::ser::SerializeTupleStruct for SerializeSeqNoBytes {
+    type Ok = Value;
+    type Error = Error;
+
+    fn serialize_field<T>(&mut self, value: &T) -> Result<(), Error>
+    where
+        T: ?Sized + serde::Serialize,
+    {
+        serde::ser::SerializeSeq::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<Value, Error> {
+        serde::ser::SerializeSeq::end(self)
+    }
+}

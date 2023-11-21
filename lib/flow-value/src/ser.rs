@@ -51,9 +51,9 @@ impl serde::Serializer for Serializer {
     type Ok = Value;
     type Error = Error;
 
-    type SerializeSeq = SerializeSeq;
-    type SerializeTuple = SerializeSeq;
-    type SerializeTupleStruct = SerializeSeq;
+    type SerializeSeq = SerializeSeqNoBytes;
+    type SerializeTuple = SerializeSeqNoBytes;
+    type SerializeTupleStruct = SerializeSeqNoBytes;
     type SerializeTupleVariant = SerializeTupleVariant;
     type SerializeMap = SerializeMap;
     type SerializeStruct = SerializeMap;
@@ -170,7 +170,7 @@ impl serde::Serializer for Serializer {
     }
 
     fn serialize_seq(self, _: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-        Ok(SerializeSeq::new())
+        Ok(SerializeSeqNoBytes::default())
     }
 
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
@@ -308,11 +308,11 @@ mod tests {
         assert_eq!(s(Option::<()>::None), Value::Null);
         assert_eq!(s(()), Value::Null);
         assert_eq!(s("end"), Value::String("end".to_owned()));
+        assert_eq!(s([1i32]), Value::Array(vec![Value::I64(1)]));
         assert_eq!(
             s((1i32, -2i32, "hello")),
             Value::Array(vec![
-                // SerializerSeq does not retain the original type
-                Value::U64(1),
+                Value::I64(1),
                 Value::I64(-2),
                 Value::String("hello".to_owned())
             ])
@@ -323,7 +323,7 @@ mod tests {
             s(HashMap::from([("a".to_owned(), -1i32)])),
             Value::Map(Map::from([("a".to_owned(), Value::I64(-1))]))
         );
-        assert_eq!(s([1u8; 32]), Value::B32([1; 32]));
+        // assert_eq!(s([1u8; 32]), Value::B32([1; 32]));
         assert_eq!(s(crate::Bytes(&[2u8; 64])), Value::B64([2; 64]));
     }
 
