@@ -96,8 +96,9 @@ where
 /// use solana_sdk::signature::Signature;
 /// use flow_value::Value;
 ///
-/// let val = flow_value::to_value(&Signature::new_unique()).unwrap();
-/// assert!(matches!(val, Value::B64(_)));
+/// let signature = Signature::new_unique();
+/// let value = flow_value::to_value(&flow_value::Bytes(signature.as_ref())).unwrap();
+/// assert_eq!(value, Value::B64(signature.into()));
 /// ```
 pub fn to_value<T>(t: &T) -> Result<Value, Error>
 where
@@ -729,7 +730,7 @@ impl serde::de::Error for Error {
 }
 
 // default implementation of [u8] doesn't call serialize_bytes
-pub(crate) struct Bytes<'a>(&'a [u8]);
+pub struct Bytes<'a>(pub &'a [u8]);
 
 impl<'a> serde::Serialize for Bytes<'a> {
     fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
