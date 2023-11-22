@@ -51,11 +51,13 @@
     {
       "name": "flow_owner",
       "type": "string",
+      "defaultValue": "",
       "tooltip": ""
     },
     {
       "name": "started_by",
       "type": "string",
+      "defaultValue": "",
       "tooltip": ""
     }
   ],
