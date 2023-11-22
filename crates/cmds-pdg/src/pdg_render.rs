@@ -147,7 +147,7 @@ async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
                 version: "6".to_owned(),
                 workitem: WorkItem {
                     attributes: input.attributes,
-                    ..Default::default()
+                    ..<_>::default()
                 },
             }
         })?;

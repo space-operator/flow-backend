@@ -10,7 +10,7 @@ use chrono::{DateTime, Utc};
 use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
-    context::{execute, get_jwt, signer, CommandContext, Context, User},
+    context::{execute, get_jwt, signer, CommandContext, Context},
     solana::{find_failed_instruction, Instructions},
     utils::{Extensions, TowerClient},
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
@@ -341,11 +341,13 @@ impl FlowGraph {
     pub async fn from_cfg(
         c: FlowConfig,
         registry: FlowRegistry,
-        user: User,
         signer: signer::Svc,
         token: get_jwt::Svc,
         partial_config: Option<&PartialConfig>,
     ) -> crate::Result<Self> {
+        let flow_owner = registry.flow_owner.clone();
+        let started_by = registry.started_by.clone();
+
         let ext = {
             let mut ext = Extensions::new();
             ext.insert(registry);
@@ -353,7 +355,7 @@ impl FlowGraph {
             ext
         };
 
-        let ctx = Context::from_cfg(&c.ctx, user, signer, token, ext);
+        let ctx = Context::from_cfg(&c.ctx, flow_owner, started_by, signer, token, ext);
 
         let f = CommandFactory::new();
 
@@ -1490,8 +1492,7 @@ mod tests {
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
         let mut flow = FlowGraph::from_cfg(
             flow_config,
-            Default::default(),
-            Default::default(),
+            <_>::default(),
             signer::unimplemented_svc(),
             get_jwt::unimplemented_svc(),
             None,
@@ -1531,8 +1532,7 @@ mod tests {
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
         let mut flow = FlowGraph::from_cfg(
             flow_config,
-            Default::default(),
-            Default::default(),
+            <_>::default(),
             signer::unimplemented_svc(),
             get_jwt::unimplemented_svc(),
             None,
@@ -1574,8 +1574,7 @@ mod tests {
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
         let flow = FlowGraph::from_cfg(
             flow_config,
-            Default::default(),
-            Default::default(),
+            <_>::default(),
             signer::unimplemented_svc(),
             get_jwt::unimplemented_svc(),
             None,

@@ -570,7 +570,7 @@ impl RenderParams {
             wedgeindex,
             render_noise_threshold,
             render_resolution,
-            ..Default::default()
+            ..<_>::default()
         })
     }
 

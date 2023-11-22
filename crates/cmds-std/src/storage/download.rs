@@ -30,7 +30,7 @@ struct Output {
 }
 
 async fn run(mut ctx: Context, input: FileSpec) -> Result<Output, CommandError> {
-    let key = input.key(&ctx.user.id);
+    let key = input.key(&ctx.flow_owner.id);
     let url = format!(
         "{}/storage/v1/object/authenticated/{}",
         ctx.endpoints.supabase, key

@@ -35,7 +35,7 @@ struct Output {
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let path = input.path;
     let prefix = if ["user-storages", "user-public-storages"].contains(&input.bucket.as_str()) {
-        format!("{}/{}", ctx.user.id, path.display())
+        format!("{}/{}", ctx.flow_owner.id, path.display())
     } else {
         format!("{}", path.display())
     };

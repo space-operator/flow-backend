@@ -284,8 +284,7 @@ mod tests {
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
         let mut flow = FlowGraph::from_cfg(
             flow_config,
-            Default::default(),
-            Default::default(),
+            <_>::default(),
             signer::unimplemented_svc(),
             get_jwt::unimplemented_svc(),
             None,
@@ -323,8 +322,7 @@ mod tests {
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
         let mut flow = FlowGraph::from_cfg(
             flow_config,
-            Default::default(),
-            Default::default(),
+            <_>::default(),
             signer::unimplemented_svc(),
             get_jwt::unimplemented_svc(),
             None,
@@ -352,8 +350,7 @@ mod tests {
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
         let mut flow = FlowGraph::from_cfg(
             flow_config,
-            Default::default(),
-            Default::default(),
+            <_>::default(),
             signer::unimplemented_svc(),
             get_jwt::unimplemented_svc(),
             None,
@@ -384,8 +381,7 @@ mod tests {
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
         let mut flow = FlowGraph::from_cfg(
             flow_config,
-            Default::default(),
-            Default::default(),
+            <_>::default(),
             signer::unimplemented_svc(),
             get_jwt::unimplemented_svc(),
             None,

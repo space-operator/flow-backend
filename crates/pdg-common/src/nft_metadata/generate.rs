@@ -18,7 +18,7 @@ impl RenderParams {
             helmet_type,
             helmet_light,
             fx0,
-            ..Default::default()
+            ..<_>::default()
         }
         .adjust_base()
         .generate_line_art()

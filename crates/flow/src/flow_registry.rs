@@ -33,7 +33,8 @@ pub enum StopError {
 #[derive(Clone)]
 pub struct FlowRegistry {
     depth: u32,
-    user: User,
+    pub(crate) flow_owner: User,
+    pub(crate) started_by: User,
     shared_with: Vec<UserId>,
     flows: Arc<HashMap<FlowId, ClientConfig>>,
     signers_info: JsonValue,
@@ -52,7 +53,8 @@ impl Default for FlowRegistry {
         let token = get_jwt::unimplemented_svc();
         Self {
             depth: 0,
-            user: User::new(UserId::nil()),
+            flow_owner: User::new(UserId::nil()),
+            started_by: User::new(UserId::nil()),
             shared_with: <_>::default(),
             flows: Arc::new(HashMap::new()),
             endpoints: <_>::default(),
@@ -121,7 +123,8 @@ async fn get_all_flows(
 
 impl FlowRegistry {
     pub async fn new(
-        user: User,
+        flow_owner: User,
+        started_by: User,
         shared_with: Vec<UserId>,
         entrypoint: FlowId,
         (signer, signers_info): (signer::Svc, JsonValue),
@@ -132,10 +135,11 @@ impl FlowRegistry {
         environment: HashMap<String, String>,
         endpoints: Endpoints,
     ) -> Result<Self, get_flow::Error> {
-        let flows = get_all_flows(entrypoint, user.id, get_flow, environment).await?;
+        let flows = get_all_flows(entrypoint, flow_owner.id, get_flow, environment).await?;
         Ok(Self {
             depth: 0,
-            user,
+            flow_owner,
+            started_by,
             shared_with,
             flows: Arc::new(flows),
             signer,
@@ -148,7 +152,8 @@ impl FlowRegistry {
     }
 
     pub async fn from_actix(
-        user: User,
+        flow_owner: User,
+        started_by: User,
         shared_with: Vec<UserId>,
         entrypoint: FlowId,
         (signer, signers_info): (actix::Recipient<signer::SignatureRequest>, JsonValue),
@@ -160,7 +165,8 @@ impl FlowRegistry {
         endpoints: Endpoints,
     ) -> Result<Self, get_flow::Error> {
         Self::new(
-            user,
+            flow_owner,
+            started_by,
             shared_with,
             entrypoint,
             (
@@ -217,7 +223,7 @@ impl FlowRegistry {
         let run = self
             .new_flow_run
             .call_ref(new_flow_run::Request {
-                user_id: self.user.id,
+                user_id: self.flow_owner.id,
                 shared_with: self.shared_with.clone(),
                 config: ClientConfig {
                     call_depth: self.depth,
@@ -248,13 +254,12 @@ impl FlowRegistry {
         );
         async move {
             let mut get_previous_values_svc = this.get_previous_values.clone();
-            let user_id = this.user.id;
+            let user_id = this.flow_owner.id;
             let mut flow_config = FlowConfig::new(config.clone());
             flow_config.ctx.endpoints = this.endpoints.clone();
             let mut flow = FlowGraph::from_cfg(
                 flow_config,
                 this,
-                self.user.clone(),
                 self.signer.clone(),
                 self.token.clone(),
                 partial_config.as_ref(),

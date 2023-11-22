@@ -74,7 +74,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             ctx.endpoints.supabase, input.bucket
         );
         if ["user-storages", "user-public-storages"].contains(&input.bucket.as_ref()) {
-            write!(&mut url, "/{}", ctx.user.id).unwrap();
+            write!(&mut url, "/{}", ctx.flow_owner.id).unwrap();
         }
         write!(&mut url, "/{}", input.path.display()).unwrap();
         url
