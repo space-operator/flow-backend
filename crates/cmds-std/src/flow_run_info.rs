@@ -1,4 +1,4 @@
-use flow_lib::{command::prelude::*, UserId};
+use flow_lib::command::prelude::*;
 
 const NAME: &str = "flow_run_info";
 
@@ -17,13 +17,13 @@ struct Input {}
 
 #[derive(Serialize, Debug)]
 struct Output {
-    flow_owner: UserId,
-    started_by: UserId,
+    flow_owner: String,
+    started_by: String,
 }
 
 async fn run(ctx: Context, _: Input) -> Result<Output, CommandError> {
     Ok(Output {
-        flow_owner: ctx.flow_owner.id,
-        started_by: ctx.started_by.id,
+        flow_owner: ctx.flow_owner.id.to_string(),
+        started_by: ctx.started_by.id.to_string(),
     })
 }
