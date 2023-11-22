@@ -1,6 +1,7 @@
 use flow_lib::command::CommandError;
 
 pub mod const_cmd;
+pub mod flow_run_info;
 pub mod json_extract;
 pub mod json_insert;
 pub mod kvstore;
