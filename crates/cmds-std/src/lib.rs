@@ -9,6 +9,7 @@ pub mod note;
 pub mod print_cmd;
 pub mod storage;
 pub mod wait_cmd;
+pub mod postgrest;
 
 #[derive(serde::Deserialize)]
 pub struct ErrorBody {
