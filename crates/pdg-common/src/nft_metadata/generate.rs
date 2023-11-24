@@ -5,8 +5,9 @@ use super::{
 use indexmap::IndexSet;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use strum::IntoEnumIterator;
 
-/// Effects that an NFT can have
+/// Effects that an NFT can gain
 #[derive(
     derive_more::From,
     Debug,
@@ -49,8 +50,100 @@ pub struct EffectsList {
     pub effects: IndexSet<Effect>,
 }
 
+impl From<RenderParams> for EffectsList {
+    fn from(value: RenderParams) -> Self {
+        let RenderParams {
+            body_type: _,
+            pose,
+            helmet_type: _,
+            helmet_light: _,
+            fx0,
+            fx1,
+            fx1a,
+            fx2,
+            fx3,
+            fx4,
+            fx5,
+            fx6,
+            fx_jellifish,
+            fx_lineart_helper,
+            env_light: _,
+            env_reflection: _,
+            light_reflection_mult: _,
+            butterfly_amount: _,
+            disintegration_amount: _,
+            melt_amount: _,
+            fall_amount: _,
+            firefly_amount: _,
+            frozen_amount: _,
+            fungi_amount: _,
+            gold_silver_amount: _,
+            grow_flower_amount: _,
+            hologram_amount: _,
+            eyes_light_intensity_amount: _,
+            ladybag_amount: _,
+            lineart_amount: _,
+            melting_glow_amount: _,
+            pixel_amount: _,
+            rain_amount: _,
+            smoke_amount: _,
+            soap_bubble_intensity_amount: _,
+            soap_bubble_roughness_amount: _,
+            spring_amount: _,
+            underwater_fog_amount: _,
+            xray_body_amount: _,
+            xray_skeleton_particles_amount: _,
+            background_color_random_hue: _,
+            background_underwater_color_hue: _,
+            dress_color_hue: _,
+            eye_color_random_hue: _,
+            random_value: _,
+            wedgeindex: _,
+            render_noise_threshold: _,
+            render_resolution: _,
+            wedgeattribs: _,
+        } = value;
+        Self {
+            effects: [
+                pose.into(),
+                fx0.into(),
+                fx1.into(),
+                fx2.into(),
+                fx3.into(),
+                fx4.into(),
+                fx5.into(),
+                fx6.into(),
+                fx1a.into(),
+                fx_jellifish.into(),
+                fx_lineart_helper.into(),
+            ]
+            .into(),
+        }
+    }
+}
+
 impl Effect {
-    pub fn all_effects() {}
+    pub fn all_effects() -> Vec<Effect> {
+        let mut list = Vec::new();
+        for e in Effect::iter() {
+            match e {
+                Effect::Pose(_) => list.extend(Pose::iter().map(Effect::from)),
+                Effect::Fx0(_) => list.extend(Fx0::iter().map(Effect::from)),
+                Effect::Fx1(_) => list.extend(Fx1::iter().map(Effect::from)),
+                Effect::Fx2(_) => list.extend(Fx2::iter().map(Effect::from)),
+                Effect::Fx3(_) => list.extend(Fx3::iter().map(Effect::from)),
+                Effect::Fx4(_) => list.extend(Fx4::iter().map(Effect::from)),
+                Effect::Fx5(_) => list.extend(Fx5::iter().map(Effect::from)),
+                Effect::Fx6(_) => list.extend(Fx6::iter().map(Effect::from)),
+                Effect::Fx1a(_) => list.extend(Fx1a::iter().map(Effect::from)),
+                Effect::FxJellyfish(_) => list.extend(FxJellyfish::iter().map(Effect::from)),
+                Effect::FxLineartHelper(_) => {
+                    list.extend(FxLineartHelper::iter().map(Effect::from))
+                }
+            }
+        }
+        list
+    }
 }
 
 impl RenderParams {
