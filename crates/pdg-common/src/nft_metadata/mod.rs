@@ -1344,6 +1344,7 @@ impl Fx1 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx1a {
@@ -1384,6 +1385,7 @@ impl Fx1a {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx2 {
@@ -1452,6 +1454,7 @@ impl Fx2 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx3 {
@@ -1479,6 +1482,7 @@ impl_try_from_u32!(Fx3);
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx4 {
@@ -1531,6 +1535,7 @@ impl Fx4 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx5 {
@@ -1583,6 +1588,7 @@ impl Fx5 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx6 {
@@ -1635,6 +1641,7 @@ impl Fx6 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum FxJellyfish {
@@ -1681,6 +1688,7 @@ impl FxJellyfish {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum FxLineartHelper {
