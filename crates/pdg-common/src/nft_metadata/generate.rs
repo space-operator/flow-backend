@@ -3,7 +3,7 @@ use super::{
     HelmetLight, HelmetType, LightReflectionMult, Pose, RenderParams,
 };
 use indexmap::IndexSet;
-use rand::Rng;
+use rand::{seq::SliceRandom, Rng};
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
@@ -122,6 +122,18 @@ impl From<RenderParams> for EffectsList {
     }
 }
 
+impl EffectsList {
+    pub fn effect_lottery<R: Rng + ?Sized>(&self, rng: &mut R) -> Option<Effect> {
+        let mut all = Effect::all_effects();
+        all.retain(|e| !self.effects.contains(e));
+        all.choose(rng).cloned()
+    }
+
+    pub fn push(&mut self, effect: Effect) -> bool {
+        self.effects.insert(effect)
+    }
+}
+
 impl Effect {
     pub fn all_effects() -> Vec<Effect> {
         let mut list = Vec::new();
@@ -147,6 +159,22 @@ impl Effect {
 }
 
 impl RenderParams {
+    pub fn add_effect(&mut self, effect: Effect) {
+        match effect {
+            Effect::Pose(x) => self.pose = x,
+            Effect::Fx0(x) => self.fx0 = x,
+            Effect::Fx1(x) => self.fx1 = x,
+            Effect::Fx2(x) => self.fx2 = x,
+            Effect::Fx3(x) => self.fx3 = x,
+            Effect::Fx4(x) => self.fx4 = x,
+            Effect::Fx5(x) => self.fx5 = x,
+            Effect::Fx6(x) => self.fx6 = x,
+            Effect::Fx1a(x) => self.fx1a = x,
+            Effect::FxJellyfish(x) => self.fx_jellifish = x,
+            Effect::FxLineartHelper(x) => self.fx_lineart_helper = x,
+        }
+    }
+
     pub fn generate_base() -> Self {
         let body_type = BodyType::seed();
         let pose = Pose::seed();
