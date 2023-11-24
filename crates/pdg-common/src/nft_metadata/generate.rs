@@ -1,8 +1,57 @@
 use super::{
-    BodyType, EnvLight, Fx0, Fx1, Fx1a, Fx2, Fx4, Fx5, Fx6, FxJellyfish, FxLineartHelper,
+    BodyType, EnvLight, Fx0, Fx1, Fx1a, Fx2, Fx3, Fx4, Fx5, Fx6, FxJellyfish, FxLineartHelper,
     HelmetLight, HelmetType, LightReflectionMult, Pose, RenderParams,
 };
+use indexmap::IndexSet;
 use rand::Rng;
+use serde::{Deserialize, Serialize};
+
+/// Effects that an NFT can have
+#[derive(
+    derive_more::From,
+    Debug,
+    Clone,
+    Copy,
+    Eq,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    strum::EnumIter,
+    Hash,
+)]
+#[serde(tag = "type")]
+pub enum Effect {
+    #[from]
+    Pose(Pose),
+    #[from]
+    Fx0(Fx0),
+    #[from]
+    Fx1(Fx1),
+    #[from]
+    Fx2(Fx2),
+    #[from]
+    Fx3(Fx3),
+    #[from]
+    Fx4(Fx4),
+    #[from]
+    Fx5(Fx5),
+    #[from]
+    Fx6(Fx6),
+    #[from]
+    Fx1a(Fx1a),
+    #[from]
+    FxJellyfish(FxJellyfish),
+    #[from]
+    FxLineartHelper(FxLineartHelper),
+}
+
+pub struct EffectsList {
+    pub effects: IndexSet<Effect>,
+}
+
+impl Effect {
+    pub fn all_effects() {}
+}
 
 impl RenderParams {
     pub fn generate_base() -> Self {

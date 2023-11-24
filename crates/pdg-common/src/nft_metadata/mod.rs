@@ -1218,6 +1218,7 @@ impl HelmetLight {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx0 {
@@ -1290,6 +1291,7 @@ impl Fx0 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx1 {
