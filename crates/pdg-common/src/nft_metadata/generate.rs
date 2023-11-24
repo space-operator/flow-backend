@@ -10,6 +10,8 @@ use strum::IntoEnumIterator;
 /// Effects that an NFT can gain
 #[derive(
     derive_more::From,
+    strum::EnumProperty,
+    strum::EnumIter,
     Debug,
     Clone,
     Copy,
@@ -17,37 +19,69 @@ use strum::IntoEnumIterator;
     PartialEq,
     Serialize,
     Deserialize,
-    strum::EnumIter,
     Hash,
 )]
-#[serde(tag = "type")]
+#[serde(tag = "type", content = "value")]
 pub enum Effect {
+    #[strum(props(EffectType = "Pose"))]
     #[from]
     Pose(Pose),
+    #[strum(props(EffectType = "Fx0"))]
     #[from]
     Fx0(Fx0),
+    #[strum(props(EffectType = "Fx1"))]
     #[from]
     Fx1(Fx1),
+    #[strum(props(EffectType = "Fx2"))]
     #[from]
     Fx2(Fx2),
+    #[strum(props(EffectType = "Fx3"))]
     #[from]
     Fx3(Fx3),
+    #[strum(props(EffectType = "Fx4"))]
     #[from]
     Fx4(Fx4),
+    #[strum(props(EffectType = "Fx5"))]
     #[from]
     Fx5(Fx5),
+    #[strum(props(EffectType = "Fx6"))]
     #[from]
     Fx6(Fx6),
+    #[strum(props(EffectType = "Fx1a"))]
     #[from]
     Fx1a(Fx1a),
+    #[strum(props(EffectType = "FxJellyfish"))]
     #[from]
     FxJellyfish(FxJellyfish),
+    #[strum(props(EffectType = "FxLineartHelper"))]
     #[from]
     FxLineartHelper(FxLineartHelper),
 }
 
 pub struct EffectsList {
     pub effects: IndexSet<Effect>,
+}
+
+impl From<IndexSet<Effect>> for EffectsList {
+    fn from(effects: IndexSet<Effect>) -> Self {
+        Self { effects }
+    }
+}
+
+impl From<Vec<Effect>> for EffectsList {
+    fn from(effects: Vec<Effect>) -> Self {
+        Self {
+            effects: effects.into_iter().collect(),
+        }
+    }
+}
+
+impl<const N: usize> From<[Effect; N]> for EffectsList {
+    fn from(effects: [Effect; N]) -> Self {
+        Self {
+            effects: effects.into(),
+        }
+    }
 }
 
 impl From<RenderParams> for EffectsList {
@@ -123,10 +157,13 @@ impl From<RenderParams> for EffectsList {
 }
 
 impl EffectsList {
-    pub fn effect_lottery<R: Rng + ?Sized>(&self, rng: &mut R) -> Option<Effect> {
-        let mut all = Effect::all_effects();
-        all.retain(|e| !self.effects.contains(e));
-        all.choose(rng).cloned()
+    pub fn effect_lottery<R: Rng + ?Sized>(
+        &self,
+        mut choose_from: Vec<Effect>,
+        rng: &mut R,
+    ) -> Option<Effect> {
+        choose_from.retain(|e| !self.effects.contains(e));
+        choose_from.choose(rng).cloned()
     }
 
     pub fn push(&mut self, effect: Effect) -> bool {

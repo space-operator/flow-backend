@@ -24,6 +24,7 @@ pub struct PropertyNotFound {
 trait EnumExt {
     fn pdg_name(&self) -> Result<&'static str, PropertyNotFound>;
     fn metaplex_name(&self) -> Result<&'static str, PropertyNotFound>;
+    fn effect_type(&self) -> Result<&'static str, PropertyNotFound>;
 }
 
 impl<T> EnumExt for T
@@ -32,7 +33,7 @@ where
 {
     fn pdg_name(&self) -> Result<&'static str, PropertyNotFound> {
         self.get_str("PDGName").ok_or_else(|| PropertyNotFound {
-            attr: "PdgName",
+            attr: "PDGName",
             ty: std::any::type_name::<T>(),
             variant: format!("{:?}", self),
         })
@@ -44,6 +45,13 @@ where
                 ty: std::any::type_name::<T>(),
                 variant: format!("{:?}", self),
             })
+    }
+    fn effect_type(&self) -> Result<&'static str, PropertyNotFound> {
+        self.get_str("EffectType").ok_or_else(|| PropertyNotFound {
+            attr: "EffectType",
+            ty: std::any::type_name::<T>(),
+            variant: format!("{:?}", self),
+        })
     }
 }
 
