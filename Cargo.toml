@@ -3,6 +3,9 @@ members = ["lib/*", "crates/*"]
 exclude = ["crates/space-wasm/tests"]
 resolver = "2"
 
+[patch.crates-io]
+rhai = { git = "https://github.com/space-operator/rhai", rev = "1fce1c538a6a7c0bf1cffd1a1809aec906b43c21" }
+
 [profile.dev]
 debug = 0
 opt-level = 1

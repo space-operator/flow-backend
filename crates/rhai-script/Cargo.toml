@@ -6,5 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-flow-value = { version = "0.1.0", path = "../../lib/flow-value", default-features = false }
-rhai = { version = "1.16.3", features = ["decimal"] }
+anyhow.workspace = true
+bs58.workspace = true
+flow-lib.workspace = true
+rhai = { version = "1.17", features = ["decimal", "indexmap"] }
+rhai-rand = { version = "0.1.6", features = ["decimal"] }
+thiserror = "1.0.50"
+tracing = "0.1.40"
