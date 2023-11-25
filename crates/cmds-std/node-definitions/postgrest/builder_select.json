@@ -5,7 +5,7 @@
     "unique_id": "",
     "node_id": "postgrest_builder_select",
     "version": "0.1",
-    "display_name": "Query Builder select",
+    "display_name": "DB select",
     "description": "https://docs.rs/postgrest/latest/postgrest/struct.Builder.html#method.select",
     "tags": ["database", "postgrest", "supabase"],
     "related_to": [
@@ -75,7 +75,7 @@
   ],
   "targets_form.json_schema": {
     "type": "object",
-    "title": "Query Builder select",
+    "title": "DB select",
     "properties": {
       "columns": {
         "title": "columns",
