@@ -6,10 +6,10 @@ pub mod json_extract;
 pub mod json_insert;
 pub mod kvstore;
 pub mod note;
+pub mod postgrest;
 pub mod print_cmd;
 pub mod storage;
 pub mod wait_cmd;
-pub mod postgrest;
 
 #[derive(serde::Deserialize)]
 pub struct ErrorBody {

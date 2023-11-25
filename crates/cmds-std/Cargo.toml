@@ -17,7 +17,7 @@ rust_decimal = { version = "1.32.0", features = ["serde-with-float"] }
 tracing = "0.1.40"
 bytes = "1.5.0"
 mime_guess = "2.0.4"
-postgrest = { git = "https://github.com/space-operator/postgrest-rs", rev = "2563035f48e7c46148586dc6192ba80604e9c33c" }
+postgrest = { git = "https://github.com/space-operator/postgrest-rs", rev = "5f8e53bde0fd30f91f84242d51dbb75f0e7f9fa9" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
