@@ -1,10 +1,7 @@
 use std::{collections::HashMap, str::FromStr};
 
 use flow_lib::command::prelude::*;
-use reqwest::{
-    header::{HeaderName, AUTHORIZATION},
-    StatusCode,
-};
+use reqwest::header::{HeaderName, AUTHORIZATION};
 
 use crate::supabase_error;
 
@@ -49,42 +46,41 @@ async fn run(mut ctx: Context, input: Input) -> Result<ValueSet, CommandError> {
     }
     let resp = ctx.http.execute(req.build()?).await?;
 
-    match resp.status() {
-        StatusCode::OK => {
-            let headers = resp
-                .headers()
-                .iter()
-                .map(|(k, v)| {
-                    (
-                        k.as_str().to_lowercase(),
-                        String::from_utf8_lossy(v.as_bytes()).into_owned(),
-                    )
-                })
-                .collect::<HashMap<String, String>>();
-
-            let content_type = headers
-                .get("content-type")
-                .map(String::as_str)
-                .unwrap_or("text/plain");
-            let body: Value = if content_type.starts_with("text/") {
-                resp.text().await?.into()
-            } else if content_type.contains("json") {
-                resp.json::<serde_json::Value>().await?.into()
-            } else {
-                resp.bytes().await?.into()
-            };
-
-            let headers = headers
-                .into_iter()
-                .map(|(k, v)| (k, Value::String(v)))
-                .collect::<value::Map>();
-
-            Ok(value::map! {
-                "result" => body,
-                "headers" => headers,
+    if resp.status().is_success() {
+        let headers = resp
+            .headers()
+            .iter()
+            .map(|(k, v)| {
+                (
+                    k.as_str().to_lowercase(),
+                    String::from_utf8_lossy(v.as_bytes()).into_owned(),
+                )
             })
-        }
-        code => Err(supabase_error(code, resp).await),
+            .collect::<HashMap<String, String>>();
+
+        let content_type = headers
+            .get("content-type")
+            .map(String::as_str)
+            .unwrap_or("text/plain");
+        let body: Value = if content_type.starts_with("text/") {
+            resp.text().await?.into()
+        } else if content_type.contains("json") {
+            resp.json::<serde_json::Value>().await?.into()
+        } else {
+            resp.bytes().await?.into()
+        };
+
+        let headers = headers
+            .into_iter()
+            .map(|(k, v)| (k, Value::String(v)))
+            .collect::<value::Map>();
+
+        Ok(value::map! {
+            "result" => body,
+            "headers" => headers,
+        })
+    } else {
+        Err(supabase_error(resp.status(), resp).await)
     }
 }
 
