@@ -10,7 +10,7 @@ use chrono::{DateTime, Utc};
 use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
-    context::{execute, get_jwt, signer, CommandContext, Context},
+    context::{execute, get_jwt, CommandContext, Context},
     solana::{find_failed_instruction, Instructions},
     utils::{Extensions, TowerClient},
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
@@ -341,12 +341,12 @@ impl FlowGraph {
     pub async fn from_cfg(
         c: FlowConfig,
         registry: FlowRegistry,
-        signer: signer::Svc,
-        token: get_jwt::Svc,
         partial_config: Option<&PartialConfig>,
     ) -> crate::Result<Self> {
         let flow_owner = registry.flow_owner.clone();
         let started_by = registry.started_by.clone();
+        let signer = registry.signer.clone();
+        let token = registry.token.clone();
 
         let ext = {
             let mut ext = Extensions::new();
@@ -1490,15 +1490,9 @@ mod tests {
             "/test_files/2_foreach.json"
         ));
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
-        let mut flow = FlowGraph::from_cfg(
-            flow_config,
-            <_>::default(),
-            signer::unimplemented_svc(),
-            get_jwt::unimplemented_svc(),
-            None,
-        )
-        .await
-        .unwrap();
+        let mut flow = FlowGraph::from_cfg(flow_config, <_>::default(), None)
+            .await
+            .unwrap();
         let (tx, _rx) = event_channel();
         let res = flow
             .run(
@@ -1530,15 +1524,9 @@ mod tests {
             "/test_files/uneven_loop.json"
         ));
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
-        let mut flow = FlowGraph::from_cfg(
-            flow_config,
-            <_>::default(),
-            signer::unimplemented_svc(),
-            get_jwt::unimplemented_svc(),
-            None,
-        )
-        .await
-        .unwrap();
+        let mut flow = FlowGraph::from_cfg(flow_config, <_>::default(), None)
+            .await
+            .unwrap();
         let (tx, _rx) = event_channel();
         let res = flow
             .run(
@@ -1572,15 +1560,9 @@ mod tests {
         tracing_subscriber::fmt::try_init().ok();
         let json = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/test_files/nft.json"));
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
-        let flow = FlowGraph::from_cfg(
-            flow_config,
-            <_>::default(),
-            signer::unimplemented_svc(),
-            get_jwt::unimplemented_svc(),
-            None,
-        )
-        .await
-        .unwrap();
+        let flow = FlowGraph::from_cfg(flow_config, <_>::default(), None)
+            .await
+            .unwrap();
 
         let mut txs = flow.sort_transactions().unwrap();
         assert_eq!(txs.len(), 1);

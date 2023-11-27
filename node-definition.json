@@ -1,0 +1,89 @@
+{
+  "type": "native",
+  "data": {
+    "node_id": "",
+    "display_name": "",
+    "description": "",
+    "node_definition_version": "0.1",
+    "unique_id": "",
+    "version": "0.1",
+    "tags": [],
+    "related_to": [
+      {
+        "id": "",
+        "type": "",
+        "relationship": ""
+      }
+    ],
+    "resources": {
+      "source_code_url": "",
+      "documentation_url": ""
+    },
+    "usage": {
+      "license": "Apache-2.0",
+      "license_url": "",
+      "pricing": {
+        "currency": "USDC",
+        "purchase_price": 0,
+        "price_per_run": 0,
+        "custom": {
+          "unit": "monthly",
+          "value": "0"
+        }
+      }
+    },
+    "authors": [
+      {
+        "name": "Space Operator",
+        "contact": ""
+      }
+    ],
+    "design": {
+      "width": 0,
+      "height": 0,
+      "icon_url": "",
+      "backgroundColorDark": "#000000",
+      "backgroundColor": "#fff"
+    },
+    "options": {}
+  },
+  "targets": [
+    {
+      "name": "input",
+      "type_bounds": [
+        "free"
+      ],
+      "required": true,
+      "passthrough": false,
+      "defaultValue": null,
+      "tooltip": ""
+    }
+  ],
+  "sources": [
+    {
+      "name": "output",
+      "type": "free",
+      "optional": false,
+      "defaultValue": "",
+      "tooltip": ""
+    }
+  ],
+  "targets_form.json_schema": {
+    "type": "object",
+    "title": "",
+    "properties": {
+      "input": {
+        "title": "input",
+        "type": "string"
+      }
+    }
+  },
+  "targets_form.ui_schema": {
+    "input": {
+      "ui:widget": "textarea"
+    },
+    "ui:order": [
+      "input"
+    ]
+  }
+}

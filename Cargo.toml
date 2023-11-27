@@ -24,6 +24,7 @@ pdg-common = { path = "crates/pdg-common", version = "0.0.0" }
 cmds-std = { path = "crates/cmds-std", version = "0.0.0" }
 cmds-pdg = { path = "crates/cmds-pdg", version = "0.0.0" }
 cmds-solana = { path = "crates/cmds-solana", version = "0.0.0" }
+rhai-script = { path = "crates/rhai-script", version = "0.0.0" }
 
 # lib/
 value = { path = "lib/flow-value", version = "0.1.0", package = "flow-value" }

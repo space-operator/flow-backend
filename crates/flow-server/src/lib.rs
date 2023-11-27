@@ -241,12 +241,7 @@ impl Config {
 mod tests {
     use super::*;
     use flow::{flow_run_events::event_channel, FlowGraph};
-    use flow_lib::{
-        command::CommandDescription,
-        config::client::ClientConfig,
-        context::{get_jwt, signer},
-        FlowConfig,
-    };
+    use flow_lib::{command::CommandDescription, config::client::ClientConfig, FlowConfig};
     use value::Value;
 
     use cmds_solana as _;
@@ -282,15 +277,9 @@ mod tests {
         tracing_subscriber::fmt::try_init().ok();
         let json = include_str!("../../../test_files/generate_keypair.json");
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
-        let mut flow = FlowGraph::from_cfg(
-            flow_config,
-            <_>::default(),
-            signer::unimplemented_svc(),
-            get_jwt::unimplemented_svc(),
-            None,
-        )
-        .await
-        .unwrap();
+        let mut flow = FlowGraph::from_cfg(flow_config, <_>::default(), None)
+            .await
+            .unwrap();
         let (tx, _rx) = event_channel();
         let res = flow
             .run(
@@ -320,15 +309,9 @@ mod tests {
         tracing_subscriber::fmt::try_init().ok();
         let json = include_str!("../../../test_files/const_form_data.json");
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
-        let mut flow = FlowGraph::from_cfg(
-            flow_config,
-            <_>::default(),
-            signer::unimplemented_svc(),
-            get_jwt::unimplemented_svc(),
-            None,
-        )
-        .await
-        .unwrap();
+        let mut flow = FlowGraph::from_cfg(flow_config, <_>::default(), None)
+            .await
+            .unwrap();
         let (tx, _rx) = event_channel();
         let res = flow
             .run(
@@ -348,15 +331,9 @@ mod tests {
         tracing_subscriber::fmt::try_init().ok();
         let json = include_str!("../../../test_files/foreach.json");
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
-        let mut flow = FlowGraph::from_cfg(
-            flow_config,
-            <_>::default(),
-            signer::unimplemented_svc(),
-            get_jwt::unimplemented_svc(),
-            None,
-        )
-        .await
-        .unwrap();
+        let mut flow = FlowGraph::from_cfg(flow_config, <_>::default(), None)
+            .await
+            .unwrap();
         let (tx, _rx) = event_channel();
         let res = flow
             .run(
@@ -379,15 +356,9 @@ mod tests {
         tracing_subscriber::fmt::try_init().ok();
         let json = include_str!("../../../test_files/file_upload.json");
         let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
-        let mut flow = FlowGraph::from_cfg(
-            flow_config,
-            <_>::default(),
-            signer::unimplemented_svc(),
-            get_jwt::unimplemented_svc(),
-            None,
-        )
-        .await
-        .unwrap();
+        let mut flow = FlowGraph::from_cfg(flow_config, <_>::default(), None)
+            .await
+            .unwrap();
         let (tx, _rx) = event_channel();
         let res = flow
             .run(

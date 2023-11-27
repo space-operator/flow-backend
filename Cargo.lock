@@ -1615,7 +1615,6 @@ dependencies = [
  "byteorder",
  "bytes",
  "ed25519-dalek",
- "fasteval",
  "flow-lib",
  "flow-value",
  "futures",
@@ -1632,7 +1631,6 @@ dependencies = [
  "primitive-types 0.9.1",
  "rand 0.7.3",
  "reqwest",
- "rhai",
  "rust_decimal",
  "rust_decimal_macros",
  "serde",
@@ -1667,6 +1665,7 @@ dependencies = [
  "flow-lib",
  "futures-util",
  "mime_guess",
+ "postgrest",
  "reqwest",
  "rust_decimal",
  "serde",
@@ -2610,12 +2609,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4443176a9f2c162692bd3d352d745ef9413eec5782a80d8fd6f8a1ac692a07f7"
 
 [[package]]
-name = "fasteval"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f4cdac9e4065d7c48e30770f8665b8cef9a3a73a63a4056a33a5f395bc7cf75"
-
-[[package]]
 name = "fastrand"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2683,6 +2676,7 @@ dependencies = [
  "mime_guess",
  "petgraph",
  "reqwest",
+ "rhai-script",
  "rust_decimal",
  "serde",
  "serde_json",
@@ -4310,6 +4304,8 @@ dependencies = [
 name = "pdg-common"
 version = "0.0.0"
 dependencies = [
+ "derive_more",
+ "indexmap 2.1.0",
  "rand 0.8.5",
  "serde",
  "serde_json",
@@ -4512,6 +4508,16 @@ dependencies = [
  "serde",
  "serde_json",
  "uuid 1.5.0",
+]
+
+[[package]]
+name = "postgrest"
+version = "1.6.0"
+source = "git+https://github.com/space-operator/postgrest-rs?rev=5f8e53bde0fd30f91f84242d51dbb75f0e7f9fa9#5f8e53bde0fd30f91f84242d51dbb75f0e7f9fa9"
+dependencies = [
+ "bytes",
+ "reqwest",
+ "serde",
 ]
 
 [[package]]
@@ -5027,25 +5033,53 @@ dependencies = [
 
 [[package]]
 name = "rhai"
-version = "1.16.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3625f343d89990133d013e39c46e350915178cf94f1bec9f49b0cbef98a3e3c"
+version = "1.17.0"
+source = "git+https://github.com/space-operator/rhai?rev=1fce1c538a6a7c0bf1cffd1a1809aec906b43c21#1fce1c538a6a7c0bf1cffd1a1809aec906b43c21"
 dependencies = [
  "ahash 0.8.6",
  "bitflags 2.4.1",
+ "indexmap 2.1.0",
  "instant",
  "num-traits",
  "once_cell",
  "rhai_codegen",
+ "rust_decimal",
  "smallvec",
  "smartstring",
 ]
 
 [[package]]
-name = "rhai_codegen"
-version = "1.6.0"
+name = "rhai-rand"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "853977598f084a492323fe2f7896b4100a86284ee8473612de60021ea341310f"
+checksum = "4314e7e2a1f5d5de224ae3bc9ce2af4c0146d07d3c3aadf9840f08d80ef28800"
+dependencies = [
+ "rand 0.8.5",
+ "rhai",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "rhai-script"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bs58 0.4.0",
+ "flow-lib",
+ "rhai",
+ "rhai-rand",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "rhai_codegen"
+version = "1.6.1"
+source = "git+https://github.com/space-operator/rhai?rev=1fce1c538a6a7c0bf1cffd1a1809aec906b43c21#1fce1c538a6a7c0bf1cffd1a1809aec906b43c21"
 dependencies = [
  "proc-macro2 1.0.69",
  "quote 1.0.33",

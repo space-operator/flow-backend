@@ -39,8 +39,8 @@ pub struct FlowRegistry {
     flows: Arc<HashMap<FlowId, ClientConfig>>,
     signers_info: JsonValue,
     endpoints: Endpoints,
-    signer: signer::Svc,
-    token: get_jwt::Svc,
+    pub(crate) signer: signer::Svc,
+    pub(crate) token: get_jwt::Svc,
     new_flow_run: new_flow_run::Svc,
     get_previous_values: get_previous_values::Svc,
 }
@@ -257,14 +257,7 @@ impl FlowRegistry {
             let user_id = this.flow_owner.id;
             let mut flow_config = FlowConfig::new(config.clone());
             flow_config.ctx.endpoints = this.endpoints.clone();
-            let mut flow = FlowGraph::from_cfg(
-                flow_config,
-                this,
-                self.signer.clone(),
-                self.token.clone(),
-                partial_config.as_ref(),
-            )
-            .await?;
+            let mut flow = FlowGraph::from_cfg(flow_config, this, partial_config.as_ref()).await?;
 
             if collect_instructions {
                 if let BundlingMode::Off = flow.mode {

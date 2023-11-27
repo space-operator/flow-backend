@@ -1,9 +1,10 @@
 [package]
 name = "rhai-script"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "gen"
 
 [dependencies]
 anyhow.workspace = true
@@ -11,5 +12,7 @@ bs58.workspace = true
 flow-lib.workspace = true
 rhai = { version = "1.17", features = ["decimal", "indexmap"] }
 rhai-rand = { version = "0.1.6", features = ["decimal"] }
+serde.workspace = true
+serde_json.workspace = true
 thiserror = "1.0.50"
 tracing = "0.1.40"
