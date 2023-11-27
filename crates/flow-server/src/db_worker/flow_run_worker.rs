@@ -370,6 +370,7 @@ async fn save_to_db(
                         content,
                         module,
                     });
+                    log_index += 1;
                 }
                 Event::NodeFinish(NodeFinish {
                     time,

@@ -1081,6 +1081,17 @@ impl FlowGraph {
         }
         self.supply_partial_run_values(fake_node, &mut s);
 
+        // TODO: is this the best way to do this
+        match Arc::get_mut(&mut self.ctx.extensions) {
+            Some(ext) => {
+                ext.insert(s.event_tx.clone());
+                ext.insert(s.stop.token.clone());
+            }
+            None => {
+                tracing::error!("could not insert to extensions, this is a bug");
+            }
+        }
+
         'LOOP: loop {
             tracing::trace!("new round");
             if s.stop.token.is_cancelled() {

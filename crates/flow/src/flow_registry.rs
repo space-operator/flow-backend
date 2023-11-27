@@ -1,8 +1,10 @@
 use crate::{
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
-    flow_run_events, FlowGraph,
+    flow_run_events::{self, EventSender, NodeLog},
+    FlowGraph,
 };
+use chrono::Utc;
 use flow_lib::{
     config::{
         client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
@@ -18,6 +20,7 @@ use serde_json::Value as JsonValue;
 use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
 use tokio::sync::Semaphore;
+use tokio_util::sync::CancellationToken;
 use tracing::instrument::WithSubscriber;
 use utils::actix_service::ActixService;
 
@@ -131,10 +134,71 @@ fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) 
     tokio::task::spawn_blocking(move || {
         let mut engine = rhai_script::setup_engine();
         while let Ok((req, tx)) = rx.recv() {
-            if tx
-                .send(req.command.run(&mut engine, req.ctx, req.input))
-                .is_err()
-            {
+            match (req.ctx.extensions.get::<EventSender>(), &req.ctx.command) {
+                (Some(tx), Some(cmd)) => {
+                    let tx1 = tx.clone();
+                    let tx2 = tx.clone();
+                    let node_id = cmd.node_id;
+                    let times = cmd.times;
+                    engine
+                        .on_print(move |s| {
+                            tx1.unbounded_send(
+                                NodeLog {
+                                    time: Utc::now(),
+                                    node_id,
+                                    times,
+                                    level: flow_run_events::LogLevel::Info,
+                                    module: None,
+                                    content: s.to_owned(),
+                                }
+                                .into(),
+                            )
+                            .ok();
+                        })
+                        .on_debug(move |s, _, pos| {
+                            let module = if let (Some(line), Some(position)) =
+                                (pos.line(), pos.position())
+                            {
+                                Some(format!("script.rhai:{}:{}", line, position))
+                            } else {
+                                None
+                            };
+                            tx2.unbounded_send(
+                                NodeLog {
+                                    time: Utc::now(),
+                                    node_id,
+                                    times,
+                                    level: flow_run_events::LogLevel::Debug,
+                                    module,
+                                    content: s.to_owned(),
+                                }
+                                .into(),
+                            )
+                            .ok();
+                        });
+                }
+                _ => {
+                    engine
+                        .on_print(|s| {
+                            tracing::info!("rhai: {}", s);
+                        })
+                        .on_debug(move |s, _, pos| {
+                            tracing::info!("rhai: {}, at {}", s, pos);
+                        });
+                }
+            }
+            match req.ctx.extensions.get::<CancellationToken>().cloned() {
+                Some(stop_token) => {
+                    engine.on_progress(move |c| {
+                        (c % 4096 == 0 && stop_token.is_cancelled()).then(|| "canceled".into())
+                    });
+                }
+                None => {
+                    engine.on_progress(|_| None);
+                }
+            }
+            let result = req.command.run(&mut engine, req.ctx, req.input);
+            if tx.send(result).is_err() {
                 tracing::debug!("command stopped waiting");
             }
         }
