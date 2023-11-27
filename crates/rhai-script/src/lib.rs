@@ -3,11 +3,13 @@ use convert::{dynamic_to_value, value_to_dynamic};
 use flow_lib::command::prelude::*;
 use rhai::{
     packages::{Package, StandardPackage},
-    Dynamic, Engine,
+    Dynamic,
 };
 use rhai_rand::RandomPackage;
 
 pub mod convert;
+
+pub use rhai::Engine;
 
 pub fn setup_engine() -> Engine {
     let mut engine = Engine::new();

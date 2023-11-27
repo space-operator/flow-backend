@@ -14,7 +14,7 @@ use flow_lib::{
 };
 use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
 use tracing::instrument::WithSubscriber;
 use utils::actix_service::ActixService;
@@ -43,6 +43,7 @@ pub struct FlowRegistry {
     pub(crate) token: get_jwt::Svc,
     new_flow_run: new_flow_run::Svc,
     get_previous_values: get_previous_values::Svc,
+    rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<()>>>>,
 }
 
 impl Default for FlowRegistry {
@@ -63,6 +64,7 @@ impl Default for FlowRegistry {
             token,
             new_flow_run,
             get_previous_values,
+            rhai_tx: <_>::default(),
         }
     }
 }
