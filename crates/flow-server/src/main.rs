@@ -90,7 +90,9 @@ async fn main() {
                 let names = conn.get_natives_commands().await?;
                 let mut missing = BTreeSet::new();
                 for name in names {
-                    if !natives.contains(&&Cow::Borrowed(name.as_str())) {
+                    if !natives.contains(&&Cow::Borrowed(name.as_str()))
+                        && !rhai_script::is_rhai_script(&name)
+                    {
                         missing.insert(name);
                     }
                 }
