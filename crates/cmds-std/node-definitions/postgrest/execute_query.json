@@ -1,0 +1,84 @@
+{
+  "type": "native",
+  "data": {
+    "node_definition_version": "0.1",
+    "unique_id": "",
+    "node_id": "postgrest_execute_query",
+    "version": "0.1",
+    "display_name": "Execute Query",
+    "description": "Send the query and return result",
+    "tags": ["database", "postgrest", "supabase"],
+    "related_to": [
+      {
+        "id": "",
+        "type": "",
+        "relationship": ""
+      }
+    ],
+    "resources": {
+      "source_code_url": "",
+      "documentation_url": ""
+    },
+    "usage": {
+      "license": "Apache-2.0",
+      "license_url": "",
+      "pricing": {
+        "currency": "USDC",
+        "purchase_price": 0,
+        "price_per_run": 0,
+        "custom": {
+          "unit": "monthly",
+          "value": "0"
+        }
+      }
+    },
+    "authors": [
+      {
+        "name": "Space Operator",
+        "contact": ""
+      }
+    ],
+    "design": {
+      "width": 0,
+      "height": 0,
+      "icon_url": "",
+      "backgroundColorDark": "#000000",
+      "backgroundColor": "#fff"
+    },
+    "options": {}
+  },
+  "targets": [
+    {
+      "name": "query",
+      "type_bounds": ["object"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "headers",
+      "type_bounds": ["free"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    }
+  ],
+  "sources": [
+    {
+      "name": "result",
+      "type": "free",
+      "defaultValue": "",
+      "tooltip": ""
+    },
+    {
+      "name": "headers",
+      "type": "object",
+      "defaultValue": "",
+      "tooltip": ""
+    }
+  ],
+  "targets_form.json_schema": {},
+  "targets_form.ui_schema": {}
+}

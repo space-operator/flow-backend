@@ -49,10 +49,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         Instructions::default()
     };
 
-    let signature = ctx
-        .execute(instructions, Default::default())
-        .await?
-        .signature;
+    let signature = ctx.execute(instructions, <_>::default()).await?.signature;
 
     Ok(Output { signature })
 }

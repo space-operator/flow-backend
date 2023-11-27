@@ -91,7 +91,7 @@ struct SuccessBody {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let key = input.file.key(&ctx.user.id);
+    let key = input.file.key(&ctx.flow_owner.id);
     let url = format!("{}/storage/v1/object/sign/{}", ctx.endpoints.supabase, key);
     tracing::debug!("using URL: {}", url);
     let mut req = ctx.http.post(url);

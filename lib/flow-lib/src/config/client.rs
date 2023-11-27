@@ -1,11 +1,15 @@
 //! Parse JS front-end flow config into back-end flow config
 
-use crate::{CommandType, FlowId, FlowRunId, NodeId, SolanaNet, UserId, ValueType};
+use crate::{
+    CmdInputDescription, CmdOutputDescription, CommandType, FlowId, FlowRunId, NodeId, SolanaNet,
+    UserId, ValueType,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use serde_with::serde_as;
 use std::collections::HashMap;
 use uuid::Uuid;
+use value::default::bool_false;
 
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -137,6 +141,18 @@ pub struct Source {
     pub id: Uuid,
     pub name: String,
     pub r#type: ValueType,
+    #[serde(default = "bool_false")]
+    pub optional: bool,
+}
+
+impl Into<CmdOutputDescription> for Source {
+    fn into(self) -> CmdOutputDescription {
+        CmdOutputDescription {
+            name: self.name,
+            r#type: self.r#type,
+            optional: self.optional,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -144,6 +160,19 @@ pub struct Target {
     pub id: Uuid,
     pub name: String,
     pub type_bounds: Vec<ValueType>,
+    pub required: bool,
+    pub passthrough: bool,
+}
+
+impl Into<CmdInputDescription> for Target {
+    fn into(self) -> CmdInputDescription {
+        CmdInputDescription {
+            name: self.name,
+            type_bounds: self.type_bounds,
+            required: self.required,
+            passthrough: self.passthrough,
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -2,12 +2,27 @@ use super::{EnumExt, PropertyNotFound, RenderParams};
 use serde::{Deserialize, Serialize};
 use thiserror::Error as ThisError;
 
+pub fn hue_to_color_name(mut hue: f64) -> String {
+    // Using this wheel for names
+    // https://i.pinimg.com/originals/bb/61/4e/bb614ebff2617fcd9e273ccc2d98201b.jpg
+    const NAMES: &[&str] = &[
+        "Red", "Brick", "Orange", "Gold", "Yellow", "Lime", "Green", "Teal", "Blue", "Indigo",
+        "Purple", "Violet",
+    ];
+    hue = (hue + 15.0) % 360f64;
+    if hue < 0.0 {
+        hue += 360.0;
+    }
+    let index = (hue / 30.0).floor() as usize;
+    NAMES[index].to_owned()
+}
+
 /// Traits that will be included when uploading to Metaplex
 pub struct NftTraits {
     pub body: super::BodyType,
     pub helmet: super::HelmetType,
     pub helmet_light: super::HelmetLight,
-    pub color: f64,
+    pub dress_color: String,
     pub pose: super::Pose,
     pub composition: super::Fx0,
     pub transformation: super::Fx1,
@@ -17,7 +32,6 @@ pub struct NftTraits {
     pub growth: super::Fx5,
     pub wrapping: super::Fx6,
     pub animal: Animal,
-    pub seed: i64,
 }
 
 #[derive(strum::EnumProperty, strum::EnumIter, Debug, Clone, Copy, PartialEq, Eq)]
@@ -64,7 +78,7 @@ impl NftTraits {
             body: r.body_type,
             helmet: r.helmet_type,
             helmet_light: r.helmet_light,
-            color: r.dress_color_hue.round(),
+            dress_color: hue_to_color_name(r.dress_color_hue),
             pose: r.pose,
             composition: r.fx0,
             transformation: r.fx1,
@@ -85,7 +99,6 @@ impl NftTraits {
                 super::Fx2::Ladybag => Animal::Ladybug,
                 super::Fx2::Spring => Animal::No,
             },
-            seed: r.wedgeindex,
         }
     }
 
@@ -148,7 +161,7 @@ impl NftTraits {
             body: find_enum(v, "Body")?,
             helmet: find_enum(v, "Helmet")?,
             helmet_light: find_enum(v, "Helmet Light")?,
-            color: find_from_str(v, "Color")?,
+            dress_color: find_from_str(v, "Dress Color Hue")?,
             pose: find_enum(v, "Pose")?,
             composition: find_enum(v, "Composition")?,
             transformation: find_enum(v, "Transformation")?,
@@ -158,7 +171,6 @@ impl NftTraits {
             growth: find_enum(v, "Growth")?,
             wrapping: find_enum(v, "Wrapping")?,
             animal: find_enum(v, "Animal")?,
-            seed: find_from_str(v, "Seed")?,
         })
     }
 
@@ -170,7 +182,7 @@ impl NftTraits {
             body,
             helmet,
             helmet_light,
-            color,
+            dress_color,
             pose,
             composition,
             transformation,
@@ -180,7 +192,6 @@ impl NftTraits {
             growth,
             wrapping,
             animal,
-            seed,
         } = self;
 
         fn push(v: &mut Vec<MetaplexAttribute>, ty: &str, value: impl Into<String>) {
@@ -196,7 +207,7 @@ impl NftTraits {
         push(&mut v, "Body", body.metaplex_name()?);
         push(&mut v, "Helmet", helmet.metaplex_name()?);
         push(&mut v, "Helmet Light", helmet_light.metaplex_name()?);
-        push(&mut v, "Color", color.round().to_string());
+        push(&mut v, "Dress Color Hue", dress_color.clone());
         push(&mut v, "Pose", pose.metaplex_name()?);
         push(&mut v, "Composition", composition.metaplex_name()?);
         push(&mut v, "Transformation", transformation.metaplex_name()?);
@@ -206,7 +217,6 @@ impl NftTraits {
         push(&mut v, "Growth", growth.metaplex_name()?);
         push(&mut v, "Wrapping", wrapping.metaplex_name()?);
         push(&mut v, "Animal", animal.metaplex_name()?);
-        push(&mut v, "Seed", seed.to_string());
 
         Ok(v)
     }

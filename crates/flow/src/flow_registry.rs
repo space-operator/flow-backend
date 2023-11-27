@@ -12,10 +12,12 @@ use flow_lib::{
     utils::TowerClient,
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, UserId, ValueSet,
 };
+use futures::channel::oneshot;
 use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
+use tokio::sync::Semaphore;
 use tracing::instrument::WithSubscriber;
 use utils::actix_service::ActixService;
 
@@ -33,15 +35,18 @@ pub enum StopError {
 #[derive(Clone)]
 pub struct FlowRegistry {
     depth: u32,
-    user: User,
+    pub(crate) flow_owner: User,
+    pub(crate) started_by: User,
     shared_with: Vec<UserId>,
     flows: Arc<HashMap<FlowId, ClientConfig>>,
     signers_info: JsonValue,
     endpoints: Endpoints,
-    signer: signer::Svc,
-    token: get_jwt::Svc,
+    pub(crate) signer: signer::Svc,
+    pub(crate) token: get_jwt::Svc,
     new_flow_run: new_flow_run::Svc,
     get_previous_values: get_previous_values::Svc,
+    pub(crate) rhai_permit: Arc<Semaphore>,
+    rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
 }
 
 impl Default for FlowRegistry {
@@ -52,7 +57,8 @@ impl Default for FlowRegistry {
         let token = get_jwt::unimplemented_svc();
         Self {
             depth: 0,
-            user: User::new(UserId::nil()),
+            flow_owner: User::new(UserId::nil()),
+            started_by: User::new(UserId::nil()),
             shared_with: <_>::default(),
             flows: Arc::new(HashMap::new()),
             endpoints: <_>::default(),
@@ -61,6 +67,8 @@ impl Default for FlowRegistry {
             token,
             new_flow_run,
             get_previous_values,
+            rhai_permit: Arc::new(Semaphore::new(1)),
+            rhai_tx: <_>::default(),
         }
     }
 }
@@ -119,9 +127,24 @@ async fn get_all_flows(
     Ok(flows)
 }
 
+fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) {
+    tokio::task::spawn_blocking(move || {
+        let mut engine = rhai_script::setup_engine();
+        while let Ok((req, tx)) = rx.recv() {
+            if tx
+                .send(req.command.run(&mut engine, req.ctx, req.input))
+                .is_err()
+            {
+                tracing::debug!("command stopped waiting");
+            }
+        }
+    });
+}
+
 impl FlowRegistry {
     pub async fn new(
-        user: User,
+        flow_owner: User,
+        started_by: User,
         shared_with: Vec<UserId>,
         entrypoint: FlowId,
         (signer, signers_info): (signer::Svc, JsonValue),
@@ -132,10 +155,11 @@ impl FlowRegistry {
         environment: HashMap<String, String>,
         endpoints: Endpoints,
     ) -> Result<Self, get_flow::Error> {
-        let flows = get_all_flows(entrypoint, user.id, get_flow, environment).await?;
+        let flows = get_all_flows(entrypoint, flow_owner.id, get_flow, environment).await?;
         Ok(Self {
             depth: 0,
-            user,
+            flow_owner,
+            started_by,
             shared_with,
             flows: Arc::new(flows),
             signer,
@@ -144,11 +168,35 @@ impl FlowRegistry {
             get_previous_values,
             token,
             endpoints,
+            rhai_permit: Arc::new(Semaphore::new(1)),
+            rhai_tx: <_>::default(),
         })
     }
 
+    pub async fn run_rhai(
+        &self,
+        req: run_rhai::Request,
+    ) -> Result<run_rhai::Response, run_rhai::Error> {
+        let worker = {
+            let mut tx = self.rhai_tx.lock().unwrap();
+            if tx.is_none() {
+                let (new_tx, rx) = crossbeam_channel::unbounded();
+                spawn_rhai_thread(rx);
+                *tx = Some(new_tx.clone());
+            }
+            tx.clone().unwrap()
+        };
+        let (tx, rx) = oneshot::channel();
+        worker
+            .send((req, tx))
+            .map_err(|_| run_rhai::Error::msg("rhai worker stopped"))?;
+        rx.await
+            .map_err(|_| run_rhai::Error::msg("rhai worker stopped"))?
+    }
+
     pub async fn from_actix(
-        user: User,
+        flow_owner: User,
+        started_by: User,
         shared_with: Vec<UserId>,
         entrypoint: FlowId,
         (signer, signers_info): (actix::Recipient<signer::SignatureRequest>, JsonValue),
@@ -160,7 +208,8 @@ impl FlowRegistry {
         endpoints: Endpoints,
     ) -> Result<Self, get_flow::Error> {
         Self::new(
-            user,
+            flow_owner,
+            started_by,
             shared_with,
             entrypoint,
             (
@@ -217,7 +266,7 @@ impl FlowRegistry {
         let run = self
             .new_flow_run
             .call_ref(new_flow_run::Request {
-                user_id: self.user.id,
+                user_id: self.flow_owner.id,
                 shared_with: self.shared_with.clone(),
                 config: ClientConfig {
                     call_depth: self.depth,
@@ -248,18 +297,10 @@ impl FlowRegistry {
         );
         async move {
             let mut get_previous_values_svc = this.get_previous_values.clone();
-            let user_id = this.user.id;
+            let user_id = this.flow_owner.id;
             let mut flow_config = FlowConfig::new(config.clone());
             flow_config.ctx.endpoints = this.endpoints.clone();
-            let mut flow = FlowGraph::from_cfg(
-                flow_config,
-                this,
-                self.user.clone(),
-                self.signer.clone(),
-                self.token.clone(),
-                partial_config.as_ref(),
-            )
-            .await?;
+            let mut flow = FlowGraph::from_cfg(flow_config, this, partial_config.as_ref()).await?;
 
             if collect_instructions {
                 if let BundlingMode::Off = flow.mode {
@@ -306,6 +347,24 @@ impl FlowRegistry {
         .with_subscriber(subscriber)
         .await
     }
+}
+
+pub mod run_rhai {
+    use flow_lib::{command::CommandError, Context, ValueSet};
+    use futures::channel::oneshot;
+    use std::sync::Arc;
+
+    pub type ChannelMessage = (Request, oneshot::Sender<Result<Response, Error>>);
+
+    pub struct Request {
+        pub command: Arc<rhai_script::Command>,
+        pub ctx: Context,
+        pub input: ValueSet,
+    }
+
+    pub type Response = ValueSet;
+
+    pub type Error = CommandError;
 }
 
 pub mod new_flow_run {

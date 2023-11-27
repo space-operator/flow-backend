@@ -277,11 +277,12 @@ pub struct CommandContext {
 
 #[derive(Clone)]
 pub struct Context {
+    pub flow_owner: User,
+    pub started_by: User,
     pub cfg: ContextConfig,
     pub http: reqwest::Client,
     pub solana_client: Arc<SolanaClient>,
     pub environment: HashMap<String, String>,
-    pub user: User,
     pub endpoints: Endpoints,
     pub extensions: Arc<Extensions>,
     pub command: Option<CommandContext>,
@@ -293,6 +294,7 @@ impl Default for Context {
     fn default() -> Self {
         let mut ctx = Context::from_cfg(
             &ContextConfig::default(),
+            User::default(),
             User::default(),
             signer::unimplemented_svc(),
             get_jwt::unimplemented_svc(),
@@ -308,7 +310,7 @@ impl Default for Context {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct User {
     pub id: UserId,
 }
@@ -331,7 +333,8 @@ impl Default for User {
 impl Context {
     pub fn from_cfg(
         cfg: &ContextConfig,
-        user: User,
+        flow_owner: User,
+        started_by: User,
         sig_svc: signer::Svc,
         token_svc: get_jwt::Svc,
         extensions: Extensions,
@@ -339,11 +342,12 @@ impl Context {
         let solana_client = SolanaClient::new(cfg.solana_client.url.clone());
 
         Self {
+            flow_owner,
+            started_by,
             cfg: cfg.clone(),
             http: reqwest::Client::new(),
             solana_client: Arc::new(solana_client),
             environment: cfg.environment.clone(),
-            user,
             endpoints: cfg.endpoints.clone(),
             extensions: Arc::new(extensions),
             command: None,
@@ -360,7 +364,7 @@ impl Context {
                 .ready()
                 .await?
                 .call(get_jwt::Request {
-                    user_id: self.user.id,
+                    user_id: self.flow_owner.id,
                 })
                 .await?
                 .access_token)

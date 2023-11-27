@@ -491,6 +491,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
 
             let r = FlowRegistry::from_actix(
                 msg.user,
+                msg.user,
                 Vec::new(),
                 msg.flow_id,
                 (signer.recipient(), signers_info),
@@ -573,6 +574,9 @@ impl actix::Handler<StartFlowShared> for UserWorker {
 
             let r = FlowRegistry::from_actix(
                 User { id: user_id },
+                User {
+                    id: msg.started_by.0,
+                },
                 [msg.started_by.0].into(),
                 msg.flow_id,
                 (signer.recipient(), signers_info),

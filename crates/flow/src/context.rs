@@ -32,6 +32,23 @@ impl CommandFactory {
         Self { natives }
     }
 
+    pub fn new_native_command(
+        &self,
+        name: &str,
+        config: &NodeData,
+    ) -> crate::Result<Box<dyn CommandTrait>> {
+        match self.natives.get(name) {
+            Some(d) => (d.fn_new)(config).map_err(crate::Error::CreateCmd),
+            None => {
+                if rhai_script::is_rhai_script(name) {
+                    crate::command::rhai::build(config).map_err(crate::Error::CreateCmd)
+                } else {
+                    Err(Error::Any(format!("native not found: {}", name).into()))
+                }
+            }
+        }
+    }
+
     pub async fn new_command(
         &self,
         name: &str,
@@ -39,11 +56,7 @@ impl CommandFactory {
     ) -> crate::Result<Box<dyn CommandTrait>> {
         match config.r#type {
             CommandType::Mock => Err(Error::custom("mock node")),
-            CommandType::Native => self
-                .natives
-                .get(name)
-                .ok_or_else(|| Error::Any(format!("native not found: {}", name).into()))
-                .and_then(|d| (d.fn_new)(config).map_err(crate::Error::CreateCmd)),
+            CommandType::Native => self.new_native_command(name, config),
             CommandType::Wasm => {
                 let bytes = config
                     .targets_form

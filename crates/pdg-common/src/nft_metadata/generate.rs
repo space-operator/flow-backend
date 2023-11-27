@@ -1,10 +1,217 @@
 use super::{
-    BodyType, EnvLight, Fx0, Fx1, Fx1a, Fx2, Fx4, Fx5, Fx6, FxJellyfish, FxLineartHelper,
+    BodyType, EnvLight, Fx0, Fx1, Fx1a, Fx2, Fx3, Fx4, Fx5, Fx6, FxJellyfish, FxLineartHelper,
     HelmetLight, HelmetType, LightReflectionMult, Pose, RenderParams,
 };
-use rand::Rng;
+use indexmap::IndexSet;
+use rand::{seq::SliceRandom, Rng};
+use serde::{Deserialize, Serialize};
+use strum::IntoEnumIterator;
+
+/// Effects that an NFT can gain
+#[derive(
+    derive_more::From,
+    strum::EnumProperty,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    Eq,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Hash,
+)]
+#[serde(tag = "type", content = "value")]
+pub enum Effect {
+    #[strum(props(EffectType = "Pose"))]
+    #[from]
+    Pose(Pose),
+    #[strum(props(EffectType = "Fx0"))]
+    #[from]
+    Fx0(Fx0),
+    #[strum(props(EffectType = "Fx1"))]
+    #[from]
+    Fx1(Fx1),
+    #[strum(props(EffectType = "Fx2"))]
+    #[from]
+    Fx2(Fx2),
+    #[strum(props(EffectType = "Fx3"))]
+    #[from]
+    Fx3(Fx3),
+    #[strum(props(EffectType = "Fx4"))]
+    #[from]
+    Fx4(Fx4),
+    #[strum(props(EffectType = "Fx5"))]
+    #[from]
+    Fx5(Fx5),
+    #[strum(props(EffectType = "Fx6"))]
+    #[from]
+    Fx6(Fx6),
+    #[strum(props(EffectType = "Fx1a"))]
+    #[from]
+    Fx1a(Fx1a),
+    #[strum(props(EffectType = "FxJellyfish"))]
+    #[from]
+    FxJellyfish(FxJellyfish),
+    #[strum(props(EffectType = "FxLineartHelper"))]
+    #[from]
+    FxLineartHelper(FxLineartHelper),
+}
+
+pub struct EffectsList {
+    pub effects: IndexSet<Effect>,
+}
+
+impl From<IndexSet<Effect>> for EffectsList {
+    fn from(effects: IndexSet<Effect>) -> Self {
+        Self { effects }
+    }
+}
+
+impl From<Vec<Effect>> for EffectsList {
+    fn from(effects: Vec<Effect>) -> Self {
+        Self {
+            effects: effects.into_iter().collect(),
+        }
+    }
+}
+
+impl<const N: usize> From<[Effect; N]> for EffectsList {
+    fn from(effects: [Effect; N]) -> Self {
+        Self {
+            effects: effects.into(),
+        }
+    }
+}
+
+impl From<RenderParams> for EffectsList {
+    fn from(value: RenderParams) -> Self {
+        let RenderParams {
+            body_type: _,
+            pose,
+            helmet_type: _,
+            helmet_light: _,
+            fx0,
+            fx1,
+            fx1a,
+            fx2,
+            fx3,
+            fx4,
+            fx5,
+            fx6,
+            fx_jellifish,
+            fx_lineart_helper,
+            env_light: _,
+            env_reflection: _,
+            light_reflection_mult: _,
+            butterfly_amount: _,
+            disintegration_amount: _,
+            melt_amount: _,
+            fall_amount: _,
+            firefly_amount: _,
+            frozen_amount: _,
+            fungi_amount: _,
+            gold_silver_amount: _,
+            grow_flower_amount: _,
+            hologram_amount: _,
+            eyes_light_intensity_amount: _,
+            ladybag_amount: _,
+            lineart_amount: _,
+            melting_glow_amount: _,
+            pixel_amount: _,
+            rain_amount: _,
+            smoke_amount: _,
+            soap_bubble_intensity_amount: _,
+            soap_bubble_roughness_amount: _,
+            spring_amount: _,
+            underwater_fog_amount: _,
+            xray_body_amount: _,
+            xray_skeleton_particles_amount: _,
+            background_color_random_hue: _,
+            background_underwater_color_hue: _,
+            dress_color_hue: _,
+            eye_color_random_hue: _,
+            random_value: _,
+            wedgeindex: _,
+            render_noise_threshold: _,
+            render_resolution: _,
+            wedgeattribs: _,
+        } = value;
+        Self {
+            effects: [
+                pose.into(),
+                fx0.into(),
+                fx1.into(),
+                fx2.into(),
+                fx3.into(),
+                fx4.into(),
+                fx5.into(),
+                fx6.into(),
+                fx1a.into(),
+                fx_jellifish.into(),
+                fx_lineart_helper.into(),
+            ]
+            .into(),
+        }
+    }
+}
+
+impl EffectsList {
+    pub fn effect_lottery<R: Rng + ?Sized>(
+        &self,
+        mut choose_from: Vec<Effect>,
+        rng: &mut R,
+    ) -> Option<Effect> {
+        choose_from.retain(|e| !self.effects.contains(e));
+        choose_from.choose(rng).cloned()
+    }
+
+    pub fn push(&mut self, effect: Effect) -> bool {
+        self.effects.insert(effect)
+    }
+}
+
+impl Effect {
+    pub fn all_effects() -> Vec<Effect> {
+        let mut list = Vec::new();
+        for e in Effect::iter() {
+            match e {
+                Effect::Pose(_) => list.extend(Pose::iter().map(Effect::from)),
+                Effect::Fx0(_) => list.extend(Fx0::iter().map(Effect::from)),
+                Effect::Fx1(_) => list.extend(Fx1::iter().map(Effect::from)),
+                Effect::Fx2(_) => list.extend(Fx2::iter().map(Effect::from)),
+                Effect::Fx3(_) => list.extend(Fx3::iter().map(Effect::from)),
+                Effect::Fx4(_) => list.extend(Fx4::iter().map(Effect::from)),
+                Effect::Fx5(_) => list.extend(Fx5::iter().map(Effect::from)),
+                Effect::Fx6(_) => list.extend(Fx6::iter().map(Effect::from)),
+                Effect::Fx1a(_) => list.extend(Fx1a::iter().map(Effect::from)),
+                Effect::FxJellyfish(_) => list.extend(FxJellyfish::iter().map(Effect::from)),
+                Effect::FxLineartHelper(_) => {
+                    list.extend(FxLineartHelper::iter().map(Effect::from))
+                }
+            }
+        }
+        list
+    }
+}
 
 impl RenderParams {
+    pub fn add_effect(&mut self, effect: Effect) {
+        match effect {
+            Effect::Pose(x) => self.pose = x,
+            Effect::Fx0(x) => self.fx0 = x,
+            Effect::Fx1(x) => self.fx1 = x,
+            Effect::Fx2(x) => self.fx2 = x,
+            Effect::Fx3(x) => self.fx3 = x,
+            Effect::Fx4(x) => self.fx4 = x,
+            Effect::Fx5(x) => self.fx5 = x,
+            Effect::Fx6(x) => self.fx6 = x,
+            Effect::Fx1a(x) => self.fx1a = x,
+            Effect::FxJellyfish(x) => self.fx_jellifish = x,
+            Effect::FxLineartHelper(x) => self.fx_lineart_helper = x,
+        }
+    }
+
     pub fn generate_base() -> Self {
         let body_type = BodyType::seed();
         let pose = Pose::seed();
@@ -18,7 +225,7 @@ impl RenderParams {
             helmet_type,
             helmet_light,
             fx0,
-            ..Default::default()
+            ..<_>::default()
         }
         .adjust_base()
         .generate_line_art()

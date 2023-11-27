@@ -24,6 +24,7 @@ pub struct PropertyNotFound {
 trait EnumExt {
     fn pdg_name(&self) -> Result<&'static str, PropertyNotFound>;
     fn metaplex_name(&self) -> Result<&'static str, PropertyNotFound>;
+    fn effect_type(&self) -> Result<&'static str, PropertyNotFound>;
 }
 
 impl<T> EnumExt for T
@@ -32,7 +33,7 @@ where
 {
     fn pdg_name(&self) -> Result<&'static str, PropertyNotFound> {
         self.get_str("PDGName").ok_or_else(|| PropertyNotFound {
-            attr: "PdgName",
+            attr: "PDGName",
             ty: std::any::type_name::<T>(),
             variant: format!("{:?}", self),
         })
@@ -44,6 +45,13 @@ where
                 ty: std::any::type_name::<T>(),
                 variant: format!("{:?}", self),
             })
+    }
+    fn effect_type(&self) -> Result<&'static str, PropertyNotFound> {
+        self.get_str("EffectType").ok_or_else(|| PropertyNotFound {
+            attr: "EffectType",
+            ty: std::any::type_name::<T>(),
+            variant: format!("{:?}", self),
+        })
     }
 }
 
@@ -570,7 +578,7 @@ impl RenderParams {
             wedgeindex,
             render_noise_threshold,
             render_resolution,
-            ..Default::default()
+            ..<_>::default()
         })
     }
 
@@ -1218,6 +1226,7 @@ impl HelmetLight {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx0 {
@@ -1290,6 +1299,7 @@ impl Fx0 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx1 {
@@ -1342,6 +1352,7 @@ impl Fx1 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx1a {
@@ -1382,6 +1393,7 @@ impl Fx1a {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx2 {
@@ -1450,6 +1462,7 @@ impl Fx2 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx3 {
@@ -1477,6 +1490,7 @@ impl_try_from_u32!(Fx3);
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx4 {
@@ -1529,6 +1543,7 @@ impl Fx4 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx5 {
@@ -1581,6 +1596,7 @@ impl Fx5 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum Fx6 {
@@ -1633,6 +1649,7 @@ impl Fx6 {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum FxJellyfish {
@@ -1679,6 +1696,7 @@ impl FxJellyfish {
     Deserialize_repr,
     Default,
     Display,
+    Hash,
 )]
 #[repr(u32)]
 pub enum FxLineartHelper {
