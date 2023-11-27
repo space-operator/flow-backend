@@ -190,7 +190,7 @@ fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) 
             match req.ctx.extensions.get::<CancellationToken>().cloned() {
                 Some(stop_token) => {
                     engine.on_progress(move |c| {
-                        (c % 2048 == 0 && stop_token.is_cancelled()).then(|| "canceled".into())
+                        (c % 4096 == 0 && stop_token.is_cancelled()).then(|| "canceled".into())
                     });
                 }
                 None => {
