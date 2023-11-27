@@ -40,7 +40,10 @@ use std::{
     time::Duration,
 };
 use thiserror::Error as ThisError;
-use tokio::task::{JoinError, JoinHandle};
+use tokio::{
+    sync::Semaphore,
+    task::{JoinError, JoinHandle},
+};
 use tokio_util::sync::CancellationToken;
 use tracing::instrument::WithSubscriber;
 use uuid::Uuid;
@@ -105,6 +108,7 @@ pub struct FlowGraph {
     pub nodes: HashMap<NodeId, Node>,
     pub mode: client::BundlingMode,
     pub output_instructions: bool,
+    pub rhai_permit: Arc<Semaphore>,
 }
 
 pub struct UsePreviousValue {
@@ -347,6 +351,7 @@ impl FlowGraph {
         let started_by = registry.started_by.clone();
         let signer = registry.signer.clone();
         let token = registry.token.clone();
+        let rhai_permit = registry.rhai_permit.clone();
 
         let ext = {
             let mut ext = Extensions::new();
@@ -464,6 +469,7 @@ impl FlowGraph {
             nodes,
             mode: c.instructions_bundling,
             output_instructions: false,
+            rhai_permit,
         })
     }
 
@@ -1223,19 +1229,31 @@ impl FlowGraph {
         let outputs = s.result.node_outputs.entry(node.id).or_default();
         debug_assert_eq!(outputs.len(), times as usize);
         outputs.push(<_>::default());
+        let rhai_permit = self.rhai_permit.clone();
+        let is_rhai_script = rhai_script::is_rhai_script(&node.command.name());
+        let task = run_command(
+            node,
+            s.flow_run_id,
+            times,
+            inputs,
+            self.ctx.clone(),
+            s.event_tx.clone(),
+            s.stop.clone(),
+            s.out_tx.clone(),
+            self.mode.clone(),
+        );
         // let span = tracing::error_span!("node", node_id = node.id.to_string(), times = times);
         let handler = tokio::spawn(
-            run_command(
-                node,
-                s.flow_run_id,
-                times,
-                inputs,
-                self.ctx.clone(),
-                s.event_tx.clone(),
-                s.stop.clone(),
-                s.out_tx.clone(),
-                self.mode.clone(),
-            )
+            async move {
+                if is_rhai_script {
+                    let p = rhai_permit.acquire().await;
+                    let result = task.await;
+                    std::mem::drop(p);
+                    result
+                } else {
+                    task.await
+                }
+            }
             // .instrument(span)
             .with_current_subscriber(),
         );

@@ -2666,6 +2666,7 @@ dependencies = [
  "chrono",
  "cmds-solana",
  "cmds-std",
+ "crossbeam-channel",
  "derive_more",
  "flow-lib",
  "flow-value",

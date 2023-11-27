@@ -12,10 +12,12 @@ use flow_lib::{
     utils::TowerClient,
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, UserId, ValueSet,
 };
+use futures::channel::oneshot;
 use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
 use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
+use tokio::sync::Semaphore;
 use tracing::instrument::WithSubscriber;
 use utils::actix_service::ActixService;
 
@@ -43,7 +45,8 @@ pub struct FlowRegistry {
     pub(crate) token: get_jwt::Svc,
     new_flow_run: new_flow_run::Svc,
     get_previous_values: get_previous_values::Svc,
-    rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<()>>>>,
+    pub(crate) rhai_permit: Arc<Semaphore>,
+    rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
 }
 
 impl Default for FlowRegistry {
@@ -64,6 +67,7 @@ impl Default for FlowRegistry {
             token,
             new_flow_run,
             get_previous_values,
+            rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
         }
     }
@@ -123,6 +127,20 @@ async fn get_all_flows(
     Ok(flows)
 }
 
+fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) {
+    tokio::task::spawn_blocking(move || {
+        let mut engine = rhai_script::setup_engine();
+        while let Ok((req, tx)) = rx.recv() {
+            if tx
+                .send(req.command.run(&mut engine, req.ctx, req.input))
+                .is_err()
+            {
+                tracing::debug!("command stopped waiting");
+            }
+        }
+    });
+}
+
 impl FlowRegistry {
     pub async fn new(
         flow_owner: User,
@@ -150,7 +168,30 @@ impl FlowRegistry {
             get_previous_values,
             token,
             endpoints,
+            rhai_permit: Arc::new(Semaphore::new(1)),
+            rhai_tx: <_>::default(),
         })
+    }
+
+    pub async fn run_rhai(
+        &self,
+        req: run_rhai::Request,
+    ) -> Result<run_rhai::Response, run_rhai::Error> {
+        let worker = {
+            let mut tx = self.rhai_tx.lock().unwrap();
+            if tx.is_none() {
+                let (new_tx, rx) = crossbeam_channel::unbounded();
+                spawn_rhai_thread(rx);
+                *tx = Some(new_tx.clone());
+            }
+            tx.clone().unwrap()
+        };
+        let (tx, rx) = oneshot::channel();
+        worker
+            .send((req, tx))
+            .map_err(|_| run_rhai::Error::msg("rhai worker stopped"))?;
+        rx.await
+            .map_err(|_| run_rhai::Error::msg("rhai worker stopped"))?
     }
 
     pub async fn from_actix(
@@ -306,6 +347,24 @@ impl FlowRegistry {
         .with_subscriber(subscriber)
         .await
     }
+}
+
+pub mod run_rhai {
+    use flow_lib::{command::CommandError, Context, ValueSet};
+    use futures::channel::oneshot;
+    use std::sync::Arc;
+
+    pub type ChannelMessage = (Request, oneshot::Sender<Result<Response, Error>>);
+
+    pub struct Request {
+        pub command: Arc<rhai_script::Command>,
+        pub ctx: Context,
+        pub input: ValueSet,
+    }
+
+    pub type Response = ValueSet;
+
+    pub type Error = CommandError;
 }
 
 pub mod new_flow_run {

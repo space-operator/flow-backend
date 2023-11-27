@@ -1,3 +1,4 @@
+use rhai_script::COMMAND_ID_PREFIX;
 use serde::Serialize;
 use serde_json::{json, ser::PrettyFormatter};
 
@@ -43,7 +44,7 @@ fn main() {
     for i in 0..=5 {
         for o in 1..=5 {
             let mut def = base.clone();
-            def["data"]["node_id"] = format!("rhai_script_{i}x{o}").into();
+            def["data"]["node_id"] = format!("{COMMAND_ID_PREFIX}{i}x{o}").into();
             def["data"]["display_name"] = format!("RHAI Script {i}x{o}").into();
             let targets = (0..i).map(|i| {
                 json!({
@@ -74,9 +75,10 @@ fn main() {
                 PrettyFormatter::with_indent(b"  "),
             ))
             .unwrap();
+            let base_path: String =
+                concat!(env!("CARGO_MANIFEST_DIR"), "/node-definitions/",).to_owned();
             std::fs::write(
-                &(concat!(env!("CARGO_MANIFEST_DIR"), "/node-definitions/",).to_owned()
-                    + &format!("rhai_script_{i}x{o}.json")),
+                &(base_path + format!("rhai_script_{i}x{o}.json").as_str()),
                 &pretty,
             )
             .unwrap();

@@ -26,10 +26,16 @@ pub fn setup_engine() -> Engine {
     engine
 }
 
+pub const COMMAND_ID_PREFIX: &str = "rhai_script_";
+
+pub fn is_rhai_script(s: &str) -> bool {
+    s.starts_with(COMMAND_ID_PREFIX)
+}
+
 pub struct Command {
-    source_code_name: Name,
-    inputs: Vec<Input>,
-    outputs: Vec<Output>,
+    pub source_code_name: Name,
+    pub inputs: Vec<Input>,
+    pub outputs: Vec<Output>,
 }
 
 impl Command {

@@ -1,4 +1,5 @@
 //! Note: only add fields that are needed in backend.
+use crate::CmdInputDescription;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

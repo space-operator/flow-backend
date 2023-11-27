@@ -40,8 +40,8 @@ impl CommandFactory {
         match self.natives.get(name) {
             Some(d) => (d.fn_new)(config).map_err(crate::Error::CreateCmd),
             None => {
-                if name.starts_with("rhai_script_") {
-                    Err(Error::Any(format!("native not found: {}", name).into()))
+                if rhai_script::is_rhai_script(name) {
+                    crate::command::rhai::build(config).map_err(crate::Error::CreateCmd)
                 } else {
                     Err(Error::Any(format!("native not found: {}", name).into()))
                 }
