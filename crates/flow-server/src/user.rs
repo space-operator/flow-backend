@@ -134,9 +134,9 @@ pub enum LoginError {
 }
 
 #[derive(Deserialize, ThisError, Debug)]
-#[error("{message}")]
+#[error("{error}")]
 pub struct SupabaseError {
-    pub message: String,
+    pub error: String,
 }
 
 async fn supabase_error(resp: reqwest::Response) -> LoginError {
