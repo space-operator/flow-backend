@@ -134,16 +134,24 @@ pub enum LoginError {
 }
 
 #[derive(Deserialize, ThisError, Debug)]
-#[error("{error}")]
+#[error("{msg}")]
 pub struct SupabaseError {
-    pub error: String,
+    pub msg: String,
 }
 
 async fn supabase_error(resp: reqwest::Response) -> LoginError {
-    match resp.json::<SupabaseError>().await {
-        Ok(msg) => LoginError::Supabase(msg),
+    let bytes = match resp.bytes().await {
+        Ok(bytes) => bytes,
         Err(error) => {
             tracing::warn!("network error: {}", error);
+            return login_error();
+        }
+    };
+    match serde_json::from_slice::<SupabaseError>(&bytes) {
+        Ok(msg) => LoginError::Supabase(msg),
+        Err(error) => {
+            tracing::warn!("decode error: {}", error);
+            tracing::warn!("error body: {}", String::from_utf8_lossy(&bytes));
             login_error()
         }
     }
