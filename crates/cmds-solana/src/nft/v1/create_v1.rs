@@ -109,12 +109,15 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let token_standard: mpl_token_metadata::types::TokenStandard = token_standard.into();
 
     // Collection
-    let collection = input.collection_mint_account.map(|key| {
-        Collection::from(NftCollection {
-            verified: false,
-            key,
+    let collection = input
+        .collection_mint_account
+        .map(|key| {
+            Collection::from(NftCollection {
+                verified: false,
+                key,
+            })
         })
-    });
+        .or(input.data.collection.map(Into::into));
 
     // Print Supply
     let print_supply = match input.print_supply {
