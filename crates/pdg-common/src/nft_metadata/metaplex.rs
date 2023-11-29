@@ -18,6 +18,7 @@ pub fn hue_to_color_name(mut hue: f64) -> String {
 }
 
 /// Traits that will be included when uploading to Metaplex
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NftTraits {
     pub body: super::BodyType,
     pub helmet: super::HelmetType,
@@ -107,7 +108,7 @@ impl NftTraits {
     /// Read from an `attributes` array
     ///
     /// https://docs.metaplex.com/programs/token-metadata/token-standard#the-programmable-non-fungible-standard
-    pub fn parse_metaflex_attrs(v: &[MetaplexAttribute]) -> Result<Self, ParseMetaflexError> {
+    pub fn parse_metaplex_attrs(v: &[MetaplexAttribute]) -> Result<Self, ParseMetaflexError> {
         fn find_str<'a>(
             v: &'a [MetaplexAttribute],
             trait_type: &str,
@@ -261,7 +262,7 @@ mod tests {
     }
 
     #[test]
-    fn test_gen_metaflex_attrs() {
+    fn test_gen_metaplex_attrs() {
         let mut json =
             serde_json::from_str::<serde_json::Value>(include_str!("tests/123.json")).unwrap();
         let params = RenderParams::from_pdg_metadata(&mut json, true).unwrap();
@@ -270,5 +271,10 @@ mod tests {
         let attrs = meta.gen_metaplex_attrs().unwrap();
         let json = serde_json::to_string_pretty(&attrs).unwrap();
         println!("{}", json);
+        let meta1 = NftTraits::parse_metaplex_attrs(
+            &serde_json::from_str::<Vec<MetaplexAttribute>>(&json).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(meta, meta1);
     }
 }
