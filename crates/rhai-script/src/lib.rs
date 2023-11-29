@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use chrono::Utc;
 use convert::{dynamic_to_value, value_to_dynamic};
 use flow_lib::command::prelude::*;
 use rhai::{
@@ -6,7 +7,6 @@ use rhai::{
     Dynamic,
 };
 use rhai_rand::RandomPackage;
-use chrono::Utc;
 
 pub mod convert;
 

@@ -116,7 +116,7 @@ const DEFAULT_WEDGEATTRIBS: Attr<&[&str]> = Attr {
 */
 
 /// Condensed metadata
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct RenderParams {
     pub body_type: BodyType,
     pub pose: Pose,

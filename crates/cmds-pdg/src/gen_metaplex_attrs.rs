@@ -6,6 +6,7 @@ use flow_lib::{
     Context,
 };
 use pdg_common::nft_metadata::{
+    generate::{Effect, EffectsList},
     metaplex::{MetaplexAttribute, NftTraits},
     RenderParams,
 };
@@ -25,6 +26,7 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 #[derive(Deserialize, Debug)]
 struct Input {
     attributes: RenderParams,
+    effects: Vec<Effect>,
 }
 
 #[derive(Serialize, Debug)]
@@ -33,7 +35,8 @@ struct Output {
 }
 
 async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+    let traits = NftTraits::new(&input.attributes, &EffectsList::from(input.effects));
     Ok(Output {
-        attributes: NftTraits::new(&input.attributes).gen_metaplex_attrs()?,
+        attributes: traits.gen_metaplex_attrs()?,
     })
 }
