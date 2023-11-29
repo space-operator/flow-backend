@@ -57,20 +57,20 @@
   ],
   "targets": [
     {
-      "name": "mint_account",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
       "name": "fee_payer",
       "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
       "passthrough": true
+    },
+    {
+      "name": "mint_account",
+      "type_bounds": ["pubkey"],
+      "required": true,
+      "defaultValue": "",
+      "tooltip": "",
+      "passthrough": false
     },
     {
       "name": "collection_authority",

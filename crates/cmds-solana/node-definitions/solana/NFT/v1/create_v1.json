@@ -88,7 +88,7 @@
       "required": false,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "mint_account",

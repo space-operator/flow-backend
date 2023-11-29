@@ -1,4 +1,4 @@
-use flow_lib::command::prelude::*;
+use flow_lib::{command::prelude::*, SolanaNet};
 
 const NAME: &str = "flow_run_info";
 
@@ -19,11 +19,13 @@ struct Input {}
 struct Output {
     flow_owner: String,
     started_by: String,
+    solana_net: SolanaNet,
 }
 
 async fn run(ctx: Context, _: Input) -> Result<Output, CommandError> {
     Ok(Output {
         flow_owner: ctx.flow_owner.id.to_string(),
         started_by: ctx.started_by.id.to_string(),
+        solana_net: ctx.cfg.solana_client.cluster,
     })
 }

@@ -59,6 +59,12 @@
       "type": "string",
       "defaultValue": "",
       "tooltip": ""
+    },
+    {
+      "name": "solana_net",
+      "type": "string",
+      "defaultValue": "",
+      "tooltip": ""
     }
   ],
   "targets": [],
