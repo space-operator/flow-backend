@@ -1,4 +1,4 @@
-use super::{EnumExt, PropertyNotFound, RenderParams};
+use super::{generate::EffectsList, EnumExt, PropertyNotFound, RenderParams};
 use serde::{Deserialize, Serialize};
 use thiserror::Error as ThisError;
 
@@ -24,6 +24,7 @@ pub struct NftTraits {
     pub helmet_light: super::HelmetLight,
     pub dress_color: String,
     pub pose: super::Pose,
+    pub effects_count: usize,
     pub composition: super::Fx0,
     pub transformation: super::Fx1,
     pub season: super::Fx2,
@@ -73,13 +74,14 @@ pub enum ParseMetaflexError {
 }
 
 impl NftTraits {
-    pub fn new(r: &RenderParams) -> Self {
+    pub fn new(r: &RenderParams, effects: &EffectsList) -> Self {
         Self {
             body: r.body_type,
             helmet: r.helmet_type,
             helmet_light: r.helmet_light,
             dress_color: hue_to_color_name(r.dress_color_hue),
             pose: r.pose,
+            effects_count: effects.effects.len(),
             composition: r.fx0,
             transformation: r.fx1,
             season: r.fx2,
@@ -163,6 +165,7 @@ impl NftTraits {
             helmet_light: find_enum(v, "Helmet Light")?,
             dress_color: find_from_str(v, "Dress Color Hue")?,
             pose: find_enum(v, "Pose")?,
+            effects_count: find_from_str(v, "Gained Effects")?,
             composition: find_enum(v, "Composition")?,
             transformation: find_enum(v, "Transformation")?,
             season: find_enum(v, "Season")?,
@@ -184,6 +187,7 @@ impl NftTraits {
             helmet_light,
             dress_color,
             pose,
+            effects_count,
             composition,
             transformation,
             season,
@@ -209,6 +213,7 @@ impl NftTraits {
         push(&mut v, "Helmet Light", helmet_light.metaplex_name()?);
         push(&mut v, "Dress Color Hue", dress_color.clone());
         push(&mut v, "Pose", pose.metaplex_name()?);
+        push(&mut v, "Gained Effects", effects_count.to_string());
         push(&mut v, "Composition", composition.metaplex_name()?);
         push(&mut v, "Transformation", transformation.metaplex_name()?);
         push(&mut v, "Season", season.metaplex_name()?);
@@ -260,7 +265,8 @@ mod tests {
         let mut json =
             serde_json::from_str::<serde_json::Value>(include_str!("tests/123.json")).unwrap();
         let params = RenderParams::from_pdg_metadata(&mut json, true).unwrap();
-        let meta = NftTraits::new(&params);
+        let effects = EffectsList::from(params.clone());
+        let meta = NftTraits::new(&params, &effects);
         let attrs = meta.gen_metaplex_attrs().unwrap();
         let json = serde_json::to_string_pretty(&attrs).unwrap();
         println!("{}", json);
