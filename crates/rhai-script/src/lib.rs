@@ -6,16 +6,22 @@ use rhai::{
     Dynamic,
 };
 use rhai_rand::RandomPackage;
+use chrono::Utc;
 
 pub mod convert;
 
 pub use rhai::Engine;
+
+fn utc_now() -> String {
+    Utc::now().to_string()
+}
 
 pub fn setup_engine() -> Engine {
     let mut engine = Engine::new();
     engine
         .register_global_module(StandardPackage::new().as_shared_module())
         .register_static_module("rand", RandomPackage::new().as_shared_module())
+        .register_fn("utc_now", utc_now)
         .set_max_expr_depths(32, 32)
         .set_max_call_levels(256)
         .set_max_operations(10_000_000)

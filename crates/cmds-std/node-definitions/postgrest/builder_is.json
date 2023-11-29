@@ -3,11 +3,11 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "verify_collection_v1",
+    "node_id": "postgrest_builder_is",
     "version": "0.1",
-    "display_name": "Verify Collection V1",
-    "description": "",
-    "tags": ["NFT", "Solana", "V1"],
+    "display_name": "DB is",
+    "description": "https://docs.rs/postgrest/latest/postgrest/struct.Builder.html#method.is",
+    "tags": ["database", "postgrest", "supabase"],
     "related_to": [
       {
         "id": "",
@@ -47,64 +47,55 @@
     },
     "options": {}
   },
+  "targets": [
+    {
+      "name": "query",
+      "type_bounds": ["object"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "column",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "filter",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    }
+  ],
   "sources": [
     {
-      "name": "signature",
-      "type": "signature",
+      "name": "query",
+      "type": "object",
       "defaultValue": "",
       "tooltip": ""
     }
   ],
-  "targets": [
-    {
-      "name": "fee_payer",
-      "type_bounds": ["keypair"],
-      "required": true,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": true
-    },
-    {
-      "name": "mint_account",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "collection_authority",
-      "type_bounds": ["keypair"],
-      "required": true,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "collection_mint_account",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "delegate_record",
-      "type_bounds": ["pubkey"],
-      "required": false,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "submit",
-      "type_bounds": ["bool"],
-      "required": true,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
+  "targets_form.json_schema": {
+    "type": "object",
+    "title": "DB eq",
+    "properties": {
+      "column": {
+        "title": "column",
+        "type": "string"
+      },
+      "filter": {
+        "title": "filter",
+        "type": "string"
+      }
     }
-  ],
-  "targets_form.json_schema": {},
-  "targets_form.ui_schema": {}
+  },
+  "targets_form.ui_schema": {
+    "ui:order": ["column", "filter"]
+  }
 }

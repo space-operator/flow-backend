@@ -3,10 +3,10 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "flow_run_info",
+    "node_id": "get_effect_list",
     "version": "0.1",
-    "description": "",
-    "display_name": "Flow Run Info",
+    "display_name": "Get Effects List",
+    "description": "Get effects list from PDG render parameters",
     "tags": [],
     "related_to": [
       {
@@ -49,25 +49,22 @@
   },
   "sources": [
     {
-      "name": "flow_owner",
-      "type": "string",
-      "defaultValue": "",
-      "tooltip": ""
-    },
-    {
-      "name": "started_by",
-      "type": "string",
-      "defaultValue": "",
-      "tooltip": ""
-    },
-    {
-      "name": "solana_net",
-      "type": "string",
+      "name": "effects",
+      "type": "array",
       "defaultValue": "",
       "tooltip": ""
     }
   ],
-  "targets": [],
+  "targets": [
+    {
+      "name": "attributes",
+      "type_bounds": ["object"],
+      "required": true,
+      "passthrough": false,
+      "defaultValue": null,
+      "tooltip": ""
+    }
+  ],
   "targets_form.json_schema": {},
   "targets_form.ui_schema": {}
 }

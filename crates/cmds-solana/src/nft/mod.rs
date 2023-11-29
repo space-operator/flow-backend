@@ -136,7 +136,7 @@ impl From<NftCreator> for mpl_token_metadata::types::Creator {
     fn from(v: NftCreator) -> Self {
         mpl_token_metadata::types::Creator {
             address: v.address,
-            verified: v.verified.is_some(),
+            verified: v.verified.unwrap_or(false),
             share: v.share,
         }
     }
@@ -146,7 +146,7 @@ impl From<NftCreator> for mpl_candy_machine_core::Creator {
     fn from(v: NftCreator) -> Self {
         mpl_candy_machine_core::Creator {
             address: v.address,
-            verified: v.verified.is_some(),
+            verified: v.verified.unwrap_or(false),
             percentage_share: v.share,
         }
     }
