@@ -19,13 +19,11 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     let url = input
         .url
         .unwrap_or_else(|| format!("{}/rest/v1", ctx.endpoints.supabase));
-    let mut pg = postgrest::Postgrest::new(url);
-    if let Some(schema) = input.schema {
-        pg = pg.schema(schema);
-    }
-    let query = pg
-        .rpc(input.function, serde_json::to_string(&input.params)?)
+    let url = format!("{}/rpc/{}", url, input.function);
+    let query = postgrest::Builder::new(url, input.schema, <_>::default(), ctx.http)
+        .rpc(serde_json::to_string(&input.params)?)
         .into();
+
     Ok(Output { query })
 }
 
