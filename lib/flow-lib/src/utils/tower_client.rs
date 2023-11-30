@@ -38,7 +38,10 @@ where
         S: tower::Service<T, Response = U, Error = E> + Send + 'static,
         S::Future: Send + 'static,
     {
-        let buffer = Buffer::new(BoxService::new(s), size);
+        let (buffer, worker) = Buffer::pair(BoxService::new(s), size);
+        if let Ok(rt) = tokio::runtime::Handle::try_current() {
+            rt.spawn(worker);
+        }
         Self::new(buffer, worker_error)
     }
 
