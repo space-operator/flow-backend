@@ -3,23 +3,25 @@ use flow_lib::command::prelude::*;
 const NAME: &str = "postgrest_builder_select";
 
 #[derive(Deserialize, Debug)]
-struct Input {
-    query: postgrest::Builder,
-    columns: String,
+pub struct Input {
+    pub query: postgrest::Query,
+    pub columns: String,
 }
 
 #[derive(Serialize, Debug)]
-struct Output {
-    query: postgrest::Builder,
+pub struct Output {
+    pub query: postgrest::Query,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     Ok(Output {
-        query: input.query.select(input.columns),
+        query: postgrest::Builder::from_query(input.query, ctx.http)
+            .select(input.columns)
+            .into(),
     })
 }
 
-fn build() -> BuildResult {
+pub fn build() -> BuildResult {
     Ok(
         CmdBuilder::new(flow_lib::node_definition!("postgrest/builder_select.json"))?
             .check_name(NAME)?

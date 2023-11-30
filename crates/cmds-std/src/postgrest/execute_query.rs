@@ -9,7 +9,7 @@ const NAME: &str = "postgrest_execute_query";
 
 #[derive(Deserialize, Debug)]
 struct Input {
-    query: postgrest::Builder,
+    query: postgrest::Query,
     #[serde(default)]
     pub headers: Vec<(String, String)>,
 }
@@ -35,7 +35,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<ValueSet, CommandError> {
         .url
         .starts_with(&format!("{}/rest/v1", ctx.endpoints.supabase));
 
-    let mut req = input.query.build();
+    let mut req = postgrest::Builder::from_query(input.query, ctx.http.clone()).build();
     for (k, v) in input.headers {
         req = req.header(k, v);
     }

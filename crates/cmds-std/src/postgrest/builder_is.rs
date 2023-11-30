@@ -4,19 +4,21 @@ const NAME: &str = "postgrest_builder_is";
 
 #[derive(Deserialize, Debug)]
 struct Input {
-    query: postgrest::Builder,
+    query: postgrest::Query,
     column: String,
     filter: String,
 }
 
 #[derive(Serialize, Debug)]
 struct Output {
-    query: postgrest::Builder,
+    query: postgrest::Query,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     Ok(Output {
-        query: input.query.is(input.column, input.filter),
+        query: postgrest::Builder::from_query(input.query, ctx.http)
+            .is(input.column, input.filter)
+            .into(),
     })
 }
 

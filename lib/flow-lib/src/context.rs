@@ -433,3 +433,13 @@ impl Context {
         f::<Self>();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_no_tokio() {
+        Context::default();
+    }
+}

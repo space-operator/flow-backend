@@ -12,7 +12,7 @@ struct Input {
 
 #[derive(Serialize, Debug)]
 struct Output {
-    query: postgrest::Builder,
+    query: postgrest::Query,
 }
 
 async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -23,7 +23,9 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     if let Some(schema) = input.schema {
         pg = pg.schema(schema);
     }
-    let query = pg.rpc(input.function, serde_json::to_string(&input.params)?);
+    let query = pg
+        .rpc(input.function, serde_json::to_string(&input.params)?)
+        .into();
     Ok(Output { query })
 }
 

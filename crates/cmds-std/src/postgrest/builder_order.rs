@@ -4,18 +4,20 @@ const NAME: &str = "postgrest_builder_order";
 
 #[derive(Deserialize, Debug)]
 struct Input {
-    query: postgrest::Builder,
+    query: postgrest::Query,
     columns: String,
 }
 
 #[derive(Serialize, Debug)]
 struct Output {
-    query: postgrest::Builder,
+    query: postgrest::Query,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     Ok(Output {
-        query: input.query.order(input.columns),
+        query: postgrest::Builder::from_query(input.query, ctx.http)
+            .order(input.columns)
+            .into(),
     })
 }
 

@@ -3,6 +3,10 @@ name = "cmds-std"
 version = "0.0.0"
 edition = "2021"
 
+[[bench]]
+name = "postgrest"
+harness = false
+
 [dependencies]
 flow-lib = { workspace = true }
 
@@ -17,7 +21,9 @@ rust_decimal = { version = "1.32.0", features = ["serde-with-float"] }
 tracing = "0.1.40"
 bytes = "1.5.0"
 mime_guess = "2.0.4"
-postgrest = { git = "https://github.com/space-operator/postgrest-rs", rev = "5f8e53bde0fd30f91f84242d51dbb75f0e7f9fa9" }
+postgrest = { git = "https://github.com/space-operator/postgrest-rs", rev = "8e371bb3d42710353d9fc0b5573a9f4cb7d88255" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
+criterion = "0.5"
+futures-executor = "0.3"
