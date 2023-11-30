@@ -19,6 +19,7 @@ use futures_util::{stream::BoxStream, StreamExt};
 use hashbrown::HashMap;
 use thiserror::Error as ThisError;
 use utils::address_book::ManagableActor;
+use value::Value;
 
 pub struct FlowRunWorker {
     root: actix::Addr<DBWorker>,
@@ -253,6 +254,30 @@ fn log_error<E: std::fmt::Display>(error: E) {
     tracing::error!("{}, dropping event.", error);
 }
 
+/// Max 16 KB for each fields
+const MAX_SIZE: usize = 16 * 1024;
+
+/// Strip long values to save data
+fn strip(value: Value) -> Value {
+    match value {
+        Value::String(s) if s.len() > MAX_SIZE => "VALUE TOO LARGE".into(),
+        Value::Bytes(s) if s.len() > MAX_SIZE => "VALUE TOO LARGE".into(),
+        Value::Array(mut s) => {
+            for v in &mut s {
+                *v = strip(std::mem::take(v));
+            }
+            Value::Array(s)
+        }
+        Value::Map(mut s) => {
+            for v in s.values_mut() {
+                *v = strip(std::mem::take(v));
+            }
+            Value::Map(s)
+        }
+        _ => value,
+    }
+}
+
 async fn save_to_db(
     user_id: UserId,
     run_id: FlowRunId,
@@ -324,7 +349,7 @@ async fn save_to_db(
                     times,
                     input,
                 }) => {
-                    conn.new_node_run(&run_id, &node_id, &(times as i32), &time, &input)
+                    conn.new_node_run(&run_id, &node_id, &(times as i32), &time, &strip(input))
                         .await
                         .map_err(log_error)
                         .ok();
@@ -335,7 +360,7 @@ async fn save_to_db(
                     output,
                     ..
                 }) => {
-                    conn.save_node_output(&run_id, &node_id, &(times as i32), &output)
+                    conn.save_node_output(&run_id, &node_id, &(times as i32), &strip(output))
                         .await
                         .map_err(log_error)
                         .ok();
