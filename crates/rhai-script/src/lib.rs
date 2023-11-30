@@ -96,13 +96,16 @@ impl Command {
                 }
             };
             let value = dynamic_to_value(dy).map_err(|error| anyhow!("{:?}: {}", o.name, error))?;
-            outputs.insert(o.name.clone(), value);
+            if !matches!(value, Value::Null) {
+                outputs.insert(o.name.clone(), value);
+            }
         }
         if outputs.is_empty() && self.outputs.len() == 1 {
             let name = self.outputs[0].name.clone();
-            let value =
-                dynamic_to_value(eval_result).map_err(|error| anyhow!("{:?}: {}", name, error))?;
-            outputs.insert(name, value);
+            let value = dynamic_to_value(eval_result).map_err(|e| anyhow!("{:?}: {}", name, e))?;
+            if !matches!(value, Value::Null) {
+                outputs.insert(name, value);
+            }
         }
         Ok(outputs)
     }
