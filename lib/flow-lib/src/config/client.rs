@@ -145,12 +145,19 @@ pub struct Source {
     pub optional: bool,
 }
 
-impl Into<CmdOutputDescription> for Source {
-    fn into(self) -> CmdOutputDescription {
-        CmdOutputDescription {
-            name: self.name,
-            r#type: self.r#type,
-            optional: self.optional,
+impl From<Source> for CmdOutputDescription {
+    fn from(
+        Source {
+            name,
+            r#type,
+            optional,
+            ..
+        }: Source,
+    ) -> Self {
+        Self {
+            name,
+            r#type,
+            optional,
         }
     }
 }
@@ -164,13 +171,21 @@ pub struct Target {
     pub passthrough: bool,
 }
 
-impl Into<CmdInputDescription> for Target {
-    fn into(self) -> CmdInputDescription {
-        CmdInputDescription {
-            name: self.name,
-            type_bounds: self.type_bounds,
-            required: self.required,
-            passthrough: self.passthrough,
+impl From<Target> for CmdInputDescription {
+    fn from(
+        Target {
+            name,
+            type_bounds,
+            required,
+            passthrough,
+            ..
+        }: Target,
+    ) -> Self {
+        Self {
+            name,
+            type_bounds,
+            required,
+            passthrough,
         }
     }
 }

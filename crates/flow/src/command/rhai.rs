@@ -23,11 +23,8 @@ impl CommandTrait for Command {
     }
 
     async fn run(&self, ctx: Context, input: ValueSet) -> Result<ValueSet, CommandError> {
-        let registry = ctx
-            .get::<FlowRegistry>()
-            .ok_or_else(|| anyhow::anyhow!("FlowRegistry not found"))?;
-        // TODO: stop token
-        registry
+        ctx.get::<FlowRegistry>()
+            .ok_or_else(|| anyhow::anyhow!("FlowRegistry not found"))?
             .run_rhai(run_rhai::Request {
                 command: self.inner.clone(),
                 ctx: ctx.clone(),
@@ -39,7 +36,16 @@ impl CommandTrait for Command {
 
 pub fn build(nd: &NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
     let inputs: Vec<Input> = nd.targets.iter().cloned().map(Into::into).collect();
-    let outputs: Vec<Output> = nd.sources.iter().cloned().map(Into::into).collect();
+    let outputs: Vec<Output> = nd
+        .sources
+        .iter()
+        .cloned()
+        .map(|s| Output {
+            // TODO: we did not upload this field to db
+            optional: true,
+            ..Output::from(s)
+        })
+        .collect();
     let source_code_name = inputs
         .get(0)
         .ok_or_else(|| CommandError::msg("no source code input"))?

@@ -6,3 +6,4 @@ pub mod builder_select;
 pub mod builder_update;
 pub mod execute_query;
 pub mod new_query;
+pub mod new_rpc;
