@@ -83,7 +83,7 @@
   ],
   "sources": [
     {
-      "name": "quey",
+      "name": "query",
       "type": "object",
       "defaultValue": "",
       "tooltip": ""
@@ -93,8 +93,8 @@
     "type": "object",
     "title": "New RPC",
     "properties": {
-      "table": {
-        "title": "table",
+      "function": {
+        "title": "function",
         "type": "string"
       }
     }
