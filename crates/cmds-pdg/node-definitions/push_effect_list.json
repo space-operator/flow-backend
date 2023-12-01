@@ -53,17 +53,19 @@
       "type": "array",
       "defaultValue": "",
       "tooltip": ""
-    },
-    {
-      "name": "element",
-      "type": "object",
-      "defaultValue": "",
-      "tooltip": ""
     }
   ],
   "targets": [
     {
       "name": "effects",
+      "type_bounds": ["array"],
+      "required": true,
+      "passthrough": false,
+      "defaultValue": null,
+      "tooltip": ""
+    },
+    {
+      "name": "element",
       "type_bounds": ["array"],
       "required": true,
       "passthrough": false,
