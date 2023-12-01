@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use crate::{command::prelude::*, flow_registry::FlowRegistry};
 
 pub const INTERFLOW: &str = "interflow";
@@ -79,7 +80,16 @@ impl CommandTrait for Interflow {
             )
             .await?;
         let result = handle.await?;
-        Ok(result.output)
+        if result.flow_errors.is_empty() {
+            Ok(result.output)
+        } else {
+            let mut errors = String::new();
+            for error in result.flow_errors {
+                errors += &error;
+                errors += ";\n";
+            }
+            Err(anyhow!(errors))
+        }
     }
 }
 
