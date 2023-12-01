@@ -1,6 +1,7 @@
 pub mod builder_eq;
 pub mod builder_insert;
 pub mod builder_is;
+pub mod builder_limit;
 pub mod builder_neq;
 pub mod builder_order;
 pub mod builder_select;
