@@ -277,29 +277,31 @@ impl UserConnection {
                     SELECT
                         f.id,
                         ARRAY_AGG(
-                            CASE WHEN
-                                node #>> '{data,node_id}' IN ('interflow', 'interflow_instructions')
-                                AND node->>'type' = 'native'
-                            THEN jsonb_set(
-                                    node,
-                                    '{data,targets_form,form_data,id}',
-                                    $2::JSONB->(node #>> '{data,targets_form,form_data,id}')
-                                )
-
-                            CASE WHEN
-                                node #>> '{data,node_id}' IN ('wallet')
-                                AND node->>'type' = 'native'
-                            THEN jsonb_set(
-                                    jsonb_set(
+                            CASE
+                                WHEN
+                                    node #>> '{data,node_id}' IN ('interflow', 'interflow_instructions')
+                                    AND node->>'type' = 'native'
+                                THEN jsonb_set(
                                         node,
-                                        '{data,targets_form,form_data,public_key}',
-                                        $2::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->1
-                                    ),
-                                    '{data,targets_form,form_data,wallet_id}',
-                                    $2::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->0
-                                )
+                                        '{data,targets_form,form_data,id}',
+                                        $2::JSONB->(node #>> '{data,targets_form,form_data,id}')
+                                    )
 
-                            ELSE node END
+                                WHEN
+                                    node #>> '{data,node_id}' IN ('wallet')
+                                    AND node->>'type' = 'native'
+                                THEN jsonb_set(
+                                        jsonb_set(
+                                            node,
+                                            '{data,targets_form,form_data,public_key}',
+                                            $3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->1
+                                        ),
+                                        '{data,targets_form,form_data,wallet_id}',
+                                        $3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->0
+                                    )
+
+                                ELSE node
+                            END
 
                             ORDER BY idx
                         ) AS nodes
