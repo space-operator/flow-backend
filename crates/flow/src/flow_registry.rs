@@ -37,17 +37,20 @@ pub enum StopError {
 /// A collection of flows config to run together
 #[derive(Clone)]
 pub struct FlowRegistry {
-    depth: u32,
+    flows: Arc<HashMap<FlowId, ClientConfig>>,
     pub(crate) flow_owner: User,
     pub(crate) started_by: User,
     shared_with: Vec<UserId>,
-    flows: Arc<HashMap<FlowId, ClientConfig>>,
     signers_info: JsonValue,
     endpoints: Endpoints,
+
+    depth: u32,
+
     pub(crate) signer: signer::Svc,
     pub(crate) token: get_jwt::Svc,
     new_flow_run: new_flow_run::Svc,
     get_previous_values: get_previous_values::Svc,
+
     pub(crate) rhai_permit: Arc<Semaphore>,
     rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
 }
