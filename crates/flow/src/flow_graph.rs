@@ -227,6 +227,7 @@ struct State {
     running_info: HashMap<(NodeId, u32), RunningNodeInfo>,
     result: FlowRunResult,
     stop: StopSignal,
+    stop_shared: StopSignal,
     out_tx: mpsc::UnboundedSender<PartialOutput>,
     out_rx: mpsc::UnboundedReceiver<PartialOutput>,
 }
@@ -896,10 +897,13 @@ impl FlowGraph {
                     let res = s
                         .stop
                         .race(
-                            std::pin::pin!(ins.execute(
-                                &self.ctx.solana_client,
-                                self.ctx.signer.clone(),
-                                Some(s.flow_run_id)
+                            std::pin::pin!(s.stop_shared.race(
+                                std::pin::pin!(ins.execute(
+                                    &self.ctx.solana_client,
+                                    self.ctx.signer.clone(),
+                                    Some(s.flow_run_id)
+                                )),
+                                execute::Error::Canceled,
                             )),
                             execute::Error::Canceled,
                         )
@@ -1008,6 +1012,7 @@ impl FlowGraph {
         flow_run_id: FlowRunId,
         flow_inputs: value::Map,
         stop: StopSignal,
+        stop_shared: StopSignal,
         previous_values: HashMap<NodeId, Vec<Value>>,
     ) -> FlowRunResult {
         event_tx
@@ -1025,6 +1030,7 @@ impl FlowGraph {
             running_info: HashMap::new(),
             result: FlowRunResult::default(),
             stop,
+            stop_shared,
             out_tx,
             out_rx,
         };
@@ -1252,6 +1258,7 @@ impl FlowGraph {
             self.ctx.clone(),
             s.event_tx.clone(),
             s.stop.clone(),
+            s.stop_shared.clone(),
             s.out_tx.clone(),
             self.mode.clone(),
         );
@@ -1309,6 +1316,7 @@ struct ExecuteNoBundling {
     node_id: NodeId,
     times: u32,
     tx: mpsc::UnboundedSender<PartialOutput>,
+    stop_shared: StopSignal,
     simple_svc: execute::Svc,
 }
 
@@ -1344,7 +1352,7 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
             let node_id = self.node_id;
             let times = self.times;
             let output = req.output.clone();
-            async move {
+            let task = async move {
                 let res = svc.ready().await?.call(req).await;
                 let output = match &res {
                     Ok(_) => Ok((Instructions::default(), output)),
@@ -1365,7 +1373,9 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
                 }
                 res
             }
-            .boxed()
+            .boxed();
+            let stop = self.stop_shared.clone();
+            Box::pin(async move { stop.race(task, execute::Error::Canceled).await })
         }
     }
 }
@@ -1386,6 +1396,7 @@ async fn run_command(
     mut ctx: Context,
     event_tx: EventSender,
     stop: StopSignal,
+    stop_shared: StopSignal,
     tx: mpsc::UnboundedSender<PartialOutput>,
     mode: client::BundlingMode,
 ) -> Finished {
@@ -1396,6 +1407,7 @@ async fn run_command(
                 times,
                 tx: tx.clone(),
                 simple_svc: execute::simple(&ctx, 32, Some(flow_run_id)),
+                stop_shared,
             },
             execute::Error::worker,
             32,
@@ -1532,6 +1544,7 @@ mod tests {
                 <_>::default(),
                 <_>::default(),
                 <_>::default(),
+                <_>::default(),
             )
             .await;
         assert_eq!(
@@ -1562,6 +1575,7 @@ mod tests {
         let res = flow
             .run(
                 tx,
+                <_>::default(),
                 <_>::default(),
                 <_>::default(),
                 <_>::default(),

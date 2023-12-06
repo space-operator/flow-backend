@@ -274,6 +274,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                 root.clone(),
             );
             let stop_signal = actor.stop_signal();
+            let stop_shared_signal = actor.stop_shared_signal();
 
             root.send(StartActor {
                 actor,
@@ -285,6 +286,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
             Ok(new_flow_run::Response {
                 flow_run_id: run_id,
                 stop_signal,
+                stop_shared_signal,
             })
         })
     }
