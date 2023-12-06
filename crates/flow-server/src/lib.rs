@@ -288,6 +288,7 @@ mod tests {
                 <_>::default(),
                 <_>::default(),
                 <_>::default(),
+                <_>::default(),
             )
             .await;
         assert_eq!(
@@ -320,6 +321,7 @@ mod tests {
                 <_>::default(),
                 <_>::default(),
                 <_>::default(),
+                <_>::default(),
             )
             .await;
         assert!(res.node_errors.is_empty());
@@ -338,6 +340,7 @@ mod tests {
         let res = flow
             .run(
                 tx,
+                <_>::default(),
                 <_>::default(),
                 <_>::default(),
                 <_>::default(),
@@ -363,6 +366,7 @@ mod tests {
         let res = flow
             .run(
                 tx,
+                <_>::default(),
                 <_>::default(),
                 <_>::default(),
                 <_>::default(),

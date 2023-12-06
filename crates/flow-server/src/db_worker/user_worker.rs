@@ -274,6 +274,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                 root.clone(),
             );
             let stop_signal = actor.stop_signal();
+            let stop_shared_signal = actor.stop_shared_signal();
 
             root.send(StartActor {
                 actor,
@@ -285,6 +286,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
             Ok(new_flow_run::Response {
                 flow_run_id: run_id,
                 stop_signal,
+                stop_shared_signal,
             })
         })
     }
@@ -300,7 +302,11 @@ impl actix::Handler<signer::SignatureRequest> for UserWorker {
             let id = db
                 .get_user_conn(user_id)
                 .await?
-                .new_signature_request(&msg.pubkey.to_bytes(), &msg.message)
+                .new_signature_request(
+                    &msg.pubkey.to_bytes(),
+                    &msg.message,
+                    msg.flow_run_id.as_ref(),
+                )
                 .await?;
             Ok((id, msg))
         }

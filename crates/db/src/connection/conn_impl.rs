@@ -105,9 +105,78 @@ impl UserConnection {
             .transaction()
             .await
             .map_err(Error::exec("start"))?;
+
+        let flow_owner = {
+            let stmt = tx
+                .prepare_cached(
+                    r#"SELECT user_id FROM flows
+                    WHERE id = $1 AND (user_id = $2 OR "isPublic")"#,
+                )
+                .await
+                .map_err(Error::exec("prepare"))?;
+            let owner: UserId = tx
+                .query_one(&stmt, &[&flow_id, &self.user_id])
+                .await
+                .map_err(Error::exec("get flow's owner"))?
+                .try_get(0)
+                .map_err(Error::data("flows.user_id"))?;
+            owner
+        };
+
+        let get_wallets = tx
+            .prepare_cached("SELECT id, public_key FROM wallets WHERE user_id = $1")
+            .await
+            .map_err(Error::exec("prepare"))?;
+        let owner_wallets = tx
+            .query(&get_wallets, &[&flow_owner])
+            .await
+            .map_err(Error::exec("get_wallets"))?
+            .into_iter()
+            .map(|r| {
+                Ok::<_, Error>((
+                    r.try_get::<_, i64>(0).map_err(Error::data("wallets.id"))?,
+                    r.try_get::<_, String>(1)
+                        .map_err(Error::data("wallets.public_key"))?,
+                ))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let is_same_user = self.user_id == flow_owner;
+        let user_wallet = if is_same_user {
+            owner_wallets.clone()
+        } else {
+            tx.query(&get_wallets, &[&self.user_id])
+                .await
+                .map_err(Error::exec("get_wallets"))?
+                .into_iter()
+                .map(|r| {
+                    Ok::<_, Error>((
+                        r.try_get::<_, i64>(0).map_err(Error::data("wallets.id"))?,
+                        r.try_get::<_, String>(1)
+                            .map_err(Error::data("wallets.public_key"))?,
+                    ))
+                })
+                .collect::<Result<Vec<_>, _>>()?
+        };
+        if user_wallet.is_empty() {
+            return Err(Error::LogicError(anyhow::anyhow!("user has no wallets")));
+        }
+
+        let wallet_map = {
+            let mut res = HashMap::with_capacity(owner_wallets.len());
+            for wallet in &owner_wallets {
+                let (id, owner_pk) = wallet;
+                let new_id = is_same_user
+                    .then_some(wallet)
+                    .or_else(|| user_wallet.iter().find(|(_, pk)| pk == owner_pk))
+                    .unwrap_or_else(|| &user_wallet[0]);
+                res.insert(id, new_id);
+            }
+            res
+        };
+
         let mut ids = HashSet::<FlowId>::new();
         let mut queue = vec![flow_id];
-        let stmt = tx
+        let get_interflows = tx
             .prepare_cached(
                 r#"WITH nodes AS
                 (
@@ -121,7 +190,7 @@ impl UserConnection {
             )
             .await
             .map_err(Error::exec("prepare"))?;
-        let stmt1 = tx
+        let check_flow = tx
             .prepare_cached(
                 r#"SELECT id FROM flows WHERE id = $1 AND (user_id = $2 OR "isPublic")"#,
             )
@@ -129,7 +198,7 @@ impl UserConnection {
             .map_err(Error::exec("prepare"))?;
         while let Some(id) = queue.pop() {
             if tx
-                .query_opt(&stmt1, &[&id, &self.user_id])
+                .query_opt(&check_flow, &[&id, &self.user_id])
                 .await
                 .map_err(Error::exec("check flow"))?
                 .is_some()
@@ -143,7 +212,7 @@ impl UserConnection {
             }
 
             let rows = tx
-                .query(&stmt, &[&id])
+                .query(&get_interflows, &[&id])
                 .await
                 .map_err(Error::exec("get interflows"))?;
             for row in rows {
@@ -160,6 +229,7 @@ impl UserConnection {
         let stmt = tx
             .prepare(
                 r#"INSERT INTO flows (
+                    guide,
                     name,
                     mosaic,
                     description,
@@ -172,6 +242,7 @@ impl UserConnection {
                     edges,
                     user_id
                 ) SELECT
+                    guide,
                     CONCAT('[CLONED] ', name) AS name,
                     mosaic,
                     CONCAT('[CLONED] ', description) AS description,
@@ -188,7 +259,7 @@ impl UserConnection {
             )
             .await
             .map_err(Error::exec("prepare"))?;
-        let mut map = HashMap::new();
+        let mut flow_id_map = HashMap::new();
         let mut new_ids = Vec::new();
         for id in &ids {
             let new_id: i32 = tx
@@ -197,7 +268,7 @@ impl UserConnection {
                 .map_err(Error::exec("copy flow"))?
                 .try_get(0)
                 .map_err(Error::data("flows.id"))?;
-            map.insert(*id, new_id);
+            flow_id_map.insert(*id, new_id);
             new_ids.push(new_id);
         }
         let stmt = tx
@@ -206,15 +277,32 @@ impl UserConnection {
                     SELECT
                         f.id,
                         ARRAY_AGG(
-                            CASE WHEN
-                                node #>> '{data,node_id}' IN ('interflow', 'interflow_instructions')
-                                AND node->>'type' = 'native'
-                            THEN jsonb_set(
-                                    node,
-                                    '{data,targets_form,form_data,id}',
-                                    $2::JSONB->(node #>> '{data,targets_form,form_data,id}')
-                                )
-                            ELSE node END
+                            CASE
+                                WHEN
+                                    node #>> '{data,node_id}' IN ('interflow', 'interflow_instructions')
+                                    AND node->>'type' = 'native'
+                                THEN jsonb_set(
+                                        node,
+                                        '{data,targets_form,form_data,id}',
+                                        $2::JSONB->(node #>> '{data,targets_form,form_data,id}')
+                                    )
+
+                                WHEN
+                                    node #>> '{data,node_id}' IN ('wallet')
+                                    AND node->>'type' = 'native'
+                                THEN jsonb_set(
+                                        jsonb_set(
+                                            node,
+                                            '{data,targets_form,form_data,public_key}',
+                                            $3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->1
+                                        ),
+                                        '{data,targets_form,form_data,wallet_id}',
+                                        $3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->0
+                                    )
+
+                                ELSE node
+                            END
+
                             ORDER BY idx
                         ) AS nodes
                     FROM flows f CROSS JOIN unnest(f.nodes) WITH ORDINALITY AS n(node, idx)
@@ -225,14 +313,14 @@ impl UserConnection {
             )
             .await
             .map_err(Error::exec("prepare"))?;
-        tx.execute(&stmt, &[&new_ids, &Json(&map)])
+        tx.execute(&stmt, &[&new_ids, &Json(&flow_id_map), &Json(&wallet_map)])
             .await
             .map_err(Error::exec("update interflow IDs"))?;
         tx.commit()
             .await
             .map_err(Error::exec("commit clone_flow"))?;
 
-        Ok(map)
+        Ok(flow_id_map)
     }
 
     pub async fn new_flow_run(
@@ -718,6 +806,7 @@ impl UserConnection {
         &self,
         pubkey: &[u8; 32],
         message: &[u8],
+        flow_run_id: Option<&FlowRunId>,
     ) -> crate::Result<i64> {
         let pubkey = bs58::encode(pubkey).into_string();
         let message = base64::encode(message);
@@ -727,14 +816,15 @@ impl UserConnection {
                 "INSERT INTO signature_requests (
                     user_id,
                     msg,
-                    pubkey
+                    pubkey,
+                    flow_run_id,
                 ) VALUES ($1, $2, $3) RETURNING id",
             )
             .await
             .map_err(Error::exec("prepare"))?;
         let id = self
             .conn
-            .query_one(&stmt, &[&self.user_id, &message, &pubkey])
+            .query_one(&stmt, &[&self.user_id, &message, &pubkey, &flow_run_id])
             .await
             .map_err(Error::exec("new_signature_request"))?
             .try_get(0)

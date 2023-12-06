@@ -120,7 +120,7 @@ pub mod get_jwt {
 
 /// Request Solana signature from external wallets.
 pub mod signer {
-    use crate::{utils::TowerClient, BoxError};
+    use crate::{utils::TowerClient, BoxError, FlowRunId};
     use solana_sdk::{pubkey::Pubkey, signature::Signature};
     use std::time::Duration;
     use thiserror::Error as ThisError;
@@ -148,6 +148,7 @@ pub mod signer {
         pub pubkey: Pubkey,
         pub message: bytes::Bytes,
         pub timeout: Duration,
+        pub flow_run_id: Option<FlowRunId>,
     }
 
     impl actix::Message for SignatureRequest {
@@ -166,7 +167,7 @@ pub mod signer {
 
 /// Output values and Solana instructions to be executed.
 pub mod execute {
-    use crate::{solana::Instructions, utils::TowerClient, BoxError};
+    use crate::{solana::Instructions, utils::TowerClient, BoxError, FlowRunId};
     use futures::channel::oneshot::Canceled;
     use solana_client::client_error::ClientError;
     use solana_sdk::{signature::Signature, signer::SignerError};
@@ -251,7 +252,7 @@ pub mod execute {
         Svc::unimplemented(|| Error::other("unimplemented"), Error::worker)
     }
 
-    pub fn simple(ctx: &super::Context, size: usize) -> Svc {
+    pub fn simple(ctx: &super::Context, size: usize, flow_run_id: Option<FlowRunId>) -> Svc {
         let rpc = ctx.solana_client.clone();
         let signer = ctx.signer.clone();
         let handle = move |req: Request| {
@@ -259,7 +260,7 @@ pub mod execute {
             let signer = signer.clone();
             async move {
                 Ok(Response {
-                    signature: Some(req.instructions.execute(&rpc, signer).await?),
+                    signature: Some(req.instructions.execute(&rpc, signer, flow_run_id).await?),
                 })
             }
         };
@@ -301,7 +302,7 @@ impl Default for Context {
             Extensions::default(),
         );
         ctx.command = Some(CommandContext {
-            svc: execute::simple(&ctx, 1),
+            svc: execute::simple(&ctx, 1, None),
             flow_run_id: uuid::Uuid::nil(),
             node_id: uuid::Uuid::nil(),
             times: 0,
@@ -415,6 +416,7 @@ impl Context {
                 pubkey,
                 message,
                 timeout,
+                flow_run_id: self.command.as_ref().map(|ctx| ctx.flow_run_id),
             })
             .await?;
         Ok(signature)

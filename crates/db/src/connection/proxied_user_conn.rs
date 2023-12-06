@@ -218,10 +218,15 @@ impl UserConnectionTrait for ProxiedUserConn {
             .await
     }
 
-    async fn new_signature_request(&self, pubkey: &[u8; 32], message: &[u8]) -> crate::Result<i64> {
+    async fn new_signature_request(
+        &self,
+        pubkey: &[u8; 32],
+        message: &[u8],
+        flow_run_id: Option<&FlowRunId>,
+    ) -> crate::Result<i64> {
         self.send(
             "new_signature_request",
-            &(&Value::from(*pubkey), &Value::from(message)),
+            &(&Value::from(*pubkey), &Value::from(message), flow_run_id),
         )
         .await
     }
@@ -325,10 +330,13 @@ impl UserConnection {
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             "new_signature_request" => {
-                let (pubkey, message): (Value, Value) = serde_json::from_str(req.params.get())?;
+                let (pubkey, message, flow_run_id): (Value, Value, Option<FlowRunId>) =
+                    serde_json::from_str(req.params.get())?;
                 let pubkey = value::from_value::<ConstBytes<32>>(pubkey)?.0;
                 let message = value::from_value::<serde_bytes::ByteBuf>(message)?.into_vec();
-                let res = self.new_signature_request(&pubkey, &message).await?;
+                let res = self
+                    .new_signature_request(&pubkey, &message, flow_run_id.as_ref())
+                    .await?;
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             "save_signature" => {

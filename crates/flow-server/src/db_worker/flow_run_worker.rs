@@ -27,6 +27,7 @@ pub struct FlowRunWorker {
     shared_with: Vec<UserId>,
     run_id: FlowRunId,
     stop_signal: StopSignal,
+    stop_shared_signal: StopSignal,
     counter: Counter,
     db: DbPool,
     stream: Option<BoxStream<'static, Event>>,
@@ -164,6 +165,9 @@ impl actix::Handler<StopFlow> for FlowRunWorker {
 
     fn handle(&mut self, msg: StopFlow, _: &mut Self::Context) -> Self::Result {
         if self.user_id != msg.user_id {
+            if self.shared_with.contains(&msg.user_id) {
+                self.stop_shared_signal.stop(msg.timeout_millies);
+            }
             return Err(StopError::Unauthorized);
         }
         if self.run_id != msg.run_id {
@@ -190,6 +194,7 @@ impl FlowRunWorker {
             shared_with,
             run_id,
             stop_signal: StopSignal::new(),
+            stop_shared_signal: StopSignal::new(),
             counter,
             db,
             stream: Some(stream),
@@ -200,6 +205,10 @@ impl FlowRunWorker {
     }
 
     pub fn stop_signal(&self) -> StopSignal {
+        self.stop_signal.clone()
+    }
+
+    pub fn stop_shared_signal(&self) -> StopSignal {
         self.stop_signal.clone()
     }
 }

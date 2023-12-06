@@ -133,7 +133,12 @@ pub trait UserConnectionTrait: Any + 'static {
         time: &DateTime<Utc>,
     ) -> crate::Result<()>;
 
-    async fn new_signature_request(&self, pubkey: &[u8; 32], message: &[u8]) -> crate::Result<i64>;
+    async fn new_signature_request(
+        &self,
+        pubkey: &[u8; 32],
+        message: &[u8],
+        flow_run_id: Option<&FlowRunId>,
+    ) -> crate::Result<i64>;
 
     async fn save_signature(&self, id: &i64, signature: &[u8; 64]) -> crate::Result<()>;
 
@@ -264,8 +269,14 @@ impl UserConnectionTrait for UserConnection {
         self.set_node_finish(id, node_id, times, time).await
     }
 
-    async fn new_signature_request(&self, pubkey: &[u8; 32], message: &[u8]) -> crate::Result<i64> {
-        self.new_signature_request(pubkey, message).await
+    async fn new_signature_request(
+        &self,
+        pubkey: &[u8; 32],
+        message: &[u8],
+        flow_run_id: Option<&FlowRunId>,
+    ) -> crate::Result<i64> {
+        self.new_signature_request(pubkey, message, flow_run_id)
+            .await
     }
 
     async fn save_signature(&self, id: &i64, signature: &[u8; 64]) -> crate::Result<()> {

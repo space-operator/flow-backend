@@ -37,17 +37,20 @@ pub enum StopError {
 /// A collection of flows config to run together
 #[derive(Clone)]
 pub struct FlowRegistry {
-    depth: u32,
+    flows: Arc<HashMap<FlowId, ClientConfig>>,
     pub(crate) flow_owner: User,
     pub(crate) started_by: User,
     shared_with: Vec<UserId>,
-    flows: Arc<HashMap<FlowId, ClientConfig>>,
     signers_info: JsonValue,
     endpoints: Endpoints,
+
+    depth: u32,
+
     pub(crate) signer: signer::Svc,
     pub(crate) token: get_jwt::Svc,
     new_flow_run: new_flow_run::Svc,
     get_previous_values: get_previous_values::Svc,
+
     pub(crate) rhai_permit: Arc<Semaphore>,
     rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
 }
@@ -354,6 +357,7 @@ impl FlowRegistry {
 
         let flow_run_id = run.flow_run_id;
         let stop = run.stop_signal;
+        let stop_shared = run.stop_shared_signal;
 
         let subscriber = flow_run_events::build_tracing_subscriber(
             tx.clone(),
@@ -400,7 +404,7 @@ impl FlowRegistry {
 
             let join_handle = tokio::spawn(
                 async move {
-                    flow.run(tx, flow_run_id, inputs, stop, previous_values)
+                    flow.run(tx, flow_run_id, inputs, stop, stop_shared, previous_values)
                         .await
                 }
                 .with_current_subscriber(),
@@ -482,6 +486,7 @@ pub mod new_flow_run {
     pub struct Response {
         pub flow_run_id: FlowRunId,
         pub stop_signal: StopSignal,
+        pub stop_shared_signal: StopSignal,
     }
 
     pub fn unimplemented_svc() -> Svc {
