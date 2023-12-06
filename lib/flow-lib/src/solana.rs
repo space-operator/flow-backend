@@ -1,4 +1,4 @@
-use crate::{context::execute::Error, context::signer};
+use crate::{context::execute::Error, context::signer, FlowRunId};
 use bytes::Bytes;
 use futures::TryStreamExt;
 use solana_client::{
@@ -101,7 +101,12 @@ impl Instructions {
         Ok(())
     }
 
-    pub async fn execute(self, rpc: &RpcClient, signer: signer::Svc) -> Result<Signature, Error> {
+    pub async fn execute(
+        self,
+        rpc: &RpcClient,
+        signer: signer::Svc,
+        flow_run_id: Option<FlowRunId>,
+    ) -> Result<Signature, Error> {
         let recent_blockhash = rpc.get_latest_blockhash().await?;
 
         let message = Message::new_with_blockhash(
@@ -134,6 +139,7 @@ impl Instructions {
                 pubkey,
                 message: msg.clone(),
                 timeout: SIGNATURE_TIMEOUT,
+                flow_run_id,
             })
             .collect::<Vec<_>>();
 

@@ -896,9 +896,11 @@ impl FlowGraph {
                     let res = s
                         .stop
                         .race(
-                            std::pin::pin!(
-                                ins.execute(&self.ctx.solana_client, self.ctx.signer.clone(),)
-                            ),
+                            std::pin::pin!(ins.execute(
+                                &self.ctx.solana_client,
+                                self.ctx.signer.clone(),
+                                Some(s.flow_run_id)
+                            )),
                             execute::Error::Canceled,
                         )
                         .await;
@@ -1393,7 +1395,7 @@ async fn run_command(
                 node_id: node.id,
                 times,
                 tx: tx.clone(),
-                simple_svc: execute::simple(&ctx, 32),
+                simple_svc: execute::simple(&ctx, 32, Some(flow_run_id)),
             },
             execute::Error::worker,
             32,

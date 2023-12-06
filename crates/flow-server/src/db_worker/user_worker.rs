@@ -300,7 +300,11 @@ impl actix::Handler<signer::SignatureRequest> for UserWorker {
             let id = db
                 .get_user_conn(user_id)
                 .await?
-                .new_signature_request(&msg.pubkey.to_bytes(), &msg.message)
+                .new_signature_request(
+                    &msg.pubkey.to_bytes(),
+                    &msg.message,
+                    msg.flow_run_id.as_ref(),
+                )
                 .await?;
             Ok((id, msg))
         }
