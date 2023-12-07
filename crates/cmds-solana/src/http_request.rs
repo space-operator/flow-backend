@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use anyhow::anyhow;
 use flow_lib::command::builder::{BuildResult, BuilderCache};
 use hyper::client::connect::dns::Name as DomainName;
 use reqwest::Url;
@@ -165,9 +166,15 @@ impl Ipv6Ext for Ipv6Addr {
     }
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     match input.url.host() {
-        Some(url::Host::Domain(_)) => {}
+        Some(url::Host::Domain(domain)) => {
+            use reqwest::dns::Resolve;
+            let _ = Resolver
+                .resolve(domain.parse()?)
+                .await
+                .map_err(|error| anyhow!(error))?;
+        }
         Some(url::Host::Ipv4(ip)) => {
             if !Ipv4Ext::is_global(&ip) {
                 return Err(anyhow::anyhow!("IP address not allowed: {}", ip));
@@ -181,9 +188,7 @@ async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
         None => return Err(anyhow::anyhow!("URL has no host")),
     }
 
-    let client = reqwest::Client::builder()
-        .dns_resolver(Arc::new(Resolver))
-        .build()?;
+    let client = ctx.http;
 
     let mut req = client.request(input.method.parse()?, input.url);
 
