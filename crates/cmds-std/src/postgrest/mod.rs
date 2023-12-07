@@ -6,6 +6,7 @@ pub mod builder_neq;
 pub mod builder_order;
 pub mod builder_select;
 pub mod builder_update;
+pub mod builder_upsert;
 pub mod execute_query;
 pub mod new_query;
 pub mod new_rpc;
