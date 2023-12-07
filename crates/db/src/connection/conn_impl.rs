@@ -817,7 +817,7 @@ impl UserConnection {
                     user_id,
                     msg,
                     pubkey,
-                    flow_run_id,
+                    flow_run_id
                 ) VALUES ($1, $2, $3) RETURNING id",
             )
             .await
