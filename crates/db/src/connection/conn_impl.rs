@@ -818,7 +818,7 @@ impl UserConnection {
                     msg,
                     pubkey,
                     flow_run_id
-                ) VALUES ($1, $2, $3) RETURNING id",
+                ) VALUES ($1, $2, $3, $4) RETURNING id",
             )
             .await
             .map_err(Error::exec("prepare"))?;
