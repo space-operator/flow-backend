@@ -21,7 +21,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
             JsonValue::Null => "null".to_owned(),
             JsonValue::Bool(x) => x.to_string(),
             JsonValue::Number(x) => x.to_string(),
-            JsonValue::String(x) => serde_json::to_string(&x).unwrap(),
+            JsonValue::String(x) => x,
             JsonValue::Array(_) => return Err(anyhow!("array type is not supported")),
             JsonValue::Object(_) => return Err(anyhow!("object type is not supported")),
         };

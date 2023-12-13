@@ -1734,7 +1734,16 @@ impl FxLineartHelper {
 }
 
 #[derive(
-    strum::FromRepr, Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default,
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
 )]
 #[repr(u32)]
 pub enum EnvLight {
@@ -1759,7 +1768,16 @@ impl EnvLight {
 }
 
 #[derive(
-    strum::FromRepr, Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default,
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
 )]
 #[repr(u32)]
 pub enum EnvReflection {
@@ -1771,7 +1789,16 @@ pub enum EnvReflection {
 impl_try_from_u32!(EnvReflection);
 
 #[derive(
-    strum::FromRepr, Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default,
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
 )]
 #[repr(u32)]
 pub enum LightReflectionMult {
