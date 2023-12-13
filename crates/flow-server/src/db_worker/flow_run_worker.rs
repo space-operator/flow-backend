@@ -264,7 +264,7 @@ fn log_error<E: std::fmt::Display>(error: E) {
 }
 
 /// Max 16 KB for each fields
-const MAX_SIZE: usize = 16 * 1024;
+const MAX_SIZE: usize = 32 * 1024;
 
 /// Strip long values to save data
 fn strip(value: Value) -> Value {

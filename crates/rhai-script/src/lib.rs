@@ -27,7 +27,7 @@ pub fn setup_engine() -> Engine {
         .set_max_operations(10_000_000)
         .set_max_string_size(50_000)
         .set_max_array_size(10_000)
-        .set_max_map_size(1_000)
+        .set_max_map_size(10_000)
         .set_max_variables(50);
     engine
 }
