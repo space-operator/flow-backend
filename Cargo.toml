@@ -5,6 +5,9 @@ resolver = "2"
 
 [patch.crates-io]
 rhai = { git = "https://github.com/space-operator/rhai", rev = "1fce1c538a6a7c0bf1cffd1a1809aec906b43c21" }
+# fix zeroize and subtle dep conflict
+aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs", rev = "555ae1d82d000f01899498f969e6dc1d0a4fe467" }
+curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", rev = "8274d5cbb6fc3f38cdc742b4798173895cd2a290" }
 
 [profile.dev]
 debug = 0
