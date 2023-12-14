@@ -924,6 +924,7 @@ macro_rules! impl_try_from_u32 {
     Serialize_repr,
     Deserialize_repr,
     Default,
+    Hash,
 )]
 #[repr(u32)]
 pub enum BodyType {
@@ -987,6 +988,7 @@ impl BodyType {
     Serialize_repr,
     Deserialize_repr,
     Default,
+    Hash,
 )]
 #[repr(u32)]
 pub enum HelmetType {
