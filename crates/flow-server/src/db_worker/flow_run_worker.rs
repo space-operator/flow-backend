@@ -167,7 +167,6 @@ impl actix::Handler<StopFlow> for FlowRunWorker {
 
     fn handle(&mut self, msg: StopFlow, _: &mut Self::Context) -> Self::Result {
         if self.user_id != msg.user_id {
-            dbg!(self.user_id, msg.user_id, &self.shared_with);
             if self.shared_with.contains(&msg.user_id) {
                 self.stop_shared_signal.stop(msg.timeout_millies);
             }
