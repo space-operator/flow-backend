@@ -49,7 +49,9 @@ impl actix::Handler<SubscribeSigReq> for UserWorker {
 
     fn handle(&mut self, msg: SubscribeSigReq, _: &mut Self::Context) -> Self::Result {
         if msg.user_id != self.user_id {
-            return Err(SubscribeError::Unauthorized);
+            return Err(SubscribeError::Unauthorized {
+                user_id: msg.user_id,
+            });
         }
 
         let sub_id = self.counter.next();

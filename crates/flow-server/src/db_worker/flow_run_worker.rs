@@ -106,7 +106,9 @@ impl actix::Handler<SubscribeEvents> for FlowRunWorker {
 
     fn handle(&mut self, msg: SubscribeEvents, _: &mut Self::Context) -> Self::Result {
         if msg.user_id != self.user_id && !self.shared_with.contains(&msg.user_id) {
-            return Err(SubscribeError::Unauthorized);
+            return Err(SubscribeError::Unauthorized {
+                user_id: msg.user_id,
+            });
         }
         msg.receiver
             .upgrade()
@@ -135,8 +137,8 @@ impl actix::Message for StopFlow {
 
 #[derive(ThisError, Debug)]
 pub enum StopError {
-    #[error("unauthorized")]
-    Unauthorized,
+    #[error("unauthorized: {}", user_id)]
+    Unauthorized { user_id: UserId },
     #[error("not found")]
     NotFound,
     #[error(transparent)]
@@ -148,7 +150,7 @@ pub enum StopError {
 impl actix_web::ResponseError for StopError {
     fn status_code(&self) -> StatusCode {
         match self {
-            StopError::Unauthorized => StatusCode::UNAUTHORIZED,
+            StopError::Unauthorized { .. } => StatusCode::UNAUTHORIZED,
             StopError::NotFound => StatusCode::NOT_FOUND,
             StopError::Mailbox(_) => StatusCode::INTERNAL_SERVER_ERROR,
             StopError::Worker(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -165,10 +167,13 @@ impl actix::Handler<StopFlow> for FlowRunWorker {
 
     fn handle(&mut self, msg: StopFlow, _: &mut Self::Context) -> Self::Result {
         if self.user_id != msg.user_id {
+            dbg!(self.user_id, msg.user_id, &self.shared_with);
             if self.shared_with.contains(&msg.user_id) {
                 self.stop_shared_signal.stop(msg.timeout_millies);
             }
-            return Err(StopError::Unauthorized);
+            return Err(StopError::Unauthorized {
+                user_id: msg.user_id,
+            });
         }
         if self.run_id != msg.run_id {
             return Err(StopError::NotFound);

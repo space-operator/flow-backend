@@ -1,4 +1,4 @@
-use flow_lib::{config::client::ClientConfig, FlowId, FlowRunId, ValueSet};
+use flow_lib::{config::client::ClientConfig, FlowId, FlowRunId, UserId, ValueSet};
 use thiserror::Error as ThisError;
 use uuid::Uuid;
 
@@ -25,8 +25,8 @@ pub type SubscriptionID = u64;
 
 #[derive(ThisError, Debug)]
 pub enum SubscribeError {
-    #[error("unauthorized")]
-    Unauthorized,
+    #[error("unauthorized: {}", user_id)]
+    Unauthorized { user_id: UserId },
     #[error("not found")]
     NotFound,
     #[error(transparent)]
