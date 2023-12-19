@@ -1516,6 +1516,7 @@ fn finished_recursive(
 mod tests {
     use super::*;
     use crate::flow_run_events::event_channel;
+    use anyhow::anyhow;
     use flow_lib::config::client::ClientConfig;
 
     use cmds_solana as _;
@@ -1524,6 +1525,34 @@ mod tests {
     #[derive(serde::Deserialize)]
     struct TestFile {
         flow: ClientConfig,
+    }
+
+    #[tokio::test]
+    async fn test_stop() {
+        let task = async {
+            tokio::time::sleep(Duration::from_secs(4)).await;
+            Ok::<_, anyhow::Error>(())
+        };
+        let first = StopSignal::new();
+        let second = StopSignal::new();
+
+        tokio::spawn({
+            let second = second.clone();
+            async move {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                second.stop(0);
+            }
+        });
+
+        let error = first
+            .race(
+                std::pin::pin!(second.race(std::pin::pin!(task), anyhow!("second"))),
+                anyhow!("first"),
+            )
+            .await
+            .unwrap_err()
+            .to_string();
+        assert_eq!(error, "second");
     }
 
     #[tokio::test]
