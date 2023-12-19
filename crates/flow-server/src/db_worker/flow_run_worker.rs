@@ -169,6 +169,7 @@ impl actix::Handler<StopFlow> for FlowRunWorker {
         if self.user_id != msg.user_id {
             if self.shared_with.contains(&msg.user_id) {
                 self.stop_shared_signal.stop(msg.timeout_millies);
+                return Ok(());
             }
             return Err(StopError::Unauthorized {
                 user_id: msg.user_id,
