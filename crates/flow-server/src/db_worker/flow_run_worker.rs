@@ -214,7 +214,7 @@ impl FlowRunWorker {
     }
 
     pub fn stop_shared_signal(&self) -> StopSignal {
-        self.stop_signal.clone()
+        self.stop_shared_signal.clone()
     }
 }
 
