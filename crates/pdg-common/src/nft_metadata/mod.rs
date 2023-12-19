@@ -135,6 +135,7 @@ pub struct RenderParams {
     pub env_light: EnvLight,
     pub env_reflection: EnvReflection,
     pub light_reflection_mult: LightReflectionMult,
+
     pub butterfly_amount: f64,
     pub disintegration_amount: f64,
     pub melt_amount: f64,
@@ -158,12 +159,15 @@ pub struct RenderParams {
     pub underwater_fog_amount: f64,
     pub xray_body_amount: f64,
     pub xray_skeleton_particles_amount: f64,
+
     pub background_color_random_hue: f64,
     pub background_underwater_color_hue: f64,
     pub dress_color_hue: f64,
     pub eye_color_random_hue: f64,
+
     pub random_value: f64,
     pub wedgeindex: i64,
+
     pub render_noise_threshold: f64,
     pub render_resolution: u32,
     pub wedgeattribs: Vec<String>,
@@ -221,55 +225,56 @@ impl Default for RenderParams {
             wedgeindex: 5043,
             render_noise_threshold: 0.6,
             render_resolution: 1024,
-            wedgeattribs: vec![
-                "Body_type".to_string(),
-                "Butterfly_amount".to_string(),
-                "Desintegration_amount".to_string(),
-                "Env_Light".to_string(),
-                "Env_reflection".to_string(),
-                "Eyes_light_intensity_amount".to_string(),
-                "FX_lineart_helper".to_string(),
-                "Fall_amount".to_string(),
-                "Firefly_amount".to_string(),
-                "Frozen_amount".to_string(),
-                "Fungi_amount".to_string(),
-                "Fx_Jellifish".to_string(),
-                "Fx_switcher_layer_0".to_string(),
-                "Fx_switcher_layer_1".to_string(),
-                "Fx_switcher_layer_1a".to_string(),
-                "Fx_switcher_layer_2".to_string(),
-                "Fx_switcher_layer_3".to_string(),
-                "Fx_switcher_layer_4".to_string(),
-                "Fx_switcher_layer_5".to_string(),
-                "Fx_switcher_layer_6".to_string(),
-                "Gold_silver_amount".to_string(),
-                "Grow_flower_amount".to_string(),
-                "Helmet_light".to_string(),
-                "Helmet_type".to_string(),
-                "Hologram_amount".to_string(),
-                "Ladybag_amount".to_string(),
-                "Lineart_amount".to_string(),
-                "Melt_amount".to_string(),
-                "Melting_glow_amount".to_string(),
-                "Pixel_amount".to_string(),
-                "Pose".to_string(),
-                "Rain_amount".to_string(),
-                "Render_noise_threshold".to_string(),
-                "Render_resolution".to_string(),
-                "Smoke_amount".to_string(),
-                "Soap_bubble_intensity_amount".to_string(),
-                "Soap_bubble_roughness_amount".to_string(),
-                "Spring_amount".to_string(),
-                "Underwater_fog_amount".to_string(),
-                "Xray_body_amount".to_string(),
-                "Xray_skeleton_particles_amount".to_string(),
-                "background_color_random_hue".to_string(),
-                "background_underwater_color_hue".to_string(),
-                "dress_color_hue".to_string(),
-                "eye_color_random_hue".to_string(),
-                "light_reflection_mult".to_string(),
-                "random_value".to_string(),
-            ],
+            wedgeattribs: [
+                "Body_type".to_owned(),
+                "Butterfly_amount".to_owned(),
+                "Desintegration_amount".to_owned(),
+                "Env_Light".to_owned(),
+                "Env_reflection".to_owned(),
+                "Eyes_light_intensity_amount".to_owned(),
+                "FX_lineart_helper".to_owned(),
+                "Fall_amount".to_owned(),
+                "Firefly_amount".to_owned(),
+                "Frozen_amount".to_owned(),
+                "Fungi_amount".to_owned(),
+                "Fx_Jellifish".to_owned(),
+                "Fx_switcher_layer_0".to_owned(),
+                "Fx_switcher_layer_1".to_owned(),
+                "Fx_switcher_layer_1a".to_owned(),
+                "Fx_switcher_layer_2".to_owned(),
+                "Fx_switcher_layer_3".to_owned(),
+                "Fx_switcher_layer_4".to_owned(),
+                "Fx_switcher_layer_5".to_owned(),
+                "Fx_switcher_layer_6".to_owned(),
+                "Gold_silver_amount".to_owned(),
+                "Grow_flower_amount".to_owned(),
+                "Helmet_light".to_owned(),
+                "Helmet_type".to_owned(),
+                "Hologram_amount".to_owned(),
+                "Ladybag_amount".to_owned(),
+                "Lineart_amount".to_owned(),
+                "Melt_amount".to_owned(),
+                "Melting_glow_amount".to_owned(),
+                "Pixel_amount".to_owned(),
+                "Pose".to_owned(),
+                "Rain_amount".to_owned(),
+                "Render_noise_threshold".to_owned(),
+                "Render_resolution".to_owned(),
+                "Smoke_amount".to_owned(),
+                "Soap_bubble_intensity_amount".to_owned(),
+                "Soap_bubble_roughness_amount".to_owned(),
+                "Spring_amount".to_owned(),
+                "Underwater_fog_amount".to_owned(),
+                "Xray_body_amount".to_owned(),
+                "Xray_skeleton_particles_amount".to_owned(),
+                "background_color_random_hue".to_owned(),
+                "background_underwater_color_hue".to_owned(),
+                "dress_color_hue".to_owned(),
+                "eye_color_random_hue".to_owned(),
+                "light_reflection_mult".to_owned(),
+                "random_value".to_owned(),
+            ]
+            .into(),
         }
     }
 }
@@ -919,6 +924,7 @@ macro_rules! impl_try_from_u32 {
     Serialize_repr,
     Deserialize_repr,
     Default,
+    Hash,
 )]
 #[repr(u32)]
 pub enum BodyType {
@@ -982,6 +988,7 @@ impl BodyType {
     Serialize_repr,
     Deserialize_repr,
     Default,
+    Hash,
 )]
 #[repr(u32)]
 pub enum HelmetType {
@@ -1729,7 +1736,16 @@ impl FxLineartHelper {
 }
 
 #[derive(
-    strum::FromRepr, Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default,
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
 )]
 #[repr(u32)]
 pub enum EnvLight {
@@ -1754,7 +1770,16 @@ impl EnvLight {
 }
 
 #[derive(
-    strum::FromRepr, Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default,
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
 )]
 #[repr(u32)]
 pub enum EnvReflection {
@@ -1766,7 +1791,16 @@ pub enum EnvReflection {
 impl_try_from_u32!(EnvReflection);
 
 #[derive(
-    strum::FromRepr, Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default,
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
 )]
 #[repr(u32)]
 pub enum LightReflectionMult {

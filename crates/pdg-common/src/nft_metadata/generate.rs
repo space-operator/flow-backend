@@ -418,6 +418,8 @@ mod tests {
     use serde_json::json;
     use strum::IntoEnumIterator;
 
+    use crate::nft_metadata::EnvReflection;
+
     use super::*;
 
     #[test]
@@ -558,5 +560,27 @@ mod tests {
         // dbg!(add_new_effect_to_base(base, &new_effect));
         // togg
         // dbg!(base);
+    }
+
+    #[test]
+    fn iterate() {
+        let count = BodyType::iter().count()
+            * Pose::iter().count()
+            * HelmetType::iter().count()
+            * HelmetLight::iter().count()
+            * (Fx0::iter().count() - 2)
+            * Fx1::iter().count()
+            * Fx1a::iter().count()
+            * Fx2::iter().count()
+            * Fx3::iter().count()
+            * Fx4::iter().count()
+            * Fx5::iter().count()
+            * Fx6::iter().count()
+            * FxJellyfish::iter().count()
+            * FxLineartHelper::iter().count()
+            * EnvLight::iter().count()
+            * EnvReflection::iter().count()
+            * LightReflectionMult::iter().count();
+        println!("{}", count);
     }
 }
