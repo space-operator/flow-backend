@@ -21,6 +21,7 @@ pub mod wallet;
 pub mod wormhole;
 // pub mod xnft;
 pub mod db;
+pub mod streamflow;
 
 pub use error::{Error, Result};
 
