@@ -1,18 +1,17 @@
 use std::str::FromStr;
-use std::time::SystemTime;
 
-use crate::{find_pda, prelude::*};
-use borsh::{BorshDeserialize, BorshSerialize};
+use crate::prelude::*;
+use crate::utils::anchor_sighash;
+use borsh::BorshSerialize;
 use solana_program::instruction::AccountMeta;
 use solana_program::{system_program, sysvar};
-use solana_sdk::program_pack::Pack;
-use solana_sdk::system_instruction;
 use spl_associated_token_account::get_associated_token_address;
-use spl_token::state::Mint;
 
-const NAME: &str = "create_timelock";
+use super::{CreateData, CreateDataInput, FEE_ORACLE_ADDRESS, STRM_TREASURY, WITHDRAWOR_ADDRESS};
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/streamflow/create_timelock.json");
+const NAME: &str = "create_streamflow_timelock";
+
+const DEFINITION: &str = flow_lib::node_definition!("solana/streamflow/create.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -37,6 +36,9 @@ pub struct Input {
     metadata: Keypair,
     #[serde(with = "value::pubkey")]
     mint_account: Pubkey,
+    data: CreateDataInput,
+    #[serde(default, with = "value::pubkey::opt")]
+    partner: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }
@@ -47,30 +49,6 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-#[derive(BorshSerialize, BorshDeserialize)]
-struct CreateStreamIx {
-    ix: u8,
-    metadata: StreamInstruction,
-}
-
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
-pub struct StreamInstruction {
-    start_time: u64,
-    end_time: u64,
-    deposited_amount: u64,
-    total_amount: u64,
-    period: u64,
-    cliff: u64,
-    cliff_amount: u64,
-    cancelable_by_sender: bool,
-    cancelable_by_recipient: bool,
-    withdrawal_public: bool,
-    transferable_by_sender: bool,
-    transferable_by_recipient: bool,
-    release_rate: u64,
-    stream_name: String,
-}
-
 fn create_create_stream_instruction(
     sender: &Pubkey,
     sender_tokens: &Pubkey,
@@ -78,18 +56,27 @@ fn create_create_stream_instruction(
     recipient_tokens: &Pubkey,
     metadata: &Pubkey,
     escrow_tokens: &Pubkey,
+    streamflow_treasury_tokens: &Pubkey,
+    partner: &Pubkey,
+    partner_tokens: &Pubkey,
     mint: &Pubkey,
     timelock_program: &Pubkey,
-    data: CreateStreamIx,
+    data: CreateData,
 ) -> Instruction {
     let accounts = [
         AccountMeta::new(*sender, true),
         AccountMeta::new(*sender_tokens, false),
         AccountMeta::new(*recipient, false),
-        AccountMeta::new(*recipient_tokens, false),
         AccountMeta::new(*metadata, true),
         AccountMeta::new(*escrow_tokens, false),
+        AccountMeta::new(*recipient_tokens, false),
+        AccountMeta::new(Pubkey::from_str(STRM_TREASURY).unwrap(), false),
+        AccountMeta::new(*streamflow_treasury_tokens, false),
+        AccountMeta::new(Pubkey::from_str(WITHDRAWOR_ADDRESS).unwrap(), false),
+        AccountMeta::new(*partner, false),
+        AccountMeta::new(*partner_tokens, false),
         AccountMeta::new_readonly(*mint, false),
+        AccountMeta::new_readonly(Pubkey::from_str(FEE_ORACLE_ADDRESS).unwrap(), false),
         AccountMeta::new_readonly(sysvar::rent::ID, false),
         AccountMeta::new_readonly(*timelock_program, false),
         AccountMeta::new_readonly(spl_token::ID, false),
@@ -98,49 +85,42 @@ fn create_create_stream_instruction(
     ]
     .to_vec();
 
+    let discriminator = anchor_sighash("create");
+
     Instruction {
         program_id: *timelock_program,
         accounts,
-        data: data.try_to_vec().unwrap(),
+        data: (discriminator, data).try_to_vec().unwrap(),
     }
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let timelock_program: Pubkey =
-        Pubkey::from_str("8e72pYCDaxu3GqMfeQ5r8wFgoZSYk6oua1Qo9XpsZjX").unwrap();
+    let timelock_program = crate::streamflow::streamflow_program_id(ctx.cfg.solana_client.cluster);
 
-    let now = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
+    let data: CreateData = input.data.into();
 
-    let data: CreateStreamIx = CreateStreamIx {
-        ix: 0,
-        metadata: StreamInstruction {
-            start_time: now + 5,
-            end_time: now + 605,
-            deposited_amount: spl_token::ui_amount_to_amount(20.0, 9),
-            total_amount: spl_token::ui_amount_to_amount(20.0, 9),
-            period: 0,
-            cliff: 0,
-            cliff_amount: 0,
-            cancelable_by_sender: false,
-            cancelable_by_recipient: false,
-            withdrawal_public: false,
-            transferable_by_sender: false,
-            transferable_by_recipient: false,
-            release_rate: 0,
-            stream_name: "TheTestoooooooooor".to_string(),
-        },
-    };
-
-    let escrow_tokens =
-        Pubkey::find_program_address(&[input.metadata.pubkey().as_ref()], &timelock_program).0;
+    let escrow_tokens = Pubkey::find_program_address(
+        &[b"strm", input.metadata.pubkey().as_ref()],
+        &timelock_program,
+    )
+    .0;
 
     let sender_tokens: Pubkey =
         get_associated_token_address(&input.sender.pubkey(), &input.mint_account);
 
     let recipient_tokens = get_associated_token_address(&input.recipient, &input.mint_account);
+
+    let streamflow_treasury_tokens = get_associated_token_address(
+        &Pubkey::from_str(STRM_TREASURY).unwrap(),
+        &input.mint_account,
+    );
+
+    let partner = match &input.partner {
+        Some(partner) => *partner,
+        None => Pubkey::from_str(STRM_TREASURY).unwrap(),
+    };
+
+    let partner_tokens = get_associated_token_address(&partner, &input.mint_account);
 
     let instruction = create_create_stream_instruction(
         &input.fee_payer.pubkey(),
@@ -149,6 +129,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &recipient_tokens,
         &input.metadata.pubkey(),
         &escrow_tokens,
+        &streamflow_treasury_tokens,
+        &partner,
+        &partner_tokens,
         &input.mint_account,
         &timelock_program,
         data,

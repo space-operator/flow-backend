@@ -3,9 +3,9 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "create_timelock",
+    "node_id": "create_streamflow_timelock",
     "version": "0.1",
-    "display_name": "Create Timelock",
+    "display_name": "Create Streamflow Timelock",
     "description": "",
     "tags": [],
     "related_to": [
@@ -92,6 +92,22 @@
       "name": "mint_account",
       "type_bounds": ["pubkey"],
       "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "data",
+      "type_bounds": ["json"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "partner",
+      "type_bounds": ["pubkey"],
+      "required": false,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false
