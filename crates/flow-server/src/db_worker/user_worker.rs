@@ -3,9 +3,7 @@ use super::{
     DBWorker, GetTokenWorker, StartFlowRunWorker,
 };
 use crate::error::ErrorBody;
-use actix::{
-    Actor, ActorFutureExt, Arbiter, AsyncContext, ResponseActFuture, ResponseFuture, WrapFuture,
-};
+use actix::{Actor, ActorFutureExt, AsyncContext, ResponseActFuture, ResponseFuture, WrapFuture};
 use actix_web::{http::StatusCode, ResponseError};
 use db::{pool::DbPool, Error as DbError};
 use flow::{

@@ -1,7 +1,7 @@
 use crate::Config;
 use actix::{
-    fut::wrap_future, Actor, ActorContext, ActorFutureExt, Arbiter, ArbiterHandle, AsyncContext,
-    Context, ResponseActFuture, WrapFuture,
+    fut::wrap_future, Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context,
+    ResponseActFuture, WrapFuture,
 };
 use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
@@ -10,7 +10,10 @@ use db::{
 use flow_lib::{config::Endpoints, context::get_jwt, UserId};
 use futures_channel::mpsc;
 use futures_util::StreamExt;
-use std::sync::{atomic::AtomicU64, Arc};
+use std::{
+    sync::{atomic::AtomicU64, Arc},
+    time::Duration,
+};
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast;
 use utils::address_book::{AddressBook, ManagableActor};
@@ -94,7 +97,7 @@ impl Actor for DBWorker {
 
 #[derive(Debug, Clone, Copy)]
 pub struct SystemShutdown {
-    pub timeout_millies: u32,
+    pub timeout: Duration,
 }
 
 #[derive(ThisError, Debug, Clone)]

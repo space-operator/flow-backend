@@ -12,7 +12,7 @@ use flow_server::{
     wss, Config,
 };
 use futures_util::{future::ok, TryFutureExt};
-use std::{borrow::Cow, collections::BTreeSet, convert::Infallible};
+use std::{borrow::Cow, collections::BTreeSet, convert::Infallible, time::Duration};
 use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
@@ -129,6 +129,8 @@ async fn main() {
 
     let root = db_worker.clone();
 
+    let shutdown_timeout_secs = config.shutdown_timeout_secs;
+
     HttpServer::new(move || {
         let auth = if let Some(supabase_auth) = &supabase_auth {
             Some(
@@ -209,7 +211,7 @@ async fn main() {
     .unwrap();
 
     root.send(SystemShutdown {
-        timeout_millies: 5 * 1000,
+        timeout: Duration::from_secs(shutdown_timeout_secs as u64),
     })
     .await
     .unwrap();
