@@ -6,7 +6,7 @@ use solana_sdk::pubkey::Pubkey;
 // Command Name
 const GRANT_ACCESS: &str = "grant_access";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/xnft/grant_access.json");
+const DEFINITION: &str = flow_lib::node_definition!("xnft/grant_access.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

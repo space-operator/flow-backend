@@ -7,7 +7,7 @@ use crate::{
 const NAME: &str = "redeem_nft_on_eth";
 
 const DEFINITION: &str =
-    flow_lib::node_definition!("solana/wormhole/nft_bridge/eth/redeem_nft_on_eth.json");
+    flow_lib::node_definition!("wormhole/nft_bridge/eth/redeem_nft_on_eth.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

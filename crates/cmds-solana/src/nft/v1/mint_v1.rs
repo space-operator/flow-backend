@@ -10,7 +10,7 @@ use super::AuthorizationData;
 // Command Name
 const NAME: &str = "mint_v1";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/NFT/v1/mint_v1.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/v1/mint_v1.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

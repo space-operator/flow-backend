@@ -8,8 +8,7 @@ use super::MetadataBubblegum;
 // Command Name
 const MINT_COMPRESSED_NFT: &str = "mint_compressed_NFT";
 
-const DEFINITION: &str =
-    flow_lib::node_definition!("solana/compression/mint_compressed_NFT.json");
+const DEFINITION: &str = flow_lib::node_definition!("compression/mint_compressed_NFT.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

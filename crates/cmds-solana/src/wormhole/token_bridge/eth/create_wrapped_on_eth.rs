@@ -12,7 +12,7 @@ use super::Receipt;
 const NAME: &str = "create_wrapped_on_eth";
 
 const DEFINITION: &str =
-    flow_lib::node_definition!("solana/wormhole/token_bridge/eth/create_wrapped_on_eth.json");
+    flow_lib::node_definition!("wormhole/token_bridge/eth/create_wrapped_on_eth.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

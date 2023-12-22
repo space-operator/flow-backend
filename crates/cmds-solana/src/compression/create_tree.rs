@@ -10,7 +10,7 @@ use std::mem::size_of;
 // Command Name
 const CREATE_TREE: &str = "create_tree";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/compression/create_tree.json");
+const DEFINITION: &str = flow_lib::node_definition!("compression/create_tree.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;
@@ -270,7 +270,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             },
         ]
         .into(),
-       
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

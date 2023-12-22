@@ -10,7 +10,7 @@ use super::{get_sequence_number, AttestTokenData, SequenceTracker, TokenBridgeIn
 // Command Name
 const NAME: &str = "attest_token";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/wormhole/token_bridge/attest.json");
+const DEFINITION: &str = flow_lib::node_definition!("wormhole/token_bridge/attest.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

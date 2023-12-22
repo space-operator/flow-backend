@@ -14,7 +14,7 @@ use super::CandyGuardData;
 // Command Name
 const MINT: &str = "mint";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/NFT/candy_machine/mint.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/candy_machine/mint.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

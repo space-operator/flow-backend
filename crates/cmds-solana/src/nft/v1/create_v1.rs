@@ -13,7 +13,7 @@ use crate::nft::{
 // Command Name
 const NAME: &str = "create_v1";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/NFT/v1/create_v1.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/v1/create_v1.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

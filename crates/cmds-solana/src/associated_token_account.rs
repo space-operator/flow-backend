@@ -3,7 +3,7 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 
 const SOLANA_ASSOCIATED_TOKEN_ACCOUNT: &str = "associated_token_account";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/associated_token_account.json");
+const DEFINITION: &str = flow_lib::node_definition!("associated_token_account.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

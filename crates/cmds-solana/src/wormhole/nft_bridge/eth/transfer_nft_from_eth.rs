@@ -4,7 +4,7 @@ use crate::{prelude::*, wormhole::token_bridge::eth::Response as ServerlessOutpu
 const NAME: &str = "transfer_nft_from_eth";
 
 const DEFINITION: &str =
-    flow_lib::node_definition!("solana/wormhole/nft_bridge/eth/transfer_nft_from_eth.json");
+    flow_lib::node_definition!("wormhole/nft_bridge/eth/transfer_nft_from_eth.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

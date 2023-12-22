@@ -3,8 +3,7 @@ use crate::prelude::*;
 // Command Name
 const NAME: &str = "verify_collection";
 
-const DEFINITION: &str =
-    flow_lib::node_definition!("solana/NFT/verify_collection.json");
+const DEFINITION: &str = flow_lib::node_definition!("NFT/verify_collection.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;
@@ -16,9 +15,7 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-flow_lib::submit!(CommandDescription::new(NAME, |_| {
-    build()
-}));
+flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {

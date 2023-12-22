@@ -6,7 +6,7 @@ use solana_sdk::pubkey::Pubkey;
 // Command Name
 const WRAP: &str = "wrap";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/NFT/candy_machine/wrap.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/candy_machine/wrap.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

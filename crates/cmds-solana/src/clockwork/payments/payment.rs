@@ -14,8 +14,7 @@ use spl_associated_token_account::get_associated_token_address;
 
 const CREATE_PAYMENT: &str = "create_payment";
 
-const DEFINITION: &str =
-    flow_lib::node_definition!("solana/clockwork/payments/create_payment.json");
+const DEFINITION: &str = flow_lib::node_definition!("clockwork/payments/create_payment.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;
