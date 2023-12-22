@@ -230,11 +230,14 @@ impl RenderParams {
         .adjust_base()
         .generate_line_art()
         .generate_fx()
-        .generate_underwater()
+        // .generate_underwater()
         .generate_background_color()
         .generate_dress_hue()
         .generate_helmet_lights()
         .generate_wedge()
+        .generate_random_value()
+        .generate_env_light()
+        .generate_smoke()
     }
 
     pub fn generate_line_art(mut self) -> Self {
@@ -297,7 +300,7 @@ impl RenderParams {
                 self.light_reflection_mult = LightReflectionMult::Two;
             }
             Fx0::Pixel => {
-                self.pixel_amount = rand::random::<f64>() * 20.0;
+                self.pixel_amount = rand::thread_rng().gen_range(70.0..=90.0);
             }
             _ => {}
         }
@@ -341,7 +344,7 @@ impl RenderParams {
         self.fx5 = fx5;
         match fx5 {
             Fx5::No => {}
-            Fx5::Fungi => self.fungi_amount = rand::random::<f64>() * 30.0,
+            Fx5::Fungi => self.fungi_amount = rand::random::<f64>() * 20.0,
             Fx5::GrowFlower => self.grow_flower_amount = rand::random::<f64>() * 30.0,
         }
 
@@ -349,8 +352,8 @@ impl RenderParams {
         self.fx6 = fx6;
         match fx6 {
             Fx6::No => {}
-            Fx6::Gold => self.gold_silver_amount = rand::random::<f64>() * 30.0,
-            Fx6::Silver => self.gold_silver_amount = rand::random::<f64>() * 30.0,
+            Fx6::Gold => self.gold_silver_amount = rand::random::<f64>() * 25.0,
+            Fx6::Silver => self.gold_silver_amount = rand::random::<f64>() * 25.0,
         }
 
         self
@@ -400,6 +403,22 @@ impl RenderParams {
 
     pub fn generate_dress_hue(mut self) -> Self {
         self.dress_color_hue = rand::random::<f64>() * 360.0;
+        self
+    }
+
+    pub fn generate_random_value(mut self) -> Self {
+        self.random_value = rand::thread_rng().gen_range(25f64..=99999f64);
+        self
+    }
+
+    pub fn generate_env_light(mut self) -> Self {
+        self.env_light = EnvLight::Night;
+        self
+    }
+
+    pub fn generate_smoke(mut self) -> Self {
+        self.fx3 = Fx3::Smoke;
+        self.smoke_amount = rand::thread_rng().gen_range(25f64..=60f64);
         self
     }
 

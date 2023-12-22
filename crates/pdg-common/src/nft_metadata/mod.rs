@@ -1182,20 +1182,20 @@ impl Pose {
 pub enum HelmetLight {
     #[strum(props(PDGName = "No"))]
     #[strum(props(MetaplexName = "No"))]
-    #[strum(props(weight = "50"))]
+    #[strum(props(weight = "0"))]
     #[default]
     Off = 0,
     #[strum(props(PDGName = "Dots"))]
     #[strum(props(MetaplexName = "Dots"))]
-    #[strum(props(weight = "25"))]
+    #[strum(props(weight = "50"))]
     Dots = 1,
     #[strum(props(PDGName = "Glowing eyes"))]
     #[strum(props(MetaplexName = "Glowing Eyes"))]
-    #[strum(props(weight = "15"))]
+    #[strum(props(weight = "35"))]
     GlowingEyes = 2,
     #[strum(props(PDGName = "Solana"))]
     #[strum(props(MetaplexName = "Solana"))]
-    #[strum(props(weight = "10"))]
+    #[strum(props(weight = "15"))]
     Solana = 3,
 }
 
@@ -1239,7 +1239,7 @@ impl HelmetLight {
 pub enum Fx0 {
     #[strum(props(PDGName = "No"))]
     #[strum(props(MetaplexName = "No"))]
-    #[strum(props(weight = "40"))]
+    #[strum(props(weight = "30"))]
     #[default]
     No = 0,
     #[strum(props(PDGName = "Marble"))]
@@ -1256,7 +1256,7 @@ pub enum Fx0 {
     LineartBase = 3,
     #[strum(props(PDGName = "Wood"))]
     #[strum(props(MetaplexName = "Wood"))]
-    #[strum(props(weight = "10"))]
+    #[strum(props(weight = "20"))]
     Wood = 4,
     #[strum(props(PDGName = "Hologram"))]
     #[strum(props(MetaplexName = "Hologram"))]
@@ -1312,16 +1312,16 @@ impl Fx0 {
 pub enum Fx1 {
     #[strum(props(PDGName = "No"))]
     #[strum(props(MetaplexName = "No"))]
-    #[strum(props(weight = "80"))]
+    #[strum(props(weight = "60"))]
     #[default]
     No = 0,
     #[strum(props(PDGName = "Melted"))]
     #[strum(props(MetaplexName = "Melted"))]
-    #[strum(props(weight = "5"))]
+    #[strum(props(weight = "10"))]
     Melted = 1,
     #[strum(props(PDGName = "Disintegration"))]
     #[strum(props(MetaplexName = "Disintegration"))]
-    #[strum(props(weight = "15"))]
+    #[strum(props(weight = "30"))]
     Disintegration = 2,
 }
 
@@ -1419,11 +1419,11 @@ pub enum Fx2 {
     Underwater = 2,
     #[strum(props(PDGName = "Fireflyies"))]
     #[strum(props(MetaplexName = "Firefly"))]
-    #[strum(props(weight = "10"))]
+    #[strum(props(weight = "15"))]
     Fireflyies = 3,
     #[strum(props(PDGName = "Fall"))]
     #[strum(props(MetaplexName = "Fall"))]
-    #[strum(props(weight = "10"))]
+    #[strum(props(weight = "0"))]
     Fall = 4,
     #[strum(props(PDGName = "Ladybag"))]
     #[strum(props(MetaplexName = "Ladybug"))]
@@ -1431,7 +1431,7 @@ pub enum Fx2 {
     Ladybag = 5,
     #[strum(props(PDGName = "Spring"))]
     #[strum(props(MetaplexName = "Spring"))]
-    #[strum(props(weight = "10"))]
+    #[strum(props(weight = "0"))]
     Spring = 6,
 }
 
