@@ -1,17 +1,21 @@
 use std::str::FromStr;
 
 use crate::prelude::*;
+use crate::streamflow::StreamContract;
 use crate::utils::anchor_sighash;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
+use solana_account_decoder::UiAccountEncoding;
+use solana_client::rpc_config::RpcAccountInfoConfig;
 use solana_program::instruction::AccountMeta;
-use solana_program::{system_program, sysvar};
+use solana_sdk::commitment_config::CommitmentConfig;
 use spl_associated_token_account::get_associated_token_address;
+use tracing::info;
 
-use super::{CreateData, CreateDataInput, FEE_ORACLE_ADDRESS, STRM_TREASURY, WITHDRAWOR_ADDRESS};
+use super::{WithdrawData, WithdrawDataInput, STRM_TREASURY};
 
-const NAME: &str = "create_streamflow_timelock";
+const NAME: &str = "withdraw_streamflow_timelock";
 
-const DEFINITION: &str = flow_lib::node_definition!("streamflow/create.json");
+const DEFINITION: &str = flow_lib::node_definition!("streamflow/withdraw.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -29,14 +33,12 @@ pub struct Input {
     #[serde(with = "value::keypair")]
     fee_payer: Keypair,
     #[serde(with = "value::keypair")]
-    sender: Keypair,
+    authority: Keypair,
     #[serde(with = "value::pubkey")]
     recipient: Pubkey,
-    #[serde(with = "value::keypair")]
-    metadata: Keypair,
     #[serde(with = "value::pubkey")]
-    mint_account: Pubkey,
-    data: CreateDataInput,
+    metadata: Pubkey,
+    data: WithdrawDataInput,
     #[serde(default, with = "value::pubkey::opt")]
     partner: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
@@ -49,9 +51,8 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-fn create_create_stream_instruction(
-    sender: &Pubkey,
-    sender_tokens: &Pubkey,
+fn create_withdraw_stream_instruction(
+    authority: &Pubkey,
     recipient: &Pubkey,
     recipient_tokens: &Pubkey,
     metadata: &Pubkey,
@@ -61,31 +62,24 @@ fn create_create_stream_instruction(
     partner_tokens: &Pubkey,
     mint: &Pubkey,
     timelock_program: &Pubkey,
-    data: CreateData,
+    data: WithdrawData,
 ) -> Instruction {
     let accounts = [
-        AccountMeta::new(*sender, true),
-        AccountMeta::new(*sender_tokens, false),
+        AccountMeta::new(*authority, true),
         AccountMeta::new(*recipient, false),
-        AccountMeta::new(*metadata, true),
-        AccountMeta::new(*escrow_tokens, false),
         AccountMeta::new(*recipient_tokens, false),
+        AccountMeta::new(*metadata, false),
+        AccountMeta::new(*escrow_tokens, false),
         AccountMeta::new(Pubkey::from_str(STRM_TREASURY).unwrap(), false),
         AccountMeta::new(*streamflow_treasury_tokens, false),
-        AccountMeta::new(Pubkey::from_str(WITHDRAWOR_ADDRESS).unwrap(), false),
         AccountMeta::new(*partner, false),
         AccountMeta::new(*partner_tokens, false),
         AccountMeta::new_readonly(*mint, false),
-        AccountMeta::new_readonly(Pubkey::from_str(FEE_ORACLE_ADDRESS).unwrap(), false),
-        AccountMeta::new_readonly(sysvar::rent::ID, false),
-        AccountMeta::new_readonly(*timelock_program, false),
         AccountMeta::new_readonly(spl_token::ID, false),
-        AccountMeta::new_readonly(spl_associated_token_account::ID, false),
-        AccountMeta::new_readonly(system_program::ID, false),
     ]
     .to_vec();
 
-    let discriminator = anchor_sighash("create");
+    let discriminator = anchor_sighash("withdraw");
 
     Instruction {
         program_id: *timelock_program,
@@ -97,42 +91,64 @@ fn create_create_stream_instruction(
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let timelock_program = crate::streamflow::streamflow_program_id(ctx.cfg.solana_client.cluster);
 
-    let data: CreateData = input.data.into();
+    let data: WithdrawData = input.data.into();
 
-    let escrow_tokens = Pubkey::find_program_address(
-        &[b"strm", input.metadata.pubkey().as_ref()],
-        &timelock_program,
-    )
-    .0;
+    let commitment = CommitmentConfig::confirmed();
 
-    let sender_tokens: Pubkey =
-        get_associated_token_address(&input.sender.pubkey(), &input.mint_account);
+    let config = RpcAccountInfoConfig {
+        encoding: Some(UiAccountEncoding::Base64),
+        commitment: Some(commitment),
+        data_slice: None,
+        min_context_slot: None,
+    };
 
-    let recipient_tokens = get_associated_token_address(&input.recipient, &input.mint_account);
+    let response = ctx
+        .solana_client
+        .get_account_with_config(&input.metadata, config)
+        .await
+        .map_err(|e| {
+            tracing::error!("Error: {:?}", e);
+            crate::Error::AccountNotFound(input.metadata)
+        })?;
 
-    let streamflow_treasury_tokens = get_associated_token_address(
-        &Pubkey::from_str(STRM_TREASURY).unwrap(),
-        &input.mint_account,
-    );
+    let escrow = match response.value {
+        Some(account) => account,
+        None => return Err(crate::Error::AccountNotFound(input.metadata).into()),
+    };
+
+    let mut escrow_data: &[u8] = &escrow.data;
+    let escrow_data = StreamContract::deserialize(&mut escrow_data).map_err(|_| {
+        tracing::error!(
+            "Invalid data for: {:?}",
+            crate::Error::InvalidAccountData(input.metadata)
+        );
+        crate::Error::InvalidAccountData(input.metadata)
+    })?;
+
+    info!("Escrow account: {:?}", escrow_data);
+
+    let recipient_tokens = get_associated_token_address(&escrow_data.recipient, &escrow_data.mint);
+
+    let streamflow_treasury_tokens =
+        get_associated_token_address(&Pubkey::from_str(STRM_TREASURY).unwrap(), &escrow_data.mint);
 
     let partner = match &input.partner {
         Some(partner) => *partner,
         None => Pubkey::from_str(STRM_TREASURY).unwrap(),
     };
 
-    let partner_tokens = get_associated_token_address(&partner, &input.mint_account);
+    let partner_tokens = get_associated_token_address(&partner, &escrow_data.mint);
 
-    let instruction = create_create_stream_instruction(
+    let instruction = create_withdraw_stream_instruction(
         &input.fee_payer.pubkey(),
-        &sender_tokens,
-        &input.recipient,
+        &escrow_data.recipient,
         &recipient_tokens,
-        &input.metadata.pubkey(),
-        &escrow_tokens,
+        &input.metadata,
+        &escrow_data.escrow_tokens,
         &streamflow_treasury_tokens,
         &partner,
         &partner_tokens,
-        &input.mint_account,
+        &escrow_data.mint,
         &timelock_program,
         data,
     );
@@ -141,8 +157,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         fee_payer: input.fee_payer.pubkey(),
         signers: [
             input.fee_payer.clone_keypair(),
-            input.sender.clone_keypair(),
-            input.metadata.clone_keypair(),
+            input.authority.clone_keypair(),
         ]
         .into(),
         instructions: vec![instruction].into(),
@@ -150,18 +165,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
 
-    let signature = ctx
-        .execute(
-            ins,
-            value::map! {
-                "escrow_tokens" => escrow_tokens,
-                "sender_tokens" => sender_tokens,
-                "recipient_tokens" => recipient_tokens,
-                "metadata" => input.metadata.pubkey(),
-            },
-        )
-        .await?
-        .signature;
+    let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })
 }
