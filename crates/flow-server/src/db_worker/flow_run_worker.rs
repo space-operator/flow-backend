@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use super::{
     messages::{Finished, SubscribeError, SubscriptionID},
     CopyIn, Counter, DBWorker, SystemShutdown,
@@ -10,7 +8,7 @@ use actix::{
     StreamHandler, WrapFuture,
 };
 use actix_web::http::StatusCode;
-use db::{pool::DbPool, FlowRunLogsRow};
+use db::{pool::DbPool, FlowRunLogsRow, NodeRunRow};
 use flow::{
     flow_graph::StopSignal,
     flow_run_events::{
@@ -22,6 +20,7 @@ use flow_lib::{FlowRunId, UserId};
 use futures_channel::mpsc;
 use futures_util::{stream::BoxStream, StreamExt};
 use hashbrown::HashMap;
+use std::time::Duration;
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast;
 use utils::address_book::ManagableActor;
@@ -311,7 +310,8 @@ async fn save_to_db(
     const CHUNK_SIZE: usize = 16;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
     while let Some(events) = chunks.next().await {
-        let mut logs: Vec<FlowRunLogsRow> = Vec::with_capacity(CHUNK_SIZE);
+        let mut node_runs: Vec<NodeRunRow> = Vec::new();
+        let mut logs: Vec<FlowRunLogsRow> = Vec::new();
         let conn = match db.get_user_conn(user_id).await {
             Ok(conn) => conn,
             Err(error) => {
@@ -335,25 +335,6 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
-                }
-                Event::FlowLog(FlowLog {
-                    time,
-                    level,
-                    module,
-                    content,
-                }) => {
-                    logs.push(FlowRunLogsRow {
-                        user_id,
-                        flow_run_id: run_id,
-                        log_index,
-                        node_id: None,
-                        times: None,
-                        time,
-                        log_level: level.to_string(),
-                        content,
-                        module,
-                    });
-                    log_index += 1;
                 }
                 Event::FlowFinish(FlowFinish {
                     time,
@@ -398,6 +379,16 @@ async fn save_to_db(
                         .map_err(log_error)
                         .ok();
                 }
+                Event::NodeFinish(NodeFinish {
+                    time,
+                    node_id,
+                    times,
+                }) => {
+                    conn.set_node_finish(&run_id, &node_id, &(times as i32), &time)
+                        .await
+                        .map_err(log_error)
+                        .ok();
+                }
                 Event::NodeLog(NodeLog {
                     time,
                     node_id,
@@ -419,15 +410,24 @@ async fn save_to_db(
                     });
                     log_index += 1;
                 }
-                Event::NodeFinish(NodeFinish {
+                Event::FlowLog(FlowLog {
                     time,
-                    node_id,
-                    times,
+                    level,
+                    module,
+                    content,
                 }) => {
-                    conn.set_node_finish(&run_id, &node_id, &(times as i32), &time)
-                        .await
-                        .map_err(log_error)
-                        .ok();
+                    logs.push(FlowRunLogsRow {
+                        user_id,
+                        flow_run_id: run_id,
+                        log_index,
+                        node_id: None,
+                        times: None,
+                        time,
+                        log_level: level.to_string(),
+                        content,
+                        module,
+                    });
+                    log_index += 1;
                 }
             }
         }
