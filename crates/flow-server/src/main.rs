@@ -7,7 +7,7 @@ use db::{
 use either::Either;
 use flow_server::{
     api::{self, prelude::Success},
-    db_worker::{self, token_worker::token_from_apikeys},
+    db_worker::{token_worker::token_from_apikeys, DBWorker, SystemShutdown},
     user::{SignatureAuth, SupabaseAuth},
     wss, Config,
 };
@@ -111,7 +111,7 @@ async fn main() {
         }
     }
 
-    let db_worker = db_worker::DBWorker::new(db.clone(), config.clone(), actors).start();
+    let db_worker = DBWorker::create(|ctx| DBWorker::new(db.clone(), config.clone(), actors, ctx));
 
     let sig_auth = SignatureAuth::new(rand::random());
     let supabase_auth = match SupabaseAuth::new(&config.supabase, db.clone()) {
@@ -126,6 +126,8 @@ async fn main() {
     let port = config.port;
 
     tracing::info!("listening on {:?} port {:?}", host, port);
+
+    let root = db_worker.clone();
 
     HttpServer::new(move || {
         let auth = if let Some(supabase_auth) = &supabase_auth {
@@ -203,6 +205,12 @@ async fn main() {
     .bind((host, port))
     .unwrap()
     .run()
+    .await
+    .unwrap();
+
+    root.send(SystemShutdown {
+        timeout_millies: 5 * 1000,
+    })
     .await
     .unwrap();
 }

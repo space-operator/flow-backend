@@ -228,12 +228,8 @@ impl Authenticated {
         let user_id = self.user.user_id;
         let addr = ctx.address();
         let fut = wrap_future::<_, WsConn>(async move {
-            let rt = actix::Arbiter::try_current().unwrap_or_else(|| {
-                tracing::warn!("starting new arbiter");
-                actix::Arbiter::new().handle()
-            });
             let sub_id = db_worker
-                .send(GetUserWorker { user_id, rt })
+                .send(GetUserWorker { user_id })
                 .await?
                 .send(SubscribeSigReq {
                     user_id,

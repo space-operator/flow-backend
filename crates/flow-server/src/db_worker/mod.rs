@@ -1,5 +1,8 @@
 use crate::Config;
-use actix::{Actor, ActorContext, ActorFutureExt, ArbiterHandle, AsyncContext, WrapFuture};
+use actix::{
+    fut::wrap_future, Actor, ActorContext, ActorFutureExt, Arbiter, ArbiterHandle, AsyncContext,
+    Context, ResponseActFuture, WrapFuture,
+};
 use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
     FlowRunLogsRow,
@@ -8,6 +11,8 @@ use flow_lib::{config::Endpoints, context::get_jwt, UserId};
 use futures_channel::mpsc;
 use futures_util::StreamExt;
 use std::sync::{atomic::AtomicU64, Arc};
+use thiserror::Error as ThisError;
+use tokio::sync::broadcast;
 use utils::address_book::{AddressBook, ManagableActor};
 
 pub mod flow_run_worker;
@@ -39,17 +44,38 @@ pub struct DBWorker {
     /// All actors in the system
     actors: AddressBook,
     counter: Counter,
-    tx: Option<mpsc::UnboundedSender<Vec<FlowRunLogsRow>>>,
+    tx: mpsc::UnboundedSender<Vec<FlowRunLogsRow>>,
+    done_tx: broadcast::Sender<()>,
 }
 
 impl DBWorker {
-    pub fn new(db: DbPool, config: Config, actors: AddressBook) -> Self {
+    pub fn new(
+        db: DbPool,
+        config: Config,
+        actors: AddressBook,
+        ctx: &mut actix::Context<Self>,
+    ) -> Self {
+        let (tx, rx) = mpsc::unbounded();
+        match &db {
+            DbPool::Real(db) => ctx.spawn(wrap_future::<_, Self>(db_copy_in(rx, db.clone())).map(
+                |_, act, _| {
+                    act.done_tx.send(()).ok();
+                },
+            )),
+            DbPool::Proxied(db) => ctx.spawn(
+                wrap_future::<_, Self>(db_copy_in_proxied(rx, db.clone())).map(|_, act, _| {
+                    act.done_tx.send(()).ok();
+                }),
+            ),
+        };
+
         Self {
             db,
             endpoints: config.endpoints(),
             actors,
             counter: Counter::default(),
-            tx: None,
+            tx,
+            done_tx: broadcast::channel(1).0,
         }
     }
 }
@@ -57,26 +83,8 @@ impl DBWorker {
 impl Actor for DBWorker {
     type Context = actix::Context<Self>;
 
-    fn started(&mut self, ctx: &mut Self::Context) {
+    fn started(&mut self, _: &mut Self::Context) {
         tracing::info!("started DBWorker");
-        if self.tx.is_none() {
-            let (tx, rx) = mpsc::unbounded();
-            self.tx = Some(tx);
-            match &self.db {
-                DbPool::Real(db) => ctx.spawn(
-                    db_copy_in(rx, db.clone())
-                        .into_actor(&*self)
-                        .map(|_, _, ctx| ctx.stop()),
-                ),
-                DbPool::Proxied(db) => ctx.spawn(
-                    db_copy_in_proxied(rx, db.clone())
-                        .into_actor(&*self)
-                        .map(|_, _, ctx| ctx.stop()),
-                ),
-            };
-        } else {
-            tracing::error!("started called twice");
-        }
     }
 
     fn stopped(&mut self, _: &mut Self::Context) {
@@ -84,9 +92,45 @@ impl Actor for DBWorker {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct SystemShutdown {
+    pub timeout_millies: u32,
+}
+
+#[derive(ThisError, Debug, Clone)]
+#[error("shutdown timeout")]
+pub struct ShutdownTimedout(String);
+
+impl actix::Message for SystemShutdown {
+    type Result = ();
+}
+
+impl actix::Handler<SystemShutdown> for DBWorker {
+    type Result = ResponseActFuture<Self, <SystemShutdown as actix::Message>::Result>;
+    fn handle(&mut self, msg: SystemShutdown, _: &mut Self::Context) -> Self::Result {
+        let wait = self
+            .actors
+            .iter::<FlowRunWorker>()
+            .map(|addr| addr.send(msg))
+            .collect::<Vec<_>>();
+        Box::pin(
+            futures_util::future::join_all(wait)
+                .into_actor(&*self)
+                .then(|_, act, _| {
+                    act.tx = mpsc::unbounded().0;
+                    let mut rx = act.done_tx.subscribe();
+                    async move {
+                        rx.recv().await.ok();
+                    }
+                    .into_actor(&*act)
+                })
+                .map(|_, _, ctx| ctx.stop()),
+        )
+    }
+}
+
 pub struct GetUserWorker {
     pub user_id: UserId,
-    pub rt: ArbiterHandle,
 }
 
 impl actix::Message for GetUserWorker {
@@ -103,7 +147,7 @@ impl actix::Handler<GetUserWorker> for DBWorker {
             let root = ctx.address();
             let endpoints = self.endpoints.clone();
             move || {
-                UserWorker::start_in_arbiter(&msg.rt, move |_| {
+                UserWorker::start_in_arbiter(&Arbiter::current(), move |_| {
                     UserWorker::new(id, endpoints, db, counter, root)
                 })
             }
@@ -113,7 +157,6 @@ impl actix::Handler<GetUserWorker> for DBWorker {
 
 pub struct GetTokenWorker {
     pub user_id: UserId,
-    pub rt: ArbiterHandle,
 }
 
 impl actix::Message for GetTokenWorker {
@@ -137,7 +180,7 @@ impl actix::Handler<GetTokenWorker> for DBWorker {
                         endpoints: endpoints.clone(),
                     };
                     move || {
-                        TokenWorker::start_in_arbiter(&msg.rt, move |_| {
+                        TokenWorker::start_in_arbiter(&Arbiter::current(), move |_| {
                             TokenWorker::new(user_id, local_db, endpoints, claim)
                         })
                     }
@@ -154,20 +197,30 @@ impl actix::Handler<GetTokenWorker> for DBWorker {
     }
 }
 
-pub struct StartActor<A: ManagableActor> {
-    pub actor: A,
-    pub rt: ArbiterHandle,
+pub struct StartFlowRunWorker<F>
+where
+    F: FnOnce(&mut Context<FlowRunWorker>) -> FlowRunWorker + Send + 'static,
+{
+    pub id: <FlowRunWorker as ManagableActor>::ID,
+    pub make_actor: F,
 }
 
-impl<A: ManagableActor> actix::Message for StartActor<A> {
-    type Result = Result<actix::Addr<A>, A>;
+impl<F> actix::Message for StartFlowRunWorker<F>
+where
+    F: FnOnce(&mut Context<FlowRunWorker>) -> FlowRunWorker + Send + 'static,
+{
+    type Result = Result<actix::Addr<FlowRunWorker>, ()>;
 }
 
-impl actix::Handler<StartActor<FlowRunWorker>> for DBWorker {
-    type Result = Result<actix::Addr<FlowRunWorker>, FlowRunWorker>;
+impl<F> actix::Handler<StartFlowRunWorker<F>> for DBWorker
+where
+    F: FnOnce(&mut Context<FlowRunWorker>) -> FlowRunWorker + Send + 'static,
+{
+    type Result = Result<actix::Addr<FlowRunWorker>, ()>;
 
-    fn handle(&mut self, msg: StartActor<FlowRunWorker>, _: &mut Self::Context) -> Self::Result {
-        self.actors.try_start_in_rt(msg.actor, msg.rt)
+    fn handle(&mut self, msg: StartFlowRunWorker<F>, _: &mut Self::Context) -> Self::Result {
+        self.actors
+            .try_start_with_context(msg.id, msg.make_actor, Arbiter::current())
     }
 }
 
@@ -215,13 +268,7 @@ impl actix::Handler<CopyIn<Vec<FlowRunLogsRow>>> for DBWorker {
     type Result = ();
 
     fn handle(&mut self, msg: CopyIn<Vec<FlowRunLogsRow>>, _: &mut Self::Context) -> Self::Result {
-        let opt = self
-            .tx
-            .as_ref()
-            .and_then(move |tx| tx.unbounded_send(msg.0).ok());
-        if opt.is_none() {
-            tracing::error!("channel closed");
-        }
+        self.tx.unbounded_send(msg.0).ok();
     }
 }
 
