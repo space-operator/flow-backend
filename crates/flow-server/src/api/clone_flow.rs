@@ -27,10 +27,6 @@ async fn clone_flow(
     let id_map = db_worker
         .send(GetUserWorker {
             user_id: user.user_id,
-            rt: actix::Arbiter::try_current().unwrap_or_else(|| {
-                tracing::warn!("starting new arbiter");
-                actix::Arbiter::new().handle()
-            }),
         })
         .await?
         .send(CloneFlow {

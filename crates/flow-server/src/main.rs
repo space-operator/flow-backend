@@ -7,12 +7,12 @@ use db::{
 use either::Either;
 use flow_server::{
     api::{self, prelude::Success},
-    db_worker::{self, token_worker::token_from_apikeys},
+    db_worker::{token_worker::token_from_apikeys, DBWorker, SystemShutdown},
     user::{SignatureAuth, SupabaseAuth},
     wss, Config,
 };
 use futures_util::{future::ok, TryFutureExt};
-use std::{borrow::Cow, collections::BTreeSet, convert::Infallible};
+use std::{borrow::Cow, collections::BTreeSet, convert::Infallible, time::Duration};
 use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
@@ -111,7 +111,7 @@ async fn main() {
         }
     }
 
-    let db_worker = db_worker::DBWorker::new(db.clone(), config.clone(), actors).start();
+    let db_worker = DBWorker::create(|ctx| DBWorker::new(db.clone(), config.clone(), actors, ctx));
 
     let sig_auth = SignatureAuth::new(rand::random());
     let supabase_auth = match SupabaseAuth::new(&config.supabase, db.clone()) {
@@ -126,6 +126,10 @@ async fn main() {
     let port = config.port;
 
     tracing::info!("listening on {:?} port {:?}", host, port);
+
+    let root = db_worker.clone();
+
+    let shutdown_timeout_secs = config.shutdown_timeout_secs;
 
     HttpServer::new(move || {
         let auth = if let Some(supabase_auth) = &supabase_auth {
@@ -203,6 +207,12 @@ async fn main() {
     .bind((host, port))
     .unwrap()
     .run()
+    .await
+    .unwrap();
+
+    root.send(SystemShutdown {
+        timeout: Duration::from_secs(shutdown_timeout_secs as u64),
+    })
     .await
     .unwrap();
 }

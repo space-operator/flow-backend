@@ -1,14 +1,15 @@
 use super::{
     flow_run_worker::FlowRunWorker, messages::SubscribeError, signer::SignerWorker, Counter,
-    DBWorker, GetTokenWorker, StartActor,
+    DBWorker, GetTokenWorker, StartFlowRunWorker,
 };
 use crate::error::ErrorBody;
-use actix::{
-    Actor, ActorFutureExt, Arbiter, AsyncContext, ResponseActFuture, ResponseFuture, WrapFuture,
-};
+use actix::{Actor, ActorFutureExt, AsyncContext, ResponseActFuture, ResponseFuture, WrapFuture};
 use actix_web::{http::StatusCode, ResponseError};
 use db::{pool::DbPool, Error as DbError};
-use flow::flow_registry::{get_flow, get_previous_values, new_flow_run, FlowRegistry};
+use flow::{
+    flow_graph::StopSignal,
+    flow_registry::{get_flow, get_previous_values, new_flow_run, FlowRegistry},
+};
 use flow_lib::{
     config::{
         client::{FlowRunOrigin, PartialConfig},
@@ -266,21 +267,30 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                 }
             }
 
-            let actor = FlowRunWorker::new(
-                run_id,
-                user_id,
-                msg.shared_with,
-                counter,
-                msg.stream,
-                db.clone(),
-                root.clone(),
-            );
-            let stop_signal = actor.stop_signal();
-            let stop_shared_signal = actor.stop_shared_signal();
+            let stop_signal = StopSignal::new();
+            let stop_shared_signal = StopSignal::new();
 
-            root.send(StartActor {
-                actor,
-                rt: Arbiter::current(),
+            root.send(StartFlowRunWorker {
+                id: run_id,
+                make_actor: {
+                    let stop_signal = stop_signal.clone();
+                    let stop_shared_signal = stop_shared_signal.clone();
+                    let root = root.clone();
+                    move |ctx| {
+                        FlowRunWorker::new(
+                            run_id,
+                            user_id,
+                            msg.shared_with,
+                            counter,
+                            msg.stream,
+                            db,
+                            root.clone(),
+                            stop_signal.clone(),
+                            stop_shared_signal.clone(),
+                            ctx,
+                        )
+                    }
+                },
             })
             .await?
             .map_err(|_| new_flow_run::Error::Other("could not start worker".into()))?;
@@ -484,15 +494,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 return Err(StartError::Unauthorized);
             }
 
-            let wrk = root
-                .send(GetTokenWorker {
-                    user_id,
-                    rt: actix::Arbiter::try_current().unwrap_or_else(|| {
-                        tracing::warn!("starting new arbiter");
-                        actix::Arbiter::new().handle()
-                    }),
-                })
-                .await??;
+            let wrk = root.send(GetTokenWorker { user_id }).await??;
 
             let (signer, signers_info) =
                 SignerWorker::fetch_and_start(db, &[(user_id, addr.clone().recipient())]).await?;
@@ -561,15 +563,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let root = self.root.clone();
         let db = self.db.clone();
         Box::pin(async move {
-            let wrk = root
-                .send(GetTokenWorker {
-                    user_id,
-                    rt: actix::Arbiter::try_current().unwrap_or_else(|| {
-                        tracing::warn!("starting new arbiter");
-                        actix::Arbiter::new().handle()
-                    }),
-                })
-                .await??;
+            let wrk = root.send(GetTokenWorker { user_id }).await??;
 
             let (signer, signers_info) = SignerWorker::fetch_and_start(
                 db,

@@ -118,6 +118,8 @@ pub struct Config {
     pub supabase: SupabaseConfig,
     #[serde(default = "Config::default_local_storage")]
     pub local_storage: PathBuf,
+    #[serde(default = "Config::default_shutdown_timeout_secs")]
+    pub shutdown_timeout_secs: u16,
 }
 
 impl Default for Config {
@@ -129,6 +131,7 @@ impl Default for Config {
             cors_origins: Vec::new(),
             supabase: SupabaseConfig::default(),
             local_storage: Self::default_local_storage(),
+            shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
         }
     }
 }
@@ -138,12 +141,16 @@ impl Config {
         "127.0.0.1".to_owned()
     }
 
-    pub fn default_port() -> u16 {
+    pub const fn default_port() -> u16 {
         8080
     }
 
     pub fn default_local_storage() -> PathBuf {
         PathBuf::from("./local_storage")
+    }
+
+    pub const fn default_shutdown_timeout_secs() -> u16 {
+        1
     }
 
     pub fn get_config() -> Self {
