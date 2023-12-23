@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::{
     nft::{CollectionDetails, NftCreator, NftUses, TokenStandard},
     prelude::*,
@@ -573,7 +575,7 @@ pub enum UpdateArgs {
         authorization_data: Option<AuthorizationData>,
     },
     AsUpdateAuthorityV2 {
-        new_update_authority: Option<Pubkey>,
+        new_update_authority: Option<String>,
         data: Option<Data>,
         primary_sale_happened: Option<bool>,
         is_mutable: Option<bool>,
@@ -708,7 +710,8 @@ impl From<UpdateArgs> for mpl_token_metadata::types::UpdateArgs {
                 token_standard,
                 authorization_data,
             } => Self::AsUpdateAuthorityV2 {
-                new_update_authority,
+                new_update_authority: new_update_authority
+                    .map(|authority| Pubkey::from_str(&authority).unwrap()),
                 data: data.map(Into::into),
                 primary_sale_happened,
                 is_mutable,
