@@ -6,7 +6,7 @@ use reqwest::{header::AUTHORIZATION, StatusCode};
 // Command Name
 const NAME: &str = "supabase";
 
-const DEFINITION: &str = flow_lib::node_definition!("db/supabase.json");
+const DEFINITION: &str = flow_lib::node_definition!("supabase/supabase.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

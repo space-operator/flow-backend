@@ -7,7 +7,7 @@
     "version": "0.1",
     "display_name": "To String",
     "description": "Convert to string",
-    "tags": [],
+    "tags": ["std"],
     "related_to": [
       {
         "id": "",
