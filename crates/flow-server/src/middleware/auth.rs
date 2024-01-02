@@ -1,4 +1,3 @@
-use super::req_fn::{rc_fn_ref, Function, ReqFn};
 use crate::{
     api::{auth_proxy, ws_auth_proxy},
     error::ErrorBody,
@@ -19,13 +18,14 @@ use db::{
     apikey,
     pool::{ProxiedDbPool, RealDbPool},
 };
+use flow_lib::UserId;
 use futures_util::{future::LocalBoxFuture, FutureExt};
 use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use std::{convert::Infallible, future::Ready, panic::Location, rc::Rc, str::FromStr, sync::Arc};
 use thiserror::Error as ThisError;
-use uuid::Uuid;
+use utils::bs58_decode;
 
 pub const X_API_KEY: HeaderName = HeaderName::from_static("x-api-key");
 
@@ -71,7 +71,13 @@ pub struct Token {
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct JWTPayload {
-    pub user_id: Uuid,
+    pub user_id: UserId,
+    #[serde(with = "utils::serde_bs58")]
+    pub pubkey: [u8; 32],
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub struct Unverified {
     #[serde(with = "utils::serde_bs58")]
     pub pubkey: [u8; 32],
 }
@@ -93,13 +99,6 @@ impl ResponseError for Unauthorized {
     fn error_response(&self) -> HttpResponse {
         ErrorBody::build(self)
     }
-}
-
-pub type JWTVerifier = ReqFn<Rc<dyn Function>>;
-
-pub fn jwt_auth<B: AsRef<[u8]>>(secret: B) -> JWTVerifier {
-    let hmac = Hmac::new_from_slice(secret.as_ref()).unwrap();
-    rc_fn_ref(move |r| jwt_verify_request(hmac.clone(), r, chrono::Utc::now().timestamp()))
 }
 
 fn rsplit(b: &[u8]) -> Option<(&[u8], &[u8])> {
@@ -124,34 +123,12 @@ fn jwt_verify(mut hmac: Hmac<Sha256>, token: &[u8], now: i64) -> Result<JWTPaylo
     Ok(payload)
 }
 
-fn jwt_verify_request(
-    hmac: Hmac<Sha256>,
-    r: &ServiceRequest,
-    now: i64,
-) -> Result<(), Unauthorized> {
-    let header = r.headers().get(&AUTHORIZATION).ok_or_else(unauthorized)?;
-    let token = header
-        .as_bytes()
-        .strip_prefix(b"Bearer ")
-        .ok_or_else(unauthorized)?;
-
-    let payload = jwt_verify(hmac, token, now)?;
-
-    let mut ext = r.extensions_mut();
-    ext.insert(payload);
-    ext.insert(Token {
-        jwt: Some(String::from_utf8(token.to_owned()).map_err(|_| unauthorized())?),
-        api_key: None,
-    });
-    Ok(())
-}
-
 #[derive(Deserialize)]
 struct Payload<'a> {
     exp: i64,
     #[allow(dead_code)]
     role: Role,
-    sub: Uuid,
+    sub: UserId,
     #[serde(borrow)]
     user_metadata: UserMetadata<'a>,
 }
@@ -202,17 +179,55 @@ pub struct RealApiAuth {
     pool: RealDbPool,
 }
 
+fn decode_base58_pubkey(v: &HeaderValue) -> Result<[u8; 32], Unauthorized> {
+    let s = std::str::from_utf8(v.as_bytes()).map_err(|_| unauthorized())?;
+    bs58_decode::<32>(s).map_err(|_| unauthorized())
+}
+
 impl RealApiAuth {
     async fn run(&self, r: &ServiceRequest) -> Result<(), Unauthorized> {
-        let apikey = match r.headers().get("x-api-key") {
-            Some(apikey) => apikey,
-            None => {
-                return jwt_verify_request(self.hmac.clone(), r, chrono::Utc::now().timestamp())
+        match r.headers().get("x-api-key") {
+            Some(apikey) => {
+                if apikey.as_bytes() == self.anon_key.as_bytes() {
+                    self.jwt_verify_request(r, chrono::Utc::now().timestamp())
+                } else {
+                    self.apikey_auth(apikey, r).await
+                }
             }
-        };
-        if apikey.as_bytes() == self.anon_key.as_bytes() {
-            return jwt_verify_request(self.hmac.clone(), r, chrono::Utc::now().timestamp());
+            None => self.jwt_verify_request(r, chrono::Utc::now().timestamp()),
         }
+    }
+
+    fn jwt_verify_request(&self, r: &ServiceRequest, now: i64) -> Result<(), Unauthorized> {
+        let header = r.headers().get(&AUTHORIZATION).ok_or_else(unauthorized)?;
+        let token = header.as_bytes().strip_prefix(b"Bearer ");
+
+        match token {
+            Some(token) => {
+                let payload = jwt_verify(self.hmac.clone(), token, now)?;
+
+                let mut ext = r.extensions_mut();
+                ext.insert(payload);
+                ext.insert(Token {
+                    jwt: Some(String::from_utf8(token.to_owned()).map_err(|_| unauthorized())?),
+                    api_key: None,
+                });
+                Ok(())
+            }
+            None => {
+                let pubkey = decode_base58_pubkey(header)?;
+                let mut ext = r.extensions_mut();
+                ext.insert(Unverified { pubkey });
+                Ok(())
+            }
+        }
+    }
+
+    async fn apikey_auth(
+        &self,
+        apikey: &HeaderValue,
+        r: &ServiceRequest,
+    ) -> Result<(), Unauthorized> {
         let apikey = apikey.to_str().map_err(|_| unauthorized())?;
         if !apikey.starts_with(apikey::KEY_PREFIX) {
             return Err(unauthorized());
@@ -275,6 +290,11 @@ impl ProxiedApiAuth {
             .client
             .post(format!("{}/proxy/auth", self.upstream_url));
         if let Some(value) = r.headers().get(AUTHORIZATION) {
+            if let Ok(pubkey) = decode_base58_pubkey(value) {
+                let mut ext = r.extensions_mut();
+                ext.insert(Unverified { pubkey });
+                return Ok(());
+            }
             req = req.header(AUTHORIZATION, value);
         }
         if let Some(value) = r.headers().get(X_API_KEY) {

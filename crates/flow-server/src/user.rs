@@ -6,6 +6,7 @@ use db::{
     pool::{DbPool, RealDbPool},
 };
 use flow::BoxedError;
+use flow_lib::{FlowRunId, UserId};
 use rand::distributions::{Alphanumeric, DistString};
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize};
@@ -14,6 +15,7 @@ use std::panic::Location;
 use thiserror::Error as ThisError;
 use uuid::Uuid;
 
+pub const SIGNING_TIMEOUT_SECS: i64 = 60;
 const HEADER: &str = "space-operator authentication\n\n";
 
 #[derive(Clone, Copy)]
@@ -45,6 +47,11 @@ fn invalid() -> Invalid {
 impl SignatureAuth {
     pub fn new(secret: [u8; 32]) -> Self {
         Self { secret }
+    }
+
+    pub fn flow_run_read_token(&self, id: FlowRunId) -> String {
+        let hash = blake3::keyed_hash(&self.secret, id.as_bytes());
+        base64::encode_config(hash.as_bytes(), base64::URL_SAFE)
     }
 
     pub fn init_login(&self, now: i64, pubkey: &[u8; 32]) -> String {
@@ -85,7 +92,7 @@ impl SignatureAuth {
         if size != payload_bytes.len() {
             return Err(invalid());
         }
-        if now - payload.timestamp >= 20 {
+        if now - payload.timestamp >= SIGNING_TIMEOUT_SECS {
             return Err(invalid());
         }
         if blake3::keyed_hash(&self.secret, payload_bytes) != *blake3_sig {
@@ -98,9 +105,9 @@ impl SignatureAuth {
         if size != 64 {
             return Err(invalid());
         }
-        let signature = ed25519_dalek::Signature::from_bytes(&signature).map_err(|_| invalid())?;
+        let signature = ed25519_dalek::Signature::from_bytes(&signature);
         let pubkey =
-            ed25519_dalek::PublicKey::from_bytes(&payload.pubkey).map_err(|_| invalid())?;
+            ed25519_dalek::VerifyingKey::from_bytes(&payload.pubkey).map_err(|_| invalid())?;
         pubkey
             .verify_strict(signed_payload.as_bytes(), &signature)
             .map_err(|_| invalid())?;
@@ -231,7 +238,7 @@ impl SupabaseAuth {
 
         let (cred, new_user) = match self.get_or_reset_password(&pk).await? {
             Some(pw) => (pw, false),
-            None => (self.create_user(&payload.pubkey).await?, true),
+            None => (self.create_user(&payload.pubkey).await?.0, true),
         };
 
         let resp = self
@@ -281,14 +288,14 @@ impl SupabaseAuth {
         }
     }
 
-    pub async fn create_user(&self, pk: &[u8; 32]) -> Result<PasswordLogin, LoginError> {
+    pub async fn create_user(&self, pk: &[u8; 32]) -> Result<(PasswordLogin, UserId), LoginError> {
         let body = CreateUser::new(pk);
+        tracing::info!("creating user {}", body.user_metadata.pub_key);
         let mut conn = self
             .pool
             .get_admin_conn()
             .await
             .map_err(|_| login_error())?;
-        tracing::info!("creating user {}", body.user_metadata.pub_key);
         if self.open_whitelists {
             conn.insert_whitelist(&body.user_metadata.pub_key).await?;
         }
@@ -309,10 +316,13 @@ impl SupabaseAuth {
         let pw = rand_password();
         conn.reset_password(&id, &pw).await?;
 
-        Ok(PasswordLogin {
-            email: body.email,
-            password: pw,
-        })
+        Ok((
+            PasswordLogin {
+                email: body.email,
+                password: pw,
+            },
+            id,
+        ))
     }
 }
 
@@ -327,14 +337,10 @@ mod tests {
 
     #[test]
     fn test_sign_verify() {
-        let sk = ed25519_dalek::SecretKey::from_bytes(&rand::random::<[u8; 32]>()).unwrap();
-        let kp = ed25519_dalek::Keypair {
-            public: (&sk).into(),
-            secret: sk,
-        };
+        let kp = ed25519_dalek::SigningKey::from_bytes(&rand::random::<[u8; 32]>());
         let m = SignatureAuth::new(rand::random());
-        let msg = m.init_login(now(), kp.public.as_bytes());
-        let signature = bs58::encode(kp.sign(msg.as_bytes())).into_string();
+        let msg = m.init_login(now(), kp.verifying_key().as_bytes());
+        let signature = bs58::encode(&kp.sign(msg.as_bytes()).to_bytes()).into_string();
         m.confirm(now(), &format!("{msg}.{signature}")).unwrap();
     }
 }
