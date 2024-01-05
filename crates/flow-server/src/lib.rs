@@ -207,10 +207,12 @@ impl Config {
 
     /// Build a CORS middleware.
     pub fn cors(&self) -> actix_cors::Cors {
-        let mut cors = actix_cors::Cors::default()
+        let cors = actix_cors::Cors::default()
             .allow_any_header()
             .allow_any_method()
+            .allow_any_origin()
             .supports_credentials();
+        /*
         for origin in &self.cors_origins {
             if origin.contains('*') {
                 let pattern = origin.clone();
@@ -219,6 +221,7 @@ impl Config {
                 cors = cors.allowed_origin(origin);
             }
         }
+        */
         cors
     }
 
