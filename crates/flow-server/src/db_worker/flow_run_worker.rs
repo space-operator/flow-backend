@@ -1,5 +1,6 @@
 use super::{
     messages::{Finished, SubscribeError, SubscriptionID},
+    user_worker::SigReqEvent,
     CopyIn, Counter, DBWorker, SystemShutdown,
 };
 use crate::error::ErrorBody;
@@ -59,6 +60,24 @@ impl ManagableActor for FlowRunWorker {
     }
 }
 
+impl actix::Handler<SigReqEvent> for FlowRunWorker {
+    type Result = ();
+    fn handle(&mut self, msg: SigReqEvent, _: &mut Self::Context) -> Self::Result {
+        self.subs.retain(|id, sub| {
+            let retain = if let Some(addr) = sub.receiver1.upgrade() {
+                addr.do_send(SigReqEvent {
+                    sub_id: *id,
+                    ..msg.clone()
+                });
+                true
+            } else {
+                false
+            };
+            retain
+        });
+    }
+}
+
 impl actix::Handler<SystemShutdown> for FlowRunWorker {
     type Result = ResponseActFuture<Self, <SystemShutdown as actix::Message>::Result>;
     fn handle(&mut self, msg: SystemShutdown, _: &mut Self::Context) -> Self::Result {
@@ -83,6 +102,7 @@ impl actix::Handler<SystemShutdown> for FlowRunWorker {
 struct Subscription {
     finished: actix::WeakRecipient<Finished>,
     receiver: actix::WeakRecipient<FullEvent>,
+    receiver1: actix::WeakRecipient<SigReqEvent>,
 }
 
 pub struct FullEvent {
@@ -100,6 +120,7 @@ pub struct SubscribeEvents {
     pub flow_run_id: FlowRunId,
     pub finished: actix::WeakRecipient<Finished>,
     pub receiver: actix::WeakRecipient<FullEvent>,
+    pub receiver1: actix::WeakRecipient<SigReqEvent>,
 }
 
 impl actix::Message for SubscribeEvents {
@@ -110,7 +131,10 @@ impl actix::Handler<SubscribeEvents> for FlowRunWorker {
     type Result = Result<(SubscriptionID, Vec<Event>), SubscribeError>;
 
     fn handle(&mut self, msg: SubscribeEvents, _: &mut Self::Context) -> Self::Result {
-        if msg.user_id != self.user_id && !self.shared_with.contains(&msg.user_id) {
+        if !msg.user_id.is_nil()
+            && msg.user_id != self.user_id
+            && !self.shared_with.contains(&msg.user_id)
+        {
             return Err(SubscribeError::Unauthorized {
                 user_id: msg.user_id,
             });
@@ -124,6 +148,7 @@ impl actix::Handler<SubscribeEvents> for FlowRunWorker {
             Subscription {
                 finished: msg.finished,
                 receiver: msg.receiver,
+                receiver1: msg.receiver1,
             },
         );
         Ok((sub_id, self.all_events.clone()))

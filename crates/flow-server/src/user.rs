@@ -15,12 +15,13 @@ use std::panic::Location;
 use thiserror::Error as ThisError;
 use uuid::Uuid;
 
+pub const FLOW_RUN_TOKEN_PREFIX: &str = "fr-";
 pub const SIGNING_TIMEOUT_SECS: i64 = 60;
 const HEADER: &str = "space-operator authentication\n\n";
 
 #[derive(Clone, Copy)]
 pub struct SignatureAuth {
-    secret: [u8; 32],
+    secret: [u8; blake3::KEY_LEN],
 }
 
 #[derive(Encode, Decode)]
@@ -49,9 +50,19 @@ impl SignatureAuth {
         Self { secret }
     }
 
-    pub fn flow_run_read_token(&self, id: FlowRunId) -> String {
-        let hash = blake3::keyed_hash(&self.secret, id.as_bytes());
-        base64::encode_config(hash.as_bytes(), base64::URL_SAFE)
+    pub(crate) fn hash(&self, data: &[u8]) -> blake3::Hash {
+        blake3::keyed_hash(&self.secret, data)
+    }
+
+    /// `fr-` + `base64(id + hash(id))`
+    pub fn flow_run_token(&self, id: FlowRunId) -> String {
+        let mut buf = Vec::<u8>::with_capacity(48);
+        buf.extend_from_slice(id.as_bytes());
+        let hash = blake3::keyed_hash(&self.secret, &buf);
+        buf.extend_from_slice(hash.as_bytes());
+        let mut msg = FLOW_RUN_TOKEN_PREFIX.to_owned();
+        base64::encode_config_buf(&buf, base64::URL_SAFE_NO_PAD, &mut msg);
+        msg
     }
 
     pub fn init_login(&self, now: i64, pubkey: &[u8; 32]) -> String {
@@ -64,7 +75,7 @@ impl SignatureAuth {
         let sig = blake3::keyed_hash(&self.secret, &bytes);
         bytes.extend_from_slice(sig.as_bytes());
         let mut msg = HEADER.to_owned();
-        base64::encode_config_buf(&bytes, base64::URL_SAFE, &mut msg);
+        base64::encode_config_buf(&bytes, base64::URL_SAFE_NO_PAD, &mut msg);
         msg
     }
 

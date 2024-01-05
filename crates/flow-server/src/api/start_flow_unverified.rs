@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::{
     db_worker::{user_worker::StartFlowShared, GetUserWorker},
-    user::SupabaseAuth,
+    user::{SignatureAuth, SupabaseAuth},
 };
 use db::pool::DbPool;
 use hashbrown::HashMap;
@@ -16,10 +16,17 @@ pub struct Params {
 #[derive(Serialize)]
 pub struct Output {
     pub flow_run_id: FlowRunId,
+    pub token: String,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(
+    config: &Config,
+    db: DbPool,
+    sup: web::Data<SupabaseAuth>,
+) -> impl HttpServiceFactory {
     web::resource("/start_unverified/{id}")
+        .app_data(sup)
+        .app_data(web::Data::new(config.signature_auth()))
         .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(start_flow_unverified))
@@ -27,8 +34,8 @@ pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
 
 pub async fn find_or_create_user(
     pubkey: &[u8; 32],
-    sup: web::Data<SupabaseAuth>,
-    db: web::Data<RealDbPool>,
+    sup: &SupabaseAuth,
+    db: &RealDbPool,
 ) -> Result<UserId, Error> {
     let conn = db.get_admin_conn().await?;
     let user_id = conn
@@ -49,6 +56,7 @@ async fn start_flow_unverified(
     db_worker: web::Data<actix::Addr<DBWorker>>,
     sup: web::Data<SupabaseAuth>,
     db: web::Data<RealDbPool>,
+    sig: web::Data<SignatureAuth>,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let user = user.into_inner();
@@ -66,10 +74,14 @@ async fn start_flow_unverified(
         return Err(Error::custom(StatusCode::FORBIDDEN, "not allowed"));
     }
 
-    let user_id = find_or_create_user(&user.pubkey, sup, db).await?;
+    let user_id = find_or_create_user(&user.pubkey, &sup, &db).await?;
 
     let starter = db_worker.send(GetUserWorker { user_id }).await?;
-    let owner = db_worker.send(GetUserWorker { user_id }).await?;
+    let owner = db_worker
+        .send(GetUserWorker {
+            user_id: flow.user_id,
+        })
+        .await?;
 
     let flow_run_id = owner
         .send(StartFlowShared {
@@ -79,5 +91,7 @@ async fn start_flow_unverified(
         })
         .await??;
 
-    Ok(web::Json(Output { flow_run_id }))
+    let token = sig.flow_run_token(flow_run_id);
+
+    Ok(web::Json(Output { flow_run_id, token }))
 }

@@ -1,6 +1,6 @@
 use super::{
     flow_run_worker::FlowRunWorker, messages::SubscribeError, signer::SignerWorker, Counter,
-    DBWorker, GetTokenWorker, StartFlowRunWorker,
+    DBWorker, FindActor, GetTokenWorker, StartFlowRunWorker,
 };
 use crate::error::ErrorBody;
 use actix::{Actor, ActorFutureExt, AsyncContext, ResponseActFuture, ResponseFuture, WrapFuture};
@@ -19,7 +19,7 @@ use flow_lib::{
     FlowId, FlowRunId, User, UserId,
 };
 use futures_channel::oneshot;
-use futures_util::future::BoxFuture;
+use futures_util::{future::BoxFuture, TryFutureExt};
 use hashbrown::HashMap;
 use solana_sdk::signature::Signature;
 use std::future::ready;
@@ -167,6 +167,22 @@ impl UserWorker {
                         }
                         None => false,
                     });
+                if let Some(flow_run_id) = req.flow_run_id {
+                    actix::spawn(
+                        self.root
+                            .send(FindActor::<FlowRunWorker>::new(flow_run_id))
+                            .map_ok(move |res| {
+                                if let Some(addr) = res {
+                                    addr.do_send(SigReqEvent {
+                                        sub_id: 0,
+                                        req_id: id,
+                                        pubkey: req.pubkey.to_bytes(),
+                                        message: req.message.clone(),
+                                    });
+                                }
+                            }),
+                    );
+                }
                 ctx.run_later(timeout, move |act, _| {
                     if let Some(SigReq { resp, .. }) = act.sigreg.remove(&id) {
                         resp.send(Err(signer::Error::Timeout)).ok();
@@ -328,6 +344,7 @@ impl actix::Handler<signer::SignatureRequest> for UserWorker {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct SubmitSignature {
     pub user_id: UserId,
     pub id: i64,

@@ -11,6 +11,7 @@ use middleware::{
 };
 use serde::Deserialize;
 use std::{path::PathBuf, rc::Rc};
+use user::SignatureAuth;
 
 pub mod api;
 pub mod db_worker;
@@ -120,6 +121,9 @@ pub struct Config {
     pub local_storage: PathBuf,
     #[serde(default = "Config::default_shutdown_timeout_secs")]
     pub shutdown_timeout_secs: u16,
+
+    #[serde(skip)]
+    blake3_key: [u8; blake3::KEY_LEN],
 }
 
 impl Default for Config {
@@ -132,6 +136,7 @@ impl Default for Config {
             supabase: SupabaseConfig::default(),
             local_storage: Self::default_local_storage(),
             shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
+            blake3_key: rand::random(),
         }
     }
 }
@@ -217,18 +222,30 @@ impl Config {
         cors
     }
 
+    pub fn signature_auth(&self) -> SignatureAuth {
+        SignatureAuth::new(self.blake3_key)
+    }
+
     /// Build a middleware to validate `Authorization` header
     /// with Supabase's JWT secret and API key.
     pub fn all_auth(&self, pool: DbPool) -> auth::ApiAuth {
         match (self.supabase.jwt_key.as_ref(), pool) {
-            (Some(key), DbPool::Real(pool)) => {
-                auth::ApiAuth::real(key.as_bytes(), self.supabase.anon_key.clone(), pool)
-            }
+            (Some(key), DbPool::Real(pool)) => auth::ApiAuth::real(
+                key.as_bytes(),
+                self.supabase.anon_key.clone(),
+                pool,
+                self.signature_auth(),
+            ),
             (None, DbPool::Real(pool)) => {
                 // TODO: print error
-                auth::ApiAuth::real(&[], self.supabase.anon_key.clone(), pool)
+                auth::ApiAuth::real(
+                    &[],
+                    self.supabase.anon_key.clone(),
+                    pool,
+                    self.signature_auth(),
+                )
             }
-            (_, DbPool::Proxied(pool)) => auth::ApiAuth::proxied(pool),
+            (_, DbPool::Proxied(pool)) => auth::ApiAuth::proxied(pool, self.signature_auth()),
         }
     }
 
