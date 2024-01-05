@@ -49,7 +49,7 @@ impl UserConnection {
         let stmt = self
             .conn
             .prepare_cached(
-                r#"SELECT user_id, start_shared FROM flows
+                r#"SELECT user_id, start_shared, start_unverified FROM flows
                 WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
             )
             .await

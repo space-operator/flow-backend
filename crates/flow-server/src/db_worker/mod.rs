@@ -1,7 +1,7 @@
 use crate::Config;
 use actix::{
     fut::wrap_future, Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context,
-    ResponseActFuture, WrapFuture,
+    ResponseActFuture, ResponseFuture, WrapFuture,
 };
 use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
@@ -9,7 +9,7 @@ use db::{
 };
 use flow_lib::{config::Endpoints, context::get_jwt, UserId};
 use futures_channel::mpsc;
-use futures_util::StreamExt;
+use futures_util::{FutureExt, StreamExt};
 use std::{
     sync::{atomic::AtomicU64, Arc},
     time::Duration,
@@ -27,7 +27,10 @@ pub mod user_worker;
 pub use flow_run_worker::FlowRunWorker;
 pub use user_worker::UserWorker;
 
-use self::token_worker::{LoginWithAdminCred, TokenWorker};
+use self::{
+    token_worker::{LoginWithAdminCred, TokenWorker},
+    user_worker::{SubmitError, SubmitSignature},
+};
 
 #[derive(Clone, Default)]
 pub struct Counter {
@@ -114,7 +117,7 @@ impl actix::Handler<SystemShutdown> for DBWorker {
         let wait = self
             .actors
             .iter::<FlowRunWorker>()
-            .map(|addr| addr.send(msg))
+            .map(|(_, addr)| addr.send(msg))
             .collect::<Vec<_>>();
         Box::pin(
             futures_util::future::join_all(wait)
@@ -129,6 +132,26 @@ impl actix::Handler<SystemShutdown> for DBWorker {
                 })
                 .map(|_, _, ctx| ctx.stop()),
         )
+    }
+}
+
+impl actix::Handler<SubmitSignature> for DBWorker {
+    type Result = ResponseFuture<Result<(), SubmitError>>;
+    fn handle(&mut self, msg: SubmitSignature, _: &mut Self::Context) -> Self::Result {
+        let users = self.actors.iter::<UserWorker>().collect::<Vec<_>>();
+        async move {
+            for (user_id, addr) in users {
+                let res = addr.send(SubmitSignature { user_id, ..msg }).await;
+                match res {
+                    Err(_) => continue,
+                    Ok(Err(SubmitError::NotFound)) => continue,
+                    Ok(Ok(())) => return Ok(()),
+                    Ok(Err(error)) => return Err(error),
+                }
+            }
+            Ok(())
+        }
+        .boxed_local()
     }
 }
 

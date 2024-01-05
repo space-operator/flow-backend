@@ -121,10 +121,17 @@ impl AddressBook {
         }
     }
 
-    pub fn iter<'a, A: Actor>(&'a self) -> impl Iterator<Item = actix::Addr<A>> + 'a {
-        self.addrs.values().filter_map(|v| {
+    pub fn iter<'a, A: ManagableActor>(
+        &'a self,
+    ) -> impl Iterator<Item = (A::ID, actix::Addr<A>)> + 'a {
+        self.addrs.iter().filter_map(|(k, v)| {
             v.downcast_ref::<WeakAddr<A>>()
                 .and_then(|weak| weak.upgrade())
+                .and_then(|addr| {
+                    k.id.as_any()
+                        .downcast_ref::<ID<A>>()
+                        .map(|id| (id.id.clone(), addr))
+                })
         })
     }
 }

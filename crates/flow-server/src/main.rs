@@ -8,7 +8,7 @@ use either::Either;
 use flow_server::{
     api::{self, prelude::Success},
     db_worker::{token_worker::token_from_apikeys, DBWorker, SystemShutdown},
-    user::{SignatureAuth, SupabaseAuth},
+    user::SupabaseAuth,
     wss, Config,
 };
 use futures_util::{future::ok, TryFutureExt};
@@ -113,7 +113,7 @@ async fn main() {
 
     let db_worker = DBWorker::create(|ctx| DBWorker::new(db.clone(), config.clone(), actors, ctx));
 
-    let sig_auth = SignatureAuth::new(rand::random());
+    let sig_auth = config.signature_auth();
     let supabase_auth = match SupabaseAuth::new(&config.supabase, db.clone()) {
         Ok(c) => Some(c),
         Err(e) => {
@@ -145,14 +145,20 @@ async fn main() {
             None
         };
 
-        let flow = web::scope("/flow")
+        let mut flow = web::scope("/flow")
             .service(api::start_flow::service(&config, db.clone()))
             .service(api::stop_flow::service(&config, db.clone()))
             .service(api::start_flow_shared::service(&config, db.clone()))
             .service(api::clone_flow::service(&config, db.clone()));
+        if let Some(supabase_auth) = &supabase_auth {
+            flow = flow.service(api::start_flow_unverified::service(
+                &config,
+                db.clone(),
+                web::Data::new(supabase_auth.clone()),
+            ))
+        }
         let websocket = web::scope("/ws").service(wss::service(&config, db.clone()));
-        let signature =
-            web::scope("/signature").service(api::submit_signature::service(&config, db.clone()));
+        let signature = web::scope("/signature").service(api::submit_signature::service(&config));
 
         let healthcheck = web::resource("/healthcheck")
             .route(web::get().to(|()| ok::<_, Infallible>(web::Json(Success))));
