@@ -187,7 +187,7 @@ impl Authenticated {
         let addr = ctx.address();
         let token = self.token.clone();
         let fut = wrap_future::<_, WsConn>(async move {
-            let (sub_id, events) = db_worker
+            let result = db_worker
                 .send(FindActor::<FlowRunWorker>::new(msg.flow_run_id))
                 .await?
                 .ok_or("not found")?
@@ -200,10 +200,10 @@ impl Authenticated {
                 })
                 .await??;
 
-            Ok::<_, BoxError>((sub_id, events))
+            Ok::<_, BoxError>(result)
         })
         .map(move |res, act, ctx| match res {
-            Ok((sub_id, events)) => {
+            Ok((sub_id, events, sigreqs)) => {
                 let state = if let State::Authenticated(state) = &mut act.state {
                     state
                 } else {
@@ -222,6 +222,20 @@ impl Authenticated {
                             time: event.time(),
                             content: event,
                         },
+                    );
+                }
+                for event in sigreqs {
+                    let pubkey = bs58::encode(&event.pubkey).into_string();
+                    let message = base64::encode(&event.message);
+                    let req_id = event.req_id;
+                    text_stream(
+                        ctx,
+                        sub_id,
+                        &json!({
+                            "req_id": req_id,
+                            "pubkey": pubkey,
+                            "message": message,
+                        }),
                     );
                 }
             }
