@@ -36,6 +36,7 @@ pub struct FlowRunWorker {
     tx: mpsc::UnboundedSender<Event>,
     subs: HashMap<SubscriptionID, Subscription>,
     all_events: Vec<Event>,
+    all_sigreq: Vec<SigReqEvent>,
     done_tx: broadcast::Sender<()>,
 }
 
@@ -75,6 +76,7 @@ impl actix::Handler<SigReqEvent> for FlowRunWorker {
             };
             retain
         });
+        self.all_sigreq.push(msg);
     }
 }
 
@@ -124,11 +126,11 @@ pub struct SubscribeEvents {
 }
 
 impl actix::Message for SubscribeEvents {
-    type Result = Result<(SubscriptionID, Vec<Event>), SubscribeError>;
+    type Result = Result<(SubscriptionID, Vec<Event>, Vec<SigReqEvent>), SubscribeError>;
 }
 
 impl actix::Handler<SubscribeEvents> for FlowRunWorker {
-    type Result = Result<(SubscriptionID, Vec<Event>), SubscribeError>;
+    type Result = Result<(SubscriptionID, Vec<Event>, Vec<SigReqEvent>), SubscribeError>;
 
     fn handle(&mut self, msg: SubscribeEvents, _: &mut Self::Context) -> Self::Result {
         if !msg.user_id.is_nil()
@@ -151,7 +153,7 @@ impl actix::Handler<SubscribeEvents> for FlowRunWorker {
                 receiver1: msg.receiver1,
             },
         );
-        Ok((sub_id, self.all_events.clone()))
+        Ok((sub_id, self.all_events.clone(), self.all_sigreq.clone()))
     }
 }
 
@@ -244,6 +246,7 @@ impl FlowRunWorker {
             done_tx: broadcast::channel::<()>(1).0,
             subs: HashMap::new(),
             all_events: Vec::new(),
+            all_sigreq: Vec::new(),
         }
     }
 
