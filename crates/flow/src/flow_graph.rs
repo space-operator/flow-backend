@@ -29,6 +29,7 @@ use petgraph::{
     visit::EdgeRef,
     Direction,
 };
+use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
@@ -860,9 +861,11 @@ impl FlowGraph {
 
                     let (ins, resp) = {
                         let mut ins = w.instructions;
+                        ins.instructions
+                            .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
                         let mut resp = vec![Responder {
                             sender: w.resp,
-                            range: 0..ins.instructions.len(),
+                            range: 1..ins.instructions.len(),
                         }];
                         while let Some(w) = tx.pop() {
                             let old_len = ins.instructions.len();
