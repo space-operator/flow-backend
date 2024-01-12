@@ -1,3 +1,5 @@
+use tracing::info;
+
 use crate::{
     prelude::*,
     wormhole::token_bridge::{
@@ -59,13 +61,13 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let response: CreateWrappedResponse = ctx
         .http
-        .post("https://gygvoikm3c.execute-api.us-east-1.amazonaws.com/create_wrapped_on_eth")
+        .post("http://localhost:8000/api/create_wrapped_on_eth")
         .json(&payload)
         .send()
         .await?
         .json::<CreateWrappedResponse>()
         .await?;
-
+    info!("response: {:?}", response);
     let receipt = response.output.receipt;
 
     // token contract address on ETH

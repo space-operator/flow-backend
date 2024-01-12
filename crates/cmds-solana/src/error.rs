@@ -28,6 +28,8 @@ pub enum Error {
     AssociatedTokenAccountDoesntExist,
     #[error("account {0} not found")]
     AccountNotFound(solana_sdk::pubkey::Pubkey),
+    #[error("Invalid account data for {0}")]
+    InvalidAccountData(solana_sdk::pubkey::Pubkey),
     #[error("bundlr isn't available on solana testnet")]
     BundlrNotAvailableOnTestnet,
     #[error("bundlr api returned an invalid response: {0}")]

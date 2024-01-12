@@ -5,7 +5,10 @@ use rand::Rng;
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
 use solana_sdk::pubkey::Pubkey;
 
-use super::{get_sequence_number, AttestTokenData, SequenceTracker, TokenBridgeInstructions};
+use super::{
+    get_sequence_number, get_sequence_number_from_message, AttestTokenData, SequenceTracker,
+    TokenBridgeInstructions,
+};
 
 // Command Name
 const NAME: &str = "attest_token";
@@ -39,6 +42,7 @@ pub struct Input {
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     signature: Option<Signature>,
+    sequence: String,
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -115,20 +119,22 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
 
-    let sequence_data: SequenceTracker = get_sequence_number(&ctx, sequence).await;
-
     let signature = ctx
         .execute(
             ins,
             value::map! {
-                "SPL_metadata" => spl_metadata,
+                "spl_metadata" => spl_metadata,
                 "mint_metadata" => mint_meta,
                 "emitter"=>emitter.to_string(),
-                "sequence"=>sequence_data.sequence.to_string(),
+                // "sequence"=>sequence_data.sequence.to_string(),
             },
         )
         .await?
         .signature;
 
-    Ok(Output { signature })
+    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
+    Ok(Output {
+        signature,
+        sequence,
+    })
 }

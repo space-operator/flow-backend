@@ -153,7 +153,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
 
-    let sequence_data: SequenceTracker = get_sequence_number(&ctx, sequence).await;
+    let sequence_data: SequenceTracker = get_sequence_number(&ctx, sequence).await?;
 
     let signature = ctx
         .execute(
