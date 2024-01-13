@@ -189,6 +189,8 @@ impl Default for RenderParams {
             fx4: Fx4::default(),
             fx5: Fx5::default(),
             fx6: Fx6::default(),
+            fx0_bodyoff: Fx0Bodyoff::default(),
+            fx0_bodyoff_glass: Fx0BodyoffGlass::default(),
             fx_jellifish: FxJellyfish::default(),
             fx_lineart_helper: FxLineartHelper::default(),
             env_light: EnvLight::default(),
@@ -1609,17 +1611,29 @@ impl Fx5 {
 pub enum Fx6 {
     #[strum(props(PDGName = "No"))]
     #[strum(props(MetaplexName = "No"))]
-    #[strum(props(weight = "65"))]
+    #[strum(props(weight = "50"))]
     #[default]
     No = 0,
     #[strum(props(PDGName = "Gold"))]
     #[strum(props(MetaplexName = "Gold"))]
-    #[strum(props(weight = "10"))]
+    #[strum(props(weight = "5"))]
     Gold = 1,
     #[strum(props(PDGName = "Silver"))]
     #[strum(props(MetaplexName = "Silver"))]
-    #[strum(props(weight = "25"))]
+    #[strum(props(weight = "10"))]
     Silver = 2,
+    #[strum(props(PDGName = "Rose Gold"))]
+    #[strum(props(MetaplexName = "Rose Gold"))]
+    #[strum(props(weight = "5"))]
+    RoseGold = 3,
+    #[strum(props(PDGName = "Copper"))]
+    #[strum(props(MetaplexName = "Copper"))]
+    #[strum(props(weight = "15"))]
+    Copper = 4,
+    #[strum(props(PDGName = "Bronze"))]
+    #[strum(props(MetaplexName = "Bronze"))]
+    #[strum(props(weight = "15"))]
+    Bronze = 5,
 }
 
 impl_try_from_u32!(Fx6);
@@ -1628,6 +1642,270 @@ impl Fx6 {
     fn seed() -> Self {
         let mut rng = rand::thread_rng();
         let variants = Fx6::iter().collect::<Vec<_>>();
+        let weights = variants
+            .iter()
+            .map(|v| {
+                v.get_str("weight")
+                    .unwrap_or("0")
+                    .parse::<u32>()
+                    .unwrap_or(0)
+            })
+            .collect::<Vec<_>>();
+        let dist = WeightedIndex::new(weights).unwrap();
+
+        variants[dist.sample(&mut rng)]
+    }
+}
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+)]
+#[repr(u32)]
+pub enum Fx0BodyOff {
+    #[strum(props(PDGName = "No"))]
+    #[strum(props(MetaplexName = "No Body"))]
+    #[strum(props(weight = "50"))]
+    #[default]
+    No = 0,
+    #[strum(props(PDGName = "Visible"))]
+    #[strum(props(MetaplexName = "Visible"))]
+    #[strum(props(weight = "5"))]
+    On = 1,
+}
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+)]
+#[repr(u32)]
+pub enum Fx0BodyOffGlass {
+    #[strum(props(PDGName = "No"))]
+    #[strum(props(MetaplexName = "No Glass"))]
+    #[strum(props(weight = "50"))]
+    #[default]
+    No = 0,
+    #[strum(props(PDGName = "On"))]
+    #[strum(props(MetaplexName = "Visible"))]
+    #[strum(props(weight = "5"))]
+    On = 1,
+}
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+)]
+#[repr(u32)]
+pub enum BodyMaterialVariations {
+    #[default]
+    StandardTextures = 0,
+    Stripes = 1,
+    Dots = 2,
+    Felt = 3,
+}
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumProperty,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+    Display,
+    Hash,
+)]
+#[repr(u32)]
+pub enum MarbleVariation {
+    #[strum(props(PDGName = "No"))]
+    #[strum(props(MetaplexName = "No"))]
+    #[strum(props(weight = "50"))]
+    #[default]
+    No = 0,
+    #[strum(props(PDGName = "Gold"))]
+    #[strum(props(MetaplexName = "Gold"))]
+    #[strum(props(weight = "5"))]
+    Gold = 1,
+    #[strum(props(PDGName = "Silver"))]
+    #[strum(props(MetaplexName = "Silver"))]
+    #[strum(props(weight = "10"))]
+    Silver = 2,
+    #[strum(props(PDGName = "Rose Gold"))]
+    #[strum(props(MetaplexName = "Rose Gold"))]
+    #[strum(props(weight = "5"))]
+    RoseGold = 3,
+    #[strum(props(PDGName = "Copper"))]
+    #[strum(props(MetaplexName = "Copper"))]
+    #[strum(props(weight = "15"))]
+    Copper = 4,
+    #[strum(props(PDGName = "Bronze"))]
+    #[strum(props(MetaplexName = "Bronze"))]
+    #[strum(props(weight = "15"))]
+    Bronze = 5,
+    #[strum(props(PDGName = "Copper"))]
+    #[strum(props(MetaplexName = "Copper"))]
+    #[strum(props(weight = "15"))]
+    Copper = 6,
+    #[strum(props(PDGName = "Bronze"))]
+    #[strum(props(MetaplexName = "Bronze"))]
+    #[strum(props(weight = "15"))]
+    Bronze = 7,
+}
+
+impl_try_from_u32!(MarbleVariation);
+
+impl MarbleVariation {
+    fn seed() -> Self {
+        let mut rng = rand::thread_rng();
+        let variants = MarbleVariation::iter().collect::<Vec<_>>();
+        let weights = variants
+            .iter()
+            .map(|v| {
+                v.get_str("weight")
+                    .unwrap_or("0")
+                    .parse::<u32>()
+                    .unwrap_or(0)
+            })
+            .collect::<Vec<_>>();
+        let dist = WeightedIndex::new(weights).unwrap();
+
+        variants[dist.sample(&mut rng)]
+    }
+}
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumProperty,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+    Display,
+    Hash,
+)]
+#[repr(u32)]
+pub enum WoodVariation {
+    #[strum(props(PDGName = "No"))]
+    #[strum(props(MetaplexName = "No"))]
+    #[strum(props(weight = "50"))]
+    #[default]
+    No = 0,
+    #[strum(props(PDGName = "Gold"))]
+    #[strum(props(MetaplexName = "Gold"))]
+    #[strum(props(weight = "5"))]
+    Gold = 1,
+    #[strum(props(PDGName = "Silver"))]
+    #[strum(props(MetaplexName = "Silver"))]
+    #[strum(props(weight = "10"))]
+    Silver = 2,
+    #[strum(props(PDGName = "Rose Gold"))]
+    #[strum(props(MetaplexName = "Rose Gold"))]
+    #[strum(props(weight = "5"))]
+    RoseGold = 3,
+    #[strum(props(PDGName = "Copper"))]
+    #[strum(props(MetaplexName = "Copper"))]
+    #[strum(props(weight = "15"))]
+    Copper = 4,
+    #[strum(props(PDGName = "Bronze"))]
+    #[strum(props(MetaplexName = "Bronze"))]
+    #[strum(props(weight = "15"))]
+    Bronze = 5,
+    #[strum(props(PDGName = "Copper"))]
+    #[strum(props(MetaplexName = "Copper"))]
+    #[strum(props(weight = "15"))]
+    Copper = 6,
+    #[strum(props(PDGName = "Bronze"))]
+    #[strum(props(MetaplexName = "Bronze"))]
+    #[strum(props(weight = "15"))]
+    Bronze = 7,
+}
+
+impl_try_from_u32!(WoodVariation);
+
+impl WoodVariation {
+    fn seed() -> Self {
+        let mut rng = rand::thread_rng();
+        let variants = WoodVariation::iter().collect::<Vec<_>>();
+        let weights = variants
+            .iter()
+            .map(|v| {
+                v.get_str("weight")
+                    .unwrap_or("0")
+                    .parse::<u32>()
+                    .unwrap_or(0)
+            })
+            .collect::<Vec<_>>();
+        let dist = WeightedIndex::new(weights).unwrap();
+
+        variants[dist.sample(&mut rng)]
+    }
+}
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumProperty,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+    Display,
+    Hash,
+)]
+#[repr(u32)]
+pub enum GlowingLogo {
+    #[strum(props(PDGName = "No"))]
+    #[strum(props(weight = "90"))]
+    #[default]
+    No = 0,
+    #[strum(props(PDGName = "Yes"))]
+    #[strum(props(weight = "10"))]
+    Yes = 1,
+}
+
+impl_try_from_u32!(GlowingLogo);
+
+impl GlowingLogo {
+    fn seed() -> Self {
+        let mut rng = rand::thread_rng();
+        let variants = GlowingLogo::iter().collect::<Vec<_>>();
         let weights = variants
             .iter()
             .map(|v| {

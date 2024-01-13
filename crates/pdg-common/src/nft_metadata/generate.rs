@@ -351,6 +351,9 @@ impl RenderParams {
             Fx6::No => {}
             Fx6::Gold => self.gold_silver_amount = rand::random::<f64>() * 30.0,
             Fx6::Silver => self.gold_silver_amount = rand::random::<f64>() * 30.0,
+            Fx6::RoseGold => self.gold_silver_amount = rand::random::<f64>() * 30.0,
+            Fx6::Bronze => self.gold_silver_amount = rand::random::<f64>() * 30.0,
+            Fx6::Copper => self.gold_silver_amount = rand::random::<f64>() * 30.0,
         }
 
         self
