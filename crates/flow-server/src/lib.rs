@@ -11,6 +11,7 @@ use middleware::{
 };
 use serde::Deserialize;
 use std::{path::PathBuf, rc::Rc};
+use user::SignatureAuth;
 
 pub mod api;
 pub mod db_worker;
@@ -118,6 +119,11 @@ pub struct Config {
     pub supabase: SupabaseConfig,
     #[serde(default = "Config::default_local_storage")]
     pub local_storage: PathBuf,
+    #[serde(default = "Config::default_shutdown_timeout_secs")]
+    pub shutdown_timeout_secs: u16,
+
+    #[serde(skip)]
+    blake3_key: [u8; blake3::KEY_LEN],
 }
 
 impl Default for Config {
@@ -129,6 +135,8 @@ impl Default for Config {
             cors_origins: Vec::new(),
             supabase: SupabaseConfig::default(),
             local_storage: Self::default_local_storage(),
+            shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
+            blake3_key: rand::random(),
         }
     }
 }
@@ -138,12 +146,16 @@ impl Config {
         "127.0.0.1".to_owned()
     }
 
-    pub fn default_port() -> u16 {
+    pub const fn default_port() -> u16 {
         8080
     }
 
     pub fn default_local_storage() -> PathBuf {
         PathBuf::from("./local_storage")
+    }
+
+    pub const fn default_shutdown_timeout_secs() -> u16 {
+        1
     }
 
     pub fn get_config() -> Self {
@@ -195,10 +207,12 @@ impl Config {
 
     /// Build a CORS middleware.
     pub fn cors(&self) -> actix_cors::Cors {
-        let mut cors = actix_cors::Cors::default()
+        let cors = actix_cors::Cors::default()
             .allow_any_header()
             .allow_any_method()
+            .allow_any_origin()
             .supports_credentials();
+        /*
         for origin in &self.cors_origins {
             if origin.contains('*') {
                 let pattern = origin.clone();
@@ -207,21 +221,34 @@ impl Config {
                 cors = cors.allowed_origin(origin);
             }
         }
+        */
         cors
+    }
+
+    pub fn signature_auth(&self) -> SignatureAuth {
+        SignatureAuth::new(self.blake3_key)
     }
 
     /// Build a middleware to validate `Authorization` header
     /// with Supabase's JWT secret and API key.
     pub fn all_auth(&self, pool: DbPool) -> auth::ApiAuth {
         match (self.supabase.jwt_key.as_ref(), pool) {
-            (Some(key), DbPool::Real(pool)) => {
-                auth::ApiAuth::real(key.as_bytes(), self.supabase.anon_key.clone(), pool)
-            }
+            (Some(key), DbPool::Real(pool)) => auth::ApiAuth::real(
+                key.as_bytes(),
+                self.supabase.anon_key.clone(),
+                pool,
+                self.signature_auth(),
+            ),
             (None, DbPool::Real(pool)) => {
                 // TODO: print error
-                auth::ApiAuth::real(&[], self.supabase.anon_key.clone(), pool)
+                auth::ApiAuth::real(
+                    &[],
+                    self.supabase.anon_key.clone(),
+                    pool,
+                    self.signature_auth(),
+                )
             }
-            (_, DbPool::Proxied(pool)) => auth::ApiAuth::proxied(pool),
+            (_, DbPool::Proxied(pool)) => auth::ApiAuth::proxied(pool, self.signature_auth()),
         }
     }
 

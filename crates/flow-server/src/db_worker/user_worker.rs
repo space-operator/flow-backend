@@ -1,14 +1,15 @@
 use super::{
     flow_run_worker::FlowRunWorker, messages::SubscribeError, signer::SignerWorker, Counter,
-    DBWorker, GetTokenWorker, StartActor,
+    DBWorker, FindActor, GetTokenWorker, StartFlowRunWorker,
 };
 use crate::error::ErrorBody;
-use actix::{
-    Actor, ActorFutureExt, Arbiter, AsyncContext, ResponseActFuture, ResponseFuture, WrapFuture,
-};
+use actix::{Actor, ActorFutureExt, AsyncContext, ResponseActFuture, ResponseFuture, WrapFuture};
 use actix_web::{http::StatusCode, ResponseError};
 use db::{pool::DbPool, Error as DbError};
-use flow::flow_registry::{get_flow, get_previous_values, new_flow_run, FlowRegistry};
+use flow::{
+    flow_graph::StopSignal,
+    flow_registry::{get_flow, get_previous_values, new_flow_run, FlowRegistry},
+};
 use flow_lib::{
     config::{
         client::{FlowRunOrigin, PartialConfig},
@@ -18,7 +19,7 @@ use flow_lib::{
     FlowId, FlowRunId, User, UserId,
 };
 use futures_channel::oneshot;
-use futures_util::future::BoxFuture;
+use futures_util::{future::BoxFuture, TryFutureExt};
 use hashbrown::HashMap;
 use solana_sdk::signature::Signature;
 use std::future::ready;
@@ -166,6 +167,22 @@ impl UserWorker {
                         }
                         None => false,
                     });
+                if let Some(flow_run_id) = req.flow_run_id {
+                    actix::spawn(
+                        self.root
+                            .send(FindActor::<FlowRunWorker>::new(flow_run_id))
+                            .map_ok(move |res| {
+                                if let Some(addr) = res {
+                                    addr.do_send(SigReqEvent {
+                                        sub_id: 0,
+                                        req_id: id,
+                                        pubkey: req.pubkey.to_bytes(),
+                                        message: req.message.clone(),
+                                    });
+                                }
+                            }),
+                    );
+                }
                 ctx.run_later(timeout, move |act, _| {
                     if let Some(SigReq { resp, .. }) = act.sigreg.remove(&id) {
                         resp.send(Err(signer::Error::Timeout)).ok();
@@ -266,21 +283,30 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                 }
             }
 
-            let actor = FlowRunWorker::new(
-                run_id,
-                user_id,
-                msg.shared_with,
-                counter,
-                msg.stream,
-                db.clone(),
-                root.clone(),
-            );
-            let stop_signal = actor.stop_signal();
-            let stop_shared_signal = actor.stop_shared_signal();
+            let stop_signal = StopSignal::new();
+            let stop_shared_signal = StopSignal::new();
 
-            root.send(StartActor {
-                actor,
-                rt: Arbiter::current(),
+            root.send(StartFlowRunWorker {
+                id: run_id,
+                make_actor: {
+                    let stop_signal = stop_signal.clone();
+                    let stop_shared_signal = stop_shared_signal.clone();
+                    let root = root.clone();
+                    move |ctx| {
+                        FlowRunWorker::new(
+                            run_id,
+                            user_id,
+                            msg.shared_with,
+                            counter,
+                            msg.stream,
+                            db,
+                            root.clone(),
+                            stop_signal.clone(),
+                            stop_shared_signal.clone(),
+                            ctx,
+                        )
+                    }
+                },
             })
             .await?
             .map_err(|_| new_flow_run::Error::Other("could not start worker".into()))?;
@@ -318,6 +344,7 @@ impl actix::Handler<signer::SignatureRequest> for UserWorker {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct SubmitSignature {
     pub user_id: UserId,
     pub id: i64,
@@ -484,15 +511,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 return Err(StartError::Unauthorized);
             }
 
-            let wrk = root
-                .send(GetTokenWorker {
-                    user_id,
-                    rt: actix::Arbiter::try_current().unwrap_or_else(|| {
-                        tracing::warn!("starting new arbiter");
-                        actix::Arbiter::new().handle()
-                    }),
-                })
-                .await??;
+            let wrk = root.send(GetTokenWorker { user_id }).await??;
 
             let (signer, signers_info) =
                 SignerWorker::fetch_and_start(db, &[(user_id, addr.clone().recipient())]).await?;
@@ -561,15 +580,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let root = self.root.clone();
         let db = self.db.clone();
         Box::pin(async move {
-            let wrk = root
-                .send(GetTokenWorker {
-                    user_id,
-                    rt: actix::Arbiter::try_current().unwrap_or_else(|| {
-                        tracing::warn!("starting new arbiter");
-                        actix::Arbiter::new().handle()
-                    }),
-                })
-                .await??;
+            let wrk = root.send(GetTokenWorker { user_id }).await??;
 
             let (signer, signers_info) = SignerWorker::fetch_and_start(
                 db,

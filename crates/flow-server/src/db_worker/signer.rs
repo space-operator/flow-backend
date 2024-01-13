@@ -82,6 +82,11 @@ impl SignerWorker {
                         sender: sender.clone(),
                     },
                     Some(keypair) => {
+                        // check to prevent https://github.com/advisories/GHSA-w5vr-6qhr-36cc
+                        if ed25519_dalek::SigningKey::from_keypair_bytes(&keypair).is_err() {
+                            tracing::warn!("invalid keypair: mismatch; id={}", w.id);
+                            continue;
+                        }
                         let keypair = match Keypair::from_bytes(&keypair) {
                             Ok(keypair) => keypair,
                             Err(error) => {
@@ -89,13 +94,6 @@ impl SignerWorker {
                                 continue;
                             }
                         };
-                        // check to prevent https://github.com/advisories/GHSA-w5vr-6qhr-36cc
-                        if keypair.pubkey().to_bytes()
-                            != ed25519_dalek::PublicKey::from(keypair.secret()).to_bytes()
-                        {
-                            tracing::warn!("invalid keypair: mismatch; id={}", w.id);
-                            continue;
-                        }
                         SignerType::Keypair(Box::new(keypair))
                     }
                 };

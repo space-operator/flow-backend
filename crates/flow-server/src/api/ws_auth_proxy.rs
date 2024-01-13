@@ -1,7 +1,5 @@
-use super::prelude::{
-    auth::{ApiAuth, JWTPayload},
-    *,
-};
+use super::prelude::*;
+use crate::{auth::ApiAuth, middleware::auth::TokenType};
 
 #[derive(Serialize, Deserialize)]
 pub struct Params {
@@ -10,7 +8,7 @@ pub struct Params {
 
 #[derive(Serialize, Deserialize)]
 pub struct Output {
-    pub payload: JWTPayload,
+    pub payload: TokenType,
 }
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {

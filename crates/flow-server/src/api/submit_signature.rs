@@ -1,8 +1,5 @@
 use super::prelude::*;
-use crate::db_worker::{
-    user_worker::{SubmitError, SubmitSignature},
-    FindActor, UserWorker,
-};
+use crate::db_worker::user_worker::{SubmitError, SubmitSignature};
 
 #[derive(Deserialize)]
 pub struct Params {
@@ -16,31 +13,25 @@ pub struct Output {
     success: bool,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config) -> impl HttpServiceFactory {
     web::resource("/submit")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(submit_signature))
 }
 
 async fn submit_signature(
     params: web::Json<Params>,
-    user: web::ReqData<auth::JWTPayload>,
     db_worker: web::Data<actix::Addr<DBWorker>>,
-) -> Result<web::Json<Output>, SubmitError> {
-    let user = user.into_inner();
+) -> Result<web::Json<Success>, SubmitError> {
     let params = params.into_inner();
 
     db_worker
-        .send(FindActor::<UserWorker>::new(user.user_id))
-        .await?
-        .ok_or(SubmitError::NotFound)?
         .send(SubmitSignature {
             id: params.id,
-            user_id: user.user_id,
+            user_id: UserId::nil(),
             signature: params.signature,
         })
         .await??;
 
-    Ok(web::Json(Output { success: true }))
+    Ok(web::Json(Success))
 }

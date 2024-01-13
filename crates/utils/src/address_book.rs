@@ -61,6 +61,26 @@ impl AddressBook {
         }
     }
 
+    pub fn try_start_with_context<A, F>(
+        &mut self,
+        id: A::ID,
+        make_actor: F,
+        rt: ArbiterHandle,
+    ) -> Result<actix::Addr<A>, ()>
+    where
+        A: Actor<Context = actix::Context<A>>,
+        A: ManagableActor + Send,
+        F: FnOnce(&mut actix::Context<A>) -> A + Send + 'static,
+    {
+        if let hashbrown::hash_map::Entry::Vacant(slot) = self.addrs.entry(AnyID::new::<A>(id)) {
+            let addr = A::start_in_arbiter(&rt, make_actor);
+            slot.insert(Box::new(addr.downgrade()));
+            Ok(addr)
+        } else {
+            Err(())
+        }
+    }
+
     pub fn get<A>(&self, id: A::ID) -> Option<WeakAddr<A>>
     where
         A: ManagableActor,
@@ -71,7 +91,7 @@ impl AddressBook {
     }
 
     #[must_use]
-    pub fn insert<A>(&mut self, id: A::ID, addr: actix::WeakAddr<A>) -> bool
+    pub fn insert<A>(&mut self, id: A::ID, addr: WeakAddr<A>) -> bool
     where
         A: ManagableActor,
     {
@@ -86,8 +106,8 @@ impl AddressBook {
     pub fn try_insert<A>(
         &mut self,
         id: A::ID,
-        addr: actix::WeakAddr<A>,
-    ) -> Result<(), (A::ID, actix::WeakAddr<A>)>
+        addr: WeakAddr<A>,
+    ) -> Result<(), (A::ID, WeakAddr<A>)>
     where
         A: ManagableActor,
     {
@@ -99,6 +119,20 @@ impl AddressBook {
         } else {
             Err((id, addr))
         }
+    }
+
+    pub fn iter<'a, A: ManagableActor>(
+        &'a self,
+    ) -> impl Iterator<Item = (A::ID, actix::Addr<A>)> + 'a {
+        self.addrs.iter().filter_map(|(k, v)| {
+            v.downcast_ref::<WeakAddr<A>>()
+                .and_then(|weak| weak.upgrade())
+                .and_then(|addr| {
+                    k.id.as_any()
+                        .downcast_ref::<ID<A>>()
+                        .map(|id| (id.id.clone(), addr))
+                })
+        })
     }
 }
 
@@ -205,66 +239,3 @@ impl AnyID {
         }
     }
 }
-
-/*
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    struct StringActor0 {
-        id: String,
-    }
-
-    impl Actor for StringActor0 {
-        type Context = actix::Context<Self>;
-    }
-
-    impl ManagableActor for StringActor0 {
-        type ID = String;
-        fn id(&self) -> String {
-            self.id.clone()
-        }
-    }
-
-    struct StringActor1 {
-        id: String,
-    }
-
-    impl Actor for StringActor1 {
-        type Context = actix::Context<Self>;
-    }
-
-    impl ManagableActor for StringActor1 {
-        type ID = String;
-        fn id(&self) -> String {
-            self.id.clone()
-        }
-    }
-
-    struct I32Actor0 {
-        id: i32,
-    }
-
-    impl Actor for I32Actor0 {
-        type Context = actix::Context<Self>;
-    }
-
-    impl ManagableActor for I32Actor0 {
-        type ID = i32;
-        fn id(&self) -> i32 {
-            self.id
-        }
-    }
-
-    struct UnitActor0 {}
-
-    impl Actor for UnitActor0 {
-        type Context = actix::Context<Self>;
-    }
-
-    impl ManagableActor for UnitActor0 {
-        type ID = ();
-        fn id(&self) -> Self::ID {}
-    }
-}
-*/

@@ -29,6 +29,7 @@ use petgraph::{
     visit::EdgeRef,
     Direction,
 };
+use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
@@ -860,9 +861,11 @@ impl FlowGraph {
 
                     let (ins, resp) = {
                         let mut ins = w.instructions;
+                        ins.instructions
+                            .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
                         let mut resp = vec![Responder {
                             sender: w.resp,
-                            range: 0..ins.instructions.len(),
+                            range: 1..ins.instructions.len(),
                         }];
                         while let Some(w) = tx.pop() {
                             let old_len = ins.instructions.len();
@@ -893,21 +896,25 @@ impl FlowGraph {
                         }
                         return ControlFlow::Break(ins);
                     }
-                    tracing::info!("executing instructions");
-                    let res = s
-                        .stop
-                        .race(
-                            std::pin::pin!(s.stop_shared.race(
-                                std::pin::pin!(ins.execute(
-                                    &self.ctx.solana_client,
-                                    self.ctx.signer.clone(),
-                                    Some(s.flow_run_id)
+                    let res = if s.stop.token.is_cancelled() || s.stop_shared.token.is_cancelled() {
+                        Err(execute::Error::Canceled)
+                    } else {
+                        tracing::info!("executing instructions");
+                        s.stop
+                            .race(
+                                std::pin::pin!(s.stop_shared.race(
+                                    std::pin::pin!(ins.execute(
+                                        &self.ctx.solana_client,
+                                        self.ctx.signer.clone(),
+                                        Some(s.flow_run_id)
+                                    )),
+                                    execute::Error::Canceled,
                                 )),
                                 execute::Error::Canceled,
-                            )),
-                            execute::Error::Canceled,
-                        )
-                        .await;
+                            )
+                            .await
+                    };
+
                     let res = res.map(|s| execute::Response { signature: Some(s) });
                     let failed_instruction = res.as_ref().err().and_then(|e| match e {
                         execute::Error::Solana(e) => find_failed_instruction(e),
@@ -1346,6 +1353,9 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
                 .ok();
             rx.map(|r| r?).boxed()
         } else {
+            if self.stop_shared.token.is_cancelled() {
+                return Box::pin(async { Err(execute::Error::Canceled) });
+            }
             // execute before sending the partial output
             let mut svc = self.simple_svc.clone();
             let tx = self.tx.clone();
