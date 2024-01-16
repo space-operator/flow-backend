@@ -13,3 +13,4 @@ futures-util = { version = "0.3", features = ["sink"] }
 serde = "1"
 bs58 = "0.4"
 thiserror = "1"
+serde_json = { version = "1", features = ["raw_value"] }

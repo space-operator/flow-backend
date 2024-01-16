@@ -10,17 +10,18 @@ use crate::{
     middleware::auth::Unauthorized as AuthError,
     Config,
 };
-use actix::{fut::wrap_future, Actor, ActorContext, ActorFutureExt, AsyncContext};
+use actix::{fut::wrap_future, Actor, ActorContext, ActorFutureExt, AsyncContext, WrapFuture};
 use actix_web::{dev::HttpServiceFactory, guard, web, HttpRequest};
 use actix_web_actors::ws::{self, CloseCode, WebsocketContext};
 use chrono::{DateTime, Utc};
 use db::pool::DbPool;
 use flow::flow_run_events;
 use flow_lib::{BoxError, FlowRunId};
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, value::RawValue};
 use std::sync::Arc;
+use utils::rpc;
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
     let auth = web::Data::new(config.all_auth(db));
@@ -38,12 +39,13 @@ async fn ws_handler(
 ) -> Result<actix_web::HttpResponse, crate::error::Error> {
     let resp = ws::start(
         WsConn {
-            state: State::Initial(Initial {
-                msg_count: 0,
-                queue: Vec::new(),
-                auth_service: auth.into_inner(),
-                db_worker: (**db_worker).clone(),
-            }),
+            msg_count: 0,
+            tokens: <_>::default(),
+            queue: <_>::default(),
+            subscribing: <_>::default(),
+
+            auth_service: auth.into_inner(),
+            db_worker: (**db_worker).clone(),
         },
         &req,
         stream,
@@ -53,25 +55,12 @@ async fn ws_handler(
 
 /// Actor holding a user's websocket connection
 pub struct WsConn {
-    state: State,
-}
-
-enum State {
-    Initial(Initial),
-    Authenticated(Authenticated),
-}
-
-struct Initial {
     msg_count: u64,
+    tokens: HashSet<TokenType>,
     queue: Vec<WithId<WsMessage>>,
-    auth_service: Arc<ApiAuth>,
-    db_worker: actix::Addr<DBWorker>,
-}
-
-struct Authenticated {
-    msg_count: u64,
-    token: TokenType,
     subscribing: HashMap<SubscriptionID, Subscription>,
+
+    auth_service: Arc<ApiAuth>,
     db_worker: actix::Addr<DBWorker>,
 }
 
@@ -85,85 +74,55 @@ impl Actor for WsConn {
 
 impl actix::StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
     fn handle(&mut self, item: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
-        let item = match item {
-            Ok(item) => item,
+        match item {
+            Ok(ws::Message::Text(text)) => {
+                let id = self.next_id();
+                match serde_json::from_str::<rpc::Request<WsMessage>>(&text) {
+                    Ok(msg) => match msg.request {
+                        WsMessage::Authenticate(params) => self.authenticate(msg.id, params, ctx),
+                        WsMessage::SubscribeFlowRunEvents(params) => {
+                            self.subscribe_run(msg.id, params, ctx)
+                        }
+                        WsMessage::SubscribeSignatureRequests(params) => {
+                            self.subscribe_sig(msg.id, params, ctx)
+                        }
+                    },
+                    Err(error) => error_response(ctx, id, &error),
+                };
+            }
+            Ok(ws::Message::Ping(data)) => {
+                ctx.pong(&data);
+            }
+            Ok(ws::Message::Close(reason)) => {
+                ctx.close(reason);
+                ctx.stop();
+            }
             Err(error) => {
                 tracing::error!("WS error: {}, stopping connection", error);
                 ctx.close(Some(CloseCode::Invalid.into()));
                 ctx.stop();
-                return;
             }
-        };
-
-        if let ws::Message::Text(text) = item {
-            let id = self.next_id();
-            match serde_json::from_str::<WsMessage>(&text) {
-                Ok(msg) => match &mut self.state {
-                    State::Initial(state) => state.handle(WithId { id, msg }, ctx),
-                    State::Authenticated(state) => state.handle(WithId { id, msg }, ctx),
-                },
-                Err(error) => error_response(ctx, id, &error),
-            };
+            Ok(ws::Message::Binary(_)) => {
+                tracing::warn!("received Binary message");
+            }
+            Ok(ws::Message::Continuation(_)) => {
+                tracing::warn!("received Continuation message");
+            }
+            Ok(ws::Message::Pong(_)) => {}
+            Ok(ws::Message::Nop) => {}
         }
     }
 }
 
-impl Initial {
-    fn handle(&mut self, msg: WithId<WsMessage>, ctx: &mut WebsocketContext<WsConn>) {
+impl WsConn {
+    fn handle_decoded_message(
+        &mut self,
+        msg: WithId<WsMessage>,
+        ctx: &mut WebsocketContext<WsConn>,
+    ) {
         let WithId { id, msg } = msg;
         match msg {
-            WsMessage::Authenticate(m) => {
-                let auth = self.auth_service.clone();
-                let token = m.token;
-                let fut = wrap_future::<_, WsConn>(auth.ws_authenticate(token));
-                let fut = fut.map(move |res, act, ctx| match res {
-                    Ok(token) => {
-                        let new_state = if let State::Initial(state) = &act.state {
-                            Authenticated {
-                                msg_count: state.msg_count,
-                                token: token.clone(),
-                                subscribing: HashMap::new(),
-                                db_worker: state.db_worker.clone(),
-                            }
-                        } else {
-                            unreachable!()
-                        };
-                        let old_state =
-                            std::mem::replace(&mut act.state, State::Authenticated(new_state));
-                        let old_state = if let State::Initial(state) = old_state {
-                            state
-                        } else {
-                            unreachable!()
-                        };
-                        if let State::Authenticated(state) = &mut act.state {
-                            for msg in old_state.queue {
-                                state.handle(msg, ctx);
-                            }
-                        } else {
-                            unreachable!();
-                        }
-                        let user_id = token.user_id();
-                        let flow_run_id = token.flow_run_id();
-                        success_response(
-                            ctx,
-                            id,
-                            json!({ "user_id": user_id, "flow_run_id": flow_run_id }),
-                        )
-                    }
-                    Err(error) => error_response(ctx, id, &error),
-                });
-                ctx.wait(fut);
-            }
-            _ => self.queue.push(WithId { id, msg }),
-        }
-    }
-}
-
-impl Authenticated {
-    fn handle(&mut self, msg: WithId<WsMessage>, ctx: &mut WebsocketContext<WsConn>) {
-        let WithId { id, msg } = msg;
-        match msg {
-            WsMessage::Authenticate(_) => error_response(ctx, id, &"already authenticated"),
+            WsMessage::Authenticate(msg) => self.authenticate(WithId { id, msg }, ctx),
             WsMessage::SubscribeFlowRunEvents(msg) => self.subscribe_run(WithId { id, msg }, ctx),
             WsMessage::SubscribeSignatureRequests(msg) => {
                 self.subscribe_sig(WithId { id, msg }, ctx)
@@ -171,48 +130,68 @@ impl Authenticated {
         }
     }
 
-    fn subscribe_run(
+    fn authenticate(
         &mut self,
-        msg: WithId<SubscribeFlowRunEvents>,
+        id: i64,
+        params: WsAuthenticate,
         ctx: &mut WebsocketContext<WsConn>,
     ) {
-        let WithId { id, msg } = msg;
+        let token = params.token;
+        let fut = self
+            .auth_service
+            .clone()
+            .ws_authenticate(token)
+            .into_actor(&*self)
+            .map(move |res, act, ctx| match res {
+                Ok(token) => {
+                    act.tokens.insert(token);
+                    for msg in act.queue.split_off(0) {
+                        act.handle_decoded_message(msg, ctx);
+                    }
+                    let user_id = token.user_id();
+                    let flow_run_id = token.flow_run_id();
+                    success_response(
+                        ctx,
+                        id,
+                        json!({ "user_id": user_id, "flow_run_id": flow_run_id }),
+                    )
+                }
+                Err(error) => error_response(ctx, id, &error),
+            });
+        ctx.wait(fut);
+    }
+
+    fn subscribe_run(
+        &mut self,
+        id: i64,
+        params: SubscribeFlowRunEvents,
+        ctx: &mut WebsocketContext<WsConn>,
+    ) {
+        // TODO: implement token for interflow
+        let flow_run_id = params.flow_run_id;
         let db_worker = self.db_worker.clone();
-        let flow_run_id = msg.flow_run_id;
-        if self.token.flow_run_id().is_some() && self.token.flow_run_id().unwrap() != flow_run_id {
-            // TODO: implement token for interflow
-            error_response(ctx, id, &"token did not match");
-            return;
-        }
+        let tokens = self.tokens.clone();
         let addr = ctx.address();
-        let token = self.token.clone();
-        let fut = wrap_future::<_, WsConn>(async move {
-            let result = db_worker
-                .send(FindActor::<FlowRunWorker>::new(msg.flow_run_id))
-                .await?
-                .ok_or("not found")?
-                .send(SubscribeEvents {
-                    user_id: token.user_id().unwrap_or_default(),
-                    flow_run_id,
-                    finished: addr.clone().into(),
-                    receiver: addr.clone().into(),
-                    receiver1: addr.into(),
-                })
-                .await??;
-
-            Ok::<_, BoxError>(result)
-        })
+        let fut = async move {
+            Ok::<_, BoxError>(
+                db_worker
+                    .send(FindActor::<FlowRunWorker>::new(flow_run_id))
+                    .await?
+                    .ok_or("not found")?
+                    .send(SubscribeEvents {
+                        tokens,
+                        finished: addr.clone().into(),
+                        receiver: addr.clone().into(),
+                    })
+                    .await??,
+            )
+        }
+        .into_actor(&*self)
         .map(move |res, act, ctx| match res {
-            Ok((sub_id, events, sigreqs)) => {
-                let state = if let State::Authenticated(state) = &mut act.state {
-                    state
-                } else {
-                    unreachable!();
-                };
-
+            Ok((sub_id, events)) => {
                 tracing::info!("subscribed flow-run");
-                state.subscribing.insert(sub_id, Subscription {});
-                success_response(ctx, id, json!({ "subscription_id": sub_id }));
+                act.subscribing.insert(sub_id, Subscription {});
+                success_response(ctx, id, json!({ "subscription": sub_id }));
                 for event in events {
                     text_stream(
                         ctx,
@@ -222,20 +201,6 @@ impl Authenticated {
                             time: event.time(),
                             content: event,
                         },
-                    );
-                }
-                for event in sigreqs {
-                    let pubkey = bs58::encode(&event.pubkey).into_string();
-                    let message = base64::encode(&event.message);
-                    let req_id = event.req_id;
-                    text_stream(
-                        ctx,
-                        sub_id,
-                        &json!({
-                            "req_id": req_id,
-                            "pubkey": pubkey,
-                            "message": message,
-                        }),
                     );
                 }
             }
@@ -291,6 +256,8 @@ impl Authenticated {
     }
 }
 
+impl Authenticated {}
+
 impl WsConn {
     fn next_id(&mut self) -> u64 {
         let count = match &mut self.state {
@@ -303,7 +270,7 @@ impl WsConn {
     }
 }
 
-fn error_response<E: ToString>(ctx: &mut WebsocketContext<WsConn>, id: u64, error: &E) {
+fn error_response<E: ToString>(ctx: &mut WebsocketContext<WsConn>, id: i64, error: &E) {
     let text = serde_json::to_string(&WSResponse::<()> {
         id,
         data: Err(error.to_string()),
@@ -312,7 +279,7 @@ fn error_response<E: ToString>(ctx: &mut WebsocketContext<WsConn>, id: u64, erro
     ctx.text(text);
 }
 
-fn success_response<T: Serialize>(ctx: &mut WebsocketContext<WsConn>, id: u64, value: T) {
+fn success_response<T: Serialize>(ctx: &mut WebsocketContext<WsConn>, id: i64, value: T) {
     let result = serde_json::to_string(&WSResponse::<T> {
         id,
         data: Ok(value),
@@ -336,6 +303,7 @@ fn text_stream<T: Serialize>(ctx: &mut WebsocketContext<WsConn>, sub_id: Subscri
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(tag = "method", content = "params")]
 pub enum WsMessage {
     Authenticate(WsAuthenticate),
     SubscribeFlowRunEvents(SubscribeFlowRunEvents),
@@ -344,7 +312,7 @@ pub enum WsMessage {
 
 #[derive(Serialize, Deserialize)]
 pub struct WSResponse<T> {
-    id: u64,
+    id: i64,
     #[serde(flatten)]
     data: Result<T, String>,
 }
@@ -356,7 +324,7 @@ pub struct WSEvent<T> {
 }
 
 struct WithId<M> {
-    id: u64,
+    id: i64,
     msg: M,
 }
 

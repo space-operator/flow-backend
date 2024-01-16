@@ -25,8 +25,8 @@ pub type SubscriptionID = u64;
 
 #[derive(ThisError, Debug)]
 pub enum SubscribeError {
-    #[error("unauthorized: {}", user_id)]
-    Unauthorized { user_id: UserId },
+    #[error("unauthorized")]
+    Unauthorized,
     #[error("not found")]
     NotFound,
     #[error(transparent)]
