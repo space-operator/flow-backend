@@ -22,7 +22,7 @@ pub struct Input {
     pub token: String,
     pub network_name: String,
     pub recipient: String,
-    pub amount: String,
+    pub amount: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -48,7 +48,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
         token: input.token,
         keypair: input.keypair,
         recipient: input.recipient,
-        amount: input.amount,
+        amount: input.amount.to_string(),
     };
 
     let response: ServerlessOutput = ctx

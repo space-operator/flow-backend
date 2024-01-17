@@ -70,10 +70,10 @@
   "targets": [
     {
       "name": "keypair",
-      "type_bounds": ["keypair"],
+      "type_bounds": ["string"],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "ETH Wallet Private Key",
       "passthrough": true
     },
     {
@@ -81,7 +81,7 @@
       "type_bounds": ["string"],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wormhole Network Name",
       "passthrough": false
     },
     {
@@ -89,7 +89,7 @@
       "type_bounds": ["address"],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "ETH token address",
       "passthrough": false
     },
     {
@@ -97,12 +97,12 @@
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "SOL recipient associated token address",
       "passthrough": false
     },
     {
       "name": "amount",
-      "type_bounds": ["u64"],
+      "type_bounds": ["f64"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
