@@ -1,6 +1,7 @@
 use super::{
-    BodyType, EnvLight, Fx0, Fx1, Fx1a, Fx2, Fx3, Fx4, Fx5, Fx6, FxJellyfish, FxLineartHelper,
-    HelmetLight, HelmetType, LightReflectionMult, Pose, RenderParams,
+    BodyMaterialVariations, BodyType, EnvLight, Fx0, Fx1, Fx1a, Fx2, Fx3, Fx4, Fx5, Fx6,
+    FxJellyfish, FxLineartHelper, GlowingLogo, HelmetLight, HelmetType, LightReflectionMult,
+    MarbleVariation, Pose, RenderParams, WoodVariation,
 };
 use indexmap::IndexSet;
 use rand::{seq::SliceRandom, Rng};
@@ -99,11 +100,19 @@ impl From<RenderParams> for EffectsList {
             fx4,
             fx5,
             fx6,
+            fx0_bodyoff,
+            fx0_bodyoff_glass,
+            body_material_variation,
+            marble_variation,
+            wood_variation,
             fx_jellifish,
             fx_lineart_helper,
             env_light: _,
             env_reflection: _,
             light_reflection_mult: _,
+            glowing_logo: _,
+            logo_hue: _,
+            logo_name: _,
             butterfly_amount: _,
             disintegration_amount: _,
             melt_amount: _,
@@ -235,6 +244,10 @@ impl RenderParams {
         .generate_dress_hue()
         .generate_helmet_lights()
         .generate_wedge()
+        .generate_body_material_variation()
+        .generate_marble_variation()
+        .generate_wood_variation()
+        .glowing_logo()
     }
 
     pub fn generate_line_art(mut self) -> Self {
@@ -406,6 +419,44 @@ impl RenderParams {
         self
     }
 
+    pub fn generate_body_material_variation(mut self) -> Self {
+        match self.fx0 {
+            Fx0::No => {
+                self.body_material_variation = BodyMaterialVariations::seed();
+            }
+            _ => {}
+        }
+        self
+    }
+
+    pub fn generate_marble_variation(mut self) -> Self {
+        match self.fx0 {
+            Fx0::Marble => {
+                self.marble_variation = MarbleVariation::seed();
+            }
+            _ => {}
+        }
+        self
+    }
+
+    pub fn generate_wood_variation(mut self) -> Self {
+        match self.fx0 {
+            Fx0::Wood => {
+                self.wood_variation = WoodVariation::seed();
+            }
+            _ => {}
+        }
+        self
+    }
+
+    pub fn glowing_logo(mut self) -> Self {
+        self.glowing_logo = GlowingLogo::seed();
+        if self.glowing_logo == GlowingLogo::Yes {
+            self.logo_hue = rand::random::<f64>() * 360.0;
+        }
+        self
+    }
+
     //smoke, env_reflection, light_reflection, env_light
     //
     //
@@ -429,6 +480,7 @@ mod tests {
     fn test() {
         // generate a base
         let base = RenderParams::generate_base();
+        dbg!(&base);
 
         // store user poses
         let mut poses: HashSet<Pose> = HashSet::new();
