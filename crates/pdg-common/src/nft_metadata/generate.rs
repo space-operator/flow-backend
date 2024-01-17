@@ -301,18 +301,23 @@ impl RenderParams {
                 self.hologram_amount = rand::thread_rng().gen_range(25.0..=100.0)
             }
             Fx0::Xray => {
+                self.env_light = EnvLight::day_or_night();
                 self.xray_skeleton_particles_amount = rand::thread_rng().gen_range(25.0..=100.0);
                 self.xray_body_amount = rand::thread_rng().gen_range(25.0..=100.0);
             }
             Fx0::SoapBubble => {
+                self.env_light = EnvLight::day_or_night();
                 self.soap_bubble_intensity_amount = rand::thread_rng().gen_range(25.0..=100.0);
                 self.soap_bubble_roughness_amount = rand::thread_rng().gen_range(25.0..=100.0);
                 self.light_reflection_mult = LightReflectionMult::Two;
             }
             Fx0::Pixel => {
+                self.env_light = EnvLight::day_or_night();
                 self.pixel_amount = rand::random::<f64>() * 20.0;
             }
-            _ => {}
+            _ => {
+                self.env_light = EnvLight::day_or_night();
+            }
         }
         self
     }
