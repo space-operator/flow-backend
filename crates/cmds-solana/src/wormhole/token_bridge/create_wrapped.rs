@@ -6,6 +6,7 @@ use borsh::BorshSerialize;
 
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
 use solana_sdk::pubkey::Pubkey;
+use tracing_log::log::info;
 use wormhole_sdk::token::Message;
 
 use super::{CreateWrappedData, PayloadAssetMeta, TokenBridgeInstructions};
@@ -77,6 +78,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         }
     };
 
+    info!("payload: {:?}", payload);
+
     let message =
         Pubkey::find_program_address(&[b"PostedVAA", &input.vaa_hash], &wormhole_core_program_id).0;
 
@@ -142,12 +145,14 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
             // Program
-            AccountMeta::new_readonly(wormhole_core_program_id, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            // AccountMeta::new_readonly(wormhole_core_program_id, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(mpl_token_metadata::ID, false),
         ],
         data: (TokenBridgeInstructions::CreateWrapped, CreateWrappedData {}).try_to_vec()?,
     };
+
+    info!("ix: {:?}", ix);
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),

@@ -1,3 +1,5 @@
+use tracing::info;
+
 use crate::{prelude::*, wormhole::token_bridge::eth::Response as ServerlessOutput};
 
 // Command Name
@@ -44,10 +46,11 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
         token: input.token,
         keypair: input.keypair,
     };
+    info!("payload: {:?}", payload);
 
     let response: ServerlessOutput = ctx
         .http
-        .post("https://gygvoikm3c.execute-api.us-east-1.amazonaws.com/attest_from_eth")
+        .post("http://localhost:8000/api/attest_from_eth")
         .json(&payload)
         .send()
         .await?

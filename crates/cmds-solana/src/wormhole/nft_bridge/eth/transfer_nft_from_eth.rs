@@ -54,7 +54,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let response: ServerlessOutput = ctx
         .http
-        .post("https://gygvoikm3c.execute-api.us-east-1.amazonaws.com/transfer_nft_from_eth")
+        .post("http://localhost:8000/api/transfer_nft_from_eth")
         .json(&payload)
         .send()
         .await?

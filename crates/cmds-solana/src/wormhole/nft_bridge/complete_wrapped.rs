@@ -96,8 +96,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let mut token_id = vec![0u8; 32];
     payload.token_id.to_big_endian(&mut token_id);
 
-    let to = Pubkey::from(payload.to.0);
-
     let message =
         Pubkey::find_program_address(&[b"PostedVAA", &input.vaa_hash], &wormhole_core_program_id).0;
 
@@ -136,6 +134,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let mint_authority = Pubkey::find_program_address(&[b"mint_signer"], &nft_bridge_program_id).0;
 
+    // let to = Pubkey::from(payload.to.0);
+    let to = spl_associated_token_account::get_associated_token_address(&input.to_authority, &mint);
     // let token_account =
     //     spl_associated_token_account::get_associated_token_address(&input.to_authority, &mint);
 
