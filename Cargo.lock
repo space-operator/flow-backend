@@ -2831,6 +2831,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "flow-api"
+version = "0.1.0"
+dependencies = [
+ "flow-lib",
+ "serde",
+]
+
+[[package]]
 name = "flow-lib"
 version = "0.1.0"
 dependencies = [
@@ -8109,6 +8117,7 @@ dependencies = [
  "futures-util",
  "hashbrown 0.13.2",
  "serde",
+ "serde_json",
  "thiserror",
  "tower",
 ]

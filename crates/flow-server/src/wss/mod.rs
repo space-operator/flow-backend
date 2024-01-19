@@ -211,11 +211,10 @@ impl WsConn {
 
     fn subscribe_sig(
         &mut self,
-        msg: WithId<SubscribeSignatureRequests>,
+        id: i64,
+        _params: SubscribeSignatureRequests,
         ctx: &mut WebsocketContext<WsConn>,
     ) {
-        let WithId { id, .. } = msg;
-
         let user_id = match self.token.user_id() {
             Some(user_id) => user_id,
             None => {
