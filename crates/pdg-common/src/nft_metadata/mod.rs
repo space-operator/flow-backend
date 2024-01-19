@@ -1872,7 +1872,7 @@ pub enum MarbleVariation {
     Five = 5,
     #[strum(props(MetaplexName = "Six"))]
     #[strum(props(weight = "15"))]
-    Size = 6,
+    Six = 6,
     #[strum(props(MetaplexName = "Seven"))]
     #[strum(props(weight = "15"))]
     Seven = 7,
@@ -1937,7 +1937,7 @@ pub enum WoodVariation {
     Five = 5,
     #[strum(props(MetaplexName = "Six"))]
     #[strum(props(weight = "15"))]
-    Size = 6,
+    Six = 6,
     #[strum(props(MetaplexName = "Seven"))]
     #[strum(props(weight = "15"))]
     Seven = 7,
