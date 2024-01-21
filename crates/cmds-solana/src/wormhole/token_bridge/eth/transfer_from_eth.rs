@@ -1,4 +1,11 @@
-use crate::{prelude::*, wormhole::token_bridge::eth::Response as ServerlessOutput};
+use std::str::FromStr;
+
+use tracing_log::log::info;
+
+use crate::{
+    prelude::*,
+    wormhole::token_bridge::eth::{Response as ServerlessOutput, TransferFromEthResponse},
+};
 
 // Command Name
 const NAME: &str = "transfer_from_eth";
@@ -27,9 +34,11 @@ pub struct Input {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
-    response: ServerlessOutput,
+    response: TransferFromEthResponse,
     emitter: String,
     sequence: String,
+    recipient_ata: Pubkey,
+    mint: Pubkey,
 }
 
 async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -51,22 +60,29 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
         amount: input.amount.to_string(),
     };
 
-    let response: ServerlessOutput = ctx
+    let response: TransferFromEthResponse = ctx
         .http
         .post("http://localhost:8000/api/transfer_from_eth")
         .json(&payload)
         .send()
         .await?
-        .json::<ServerlessOutput>()
+        .json::<TransferFromEthResponse>()
         .await?;
 
     let emitter = response.output.emitter_address.clone();
     let sequence = response.output.sequence.clone();
 
+    let recipient_ata = Pubkey::from_str(&response.output.recipient_ata).unwrap();
+    let mint = Pubkey::from_str(&response.output.mint).unwrap();
+
+    info!("recipient_ata: {:?}", recipient_ata);
+    info!("mint: {:?}", mint);
     Ok(Output {
         response,
         emitter,
         sequence,
+        recipient_ata,
+        mint,
     })
 }
 

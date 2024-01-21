@@ -1,3 +1,4 @@
+use crate::wormhole::token_bridge::{Address, PayloadTransfer};
 use crate::wormhole::{PostVAAData, VAA};
 
 use crate::prelude::*;
@@ -145,7 +146,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
             // Program
-            // AccountMeta::new_readonly(wormhole_core_program_id, false),
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(mpl_token_metadata::ID, false),
         ],
@@ -166,7 +166,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .execute(
             ins,
             value::map! {
-                "SPL_metadata" => spl_metadata,
+                "spl_metadata" => spl_metadata,
                 "mint_metadata" => mint_meta,
                 "mint" => mint,
             },
