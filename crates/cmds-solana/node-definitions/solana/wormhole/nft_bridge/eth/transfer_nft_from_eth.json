@@ -65,6 +65,18 @@
       "type": "u32",
       "defaultValue": null,
       "tooltip": ""
+    },
+    {
+      "name": "recipient_ata",
+      "type": "pubkey",
+      "defaultValue": null,
+      "tooltip": ""
+    },
+    {
+      "name": "mint",
+      "type": "pubkey",
+      "defaultValue": null,
+      "tooltip": ""
     }
   ],
   "targets": [

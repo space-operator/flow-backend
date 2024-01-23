@@ -72,7 +72,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             AccountMeta::new(input.payer.pubkey(), true),
             AccountMeta::new(fee_collector, false),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
         data: (

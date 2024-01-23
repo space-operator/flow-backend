@@ -1,4 +1,5 @@
-use crate::wormhole::token_bridge::eth::hex_to_address;
+use crate::wormhole::token_bridge::TransferTokensArgs;
+use crate::wormhole::token_bridge::{eth::hex_to_address, get_sequence_number_from_message};
 
 use crate::prelude::*;
 
@@ -6,8 +7,9 @@ use borsh::BorshSerialize;
 use rand::Rng;
 use solana_program::instruction::AccountMeta;
 use solana_sdk::pubkey::Pubkey;
+use tracing_log::log::info;
 
-use super::{get_sequence_number, SequenceTracker, TokenBridgeInstructions, TransferWrappedData};
+use super::{TokenBridgeInstructions, TransferWrappedData};
 
 // Command Name
 const NAME: &str = "transfer_wrapped";
@@ -30,16 +32,13 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 pub struct Input {
     #[serde(with = "value::keypair")]
     pub payer: Keypair,
-    pub token_chain: u16,
-    pub token_address: Pubkey,
+    pub mint: Pubkey,
     pub amount: u64,
     pub fee: u64,
     pub target_address: String,
     pub target_chain: u16,
     #[serde(with = "value::keypair")]
     pub message: Keypair,
-    #[serde(with = "value::pubkey")]
-    pub from: Pubkey,
     #[serde(with = "value::keypair")]
     pub from_owner: Keypair,
     #[serde(default = "value::default::bool_true")]
@@ -50,6 +49,7 @@ pub struct Input {
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     signature: Option<Signature>,
+    sequence: String,
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -63,24 +63,12 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let target_address = hex_to_address(&input.target_address).map_err(anyhow::Error::msg)?;
 
-    let wrapped_mint_key = Pubkey::find_program_address(
-        &[
-            b"wrapped",
-            input.token_chain.to_be_bytes().as_ref(),
-            &input.token_address.as_ref(),
-        ],
-        &token_bridge_program_id,
-    )
-    .0;
-
-    let wrapped_meta_key = Pubkey::find_program_address(
-        &[b"meta", wrapped_mint_key.as_ref()],
-        &token_bridge_program_id,
-    )
-    .0;
+    let wrapped_meta_key =
+        Pubkey::find_program_address(&[b"meta", input.mint.as_ref()], &token_bridge_program_id).0;
 
     let authority_signer =
         Pubkey::find_program_address(&[b"authority_signer"], &token_bridge_program_id).0;
+    info!("authority_signer: {}", authority_signer);
 
     let emitter = Pubkey::find_program_address(&[b"emitter"], &token_bridge_program_id).0;
     let bridge_config = Pubkey::find_program_address(&[b"Bridge"], &wormhole_core_program_id).0;
@@ -94,22 +82,36 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     // TODO: use a real nonce
     let nonce = rand::thread_rng().gen();
 
-    let wrapped_data = TransferWrappedData {
+    // let wrapped_data = TransferWrappedData {
+    //     nonce,
+    //     amount: input.amount,
+    //     fee: input.fee,
+    //     target_address,
+    //     target_chain: input.target_chain,
+    // };
+
+    let wrapped_data = TransferTokensArgs {
         nonce,
         amount: input.amount,
-        fee: input.fee,
-        target_address,
-        target_chain: input.target_chain,
+        relayer_fee: input.fee,
+        recipient: target_address.0,
+        recipient_chain: input.target_chain,
     };
+
+    let from_ata = spl_associated_token_account::get_associated_token_address(
+        &input.from_owner.pubkey(),
+        &input.mint,
+    );
+    info!("amount: {}", input.amount);
 
     let ix = solana_program::instruction::Instruction {
         program_id: token_bridge_program_id,
         accounts: vec![
             AccountMeta::new(input.payer.pubkey(), true),
             AccountMeta::new_readonly(config_key, false),
-            AccountMeta::new(input.from, false),
+            AccountMeta::new(from_ata, false),
             AccountMeta::new_readonly(input.from_owner.pubkey(), true),
-            AccountMeta::new(wrapped_mint_key, false),
+            AccountMeta::new(input.mint, false),
             AccountMeta::new_readonly(wrapped_meta_key, false),
             AccountMeta::new_readonly(authority_signer, false),
             AccountMeta::new(bridge_config, false),
@@ -122,8 +124,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             // Program
-            AccountMeta::new_readonly(wormhole_core_program_id, false),
             AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(wormhole_core_program_id, false),
         ],
         data: (TokenBridgeInstructions::TransferWrapped, wrapped_data).try_to_vec()?,
     };
@@ -139,13 +141,12 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         instructions: [
             spl_token::instruction::approve(
                 &spl_token::id(),
-                &input.from,
+                &from_ata,
                 &authority_signer,
-                &input.payer.pubkey(),
+                &input.from_owner.pubkey(),
                 &[],
                 input.amount,
-            )
-            .unwrap(),
+            )?,
             ix,
         ]
         .into(),
@@ -153,20 +154,21 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
 
-    let sequence_data: SequenceTracker = get_sequence_number(&ctx, sequence).await?;
-
     let signature = ctx
         .execute(
             ins,
             value::map! {
-                "wrapped_mint_key" => wrapped_mint_key,
                 "wrapped_meta_key" => wrapped_meta_key,
-                "sequence" => sequence_data.sequence.to_string(),
                 "emitter" => emitter,
             },
         )
         .await?
         .signature;
 
-    Ok(Output { signature })
+    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
+
+    Ok(Output {
+        signature,
+        sequence,
+    })
 }

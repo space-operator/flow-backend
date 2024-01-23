@@ -1,4 +1,9 @@
-use crate::wormhole::ForeignAddress;
+use crate::wormhole::{
+    token_bridge::{
+        eth::hex_to_address,  get_sequence_number_from_message,
+    },
+    ForeignAddress,
+};
 use std::str::FromStr;
 
 use crate::prelude::*;
@@ -33,17 +38,12 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 pub struct Input {
     #[serde(with = "value::keypair")]
     pub payer: Keypair,
-    pub token_chain: u16,
-    pub token_address: ForeignAddress,
-    pub token_id: String,
-    pub amount: u64,
-    pub fee: u64,
-    pub target_address: Address,
+    #[serde(with = "value::pubkey")]
+    pub mint: Pubkey,
+    pub target_address: String,
     pub target_chain: u16,
     #[serde(with = "value::keypair")]
     pub message: Keypair,
-    #[serde(with = "value::pubkey")]
-    pub from: Pubkey,
     #[serde(with = "value::keypair")]
     pub from_owner: Keypair,
     #[serde(default = "value::default::bool_true")]
@@ -54,6 +54,7 @@ pub struct Input {
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     signature: Option<Signature>,
+    sequence: String,
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -65,35 +66,15 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let config_key = Pubkey::find_program_address(&[b"config"], &nft_bridge_program_id).0;
 
-    // Convert token id
-    let token_id_input =
-        U256::from_str(&input.token_id).map_err(|_| anyhow::anyhow!("Invalid token id"))?;
-    let mut token_id = vec![0u8; 32];
-    token_id_input.to_big_endian(&mut token_id);
-
-    let wrapped_mint_key = Pubkey::find_program_address(
-        &[
-            b"wrapped",
-            input.token_chain.to_be_bytes().as_ref(),
-            &input.token_address,
-            &token_id,
-        ],
-        &nft_bridge_program_id,
-    )
-    .0;
-
-    let wrapped_meta_key = Pubkey::find_program_address(
-        &[b"meta", wrapped_mint_key.as_ref()],
-        &nft_bridge_program_id,
-    )
-    .0;
+    let wrapped_meta_key =
+        Pubkey::find_program_address(&[b"meta", input.mint.as_ref()], &nft_bridge_program_id).0;
 
     // SPL Metadata
     let spl_metadata = Pubkey::find_program_address(
         &[
             b"metadata".as_ref(),
             mpl_token_metadata::ID.as_ref(),
-            wrapped_mint_key.as_ref(),
+            input.mint.as_ref(),
         ],
         &mpl_token_metadata::ID,
     )
@@ -117,18 +98,23 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let wrapped_data = TransferWrappedData {
         nonce,
-        target_address: super::Address(input.target_address.0),
+        target_address: hex_to_address(&input.target_address)?,
         target_chain: input.target_chain,
     };
+
+    let from_ata = spl_associated_token_account::get_associated_token_address(
+        &input.from_owner.pubkey(),
+        &input.mint,
+    );
 
     let ix = solana_program::instruction::Instruction {
         program_id: nft_bridge_program_id,
         accounts: vec![
             AccountMeta::new(input.payer.pubkey(), true),
             AccountMeta::new_readonly(config_key, false),
-            AccountMeta::new(input.from, false),
+            AccountMeta::new(from_ata, false),
             AccountMeta::new_readonly(input.from_owner.pubkey(), true),
-            AccountMeta::new(wrapped_mint_key, false),
+            AccountMeta::new(input.mint, false),
             AccountMeta::new_readonly(wrapped_meta_key, false),
             AccountMeta::new_readonly(spl_metadata, false),
             AccountMeta::new_readonly(authority_signer, false),
@@ -148,6 +134,15 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         data: (NFTBridgeInstructions::TransferWrapped, wrapped_data).try_to_vec()?,
     };
 
+    let approve_ix = spl_token::instruction::approve(
+        &spl_token::id(),
+        &from_ata,
+        &authority_signer,
+        &input.from_owner.pubkey(),
+        &[],
+        1,
+    )?;
+
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [
@@ -156,7 +151,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             input.message.clone_keypair(),
         ]
         .into(),
-        instructions: [ix].into(),
+        instructions: [approve_ix, ix].into(),
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
@@ -165,13 +160,17 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .execute(
             ins,
             value::map! {
-                "wrapped_mint_key" => wrapped_mint_key,
                 "wrapped_meta_key" => wrapped_meta_key,
-                "spl_metadata" => spl_metadata,
+                "emitter" => emitter,
             },
         )
         .await?
         .signature;
 
-    Ok(Output { signature })
+    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
+
+    Ok(Output {
+        signature,
+        sequence,
+    })
 }

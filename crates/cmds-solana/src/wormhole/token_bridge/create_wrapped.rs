@@ -113,6 +113,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     )
     .0;
 
+    info!("payload token address: {:?}", payload.token_address);
+
     let mint_meta =
         Pubkey::find_program_address(&[b"meta", mint.as_ref()], &token_bridge_program_id).0;
 

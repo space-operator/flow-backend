@@ -6,7 +6,7 @@ use solana_program::{instruction::AccountMeta, system_program, sysvar};
 use solana_sdk::pubkey::Pubkey;
 
 use super::{
-    get_sequence_number, get_sequence_number_from_message, AttestTokenData, SequenceTracker,
+    get_sequence_number_from_message, AttestTokenData, 
     TokenBridgeInstructions,
 };
 

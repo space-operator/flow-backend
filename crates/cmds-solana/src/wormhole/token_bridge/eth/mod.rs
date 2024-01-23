@@ -150,3 +150,17 @@ pub fn hex_to_address(hex: &str) -> Result<Address, anyhow::Error> {
     let address: Address = Address(array);
     Ok(address)
 }
+
+
+// let to: String = format!("{}", Pubkey::new_from_array(payload.to.0));
+// info!("to {:?}", to);
+
+// let to: String = format!("{}", Address(payload.token_address));
+// info!("token: {:?}", to);
+
+// let hex = hex::encode(&payload.token_address);
+// info!("hex_token: {:?}", hex);
+
+// format!("0x{}", hex);
+
+// info!("payload: {:?}", payload);

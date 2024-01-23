@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::wormhole::ForeignAddress;
 use borsh::{BorshDeserialize, BorshSerialize};
 
@@ -73,6 +75,16 @@ impl From<wormhole_sdk::Address> for Address {
     }
 }
 
+impl fmt::Display for Address {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for b in self.0 {
+            write!(f, "{b:02x}")?;
+        }
+
+        Ok(())
+    }
+}
+
 pub type ChainID = u16;
 
 #[derive(BorshDeserialize, BorshSerialize, Default)]
@@ -122,6 +134,15 @@ pub struct TransferWrappedData {
     pub fee: u64,
     pub target_address: Address,
     pub target_chain: ChainID,
+}
+
+#[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+pub struct TransferTokensArgs {
+    pub nonce: u32,
+    pub amount: u64,
+    pub relayer_fee: u64,
+    pub recipient: [u8; 32],
+    pub recipient_chain: u16,
 }
 
 #[derive(Default, BorshSerialize, BorshDeserialize, Serialize)]

@@ -1,6 +1,6 @@
 use crate::{
     prelude::*,
-    wormhole::token_bridge::{eth::hex_to_address, get_sequence_number, SequenceTracker, get_sequence_number_from_message},
+    wormhole::token_bridge::{eth::hex_to_address,   get_sequence_number_from_message},
 };
 
 use borsh::BorshSerialize;
