@@ -50,7 +50,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let response: ServerlessOutput = ctx
         .http
-        .post("http://localhost:8000/api/attest_from_eth")
+        .post("https://space-operator.deno.dev/api/attest_from_eth")
         .json(&payload)
         .send()
         .await?

@@ -61,7 +61,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let response: CreateWrappedResponse = ctx
         .http
-        .post("http://localhost:8000/api/create_wrapped_on_eth")
+        .post("https://space-operator.deno.dev/api/create_wrapped_on_eth")
         .json(&payload)
         .send()
         .await?

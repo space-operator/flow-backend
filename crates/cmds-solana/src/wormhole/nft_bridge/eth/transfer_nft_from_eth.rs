@@ -63,7 +63,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let response: TransferFromEthResponse = ctx
         .http
-        .post("http://localhost:8000/api/transfer_nft_from_eth")
+        .post("https://space-operator.deno.dev/api/transfer_nft_from_eth")
         .json(&payload)
         .send()
         .await?
@@ -75,7 +75,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let recipient_ata = Pubkey::from_str(&response.output.recipient_ata).unwrap();
     let mint = Pubkey::from_str(&response.output.mint).unwrap();
-    
+
     info!("recipient_ata: {:?}", recipient_ata);
     info!("mint: {:?}", mint);
 

@@ -62,7 +62,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let response: TransferFromEthResponse = ctx
         .http
-        .post("http://localhost:8000/api/transfer_from_eth")
+        .post("https://space-operator.deno.dev/api/transfer_from_eth")
         .json(&payload)
         .send()
         .await?

@@ -50,7 +50,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let response: GetForeignAddress = ctx
         .http
-        .post("http://localhost:8000/api/get_foreign_asset_eth")
+        .post("https://space-operator.deno.dev/api/get_foreign_asset_eth")
         .json(&payload)
         .send()
         .await?

@@ -49,7 +49,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let response: RedeemOnEthResponse = ctx
         .http
-        .post("http://localhost:8000/api/redeem_on_eth")
+        .post("https://space-operator.deno.dev/api/redeem_on_eth")
         .json(&payload)
         .send()
         .await?
