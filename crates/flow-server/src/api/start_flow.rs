@@ -49,10 +49,6 @@ async fn start_flow(
     let flow_run_id = db_worker
         .send(GetUserWorker {
             user_id: user.user_id,
-            rt: actix::Arbiter::try_current().unwrap_or_else(|| {
-                tracing::warn!("starting new arbiter");
-                actix::Arbiter::new().handle()
-            }),
         })
         .await?
         .send(StartFlowFresh {

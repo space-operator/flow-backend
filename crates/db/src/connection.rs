@@ -29,6 +29,7 @@ pub struct UserConnection {
 pub struct FlowInfo {
     pub user_id: Uuid,
     pub start_shared: bool,
+    pub start_unverified: bool,
 }
 
 impl TryFrom<Row> for FlowInfo {
@@ -39,6 +40,9 @@ impl TryFrom<Row> for FlowInfo {
             start_shared: r
                 .try_get("start_shared")
                 .map_err(Error::data("flow.start_shared"))?,
+            start_unverified: r
+                .try_get("start_unverified")
+                .map_err(Error::data("flow.start_unverified"))?,
         })
     }
 }

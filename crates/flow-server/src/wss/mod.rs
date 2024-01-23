@@ -1,4 +1,5 @@
 use crate::{
+    api::prelude::auth::TokenType,
     auth::{ApiAuth, JWTPayload},
     db_worker::{
         flow_run_worker::{self, FlowRunWorker, SubscribeEvents},
@@ -69,7 +70,7 @@ struct Initial {
 
 struct Authenticated {
     msg_count: u64,
-    user: JWTPayload,
+    token: TokenType,
     subscribing: HashMap<SubscriptionID, Subscription>,
     db_worker: actix::Addr<DBWorker>,
 }
@@ -116,12 +117,11 @@ impl Initial {
                 let token = m.token;
                 let fut = wrap_future::<_, WsConn>(auth.ws_authenticate(token));
                 let fut = fut.map(move |res, act, ctx| match res {
-                    Ok(user) => {
-                        let user_id = user.user_id;
+                    Ok(token) => {
                         let new_state = if let State::Initial(state) = &act.state {
                             Authenticated {
                                 msg_count: state.msg_count,
-                                user,
+                                token: token.clone(),
                                 subscribing: HashMap::new(),
                                 db_worker: state.db_worker.clone(),
                             }
@@ -142,7 +142,13 @@ impl Initial {
                         } else {
                             unreachable!();
                         }
-                        success_response(ctx, id, json!({ "user_id": user_id }))
+                        let user_id = token.user_id();
+                        let flow_run_id = token.flow_run_id();
+                        success_response(
+                            ctx,
+                            id,
+                            json!({ "user_id": user_id, "flow_run_id": flow_run_id }),
+                        )
                     }
                     Err(error) => error_response(ctx, id, &error),
                 });
@@ -173,25 +179,31 @@ impl Authenticated {
         let WithId { id, msg } = msg;
         let db_worker = self.db_worker.clone();
         let flow_run_id = msg.flow_run_id;
-        let user_id = self.user.user_id;
+        if self.token.flow_run_id().is_some() && self.token.flow_run_id().unwrap() != flow_run_id {
+            // TODO: implement token for interflow
+            error_response(ctx, id, &"token did not match");
+            return;
+        }
         let addr = ctx.address();
+        let token = self.token.clone();
         let fut = wrap_future::<_, WsConn>(async move {
-            let (sub_id, events) = db_worker
+            let result = db_worker
                 .send(FindActor::<FlowRunWorker>::new(msg.flow_run_id))
                 .await?
                 .ok_or("not found")?
                 .send(SubscribeEvents {
-                    user_id,
+                    user_id: token.user_id().unwrap_or_default(),
                     flow_run_id,
                     finished: addr.clone().into(),
-                    receiver: addr.into(),
+                    receiver: addr.clone().into(),
+                    receiver1: addr.into(),
                 })
                 .await??;
 
-            Ok::<_, BoxError>((sub_id, events))
+            Ok::<_, BoxError>(result)
         })
         .map(move |res, act, ctx| match res {
-            Ok((sub_id, events)) => {
+            Ok((sub_id, events, sigreqs)) => {
                 let state = if let State::Authenticated(state) = &mut act.state {
                     state
                 } else {
@@ -212,6 +224,20 @@ impl Authenticated {
                         },
                     );
                 }
+                for event in sigreqs {
+                    let pubkey = bs58::encode(&event.pubkey).into_string();
+                    let message = base64::encode(&event.message);
+                    let req_id = event.req_id;
+                    text_stream(
+                        ctx,
+                        sub_id,
+                        &json!({
+                            "req_id": req_id,
+                            "pubkey": pubkey,
+                            "message": message,
+                        }),
+                    );
+                }
             }
             Err(error) => error_response(ctx, id, &error),
         });
@@ -224,16 +250,20 @@ impl Authenticated {
         ctx: &mut WebsocketContext<WsConn>,
     ) {
         let WithId { id, .. } = msg;
+
+        let user_id = match self.token.user_id() {
+            Some(user_id) => user_id,
+            None => {
+                error_response(ctx, id, &"cannot use when");
+                return;
+            }
+        };
+
         let db_worker = self.db_worker.clone();
-        let user_id = self.user.user_id;
         let addr = ctx.address();
         let fut = wrap_future::<_, WsConn>(async move {
-            let rt = actix::Arbiter::try_current().unwrap_or_else(|| {
-                tracing::warn!("starting new arbiter");
-                actix::Arbiter::new().handle()
-            });
             let sub_id = db_worker
-                .send(GetUserWorker { user_id, rt })
+                .send(GetUserWorker { user_id })
                 .await?
                 .send(SubscribeSigReq {
                     user_id,
