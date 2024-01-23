@@ -312,7 +312,6 @@ pub enum FromPDGError {
     DifferentConfig(AttrCfg),
     ExpectedObject,
     NotFound(Cow<'static, str>),
-    #[error("")]
     UnknownVariant(&'static str, u32),
     Json(#[from] serde_json::Error),
     WrongName {
@@ -501,7 +500,7 @@ impl RenderParams {
 
         let glowing_logo = try_get_enum::<GlowingLogo>(m, "Glowing_logo")?;
         let logo_hue = try_get_f64(m, "Logo_hue")?;
-        let logo_name = try_get_string(m, "Logo_name")?;
+        let logo_name = try_get_string(m, "logo_name")?;
 
         let butterfly_amount = try_get_f64(m, "Butterfly_amount")?;
         let disintegration_amount = try_get_f64(m, "Desintegration_amount")?;
@@ -1876,6 +1875,10 @@ pub enum MarbleVariation {
     #[strum(props(MetaplexName = "Seven"))]
     #[strum(props(weight = "15"))]
     Seven = 7,
+    #[strum(props(MetaplexName = "Eight"))]
+    #[strum(props(weight = "15"))]
+    Eight = 8,
+
 }
 
 impl_try_from_u32!(MarbleVariation);
