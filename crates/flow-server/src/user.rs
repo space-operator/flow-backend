@@ -225,10 +225,7 @@ impl SupabaseAuth {
             "https://{}.supabase.co/auth/v1/",
             config.project_id,
         ))?;
-        let service_key = config
-            .service_key
-            .as_ref()
-            .ok_or_else(|| "need service_key")?;
+        let service_key = config.service_key.as_ref().ok_or("need service_key")?;
         let login_url = base_url.join("token?grant_type=password")?;
         let create_user_url = base_url.join("admin/users")?;
         let admin_token = HeaderValue::from_str(&format!("Bearer {}", service_key))?;

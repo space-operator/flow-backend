@@ -149,7 +149,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         );
 
     info!("associated_token_exists: {:?}", associated_token_exists);
-    
+
     info!("to: {:?}", to);
     let ix = solana_program::instruction::Instruction {
         program_id: token_bridge_program_id,

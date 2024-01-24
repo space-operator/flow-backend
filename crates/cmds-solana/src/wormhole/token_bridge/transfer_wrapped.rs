@@ -9,7 +9,7 @@ use solana_program::instruction::AccountMeta;
 use solana_sdk::pubkey::Pubkey;
 use tracing_log::log::info;
 
-use super::{TokenBridgeInstructions};
+use super::TokenBridgeInstructions;
 
 // Command Name
 const NAME: &str = "transfer_wrapped";

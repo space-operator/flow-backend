@@ -47,7 +47,7 @@ pub fn build(nd: &NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
         })
         .collect();
     let source_code_name = inputs
-        .get(0)
+        .first()
         .ok_or_else(|| CommandError::msg("no source code input"))?
         .name
         .clone();

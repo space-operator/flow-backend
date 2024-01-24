@@ -6,8 +6,8 @@ use solana_program::instruction::AccountMeta;
 use solana_sdk::pubkey::Pubkey;
 
 use super::{
-    eth::hex_to_address,  get_sequence_number_from_message,
-    TokenBridgeInstructions, TransferNativeData,
+    eth::hex_to_address, get_sequence_number_from_message, TokenBridgeInstructions,
+    TransferNativeData,
 };
 
 // Command Name

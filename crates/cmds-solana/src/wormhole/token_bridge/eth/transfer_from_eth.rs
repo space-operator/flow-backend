@@ -2,10 +2,7 @@ use std::str::FromStr;
 
 use tracing_log::log::info;
 
-use crate::{
-    prelude::*,
-    wormhole::token_bridge::eth::{TransferFromEthResponse},
-};
+use crate::{prelude::*, wormhole::token_bridge::eth::TransferFromEthResponse};
 
 // Command Name
 const NAME: &str = "transfer_from_eth";
@@ -89,6 +86,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::wormhole::token_bridge::eth::Response as ServerlessOutput;
 
     #[derive(Serialize, Deserialize, Debug)]
     struct Payload {

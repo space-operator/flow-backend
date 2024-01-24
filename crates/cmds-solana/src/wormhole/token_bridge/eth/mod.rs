@@ -151,7 +151,6 @@ pub fn hex_to_address(hex: &str) -> Result<Address, anyhow::Error> {
     Ok(address)
 }
 
-
 // let to: String = format!("{}", Pubkey::new_from_array(payload.to.0));
 // info!("to {:?}", to);
 

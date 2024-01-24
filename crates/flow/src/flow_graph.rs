@@ -349,8 +349,8 @@ impl FlowGraph {
         registry: FlowRegistry,
         partial_config: Option<&PartialConfig>,
     ) -> crate::Result<Self> {
-        let flow_owner = registry.flow_owner.clone();
-        let started_by = registry.started_by.clone();
+        let flow_owner = registry.flow_owner;
+        let started_by = registry.started_by;
         let signer = registry.signer.clone();
         let token = registry.token.clone();
         let rhai_permit = registry.rhai_permit.clone();

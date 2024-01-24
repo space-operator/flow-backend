@@ -2,10 +2,7 @@ use std::str::FromStr;
 
 use tracing_log::log::info;
 
-use crate::{
-    prelude::*,
-    wormhole::token_bridge::eth::{TransferFromEthResponse},
-};
+use crate::{prelude::*, wormhole::token_bridge::eth::TransferFromEthResponse};
 
 // Command Name
 const NAME: &str = "transfer_nft_from_eth";
@@ -90,7 +87,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::wormhole::token_bridge::eth::Receipt;
+    use crate::wormhole::token_bridge::eth::{Receipt, Response as ServerlessOutput};
 
     use super::*;
 

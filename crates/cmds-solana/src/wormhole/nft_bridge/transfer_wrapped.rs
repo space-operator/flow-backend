@@ -1,9 +1,4 @@
-use crate::wormhole::{
-    token_bridge::{
-        eth::hex_to_address,  get_sequence_number_from_message,
-    },
-};
-
+use crate::wormhole::token_bridge::{eth::hex_to_address, get_sequence_number_from_message};
 
 use crate::prelude::*;
 
@@ -12,7 +7,6 @@ use borsh::BorshSerialize;
 use rand::Rng;
 use solana_program::instruction::AccountMeta;
 use solana_sdk::pubkey::Pubkey;
-
 
 use super::{NFTBridgeInstructions, TransferWrappedData};
 

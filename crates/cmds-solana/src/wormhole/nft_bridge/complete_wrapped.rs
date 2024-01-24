@@ -1,5 +1,3 @@
-
-
 use crate::prelude::*;
 use crate::wormhole::nft_bridge::Address;
 use crate::wormhole::{PostVAAData, VAA};
