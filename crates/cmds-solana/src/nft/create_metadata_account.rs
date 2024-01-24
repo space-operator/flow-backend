@@ -1,4 +1,4 @@
-use super::{CollectionDetails, NftCreator, NftDataV2, NftUses};
+use super::{CollectionDetails, NftDataV2};
 use crate::prelude::*;
 use mpl_token_metadata::accounts::Metadata;
 use solana_program::system_program;

@@ -4,7 +4,7 @@ use tracing_log::log::info;
 
 use crate::{
     prelude::*,
-    wormhole::token_bridge::eth::{Response as ServerlessOutput, TransferFromEthResponse},
+    wormhole::token_bridge::eth::{TransferFromEthResponse},
 };
 
 // Command Name

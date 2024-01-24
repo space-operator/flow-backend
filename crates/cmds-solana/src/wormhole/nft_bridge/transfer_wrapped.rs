@@ -2,18 +2,17 @@ use crate::wormhole::{
     token_bridge::{
         eth::hex_to_address,  get_sequence_number_from_message,
     },
-    ForeignAddress,
 };
-use std::str::FromStr;
+
 
 use crate::prelude::*;
 
 use borsh::BorshSerialize;
-use primitive_types::U256;
+
 use rand::Rng;
 use solana_program::instruction::AccountMeta;
 use solana_sdk::pubkey::Pubkey;
-use wormhole_sdk::Address;
+
 
 use super::{NFTBridgeInstructions, TransferWrappedData};
 
