@@ -146,7 +146,7 @@ mod tests {
         let mut array = [0u8; 32];
         array[32 - bytes.len()..].copy_from_slice(&bytes);
         let address: Address = Address(array);
-        dbg!(address.to_string());
+        // dbg!(address.to_string());
 
         // back to string
         // remove left zero padding
@@ -158,7 +158,7 @@ mod tests {
             }
             write!(&mut s, "{:02x}", b).unwrap();
         }
-        dbg!(s);
+        // dbg!(s);
         Ok(())
     }
 }
