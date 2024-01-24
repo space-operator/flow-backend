@@ -45,20 +45,14 @@ async fn start_flow_shared(
         return Err(Error::custom(StatusCode::FORBIDDEN, "not allowed"));
     }
 
-    let rt = actix::Arbiter::try_current().unwrap_or_else(|| {
-        tracing::warn!("starting new arbiter");
-        actix::Arbiter::new().handle()
-    });
     let starter = db_worker
         .send(GetUserWorker {
             user_id: user.user_id,
-            rt: rt.clone(),
         })
         .await?;
     let owner = db_worker
         .send(GetUserWorker {
             user_id: flow.user_id,
-            rt,
         })
         .await?;
 

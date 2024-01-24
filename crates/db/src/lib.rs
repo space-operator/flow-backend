@@ -17,6 +17,21 @@ pub use tokio_postgres::error::SqlState;
 pub use wasm_storage::{StorageError, WasmStorage};
 
 #[derive(Serialize, Deserialize)]
+pub struct NodeRunRow {
+    pub user_id: UserId,
+    pub flow_run_id: FlowRunId,
+    pub node_id: NodeId,
+    pub times: i32,
+    #[serde(with = "chrono::serde::ts_milliseconds")]
+    pub start_time: DateTime<Utc>,
+    #[serde(with = "chrono::serde::ts_milliseconds")]
+    pub end_time: DateTime<Utc>,
+    pub input: Option<value::Value>,
+    pub output: Option<value::Value>,
+    pub errors: Option<Vec<String>>,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct FlowRunLogsRow {
     pub user_id: UserId,
     pub flow_run_id: FlowRunId,

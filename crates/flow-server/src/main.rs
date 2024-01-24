@@ -7,12 +7,12 @@ use db::{
 use either::Either;
 use flow_server::{
     api::{self, prelude::Success},
-    db_worker::{self, token_worker::token_from_apikeys},
-    user::{SignatureAuth, SupabaseAuth},
+    db_worker::{token_worker::token_from_apikeys, DBWorker, SystemShutdown},
+    user::SupabaseAuth,
     wss, Config,
 };
 use futures_util::{future::ok, TryFutureExt};
-use std::{borrow::Cow, collections::BTreeSet, convert::Infallible};
+use std::{borrow::Cow, collections::BTreeSet, convert::Infallible, time::Duration};
 use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
@@ -111,9 +111,9 @@ async fn main() {
         }
     }
 
-    let db_worker = db_worker::DBWorker::new(db.clone(), config.clone(), actors).start();
+    let db_worker = DBWorker::create(|ctx| DBWorker::new(db.clone(), config.clone(), actors, ctx));
 
-    let sig_auth = SignatureAuth::new(rand::random());
+    let sig_auth = config.signature_auth();
     let supabase_auth = match SupabaseAuth::new(&config.supabase, db.clone()) {
         Ok(c) => Some(c),
         Err(e) => {
@@ -126,6 +126,10 @@ async fn main() {
     let port = config.port;
 
     tracing::info!("listening on {:?} port {:?}", host, port);
+
+    let root = db_worker.clone();
+
+    let shutdown_timeout_secs = config.shutdown_timeout_secs;
 
     HttpServer::new(move || {
         let auth = if let Some(supabase_auth) = &supabase_auth {
@@ -141,14 +145,20 @@ async fn main() {
             None
         };
 
-        let flow = web::scope("/flow")
+        let mut flow = web::scope("/flow")
             .service(api::start_flow::service(&config, db.clone()))
             .service(api::stop_flow::service(&config, db.clone()))
             .service(api::start_flow_shared::service(&config, db.clone()))
             .service(api::clone_flow::service(&config, db.clone()));
+        if let Some(supabase_auth) = &supabase_auth {
+            flow = flow.service(api::start_flow_unverified::service(
+                &config,
+                db.clone(),
+                web::Data::new(supabase_auth.clone()),
+            ))
+        }
         let websocket = web::scope("/ws").service(wss::service(&config, db.clone()));
-        let signature =
-            web::scope("/signature").service(api::submit_signature::service(&config, db.clone()));
+        let signature = web::scope("/signature").service(api::submit_signature::service(&config));
 
         let healthcheck = web::resource("/healthcheck")
             .route(web::get().to(|()| ok::<_, Infallible>(web::Json(Success))));
@@ -203,6 +213,12 @@ async fn main() {
     .bind((host, port))
     .unwrap()
     .run()
+    .await
+    .unwrap();
+
+    root.send(SystemShutdown {
+        timeout: Duration::from_secs(shutdown_timeout_secs as u64),
+    })
     .await
     .unwrap();
 }
