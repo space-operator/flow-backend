@@ -5,7 +5,7 @@ use rand::Rng;
 use solana_program::{instruction::AccountMeta, system_instruction, sysvar};
 use solana_sdk::pubkey::Pubkey;
 
-use super::{BridgeData, PostMessageData};
+use super::{token_bridge::get_sequence_number_from_message, BridgeData, PostMessageData};
 
 // Command Name
 const NAME: &str = "post_message";
@@ -39,6 +39,8 @@ pub struct Input {
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     signature: Option<Signature>,
+    sequence: String,
+    emitter: String,
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -107,15 +109,13 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
 
-    let signature = ctx
-        .execute(
-            ins,
-            value::map! {
-                "sequence" => sequence,
-            },
-        )
-        .await?
-        .signature;
+    let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    Ok(Output { signature })
+    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
+
+    Ok(Output {
+        signature,
+        sequence,
+        emitter: emitter.to_string(),
+    })
 }
