@@ -3,22 +3,20 @@ use solana_sdk::program_pack::Pack;
 use solana_sdk::system_instruction;
 use spl_token::state::Mint;
 
-const SOLANA_CREATE_MINT_ACCOUNT: &str = "create_mint_account";
+const NAME: &str = "create_mint_account";
 
 const DEFINITION: &str = flow_lib::node_definition!("solana/create_mint_account.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
-            .check_name(SOLANA_CREATE_MINT_ACCOUNT)?
+            .check_name(NAME)?
             .simple_instruction_info("signature")
     });
     Ok(CACHE.clone()?.build(run))
 }
 
-flow_lib::submit!(CommandDescription::new(SOLANA_CREATE_MINT_ACCOUNT, |_| {
-    build()
-}));
+flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {

@@ -26,6 +26,10 @@ pub enum Error {
     Bundlr(#[from] bundlr_sdk::error::BundlrError),
     #[error("solana error: associated token account doesn't exist")]
     AssociatedTokenAccountDoesntExist,
+    #[error("account {0} not found")]
+    AccountNotFound(solana_sdk::pubkey::Pubkey),
+    #[error("Invalid account data for {0}")]
+    InvalidAccountData(solana_sdk::pubkey::Pubkey),
     #[error("bundlr isn't available on solana testnet")]
     BundlrNotAvailableOnTestnet,
     #[error("bundlr api returned an invalid response: {0}")]

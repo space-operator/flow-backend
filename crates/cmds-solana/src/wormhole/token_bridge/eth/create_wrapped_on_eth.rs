@@ -1,3 +1,5 @@
+use tracing::info;
+
 use crate::{
     prelude::*,
     wormhole::token_bridge::{
@@ -59,13 +61,13 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let response: CreateWrappedResponse = ctx
         .http
-        .post("https://gygvoikm3c.execute-api.us-east-1.amazonaws.com/create_wrapped_on_eth")
+        .post("https://space-operator.deno.dev/api/create_wrapped_on_eth")
         .json(&payload)
         .send()
         .await?
         .json::<CreateWrappedResponse>()
         .await?;
-
+    info!("response: {:?}", response);
     let receipt = response.output.receipt;
 
     // token contract address on ETH
@@ -144,7 +146,7 @@ mod tests {
         let mut array = [0u8; 32];
         array[32 - bytes.len()..].copy_from_slice(&bytes);
         let address: Address = Address(array);
-        dbg!(address.to_string());
+        // dbg!(address.to_string());
 
         // back to string
         // remove left zero padding
@@ -156,7 +158,7 @@ mod tests {
             }
             write!(&mut s, "{:02x}", b).unwrap();
         }
-        dbg!(s);
+        // dbg!(s);
         Ok(())
     }
 }

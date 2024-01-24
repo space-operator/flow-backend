@@ -1,4 +1,4 @@
-use super::{CollectionDetails, NftCreator, NftDataV2, NftUses};
+use super::{CollectionDetails, NftDataV2};
 use crate::prelude::*;
 use mpl_token_metadata::accounts::Metadata;
 use solana_program::system_program;
@@ -32,11 +32,6 @@ pub struct Input {
     #[serde(with = "value::keypair")]
     pub fee_payer: Keypair,
     pub metadata: NftDataV2,
-    pub metadata_uri: String,
-    pub uses: Option<NftUses>,
-    #[serde(default, with = "value::pubkey::opt")]
-    pub collection_mint_account: Option<Pubkey>,
-    pub creators: Vec<NftCreator>,
     pub collection_details: Option<CollectionDetails>,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
@@ -56,9 +51,10 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         mint: input.mint_account,
         mint_authority: input.mint_authority,
         payer: input.fee_payer.pubkey(),
+        //TODO when would this be false?
         update_authority: (input.update_authority.pubkey(), true),
         system_program: system_program::id(),
-        //TODO double check what this is for
+        //TODO double check this
         rent: Some(input.fee_payer.pubkey()),
     };
 

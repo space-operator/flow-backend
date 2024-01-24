@@ -56,7 +56,13 @@
     },
     {
       "name": "sequence",
-      "type": "u32",
+      "type": "string",
+      "defaultValue": null,
+      "tooltip": ""
+    },
+    {
+      "name": "emitter",
+      "type": "string",
       "defaultValue": null,
       "tooltip": ""
     }
@@ -76,7 +82,7 @@
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": true
+      "passthrough": false
     },
     {
       "name": "message",

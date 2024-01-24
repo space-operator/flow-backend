@@ -6,7 +6,7 @@ use solana_program::instruction::AccountMeta;
 use solana_sdk::pubkey::Pubkey;
 
 use super::{
-    eth::hex_to_address, get_sequence_number, SequenceTracker, TokenBridgeInstructions,
+    eth::hex_to_address, get_sequence_number_from_message, TokenBridgeInstructions,
     TransferNativeData,
 };
 
@@ -50,6 +50,7 @@ pub struct Input {
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     signature: Option<Signature>,
+    sequence: String,
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -114,8 +115,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             // Program
-            AccountMeta::new_readonly(wormhole_core_program_id, false),
             AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(wormhole_core_program_id, false),
         ],
         data: (TokenBridgeInstructions::TransferNative, wrapped_data).try_to_vec()?,
     };
@@ -140,20 +141,24 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
 
-    let sequence_data: SequenceTracker = get_sequence_number(&ctx, sequence).await;
+    // let sequence_data: SequenceTracker = get_sequence_number(&ctx, sequence).await?;
 
     let signature = ctx
         .execute(
             ins,
             value::map! {
-                "custody_key" => custody_key,
+                "custody" => custody_key,
                 "custody_signer" => custody_signer,
-                "sequence" => sequence_data.sequence.to_string(),
+                // "sequence" => sequence_data.sequence.to_string(),
                 "emitter" => emitter.to_string(),
             },
         )
         .await?
         .signature;
+    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
 
-    Ok(Output { signature })
+    Ok(Output {
+        signature,
+        sequence,
+    })
 }
