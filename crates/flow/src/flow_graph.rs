@@ -861,8 +861,8 @@ impl FlowGraph {
 
                     let (ins, resp) = {
                         let mut ins = w.instructions;
-                        ins.instructions
-                            .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
+                        // ins.instructions
+                        //     .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
                         let mut resp = vec![Responder {
                             sender: w.resp,
                             range: 1..ins.instructions.len(),
@@ -1363,9 +1363,9 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
             let times = self.times;
             let output = req.output.clone();
             let task = async move {
-                req.instructions
-                    .instructions
-                    .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
+                // req.instructions
+                //     .instructions
+                //     .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
                 let res = svc.ready().await?.call(req).await;
                 let output = match &res {
                     Ok(_) => Ok((Instructions::default(), output)),
