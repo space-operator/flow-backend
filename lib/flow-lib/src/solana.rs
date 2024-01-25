@@ -1,4 +1,5 @@
 use crate::{context::execute::Error, context::signer, FlowRunId};
+use anyhow::{anyhow, bail};
 use bytes::Bytes;
 use futures::TryStreamExt;
 use solana_client::{
@@ -9,8 +10,10 @@ use solana_client::{
 };
 use solana_sdk::{
     commitment_config::CommitmentConfig,
+    feature_set::FeatureSet,
     instruction::Instruction,
     message::Message,
+    precompiles::verify_if_precompile,
     pubkey::Pubkey,
     signature::{Presigner, Signature},
     signer::{keypair::Keypair, Signer},
@@ -172,6 +175,10 @@ impl Instructions {
 
             tx.try_sign(&signers, recent_blockhash)?;
         }
+
+        // TODO: is it correct to use FeatureSet::all_enabled()?
+        verify_precompiles(&tx, &FeatureSet::all_enabled())?;
+
         let commitment = CommitmentConfig::confirmed();
         tracing::trace!("submitting transaction");
         let sig = rpc
@@ -180,4 +187,28 @@ impl Instructions {
 
         Ok(sig)
     }
+}
+
+/// Verify the precompiled programs in this transaction.
+pub fn verify_precompiles(tx: &Transaction, feature_set: &FeatureSet) -> Result<(), anyhow::Error> {
+    for (index, instruction) in tx.message().instructions.iter().enumerate() {
+        // The Transaction may not be sanitized at this point
+        if instruction.program_id_index as usize >= tx.message().account_keys.len() {
+            bail!(
+                "instruction #{} error: program ID not found {}",
+                index,
+                instruction.program_id_index
+            );
+        }
+        let program_id = &tx.message().account_keys[instruction.program_id_index as usize];
+
+        verify_if_precompile(
+            program_id,
+            instruction,
+            &tx.message().instructions,
+            feature_set,
+        )
+        .map_err(|error| anyhow!("instruction #{} error: {}", index, error))?;
+    }
+    Ok(())
 }
