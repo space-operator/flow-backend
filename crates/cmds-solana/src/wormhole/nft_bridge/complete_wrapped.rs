@@ -4,6 +4,7 @@ use crate::wormhole::{PostVAAData, VAA};
 use borsh::BorshSerialize;
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
 use solana_sdk::pubkey::Pubkey;
+use tracing::info;
 use wormhole_sdk::nft::Message;
 
 use super::{CompleteWrappedData, NFTBridgeInstructions, PayloadTransfer};
@@ -57,19 +58,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let vaa =
         VAA::deserialize(&input.vaa).map_err(|_| anyhow::anyhow!("Failed to deserialize VAA"))?;
-    // let vaa_bytes =
-    //     decode(input.vaa).map_err(|err| anyhow::anyhow!("Failed to decode VAA string: {}", err))?;
-
-    // let vaa =
-    //     VAA::deserialize(&vaa_bytes).map_err(|_| anyhow::anyhow!("Failed to deserialize VAA"))?;
 
     let vaa: PostVAAData = vaa.into();
 
-    // let payload = serde_json::to_vec(&input.payload)?;
-    // let payload = serde_json::from_slice::<Message>(&payload)?;
-    // let payload: Message =
-    //     serde_json::from_value(j).map_err(|_| anyhow::anyhow!("Failed to deserialize payload"))?;
-    // let payload: PayloadTransfer = match payload {
     let payload: PayloadTransfer = match input.payload {
         Message::Transfer {
             nft_address,
@@ -95,8 +86,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     // Convert token id
     let mut token_id = vec![0u8; 32];
     payload.token_id.to_big_endian(&mut token_id);
-
-    let to = Pubkey::from(payload.to.0);
 
     let message =
         Pubkey::find_program_address(&[b"PostedVAA", &input.vaa_hash], &wormhole_core_program_id).0;
@@ -130,14 +119,16 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &nft_bridge_program_id,
     )
     .0;
+    info!("mint: {:?}", mint);
 
     let mint_meta =
         Pubkey::find_program_address(&[b"meta", mint.as_ref()], &nft_bridge_program_id).0;
 
     let mint_authority = Pubkey::find_program_address(&[b"mint_signer"], &nft_bridge_program_id).0;
 
-    // let token_account =
-    //     spl_associated_token_account::get_associated_token_address(&input.to_authority, &mint);
+    let to = Pubkey::from(payload.to.0);
+    // let to = spl_associated_token_account::get_associated_token_address(&input.to_authority, &mint);
+    info!("to: {:?}", to);
 
     let ix = solana_program::instruction::Instruction {
         program_id: nft_bridge_program_id,

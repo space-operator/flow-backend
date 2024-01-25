@@ -121,9 +121,7 @@ impl AddressBook {
         }
     }
 
-    pub fn iter<'a, A: ManagableActor>(
-        &'a self,
-    ) -> impl Iterator<Item = (A::ID, actix::Addr<A>)> + 'a {
+    pub fn iter<A: ManagableActor>(&self) -> impl Iterator<Item = (A::ID, actix::Addr<A>)> + '_ {
         self.addrs.iter().filter_map(|(k, v)| {
             v.downcast_ref::<WeakAddr<A>>()
                 .and_then(|weak| weak.upgrade())

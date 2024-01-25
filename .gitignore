@@ -1,3 +1,4 @@
 /target
 .vscode
 /_data
+crates/flow-server/guest_local_storage/*

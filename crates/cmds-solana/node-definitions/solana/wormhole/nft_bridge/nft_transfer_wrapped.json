@@ -49,20 +49,20 @@
   },
   "sources": [
     {
-      "name": "wrapped_mint_key",
-      "type": "pubkey",
-      "defaultValue": null,
-      "tooltip": ""
-    },
-    {
       "name": "wrapped_meta_key",
       "type": "pubkey",
       "defaultValue": null,
       "tooltip": ""
     },
     {
-      "name": "spl_metadata",
+      "name": "emitter",
       "type": "pubkey",
+      "defaultValue": null,
+      "tooltip": ""
+    },
+    {
+      "name": "sequence",
+      "type": "string",
       "defaultValue": null,
       "tooltip": ""
     },
@@ -83,32 +83,8 @@
       "passthrough": true
     },
     {
-      "name": "token_chain",
-      "type_bounds": ["u16"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "token_address",
-      "type_bounds": ["address"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "amount",
-      "type_bounds": ["u64"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "fee",
-      "type_bounds": ["u64"],
+      "name": "mint",
+      "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -133,14 +109,6 @@
     {
       "name": "message",
       "type_bounds": ["keypair"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "from",
-      "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",

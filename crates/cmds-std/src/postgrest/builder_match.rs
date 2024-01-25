@@ -25,7 +25,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
             JsonValue::Array(_) => return Err(anyhow!("array type is not supported")),
             JsonValue::Object(_) => return Err(anyhow!("object type is not supported")),
         };
-        query = query.eq(k, v.to_string());
+        query = query.eq(k, &v);
     }
 
     Ok(Output {

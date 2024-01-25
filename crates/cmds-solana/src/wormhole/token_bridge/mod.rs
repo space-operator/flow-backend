@@ -1,9 +1,14 @@
+use std::fmt;
+
 use crate::wormhole::ForeignAddress;
 use borsh::{BorshDeserialize, BorshSerialize};
 
+use byteorder::{ByteOrder, LittleEndian};
 use flow_lib::Context;
 use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
+use solana_sdk::commitment_config::CommitmentConfig;
+use tracing::info;
 use wormhole_sdk::Amount;
 
 pub mod attest;
@@ -70,6 +75,16 @@ impl From<wormhole_sdk::Address> for Address {
     }
 }
 
+impl fmt::Display for Address {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for b in self.0 {
+            write!(f, "{b:02x}")?;
+        }
+
+        Ok(())
+    }
+}
+
 pub type ChainID = u16;
 
 #[derive(BorshDeserialize, BorshSerialize, Default)]
@@ -121,7 +136,16 @@ pub struct TransferWrappedData {
     pub target_chain: ChainID,
 }
 
-#[derive(Default, BorshSerialize, BorshDeserialize, Serialize, Deserialize)]
+#[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+pub struct TransferTokensArgs {
+    pub nonce: u32,
+    pub amount: u64,
+    pub relayer_fee: u64,
+    pub recipient: [u8; 32],
+    pub recipient_chain: u16,
+}
+
+#[derive(Default, BorshSerialize, BorshDeserialize, Serialize)]
 pub struct SequenceTracker {
     pub sequence: u64,
 }
@@ -138,10 +162,65 @@ pub struct TransferNativeData {
 #[derive(BorshDeserialize, BorshSerialize, Default)]
 pub struct CompleteNativeData {}
 
-pub async fn get_sequence_number(ctx: &Context, sequence: Pubkey) -> SequenceTracker {
-    let sequence_account: solana_sdk::account::Account =
-        ctx.solana_client.get_account(&sequence).await.unwrap();
+pub async fn get_sequence_number(
+    ctx: &Context,
+    sequence: Pubkey,
+) -> Result<SequenceTracker, crate::Error> {
+    let commitment = CommitmentConfig::confirmed();
+
+    let response = ctx
+        .solana_client
+        .get_account_with_commitment(&sequence, commitment)
+        .await
+        .map_err(|e| {
+            tracing::error!("Error: {:?}", e);
+            crate::Error::AccountNotFound(sequence)
+        })?;
+
+    info!("response: {:?}", response);
+    let sequence_account = match response.value {
+        Some(account) => account,
+        None => return Err(crate::Error::AccountNotFound(sequence)),
+    };
+
+    let mut sequence_data: &[u8] = &sequence_account.data;
     let sequence_data: SequenceTracker =
-        SequenceTracker::try_from_slice(&sequence_account.data).unwrap();
-    sequence_data
+        SequenceTracker::deserialize(&mut sequence_data).map_err(|_| {
+            tracing::error!(
+                "Invalid data for sequence: {:?}",
+                crate::Error::InvalidAccountData(sequence)
+            );
+            crate::Error::InvalidAccountData(sequence)
+        })?;
+    info!("sequence_data: {:?}", sequence_data.sequence);
+    Ok(sequence_data)
+}
+
+// https://github.com/wormhole-foundation/connect-sdk/blob/dc90598ecadea0319a83a983ae87667f44a3b5f2/platforms/solana/protocols/core/src/core.ts#L294C17-L294C17
+pub async fn get_sequence_number_from_message(
+    ctx: &Context,
+    message: Pubkey,
+) -> Result<String, crate::Error> {
+    let commitment = CommitmentConfig::confirmed();
+
+    let response = ctx
+        .solana_client
+        .get_account_with_commitment(&message, commitment)
+        .await
+        .map_err(|e| {
+            tracing::error!("Error: {:?}", e);
+            crate::Error::AccountNotFound(message)
+        })?;
+
+    info!("response: {:?}", response);
+    let sequence_account = match response.value {
+        Some(account) => account,
+        None => return Err(crate::Error::AccountNotFound(message)),
+    };
+
+    let sequence_data: &[u8] = &sequence_account.data;
+    let sequence: u64 = LittleEndian::read_u64(&sequence_data[49..57]);
+
+    info!("sequence_data: {:?}", sequence);
+    Ok(sequence.to_string())
 }
