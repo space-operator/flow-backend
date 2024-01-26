@@ -6,6 +6,7 @@ use borsh::BorshSerialize;
 
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
 use solana_sdk::pubkey::Pubkey;
+use tracing::info;
 use wormhole_sdk::nft::Message;
 
 use super::{Address, CompleteWrappedMetaData, NFTBridgeInstructions, PayloadTransfer};
@@ -79,6 +80,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         },
     };
 
+    info!("payload: {:?}", payload);
+
     // Convert token id
     let mut token_id = vec![0u8; 32];
     payload.token_id.to_big_endian(&mut token_id);
@@ -148,6 +151,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         )
             .try_to_vec()?,
     };
+
+    info!("ix: {:?}", ix);
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),

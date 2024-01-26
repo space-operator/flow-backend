@@ -113,7 +113,7 @@ pub mod get_jwt {
         }
 
         fn clone_request(&self, req: &Request) -> Option<Request> {
-            Some(req.clone())
+            Some(*req)
         }
     }
 }

@@ -20,16 +20,12 @@ struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<ValueSet, CommandError> {
-    let contain_auth_header = input
-        .headers
-        .iter()
-        .find(|(k, _)| {
-            HeaderName::from_str(k)
-                .ok()
-                .map(|name| name == AUTHORIZATION)
-                .unwrap_or(false)
-        })
-        .is_none();
+    let contain_auth_header = !input.headers.iter().any(|(k, _)| {
+        HeaderName::from_str(k)
+            .ok()
+            .map(|name| name == AUTHORIZATION)
+            .unwrap_or(false)
+    });
     let is_supabase = input
         .query
         .url

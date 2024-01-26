@@ -1,4 +1,8 @@
-use crate::{prelude::*, wormhole::token_bridge::eth::Response as ServerlessOutput};
+use std::str::FromStr;
+
+use tracing_log::log::info;
+
+use crate::{prelude::*, wormhole::token_bridge::eth::TransferFromEthResponse};
 
 // Command Name
 const NAME: &str = "transfer_from_eth";
@@ -22,14 +26,16 @@ pub struct Input {
     pub token: String,
     pub network_name: String,
     pub recipient: String,
-    pub amount: String,
+    pub amount: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
-    response: ServerlessOutput,
+    response: TransferFromEthResponse,
     emitter: String,
     sequence: String,
+    recipient_ata: Pubkey,
+    mint: Pubkey,
 }
 
 async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -48,31 +54,39 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
         token: input.token,
         keypair: input.keypair,
         recipient: input.recipient,
-        amount: input.amount,
+        amount: input.amount.to_string(),
     };
 
-    let response: ServerlessOutput = ctx
+    let response: TransferFromEthResponse = ctx
         .http
-        .post("https://gygvoikm3c.execute-api.us-east-1.amazonaws.com/transfer_from_eth")
+        .post("https://space-operator.deno.dev/api/transfer_from_eth")
         .json(&payload)
         .send()
         .await?
-        .json::<ServerlessOutput>()
+        .json::<TransferFromEthResponse>()
         .await?;
 
     let emitter = response.output.emitter_address.clone();
     let sequence = response.output.sequence.clone();
 
+    let recipient_ata = Pubkey::from_str(&response.output.recipient_ata).unwrap();
+    let mint = Pubkey::from_str(&response.output.mint).unwrap();
+
+    info!("recipient_ata: {:?}", recipient_ata);
+    info!("mint: {:?}", mint);
     Ok(Output {
         response,
         emitter,
         sequence,
+        recipient_ata,
+        mint,
     })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::wormhole::token_bridge::eth::Response as ServerlessOutput;
 
     #[derive(Serialize, Deserialize, Debug)]
     struct Payload {

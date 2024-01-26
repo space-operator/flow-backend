@@ -5,7 +5,9 @@ use crate::prelude::*;
 use borsh::BorshSerialize;
 
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
+use solana_sdk::commitment_config::CommitmentConfig;
 use solana_sdk::pubkey::Pubkey;
+use tracing_log::log::info;
 use wormhole_sdk::token::Message;
 
 use super::{Address, CompleteWrappedData, PayloadTransfer, TokenBridgeInstructions};
@@ -121,6 +123,34 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let mint_authority =
         Pubkey::find_program_address(&[b"mint_signer"], &token_bridge_program_id).0;
 
+    // Check if the associated token account exists
+    let associated_token =
+        spl_associated_token_account::get_associated_token_address(&input.payer.pubkey(), &mint);
+
+    let associated_token_exists = match ctx
+        .solana_client
+        .get_account_with_commitment(&associated_token, CommitmentConfig::confirmed())
+        .await
+    {
+        Ok(response) => match response.value {
+            Some(_) => Ok(true),
+            None => Ok(false),
+        },
+        Err(_) => Err(crate::Error::AccountNotFound(associated_token)),
+    }?;
+
+    // add associated token account instruction if it doesn't exist
+    let associated_token_ix =
+        spl_associated_token_account::instruction::create_associated_token_account(
+            &input.payer.pubkey(),
+            &input.payer.pubkey(),
+            &mint,
+            &spl_token::id(),
+        );
+
+    info!("associated_token_exists: {:?}", associated_token_exists);
+
+    info!("to: {:?}", to);
     let ix = solana_program::instruction::Instruction {
         program_id: token_bridge_program_id,
         accounts: vec![
@@ -141,9 +171,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             // Dependencies
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
-            // Program
-            AccountMeta::new_readonly(wormhole_core_program_id, false),
             AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(wormhole_core_program_id, false),
+            // Program
         ],
         data: (
             TokenBridgeInstructions::CompleteWrapped,
@@ -152,10 +182,16 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             .try_to_vec()?,
     };
 
+    let instructions = if associated_token_exists {
+        vec![ix]
+    } else {
+        vec![associated_token_ix, ix]
+    };
+
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [input.payer.clone_keypair()].into(),
-        instructions: [ix].into(),
+        instructions: instructions.into(),
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

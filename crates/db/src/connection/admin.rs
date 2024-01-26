@@ -38,7 +38,7 @@ impl AdminConn {
             )
             .await
             .map_err(Error::exec("prepare insert_whitelist"))?;
-        let info = format!("inserted at {}", Utc::now().to_string());
+        let info = format!("inserted at {}", Utc::now());
         self.conn
             .execute(&stmt, &[&pk_bs58, &info])
             .await
