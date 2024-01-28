@@ -73,7 +73,7 @@ struct Subscription {
 #[derive(Clone)]
 pub struct SigReqEvent {
     pub sub_id: u64,
-    pub req_id: i64,
+    pub id: i64,
     pub pubkey: [u8; 32],
     pub message: bytes::Bytes,
 }
@@ -159,7 +159,7 @@ impl UserWorker {
                         Some(addr) => {
                             addr.do_send(SigReqEvent {
                                 sub_id: *sub_id,
-                                req_id: id,
+                                id,
                                 pubkey: req.pubkey.to_bytes(),
                                 message: req.message.clone(),
                             });
@@ -175,7 +175,7 @@ impl UserWorker {
                                 if let Some(addr) = res {
                                     addr.do_send(SigReqEvent {
                                         sub_id: 0,
-                                        req_id: id,
+                                        id,
                                         pubkey: req.pubkey.to_bytes(),
                                         message: req.message.clone(),
                                     });

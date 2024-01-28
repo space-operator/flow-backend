@@ -227,12 +227,12 @@ impl Authenticated {
                 for event in sigreqs {
                     let pubkey = bs58::encode(&event.pubkey).into_string();
                     let message = base64::encode(&event.message);
-                    let req_id = event.req_id;
+                    let id = event.id;
                     text_stream(
                         ctx,
                         sub_id,
                         &json!({
-                            "req_id": req_id,
+                            "id": id,
                             "pubkey": pubkey,
                             "message": message,
                         }),
@@ -427,12 +427,12 @@ impl actix::Handler<SigReqEvent> for WsConn {
     fn handle(&mut self, msg: SigReqEvent, ctx: &mut Self::Context) -> Self::Result {
         let pubkey = bs58::encode(&msg.pubkey).into_string();
         let message = base64::encode(&msg.message);
-        let req_id = msg.req_id;
+        let id = msg.id;
         text_stream(
             ctx,
             msg.sub_id,
             &json!({
-                "req_id": req_id,
+                "id": id,
                 "pubkey": pubkey,
                 "message": message,
             }),

@@ -451,6 +451,7 @@ async fn save_to_db(
                     });
                     log_index += 1;
                 }
+                Event::SignatureRequest(_) => {}
             }
         }
         if !logs.is_empty() && tx.send(CopyIn(logs)).await.is_err() {

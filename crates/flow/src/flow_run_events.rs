@@ -13,6 +13,7 @@ use value::Value;
 
 #[derive(derive_more::From, actix::Message, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
+#[serde(tag = "event", content = "content")]
 pub enum Event {
     FlowStart(FlowStart),
     FlowError(FlowError),
@@ -23,6 +24,7 @@ pub enum Event {
     NodeError(NodeError),
     NodeLog(NodeLog),
     NodeFinish(NodeFinish),
+    SignatureRequest(SignatureRequest),
 }
 
 impl Event {
@@ -37,6 +39,7 @@ impl Event {
             Event::NodeError(e) => e.time,
             Event::NodeLog(e) => e.time,
             Event::NodeFinish(e) => e.time,
+            Event::SignatureRequest(e) => e.time,
         }
     }
 }
@@ -67,6 +70,17 @@ impl From<tracing::Level> for LogLevel {
             tracing::Level::ERROR => LogLevel::Error,
         }
     }
+}
+
+#[derive(Default, Clone, Debug, Serialize)]
+pub struct SignatureRequest {
+    #[serde(skip)]
+    pub time: DateTime<Utc>,
+    pub id: i64,
+    #[serde(with = "utils::serde_bs58")]
+    pub pubkey: [u8; 32],
+    #[serde(with = "utils::serde_base64")]
+    pub message: bytes::Bytes,
 }
 
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]

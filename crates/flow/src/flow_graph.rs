@@ -29,7 +29,7 @@ use petgraph::{
     visit::EdgeRef,
     Direction,
 };
-use solana_sdk::compute_budget::ComputeBudgetInstruction;
+// use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
@@ -1337,7 +1337,7 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
     ) -> std::task::Poll<Result<(), Self::Error>> {
         std::task::Poll::Ready(Ok(()))
     }
-    fn call(&mut self, mut req: execute::Request) -> Self::Future {
+    fn call(&mut self, req: execute::Request) -> Self::Future {
         use tower::ServiceExt;
         if req.instructions.instructions.is_empty() {
             // empty instructions wont be bundled,
