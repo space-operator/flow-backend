@@ -13,7 +13,7 @@ use value::Value;
 
 #[derive(derive_more::From, actix::Message, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
-#[serde(tag = "event", content = "content")]
+#[serde(tag = "event", content = "data")]
 pub enum Event {
     FlowStart(FlowStart),
     FlowError(FlowError),
