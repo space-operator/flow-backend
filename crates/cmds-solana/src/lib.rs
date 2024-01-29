@@ -1,6 +1,6 @@
 pub mod associated_token_account;
 // pub mod clockwork;
-// pub mod compression;
+pub mod compression;
 pub mod create_mint_account;
 pub mod create_token_account;
 pub mod error;

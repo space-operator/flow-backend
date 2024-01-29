@@ -55,8 +55,8 @@
       "tooltip": ""
     },
     {
-      "name": "tree_authority",
-      "type": "string",
+      "name": "tree_config",
+      "type": "pubkey",
       "defaultValue": "",
       "tooltip": ""
     }

@@ -65,7 +65,7 @@
       "passthrough": true
     },
     {
-      "name": "tree_delegate",
+      "name": "creator_or_delegate",
       "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": "",
@@ -73,8 +73,8 @@
       "passthrough": false
     },
     {
-      "name": "tree_authority",
-      "type_bounds": ["keypair"],
+      "name": "tree_config",
+      "type_bounds": ["pubkey"],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
