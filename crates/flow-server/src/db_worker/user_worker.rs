@@ -37,7 +37,6 @@ pub struct UserWorker {
 }
 
 pub struct SubscribeSigReq {
-    pub user_id: UserId,
     pub receiver: actix::WeakRecipient<SigReqEvent>,
 }
 
@@ -49,12 +48,6 @@ impl actix::Handler<SubscribeSigReq> for UserWorker {
     type Result = Result<u64, SubscribeError>;
 
     fn handle(&mut self, msg: SubscribeSigReq, _: &mut Self::Context) -> Self::Result {
-        if msg.user_id != self.user_id {
-            return Err(SubscribeError::Unauthorized {
-                user_id: msg.user_id,
-            });
-        }
-
         let stream_id = self.counter.next();
         self.subs.insert(
             stream_id,
@@ -76,6 +69,7 @@ pub struct SigReqEvent {
     pub id: i64,
     pub pubkey: [u8; 32],
     pub message: bytes::Bytes,
+    pub flow_run_id: Option<FlowRunId>,
 }
 
 impl actix::Message for SigReqEvent {
@@ -162,6 +156,7 @@ impl UserWorker {
                                 id,
                                 pubkey: req.pubkey.to_bytes(),
                                 message: req.message.clone(),
+                                flow_run_id: req.flow_run_id,
                             });
                             true
                         }
@@ -178,6 +173,7 @@ impl UserWorker {
                                         id,
                                         pubkey: req.pubkey.to_bytes(),
                                         message: req.message.clone(),
+                                        flow_run_id: Some(flow_run_id),
                                     });
                                 }
                             }),
