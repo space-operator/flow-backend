@@ -1,13 +1,12 @@
 use crate::{
     api::prelude::auth::TokenType,
-    auth::{ApiAuth, JWTPayload},
+    auth::ApiAuth,
     db_worker::{
         flow_run_worker::{FlowRunWorker, SubscribeEvents},
-        messages::{SubscribeError, SubscriptionID},
+        messages::SubscriptionID,
         user_worker::{SigReqEvent, SubscribeSigReq},
         DBWorker, FindActor, GetUserWorker,
     },
-    middleware::auth::Unauthorized as AuthError,
     Config,
 };
 use actix::{
@@ -25,19 +24,34 @@ use serde_json::json;
 use std::sync::Arc;
 
 #[derive(Deserialize)]
-pub struct Request {
-    pub id: i64,
+struct Request {
+    id: i64,
     #[serde(flatten)]
-    pub data: WsMessage,
+    data: WsMessage,
 }
 
 #[derive(Deserialize)]
 #[serde(tag = "method", content = "params")]
-pub enum WsMessage {
+enum WsMessage {
     Authenticate(Authenticate),
     SubscribeFlowRunEvents(SubscribeFlowRunEvents),
     SubscribeSignatureRequests(SubscribeSignatureRequests),
 }
+
+#[derive(Deserialize)]
+struct Authenticate {
+    token: String,
+}
+
+#[derive(Deserialize)]
+pub struct SubscribeFlowRunEvents {
+    flow_run_id: FlowRunId,
+    #[serde(default)]
+    token: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct SubscribeSignatureRequests {}
 
 #[derive(Serialize, Deserialize)]
 pub struct WsResponse<T> {
@@ -320,24 +334,6 @@ fn text_stream<T: Serialize>(
         Err(error) => tracing::error!("failed to serialize event: {}", error),
     }
 }
-
-#[derive(Serialize, Deserialize, actix::Message)]
-#[rtype(result = "Result<JWTPayload, AuthError>")]
-pub struct Authenticate {
-    token: String,
-}
-
-#[derive(Serialize, Deserialize, actix::Message)]
-#[rtype(result = "Option<Result<SubscriptionID, SubscribeError>>")]
-pub struct SubscribeFlowRunEvents {
-    flow_run_id: FlowRunId,
-    #[serde(default)]
-    token: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, actix::Message)]
-#[rtype(result = "Option<Result<SubscriptionID, SubscribeError>>")]
-pub struct SubscribeSignatureRequests {}
 
 impl actix::Handler<SigReqEvent> for WsConn {
     type Result = ();
