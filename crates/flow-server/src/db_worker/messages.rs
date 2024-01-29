@@ -33,8 +33,9 @@ pub enum SubscribeError {
     MailBox(#[from] actix::MailboxError),
 }
 
+/// Sent after a stream finished
 pub struct Finished {
-    pub sub_id: SubscriptionID,
+    pub stream_id: SubscriptionID,
 }
 
 impl actix::Message for Finished {

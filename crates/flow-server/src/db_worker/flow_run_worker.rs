@@ -67,7 +67,7 @@ impl actix::Handler<SigReqEvent> for FlowRunWorker {
         self.subs.retain(|id, sub| {
             let retain = if let Some(addr) = sub.receiver1.upgrade() {
                 addr.do_send(SigReqEvent {
-                    sub_id: *id,
+                    stream_id: *id,
                     ..msg.clone()
                 });
                 true
@@ -108,7 +108,7 @@ struct Subscription {
 }
 
 pub struct FullEvent {
-    pub sub_id: SubscriptionID,
+    pub stream_id: SubscriptionID,
     pub flow_run_id: FlowRunId,
     pub event: Event,
 }
@@ -144,16 +144,16 @@ impl actix::Handler<SubscribeEvents> for FlowRunWorker {
         msg.receiver
             .upgrade()
             .ok_or(SubscribeError::MailBox(actix::MailboxError::Closed))?;
-        let sub_id = self.counter.next();
+        let stream_id = self.counter.next();
         self.subs.insert(
-            sub_id,
+            stream_id,
             Subscription {
                 finished: msg.finished,
                 receiver: msg.receiver,
                 receiver1: msg.receiver1,
             },
         );
-        Ok((sub_id, self.all_events.clone(), self.all_sigreq.clone()))
+        Ok((stream_id, self.all_events.clone(), self.all_sigreq.clone()))
     }
 }
 
@@ -271,7 +271,7 @@ impl StreamHandler<Event> for FlowRunWorker {
         self.subs.retain(|id, sub| {
             let retain = if let Some(addr) = sub.receiver.upgrade() {
                 addr.do_send(FullEvent {
-                    sub_id: *id,
+                    stream_id: *id,
                     flow_run_id: self.run_id,
                     event: item.clone(),
                 });
@@ -281,7 +281,7 @@ impl StreamHandler<Event> for FlowRunWorker {
             };
             if is_finished {
                 if let Some(addr) = sub.finished.upgrade() {
-                    addr.do_send(Finished { sub_id: *id });
+                    addr.do_send(Finished { stream_id: *id });
                 }
             }
             retain

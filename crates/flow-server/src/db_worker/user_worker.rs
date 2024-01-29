@@ -55,14 +55,14 @@ impl actix::Handler<SubscribeSigReq> for UserWorker {
             });
         }
 
-        let sub_id = self.counter.next();
+        let stream_id = self.counter.next();
         self.subs.insert(
-            sub_id,
+            stream_id,
             Subscription {
                 receiver: msg.receiver,
             },
         );
-        Ok(sub_id)
+        Ok(stream_id)
     }
 }
 
@@ -72,7 +72,7 @@ struct Subscription {
 
 #[derive(Clone)]
 pub struct SigReqEvent {
-    pub sub_id: u64,
+    pub stream_id: u64,
     pub id: i64,
     pub pubkey: [u8; 32],
     pub message: bytes::Bytes,
@@ -155,10 +155,10 @@ impl UserWorker {
                     )
                     .expect("DB's ID is unique");
                 self.subs
-                    .retain(|sub_id, sub| match sub.receiver.upgrade() {
+                    .retain(|stream_id, sub| match sub.receiver.upgrade() {
                         Some(addr) => {
                             addr.do_send(SigReqEvent {
-                                sub_id: *sub_id,
+                                stream_id: *stream_id,
                                 id,
                                 pubkey: req.pubkey.to_bytes(),
                                 message: req.message.clone(),
@@ -174,7 +174,7 @@ impl UserWorker {
                             .map_ok(move |res| {
                                 if let Some(addr) = res {
                                     addr.do_send(SigReqEvent {
-                                        sub_id: 0,
+                                        stream_id: 0,
                                         id,
                                         pubkey: req.pubkey.to_bytes(),
                                         message: req.message.clone(),
