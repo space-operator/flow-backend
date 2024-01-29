@@ -18,7 +18,7 @@ use chrono::Utc;
 use db::pool::DbPool;
 use flow::flow_run_events::{Event, SignatureRequest};
 use flow_lib::{BoxError, FlowRunId};
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashSet;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
@@ -98,7 +98,7 @@ async fn ws_handler(
 /// Actor holding a user's websocket connection
 pub struct WsConn {
     tokens: HashSet<TokenType>,
-    subscribing: HashMap<SubscriptionID, ()>,
+    subscribing: HashSet<SubscriptionID>,
 
     auth_service: Arc<ApiAuth>,
     db_worker: actix::Addr<DBWorker>,
@@ -239,7 +239,7 @@ impl WsConn {
         .map(move |res, act, ctx| match res {
             Ok((stream_id, rx)) => {
                 tracing::info!("subscribed flow-run");
-                act.subscribing.insert(stream_id, ());
+                act.subscribing.insert(stream_id);
                 success_response(ctx, id, json!({ "stream_id": stream_id }));
                 let fut = rx
                     .into_actor(&*act)
@@ -290,7 +290,7 @@ impl WsConn {
         .map(move |res, act, ctx| match res {
             Ok(stream_id) => {
                 tracing::info!("subscribed signature requests");
-                act.subscribing.insert(stream_id, ());
+                act.subscribing.insert(stream_id);
                 success_response(ctx, id, json!({ "stream_id": stream_id }));
             }
             Err(error) => error_response(ctx, id, &error),
