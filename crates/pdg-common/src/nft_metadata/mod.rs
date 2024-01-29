@@ -1875,10 +1875,6 @@ pub enum MarbleVariation {
     #[strum(props(MetaplexName = "Seven"))]
     #[strum(props(weight = "15"))]
     Seven = 7,
-    #[strum(props(MetaplexName = "Eight"))]
-    #[strum(props(weight = "15"))]
-    Eight = 8,
-
 }
 
 impl_try_from_u32!(MarbleVariation);
