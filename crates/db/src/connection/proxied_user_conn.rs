@@ -227,7 +227,12 @@ impl UserConnectionTrait for ProxiedUserConn {
     ) -> crate::Result<i64> {
         self.send(
             "new_signature_request",
-            &(&Value::from(*pubkey), &Value::from(message), flow_run_id),
+            &(
+                &Value::from(*pubkey),
+                &Value::from(message),
+                flow_run_id,
+                signatures,
+            ),
         )
         .await
     }
