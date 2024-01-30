@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
-use flow_lib::NodeId;
+use flow_lib::{context::signer::SignatureRequest, NodeId};
 use serde::Serialize;
 use tracing::{span, Subscriber};
 use tracing_log::NormalizeEvent;
@@ -70,17 +70,6 @@ impl From<tracing::Level> for LogLevel {
             tracing::Level::ERROR => LogLevel::Error,
         }
     }
-}
-
-#[derive(Default, Clone, Debug, Serialize)]
-pub struct SignatureRequest {
-    #[serde(skip)]
-    pub time: DateTime<Utc>,
-    pub id: i64,
-    #[serde(with = "utils::serde_bs58")]
-    pub pubkey: [u8; 32],
-    #[serde(with = "utils::serde_base64")]
-    pub message: bytes::Bytes,
 }
 
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]

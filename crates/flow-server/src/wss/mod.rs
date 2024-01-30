@@ -16,8 +16,8 @@ use actix_web::{dev::HttpServiceFactory, guard, web, HttpRequest};
 use actix_web_actors::ws::{self, CloseCode, WebsocketContext};
 use chrono::Utc;
 use db::pool::DbPool;
-use flow::flow_run_events::{Event, SignatureRequest};
-use flow_lib::{BoxError, FlowRunId};
+use flow::flow_run_events::Event;
+use flow_lib::{context::signer::SignatureRequest, BoxError, FlowRunId};
 use hashbrown::HashSet;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -279,19 +279,35 @@ impl WsConn {
             let stream_id = db_worker
                 .send(GetUserWorker { user_id })
                 .await?
-                .send(SubscribeSigReq {
-                    receiver: addr.recipient().downgrade(),
-                })
+                .send(SubscribeSigReq {})
                 .await??;
 
             Ok::<_, BoxError>(stream_id)
         }
         .into_actor(&*self)
         .map(move |res, act, ctx| match res {
-            Ok(stream_id) => {
+            Ok((stream_id, rx)) => {
                 tracing::info!("subscribed signature requests");
                 act.subscribing.insert(stream_id);
                 success_response(ctx, id, json!({ "stream_id": stream_id }));
+                let fut = rx
+                    .into_actor(&*act)
+                    .map(move |event, _, ctx| {
+                        text_stream(
+                            ctx,
+                            stream_id,
+                            json!({
+                                "event": "SignatureRequest",
+                                "data": event,
+                            }),
+                        )
+                    })
+                    .finish()
+                    .map(move |_, act, _| {
+                        // TODO: send a message indicating stream ended?
+                        act.subscribing.remove(&stream_id);
+                    });
+                ctx.spawn(fut);
             }
             Err(error) => error_response(ctx, id, &error),
         });
@@ -332,28 +348,5 @@ fn text_stream<T: Serialize>(
     match result {
         Ok(text) => ctx.text(text),
         Err(error) => tracing::error!("failed to serialize event: {}", error),
-    }
-}
-
-impl actix::Handler<SigReqEvent> for WsConn {
-    type Result = ();
-    fn handle(&mut self, msg: SigReqEvent, ctx: &mut Self::Context) -> Self::Result {
-        let data = SignatureRequest {
-            time: Utc::now(),
-            id: msg.id,
-            pubkey: msg.pubkey,
-            message: msg.message,
-        };
-        text_stream(
-            ctx,
-            msg.stream_id,
-            WsEvent {
-                stream_id: msg.stream_id,
-                event: json!({
-                    "event": "SignatureRequest",
-                    "data": data,
-                }),
-            },
-        );
     }
 }

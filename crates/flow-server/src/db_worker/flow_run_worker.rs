@@ -15,7 +15,7 @@ use flow::{
     flow_graph::StopSignal,
     flow_run_events::{
         self, Event, FlowError, FlowFinish, FlowLog, FlowStart, NodeError, NodeFinish, NodeLog,
-        NodeOutput, NodeStart, SignatureRequest,
+        NodeOutput, NodeStart,
     },
 };
 use flow_lib::{FlowRunId, UserId};
@@ -64,16 +64,7 @@ impl ManagableActor for FlowRunWorker {
 impl actix::Handler<SigReqEvent> for FlowRunWorker {
     type Result = ();
     fn handle(&mut self, msg: SigReqEvent, ctx: &mut Self::Context) -> Self::Result {
-        StreamHandler::handle(
-            self,
-            Event::SignatureRequest(SignatureRequest {
-                time: Utc::now(),
-                id: msg.id,
-                pubkey: msg.pubkey,
-                message: msg.message,
-            }),
-            ctx,
-        )
+        StreamHandler::handle(self, Event::SignatureRequest(msg.0), ctx)
     }
 }
 

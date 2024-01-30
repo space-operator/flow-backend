@@ -11,7 +11,7 @@ use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
     context::{execute, get_jwt, CommandContext, Context},
-    solana::{find_failed_instruction, Instructions},
+    solana::{find_failed_instruction, Instructions, KeypairExt},
     utils::{Extensions, TowerClient},
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
 };
@@ -29,7 +29,7 @@ use petgraph::{
     visit::EdgeRef,
     Direction,
 };
-// use solana_sdk::compute_budget::ComputeBudgetInstruction;
+use solana_sdk::signature::Keypair;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
@@ -110,6 +110,7 @@ pub struct FlowGraph {
     pub mode: client::BundlingMode,
     pub output_instructions: bool,
     pub rhai_permit: Arc<Semaphore>,
+    pub overwrite_feepayer: Option<Keypair>,
 }
 
 pub struct UsePreviousValue {
@@ -472,6 +473,9 @@ impl FlowGraph {
             mode: c.instructions_bundling,
             output_instructions: false,
             rhai_permit,
+            overwrite_feepayer: Some(Keypair::new_user_wallet(solana_sdk::pubkey!(
+                "HuktZqYAXSeMz5hMtdEnvsJAXtapg24zXU2tkDnGgaSZ"
+            ))),
         })
     }
 
@@ -846,12 +850,7 @@ impl FlowGraph {
             debug_assert!(!tx.is_empty());
             let is_complete = tx.values().all(Option::is_some);
             if is_complete {
-                let mut tx = tx
-                    .into_values()
-                    .map(Option::unwrap) // all(is_some) == true
-                    .rev()
-                    .collect::<Vec<_>>();
-
+                let mut tx = tx.into_values().rev().collect::<Option<Vec<_>>>().unwrap();
                 while let Some(w) = tx.pop() {
                     use std::ops::Range;
                     struct Responder {
@@ -861,6 +860,9 @@ impl FlowGraph {
 
                     let (ins, resp) = {
                         let mut ins = w.instructions;
+                        if let Some(signer) = self.overwrite_feepayer.as_ref() {
+                            ins.set_feepayer(signer.clone_keypair());
+                        }
                         // ins.instructions
                         //     .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
                         let mut resp = vec![Responder {
@@ -942,10 +944,8 @@ impl FlowGraph {
                 }
             } else {
                 // Some nodes didn't output their instructions
-                for (_, v) in tx {
-                    if let Some(v) = v {
-                        v.resp.send(Err(execute::Error::TxIncomplete)).ok();
-                    }
+                for v in tx.into_values().flatten() {
+                    v.resp.send(Err(execute::Error::TxIncomplete)).ok();
                 }
             }
         }

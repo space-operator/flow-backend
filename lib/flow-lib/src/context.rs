@@ -15,6 +15,7 @@ use crate::{
     ContextConfig, FlowRunId, NodeId, UserId,
 };
 use bytes::Bytes;
+use chrono::Utc;
 use solana_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use solana_sdk::{pubkey::Pubkey, signature::Signature};
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
@@ -121,6 +122,9 @@ pub mod get_jwt {
 /// Request Solana signature from external wallets.
 pub mod signer {
     use crate::{utils::TowerClient, BoxError, FlowRunId};
+    use chrono::{DateTime, Utc};
+    use serde::{Deserialize, Serialize};
+    use serde_with::{base64::Base64, serde_as, DisplayFromStr, DurationSecondsWithFrac};
     use solana_sdk::{pubkey::Pubkey, signature::Signature};
     use std::time::Duration;
     use thiserror::Error as ThisError;
@@ -143,12 +147,29 @@ pub mod signer {
 
     pub type Svc = TowerClient<SignatureRequest, SignatureResponse, Error>;
 
-    #[derive(Debug, Clone)]
-    pub struct SignatureRequest {
+    #[serde_as]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct Presigner {
+        #[serde_as(as = "DisplayFromStr")]
         pub pubkey: Pubkey,
+        #[serde_as(as = "DisplayFromStr")]
+        pub signature: Signature,
+    }
+
+    #[serde_as]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct SignatureRequest {
+        pub id: Option<i64>,
+        #[serde(with = "chrono::serde::ts_milliseconds")]
+        pub time: DateTime<Utc>,
+        #[serde_as(as = "DisplayFromStr")]
+        pub pubkey: Pubkey,
+        #[serde_as(as = "Base64")]
         pub message: bytes::Bytes,
+        #[serde_as(as = "DurationSecondsWithFrac<f64>")]
         pub timeout: Duration,
         pub flow_run_id: Option<FlowRunId>,
+        pub signatures: Option<Vec<Presigner>>,
     }
 
     impl actix::Message for SignatureRequest {
@@ -413,10 +434,13 @@ impl Context {
             .ready()
             .await?
             .call(signer::SignatureRequest {
+                id: None,
+                time: Utc::now(),
                 pubkey,
                 message,
                 timeout,
                 flow_run_id: self.command.as_ref().map(|ctx| ctx.flow_run_id),
+                signatures: None,
             })
             .await?;
         Ok(signature)

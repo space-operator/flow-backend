@@ -223,6 +223,7 @@ impl UserConnectionTrait for ProxiedUserConn {
         pubkey: &[u8; 32],
         message: &[u8],
         flow_run_id: Option<&FlowRunId>,
+        signatures: Option<&[Presigner]>,
     ) -> crate::Result<i64> {
         self.send(
             "new_signature_request",
@@ -330,12 +331,21 @@ impl UserConnection {
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             "new_signature_request" => {
-                let (pubkey, message, flow_run_id): (Value, Value, Option<FlowRunId>) =
-                    serde_json::from_str(req.params.get())?;
+                let (pubkey, message, flow_run_id, signatures): (
+                    Value,
+                    Value,
+                    Option<FlowRunId>,
+                    Option<Vec<Presigner>>,
+                ) = serde_json::from_str(req.params.get())?;
                 let pubkey = value::from_value::<ConstBytes<32>>(pubkey)?.0;
                 let message = value::from_value::<serde_bytes::ByteBuf>(message)?.into_vec();
                 let res = self
-                    .new_signature_request(&pubkey, &message, flow_run_id.as_ref())
+                    .new_signature_request(
+                        &pubkey,
+                        &message,
+                        flow_run_id.as_ref(),
+                        signatures.as_deref(),
+                    )
                     .await?;
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
