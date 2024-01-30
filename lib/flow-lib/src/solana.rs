@@ -1,6 +1,7 @@
 use crate::{context::execute::Error, context::signer, FlowRunId};
 use anyhow::{anyhow, bail};
 use bytes::Bytes;
+use chrono::Utc;
 use futures::TryStreamExt;
 use solana_client::{
     client_error::{ClientError, ClientErrorKind},
@@ -19,7 +20,7 @@ use solana_sdk::{
     signer::{keypair::Keypair, Signer},
     transaction::Transaction,
 };
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 use tower::ServiceExt;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(5 * 60);
@@ -69,11 +70,18 @@ pub fn verbose_solana_error(err: &ClientError) -> String {
 }
 
 pub trait KeypairExt {
+    fn new_user_wallet(pk: Pubkey) -> Self;
     fn clone_keypair(&self) -> Self;
     fn is_user_wallet(&self) -> bool;
 }
 
 impl KeypairExt for Keypair {
+    fn new_user_wallet(pubkey: Pubkey) -> Self {
+        let mut buf = [0u8; 64];
+        buf[32..].copy_from_slice(&pubkey.to_bytes());
+        Keypair::from_bytes(&buf).expect("correct size, never fail")
+    }
+
     fn clone_keypair(&self) -> Self {
         Self::from_bytes(&self.to_bytes()).unwrap()
     }
@@ -91,13 +99,31 @@ pub struct Instructions {
 }
 
 impl Instructions {
+    fn push_signer(&mut self, new: Keypair) {
+        let old = self.signers.iter_mut().find(|k| k.pubkey() == new.pubkey());
+        if let Some(old) = old {
+            if old.is_user_wallet() {
+                // prefer hardcoded
+                *old = new;
+            }
+        } else {
+            self.signers.push(new);
+        }
+    }
+
+    pub fn set_feepayer(&mut self, signer: Keypair) {
+        self.fee_payer = signer.pubkey();
+        self.push_signer(signer);
+    }
+
     pub fn combine(&mut self, next: Self) -> Result<(), Self> {
         if next.fee_payer != self.fee_payer {
             return Err(next);
         }
 
-        // TODO: sort and dedup?
-        self.signers.extend(next.signers);
+        for new in next.signers {
+            self.push_signer(new);
+        }
 
         self.instructions.extend(next.instructions);
 
@@ -122,11 +148,38 @@ impl Instructions {
 
         let msg: Bytes = tx.message_data().into();
 
+        let fee_payer_signature = {
+            let keypair = self
+                .signers
+                .iter()
+                .find(|w| w.pubkey() == self.fee_payer)
+                .ok_or_else(|| Error::Other(Arc::new("fee payer is not in signers".into())))?;
+
+            if keypair.is_user_wallet() {
+                let fut = signer.call_ref(signer::SignatureRequest {
+                    id: None,
+                    time: Utc::now(),
+                    pubkey: keypair.pubkey(),
+                    message: msg.clone(),
+                    timeout: SIGNATURE_TIMEOUT,
+                    flow_run_id,
+                    signatures: None,
+                });
+                tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
+                    .await
+                    .map_err(|_| Error::Timeout)?
+                    .map_err(|error| Error::Other(Arc::new(error.into())))?
+                    .signature
+            } else {
+                keypair.sign_message(&msg)
+            }
+        };
+
         let mut wallets = self
             .signers
             .iter()
             .filter_map(|k| {
-                if k.is_user_wallet() {
+                if k.is_user_wallet() && k.pubkey() != self.fee_payer {
                     Some(k.pubkey())
                 } else {
                     None
@@ -139,10 +192,19 @@ impl Instructions {
         let reqs = wallets
             .iter()
             .map(|&pubkey| signer::SignatureRequest {
+                id: None,
+                time: Utc::now(),
                 pubkey,
                 message: msg.clone(),
                 timeout: SIGNATURE_TIMEOUT,
                 flow_run_id,
+                signatures: Some(
+                    [signer::Presigner {
+                        pubkey: self.fee_payer,
+                        signature: fee_payer_signature,
+                    }]
+                    .into(),
+                ),
             })
             .collect::<Vec<_>>();
 
@@ -155,11 +217,12 @@ impl Instructions {
             .map_err(|_| Error::Timeout)??;
 
         {
-            let presigners = wallets
+            let mut presigners = wallets
                 .iter()
                 .zip(sigs.iter())
                 .map(|(pk, sig)| Presigner::new(pk, &sig.signature))
                 .collect::<Vec<_>>();
+            presigners.push(Presigner::new(&self.fee_payer, &fee_payer_signature));
 
             let mut signers = Vec::<&dyn Signer>::with_capacity(self.signers.len());
 
@@ -168,7 +231,7 @@ impl Instructions {
             }
 
             for k in &self.signers {
-                if !k.is_user_wallet() {
+                if !k.is_user_wallet() && k.pubkey() != self.fee_payer {
                     signers.push(k);
                 }
             }

@@ -1,4 +1,5 @@
 use flow_lib::config::client::NodeDataSkipWasm;
+use serde_json::json;
 use utils::bs58_decode;
 
 use super::*;
@@ -807,9 +808,20 @@ impl UserConnection {
         pubkey: &[u8; 32],
         message: &[u8],
         flow_run_id: Option<&FlowRunId>,
+        signatures: Option<&[Presigner]>,
     ) -> crate::Result<i64> {
         let pubkey = bs58::encode(pubkey).into_string();
         let message = base64::encode(message);
+        let signatures = signatures.map(|arr| {
+            arr.iter()
+                .map(|p| {
+                    Json(json!({
+                        "pubkey": p.pubkey.to_string(),
+                        "signature": p.signature.to_string(),
+                    }))
+                })
+                .collect::<Vec<_>>()
+        });
         let stmt = self
             .conn
             .prepare_cached(
@@ -817,14 +829,18 @@ impl UserConnection {
                     user_id,
                     msg,
                     pubkey,
-                    flow_run_id
-                ) VALUES ($1, $2, $3, $4) RETURNING id",
+                    flow_run_id,
+                    signatures
+                ) VALUES ($1, $2, $3, $4, $5) RETURNING id",
             )
             .await
             .map_err(Error::exec("prepare"))?;
         let id = self
             .conn
-            .query_one(&stmt, &[&self.user_id, &message, &pubkey, &flow_run_id])
+            .query_one(
+                &stmt,
+                &[&self.user_id, &message, &pubkey, &flow_run_id, &signatures],
+            )
             .await
             .map_err(Error::exec("new_signature_request"))?
             .try_get(0)

@@ -21,10 +21,10 @@ enum WalletError {
 }
 
 fn adapter_wallet(pubkey: Pubkey) -> Output {
-    let mut buf = [0u8; 64];
-    buf[32..].copy_from_slice(&pubkey.to_bytes());
-    let keypair = Keypair::from_bytes(&buf).expect("correct size, never fail");
-    Output { pubkey, keypair }
+    Output {
+        pubkey,
+        keypair: Keypair::new_user_wallet(pubkey),
+    }
 }
 
 impl FormData {

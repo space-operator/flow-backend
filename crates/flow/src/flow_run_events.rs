@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
-use flow_lib::NodeId;
+use flow_lib::{context::signer::SignatureRequest, NodeId};
 use serde::Serialize;
 use tracing::{span, Subscriber};
 use tracing_log::NormalizeEvent;
@@ -13,6 +13,7 @@ use value::Value;
 
 #[derive(derive_more::From, actix::Message, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
+#[serde(tag = "event", content = "data")]
 pub enum Event {
     FlowStart(FlowStart),
     FlowError(FlowError),
@@ -23,6 +24,7 @@ pub enum Event {
     NodeError(NodeError),
     NodeLog(NodeLog),
     NodeFinish(NodeFinish),
+    SignatureRequest(SignatureRequest),
 }
 
 impl Event {
@@ -37,6 +39,7 @@ impl Event {
             Event::NodeError(e) => e.time,
             Event::NodeLog(e) => e.time,
             Event::NodeFinish(e) => e.time,
+            Event::SignatureRequest(e) => e.time,
         }
     }
 }

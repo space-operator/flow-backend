@@ -8262,7 +8262,9 @@ name = "utils"
 version = "0.0.0"
 dependencies = [
  "actix",
+ "base64 0.21.5",
  "bs58 0.4.0",
+ "bytes",
  "futures-util",
  "hashbrown 0.13.2",
  "serde",
