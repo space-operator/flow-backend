@@ -2837,6 +2837,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bytes",
+ "chrono",
  "flow-value",
  "futures",
  "inventory",
@@ -2845,7 +2846,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "serde_with 2.3.3",
+ "serde_with 3.4.0",
  "solana-client",
  "solana-sdk",
  "thiserror",
@@ -5730,14 +5731,8 @@ version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07ff71d2c147a7b57362cead5e22f772cd52f6ab31cfcd9edcd7f6aeb2a0afbe"
 dependencies = [
- "base64 0.13.1",
- "chrono",
- "hex",
- "indexmap 1.9.3",
  "serde",
- "serde_json",
  "serde_with_macros 2.3.3",
- "time 0.3.30",
 ]
 
 [[package]]
