@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use mpl_bubblegum::instructions::{MintToCollectionV1Builder, MintV1Builder};
+use mpl_bubblegum::instructions::MintToCollectionV1Builder;
 use solana_sdk::pubkey::Pubkey;
 
 use super::MetadataBubblegum;

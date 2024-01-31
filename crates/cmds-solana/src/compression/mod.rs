@@ -1,11 +1,14 @@
-pub mod create_tree;
-pub mod mint_v1;
-pub mod mint_to_collection_v1;
 use std::str::FromStr;
 
 use mpl_bubblegum::types::MetadataArgs;
 use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
+
+pub mod create_tree;
+pub mod mint_to_collection_v1;
+pub mod mint_v1;
+pub mod transfer;
+pub mod types;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenProgramVersion {
@@ -150,4 +153,11 @@ impl From<MetadataBubblegum> for MetadataArgs {
             creators: v.creators.into_iter().map(Into::into).collect(),
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct GetAssetResponse<T> {
+    pub id: String,
+    pub result: T,
+    pub jsonrpc: String,
 }
