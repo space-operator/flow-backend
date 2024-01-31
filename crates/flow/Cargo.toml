@@ -23,6 +23,7 @@ tokio = "1"
 uuid = { version = "1", features = ["v4", "serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
+serde_with = { version = "3", features = ["base64"] }
 hashbrown = { version = "0.13", features = ["serde"] }
 tower = "0.4"
 tokio-util = "0.7"

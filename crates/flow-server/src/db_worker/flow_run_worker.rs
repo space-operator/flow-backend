@@ -3,24 +3,25 @@ use super::{
     user_worker::SigReqEvent,
     CopyIn, Counter, DBWorker, SystemShutdown,
 };
-use crate::error::ErrorBody;
+use crate::{error::ErrorBody, middleware::auth::TokenType};
 use actix::{
     fut::wrap_future, Actor, ActorContext, ActorFutureExt, AsyncContext, ResponseActFuture,
     StreamHandler, WrapFuture,
 };
 use actix_web::http::StatusCode;
+use chrono::Utc;
 use db::{pool::DbPool, FlowRunLogsRow};
 use flow::{
     flow_graph::StopSignal,
     flow_run_events::{
         self, Event, FlowError, FlowFinish, FlowLog, FlowStart, NodeError, NodeFinish, NodeLog,
-        NodeOutput, NodeStart,
+        NodeOutput, NodeStart, SignatureRequest,
     },
 };
 use flow_lib::{FlowRunId, UserId};
 use futures_channel::mpsc;
 use futures_util::{stream::BoxStream, StreamExt};
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast;
 use utils::address_book::ManagableActor;
@@ -36,7 +37,6 @@ pub struct FlowRunWorker {
     tx: mpsc::UnboundedSender<Event>,
     subs: HashMap<SubscriptionID, Subscription>,
     all_events: Vec<Event>,
-    all_sigreq: Vec<SigReqEvent>,
     done_tx: broadcast::Sender<()>,
 }
 
@@ -63,20 +63,17 @@ impl ManagableActor for FlowRunWorker {
 
 impl actix::Handler<SigReqEvent> for FlowRunWorker {
     type Result = ();
-    fn handle(&mut self, msg: SigReqEvent, _: &mut Self::Context) -> Self::Result {
-        self.subs.retain(|id, sub| {
-            let retain = if let Some(addr) = sub.receiver1.upgrade() {
-                addr.do_send(SigReqEvent {
-                    sub_id: *id,
-                    ..msg.clone()
-                });
-                true
-            } else {
-                false
-            };
-            retain
-        });
-        self.all_sigreq.push(msg);
+    fn handle(&mut self, msg: SigReqEvent, ctx: &mut Self::Context) -> Self::Result {
+        StreamHandler::handle(
+            self,
+            Event::SignatureRequest(SignatureRequest {
+                time: Utc::now(),
+                req_id: msg.req_id,
+                pubkey: msg.pubkey,
+                message: msg.message,
+            }),
+            ctx,
+        );
     }
 }
 
@@ -104,7 +101,6 @@ impl actix::Handler<SystemShutdown> for FlowRunWorker {
 struct Subscription {
     finished: actix::WeakRecipient<Finished>,
     receiver: actix::WeakRecipient<FullEvent>,
-    receiver1: actix::WeakRecipient<SigReqEvent>,
 }
 
 pub struct FullEvent {
@@ -118,28 +114,25 @@ impl actix::Message for FullEvent {
 }
 
 pub struct SubscribeEvents {
-    pub user_id: UserId,
-    pub flow_run_id: FlowRunId,
+    pub tokens: HashSet<TokenType>,
     pub finished: actix::WeakRecipient<Finished>,
     pub receiver: actix::WeakRecipient<FullEvent>,
-    pub receiver1: actix::WeakRecipient<SigReqEvent>,
 }
 
 impl actix::Message for SubscribeEvents {
-    type Result = Result<(SubscriptionID, Vec<Event>, Vec<SigReqEvent>), SubscribeError>;
+    type Result = Result<(SubscriptionID, Vec<Event>), SubscribeError>;
 }
 
 impl actix::Handler<SubscribeEvents> for FlowRunWorker {
-    type Result = Result<(SubscriptionID, Vec<Event>, Vec<SigReqEvent>), SubscribeError>;
+    type Result = Result<(SubscriptionID, Vec<Event>), SubscribeError>;
 
     fn handle(&mut self, msg: SubscribeEvents, _: &mut Self::Context) -> Self::Result {
-        if !msg.user_id.is_nil()
-            && msg.user_id != self.user_id
-            && !self.shared_with.contains(&msg.user_id)
+        if !msg
+            .tokens
+            .iter()
+            .any(|t| t.user_id() == Some(self.user_id) || t.flow_run_id() == Some(self.run_id))
         {
-            return Err(SubscribeError::Unauthorized {
-                user_id: msg.user_id,
-            });
+            return Err(SubscribeError::Unauthorized);
         }
         msg.receiver
             .upgrade()
@@ -150,10 +143,9 @@ impl actix::Handler<SubscribeEvents> for FlowRunWorker {
             Subscription {
                 finished: msg.finished,
                 receiver: msg.receiver,
-                receiver1: msg.receiver1,
             },
         );
-        Ok((sub_id, self.all_events.clone(), self.all_sigreq.clone()))
+        Ok((sub_id, self.all_events.clone()))
     }
 }
 
@@ -246,7 +238,6 @@ impl FlowRunWorker {
             done_tx: broadcast::channel::<()>(1).0,
             subs: HashMap::new(),
             all_events: Vec::new(),
-            all_sigreq: Vec::new(),
         }
     }
 
@@ -451,6 +442,7 @@ async fn save_to_db(
                     });
                     log_index += 1;
                 }
+                Event::SignatureRequest(_) => {}
             }
         }
         if !logs.is_empty() && tx.send(CopyIn(logs)).await.is_err() {

@@ -2816,6 +2816,7 @@ dependencies = [
  "rust_decimal",
  "serde",
  "serde_json",
+ "serde_with 3.4.0",
  "solana-sdk",
  "space-wasm",
  "thiserror",
@@ -2827,6 +2828,14 @@ dependencies = [
  "tracing-subscriber",
  "utils",
  "uuid 1.6.1",
+]
+
+[[package]]
+name = "flow-api"
+version = "0.1.0"
+dependencies = [
+ "flow-lib",
+ "serde",
 ]
 
 [[package]]
@@ -8108,6 +8117,7 @@ dependencies = [
  "futures-util",
  "hashbrown 0.13.2",
  "serde",
+ "serde_json",
  "thiserror",
  "tower",
 ]

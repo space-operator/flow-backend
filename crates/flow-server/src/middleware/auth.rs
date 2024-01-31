@@ -28,7 +28,7 @@ use std::{convert::Infallible, future::Ready, panic::Location, rc::Rc, str::From
 use thiserror::Error as ThisError;
 use utils::bs58_decode;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub enum TokenType {
     JWT(JWTPayload),
     ApiKey(JWTPayload),
@@ -51,7 +51,7 @@ impl TokenType {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub struct FlowRunToken {
     pub id: FlowRunId,
 }
@@ -98,7 +98,7 @@ pub struct Token {
     pub jwt: Option<String>,
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub struct JWTPayload {
     pub user_id: UserId,
     #[serde(with = "utils::serde_bs58")]

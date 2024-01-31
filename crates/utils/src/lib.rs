@@ -3,6 +3,7 @@ use thiserror::Error as ThisError;
 pub mod actix_service;
 pub mod address_book;
 pub mod serde_bs58;
+pub mod rpc;
 
 pub struct B58<const N: usize>(pub [u8; N]);
 

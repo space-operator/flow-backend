@@ -2,6 +2,7 @@ use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use flow_lib::NodeId;
 use serde::Serialize;
+use serde_with::{base64::Base64, serde_as};
 use tracing::{span, Subscriber};
 use tracing_log::NormalizeEvent;
 use tracing_subscriber::{
@@ -13,6 +14,7 @@ use value::Value;
 
 #[derive(derive_more::From, actix::Message, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
+#[serde(tag = "type", content = "content")]
 pub enum Event {
     FlowStart(FlowStart),
     FlowError(FlowError),
@@ -23,6 +25,7 @@ pub enum Event {
     NodeError(NodeError),
     NodeLog(NodeLog),
     NodeFinish(NodeFinish),
+    SignatureRequest(SignatureRequest),
 }
 
 impl Event {
@@ -37,6 +40,7 @@ impl Event {
             Event::NodeError(e) => e.time,
             Event::NodeLog(e) => e.time,
             Event::NodeFinish(e) => e.time,
+            Event::SignatureRequest(e) => e.time,
         }
     }
 }
@@ -67,6 +71,19 @@ impl From<tracing::Level> for LogLevel {
             tracing::Level::ERROR => LogLevel::Error,
         }
     }
+}
+
+#[serde_as]
+#[derive(actix::Message, Default, Clone, Debug, Serialize)]
+#[rtype(result = "()")]
+pub struct SignatureRequest {
+    #[serde(skip)]
+    pub time: DateTime<Utc>,
+    pub req_id: i64,
+    #[serde(with = "utils::serde_bs58")]
+    pub pubkey: [u8; 32],
+    #[serde_as(as = "Base64")]
+    pub message: bytes::Bytes,
 }
 
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]
