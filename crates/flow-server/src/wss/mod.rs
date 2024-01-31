@@ -4,7 +4,7 @@ use crate::{
     db_worker::{
         flow_run_worker::{FlowRunWorker, SubscribeEvents},
         messages::SubscriptionID,
-        user_worker::{SigReqEvent, SubscribeSigReq},
+        user_worker::SubscribeSigReq,
         DBWorker, FindActor, GetUserWorker,
     },
     Config,
@@ -14,10 +14,10 @@ use actix::{
 };
 use actix_web::{dev::HttpServiceFactory, guard, web, HttpRequest};
 use actix_web_actors::ws::{self, CloseCode, WebsocketContext};
-use chrono::Utc;
+
 use db::pool::DbPool;
 use flow::flow_run_events::Event;
-use flow_lib::{context::signer::SignatureRequest, BoxError, FlowRunId};
+use flow_lib::{BoxError, FlowRunId};
 use hashbrown::HashSet;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -274,7 +274,6 @@ impl WsConn {
         };
 
         let db_worker = self.db_worker.clone();
-        let addr = ctx.address();
         let fut = async move {
             let stream_id = db_worker
                 .send(GetUserWorker { user_id })
