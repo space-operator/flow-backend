@@ -115,7 +115,7 @@
       "type_bounds": ["bool"],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If public, anyone will be able to mint Compressed NFTs from it. Otherwise, only the Tree Creator or the Tree Delegate can.",
       "passthrough": false
     },
     {

@@ -219,7 +219,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .get_minimum_balance_for_rent_exemption(merkle_tree_account_size)
         .await?;
 
-    let create_account_tree_size = system_instruction::create_account(
+    let create_merkle_account_ix = system_instruction::create_account(
         &input.payer.pubkey(),
         &input.merkle_tree.pubkey(),
         rent,
@@ -251,7 +251,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             input.merkle_tree.clone_keypair(),
         ]
         .into(),
-        instructions: [create_account_tree_size, create_tree_config_ix].into(),
+        instructions: [create_merkle_account_ix, create_tree_config_ix].into(),
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

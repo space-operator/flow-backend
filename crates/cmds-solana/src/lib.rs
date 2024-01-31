@@ -19,6 +19,7 @@ pub mod wallet;
 pub mod wormhole;
 // pub mod xnft;
 pub mod streamflow;
+pub mod das;
 
 pub use error::{Error, Result};
 
