@@ -1,5 +1,6 @@
 pub mod create_tree;
 pub mod mint_v1;
+pub mod mint_to_collection_v1;
 use std::str::FromStr;
 
 use mpl_bubblegum::types::MetadataArgs;

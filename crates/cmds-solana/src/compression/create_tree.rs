@@ -7,20 +7,20 @@ use spl_account_compression::{
 use std::mem::size_of;
 
 // Command Name
-const CREATE_TREE: &str = "create_tree";
+const NAME: &str = "create_tree";
 
 const DEFINITION: &str = flow_lib::node_definition!("compression/create_tree.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
-            .check_name(CREATE_TREE)?
+            .check_name(NAME)?
             .simple_instruction_info("signature")
     });
     Ok(CACHE.clone()?.build(run))
 }
 
-flow_lib::submit!(CommandDescription::new(CREATE_TREE, |_| { build() }));
+flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {

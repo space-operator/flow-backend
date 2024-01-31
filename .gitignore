@@ -1,5 +1,5 @@
 /target
 .vscode
 /_data
-guest.toml
-crates/flow-server/guest_local_storage/*
+/crates/flow-server/_data/guest_local_storage/*
+/crates/flow-server/guest_local_storage/*

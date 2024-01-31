@@ -75,7 +75,7 @@
     {
       "name": "tree_config",
       "type_bounds": ["pubkey"],
-      "required": false,
+      "required": true,
       "defaultValue": "",
       "tooltip": "",
       "passthrough": false
@@ -83,7 +83,7 @@
     {
       "name": "merkle_tree",
       "type_bounds": ["pubkey"],
-      "required": false,
+      "required": true,
       "defaultValue": "",
       "tooltip": "",
       "passthrough": false
@@ -91,7 +91,7 @@
     {
       "name": "leaf_owner",
       "type_bounds": ["pubkey"],
-      "required": false,
+      "required": true,
       "defaultValue": "",
       "tooltip": "",
       "passthrough": false
@@ -107,7 +107,7 @@
     {
       "name": "metadata",
       "type_bounds": ["json"],
-      "required": false,
+      "required": true,
       "defaultValue": "",
       "tooltip": "",
       "passthrough": false
