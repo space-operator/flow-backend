@@ -207,11 +207,7 @@ impl Config {
 
     /// Build a CORS middleware.
     pub fn cors(&self) -> actix_cors::Cors {
-        let cors = actix_cors::Cors::default()
-            .allow_any_header()
-            .allow_any_method()
-            .allow_any_origin()
-            .supports_credentials();
+        
         /*
         for origin in &self.cors_origins {
             if origin.contains('*') {
@@ -222,7 +218,11 @@ impl Config {
             }
         }
         */
-        cors
+        actix_cors::Cors::default()
+            .allow_any_header()
+            .allow_any_method()
+            .allow_any_origin()
+            .supports_credentials()
     }
 
     pub fn signature_auth(&self) -> SignatureAuth {

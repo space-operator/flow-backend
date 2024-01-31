@@ -70,13 +70,13 @@ pub fn verbose_solana_error(err: &ClientError) -> String {
 }
 
 pub trait KeypairExt {
-    fn new_user_wallet(pk: Pubkey) -> Self;
+    fn new_adapter_wallet(pk: Pubkey) -> Self;
     fn clone_keypair(&self) -> Self;
     fn is_user_wallet(&self) -> bool;
 }
 
 impl KeypairExt for Keypair {
-    fn new_user_wallet(pubkey: Pubkey) -> Self {
+    fn new_adapter_wallet(pubkey: Pubkey) -> Self {
         let mut buf = [0u8; 64];
         buf[32..].copy_from_slice(&pubkey.to_bytes());
         Keypair::from_bytes(&buf).expect("correct size, never fail")

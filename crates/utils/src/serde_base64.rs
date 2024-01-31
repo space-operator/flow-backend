@@ -4,7 +4,7 @@ pub fn serialize<S>(t: &bytes::Bytes, s: S) -> Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
 {
-    s.serialize_str(&BASE64_STANDARD.encode(&t))
+    s.serialize_str(&BASE64_STANDARD.encode(t))
 }
 
 struct Visitor;

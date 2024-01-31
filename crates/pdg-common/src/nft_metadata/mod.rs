@@ -870,7 +870,7 @@ impl RenderParams {
 
         push_int_attr(&mut m, "Glowing_logo", *glowing_logo as u32);
         push_float_attr(&mut m, "Logo_hue", *logo_hue);
-        push_string_attr(&mut m, "Logo_name", &logo_name);
+        push_string_attr(&mut m, "Logo_name", logo_name);
 
         push_float_attr(&mut m, "Butterfly_amount", *butterfly_amount);
         push_float_attr(&mut m, "Desintegration_amount", *disintegration_amount);

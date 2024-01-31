@@ -473,7 +473,7 @@ impl FlowGraph {
             mode: c.instructions_bundling,
             output_instructions: false,
             rhai_permit,
-            overwrite_feepayer: Some(Keypair::new_user_wallet(solana_sdk::pubkey!(
+            overwrite_feepayer: Some(Keypair::new_adapter_wallet(solana_sdk::pubkey!(
                 "HuktZqYAXSeMz5hMtdEnvsJAXtapg24zXU2tkDnGgaSZ"
             ))),
         })
