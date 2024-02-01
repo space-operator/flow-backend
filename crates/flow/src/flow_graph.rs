@@ -29,7 +29,7 @@ use petgraph::{
     visit::EdgeRef,
     Direction,
 };
-use solana_sdk::signature::Keypair;
+use solana_sdk::{pubkey::Pubkey, signature::Keypair};
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
@@ -355,6 +355,17 @@ impl FlowGraph {
         let signer = registry.signer.clone();
         let token = registry.token.clone();
         let rhai_permit = registry.rhai_permit.clone();
+        let overwrite_feepayer = c.ctx.environment.get("OVERWRITE_FEEPAYER").and_then(|s| {
+            let mut buf = [0u8; 64];
+            match bs58::decode(s).into(&mut buf).ok()? {
+                32 => Some(Keypair::new_adapter_wallet(Pubkey::new_from_array(
+                    buf[..32].try_into().unwrap(),
+                ))),
+                // TODO: check pubkey match secret key
+                64 => Some(Keypair::from_bytes(&buf).unwrap()),
+                _ => None,
+            }
+        });
 
         let ext = {
             let mut ext = Extensions::new();
@@ -473,9 +484,7 @@ impl FlowGraph {
             mode: c.instructions_bundling,
             output_instructions: false,
             rhai_permit,
-            overwrite_feepayer: Some(Keypair::new_adapter_wallet(solana_sdk::pubkey!(
-                "HuktZqYAXSeMz5hMtdEnvsJAXtapg24zXU2tkDnGgaSZ"
-            ))),
+            overwrite_feepayer,
         })
     }
 

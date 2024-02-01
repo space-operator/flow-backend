@@ -142,7 +142,7 @@ impl Default for Endpoints {
 pub struct ContextConfig {
     pub http_client: HttpClientConfig,
     pub solana_client: SolanaClientConfig,
-    pub environment: std::collections::HashMap<String, String>,
+    pub environment: HashMap<String, String>,
     pub endpoints: Endpoints,
 }
 
