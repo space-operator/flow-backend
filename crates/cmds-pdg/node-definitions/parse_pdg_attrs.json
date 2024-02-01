@@ -71,6 +71,14 @@
       "passthrough": false,
       "defaultValue": true,
       "tooltip": "Check human-readable attributes to see if they match."
+    },
+    {
+      "name": "defaults",
+      "type_bounds": ["object"],
+      "required": false,
+      "passthrough": false,
+      "defaultValue": null,
+      "tooltip": "Supply default values for missing attributes."
     }
   ],
   "targets_form.json_schema": {},

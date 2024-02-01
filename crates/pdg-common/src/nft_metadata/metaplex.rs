@@ -273,7 +273,7 @@ mod tests {
     fn test_gen_metaplex_attrs() {
         let mut json =
             serde_json::from_str::<serde_json::Value>(include_str!("tests/123.json")).unwrap();
-        let params = RenderParams::from_pdg_metadata(&mut json, true).unwrap();
+        let params = RenderParams::from_pdg_metadata(&mut json, true, &<_>::default()).unwrap();
         let effects = EffectsList::from(params.clone());
         let meta = NftTraits::new(&params, &effects);
         let attrs = meta.gen_metaplex_attrs().unwrap();
