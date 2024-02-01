@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use mpl_bubblegum::types::MetadataArgs;
+use mpl_bubblegum::types::{MetadataArgs, UpdateArgs};
 use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
 
@@ -9,6 +9,7 @@ pub mod mint_to_collection_v1;
 pub mod mint_v1;
 pub mod transfer;
 pub mod types;
+pub mod update;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenProgramVersion {
@@ -151,6 +152,20 @@ impl From<MetadataBubblegum> for MetadataArgs {
             uses: v.uses.map(Into::into),
             token_program_version: v.token_program_version.into(),
             creators: v.creators.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl From<MetadataBubblegum> for UpdateArgs {
+    fn from(v: MetadataBubblegum) -> Self {
+        Self {
+            name: Some(v.name),
+            symbol: Some(v.symbol),
+            uri: Some(v.uri),
+            creators: Some(v.creators.into_iter().map(Into::into).collect()),
+            seller_fee_basis_points: Some(v.seller_fee_basis_points),
+            primary_sale_happened: Some(v.primary_sale_happened),
+            is_mutable: Some(v.is_mutable),
         }
     }
 }
