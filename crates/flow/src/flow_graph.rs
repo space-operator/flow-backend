@@ -872,8 +872,6 @@ impl FlowGraph {
                         if let Some(signer) = self.overwrite_feepayer.as_ref() {
                             ins.set_feepayer(signer.clone_keypair());
                         }
-                        // ins.instructions
-                        //     .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
                         let mut resp = vec![Responder {
                             sender: w.resp,
                             range: 1..ins.instructions.len(),
@@ -1277,6 +1275,7 @@ impl FlowGraph {
             s.stop_shared.clone(),
             s.out_tx.clone(),
             self.mode.clone(),
+            self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair()),
         );
         // let span = tracing::error_span!("node", node_id = node.id.to_string(), times = times);
         let handler = tokio::spawn(
@@ -1334,6 +1333,7 @@ struct ExecuteNoBundling {
     tx: mpsc::UnboundedSender<PartialOutput>,
     stop_shared: StopSignal,
     simple_svc: execute::Svc,
+    overwrite_feepayer: Option<Keypair>,
 }
 
 impl tower::Service<execute::Request> for ExecuteNoBundling {
@@ -1346,7 +1346,7 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
     ) -> std::task::Poll<Result<(), Self::Error>> {
         std::task::Poll::Ready(Ok(()))
     }
-    fn call(&mut self, req: execute::Request) -> Self::Future {
+    fn call(&mut self, mut req: execute::Request) -> Self::Future {
         use tower::ServiceExt;
         if req.instructions.instructions.is_empty() {
             // empty instructions wont be bundled,
@@ -1371,10 +1371,11 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
             let node_id = self.node_id;
             let times = self.times;
             let output = req.output.clone();
+            let overwrite_feepayer = self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair());
             let task = async move {
-                // req.instructions
-                //     .instructions
-                //     .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
+                if let Some(signer) = overwrite_feepayer {
+                    req.instructions.set_feepayer(signer);
+                }
                 let res = svc.ready().await?.call(req).await;
                 let output = match &res {
                     Ok(_) => Ok((Instructions::default(), output)),
@@ -1421,6 +1422,7 @@ async fn run_command(
     stop_shared: StopSignal,
     tx: mpsc::UnboundedSender<PartialOutput>,
     mode: client::BundlingMode,
+    overwrite_feepayer: Option<Keypair>,
 ) -> Finished {
     let svc = match mode {
         client::BundlingMode::Off => TowerClient::from_service(
@@ -1430,6 +1432,7 @@ async fn run_command(
                 tx: tx.clone(),
                 simple_svc: execute::simple(&ctx, 32, Some(flow_run_id)),
                 stop_shared,
+                overwrite_feepayer,
             },
             execute::Error::worker,
             32,
