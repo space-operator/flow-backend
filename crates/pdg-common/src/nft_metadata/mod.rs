@@ -1,12 +1,9 @@
 use self::pdg::{Attr, AttrCfg};
-use rand::{
-    distributions::{Uniform, WeightedIndex},
-    prelude::Distribution,
-};
+use rand::seq::{IteratorRandom, SliceRandom};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::{borrow::Cow, collections::HashMap, fmt::Debug};
-use strum::{Display, EnumProperty, IntoEnumIterator};
+use strum::{Display, IntoEnumIterator};
 use thiserror::Error as ThisError;
 
 pub mod generate;
@@ -21,10 +18,25 @@ pub struct PropertyNotFound {
     pub variant: String,
 }
 
-trait EnumExt {
+#[derive(ThisError, Debug)]
+pub enum WeightError {
+    #[error(transparent)]
+    PropertyNotFound(#[from] PropertyNotFound),
+    #[error("invalid weight {} on type {}", value, ty)]
+    InvalidValue { value: &'static str, ty: String },
+}
+
+pub trait EnumExt {
     fn pdg_name(&self) -> Result<&'static str, PropertyNotFound>;
     fn metaplex_name(&self) -> Result<&'static str, PropertyNotFound>;
     fn effect_type(&self) -> Result<&'static str, PropertyNotFound>;
+    fn weight(&self) -> Result<f64, WeightError>;
+}
+
+pub trait EnumRandExt {
+    fn choose<R: rand::Rng + ?Sized>(rng: &mut R) -> Self;
+    fn choose_uniform<R: rand::Rng + ?Sized>(rng: &mut R) -> Self;
+    fn choose_weighted<R: rand::Rng + ?Sized>(rng: &mut R) -> Self;
 }
 
 impl<T> EnumExt for T
@@ -52,6 +64,43 @@ where
             ty: std::any::type_name::<T>(),
             variant: format!("{:?}", self),
         })
+    }
+    fn weight(&self) -> Result<f64, WeightError> {
+        let value = self.get_str("weight").ok_or_else(|| PropertyNotFound {
+            attr: "weight",
+            ty: std::any::type_name::<T>(),
+            variant: format!("{:?}", self),
+        })?;
+        value.parse().map_err(|_| WeightError::InvalidValue {
+            value,
+            ty: format!("{:?}", self),
+        })
+    }
+}
+
+impl<T> EnumRandExt for T
+where
+    T: EnumExt + IntoEnumIterator + Clone,
+{
+    fn choose<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        let has_weight = T::iter().next().unwrap().weight().is_ok();
+        if has_weight {
+            T::choose_weighted(rng)
+        } else {
+            T::choose_uniform(rng)
+        }
+    }
+
+    fn choose_uniform<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        T::iter().choose(rng).unwrap().clone()
+    }
+
+    fn choose_weighted<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        T::iter()
+            .collect::<Box<[T]>>()
+            .choose_weighted(rng, |v| v.weight().unwrap_or(0.0))
+            .unwrap()
+            .clone()
     }
 }
 
@@ -1091,25 +1140,6 @@ pub enum BodyType {
 
 impl_try_from_u32!(BodyType);
 
-impl BodyType {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = BodyType::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1184,16 +1214,6 @@ pub enum HelmetType {
 }
 
 impl_try_from_u32!(HelmetType);
-
-impl HelmetType {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = HelmetType::iter().collect::<Vec<_>>();
-        let dist = Uniform::new(0, variants.len());
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1289,16 +1309,6 @@ pub enum Pose {
 
 impl_try_from_u32!(Pose);
 
-impl Pose {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Pose::iter().collect::<Vec<_>>();
-        let dist = Uniform::new(0, variants.len());
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1334,25 +1344,6 @@ pub enum HelmetLight {
 }
 
 impl_try_from_u32!(HelmetLight);
-
-impl HelmetLight {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = HelmetLight::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1408,25 +1399,6 @@ pub enum Fx0 {
 
 impl_try_from_u32!(Fx0);
 
-impl Fx0 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx0::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1461,25 +1433,6 @@ pub enum Fx1 {
 
 impl_try_from_u32!(Fx1);
 
-impl Fx1 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx1::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1510,16 +1463,6 @@ pub enum Fx1a {
 }
 
 impl_try_from_u32!(Fx1a);
-
-impl Fx1a {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx1a::iter().collect::<Vec<_>>();
-        let dist = Uniform::new(0, variants.len());
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1570,25 +1513,6 @@ pub enum Fx2 {
 }
 
 impl_try_from_u32!(Fx2);
-
-impl Fx2 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx2::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1652,25 +1576,6 @@ pub enum Fx4 {
 
 impl_try_from_u32!(Fx4);
 
-impl Fx4 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx4::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1704,25 +1609,6 @@ pub enum Fx5 {
 }
 
 impl_try_from_u32!(Fx5);
-
-impl Fx5 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx5::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1769,25 +1655,6 @@ pub enum Fx6 {
 }
 
 impl_try_from_u32!(Fx6);
-
-impl Fx6 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx6::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1845,6 +1712,7 @@ impl_try_from_u32!(Fx0BodyOffGlass);
 
 #[derive(
     strum::FromRepr,
+    strum::EnumProperty,
     strum::EnumIter,
     Debug,
     Clone,
@@ -1865,16 +1733,6 @@ pub enum BodyMaterialVariations {
 }
 
 impl_try_from_u32!(BodyMaterialVariations);
-
-impl BodyMaterialVariations {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = BodyMaterialVariations::iter().collect::<Vec<_>>();
-        let dist = Uniform::new(0, variants.len());
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1921,25 +1779,6 @@ pub enum MarbleVariation {
 }
 
 impl_try_from_u32!(MarbleVariation);
-
-impl MarbleVariation {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = MarbleVariation::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1990,25 +1829,6 @@ pub enum WoodVariation {
 
 impl_try_from_u32!(WoodVariation);
 
-impl WoodVariation {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = WoodVariation::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -2034,25 +1854,6 @@ pub enum GlowingLogo {
 }
 
 impl_try_from_u32!(GlowingLogo);
-
-impl GlowingLogo {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = GlowingLogo::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -2082,25 +1883,6 @@ pub enum FxJellyfish {
 
 impl_try_from_u32!(FxJellyfish);
 
-impl FxJellyfish {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = FxJellyfish::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumIter,
@@ -2127,25 +1909,6 @@ pub enum FxLineartHelper {
 
 impl_try_from_u32!(FxLineartHelper);
 
-impl FxLineartHelper {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = FxLineartHelper::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("50")
-                    .parse::<u32>()
-                    .unwrap_or(50)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumIter,
@@ -2170,13 +1933,8 @@ pub enum EnvLight {
 impl_try_from_u32!(EnvLight);
 
 impl EnvLight {
-    pub fn day_or_night() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = [EnvLight::Day, EnvLight::Night];
-        let weights = vec![50, 50];
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
+    pub fn day_or_night<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        *[EnvLight::Day, EnvLight::Night].choose(rng).unwrap()
     }
 }
 

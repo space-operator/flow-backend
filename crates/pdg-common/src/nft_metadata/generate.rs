@@ -1,6 +1,6 @@
 use super::{
-    BodyMaterialVariations, BodyType, EnvLight, Fx0, Fx1, Fx1a, Fx2, Fx3, Fx4, Fx5, Fx6,
-    FxJellyfish, FxLineartHelper, GlowingLogo, HelmetLight, HelmetType, LightReflectionMult,
+    BodyMaterialVariations, BodyType, EnumRandExt, EnvLight, Fx0, Fx1, Fx1a, Fx2, Fx3, Fx4, Fx5,
+    Fx6, FxJellyfish, FxLineartHelper, GlowingLogo, HelmetLight, HelmetType, LightReflectionMult,
     MarbleVariation, Pose, RenderParams, WoodVariation,
 };
 use indexmap::IndexSet;
@@ -221,12 +221,12 @@ impl RenderParams {
         }
     }
 
-    pub fn generate_base() -> Self {
-        let body_type = BodyType::seed();
-        let pose = Pose::seed();
-        let helmet_type = HelmetType::seed();
-        let helmet_light = HelmetLight::seed();
-        let fx0 = Fx0::seed();
+    pub fn generate_base<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        let body_type = BodyType::choose(rng);
+        let pose = Pose::choose(rng);
+        let helmet_type = HelmetType::choose(rng);
+        let helmet_light = HelmetLight::choose(rng);
+        let fx0 = Fx0::choose(rng);
 
         Self {
             body_type,
@@ -236,25 +236,25 @@ impl RenderParams {
             fx0,
             ..<_>::default()
         }
-        .adjust_base()
-        .generate_line_art()
-        .generate_fx()
-        .generate_underwater()
-        .generate_background_color()
-        .generate_dress_hue()
-        .generate_helmet_lights()
-        .generate_wedge()
-        .generate_body_material_variation()
-        .generate_marble_variation()
-        .generate_wood_variation()
-        .glowing_logo()
+        .adjust_base(rng)
+        .generate_line_art(rng)
+        .generate_fx(rng)
+        .generate_underwater(rng)
+        .generate_background_color(rng)
+        .generate_dress_hue(rng)
+        .generate_helmet_lights(rng)
+        .generate_wedge(rng)
+        .generate_body_material_variation(rng)
+        .generate_marble_variation(rng)
+        .generate_wood_variation(rng)
+        .glowing_logo(rng)
     }
 
-    pub fn generate_line_art(mut self) -> Self {
+    pub fn generate_line_art<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.fx0 {
             Fx0::LineartBase => {
-                let line_art = Fx1a::seed();
-                self.lineart_amount = rand::random::<f64>() * 100.0;
+                let line_art = Fx1a::choose(rng);
+                self.lineart_amount = rng.gen_range(0.0..100.0);
 
                 self.fx1a = line_art;
                 match line_art {
@@ -273,11 +273,11 @@ impl RenderParams {
                 }
             }
             _ => {
-                let line_art = Fx1a::seed();
+                let line_art = Fx1a::choose(rng);
                 self.fx1a = line_art;
                 match line_art {
                     Fx1a::No => {
-                        let fx_lineart_helper = FxLineartHelper::seed();
+                        let fx_lineart_helper = FxLineartHelper::choose(rng);
                         self.fx_lineart_helper = fx_lineart_helper;
                     }
                     Fx1a::LineartMinimalistic => {
@@ -294,96 +294,96 @@ impl RenderParams {
         self
     }
 
-    pub fn adjust_base(mut self) -> Self {
+    pub fn adjust_base<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.fx0 {
             Fx0::Hologram => {
                 self.env_light = EnvLight::Night;
-                self.hologram_amount = rand::thread_rng().gen_range(25.0..=100.0)
+                self.hologram_amount = rng.gen_range(25.0..=100.0)
             }
             Fx0::Xray => {
-                self.env_light = EnvLight::day_or_night();
-                self.xray_skeleton_particles_amount = rand::thread_rng().gen_range(25.0..=100.0);
-                self.xray_body_amount = rand::thread_rng().gen_range(25.0..=100.0);
+                self.env_light = EnvLight::day_or_night(rng);
+                self.xray_skeleton_particles_amount = rng.gen_range(25.0..=100.0);
+                self.xray_body_amount = rng.gen_range(25.0..=100.0);
             }
             Fx0::SoapBubble => {
-                self.env_light = EnvLight::day_or_night();
-                self.soap_bubble_intensity_amount = rand::thread_rng().gen_range(25.0..=100.0);
-                self.soap_bubble_roughness_amount = rand::thread_rng().gen_range(25.0..=100.0);
+                self.env_light = EnvLight::day_or_night(rng);
+                self.soap_bubble_intensity_amount = rng.gen_range(25.0..=100.0);
+                self.soap_bubble_roughness_amount = rng.gen_range(25.0..=100.0);
                 self.light_reflection_mult = LightReflectionMult::Two;
             }
             Fx0::Pixel => {
-                self.env_light = EnvLight::day_or_night();
-                self.pixel_amount = rand::random::<f64>() * 20.0;
+                self.env_light = EnvLight::day_or_night(rng);
+                self.pixel_amount = rng.gen::<f64>() * 20.0;
             }
             _ => {
-                self.env_light = EnvLight::day_or_night();
+                self.env_light = EnvLight::day_or_night(rng);
             }
         }
         self
     }
 
-    pub fn generate_fx(mut self) -> Self {
-        let fx1 = Fx1::seed();
+    pub fn generate_fx<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
+        let fx1 = Fx1::choose(rng);
 
         self.fx1 = fx1;
         match fx1 {
             Fx1::No => {}
             Fx1::Melted => {
-                self.melt_amount = rand::random::<f64>() * 30.0;
+                self.melt_amount = rng.gen::<f64>() * 30.0;
                 self.melting_glow_amount = 50.0;
             }
-            Fx1::Disintegration => self.disintegration_amount = rand::random::<f64>() * 30.0,
+            Fx1::Disintegration => self.disintegration_amount = rng.gen::<f64>() * 30.0,
         }
 
-        let fx2 = Fx2::seed();
+        let fx2 = Fx2::choose(rng);
         self.fx2 = fx2;
         match fx2 {
             Fx2::No => {}
-            Fx2::Butterflies => self.butterfly_amount = rand::random::<f64>() * 30.0,
+            Fx2::Butterflies => self.butterfly_amount = rng.gen::<f64>() * 30.0,
             Fx2::Underwater => {} // underwater is handled separately
-            Fx2::Fireflyies => self.firefly_amount = rand::random::<f64>() * 30.0,
-            Fx2::Fall => self.fall_amount = rand::random::<f64>() * 30.0,
-            Fx2::Ladybag => self.ladybag_amount = rand::random::<f64>() * 30.0,
-            Fx2::Spring => self.spring_amount = rand::random::<f64>() * 30.0,
+            Fx2::Fireflyies => self.firefly_amount = rng.gen::<f64>() * 30.0,
+            Fx2::Fall => self.fall_amount = rng.gen::<f64>() * 30.0,
+            Fx2::Ladybag => self.ladybag_amount = rng.gen::<f64>() * 30.0,
+            Fx2::Spring => self.spring_amount = rng.gen::<f64>() * 30.0,
         }
 
-        let fx4 = Fx4::seed();
+        let fx4 = Fx4::choose(rng);
         self.fx4 = fx4;
         match fx4 {
             Fx4::No => {}
-            Fx4::Frozen => self.frozen_amount = rand::random::<f64>() * 30.0,
-            Fx4::Rain => self.rain_amount = rand::random::<f64>() * 40.0,
+            Fx4::Frozen => self.frozen_amount = rng.gen::<f64>() * 30.0,
+            Fx4::Rain => self.rain_amount = rng.gen::<f64>() * 40.0,
         }
 
-        let fx5 = Fx5::seed();
+        let fx5 = Fx5::choose(rng);
         self.fx5 = fx5;
         match fx5 {
             Fx5::No => {}
-            Fx5::Fungi => self.fungi_amount = rand::random::<f64>() * 30.0,
-            Fx5::GrowFlower => self.grow_flower_amount = rand::random::<f64>() * 30.0,
+            Fx5::Fungi => self.fungi_amount = rng.gen::<f64>() * 30.0,
+            Fx5::GrowFlower => self.grow_flower_amount = rng.gen::<f64>() * 30.0,
         }
 
-        let fx6 = Fx6::seed();
+        let fx6 = Fx6::choose(rng);
         self.fx6 = fx6;
         match fx6 {
             Fx6::No => {}
-            Fx6::Gold => self.gold_silver_amount = rand::random::<f64>() * 30.0,
-            Fx6::Silver => self.gold_silver_amount = rand::random::<f64>() * 30.0,
-            Fx6::RoseGold => self.gold_silver_amount = rand::random::<f64>() * 30.0,
-            Fx6::Bronze => self.gold_silver_amount = rand::random::<f64>() * 30.0,
-            Fx6::Copper => self.gold_silver_amount = rand::random::<f64>() * 30.0,
+            Fx6::Gold => self.gold_silver_amount = rng.gen::<f64>() * 30.0,
+            Fx6::Silver => self.gold_silver_amount = rng.gen::<f64>() * 30.0,
+            Fx6::RoseGold => self.gold_silver_amount = rng.gen::<f64>() * 30.0,
+            Fx6::Bronze => self.gold_silver_amount = rng.gen::<f64>() * 30.0,
+            Fx6::Copper => self.gold_silver_amount = rng.gen::<f64>() * 30.0,
         }
 
         self
     }
 
-    pub fn generate_underwater(mut self) -> Self {
+    pub fn generate_underwater<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.fx2 {
             Fx2::Underwater => {
-                let jellyfish = FxJellyfish::seed();
+                let jellyfish = FxJellyfish::choose(rng);
                 self.fx_jellifish = jellyfish;
 
-                self.underwater_fog_amount = rand::random::<f64>() * 30.0;
+                self.underwater_fog_amount = rng.gen::<f64>() * 30.0;
                 self.background_underwater_color_hue = 38.8;
 
                 let env_light = if self.fx0 == Fx0::Hologram {
@@ -398,10 +398,10 @@ impl RenderParams {
         self
     }
 
-    pub fn generate_helmet_lights(mut self) -> Self {
+    pub fn generate_helmet_lights<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.helmet_light {
             HelmetLight::Dots | HelmetLight::GlowingEyes => {
-                self.eye_color_random_hue = rand::random::<f64>() * 360.0;
+                self.eye_color_random_hue = rng.gen::<f64>() * 360.0;
                 self.eyes_light_intensity_amount = 100.0;
             }
             _ => {}
@@ -409,55 +409,55 @@ impl RenderParams {
         self
     }
 
-    pub fn generate_wedge(mut self) -> Self {
-        self.wedgeindex = rand::thread_rng().gen_range(25i64..=1000000000i64);
+    pub fn generate_wedge<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
+        self.wedgeindex = rng.gen_range(25i64..=1000000000i64);
         self
     }
 
-    pub fn generate_background_color(mut self) -> Self {
-        self.background_color_random_hue = rand::random::<f64>() * 360.0;
+    pub fn generate_background_color<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
+        self.background_color_random_hue = rng.gen::<f64>() * 360.0;
         self
     }
 
-    pub fn generate_dress_hue(mut self) -> Self {
-        self.dress_color_hue = rand::random::<f64>() * 360.0;
+    pub fn generate_dress_hue<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
+        self.dress_color_hue = rng.gen::<f64>() * 360.0;
         self
     }
 
-    pub fn generate_body_material_variation(mut self) -> Self {
+    pub fn generate_body_material_variation<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.fx0 {
             Fx0::No => {
-                self.body_material_variation = BodyMaterialVariations::seed();
+                self.body_material_variation = BodyMaterialVariations::choose(rng);
             }
             _ => {}
         }
         self
     }
 
-    pub fn generate_marble_variation(mut self) -> Self {
+    pub fn generate_marble_variation<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.fx0 {
             Fx0::Marble => {
-                self.marble_variation = MarbleVariation::seed();
+                self.marble_variation = MarbleVariation::choose(rng);
             }
             _ => {}
         }
         self
     }
 
-    pub fn generate_wood_variation(mut self) -> Self {
+    pub fn generate_wood_variation<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.fx0 {
             Fx0::Wood => {
-                self.wood_variation = WoodVariation::seed();
+                self.wood_variation = WoodVariation::choose(rng);
             }
             _ => {}
         }
         self
     }
 
-    pub fn glowing_logo(mut self) -> Self {
-        self.glowing_logo = GlowingLogo::seed();
+    pub fn glowing_logo<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
+        self.glowing_logo = GlowingLogo::choose(rng);
         if self.glowing_logo == GlowingLogo::Yes {
-            self.logo_hue = rand::random::<f64>() * 360.0;
+            self.logo_hue = rng.gen::<f64>() * 360.0;
         }
         self
     }
@@ -484,7 +484,7 @@ mod tests {
     #[test]
     fn test() {
         // generate a base
-        let base = RenderParams::generate_base();
+        let base = RenderParams::generate_base(&mut rand::thread_rng());
         dbg!(&base);
 
         // store user poses

@@ -40,7 +40,7 @@ struct Output {
 async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
     let attributes = match input.flag {
         Some(flag) => match flag.as_str() {
-            "base" => RenderParams::generate_base(),
+            "base" => RenderParams::generate_base(&mut rand::thread_rng()),
             _ => RenderParams::default(),
         },
         None => input.attributes.unwrap_or_default(),
