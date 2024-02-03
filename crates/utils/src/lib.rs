@@ -2,8 +2,8 @@ use thiserror::Error as ThisError;
 
 pub mod actix_service;
 pub mod address_book;
-pub mod serde_bs58;
 pub mod serde_base64;
+pub mod serde_bs58;
 
 pub struct B58<const N: usize>(pub [u8; N]);
 

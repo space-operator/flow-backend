@@ -42,7 +42,7 @@ impl CommandTrait for ToString {
     }
 
     async fn run(&self, _: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
-        let input = inputs.remove(STRINGIFY).unwrap_or("".into());
+        let input = inputs.swap_remove(STRINGIFY).unwrap_or("".into());
 
         let result = match input {
             Value::Decimal(v) => v.to_string(),

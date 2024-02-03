@@ -752,9 +752,7 @@ impl From<DelegateArgs> for mpl_token_metadata::types::DelegateArgs {
                 authorization_data,
             } => Self::LockedTransferV1 {
                 amount,
-                locked_address: locked_address
-                    .to_bytes()
-                    .into(),
+                locked_address: locked_address.to_bytes().into(),
                 authorization_data: authorization_data.map(Into::into),
             },
             DelegateArgs::ProgrammableConfigV1 { authorization_data } => {

@@ -207,7 +207,6 @@ impl Config {
 
     /// Build a CORS middleware.
     pub fn cors(&self) -> actix_cors::Cors {
-        
         /*
         for origin in &self.cors_origins {
             if origin.contains('*') {

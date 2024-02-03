@@ -132,12 +132,14 @@ async fn main() {
     let shutdown_timeout_secs = config.shutdown_timeout_secs;
 
     HttpServer::new(move || {
-        let auth = supabase_auth.as_ref().map(|supabase_auth| web::scope("/auth")
-                    .app_data(web::Data::new(sig_auth))
-                    .app_data(web::Data::new(supabase_auth.clone()))
-                    .service(api::claim_token::service(&config, db.clone()))
-                    .service(api::init_auth::service(&config))
-                    .service(api::confirm_auth::service(&config)));
+        let auth = supabase_auth.as_ref().map(|supabase_auth| {
+            web::scope("/auth")
+                .app_data(web::Data::new(sig_auth))
+                .app_data(web::Data::new(supabase_auth.clone()))
+                .service(api::claim_token::service(&config, db.clone()))
+                .service(api::init_auth::service(&config))
+                .service(api::confirm_auth::service(&config))
+        });
 
         let mut flow = web::scope("/flow")
             .service(api::start_flow::service(&config, db.clone()))

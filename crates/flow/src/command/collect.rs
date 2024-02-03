@@ -36,7 +36,7 @@ impl CommandTrait for Collect {
 
     async fn run(&self, _ctx: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let v = inputs
-            .remove(ELEMENT)
+            .swap_remove(ELEMENT)
             .unwrap_or_else(|| Value::Array(Vec::new()));
         if matches!(&v, Value::Array(_)) {
             Ok(value::map! {
