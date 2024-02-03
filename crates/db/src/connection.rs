@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 use deadpool_postgres::Object as Connection;
 use flow_lib::{
     config::client::{self, ClientConfig},
+    context::signer::Presigner,
     CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
 };
 use hashbrown::{HashMap, HashSet};
@@ -142,6 +143,7 @@ pub trait UserConnectionTrait: Any + 'static {
         pubkey: &[u8; 32],
         message: &[u8],
         flow_run_id: Option<&FlowRunId>,
+        signatures: Option<&[Presigner]>,
     ) -> crate::Result<i64>;
 
     async fn save_signature(&self, id: &i64, signature: &[u8; 64]) -> crate::Result<()>;
@@ -278,8 +280,9 @@ impl UserConnectionTrait for UserConnection {
         pubkey: &[u8; 32],
         message: &[u8],
         flow_run_id: Option<&FlowRunId>,
+        signatures: Option<&[Presigner]>,
     ) -> crate::Result<i64> {
-        self.new_signature_request(pubkey, message, flow_run_id)
+        self.new_signature_request(pubkey, message, flow_run_id, signatures)
             .await
     }
 

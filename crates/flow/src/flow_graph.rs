@@ -11,7 +11,7 @@ use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
     context::{execute, get_jwt, CommandContext, Context},
-    solana::{find_failed_instruction, Instructions},
+    solana::{find_failed_instruction, Instructions, KeypairExt},
     utils::{Extensions, TowerClient},
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
 };
@@ -29,7 +29,7 @@ use petgraph::{
     visit::EdgeRef,
     Direction,
 };
-use solana_sdk::compute_budget::ComputeBudgetInstruction;
+use solana_sdk::{pubkey::Pubkey, signature::Keypair};
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
@@ -110,6 +110,7 @@ pub struct FlowGraph {
     pub mode: client::BundlingMode,
     pub output_instructions: bool,
     pub rhai_permit: Arc<Semaphore>,
+    pub overwrite_feepayer: Option<Keypair>,
 }
 
 pub struct UsePreviousValue {
@@ -354,6 +355,17 @@ impl FlowGraph {
         let signer = registry.signer.clone();
         let token = registry.token.clone();
         let rhai_permit = registry.rhai_permit.clone();
+        let overwrite_feepayer = c.ctx.environment.get("OVERWRITE_FEEPAYER").and_then(|s| {
+            let mut buf = [0u8; 64];
+            match bs58::decode(s).into(&mut buf).ok()? {
+                32 => Some(Keypair::new_adapter_wallet(Pubkey::new_from_array(
+                    buf[..32].try_into().unwrap(),
+                ))),
+                // TODO: check pubkey match secret key
+                64 => Some(Keypair::from_bytes(&buf).unwrap()),
+                _ => None,
+            }
+        });
 
         let ext = {
             let mut ext = Extensions::new();
@@ -472,6 +484,7 @@ impl FlowGraph {
             mode: c.instructions_bundling,
             output_instructions: false,
             rhai_permit,
+            overwrite_feepayer,
         })
     }
 
@@ -846,12 +859,7 @@ impl FlowGraph {
             debug_assert!(!tx.is_empty());
             let is_complete = tx.values().all(Option::is_some);
             if is_complete {
-                let mut tx = tx
-                    .into_values()
-                    .map(Option::unwrap) // all(is_some) == true
-                    .rev()
-                    .collect::<Vec<_>>();
-
+                let mut tx = tx.into_values().rev().collect::<Option<Vec<_>>>().unwrap();
                 while let Some(w) = tx.pop() {
                     use std::ops::Range;
                     struct Responder {
@@ -861,8 +869,9 @@ impl FlowGraph {
 
                     let (ins, resp) = {
                         let mut ins = w.instructions;
-                        // ins.instructions
-                        //     .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
+                        if let Some(signer) = self.overwrite_feepayer.as_ref() {
+                            ins.set_feepayer(signer.clone_keypair());
+                        }
                         let mut resp = vec![Responder {
                             sender: w.resp,
                             range: 1..ins.instructions.len(),
@@ -942,10 +951,8 @@ impl FlowGraph {
                 }
             } else {
                 // Some nodes didn't output their instructions
-                for (_, v) in tx {
-                    if let Some(v) = v {
-                        v.resp.send(Err(execute::Error::TxIncomplete)).ok();
-                    }
+                for v in tx.into_values().flatten() {
+                    v.resp.send(Err(execute::Error::TxIncomplete)).ok();
                 }
             }
         }
@@ -1268,6 +1275,7 @@ impl FlowGraph {
             s.stop_shared.clone(),
             s.out_tx.clone(),
             self.mode.clone(),
+            self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair()),
         );
         // let span = tracing::error_span!("node", node_id = node.id.to_string(), times = times);
         let handler = tokio::spawn(
@@ -1325,6 +1333,7 @@ struct ExecuteNoBundling {
     tx: mpsc::UnboundedSender<PartialOutput>,
     stop_shared: StopSignal,
     simple_svc: execute::Svc,
+    overwrite_feepayer: Option<Keypair>,
 }
 
 impl tower::Service<execute::Request> for ExecuteNoBundling {
@@ -1362,10 +1371,11 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
             let node_id = self.node_id;
             let times = self.times;
             let output = req.output.clone();
+            let overwrite_feepayer = self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair());
             let task = async move {
-                // req.instructions
-                //     .instructions
-                //     .insert(0, ComputeBudgetInstruction::set_compute_unit_price(0));
+                if let Some(signer) = overwrite_feepayer {
+                    req.instructions.set_feepayer(signer);
+                }
                 let res = svc.ready().await?.call(req).await;
                 let output = match &res {
                     Ok(_) => Ok((Instructions::default(), output)),
@@ -1412,6 +1422,7 @@ async fn run_command(
     stop_shared: StopSignal,
     tx: mpsc::UnboundedSender<PartialOutput>,
     mode: client::BundlingMode,
+    overwrite_feepayer: Option<Keypair>,
 ) -> Finished {
     let svc = match mode {
         client::BundlingMode::Off => TowerClient::from_service(
@@ -1421,6 +1432,7 @@ async fn run_command(
                 tx: tx.clone(),
                 simple_svc: execute::simple(&ctx, 32, Some(flow_run_id)),
                 stop_shared,
+                overwrite_feepayer,
             },
             execute::Error::worker,
             32,

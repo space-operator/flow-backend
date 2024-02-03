@@ -7,6 +7,8 @@ use flow_lib::{
 };
 use pdg_common::nft_metadata::RenderParams;
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
+use std::collections::HashMap;
 
 const PARSE_PDG_ATTRS: &str = "parse_pdg_attrs";
 
@@ -29,6 +31,8 @@ struct Input {
     attributes: Value,
     #[serde(default = "bool_true")]
     check_human_readable: bool,
+    #[serde(default)]
+    defaults: HashMap<String, JsonValue>,
 }
 
 #[derive(Serialize, Debug)]
@@ -41,6 +45,7 @@ async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
         attributes: RenderParams::from_pdg_metadata(
             &mut input.attributes.into(),
             input.check_human_readable,
+            &input.defaults,
         )?,
     })
 }

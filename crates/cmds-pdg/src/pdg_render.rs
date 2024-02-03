@@ -135,15 +135,26 @@ async fn ws_wait(
 async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
     let (mut ws, _) = tokio_tungstenite::connect_async(&input.url).await?;
 
+    let rand_seed = input.rand_seed.or_else(|| {
+        Some(
+            input
+                .attributes
+                .get("wedgeindex")?
+                .pointer("/value/0")?
+                .as_i64()?
+                .to_string(),
+        )
+    });
+
     // send the request
     ws.send({
         tracing::debug!(
             "rand_seed={}",
-            &input.rand_seed.as_ref().unwrap_or(&"".to_owned())
+            &rand_seed.as_ref().unwrap_or(&"".to_owned())
         );
         let text = serde_json::to_string({
             &RenderRequest {
-                rand_seed: input.rand_seed,
+                rand_seed,
                 version: "6".to_owned(),
                 workitem: WorkItem {
                     attributes: input.attributes,

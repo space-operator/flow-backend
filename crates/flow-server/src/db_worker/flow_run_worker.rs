@@ -1,14 +1,15 @@
 use super::{
-    messages::{Finished, SubscribeError, SubscriptionID},
+    messages::{SubscribeError, SubscriptionID},
     user_worker::SigReqEvent,
     CopyIn, Counter, DBWorker, SystemShutdown,
 };
-use crate::error::ErrorBody;
+use crate::{api::prelude::auth::TokenType, error::ErrorBody};
 use actix::{
     fut::wrap_future, Actor, ActorContext, ActorFutureExt, AsyncContext, ResponseActFuture,
     StreamHandler, WrapFuture,
 };
 use actix_web::http::StatusCode;
+
 use db::{pool::DbPool, FlowRunLogsRow};
 use flow::{
     flow_graph::StopSignal,
@@ -20,7 +21,7 @@ use flow::{
 use flow_lib::{FlowRunId, UserId};
 use futures_channel::mpsc;
 use futures_util::{stream::BoxStream, StreamExt};
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast;
 use utils::address_book::ManagableActor;
@@ -36,7 +37,6 @@ pub struct FlowRunWorker {
     tx: mpsc::UnboundedSender<Event>,
     subs: HashMap<SubscriptionID, Subscription>,
     all_events: Vec<Event>,
-    all_sigreq: Vec<SigReqEvent>,
     done_tx: broadcast::Sender<()>,
 }
 
@@ -63,20 +63,8 @@ impl ManagableActor for FlowRunWorker {
 
 impl actix::Handler<SigReqEvent> for FlowRunWorker {
     type Result = ();
-    fn handle(&mut self, msg: SigReqEvent, _: &mut Self::Context) -> Self::Result {
-        self.subs.retain(|id, sub| {
-            let retain = if let Some(addr) = sub.receiver1.upgrade() {
-                addr.do_send(SigReqEvent {
-                    sub_id: *id,
-                    ..msg.clone()
-                });
-                true
-            } else {
-                false
-            };
-            retain
-        });
-        self.all_sigreq.push(msg);
+    fn handle(&mut self, msg: SigReqEvent, ctx: &mut Self::Context) -> Self::Result {
+        StreamHandler::handle(self, Event::SignatureRequest(msg.0), ctx)
     }
 }
 
@@ -102,58 +90,37 @@ impl actix::Handler<SystemShutdown> for FlowRunWorker {
 }
 
 struct Subscription {
-    finished: actix::WeakRecipient<Finished>,
-    receiver: actix::WeakRecipient<FullEvent>,
-    receiver1: actix::WeakRecipient<SigReqEvent>,
-}
-
-pub struct FullEvent {
-    pub sub_id: SubscriptionID,
-    pub flow_run_id: FlowRunId,
-    pub event: Event,
-}
-
-impl actix::Message for FullEvent {
-    type Result = ();
+    tx: mpsc::UnboundedSender<Event>,
 }
 
 pub struct SubscribeEvents {
-    pub user_id: UserId,
-    pub flow_run_id: FlowRunId,
-    pub finished: actix::WeakRecipient<Finished>,
-    pub receiver: actix::WeakRecipient<FullEvent>,
-    pub receiver1: actix::WeakRecipient<SigReqEvent>,
+    pub tokens: HashSet<TokenType>,
 }
 
 impl actix::Message for SubscribeEvents {
-    type Result = Result<(SubscriptionID, Vec<Event>, Vec<SigReqEvent>), SubscribeError>;
+    type Result = Result<(SubscriptionID, mpsc::UnboundedReceiver<Event>), SubscribeError>;
 }
 
 impl actix::Handler<SubscribeEvents> for FlowRunWorker {
-    type Result = Result<(SubscriptionID, Vec<Event>, Vec<SigReqEvent>), SubscribeError>;
+    type Result = <SubscribeEvents as actix::Message>::Result;
 
     fn handle(&mut self, msg: SubscribeEvents, _: &mut Self::Context) -> Self::Result {
-        if !msg.user_id.is_nil()
-            && msg.user_id != self.user_id
-            && !self.shared_with.contains(&msg.user_id)
-        {
-            return Err(SubscribeError::Unauthorized {
-                user_id: msg.user_id,
-            });
+        let can_read = msg
+            .tokens
+            .iter()
+            .any(|token| token.is_user(self.user_id) || token.is_flow_run(self.run_id));
+        if !can_read {
+            return Err(SubscribeError::Unauthorized);
         }
-        msg.receiver
-            .upgrade()
-            .ok_or(SubscribeError::MailBox(actix::MailboxError::Closed))?;
-        let sub_id = self.counter.next();
-        self.subs.insert(
-            sub_id,
-            Subscription {
-                finished: msg.finished,
-                receiver: msg.receiver,
-                receiver1: msg.receiver1,
-            },
-        );
-        Ok((sub_id, self.all_events.clone(), self.all_sigreq.clone()))
+
+        let stream_id = self.counter.next();
+        let (tx, rx) = mpsc::unbounded();
+        for item in self.all_events.iter().cloned() {
+            tx.unbounded_send(item).unwrap();
+        }
+        self.subs.insert(stream_id, Subscription { tx });
+
+        Ok((stream_id, rx))
     }
 }
 
@@ -246,7 +213,6 @@ impl FlowRunWorker {
             done_tx: broadcast::channel::<()>(1).0,
             subs: HashMap::new(),
             all_events: Vec::new(),
-            all_sigreq: Vec::new(),
         }
     }
 
@@ -268,21 +234,10 @@ impl StreamHandler<Event> for FlowRunWorker {
             self.tx.close_channel();
         }
 
-        self.subs.retain(|id, sub| {
-            let retain = if let Some(addr) = sub.receiver.upgrade() {
-                addr.do_send(FullEvent {
-                    sub_id: *id,
-                    flow_run_id: self.run_id,
-                    event: item.clone(),
-                });
-                true
-            } else {
-                false
-            };
+        self.subs.retain(|_, sub| {
+            let retain = sub.tx.unbounded_send(item.clone()).is_ok() && !is_finished;
             if is_finished {
-                if let Some(addr) = sub.finished.upgrade() {
-                    addr.do_send(Finished { sub_id: *id });
-                }
+                sub.tx.close_channel();
             }
             retain
         });
@@ -451,6 +406,7 @@ async fn save_to_db(
                     });
                     log_index += 1;
                 }
+                Event::SignatureRequest(_) => {}
             }
         }
         if !logs.is_empty() && tx.send(CopyIn(logs)).await.is_err() {

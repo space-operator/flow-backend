@@ -21,7 +21,7 @@ impl bundlr_sdk::Signer for BundlrSigner {
     const PUB_LENGTH: u16 = Ed25519Signer::PUB_LENGTH;
 
     fn sign(&self, msg: bytes::Bytes) -> Result<bytes::Bytes, BundlrError> {
-        let sig = if self.keypair.is_user_wallet() {
+        let sig = if self.keypair.is_adapter_wallet() {
             let rt = self
                 .ctx
                 .get::<tokio::runtime::Handle>()

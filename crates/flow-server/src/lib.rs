@@ -20,7 +20,7 @@ pub mod middleware;
 pub mod user;
 pub mod wss;
 
-fn match_wildcard(pat: &str, origin: &HeaderValue) -> bool {
+pub fn match_wildcard(pat: &str, origin: &HeaderValue) -> bool {
     let Ok(mut origin_str) = origin.to_str() else {
         return false;
     };
@@ -207,11 +207,6 @@ impl Config {
 
     /// Build a CORS middleware.
     pub fn cors(&self) -> actix_cors::Cors {
-        let cors = actix_cors::Cors::default()
-            .allow_any_header()
-            .allow_any_method()
-            .allow_any_origin()
-            .supports_credentials();
         /*
         for origin in &self.cors_origins {
             if origin.contains('*') {
@@ -222,7 +217,11 @@ impl Config {
             }
         }
         */
-        cors
+        actix_cors::Cors::default()
+            .allow_any_header()
+            .allow_any_method()
+            .allow_any_origin()
+            .supports_credentials()
     }
 
     pub fn signature_auth(&self) -> SignatureAuth {

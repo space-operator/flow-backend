@@ -3,9 +3,9 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "parse_pdg_attrs",
+    "node_id": "generate_base",
     "version": "0.1",
-    "display_name": "Parse PDG attributes",
+    "display_name": "Generate Base",
     "description": "",
     "tags": [],
     "related_to": [
@@ -57,20 +57,12 @@
   ],
   "targets": [
     {
-      "name": "attributes",
-      "type_bounds": ["object"],
-      "required": true,
-      "passthrough": false,
-      "defaultValue": null,
-      "tooltip": ""
-    },
-    {
-      "name": "check_human_readable",
-      "type_bounds": ["bool"],
+      "name": "seed",
+      "type_bounds": ["u64"],
       "required": false,
       "passthrough": false,
-      "defaultValue": true,
-      "tooltip": "Check human-readable attributes to see if they match."
+      "defaultValue": null,
+      "tooltip": "Optional random seed to use."
     },
     {
       "name": "defaults",
@@ -78,7 +70,7 @@
       "required": false,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": "Supply default values for missing attributes."
+      "tooltip": "Default values to overwrite randomly generated values."
     }
   ],
   "targets_form.json_schema": {},

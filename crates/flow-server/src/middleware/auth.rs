@@ -28,7 +28,7 @@ use std::{convert::Infallible, future::Ready, panic::Location, rc::Rc, str::From
 use thiserror::Error as ThisError;
 use utils::bs58_decode;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub enum TokenType {
     JWT(JWTPayload),
     ApiKey(JWTPayload),
@@ -36,6 +36,20 @@ pub enum TokenType {
 }
 
 impl TokenType {
+    pub fn is_user(&self, user_id: UserId) -> bool {
+        match self {
+            TokenType::JWT(x) | TokenType::ApiKey(x) => x.user_id == user_id,
+            TokenType::FlowRun(_) => false,
+        }
+    }
+
+    pub fn is_flow_run(&self, flow_run_id: FlowRunId) -> bool {
+        match self {
+            TokenType::JWT(_) | TokenType::ApiKey(_) => false,
+            TokenType::FlowRun(x) => x.id == flow_run_id,
+        }
+    }
+
     pub fn user_id(&self) -> Option<UserId> {
         match self {
             TokenType::JWT(x) | TokenType::ApiKey(x) => Some(x.user_id),
@@ -51,7 +65,7 @@ impl TokenType {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub struct FlowRunToken {
     pub id: FlowRunId,
 }
@@ -98,7 +112,7 @@ pub struct Token {
     pub jwt: Option<String>,
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub struct JWTPayload {
     pub user_id: UserId,
     #[serde(with = "utils::serde_bs58")]

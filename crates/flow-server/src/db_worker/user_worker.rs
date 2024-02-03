@@ -15,10 +15,13 @@ use flow_lib::{
         client::{FlowRunOrigin, PartialConfig},
         Endpoints,
     },
-    context::{get_jwt, signer},
+    context::{
+        get_jwt,
+        signer::{self, SignatureRequest},
+    },
     FlowId, FlowRunId, User, UserId,
 };
-use futures_channel::oneshot;
+use futures_channel::{mpsc, oneshot};
 use futures_util::{future::BoxFuture, TryFutureExt};
 use hashbrown::HashMap;
 use solana_sdk::signature::Signature;
@@ -36,47 +39,29 @@ pub struct UserWorker {
     subs: HashMap<u64, Subscription>,
 }
 
-pub struct SubscribeSigReq {
-    pub user_id: UserId,
-    pub receiver: actix::WeakRecipient<SigReqEvent>,
-}
+pub struct SubscribeSigReq {}
 
 impl actix::Message for SubscribeSigReq {
-    type Result = Result<u64, SubscribeError>;
+    type Result = Result<(u64, mpsc::UnboundedReceiver<SignatureRequest>), SubscribeError>;
 }
 
 impl actix::Handler<SubscribeSigReq> for UserWorker {
-    type Result = Result<u64, SubscribeError>;
+    type Result = <SubscribeSigReq as actix::Message>::Result;
 
-    fn handle(&mut self, msg: SubscribeSigReq, _: &mut Self::Context) -> Self::Result {
-        if msg.user_id != self.user_id {
-            return Err(SubscribeError::Unauthorized {
-                user_id: msg.user_id,
-            });
-        }
-
-        let sub_id = self.counter.next();
-        self.subs.insert(
-            sub_id,
-            Subscription {
-                receiver: msg.receiver,
-            },
-        );
-        Ok(sub_id)
+    fn handle(&mut self, _msg: SubscribeSigReq, _: &mut Self::Context) -> Self::Result {
+        let stream_id = self.counter.next();
+        let (tx, rx) = mpsc::unbounded();
+        self.subs.insert(stream_id, Subscription { tx });
+        Ok((stream_id, rx))
     }
 }
 
 struct Subscription {
-    receiver: actix::WeakRecipient<SigReqEvent>,
+    tx: mpsc::UnboundedSender<SignatureRequest>,
 }
 
 #[derive(Clone)]
-pub struct SigReqEvent {
-    pub sub_id: u64,
-    pub req_id: i64,
-    pub pubkey: [u8; 32],
-    pub message: bytes::Bytes,
-}
+pub struct SigReqEvent(pub SignatureRequest);
 
 impl actix::Message for SigReqEvent {
     type Result = ();
@@ -104,7 +89,7 @@ impl Actor for UserWorker {
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> actix::Running {
-        self.subs.retain(|_, v| v.receiver.upgrade().is_some());
+        self.subs.retain(|_, v| !v.tx.is_closed());
         if self.subs.is_empty() {
             actix::Running::Stop
         } else {
@@ -142,7 +127,8 @@ impl UserWorker {
         ctx: &mut actix::Context<Self>,
     ) -> BoxFuture<'static, Result<signer::SignatureResponse, signer::Error>> {
         match result {
-            Ok((id, req)) => {
+            Ok((id, mut req)) => {
+                req.id = Some(id);
                 let (tx, rx) = oneshot::channel();
                 let timeout = req.timeout;
                 self.sigreg
@@ -155,31 +141,18 @@ impl UserWorker {
                     )
                     .expect("DB's ID is unique");
                 self.subs
-                    .retain(|sub_id, sub| match sub.receiver.upgrade() {
-                        Some(addr) => {
-                            addr.do_send(SigReqEvent {
-                                sub_id: *sub_id,
-                                req_id: id,
-                                pubkey: req.pubkey.to_bytes(),
-                                message: req.message.clone(),
-                            });
-                            true
-                        }
-                        None => false,
-                    });
+                    .retain(|_, sub| sub.tx.unbounded_send(req.clone()).is_ok());
                 if let Some(flow_run_id) = req.flow_run_id {
                     actix::spawn(
                         self.root
                             .send(FindActor::<FlowRunWorker>::new(flow_run_id))
                             .map_ok(move |res| {
                                 if let Some(addr) = res {
-                                    addr.do_send(SigReqEvent {
-                                        sub_id: 0,
-                                        req_id: id,
-                                        pubkey: req.pubkey.to_bytes(),
-                                        message: req.message.clone(),
-                                    });
+                                    addr.do_send(SigReqEvent(req.clone()));
                                 }
+                            })
+                            .inspect_err(move |_| {
+                                tracing::error!("FlowRunWorker not found {}", flow_run_id);
                             }),
                     );
                 }
@@ -334,6 +307,7 @@ impl actix::Handler<signer::SignatureRequest> for UserWorker {
                     &msg.pubkey.to_bytes(),
                     &msg.message,
                     msg.flow_run_id.as_ref(),
+                    msg.signatures.as_deref(),
                 )
                 .await?;
             Ok((id, msg))

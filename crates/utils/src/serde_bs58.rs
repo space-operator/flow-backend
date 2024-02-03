@@ -5,13 +5,13 @@ where
     s.serialize_str(&bs58::encode(t).into_string())
 }
 
-pub struct Visitor<const N: usize>;
+struct Visitor<const N: usize>;
 
 impl<'de, const N: usize> serde::de::Visitor<'de> for Visitor<N> {
     type Value = [u8; N];
 
     fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.write_str("base58 public key")
+        f.write_str("base58")
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
@@ -33,30 +33,6 @@ pub fn deserialize<'de, const S: usize, D>(d: D) -> Result<[u8; S], D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    struct Visitor<const N: usize>;
-
-    impl<'de, const N: usize> serde::de::Visitor<'de> for Visitor<N> {
-        type Value = [u8; N];
-
-        fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-            f.write_str("base58 public key")
-        }
-
-        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
-        {
-            let mut pk = [0u8; N];
-            let size = bs58::decode(v)
-                .into(&mut pk)
-                .map_err(|_| serde::de::Error::custom("invalid base58"))?;
-            if size != N {
-                return Err(serde::de::Error::custom("invalid base58"));
-            }
-            Ok(pk)
-        }
-    }
-
     d.deserialize_str(Visitor::<S>)
 }
 

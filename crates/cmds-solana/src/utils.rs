@@ -71,7 +71,7 @@ pub async fn try_sign_wallet(
 
     let futs = keypairs
         .iter()
-        .filter(|&k| k.is_user_wallet())
+        .filter(|&k| k.is_adapter_wallet())
         .map(|k| k.pubkey())
         .collect::<BTreeSet<_>>()
         .into_iter()
@@ -95,7 +95,7 @@ pub async fn try_sign_wallet(
     }
 
     for k in keypairs {
-        if !k.is_user_wallet() {
+        if !k.is_adapter_wallet() {
             signers.push(*k);
         }
     }

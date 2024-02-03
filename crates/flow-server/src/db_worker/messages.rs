@@ -1,4 +1,4 @@
-use flow_lib::{config::client::ClientConfig, FlowId, FlowRunId, UserId, ValueSet};
+use flow_lib::{config::client::ClientConfig, FlowId, FlowRunId, ValueSet};
 use thiserror::Error as ThisError;
 use uuid::Uuid;
 
@@ -25,16 +25,17 @@ pub type SubscriptionID = u64;
 
 #[derive(ThisError, Debug)]
 pub enum SubscribeError {
-    #[error("unauthorized: {}", user_id)]
-    Unauthorized { user_id: UserId },
+    #[error("unauthorized")]
+    Unauthorized,
     #[error("not found")]
     NotFound,
     #[error(transparent)]
     MailBox(#[from] actix::MailboxError),
 }
 
+/// Sent after a stream finished
 pub struct Finished {
-    pub sub_id: SubscriptionID,
+    pub stream_id: SubscriptionID,
 }
 
 impl actix::Message for Finished {
