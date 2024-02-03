@@ -57,12 +57,20 @@
   ],
   "targets": [
     {
+      "name": "seed",
+      "type_bounds": ["u64"],
+      "required": false,
+      "passthrough": false,
+      "defaultValue": null,
+      "tooltip": "Optional random seed to use."
+    },
+    {
       "name": "defaults",
       "type_bounds": ["object"],
       "required": false,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": "Default values to use."
+      "tooltip": "Default values to overwrite randomly generated values."
     }
   ],
   "targets_form.json_schema": {},

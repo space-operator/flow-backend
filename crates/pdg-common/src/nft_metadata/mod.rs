@@ -290,7 +290,7 @@ impl Default for RenderParams {
             dress_color_hue: 0.0,
             eye_color_random_hue: 0.0,
             random_value: 0.0,
-            wedgeindex: 5043,
+            wedgeindex: 0,
             render_noise_threshold: 0.6,
             render_resolution: 1024,
             wedgeattribs: [

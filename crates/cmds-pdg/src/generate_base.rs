@@ -6,6 +6,8 @@ use flow_lib::{
     Context,
 };
 use pdg_common::nft_metadata::RenderParams;
+use rand::SeedableRng;
+use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
 
 const NAME: &str = "generate_base";
@@ -22,6 +24,8 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 #[derive(Deserialize, Debug)]
 struct Input {
     #[serde(default)]
+    seed: Option<u64>,
+    #[serde(default)]
     defaults: flow_lib::value::Map,
 }
 
@@ -31,7 +35,12 @@ struct Output {
 }
 
 async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
-    let attributes = RenderParams::generate_base(&mut rand::thread_rng());
+    let mut rng = match input.seed {
+        Some(seed) => ChaCha20Rng::seed_from_u64(seed),
+        None => ChaCha20Rng::from_entropy(),
+    };
+
+    let attributes = RenderParams::generate_base(&mut rng);
 
     let mut map = flow_lib::value::to_map(&attributes)?;
     map.extend(input.defaults.into_iter());
