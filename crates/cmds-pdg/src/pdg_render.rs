@@ -148,7 +148,7 @@ async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
 
     // send the request
     ws.send({
-        tracing::info!(
+        tracing::debug!(
             "rand_seed={}",
             &rand_seed.as_ref().unwrap_or(&"".to_owned())
         );
