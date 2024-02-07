@@ -8,11 +8,6 @@ pub struct Params {
     signature: [u8; 64],
 }
 
-#[derive(Serialize)]
-pub struct Output {
-    success: bool,
-}
-
 pub fn service(config: &Config) -> impl HttpServiceFactory {
     web::resource("/submit")
         .wrap(config.cors())

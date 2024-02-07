@@ -14,7 +14,6 @@ use actix::{
 };
 use actix_web::{dev::HttpServiceFactory, guard, web, HttpRequest};
 use actix_web_actors::ws::{self, CloseCode, WebsocketContext};
-
 use db::pool::DbPool;
 use flow::flow_run_events::Event;
 use flow_lib::{BoxError, FlowRunId};
@@ -124,6 +123,7 @@ impl actix::StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
     fn handle(&mut self, item: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match item {
             Ok(ws::Message::Text(text)) => {
+                tracing::debug!("received text '{}'", text);
                 match serde_json::from_str::<Request>(&text) {
                     Ok(msg) => match msg.data {
                         WsMessage::Authenticate(params) => self.authenticate(msg.id, params, ctx),
@@ -320,6 +320,7 @@ fn error_response<E: ToString>(ctx: &mut WebsocketContext<WsConn>, id: i64, erro
         data: Err(error.to_string()),
     })
     .unwrap();
+    tracing::debug!("sending '{}'", text);
     ctx.text(text);
 }
 
@@ -329,7 +330,10 @@ fn success_response<T: Serialize>(ctx: &mut WebsocketContext<WsConn>, id: i64, v
         data: Ok(value),
     });
     match result {
-        Ok(text) => ctx.text(text),
+        Ok(text) => {
+            tracing::debug!("sending '{}'", text);
+            ctx.text(text)
+        }
         Err(error) => error_response(
             ctx,
             id,
@@ -345,7 +349,10 @@ fn text_stream<T: Serialize>(
 ) {
     let result = serde_json::to_string(&WsEvent::<T> { stream_id, event });
     match result {
-        Ok(text) => ctx.text(text),
+        Ok(text) => {
+            tracing::debug!("sending '{}'", text);
+            ctx.text(text)
+        }
         Err(error) => tracing::error!("failed to serialize event: {}", error),
     }
 }

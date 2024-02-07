@@ -1640,6 +1640,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "702fc72eb24e5a1e48ce58027a675bc24edd52096d5397d4aea7c6dd9eca0bd1"
 
 [[package]]
+name = "client"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "flow-lib",
+ "serde",
+ "serde_with 3.6.0",
+]
+
+[[package]]
 name = "cmds-pdg"
 version = "0.0.0"
 dependencies = [
@@ -2272,7 +2282,6 @@ dependencies = [
  "kv",
  "rand 0.8.5",
  "reqwest",
- "ring 0.16.20",
  "rustls 0.20.9",
  "rustls-pemfile",
  "serde",
@@ -2289,7 +2298,6 @@ dependencies = [
  "url",
  "utils",
  "uuid 1.7.0",
- "x509-parser",
 ]
 
 [[package]]
