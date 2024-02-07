@@ -18,7 +18,7 @@ pub mod db_worker;
 pub mod error;
 pub mod middleware;
 pub mod user;
-pub mod wss;
+pub mod ws;
 
 pub fn match_wildcard(pat: &str, origin: &HeaderValue) -> bool {
     let Ok(mut origin_str) = origin.to_str() else {

@@ -10,8 +10,7 @@ use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, SslMode};
 use flow_lib::{context::get_jwt, UserId};
 use futures_util::FutureExt;
 use hashbrown::HashMap;
-use ring::signature::{UnparsedPublicKey, RSA_PSS_2048_8192_SHA256};
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 
 pub use deadpool_postgres::Object as Connection;
 
@@ -66,64 +65,6 @@ fn read_cert(path: &std::path::Path) -> crate::Result<rustls::Certificate> {
     Ok(cert)
 }
 
-struct Verifier {}
-
-// rustls rejects the certificate for some unknown reasons,
-// need to override signautre verification
-impl rustls::client::ServerCertVerifier for Verifier {
-    fn verify_server_cert(
-        &self,
-        _end_entity: &rustls::Certificate,
-        _intermediates: &[rustls::Certificate],
-        _server_name: &rustls::ServerName,
-        _scts: &mut dyn Iterator<Item = &[u8]>,
-        _ocsp_response: &[u8],
-        _now: std::time::SystemTime,
-    ) -> Result<rustls::client::ServerCertVerified, rustls::Error> {
-        Ok(rustls::client::ServerCertVerified::assertion())
-    }
-
-    fn verify_tls12_signature(
-        &self,
-        message: &[u8],
-        cert: &rustls::Certificate,
-        dss: &rustls::internal::msgs::handshake::DigitallySignedStruct,
-    ) -> Result<rustls::client::HandshakeSignatureValid, rustls::Error> {
-        let cert = x509_parser::parse_x509_certificate(&cert.0)
-            .map_err(|_| rustls::Error::InvalidCertificateSignature)?
-            .1;
-        // hardcoded algorithm to match the current Supabase cert
-        let pubkey = UnparsedPublicKey::new(
-            &RSA_PSS_2048_8192_SHA256,
-            &cert.public_key().subject_public_key.data,
-        );
-        pubkey
-            .verify(message, dss.signature())
-            .map_err(|_| rustls::Error::InvalidCertificateSignature)?;
-        Ok(rustls::client::HandshakeSignatureValid::assertion())
-    }
-
-    fn verify_tls13_signature(
-        &self,
-        message: &[u8],
-        cert: &rustls::Certificate,
-        dss: &rustls::internal::msgs::handshake::DigitallySignedStruct,
-    ) -> Result<rustls::client::HandshakeSignatureValid, rustls::Error> {
-        let cert = x509_parser::parse_x509_certificate(&cert.0)
-            .map_err(|_| rustls::Error::InvalidCertificateSignature)?
-            .1;
-        // hardcoded algorithm to match the current Supabase cert
-        let pubkey = UnparsedPublicKey::new(
-            &RSA_PSS_2048_8192_SHA256,
-            &cert.public_key().subject_public_key.data,
-        );
-        pubkey
-            .verify(message, dss.signature())
-            .map_err(|_| rustls::Error::InvalidCertificateSignature)?;
-        Ok(rustls::client::HandshakeSignatureValid::assertion())
-    }
-}
-
 async fn conn_healthcheck(
     conn: &mut ClientWrapper,
     metric: &Metrics,
@@ -159,18 +100,22 @@ impl RealDbPool {
         };
 
         let builder = if let Some(ssl) = &cfg.ssl {
+            let mut roots = rustls::RootCertStore::empty();
             let cert = read_cert(&ssl.cert)?;
-            let mut store = rustls::RootCertStore::empty();
-            store
+            roots
                 .add(&cert)
                 .map_err(|e| Error::AddCert(e.to_string()))?;
-            let mut config = rustls::ClientConfig::builder()
+            /*
+            for cert in
+                rustls_native_certs::load_native_certs().expect("could not load platform certs")
+            {
+                roots.add(&rustls::Certificate(cert.0)).unwrap();
+            }
+            */
+            let config = rustls::ClientConfig::builder()
                 .with_safe_defaults()
-                .with_root_certificates(store)
+                .with_root_certificates(roots)
                 .with_no_client_auth();
-            config
-                .dangerous()
-                .set_certificate_verifier(Arc::new(Verifier {}));
             let tls = tokio_postgres_rustls::MakeRustlsConnect::new(config);
             pool_cfg.builder(tls).map_err(Error::CreatePool)?
         } else {

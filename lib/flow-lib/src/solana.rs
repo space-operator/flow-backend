@@ -15,8 +15,7 @@ use solana_sdk::{
     instruction::Instruction,
     message::Message,
     precompiles::verify_if_precompile,
-    pubkey::Pubkey,
-    signature::{Presigner, Signature},
+    signature::Presigner,
     signer::{keypair::Keypair, Signer},
     transaction::Transaction,
 };
@@ -24,6 +23,9 @@ use std::{sync::Arc, time::Duration};
 use tower::ServiceExt;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(5 * 60);
+
+pub use solana_sdk::pubkey::Pubkey;
+pub use solana_sdk::signature::Signature;
 
 pub fn find_failed_instruction(err: &ClientError) -> Option<usize> {
     if let ClientErrorKind::RpcError(RpcError::RpcResponseError { message, .. }) = &err.kind {

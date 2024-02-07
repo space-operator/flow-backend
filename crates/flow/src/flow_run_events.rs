@@ -75,14 +75,12 @@ impl From<tracing::Level> for LogLevel {
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
 pub struct FlowStart {
-    #[serde(skip)]
     pub time: DateTime<Utc>,
 }
 
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
 pub struct FlowError {
-    #[serde(skip)]
     pub time: DateTime<Utc>,
     pub error: String,
 }
@@ -90,7 +88,6 @@ pub struct FlowError {
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
 pub struct FlowLog {
-    #[serde(skip)]
     pub time: DateTime<Utc>,
     pub level: LogLevel,
     pub module: Option<String>,
@@ -100,7 +97,6 @@ pub struct FlowLog {
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
 pub struct FlowFinish {
-    #[serde(skip)]
     pub time: DateTime<Utc>,
     pub not_run: Vec<NodeId>,
     pub output: Value,
@@ -109,7 +105,6 @@ pub struct FlowFinish {
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
 pub struct NodeStart {
-    #[serde(skip)]
     pub time: DateTime<Utc>,
     pub node_id: NodeId,
     pub times: u32,
@@ -119,7 +114,6 @@ pub struct NodeStart {
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
 pub struct NodeOutput {
-    #[serde(skip)]
     pub time: DateTime<Utc>,
     pub node_id: NodeId,
     pub times: u32,
@@ -129,7 +123,6 @@ pub struct NodeOutput {
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
 pub struct NodeError {
-    #[serde(skip)]
     pub time: DateTime<Utc>,
     pub node_id: NodeId,
     pub times: u32,
@@ -139,7 +132,6 @@ pub struct NodeError {
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
 pub struct NodeLog {
-    #[serde(skip)]
     pub time: DateTime<Utc>,
     pub node_id: NodeId,
     pub times: u32,
@@ -151,7 +143,6 @@ pub struct NodeLog {
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]
 #[rtype(result = "()")]
 pub struct NodeFinish {
-    #[serde(skip)]
     pub time: DateTime<Utc>,
     pub node_id: NodeId,
     pub times: u32,
