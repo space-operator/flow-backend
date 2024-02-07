@@ -75,7 +75,7 @@ impl CommandTrait for JsonGetField {
 
         let json = inputs
             .swap_remove(JSON_OR_STRING)
-            .ok_or_else(|| crate::Error::ValueNotFound(JSON_OR_STRING.into()))?;
+            .ok_or_else(|| crate::error::Error::ValueNotFound(JSON_OR_STRING.into()))?;
 
         match json {
             Value::Map(map) => {
