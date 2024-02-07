@@ -10,11 +10,6 @@ pub struct Params {
     pub timeout_millies: u32,
 }
 
-#[derive(Serialize)]
-pub struct Output {
-    pub success: bool,
-}
-
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
     web::resource("/stop/{id}")
         .wrap(config.all_auth(db))
@@ -27,7 +22,7 @@ async fn stop_flow(
     params: Option<web::Json<Params>>,
     user: web::ReqData<auth::JWTPayload>,
     db_worker: web::Data<actix::Addr<DBWorker>>,
-) -> Result<web::Json<Output>, StopError> {
+) -> Result<web::Json<Success>, StopError> {
     let id = id.into_inner();
     let user = user.into_inner();
     let timeout_millies = params
@@ -45,5 +40,5 @@ async fn stop_flow(
         })
         .await??;
 
-    Ok(web::Json(Output { success: true }))
+    Ok(web::Json(Success))
 }

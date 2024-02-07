@@ -9,7 +9,6 @@ use actix::{
     StreamHandler, WrapFuture,
 };
 use actix_web::http::StatusCode;
-use chrono::Utc;
 use db::{pool::DbPool, FlowRunLogsRow};
 use flow::{
     flow_graph::StopSignal,

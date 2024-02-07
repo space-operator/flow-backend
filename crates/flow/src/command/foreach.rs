@@ -36,7 +36,7 @@ impl CommandTrait for Foreach {
 
     async fn run(&self, _ctx: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let v = inputs
-            .remove(ARRAY)
+            .swap_remove(ARRAY)
             .ok_or_else(|| crate::Error::ValueNotFound(ARRAY.into()))?;
         if matches!(&v, Value::Array(_)) {
             Ok(value::map! {

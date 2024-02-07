@@ -39,7 +39,7 @@ impl CommandTrait for PrintCommand {
 
     async fn run(&self, _ctx: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let input = inputs
-            .remove(PRINT)
+            .swap_remove(PRINT)
             .ok_or_else(|| anyhow!("input not found: {}", PRINT))?;
         let output = match input {
             Value::Decimal(v) => v.to_string(),

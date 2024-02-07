@@ -64,7 +64,7 @@ pub fn remove<S: AsRef<str>>(value: &mut Value, path: &[S]) -> Option<Value> {
     let parent = get_mut(value, parent_path)?;
     let key = path.last().expect("!path.is_empty()").as_ref();
     match parent {
-        Value::Map(map) => map.remove(key),
+        Value::Map(map) => map.swap_remove(key),
         Value::Array(array) => {
             let idx = parse_index(key)?;
             if idx < array.len() {

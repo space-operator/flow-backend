@@ -85,32 +85,32 @@ impl CommandTrait for FindPDA {
     async fn run(&self, _: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let Input { program_id } = value::from_map(inputs.clone())?;
 
-        let seed_1: Option<Value> = inputs.remove(SEED_1);
+        let seed_1: Option<Value> = inputs.swap_remove(SEED_1);
         let seed_1 = match seed_1 {
             Some(Value::B32(v)) => v.to_vec(),
             Some(Value::String(v)) => v.as_bytes().to_vec(),
             _ => vec![],
         };
 
-        let seed_2: Option<Value> = inputs.remove(SEED_2);
+        let seed_2: Option<Value> = inputs.swap_remove(SEED_2);
         let seed_2 = match seed_2 {
             Some(Value::B32(v)) => v.to_vec(),
             Some(Value::String(v)) => v.as_bytes().to_vec(),
             _ => vec![],
         };
-        let seed_3: Option<Value> = inputs.remove(SEED_3);
+        let seed_3: Option<Value> = inputs.swap_remove(SEED_3);
         let seed_3 = match seed_3 {
             Some(Value::B32(v)) => v.to_vec(),
             Some(Value::String(v)) => v.as_bytes().to_vec(),
             _ => vec![],
         };
-        let seed_4: Option<Value> = inputs.remove(SEED_4);
+        let seed_4: Option<Value> = inputs.swap_remove(SEED_4);
         let seed_4 = match seed_4 {
             Some(Value::B32(v)) => v.to_vec(),
             Some(Value::String(v)) => v.as_bytes().to_vec(),
             _ => vec![],
         };
-        let seed_5: Option<Value> = inputs.remove(SEED_5);
+        let seed_5: Option<Value> = inputs.swap_remove(SEED_5);
         let seed_5 = match seed_5 {
             Some(Value::B32(v)) => v.to_vec(),
             Some(Value::String(v)) => v.as_bytes().to_vec(),

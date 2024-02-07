@@ -138,6 +138,6 @@ impl SignerWorker {
                 )
             })
             .collect::<JsonValue>();
-        Ok((signer.start(), signers_info.into()))
+        Ok((signer.start(), signers_info))
     }
 }

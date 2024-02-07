@@ -44,7 +44,7 @@ pub async fn find_or_create_user(
         .map(|pw| pw.user_id);
     let user_id = match user_id {
         Some(user_id) => user_id,
-        None => sup.create_user(&pubkey).await?.1,
+        None => sup.create_user(pubkey).await?.1,
     };
     Ok(user_id)
 }

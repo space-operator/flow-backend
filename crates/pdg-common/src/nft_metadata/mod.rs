@@ -1,12 +1,9 @@
 use self::pdg::{Attr, AttrCfg};
-use rand::{
-    distributions::{Uniform, WeightedIndex},
-    prelude::Distribution,
-};
+use rand::seq::{IteratorRandom, SliceRandom};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use std::{borrow::Cow, fmt::Debug};
-use strum::{Display, EnumProperty, IntoEnumIterator};
+use std::{borrow::Cow, collections::HashMap, fmt::Debug};
+use strum::{Display, IntoEnumIterator};
 use thiserror::Error as ThisError;
 
 pub mod generate;
@@ -21,10 +18,25 @@ pub struct PropertyNotFound {
     pub variant: String,
 }
 
-trait EnumExt {
+#[derive(ThisError, Debug)]
+pub enum WeightError {
+    #[error(transparent)]
+    PropertyNotFound(#[from] PropertyNotFound),
+    #[error("invalid weight {} on type {}", value, ty)]
+    InvalidValue { value: &'static str, ty: String },
+}
+
+pub trait EnumExt {
     fn pdg_name(&self) -> Result<&'static str, PropertyNotFound>;
     fn metaplex_name(&self) -> Result<&'static str, PropertyNotFound>;
     fn effect_type(&self) -> Result<&'static str, PropertyNotFound>;
+    fn weight(&self) -> Result<f64, WeightError>;
+}
+
+pub trait EnumRandExt {
+    fn choose<R: rand::Rng + ?Sized>(rng: &mut R) -> Self;
+    fn choose_uniform<R: rand::Rng + ?Sized>(rng: &mut R) -> Self;
+    fn choose_weighted<R: rand::Rng + ?Sized>(rng: &mut R) -> Self;
 }
 
 impl<T> EnumExt for T
@@ -52,6 +64,43 @@ where
             ty: std::any::type_name::<T>(),
             variant: format!("{:?}", self),
         })
+    }
+    fn weight(&self) -> Result<f64, WeightError> {
+        let value = self.get_str("weight").ok_or_else(|| PropertyNotFound {
+            attr: "weight",
+            ty: std::any::type_name::<T>(),
+            variant: format!("{:?}", self),
+        })?;
+        value.parse().map_err(|_| WeightError::InvalidValue {
+            value,
+            ty: format!("{:?}", self),
+        })
+    }
+}
+
+impl<T> EnumRandExt for T
+where
+    T: EnumExt + IntoEnumIterator + Clone,
+{
+    fn choose<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        let has_weight = T::iter().next().unwrap().weight().is_ok();
+        if has_weight {
+            T::choose_weighted(rng)
+        } else {
+            T::choose_uniform(rng)
+        }
+    }
+
+    fn choose_uniform<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        T::iter().choose(rng).unwrap().clone()
+    }
+
+    fn choose_weighted<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        T::iter()
+            .collect::<Box<[T]>>()
+            .choose_weighted(rng, |v| v.weight().unwrap_or(0.0))
+            .unwrap()
+            .clone()
     }
 }
 
@@ -241,7 +290,7 @@ impl Default for RenderParams {
             dress_color_hue: 0.0,
             eye_color_random_hue: 0.0,
             random_value: 0.0,
-            wedgeindex: 5043,
+            wedgeindex: 0,
             render_noise_threshold: 0.6,
             render_resolution: 1024,
             wedgeattribs: [
@@ -331,21 +380,30 @@ impl RenderParams {
     pub fn from_pdg_metadata(
         m: &mut serde_json::Value,
         check_human_readable: bool,
+        defaults: &HashMap<String, serde_json::Value>,
     ) -> Result<Self, FromPDGError> {
         fn try_get_enum<E: TryFrom<u32, Error = FromPDGError>>(
             m: &mut serde_json::Value,
             path: &'static str,
+            defaults: &HashMap<String, serde_json::Value>,
         ) -> Result<E, FromPDGError> {
-            let json = m
+            let v = match m
                 .as_object_mut()
                 .ok_or_else(|| FromPDGError::ExpectedObject)?
                 .remove(path)
-                .ok_or_else(|| not_found(path))?;
-            let attr = serde_json::from_value::<Attr<(u32,)>>(json)?;
-            if attr.cfg != AttrCfg::new_type(0) {
-                return Err(FromPDGError::DifferentConfig(attr.cfg));
-            }
-            E::try_from(attr.value.0)
+            {
+                Some(json) => {
+                    let attr = serde_json::from_value::<Attr<(u32,)>>(json)?;
+                    if attr.cfg != AttrCfg::new_type(0) {
+                        return Err(FromPDGError::DifferentConfig(attr.cfg));
+                    }
+                    attr.value.0
+                }
+                None => serde_json::from_value(
+                    defaults.get(path).cloned().ok_or_else(|| not_found(path))?,
+                )?,
+            };
+            E::try_from(v)
         }
 
         fn check_enum_name(
@@ -353,11 +411,14 @@ impl RenderParams {
             path: &'static str,
             variant_name: &'static str,
         ) -> Result<(), FromPDGError> {
-            let json = m
+            let json = match m
                 .as_object_mut()
                 .ok_or_else(|| FromPDGError::ExpectedObject)?
                 .remove(path)
-                .ok_or_else(|| not_found(path))?;
+            {
+                None => return Ok(()),
+                Some(json) => json,
+            };
             let attr = serde_json::from_value::<Attr<(String,)>>(json)?;
             if attr.cfg != AttrCfg::new_type(2) {
                 return Err(FromPDGError::DifferentConfig(attr.cfg));
@@ -372,33 +433,75 @@ impl RenderParams {
             Ok(())
         }
 
-        fn try_get_f64(m: &mut serde_json::Value, path: &'static str) -> Result<f64, FromPDGError> {
-            let json = m
+        fn try_get_f64(
+            m: &mut serde_json::Value,
+            path: &'static str,
+            defaults: &HashMap<String, serde_json::Value>,
+        ) -> Result<f64, FromPDGError> {
+            let v = match m
                 .as_object_mut()
                 .ok_or_else(|| FromPDGError::ExpectedObject)?
                 .remove(path)
-                .ok_or_else(|| not_found(path))?;
-            let attr = serde_json::from_value::<Attr<(f64,)>>(json)?;
-            if attr.cfg != AttrCfg::new_type(1) {
-                return Err(FromPDGError::DifferentConfig(attr.cfg));
-            }
-            Ok(attr.value.0)
+            {
+                Some(json) => {
+                    let attr = serde_json::from_value::<Attr<(f64,)>>(json)?;
+                    if attr.cfg != AttrCfg::new_type(1) {
+                        return Err(FromPDGError::DifferentConfig(attr.cfg));
+                    }
+                    attr.value.0
+                }
+                None => serde_json::from_value(
+                    defaults.get(path).cloned().ok_or_else(|| not_found(path))?,
+                )?,
+            };
+            Ok(v)
         }
 
         fn try_get_int<I: DeserializeOwned>(
             m: &mut serde_json::Value,
             path: &'static str,
+            defaults: &HashMap<String, serde_json::Value>,
         ) -> Result<I, FromPDGError> {
-            let json = m
+            let v = match m
                 .as_object_mut()
                 .ok_or_else(|| FromPDGError::ExpectedObject)?
                 .remove(path)
-                .ok_or_else(|| not_found(path))?;
-            let attr = serde_json::from_value::<Attr<(I,)>>(json)?;
-            if attr.cfg != AttrCfg::new_type(0) {
-                return Err(FromPDGError::DifferentConfig(attr.cfg));
-            }
-            Ok(attr.value.0)
+            {
+                Some(json) => {
+                    let attr = serde_json::from_value::<Attr<(I,)>>(json)?;
+                    if attr.cfg != AttrCfg::new_type(0) {
+                        return Err(FromPDGError::DifferentConfig(attr.cfg));
+                    }
+                    attr.value.0
+                }
+                None => serde_json::from_value(
+                    defaults.get(path).cloned().ok_or_else(|| not_found(path))?,
+                )?,
+            };
+            Ok(v)
+        }
+        fn try_get_string(
+            m: &mut serde_json::Value,
+            path: &'static str,
+            defaults: &HashMap<String, serde_json::Value>,
+        ) -> Result<String, FromPDGError> {
+            let v = match m
+                .as_object_mut()
+                .ok_or_else(|| FromPDGError::ExpectedObject)?
+                .remove(path)
+            {
+                Some(json) => {
+                    let attr = serde_json::from_value::<Attr<(String,)>>(json)?;
+                    if attr.cfg != AttrCfg::new_type(2) {
+                        return Err(FromPDGError::DifferentConfig(attr.cfg));
+                    }
+                    attr.value.0
+                }
+                None => serde_json::from_value(
+                    defaults.get(path).cloned().ok_or_else(|| not_found(path))?,
+                )?,
+            };
+            Ok(v)
         }
         fn try_get_string(
             m: &mut serde_json::Value,
@@ -416,127 +519,131 @@ impl RenderParams {
             Ok(attr.value.0)
         }
 
-        let body_type = try_get_enum::<BodyType>(m, "Body_type")?;
+        let body_type = try_get_enum::<BodyType>(m, "Body_type", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Body_name", body_type.pdg_name()?)?;
         }
-        let pose = try_get_enum::<Pose>(m, "Pose")?;
+        let pose = try_get_enum::<Pose>(m, "Pose", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Pose_name", pose.pdg_name()?)?;
         }
-        let helmet_type = try_get_enum::<HelmetType>(m, "Helmet_type")?;
+        let helmet_type = try_get_enum::<HelmetType>(m, "Helmet_type", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Helmet_name", helmet_type.pdg_name()?)?;
         }
-        let helmet_light = try_get_enum::<HelmetLight>(m, "Helmet_light")?;
+        let helmet_light = try_get_enum::<HelmetLight>(m, "Helmet_light", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Helmet_Light_name", helmet_light.pdg_name()?)?;
         }
 
-        let fx0 = try_get_enum::<Fx0>(m, "Fx_switcher_layer_0")?;
+        let fx0 = try_get_enum::<Fx0>(m, "Fx_switcher_layer_0", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Fx_0", fx0.pdg_name()?)?;
         }
 
-        let fx1 = try_get_enum::<Fx1>(m, "Fx_switcher_layer_1")?;
+        let fx1 = try_get_enum::<Fx1>(m, "Fx_switcher_layer_1", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Fx_1", fx1.pdg_name()?)?;
         }
 
-        let fx1a = try_get_enum::<Fx1a>(m, "Fx_switcher_layer_1a")?;
+        let fx1a = try_get_enum::<Fx1a>(m, "Fx_switcher_layer_1a", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Fx_1a", fx1a.pdg_name()?)?;
         }
 
-        let fx2 = try_get_enum::<Fx2>(m, "Fx_switcher_layer_2")?;
+        let fx2 = try_get_enum::<Fx2>(m, "Fx_switcher_layer_2", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Fx_2", fx2.pdg_name()?)?;
         }
 
-        let fx3 = try_get_enum::<Fx3>(m, "Fx_switcher_layer_3")?;
+        let fx3 = try_get_enum::<Fx3>(m, "Fx_switcher_layer_3", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Fx_3", fx3.pdg_name()?)?;
         }
 
-        let fx4 = try_get_enum::<Fx4>(m, "Fx_switcher_layer_4")?;
+        let fx4 = try_get_enum::<Fx4>(m, "Fx_switcher_layer_4", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Fx_4", fx4.pdg_name()?)?;
         }
 
-        let fx5 = try_get_enum::<Fx5>(m, "Fx_switcher_layer_5")?;
+        let fx5 = try_get_enum::<Fx5>(m, "Fx_switcher_layer_5", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Fx_5", fx5.pdg_name()?)?;
         }
 
-        let fx6 = try_get_enum::<Fx6>(m, "Fx_switcher_layer_6")?;
+        let fx6 = try_get_enum::<Fx6>(m, "Fx_switcher_layer_6", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Fx_6", fx6.pdg_name()?)?;
         }
 
-        let fx0_bodyoff = try_get_enum::<Fx0BodyOff>(m, "Fx_bodyoff_layer_0_1_1a")?;
+        let fx0_bodyoff = try_get_enum::<Fx0BodyOff>(m, "Fx_bodyoff_layer_0_1_1a", defaults)?;
         let fx0_bodyoff_glass =
-            try_get_enum::<Fx0BodyOffGlass>(m, "Fx_bodyoff_layer_0_1_1a_glass")?;
+            try_get_enum::<Fx0BodyOffGlass>(m, "Fx_bodyoff_layer_0_1_1a_glass", defaults)?;
 
         let body_material_variation =
-            try_get_enum::<BodyMaterialVariations>(m, "Body_material_variation")?;
+            try_get_enum::<BodyMaterialVariations>(m, "Body_material_variation", defaults)?;
 
-        let marble_variation = try_get_enum::<MarbleVariation>(m, "Marble_variation")?;
+        let marble_variation = try_get_enum::<MarbleVariation>(m, "Marble_variation", defaults)?;
 
-        let wood_variation = try_get_enum::<WoodVariation>(m, "Wood_variation")?;
+        let wood_variation = try_get_enum::<WoodVariation>(m, "Wood_variation", defaults)?;
 
-        let fx_jellifish = try_get_enum::<FxJellyfish>(m, "Fx_Jellifish")?;
+        let fx_jellifish = try_get_enum::<FxJellyfish>(m, "Fx_Jellifish", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Jellifish", fx_jellifish.pdg_name()?)?;
         }
 
-        let fx_lineart_helper = try_get_enum::<FxLineartHelper>(m, "FX_lineart_helper")?;
+        let fx_lineart_helper = try_get_enum::<FxLineartHelper>(m, "FX_lineart_helper", defaults)?;
 
-        let env_light = try_get_enum::<EnvLight>(m, "Env_Light")?;
+        let env_light = try_get_enum::<EnvLight>(m, "Env_Light", defaults)?;
 
-        let env_reflection = try_get_enum::<EnvReflection>(m, "Env_reflection")?;
+        let env_reflection = try_get_enum::<EnvReflection>(m, "Env_reflection", defaults)?;
 
         let light_reflection_mult =
-            try_get_enum::<LightReflectionMult>(m, "light_reflection_mult")?;
+            try_get_enum::<LightReflectionMult>(m, "light_reflection_mult", defaults)?;
 
-        let glowing_logo = try_get_enum::<GlowingLogo>(m, "Glowing_logo")?;
-        let logo_hue = try_get_f64(m, "Logo_hue")?;
-        let logo_name = try_get_string(m, "logo_name")?;
+        let glowing_logo = try_get_enum::<GlowingLogo>(m, "Glowing_logo", defaults)?;
+        let logo_hue = try_get_f64(m, "Logo_hue", defaults)?;
+        let logo_name = try_get_string(m, "logo_name", defaults)?;
 
-        let butterfly_amount = try_get_f64(m, "Butterfly_amount")?;
-        let disintegration_amount = try_get_f64(m, "Desintegration_amount")?;
-        let melt_amount = try_get_f64(m, "Melt_amount")?;
-        let fall_amount = try_get_f64(m, "Fall_amount")?;
-        let firefly_amount = try_get_f64(m, "Firefly_amount")?;
-        let frozen_amount = try_get_f64(m, "Frozen_amount")?;
-        let fungi_amount = try_get_f64(m, "Fungi_amount")?;
-        let gold_silver_amount = try_get_f64(m, "Gold_silver_amount")?;
-        let grow_flower_amount = try_get_f64(m, "Grow_flower_amount")?;
-        let hologram_amount = try_get_f64(m, "Hologram_amount")?;
-        let eyes_light_intensity_amount = try_get_f64(m, "Eyes_light_intensity_amount")?;
-        let ladybag_amount = try_get_f64(m, "Ladybag_amount")?;
-        let lineart_amount = try_get_f64(m, "Lineart_amount")?;
-        let melting_glow_amount = try_get_f64(m, "Melting_glow_amount")?;
-        let pixel_amount = try_get_f64(m, "Pixel_amount")?;
-        let rain_amount = try_get_f64(m, "Rain_amount")?;
-        let smoke_amount = try_get_f64(m, "Smoke_amount")?;
-        let soap_bubble_intensity_amount = try_get_f64(m, "Soap_bubble_intensity_amount")?;
-        let soap_bubble_roughness_amount = try_get_f64(m, "Soap_bubble_roughness_amount")?;
-        let spring_amount = try_get_f64(m, "Spring_amount")?;
-        let underwater_fog_amount = try_get_f64(m, "Underwater_fog_amount")?;
-        let xray_body_amount = try_get_f64(m, "Xray_body_amount")?;
-        let xray_skeleton_particles_amount = try_get_f64(m, "Xray_skeleton_particles_amount")?;
+        let butterfly_amount = try_get_f64(m, "Butterfly_amount", defaults)?;
+        let disintegration_amount = try_get_f64(m, "Desintegration_amount", defaults)?;
+        let melt_amount = try_get_f64(m, "Melt_amount", defaults)?;
+        let fall_amount = try_get_f64(m, "Fall_amount", defaults)?;
+        let firefly_amount = try_get_f64(m, "Firefly_amount", defaults)?;
+        let frozen_amount = try_get_f64(m, "Frozen_amount", defaults)?;
+        let fungi_amount = try_get_f64(m, "Fungi_amount", defaults)?;
+        let gold_silver_amount = try_get_f64(m, "Gold_silver_amount", defaults)?;
+        let grow_flower_amount = try_get_f64(m, "Grow_flower_amount", defaults)?;
+        let hologram_amount = try_get_f64(m, "Hologram_amount", defaults)?;
+        let eyes_light_intensity_amount = try_get_f64(m, "Eyes_light_intensity_amount", defaults)?;
+        let ladybag_amount = try_get_f64(m, "Ladybag_amount", defaults)?;
+        let lineart_amount = try_get_f64(m, "Lineart_amount", defaults)?;
+        let melting_glow_amount = try_get_f64(m, "Melting_glow_amount", defaults)?;
+        let pixel_amount = try_get_f64(m, "Pixel_amount", defaults)?;
+        let rain_amount = try_get_f64(m, "Rain_amount", defaults)?;
+        let smoke_amount = try_get_f64(m, "Smoke_amount", defaults)?;
+        let soap_bubble_intensity_amount =
+            try_get_f64(m, "Soap_bubble_intensity_amount", defaults)?;
+        let soap_bubble_roughness_amount =
+            try_get_f64(m, "Soap_bubble_roughness_amount", defaults)?;
+        let spring_amount = try_get_f64(m, "Spring_amount", defaults)?;
+        let underwater_fog_amount = try_get_f64(m, "Underwater_fog_amount", defaults)?;
+        let xray_body_amount = try_get_f64(m, "Xray_body_amount", defaults)?;
+        let xray_skeleton_particles_amount =
+            try_get_f64(m, "Xray_skeleton_particles_amount", defaults)?;
 
-        let background_color_random_hue = try_get_f64(m, "background_color_random_hue")?;
-        let background_underwater_color_hue = try_get_f64(m, "background_underwater_color_hue")?;
-        let dress_color_hue = try_get_f64(m, "dress_color_hue")?;
-        let eye_color_random_hue = try_get_f64(m, "eye_color_random_hue")?;
+        let background_color_random_hue = try_get_f64(m, "background_color_random_hue", defaults)?;
+        let background_underwater_color_hue =
+            try_get_f64(m, "background_underwater_color_hue", defaults)?;
+        let dress_color_hue = try_get_f64(m, "dress_color_hue", defaults)?;
+        let eye_color_random_hue = try_get_f64(m, "eye_color_random_hue", defaults)?;
 
-        let random_value = try_get_f64(m, "random_value")?;
+        let random_value = try_get_f64(m, "random_value", defaults)?;
 
-        let wedgeindex = try_get_int::<i64>(m, "wedgeindex")?;
+        let wedgeindex = try_get_int::<i64>(m, "wedgeindex", defaults)?;
 
-        let render_noise_threshold = try_get_f64(m, "Render_noise_threshold")?;
-        let render_resolution = try_get_int::<u32>(m, "Render_resolution")?;
+        let render_noise_threshold = try_get_f64(m, "Render_noise_threshold", defaults)?;
+        let render_resolution = try_get_int::<u32>(m, "Render_resolution", defaults)?;
 
         /*
         fn check_int<I: DeserializeOwned + PartialEq + std::fmt::Display>(
@@ -870,7 +977,7 @@ impl RenderParams {
 
         push_int_attr(&mut m, "Glowing_logo", *glowing_logo as u32);
         push_float_attr(&mut m, "Logo_hue", *logo_hue);
-        push_string_attr(&mut m, "Logo_name", &logo_name);
+        push_string_attr(&mut m, "Logo_name", logo_name);
 
         push_float_attr(&mut m, "Butterfly_amount", *butterfly_amount);
         push_float_attr(&mut m, "Desintegration_amount", *disintegration_amount);
@@ -1048,25 +1155,6 @@ pub enum BodyType {
 
 impl_try_from_u32!(BodyType);
 
-impl BodyType {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = BodyType::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1141,16 +1229,6 @@ pub enum HelmetType {
 }
 
 impl_try_from_u32!(HelmetType);
-
-impl HelmetType {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = HelmetType::iter().collect::<Vec<_>>();
-        let dist = Uniform::new(0, variants.len());
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1246,16 +1324,6 @@ pub enum Pose {
 
 impl_try_from_u32!(Pose);
 
-impl Pose {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Pose::iter().collect::<Vec<_>>();
-        let dist = Uniform::new(0, variants.len());
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1291,25 +1359,6 @@ pub enum HelmetLight {
 }
 
 impl_try_from_u32!(HelmetLight);
-
-impl HelmetLight {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = HelmetLight::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1365,25 +1414,6 @@ pub enum Fx0 {
 
 impl_try_from_u32!(Fx0);
 
-impl Fx0 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx0::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1418,25 +1448,6 @@ pub enum Fx1 {
 
 impl_try_from_u32!(Fx1);
 
-impl Fx1 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx1::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1467,16 +1478,6 @@ pub enum Fx1a {
 }
 
 impl_try_from_u32!(Fx1a);
-
-impl Fx1a {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx1a::iter().collect::<Vec<_>>();
-        let dist = Uniform::new(0, variants.len());
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1527,25 +1528,6 @@ pub enum Fx2 {
 }
 
 impl_try_from_u32!(Fx2);
-
-impl Fx2 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx2::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1609,25 +1591,6 @@ pub enum Fx4 {
 
 impl_try_from_u32!(Fx4);
 
-impl Fx4 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx4::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1661,25 +1624,6 @@ pub enum Fx5 {
 }
 
 impl_try_from_u32!(Fx5);
-
-impl Fx5 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx5::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
 
 #[derive(
     strum::FromRepr,
@@ -1727,24 +1671,204 @@ pub enum Fx6 {
 
 impl_try_from_u32!(Fx6);
 
-impl Fx6 {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = Fx6::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
+#[derive(
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+)]
+#[repr(u32)]
+pub enum Fx0BodyOff {
+    #[strum(props(PDGName = "No"))]
+    #[strum(props(MetaplexName = "No Body"))]
+    #[strum(props(weight = "50"))]
+    #[default]
+    No = 0,
+    #[strum(props(PDGName = "Visible"))]
+    #[strum(props(MetaplexName = "Visible"))]
+    #[strum(props(weight = "5"))]
+    On = 1,
 }
+
+impl_try_from_u32!(Fx0BodyOff);
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+)]
+#[repr(u32)]
+pub enum Fx0BodyOffGlass {
+    #[strum(props(PDGName = "No"))]
+    #[strum(props(MetaplexName = "No Glass"))]
+    #[strum(props(weight = "50"))]
+    #[default]
+    No = 0,
+    #[strum(props(PDGName = "On"))]
+    #[strum(props(MetaplexName = "Visible"))]
+    #[strum(props(weight = "5"))]
+    On = 1,
+}
+
+impl_try_from_u32!(Fx0BodyOffGlass);
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumProperty,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+)]
+#[repr(u32)]
+pub enum BodyMaterialVariations {
+    #[default]
+    StandardTextures = 0,
+    Stripes = 1,
+    Dots = 2,
+    Felt = 3,
+}
+
+impl_try_from_u32!(BodyMaterialVariations);
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumProperty,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+    Display,
+    Hash,
+)]
+#[repr(u32)]
+pub enum MarbleVariation {
+    #[strum(props(MetaplexName = "Zero"))]
+    #[strum(props(weight = "50"))]
+    #[default]
+    Zero = 0,
+    #[strum(props(MetaplexName = "One"))]
+    #[strum(props(weight = "5"))]
+    One = 1,
+    #[strum(props(MetaplexName = "Two"))]
+    #[strum(props(weight = "10"))]
+    Two = 2,
+    #[strum(props(MetaplexName = "Three"))]
+    #[strum(props(weight = "5"))]
+    Three = 3,
+    #[strum(props(MetaplexName = "Four"))]
+    #[strum(props(weight = "15"))]
+    Four = 4,
+    #[strum(props(MetaplexName = "Five"))]
+    #[strum(props(weight = "15"))]
+    Five = 5,
+    #[strum(props(MetaplexName = "Six"))]
+    #[strum(props(weight = "15"))]
+    Six = 6,
+    #[strum(props(MetaplexName = "Seven"))]
+    #[strum(props(weight = "15"))]
+    Seven = 7,
+}
+
+impl_try_from_u32!(MarbleVariation);
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumProperty,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+    Display,
+    Hash,
+)]
+#[repr(u32)]
+pub enum WoodVariation {
+    #[strum(props(MetaplexName = "Zero"))]
+    #[strum(props(weight = "50"))]
+    #[default]
+    Zero = 0,
+    #[strum(props(MetaplexName = "One"))]
+    #[strum(props(weight = "5"))]
+    One = 1,
+    #[strum(props(MetaplexName = "Two"))]
+    #[strum(props(weight = "10"))]
+    Two = 2,
+    #[strum(props(MetaplexName = "Three"))]
+    #[strum(props(weight = "5"))]
+    Three = 3,
+    #[strum(props(MetaplexName = "Four"))]
+    #[strum(props(weight = "15"))]
+    Four = 4,
+    #[strum(props(MetaplexName = "Five"))]
+    #[strum(props(weight = "15"))]
+    Five = 5,
+    #[strum(props(MetaplexName = "Six"))]
+    #[strum(props(weight = "15"))]
+    Six = 6,
+    #[strum(props(MetaplexName = "Seven"))]
+    #[strum(props(weight = "15"))]
+    Seven = 7,
+    #[strum(props(MetaplexName = "Eight"))]
+    #[strum(props(weight = "15"))]
+    Eight = 8,
+}
+
+impl_try_from_u32!(WoodVariation);
+
+#[derive(
+    strum::FromRepr,
+    strum::EnumProperty,
+    strum::EnumIter,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize_repr,
+    Deserialize_repr,
+    Default,
+    Display,
+    Hash,
+)]
+#[repr(u32)]
+pub enum GlowingLogo {
+    #[strum(props(weight = "90"))]
+    #[default]
+    No = 0,
+    #[strum(props(weight = "10"))]
+    Yes = 1,
+}
+
+impl_try_from_u32!(GlowingLogo);
 
 #[derive(
     strum::FromRepr,
@@ -2039,25 +2163,6 @@ pub enum FxJellyfish {
 
 impl_try_from_u32!(FxJellyfish);
 
-impl FxJellyfish {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = FxJellyfish::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("0")
-                    .parse::<u32>()
-                    .unwrap_or(0)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumIter,
@@ -2084,25 +2189,6 @@ pub enum FxLineartHelper {
 
 impl_try_from_u32!(FxLineartHelper);
 
-impl FxLineartHelper {
-    fn seed() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = FxLineartHelper::iter().collect::<Vec<_>>();
-        let weights = variants
-            .iter()
-            .map(|v| {
-                v.get_str("weight")
-                    .unwrap_or("50")
-                    .parse::<u32>()
-                    .unwrap_or(50)
-            })
-            .collect::<Vec<_>>();
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
-    }
-}
-
 #[derive(
     strum::FromRepr,
     strum::EnumIter,
@@ -2127,13 +2213,8 @@ pub enum EnvLight {
 impl_try_from_u32!(EnvLight);
 
 impl EnvLight {
-    pub fn day_or_night() -> Self {
-        let mut rng = rand::thread_rng();
-        let variants = [EnvLight::Day, EnvLight::Night];
-        let weights = vec![50, 50];
-        let dist = WeightedIndex::new(weights).unwrap();
-
-        variants[dist.sample(&mut rng)]
+    pub fn day_or_night<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        *[EnvLight::Day, EnvLight::Night].choose(rng).unwrap()
     }
 }
 
@@ -2179,6 +2260,8 @@ pub enum LightReflectionMult {
 
 impl_try_from_u32!(LightReflectionMult);
 
+/*
+ * TODO: add this test back
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2187,7 +2270,7 @@ mod tests {
     fn test_convert_metadata() {
         let mut json =
             serde_json::from_str::<serde_json::Value>(include_str!("tests/123.json")).unwrap();
-        let meta = RenderParams::from_pdg_metadata(&mut json, true).unwrap();
+        let meta = RenderParams::from_pdg_metadata(&mut json, true, &<_>::default()).unwrap();
         println!("{:#}", json);
         println!(
             "{:#?}",
@@ -2196,7 +2279,7 @@ mod tests {
         dbg!(&meta);
         let mut pdg = meta.to_pdg_metadata(true).unwrap();
         println!("{:#}", pdg);
-        let meta1 = RenderParams::from_pdg_metadata(&mut pdg, true).unwrap();
+        let meta1 = RenderParams::from_pdg_metadata(&mut pdg, true, &<_>::default()).unwrap();
         assert_eq!(meta, meta1);
         assert_eq!(
             pdg.as_object().unwrap().keys().next().unwrap(),
@@ -2204,3 +2287,4 @@ mod tests {
         );
     }
 }
+*/

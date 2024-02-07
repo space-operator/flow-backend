@@ -15,8 +15,7 @@ use solana_sdk::{
     instruction::Instruction,
     message::Message,
     precompiles::verify_if_precompile,
-    pubkey::Pubkey,
-    signature::{Presigner, Signature},
+    signature::Presigner,
     signer::{keypair::Keypair, Signer},
     transaction::Transaction,
 };
@@ -24,6 +23,9 @@ use std::{sync::Arc, time::Duration};
 use tower::ServiceExt;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(5 * 60);
+
+pub use solana_sdk::pubkey::Pubkey;
+pub use solana_sdk::signature::Signature;
 
 pub fn find_failed_instruction(err: &ClientError) -> Option<usize> {
     if let ClientErrorKind::RpcError(RpcError::RpcResponseError { message, .. }) = &err.kind {
@@ -70,13 +72,13 @@ pub fn verbose_solana_error(err: &ClientError) -> String {
 }
 
 pub trait KeypairExt {
-    fn new_user_wallet(pk: Pubkey) -> Self;
+    fn new_adapter_wallet(pk: Pubkey) -> Self;
     fn clone_keypair(&self) -> Self;
-    fn is_user_wallet(&self) -> bool;
+    fn is_adapter_wallet(&self) -> bool;
 }
 
 impl KeypairExt for Keypair {
-    fn new_user_wallet(pubkey: Pubkey) -> Self {
+    fn new_adapter_wallet(pubkey: Pubkey) -> Self {
         let mut buf = [0u8; 64];
         buf[32..].copy_from_slice(&pubkey.to_bytes());
         Keypair::from_bytes(&buf).expect("correct size, never fail")
@@ -86,7 +88,7 @@ impl KeypairExt for Keypair {
         Self::from_bytes(&self.to_bytes()).unwrap()
     }
 
-    fn is_user_wallet(&self) -> bool {
+    fn is_adapter_wallet(&self) -> bool {
         self.secret().as_bytes().iter().all(|b| *b == 0)
     }
 }
@@ -102,7 +104,7 @@ impl Instructions {
     fn push_signer(&mut self, new: Keypair) {
         let old = self.signers.iter_mut().find(|k| k.pubkey() == new.pubkey());
         if let Some(old) = old {
-            if old.is_user_wallet() {
+            if old.is_adapter_wallet() {
                 // prefer hardcoded
                 *old = new;
             }
@@ -155,7 +157,7 @@ impl Instructions {
                 .find(|w| w.pubkey() == self.fee_payer)
                 .ok_or_else(|| Error::Other(Arc::new("fee payer is not in signers".into())))?;
 
-            if keypair.is_user_wallet() {
+            if keypair.is_adapter_wallet() {
                 let fut = signer.call_ref(signer::SignatureRequest {
                     id: None,
                     time: Utc::now(),
@@ -179,7 +181,7 @@ impl Instructions {
             .signers
             .iter()
             .filter_map(|k| {
-                if k.is_user_wallet() && k.pubkey() != self.fee_payer {
+                if k.is_adapter_wallet() && k.pubkey() != self.fee_payer {
                     Some(k.pubkey())
                 } else {
                     None
@@ -231,7 +233,7 @@ impl Instructions {
             }
 
             for k in &self.signers {
-                if !k.is_user_wallet() && k.pubkey() != self.fee_payer {
+                if !k.is_adapter_wallet() && k.pubkey() != self.fee_payer {
                     signers.push(k);
                 }
             }

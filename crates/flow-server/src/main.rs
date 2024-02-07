@@ -9,7 +9,7 @@ use flow_server::{
     api::{self, prelude::Success},
     db_worker::{token_worker::token_from_apikeys, DBWorker, SystemShutdown},
     user::SupabaseAuth,
-    wss, Config,
+    ws, Config,
 };
 use futures_util::{future::ok, TryFutureExt};
 use std::{borrow::Cow, collections::BTreeSet, convert::Infallible, time::Duration};
@@ -132,18 +132,14 @@ async fn main() {
     let shutdown_timeout_secs = config.shutdown_timeout_secs;
 
     HttpServer::new(move || {
-        let auth = if let Some(supabase_auth) = &supabase_auth {
-            Some(
-                web::scope("/auth")
-                    .app_data(web::Data::new(sig_auth))
-                    .app_data(web::Data::new(supabase_auth.clone()))
-                    .service(api::claim_token::service(&config, db.clone()))
-                    .service(api::init_auth::service(&config))
-                    .service(api::confirm_auth::service(&config)),
-            )
-        } else {
-            None
-        };
+        let auth = supabase_auth.as_ref().map(|supabase_auth| {
+            web::scope("/auth")
+                .app_data(web::Data::new(sig_auth))
+                .app_data(web::Data::new(supabase_auth.clone()))
+                .service(api::claim_token::service(&config, db.clone()))
+                .service(api::init_auth::service(&config))
+                .service(api::confirm_auth::service(&config))
+        });
 
         let mut flow = web::scope("/flow")
             .service(api::start_flow::service(&config, db.clone()))
@@ -157,7 +153,7 @@ async fn main() {
                 web::Data::new(supabase_auth.clone()),
             ))
         }
-        let websocket = web::scope("/ws").service(wss::service(&config, db.clone()));
+        let websocket = web::scope("/ws").service(ws::service(&config, db.clone()));
         let signature = web::scope("/signature").service(api::submit_signature::service(&config));
 
         let healthcheck = web::resource("/healthcheck")

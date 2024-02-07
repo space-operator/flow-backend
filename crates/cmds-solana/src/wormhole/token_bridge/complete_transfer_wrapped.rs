@@ -191,7 +191,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [input.payer.clone_keypair()].into(),
-        instructions: instructions.into(),
+        instructions,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

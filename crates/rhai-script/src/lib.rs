@@ -53,7 +53,7 @@ impl Command {
     ) -> Result<ValueSet, CommandError> {
         let code = String::deserialize(
             input
-                .remove(&self.source_code_name)
+                .swap_remove(&self.source_code_name)
                 .ok_or_else(|| anyhow!("missing input: {}", self.source_code_name))?,
         )?;
 
@@ -70,7 +70,7 @@ impl Command {
             if i.name == self.source_code_name {
                 continue;
             }
-            match input.remove(&i.name) {
+            match input.swap_remove(&i.name) {
                 Some(value) => {
                     scope.push_dynamic(&i.name, value_to_dynamic(value));
                 }

@@ -57,12 +57,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             .unwrap()
         })
     });
-    c.bench_function("build_header", |b| b.iter(|| build_header()));
+    c.bench_function("build_header", |b| b.iter(build_header));
     let value = Value::Array(array![array!["accept", "application/json"]]);
     c.bench_function("deser_vec_tuple", |b| {
         b.iter(|| value::from_value::<Vec<(String, String)>>(black_box(value.clone())).unwrap())
     });
-    c.bench_function("new_reqwest_client", |b| b.iter(|| reqwest::Client::new()));
+    c.bench_function("new_reqwest_client", |b| b.iter(reqwest::Client::new));
 }
 
 criterion_group!(benches, criterion_benchmark);

@@ -17,7 +17,7 @@ use flow_lib::{
     },
     context::{
         get_jwt,
-        signer::{self, Presigner, SignatureRequest},
+        signer::{self, SignatureRequest},
     },
     FlowId, FlowRunId, User, UserId,
 };
@@ -48,7 +48,7 @@ impl actix::Message for SubscribeSigReq {
 impl actix::Handler<SubscribeSigReq> for UserWorker {
     type Result = <SubscribeSigReq as actix::Message>::Result;
 
-    fn handle(&mut self, msg: SubscribeSigReq, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, _msg: SubscribeSigReq, _: &mut Self::Context) -> Self::Result {
         let stream_id = self.counter.next();
         let (tx, rx) = mpsc::unbounded();
         self.subs.insert(stream_id, Subscription { tx });

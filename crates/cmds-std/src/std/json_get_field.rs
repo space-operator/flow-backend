@@ -74,8 +74,8 @@ impl CommandTrait for JsonGetField {
         let Input { field } = value::from_map(inputs.clone())?;
 
         let json = inputs
-            .remove(JSON_OR_STRING)
-            .ok_or_else(|| ValueNotFound(JSON_OR_STRING.into()))?;
+            .swap_remove(JSON_OR_STRING)
+            .ok_or_else(|| crate::Error::ValueNotFound(JSON_OR_STRING.into()))?;
 
         match json {
             Value::Map(map) => {
@@ -94,7 +94,7 @@ impl CommandTrait for JsonGetField {
 
                 let value = json
                     .ok()
-                    .and_then(|mut object| object.remove(&field))
+                    .and_then(|mut object| object.swap_remove(&field))
                     .unwrap_or_default();
 
                 let result_json: JsonValue = value;
