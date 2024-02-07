@@ -2282,9 +2282,7 @@ dependencies = [
  "kv",
  "rand 0.8.5",
  "reqwest",
- "ring 0.16.20",
  "rustls 0.20.9",
- "rustls-native-certs",
  "rustls-pemfile",
  "serde",
  "serde_bytes",
@@ -2300,7 +2298,6 @@ dependencies = [
  "url",
  "utils",
  "uuid 1.7.0",
- "x509-parser",
 ]
 
 [[package]]
