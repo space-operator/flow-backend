@@ -462,60 +462,6 @@ impl RenderParams {
         self
     }
 
-    pub fn generate_random_value(mut self) -> Self {
-        self.random_value = rand::thread_rng().gen_range(25f64..=99999f64);
-        self
-    }
-
-    pub fn generate_env_light(mut self) -> Self {
-        self.env_light = EnvLight::Night;
-        self
-    }
-
-    pub fn generate_smoke(mut self) -> Self {
-        self.fx3 = Fx3::Smoke;
-        self.smoke_amount = rand::thread_rng().gen_range(25f64..=60f64);
-        self
-    }
-
-    pub fn generate_body_material_variation(mut self) -> Self {
-        match self.fx0 {
-            Fx0::No => {
-                self.body_material_variation = BodyMaterialVariations::seed();
-            }
-            _ => {}
-        }
-        self
-    }
-
-    pub fn generate_marble_variation(mut self) -> Self {
-        match self.fx0 {
-            Fx0::Marble => {
-                self.marble_variation = MarbleVariation::seed();
-            }
-            _ => {}
-        }
-        self
-    }
-
-    pub fn generate_wood_variation(mut self) -> Self {
-        match self.fx0 {
-            Fx0::Wood => {
-                self.wood_variation = WoodVariation::seed();
-            }
-            _ => {}
-        }
-        self
-    }
-
-    pub fn glowing_logo(mut self) -> Self {
-        self.glowing_logo = GlowingLogo::seed();
-        if self.glowing_logo == GlowingLogo::Yes {
-            self.logo_hue = rand::random::<f64>() * 360.0;
-        }
-        self
-    }
-
     //smoke, env_reflection, light_reflection, env_light
     //
     //
