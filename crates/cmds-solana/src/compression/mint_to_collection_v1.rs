@@ -1,11 +1,12 @@
 use crate::prelude::*;
 use mpl_bubblegum::instructions::MintToCollectionV1Builder;
 use solana_sdk::pubkey::Pubkey;
+use tracing::info;
 
 use super::MetadataBubblegum;
 
 // Command Name
-const MINT_COMPRESSED_NFT: &str = "mint_to_collection_v1";
+const MINT_COMPRESSED_NFT: &str = "mint_cNFT_to_collection";
 
 const DEFINITION: &str = flow_lib::node_definition!("compression/mint_to_collection_v1.json");
 
@@ -38,7 +39,7 @@ pub struct Input {
     pub merkle_tree: Pubkey,
     #[serde(with = "value::pubkey")]
     pub leaf_owner: Pubkey,
-    #[serde(with = "value::pubkey::opt")]
+    #[serde(default, with = "value::pubkey::opt")]
     pub leaf_delegate: Option<Pubkey>,
     pub metadata: MetadataBubblegum,
     #[serde(default = "value::default::bool_true")]
@@ -66,6 +67,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let collection_edition =
         mpl_token_metadata::accounts::MasterEdition::find_pda(&input.collection_mint).0;
 
+    let mut metadata = input.metadata;
+    metadata.collection = Some(super::Collection {
+        verified: false,
+        key: input.collection_mint.to_string(),
+    });
     let mint_ix = MintToCollectionV1Builder::new()
         .tree_config(input.tree_config)
         .leaf_owner(input.leaf_owner)
@@ -84,9 +90,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         // .compression_program(compression_program)
         // .token_metadata_program(token_metadata_program)
         // .system_program(system_program)
-        .metadata(input.metadata.into())
+        .metadata(metadata.into())
         .instruction();
-
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [

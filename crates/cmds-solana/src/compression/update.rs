@@ -49,10 +49,10 @@ pub struct Input {
     //
     #[serde(with = "value::pubkey")]
     pub leaf_delegate: Pubkey,
-    #[serde(with = "value::pubkey::opt")]
+    #[serde(default,with = "value::pubkey::opt")]
     pub collection_mint: Option<Pubkey>,
     //
-    #[serde(with = "value::pubkey::opt")]
+    #[serde(default, with = "value::pubkey::opt")]
     pub merkle_tree: Option<Pubkey>,
     pub root: Option<String>,
     pub leaf_id: Option<u64>,

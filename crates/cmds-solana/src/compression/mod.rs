@@ -10,6 +10,7 @@ pub mod mint_v1;
 pub mod transfer;
 pub mod types;
 pub mod update;
+pub mod burn;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenProgramVersion {

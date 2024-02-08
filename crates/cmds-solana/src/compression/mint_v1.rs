@@ -32,7 +32,7 @@ pub struct Input {
     pub merkle_tree: Pubkey,
     #[serde(with = "value::pubkey")]
     pub leaf_owner: Pubkey,
-    #[serde(with = "value::pubkey::opt")]
+    #[serde(default, with = "value::pubkey::opt")]
     pub leaf_delegate: Option<Pubkey>,
     pub metadata: MetadataBubblegum,
     #[serde(default = "value::default::bool_true")]

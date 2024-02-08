@@ -224,7 +224,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &input.merkle_tree.pubkey(),
         rent,
         u64::try_from(merkle_tree_account_size).unwrap(),
-        &spl_account_compression::id(),
+        &spl_account_compression::ID,
     );
 
     // Create Tree
@@ -242,6 +242,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .max_buffer_size(input.max_buffer)
         .public(input.is_public.is_some())
         .instruction();
+
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),

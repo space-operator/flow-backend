@@ -1,19 +1,18 @@
 use std::str::FromStr;
 
 use crate::prelude::*;
-use mpl_bubblegum::instructions::TransferBuilder;
-use solana_program::instruction::AccountMeta;
+use mpl_bubblegum::instructions::BurnBuilder;
 use solana_sdk::pubkey::Pubkey;
 
 use super::{
     types::asset::{Asset, AssetProof},
-    GetAssetResponse,
+    GetAssetResponse, MetadataBubblegum,
 };
 
 // Command Name
-const NAME: &str = "transfer_cNFT";
+const NAME: &str = "burn_cNFT";
 
-const DEFINITION: &str = flow_lib::node_definition!("compression/transfer.json");
+const DEFINITION: &str = flow_lib::node_definition!("compression/burn_cNFT.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -39,12 +38,8 @@ pub enum KeypairOrPubkey {
 pub struct Input {
     #[serde(with = "value::keypair")]
     pub payer: Keypair,
-    // #[serde(with = "value::pubkey")]
-    // pub asset_id: Pubkey,
     #[serde(default)]
     pub leaf_owner: Option<KeypairOrPubkey>,
-    #[serde(with = "value::pubkey")]
-    pub new_leaf_owner: Pubkey,
     //
     pub das_get_asset_proof: Option<GetAssetResponse<AssetProof>>,
     pub das_get_asset: Option<GetAssetResponse<Asset>>,
@@ -52,7 +47,8 @@ pub struct Input {
     #[serde(default, with = "value::keypair::opt")]
     pub leaf_delegate: Option<Keypair>,
     #[serde(default, with = "value::pubkey::opt")]
-    pub tree_config: Option<Pubkey>,
+    pub collection_mint: Option<Pubkey>,
+    //
     #[serde(default, with = "value::pubkey::opt")]
     pub merkle_tree: Option<Pubkey>,
     pub root: Option<String>,
@@ -60,7 +56,6 @@ pub struct Input {
     pub creator_hash: Option<String>,
     pub leaf_id: Option<u64>,
     pub index: Option<u32>,
-    pub proof: Option<Vec<String>>,
     //
     #[serde(default = "value::default::bool_true")]
     submit: bool,
@@ -75,30 +70,6 @@ pub struct Output {
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     // get from asset proof: merkle tree, root, index, proof
     // get from asset: data hash, creator hash, leaf id or nonce, metadata
-
-    // Get proof
-    let proof = match input.proof {
-        Some(proof) => proof.to_owned(),
-        None => match &input.das_get_asset_proof {
-            Some(proof) => proof.result.proof.to_owned(),
-            None => return Err(CommandError::msg("proof is required")),
-        },
-    };
-
-    let proof: Result<Vec<AccountMeta>, CommandError> = proof
-        .iter()
-        .map(|node| {
-            let pubkey =
-                Pubkey::from_str(&node).map_err(|_| CommandError::msg("Invalid pubkey string"))?;
-            Ok(AccountMeta {
-                pubkey,
-                is_signer: false,
-                is_writable: false,
-            })
-        })
-        .collect();
-
-    let proof = proof?;
 
     // get root
     let root = match &input.root {
@@ -139,34 +110,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .map_err(|_| CommandError::msg("Invalid creator_hash string"))?
         .to_bytes();
 
-    // who is signing?
-    let delegate_is_signing = input.leaf_delegate.is_some();
-
-    let signer = match delegate_is_signing {
-        true => input.leaf_delegate.as_ref().unwrap().clone_keypair(),
-        false => match input.leaf_owner.as_ref().unwrap() {
-            KeypairOrPubkey::Keypair(k) => k.clone_keypair(),
-            KeypairOrPubkey::Pubkey(_) => {
-                return Err(CommandError::msg("leaf delegate keypair required"));
-            }
-        },
-    };
-
-    let leaf_owner = match input.leaf_owner {
-        Some(KeypairOrPubkey::Keypair(k)) => k.pubkey(),
-        Some(KeypairOrPubkey::Pubkey(p)) => p,
-        None => return Err(CommandError::msg("leaf_owner is required".to_string())),
-    };
-
-    // if delegate is signing, leaf delegate otherwise leaf owner
-    let leaf_delegate = match delegate_is_signing {
-        true => match input.leaf_delegate {
-            Some(keypair) => keypair.pubkey(),
-            None => return Err(CommandError::msg("leaf delegate keypair required")),
-        },
-        false => leaf_owner,
-    };
-
     // leaf_id aka nonce
     let nonce = match input.leaf_id {
         Some(leaf_id) => leaf_id,
@@ -202,32 +145,52 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         },
     };
 
-    let tree_config = input
-        .tree_config
-        .unwrap_or(mpl_bubblegum::accounts::TreeConfig::find_pda(&merkle_tree).0);
+    let tree_config = mpl_bubblegum::accounts::TreeConfig::find_pda(&merkle_tree).0;
 
-    let mint_ix = TransferBuilder::new()
-        .new_leaf_owner(input.new_leaf_owner)
+    // who is signing?
+    let delegate_is_signing = input.leaf_delegate.is_some();
+
+    let signer = match delegate_is_signing {
+        true => input.leaf_delegate.as_ref().unwrap().clone_keypair(),
+        false => match input.leaf_owner.as_ref().unwrap() {
+            KeypairOrPubkey::Keypair(k) => k.clone_keypair(),
+            KeypairOrPubkey::Pubkey(_) => {
+                return Err(CommandError::msg("leaf delegate keypair required"));
+            }
+        },
+    };
+
+    let leaf_owner = match input.leaf_owner {
+        Some(KeypairOrPubkey::Keypair(k)) => k.pubkey(),
+        Some(KeypairOrPubkey::Pubkey(p)) => p,
+        None => return Err(CommandError::msg("leaf_owner is required".to_string())),
+    };
+
+    // if delegate is signing, leaf delegate otherwise leaf owner
+    let leaf_delegate = match delegate_is_signing {
+        true => match input.leaf_delegate {
+            Some(keypair) => keypair.pubkey(),
+            None => return Err(CommandError::msg("leaf delegate keypair required")),
+        },
+        false => leaf_owner,
+    };
+
+    let ix = BurnBuilder::new()
         .tree_config(tree_config)
         .leaf_owner(leaf_owner, !delegate_is_signing)
         .leaf_delegate(leaf_delegate, delegate_is_signing)
         .merkle_tree(merkle_tree)
-        //Optional with defaults
-        // .log_wrapper(log_wrapper)
-        // .compression_program(compression_program)
-        // .system_program(system_program)
         .root(root)
         .data_hash(data_hash)
         .creator_hash(creator_hash)
         .nonce(nonce)
         .index(index)
-        .add_remaining_accounts(&proof)
         .instruction();
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [input.payer.clone_keypair(), signer].into(),
-        instructions: [mint_ix].into(),
+        signers: [input.payer, signer].into(),
+        instructions: [ix].into(),
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
