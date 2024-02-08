@@ -248,6 +248,7 @@ impl RenderParams {
         .generate_marble_variation(rng)
         .generate_wood_variation(rng)
         .glowing_logo(rng)
+        .generate_smoke(rng)
     }
 
     pub fn adjust_base<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
