@@ -33,6 +33,8 @@ pub struct Input {
     pub collection_authority: Keypair,
     #[serde(with = "value::keypair")]
     pub creator_or_delegate: Keypair,
+    #[serde(default = "value::default::bool_false")]
+    pub is_delegate_authority: bool,
     #[serde(with = "value::pubkey")]
     pub tree_config: Pubkey,
     #[serde(with = "value::pubkey")]
@@ -54,12 +56,14 @@ pub struct Output {
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     // Bubblegum address if none is provided
-    let collection_authority_record_pda =
+    // TODO update to MetadataDelegateRecord::find_pda
+    let collection_authority_record_pda = input.is_delegate_authority.then_some(
         mpl_token_metadata::accounts::CollectionAuthorityRecord::find_pda(
             &input.collection_mint,
             &input.collection_authority.pubkey(),
         )
-        .0;
+        .0,
+    );
 
     let collection_metadata =
         mpl_token_metadata::accounts::Metadata::find_pda(&input.collection_mint).0;
@@ -72,6 +76,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         verified: false,
         key: input.collection_mint.to_string(),
     });
+    info!("metadata: {:?}", metadata);
+    info!(
+        "collection authority {}",
+        input.collection_authority.pubkey()
+    );
     let mint_ix = MintToCollectionV1Builder::new()
         .tree_config(input.tree_config)
         .leaf_owner(input.leaf_owner)
@@ -80,7 +89,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .payer(input.payer.pubkey())
         .tree_creator_or_delegate(input.creator_or_delegate.pubkey())
         .collection_authority(input.collection_authority.pubkey())
-        .collection_authority_record_pda(Some(collection_authority_record_pda))
+        .collection_authority_record_pda(collection_authority_record_pda)
         .collection_mint(input.collection_mint)
         .collection_metadata(collection_metadata)
         .collection_edition(collection_edition)

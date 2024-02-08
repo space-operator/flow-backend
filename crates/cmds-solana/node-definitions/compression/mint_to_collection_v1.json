@@ -89,6 +89,14 @@
       "passthrough": false
     },
     {
+      "name": "is_delegate_authority",
+      "type_bounds": ["bool"],
+      "required": false,
+      "defaultValue": false,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
       "name": "tree_config",
       "type_bounds": ["pubkey"],
       "required": true,
