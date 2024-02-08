@@ -337,7 +337,10 @@ impl RealApiAuth {
         } else {
             Ok(TokenType::JWT(jwt_verify(
                 self.hmac.clone(),
-                token.as_bytes(),
+                token
+                    .as_bytes()
+                    .strip_prefix(b"Bearer ")
+                    .unwrap_or(token.as_bytes()),
                 chrono::Utc::now().timestamp(),
             )?))
         }
