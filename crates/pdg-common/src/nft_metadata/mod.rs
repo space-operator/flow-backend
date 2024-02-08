@@ -588,7 +588,7 @@ impl RenderParams {
 
         let glowing_logo = try_get_enum::<GlowingLogo>(m, "Glowing_logo", defaults)?;
         let logo_hue = try_get_f64(m, "Logo_hue", defaults)?;
-        let logo_name = try_get_string(m, "logo_name", defaults)?;
+        let logo_name = try_get_string(m, "Logo_name", defaults)?;
 
         let butterfly_amount = try_get_f64(m, "Butterfly_amount", defaults)?;
         let disintegration_amount = try_get_f64(m, "Desintegration_amount", defaults)?;
