@@ -1,6 +1,12 @@
 use crate::prelude::*;
-use mpl_bubblegum::instructions::MintToCollectionV1Builder;
-use solana_sdk::pubkey::Pubkey;
+use anchor_lang::AnchorDeserialize;
+use mpl_bubblegum::{instructions::MintToCollectionV1Builder, types::LeafSchema};
+use solana_client::rpc_config::RpcTransactionConfig;
+use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey};
+use solana_transaction_status::{
+    option_serializer::OptionSerializer, parse_instruction::ParsedInstruction,
+    TransactionStatusMeta, UiInstruction, UiTransactionEncoding, UiTransactionStatusMeta,
+};
 use tracing::info;
 
 use super::MetadataBubblegum;
@@ -115,6 +121,54 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let ins = input.submit.then_some(ins).unwrap_or_default();
 
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
+
+    // if let Some(signature) = signature {
+    //     let config = RpcTransactionConfig {
+    //         encoding: Some(UiTransactionEncoding::JsonParsed),
+    //         commitment: Some(CommitmentConfig::confirmed()),
+    //         max_supported_transaction_version: Some(0),
+    //     };
+    //     let tx_meta = ctx
+    //         .solana_client
+    //         .get_transaction_with_config(&signature, config)
+    //         .await?
+    //         .transaction
+    //         .meta
+    //         .and_then(|meta| Some(meta.inner_instructions));
+
+    //     let tx_meta = match tx_meta.unwrap() {
+    //         OptionSerializer::None => None,
+    //         OptionSerializer::Some(m) => Some(m),
+    //         OptionSerializer::Skip => None,
+    //     };
+
+    //     let inner_instruction = tx_meta
+    //         .as_ref()
+    //         .unwrap()
+    //         .get(0)
+    //         .unwrap()
+    //         .instructions
+    //         .clone();
+
+    //     info!("inner_instruction: {:?}", inner_instruction);
+
+    // let data = match inner_instruction {
+    //     UiInstruction::Parsed(instruction) => match instruction {
+    //         solana_transaction_status::UiParsedInstruction::PartiallyDecoded(instruction) => {
+    //             instruction.data.clone()
+    //         }
+    //         solana_transaction_status::UiParsedInstruction::Parsed(_) => {
+    //             return Err(CommandError::msg("Failed to parse instruction data"))
+    //         }
+    //     },
+    //     _ => return Err(CommandError::msg("Failed to parse instruction data")),
+    // };
+
+    // let leaf_schema: LeafSchema = LeafSchema::try_from_slice(&data.as_bytes()).unwrap();
+
+    // deserialize the transaction and get the instruction
+    // info!("tx: {:?}", leaf_schema);
+    // }
 
     Ok(Output { signature })
 }

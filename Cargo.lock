@@ -1862,6 +1862,7 @@ dependencies = [
  "solana-client",
  "solana-program",
  "solana-sdk",
+ "solana-transaction-status",
  "spl-account-compression",
  "spl-associated-token-account 2.2.0",
  "spl-memo 4.0.0",
