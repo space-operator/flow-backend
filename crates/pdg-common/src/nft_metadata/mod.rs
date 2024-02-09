@@ -588,7 +588,7 @@ impl RenderParams {
 
         let glowing_logo = try_get_enum::<GlowingLogo>(m, "Glowing_logo", defaults)?;
         let logo_hue = try_get_f64(m, "Logo_hue", defaults)?;
-        let logo_name = try_get_string(m, "Logo_name", defaults)?;
+        let logo_name = try_get_string(m, "logo_name", defaults)?;
 
         let butterfly_amount = try_get_f64(m, "Butterfly_amount", defaults)?;
         let disintegration_amount = try_get_f64(m, "Desintegration_amount", defaults)?;
@@ -962,7 +962,7 @@ impl RenderParams {
 
         push_int_attr(&mut m, "Glowing_logo", *glowing_logo as u32);
         push_float_attr(&mut m, "Logo_hue", *logo_hue);
-        push_string_attr(&mut m, "Logo_name", logo_name);
+        push_string_attr(&mut m, "logo_name", logo_name);
 
         push_float_attr(&mut m, "Butterfly_amount", *butterfly_amount);
         push_float_attr(&mut m, "Desintegration_amount", *disintegration_amount);
@@ -1958,7 +1958,7 @@ impl_try_from_u32!(EnvLight);
 
 impl EnvLight {
     pub fn day_or_night<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
-        *[EnvLight::Night, EnvLight::Night].choose(rng).unwrap()
+        *[EnvLight::Day, EnvLight::Night].choose(rng).unwrap()
     }
 }
 
