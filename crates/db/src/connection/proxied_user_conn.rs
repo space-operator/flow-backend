@@ -1,5 +1,3 @@
-#![allow(clippy)]
-
 use super::*;
 use crate::FlowRunLogsRow;
 use flow_lib::{context::get_jwt, BoxError, UserId};
