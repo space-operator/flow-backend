@@ -1840,7 +1840,6 @@ dependencies = [
  "flow-value",
  "futures",
  "hex",
- "hyper",
  "inventory",
  "mime_guess",
  "mpl-bubblegum",
@@ -1874,7 +1873,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-log 0.1.4",
- "url",
  "wormhole-sdk",
 ]
 
@@ -1891,6 +1889,7 @@ dependencies = [
  "flow-value",
  "futures-executor",
  "futures-util",
+ "hyper",
  "mime_guess",
  "once_cell",
  "postgrest",
@@ -1901,6 +1900,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+ "url",
 ]
 
 [[package]]
