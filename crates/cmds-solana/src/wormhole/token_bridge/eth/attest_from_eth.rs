@@ -6,7 +6,7 @@ use crate::{prelude::*, wormhole::token_bridge::eth::Response as ServerlessOutpu
 const NAME: &str = "attest_from_eth";
 
 const DEFINITION: &str =
-    flow_lib::node_definition!("solana/wormhole/token_bridge/eth/attest_from_eth.json");
+    flow_lib::node_definition!("wormhole/token_bridge/eth/attest_from_eth.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

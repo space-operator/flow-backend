@@ -7,7 +7,7 @@ use solana_sdk::pubkey::Pubkey;
 // Command Name
 const NAME: &str = "post_vaa";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/wormhole/post_vaa.json");
+const DEFINITION: &str = flow_lib::node_definition!("wormhole/post_vaa.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

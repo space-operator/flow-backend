@@ -5,7 +5,7 @@ use solana_sdk::signer::Signer;
 
 const GENERATE_KEYPAIR: &str = "generate_keypair";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/generate_keypair.json");
+const DEFINITION: &str = flow_lib::node_definition!("generate_keypair.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

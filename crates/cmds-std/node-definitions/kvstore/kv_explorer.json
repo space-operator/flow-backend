@@ -3,11 +3,11 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "json_insert",
+    "node_id": "kvexplorer",
     "version": "0.1",
-    "display_name": "Json Insert",
-    "description": "Inserts a field from a JSON",
-    "tags": [],
+    "display_name": "K/V Explorer",
+    "description": "",
+    "tags": ["std", "storage"],
     "related_to": [
       {
         "id": "",
@@ -47,41 +47,11 @@
     },
     "options": {}
   },
-  "targets": [
-    {
-      "name": "json_input",
-      "type_bounds": ["json"],
-      "required": true,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": true
-    },
-    {
-      "name": "path",
-      "type_bounds": ["string"],
-      "required": true,
-      "defaultValue": "",
-      "tooltip": "e.g. /data/records/0/fields/url to insert into url field's value\nnote the /0/ to select [0] in an array",
-      "passthrough": false
-    },
-    {
-      "name": "value",
-      "type_bounds": ["json"],
-      "required": true,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": true
-    }
-  ],
-
   "sources": [
-    {
-      "name": "updated_json",
-      "type": "json",
-      "defaultValue": "",
-      "tooltip": ""
-    }
+    { "name": "Files", "type": "array", "tooltip": "", "defaultValue": [] },
+    { "name": "URLs", "type": "array", "tooltip": "", "defaultValue": [] }
   ],
+  "targets": [],
   "targets_form.json_schema": {},
   "targets_form.ui_schema": {}
 }

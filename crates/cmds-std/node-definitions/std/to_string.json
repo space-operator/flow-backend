@@ -3,11 +3,11 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "print",
+    "node_id": "to_string",
     "version": "0.1",
-    "display_name": "Print",
-    "description": "Shows the result of an output",
-    "tags": [],
+    "display_name": "To String",
+    "description": "Convert to string",
+    "tags": ["std"],
     "related_to": [
       {
         "id": "",
@@ -49,17 +49,18 @@
   },
   "targets": [
     {
-      "name": "print",
+      "name": "stringify",
       "type_bounds": ["free"],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
-      "passthrough": true
+      "passthrough": false
     }
   ],
+
   "sources": [
     {
-      "name": "__print_output",
+      "name": "result",
       "type": "string",
       "defaultValue": "",
       "tooltip": ""

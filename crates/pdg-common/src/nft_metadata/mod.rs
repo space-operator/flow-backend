@@ -962,7 +962,7 @@ impl RenderParams {
 
         push_int_attr(&mut m, "Glowing_logo", *glowing_logo as u32);
         push_float_attr(&mut m, "Logo_hue", *logo_hue);
-        push_string_attr(&mut m, "Logo_name", logo_name);
+        push_string_attr(&mut m, "logo_name", logo_name);
 
         push_float_attr(&mut m, "Butterfly_amount", *butterfly_amount);
         push_float_attr(&mut m, "Desintegration_amount", *disintegration_amount);
@@ -1345,6 +1345,18 @@ pub enum HelmetLight {
 
 impl_try_from_u32!(HelmetLight);
 
+impl HelmetLight {
+    pub fn some_lights<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        *[
+            HelmetLight::Dots,
+            HelmetLight::GlowingEyes,
+            HelmetLight::Solana,
+        ]
+        .choose(rng)
+        .unwrap()
+    }
+}
+
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1464,6 +1476,12 @@ pub enum Fx1a {
 
 impl_try_from_u32!(Fx1a);
 
+impl Fx1a {
+    pub fn none_or_minimal<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        *[Fx1a::No, Fx1a::LineartMinimalistic].choose(rng).unwrap()
+    }
+}
+
 #[derive(
     strum::FromRepr,
     strum::EnumProperty,
@@ -1541,6 +1559,12 @@ pub enum Fx3 {
 }
 
 impl_try_from_u32!(Fx3);
+
+impl Fx3 {
+    pub fn smoke_or_not<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+        *[Fx3::No, Fx3::Smoke].choose(rng).unwrap()
+    }
+}
 
 #[derive(
     strum::FromRepr,

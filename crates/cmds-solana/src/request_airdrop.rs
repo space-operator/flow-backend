@@ -5,7 +5,7 @@ const NAME: &str = "request_airdrop";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("solana/request_airdrop.json");
+    const DEFINITION: &str = flow_lib::node_definition!("request_airdrop.json");
     static CACHE: BuilderCache =
         BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))

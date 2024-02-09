@@ -7,7 +7,7 @@
     "version": "0.1",
     "display_name": "Wait",
     "description": "Wait for an output to complete before continuing",
-    "tags": [],
+    "tags": ["std", "time"],
     "related_to": [
       {
         "id": "",
@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "",
+      "source_code_url": "crates/cmds-std/src/wait_cmd.rs",
       "documentation_url": ""
     },
     "usage": {
@@ -64,6 +64,14 @@
       "defaultValue": "",
       "tooltip": "output to wait for",
       "passthrough": true
+    },
+    {
+      "name": "duration_ms",
+      "type_bounds": ["u64"],
+      "required": false,
+      "defaultValue": "0",
+      "tooltip": "duration in ms",
+      "passthrough": false
     }
   ],
   "targets_form.json_schema": {},

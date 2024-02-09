@@ -3,11 +3,11 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "const",
+    "node_id": "fileexplorer",
     "version": "0.1",
+    "display_name": "File Explorer",
     "description": "",
-    "display_name": "Const",
-    "tags": [],
+    "tags": ["std", "storage", "files"],
     "related_to": [
       {
         "id": "",
@@ -49,10 +49,16 @@
   },
   "sources": [
     {
-      "name": "Source",
-      "type": "free",
-      "defaultValue": "",
-      "tooltip": ""
+      "name": "Values",
+      "type": "array",
+      "tooltip": "",
+      "defaultValue": []
+    },
+    {
+      "name": "KVS",
+      "type": "array",
+      "tooltip": "",
+      "defaultValue": []
     }
   ],
   "targets": [],

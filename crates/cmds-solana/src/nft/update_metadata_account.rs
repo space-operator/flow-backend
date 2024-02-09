@@ -5,8 +5,7 @@ const NAME: &str = "update_metadata_account";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str =
-        flow_lib::node_definition!("solana/NFT/update_metadata_account.json");
+    const DEFINITION: &str = flow_lib::node_definition!("NFT/update_metadata_account.json");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?
@@ -53,7 +52,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output1, CommandError> {
                     input.update_authority.clone_keypair(),
                 ]
                 .into(),
-               
+
                 instructions: [
                     mpl_token_metadata::instruction::update_metadata_accounts_v2(
                         mpl_token_metadata::id(),

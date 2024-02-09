@@ -1,10 +1,16 @@
-pub mod create_tree;
-pub mod mint_v1;
 use std::str::FromStr;
 
-use mpl_bubblegum::state::metaplex_adapter::MetadataArgs;
+use mpl_bubblegum::types::{MetadataArgs, UpdateArgs};
 use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
+
+pub mod burn;
+pub mod create_tree;
+pub mod mint_to_collection_v1;
+pub mod mint_v1;
+pub mod transfer;
+pub mod types;
+pub mod update;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenProgramVersion {
@@ -12,15 +18,11 @@ pub enum TokenProgramVersion {
     Token2022,
 }
 
-impl From<TokenProgramVersion> for mpl_bubblegum::state::metaplex_adapter::TokenProgramVersion {
+impl From<TokenProgramVersion> for mpl_bubblegum::types::TokenProgramVersion {
     fn from(v: TokenProgramVersion) -> Self {
         match v {
-            TokenProgramVersion::Original => {
-                mpl_bubblegum::state::metaplex_adapter::TokenProgramVersion::Original
-            }
-            TokenProgramVersion::Token2022 => {
-                mpl_bubblegum::state::metaplex_adapter::TokenProgramVersion::Token2022
-            }
+            TokenProgramVersion::Original => mpl_bubblegum::types::TokenProgramVersion::Original,
+            TokenProgramVersion::Token2022 => mpl_bubblegum::types::TokenProgramVersion::Token2022,
         }
     }
 }
@@ -33,9 +35,9 @@ pub struct Creator {
     pub share: u8,
 }
 
-impl From<Creator> for mpl_bubblegum::state::metaplex_adapter::Creator {
+impl From<Creator> for mpl_bubblegum::types::Creator {
     fn from(v: Creator) -> Self {
-        mpl_bubblegum::state::metaplex_adapter::Creator {
+        mpl_bubblegum::types::Creator {
             address: Pubkey::from_str(&v.address).unwrap(),
             verified: v.verified,
             share: v.share,
@@ -51,20 +53,14 @@ pub enum TokenStandard {
     NonFungibleEdition, // This is a limited edition
 }
 
-impl From<TokenStandard> for mpl_bubblegum::state::metaplex_adapter::TokenStandard {
+impl From<TokenStandard> for mpl_bubblegum::types::TokenStandard {
     fn from(v: TokenStandard) -> Self {
         match v {
-            TokenStandard::NonFungible => {
-                mpl_bubblegum::state::metaplex_adapter::TokenStandard::NonFungible
-            }
-            TokenStandard::FungibleAsset => {
-                mpl_bubblegum::state::metaplex_adapter::TokenStandard::FungibleAsset
-            }
-            TokenStandard::Fungible => {
-                mpl_bubblegum::state::metaplex_adapter::TokenStandard::Fungible
-            }
+            TokenStandard::NonFungible => mpl_bubblegum::types::TokenStandard::NonFungible,
+            TokenStandard::FungibleAsset => mpl_bubblegum::types::TokenStandard::FungibleAsset,
+            TokenStandard::Fungible => mpl_bubblegum::types::TokenStandard::Fungible,
             TokenStandard::NonFungibleEdition => {
-                mpl_bubblegum::state::metaplex_adapter::TokenStandard::NonFungibleEdition
+                mpl_bubblegum::types::TokenStandard::NonFungibleEdition
             }
         }
     }
@@ -85,13 +81,13 @@ pub struct Uses {
     pub total: u64,            //8
 }
 
-impl From<Uses> for mpl_bubblegum::state::metaplex_adapter::Uses {
+impl From<Uses> for mpl_bubblegum::types::Uses {
     fn from(v: Uses) -> Self {
-        mpl_bubblegum::state::metaplex_adapter::Uses {
+        mpl_bubblegum::types::Uses {
             use_method: match v.use_method {
-                UseMethod::Burn => mpl_bubblegum::state::metaplex_adapter::UseMethod::Burn,
-                UseMethod::Multiple => mpl_bubblegum::state::metaplex_adapter::UseMethod::Multiple,
-                UseMethod::Single => mpl_bubblegum::state::metaplex_adapter::UseMethod::Single,
+                UseMethod::Burn => mpl_bubblegum::types::UseMethod::Burn,
+                UseMethod::Multiple => mpl_bubblegum::types::UseMethod::Multiple,
+                UseMethod::Single => mpl_bubblegum::types::UseMethod::Single,
             },
             remaining: v.remaining,
             total: v.total,
@@ -106,9 +102,9 @@ pub struct Collection {
     pub key: String,
 }
 
-impl From<Collection> for mpl_bubblegum::state::metaplex_adapter::Collection {
+impl From<Collection> for mpl_bubblegum::types::Collection {
     fn from(v: Collection) -> Self {
-        mpl_bubblegum::state::metaplex_adapter::Collection {
+        mpl_bubblegum::types::Collection {
             verified: v.verified,
             key: Pubkey::from_str(&v.key).unwrap(),
         }
@@ -159,4 +155,25 @@ impl From<MetadataBubblegum> for MetadataArgs {
             creators: v.creators.into_iter().map(Into::into).collect(),
         }
     }
+}
+
+impl From<MetadataBubblegum> for UpdateArgs {
+    fn from(v: MetadataBubblegum) -> Self {
+        Self {
+            name: Some(v.name),
+            symbol: Some(v.symbol),
+            uri: Some(v.uri),
+            creators: Some(v.creators.into_iter().map(Into::into).collect()),
+            seller_fee_basis_points: Some(v.seller_fee_basis_points),
+            primary_sale_happened: Some(v.primary_sale_happened),
+            is_mutable: Some(v.is_mutable),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct GetAssetResponse<T> {
+    pub id: String,
+    pub result: T,
+    pub jsonrpc: String,
 }

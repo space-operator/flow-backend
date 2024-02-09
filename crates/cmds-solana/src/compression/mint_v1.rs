@@ -1,44 +1,39 @@
 use crate::prelude::*;
-use anchor_lang_26::{InstructionData, ToAccountMetas};
-use solana_program::{instruction::Instruction, system_program};
+use mpl_bubblegum::instructions::MintV1Builder;
 use solana_sdk::pubkey::Pubkey;
 
 use super::MetadataBubblegum;
 
 // Command Name
-const MINT_COMPRESSED_NFT: &str = "mint_compressed_NFT";
+const NAME: &str = "mint_compressed_NFT";
 
-const DEFINITION: &str =
-    flow_lib::node_definition!("solana/compression/mint_compressed_NFT.json");
+const DEFINITION: &str = flow_lib::node_definition!("compression/mint_compressed_NFT.json");
 
 fn build() -> BuildResult {
-    use once_cell::sync::Lazy;
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
-            .check_name(MINT_COMPRESSED_NFT)?
+            .check_name(NAME)?
             .simple_instruction_info("signature")
     });
     Ok(CACHE.clone()?.build(run))
 }
 
-flow_lib::submit!(CommandDescription::new(MINT_COMPRESSED_NFT, |_| {
-    build()
-}));
+flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
     #[serde(with = "value::keypair")]
     pub payer: Keypair,
     #[serde(with = "value::keypair")]
-    pub tree_delegate: Keypair,
+    pub creator_or_delegate: Keypair,
     #[serde(with = "value::pubkey")]
-    pub tree_authority: Pubkey,
+    pub tree_config: Pubkey,
     #[serde(with = "value::pubkey")]
     pub merkle_tree: Pubkey,
     #[serde(with = "value::pubkey")]
     pub leaf_owner: Pubkey,
-    #[serde(with = "value::pubkey")]
-    pub leaf_delegate: Pubkey,
+    #[serde(default, with = "value::pubkey::opt")]
+    pub leaf_delegate: Option<Pubkey>,
     pub metadata: MetadataBubblegum,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
@@ -51,44 +46,24 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let accounts = mpl_bubblegum::accounts::MintV1 {
-        payer: input.payer.pubkey(),
-        tree_authority: input.tree_authority,
-        merkle_tree: input.merkle_tree,
-        leaf_owner: input.leaf_owner,
-        leaf_delegate: input.leaf_delegate,
-        tree_delegate: input.tree_delegate.pubkey(),
-        log_wrapper: spl_noop::id(),
-        system_program: system_program::id(),
-        compression_program: spl_account_compression::id(),
-    }
-    .to_account_metas(None);
-
-    let metadata = input.metadata.into();
-
-    let data = mpl_bubblegum::instruction::MintV1 { message: metadata }.data();
-
-    let minimum_balance_for_rent_exemption = ctx
-        .solana_client
-        .get_minimum_balance_for_rent_exemption(
-            std::mem::size_of::<mpl_bubblegum::accounts::MintV1>(),
-        )
-        .await?;
+    let mint_ix = MintV1Builder::new()
+        .leaf_delegate(input.leaf_delegate.unwrap_or(input.leaf_owner))
+        .leaf_owner(input.leaf_owner)
+        .merkle_tree(input.merkle_tree)
+        .payer(input.payer.pubkey())
+        .tree_config(input.tree_config)
+        .tree_creator_or_delegate(input.creator_or_delegate.pubkey())
+        .metadata(input.metadata.into())
+        .instruction();
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [
             input.payer.clone_keypair(),
-            input.tree_delegate.clone_keypair(),
+            input.creator_or_delegate.clone_keypair(),
         ]
         .into(),
-        instructions: [Instruction {
-            program_id: mpl_bubblegum::id(),
-            accounts,
-            data,
-        }]
-        .into(),
-        minimum_balance_for_rent_exemption,
+        instructions: [mint_ix].into(),
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

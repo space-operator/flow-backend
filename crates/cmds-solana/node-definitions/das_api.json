@@ -3,10 +3,10 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "kv_read_item",
+    "node_id": "das_api",
     "version": "0.1",
-    "display_name": "Read Item",
-    "description": "Read an item by key",
+    "display_name": "DAS API",
+    "description": "",
     "tags": [],
     "related_to": [
       {
@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "",
+      "source_code_url": "node-registry/crates/cmds-solana/src/das.rs.rs",
       "documentation_url": ""
     },
     "usage": {
@@ -42,49 +42,51 @@
       "width": 0,
       "height": 0,
       "icon_url": "",
-      "backgroundColorDark": "#000000",
+      "backgroundColorDark": "#2e003f",
       "backgroundColor": "#fff"
     },
     "options": {}
   },
   "sources": [
     {
-      "name": "value",
-      "type": "free",
+      "name": "response",
+      "type": "json",
       "defaultValue": null,
       "tooltip": ""
-    },
-    {
-      "name": "found",
-      "type": "bool",
-      "defaultValue": null,
-      "tooltip": "Whether the value was found or not."
     }
   ],
   "targets": [
     {
-      "name": "store",
-      "type_bounds": ["string"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "Name of the store to read from.",
-      "passthrough": false
-    },
-    {
-      "name": "key",
+      "name": "url",
       "type_bounds": ["string"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
-      "name": "default",
-      "type_bounds": ["free"],
+      "name": "id",
+      "type_bounds": ["string"],
       "required": false,
       "defaultValue": null,
-      "tooltip": "Default value to use when the value does not exist.\nWithout this, the command will fail if not found.",
-      "passthrough": false
+      "tooltip": "",
+      "passthrough": true
+    },
+    {
+      "name": "method",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "GetAsset, GetAssetProof, GetAssetsByOwner, GetAssetsByCreator, GetAssetsByAuthority, GetAssetsbyCreator, GetAssetsByGroup, SearchAssets, GetSignaturesForAsset, GetTokenAccounts",
+      "passthrough": true
+    },
+    {
+      "name": "params",
+      "type_bounds": ["json"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": true
     }
   ],
   "targets_form.json_schema": {},

@@ -1,47 +1,38 @@
 use flow_lib::command::prelude::*;
+use std::time::Duration;
+use tokio::time;
+use tracing::info;
 
-#[derive(Debug)]
-pub struct WaitCommand {}
+pub const NAME: &str = "wait";
 
-pub const WAIT_CMD: &str = "wait";
+const DEFINITION: &str = flow_lib::node_definition!("wait.json");
 
-// Inputs
-pub const VALUE: &str = "value";
-pub const WAIT_FOR: &str = "wait_for";
-
-#[async_trait]
-impl CommandTrait for WaitCommand {
-    fn name(&self) -> Name {
-        WAIT_CMD.into()
-    }
-
-    fn inputs(&self) -> Vec<Input> {
-        [
-            Input {
-                name: VALUE.into(),
-                type_bounds: [ValueType::Free].to_vec(),
-                required: true,
-                passthrough: true,
-            },
-            Input {
-                name: WAIT_FOR.into(),
-                type_bounds: [ValueType::Free].to_vec(),
-                required: true,
-                passthrough: true,
-            },
-        ]
-        .to_vec()
-    }
-
-    fn outputs(&self) -> Vec<Output> {
-        [].to_vec()
-    }
-
-    async fn run(&self, _ctx: Context, _inputs: ValueSet) -> Result<ValueSet, CommandError> {
-        Ok(ValueSet::new())
-    }
+fn build() -> BuildResult {
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
+    Ok(CACHE.clone()?.build(run))
 }
 
-flow_lib::submit!(CommandDescription::new(WAIT_CMD, |_| Ok(Box::new(
-    WaitCommand {}
-))));
+flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Input {
+    value: Value,
+    wait_for: Value,
+    duration_ms: Option<u64>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Output {}
+
+async fn run(_ctx: Context, input: Input) -> Result<Output, CommandError> {
+    info!("duration: {:?}", input.duration_ms);
+    match input.duration_ms {
+        Some(duration) => {
+            time::sleep(Duration::from_millis(duration)).await;
+        }
+        None => {}
+    };
+
+    Ok(Output {})
+}

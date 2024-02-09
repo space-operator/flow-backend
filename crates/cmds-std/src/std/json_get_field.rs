@@ -2,6 +2,7 @@ use serde_json::Value as JsonValue;
 
 use value::from_value;
 
+use crate::error::Error::ValueNotFound;
 use crate::prelude::*;
 
 #[derive(Debug, Clone)]
@@ -74,13 +75,11 @@ impl CommandTrait for JsonGetField {
 
         let json = inputs
             .swap_remove(JSON_OR_STRING)
-            .ok_or_else(|| crate::Error::ValueNotFound(JSON_OR_STRING.into()))?;
+            .ok_or_else(|| crate::error::Error::ValueNotFound(JSON_OR_STRING.into()))?;
 
         match json {
             Value::Map(map) => {
-                let value = map
-                    .get(&field)
-                    .ok_or_else(|| crate::Error::ValueNotFound(field))?;
+                let value = map.get(&field).ok_or_else(|| ValueNotFound(field))?;
 
                 let result_json: JsonValue = from_value(value.to_owned())?;
                 let result_string = result_json.to_string();

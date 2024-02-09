@@ -6,8 +6,7 @@ use solana_sdk::pubkey::Pubkey;
 // Command Name
 const CREATE_PERMISSIONED_INSTALL: &str = "create_permissioned_install";
 
-const DEFINITION: &str =
-    flow_lib::node_definition!("solana/xnft/create_permissioned_install.json");
+const DEFINITION: &str = flow_lib::node_definition!("xnft/create_permissioned_install.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

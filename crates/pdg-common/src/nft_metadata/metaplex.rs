@@ -241,7 +241,6 @@ mod tests {
     use super::*;
     use crate::nft_metadata::{
         BodyType, EnumExt, Fx0, Fx1, Fx2, Fx3, Fx4, Fx5, Fx6, HelmetLight, HelmetType, Pose,
-        RenderParams,
     };
     use strum::{EnumProperty, IntoEnumIterator};
 

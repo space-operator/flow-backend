@@ -1,6 +1,5 @@
 use crate::prelude::*;
-use anchor_lang_26::{InstructionData, ToAccountMetas};
-use solana_program::{instruction::Instruction, system_instruction, system_program};
+use solana_program::system_instruction;
 use solana_sdk::pubkey::Pubkey;
 use spl_account_compression::{
     self, state::CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1, ConcurrentMerkleTree,
@@ -8,21 +7,20 @@ use spl_account_compression::{
 use std::mem::size_of;
 
 // Command Name
-const CREATE_TREE: &str = "create_tree";
+const NAME: &str = "create_tree";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/compression/create_tree.json");
+const DEFINITION: &str = flow_lib::node_definition!("compression/create_tree.json");
 
 fn build() -> BuildResult {
-    use once_cell::sync::Lazy;
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
-            .check_name(CREATE_TREE)?
+            .check_name(NAME)?
             .simple_instruction_info("signature")
     });
     Ok(CACHE.clone()?.build(run))
 }
 
-flow_lib::submit!(CommandDescription::new(CREATE_TREE, |_| { build() }));
+flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
@@ -47,7 +45,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let bubble_gum_program_id = mpl_bubblegum::id();
+    let bubble_gum_program_id = mpl_bubblegum::ID;
 
     // Allocate tree's account
 
@@ -216,42 +214,34 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let merkle_tree_account_size: usize =
         CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1 + merkle_tree_account_size + canopy_size as usize;
 
-    let lamports = ctx
+    let rent = ctx
         .solana_client
         .get_minimum_balance_for_rent_exemption(merkle_tree_account_size)
         .await?;
 
-    let create_account_tree_size = system_instruction::create_account(
+    let create_merkle_account_ix = system_instruction::create_account(
         &input.payer.pubkey(),
         &input.merkle_tree.pubkey(),
-        lamports,
+        rent,
         u64::try_from(merkle_tree_account_size).unwrap(),
-        &spl_account_compression::id(),
+        &spl_account_compression::ID,
     );
 
     // Create Tree
 
     let pubkey = &input.merkle_tree.pubkey();
     let seeds = &[pubkey.as_ref()];
-    let tree_authority = Pubkey::find_program_address(seeds, &bubble_gum_program_id).0;
+    let tree_config = Pubkey::find_program_address(seeds, &bubble_gum_program_id).0;
 
-    let accounts = mpl_bubblegum::accounts::CreateTree {
-        payer: input.payer.pubkey(),
-        tree_authority,
-        merkle_tree: input.merkle_tree.pubkey(),
-        tree_creator: input.creator.pubkey(),
-        log_wrapper: spl_noop::id(),
-        system_program: system_program::id(),
-        compression_program: spl_account_compression::id(),
-    }
-    .to_account_metas(None);
-
-    let data = mpl_bubblegum::instruction::CreateTree {
-        max_depth: input.max_depth,
-        max_buffer_size: input.max_buffer,
-        public: input.is_public,
-    }
-    .data();
+    let create_tree_config_ix = mpl_bubblegum::instructions::CreateTreeConfigBuilder::new()
+        .tree_config(tree_config)
+        .merkle_tree(input.merkle_tree.pubkey())
+        .payer(input.payer.pubkey())
+        .tree_creator(input.creator.pubkey())
+        .max_depth(input.max_depth)
+        .max_buffer_size(input.max_buffer)
+        .public(input.is_public.is_some())
+        .instruction();
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
@@ -261,16 +251,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             input.merkle_tree.clone_keypair(),
         ]
         .into(),
-        instructions: [
-            create_account_tree_size,
-            Instruction {
-                program_id: mpl_bubblegum::id(),
-                accounts,
-                data,
-            },
-        ]
-        .into(),
-       
+        instructions: [create_merkle_account_ix, create_tree_config_ix].into(),
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
@@ -279,7 +260,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .execute(
             ins,
             value::map! {
-                "tree_authority" => tree_authority,
+                "tree_config" => tree_config,
             },
         )
         .await?

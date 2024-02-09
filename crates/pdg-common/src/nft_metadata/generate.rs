@@ -248,50 +248,7 @@ impl RenderParams {
         .generate_marble_variation(rng)
         .generate_wood_variation(rng)
         .glowing_logo(rng)
-    }
-
-    pub fn generate_line_art<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
-        match self.fx0 {
-            Fx0::LineartBase => {
-                let line_art = Fx1a::choose(rng);
-                self.lineart_amount = rng.gen_range(0.0..100.0);
-
-                self.fx1a = line_art;
-                match line_art {
-                    Fx1a::LineartMinimalistic => {
-                        let fx_lineart_helper = FxLineartHelper::Zero;
-                        self.fx_lineart_helper = fx_lineart_helper;
-                    }
-                    Fx1a::LineartHeavy => {
-                        let fx_lineart_helper = FxLineartHelper::Zero;
-                        self.fx_lineart_helper = fx_lineart_helper;
-                    }
-                    Fx1a::No => {
-                        let fx_lineart_helper = FxLineartHelper::Zero;
-                        self.fx_lineart_helper = fx_lineart_helper;
-                    }
-                }
-            }
-            _ => {
-                let line_art = Fx1a::choose(rng);
-                self.fx1a = line_art;
-                match line_art {
-                    Fx1a::No => {
-                        let fx_lineart_helper = FxLineartHelper::choose(rng);
-                        self.fx_lineart_helper = fx_lineart_helper;
-                    }
-                    Fx1a::LineartMinimalistic => {
-                        let fx_lineart_helper = FxLineartHelper::One;
-                        self.fx_lineart_helper = fx_lineart_helper;
-                    }
-                    Fx1a::LineartHeavy => {
-                        let fx_lineart_helper = FxLineartHelper::Zero;
-                        self.fx_lineart_helper = fx_lineart_helper;
-                    }
-                }
-            }
-        }
-        self
+        .generate_smoke(rng)
     }
 
     pub fn adjust_base<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
@@ -317,6 +274,48 @@ impl RenderParams {
             }
             _ => {
                 self.env_light = EnvLight::day_or_night(rng);
+            }
+        }
+        self
+    }
+
+    pub fn generate_line_art<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
+        match self.fx0 {
+            Fx0::LineartBase => {
+                let line_art = Fx1a::choose(rng);
+                self.lineart_amount = rng.gen_range(0.0..100.0);
+
+                self.fx1a = line_art;
+                match line_art {
+                    Fx1a::LineartMinimalistic => {
+                        let fx_lineart_helper = FxLineartHelper::Zero;
+                        self.fx_lineart_helper = fx_lineart_helper;
+                    }
+                    Fx1a::LineartHeavy => {
+                        let fx_lineart_helper = FxLineartHelper::Zero;
+                        self.fx_lineart_helper = fx_lineart_helper;
+                        self.helmet_light = HelmetLight::some_lights(rng);
+                    }
+                    Fx1a::No => {
+                        let fx_lineart_helper = FxLineartHelper::Zero;
+                        self.fx_lineart_helper = fx_lineart_helper;
+                    }
+                }
+            }
+            _ => {
+                let line_art = Fx1a::none_or_minimal(rng);
+                self.fx1a = line_art;
+                match line_art {
+                    Fx1a::No => {
+                        let fx_lineart_helper = FxLineartHelper::choose(rng);
+                        self.fx_lineart_helper = fx_lineart_helper;
+                    }
+                    Fx1a::LineartMinimalistic => {
+                        let fx_lineart_helper = FxLineartHelper::One;
+                        self.fx_lineart_helper = fx_lineart_helper;
+                    }
+                    Fx1a::LineartHeavy => {}
+                }
             }
         }
         self
@@ -462,7 +461,24 @@ impl RenderParams {
         self
     }
 
-    //smoke, env_reflection, light_reflection, env_light
+    pub fn generate_smoke<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
+        match self.env_light {
+            EnvLight::Day | EnvLight::Underwater | EnvLight::UnderwaterHologram => {
+                self.smoke_amount = 0.0;
+                self.fx3 = Fx3::No;
+            }
+            EnvLight::Night => {
+                self.fx3 = Fx3::smoke_or_not(rng);
+                match self.fx3 {
+                    Fx3::Smoke => self.smoke_amount = rng.gen_range(25.0..=50.0),
+                    Fx3::No => self.smoke_amount = 0.0,
+                }
+            }
+        }
+        self
+    }
+
+    //env_reflection, light_reflection, env_light
     //
     //
 }

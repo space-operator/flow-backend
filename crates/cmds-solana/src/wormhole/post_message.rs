@@ -10,7 +10,7 @@ use super::{token_bridge::get_sequence_number_from_message, BridgeData, PostMess
 // Command Name
 const NAME: &str = "post_message";
 
-const DEFINITION: &str = flow_lib::node_definition!("solana/wormhole/post_message.json");
+const DEFINITION: &str = flow_lib::node_definition!("wormhole/post_message.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

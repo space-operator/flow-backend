@@ -3,9 +3,9 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "create_tree",
+    "node_id": "mint_compressed_NFT",
     "version": "0.1",
-    "display_name": "Create Tree",
+    "display_name": "Mint Compressed NFT",
     "description": "",
     "tags": [],
     "related_to": [
@@ -53,12 +53,6 @@
       "type": "string",
       "defaultValue": "",
       "tooltip": ""
-    },
-    {
-      "name": "tree_authority",
-      "type": "string",
-      "defaultValue": "",
-      "tooltip": ""
     }
   ],
   "targets": [
@@ -71,7 +65,7 @@
       "passthrough": true
     },
     {
-      "name": "creator",
+      "name": "creator_or_delegate",
       "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": "",
@@ -79,42 +73,42 @@
       "passthrough": false
     },
     {
+      "name": "tree_config",
+      "type_bounds": ["pubkey"],
+      "required": true,
+      "defaultValue": "",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
       "name": "merkle_tree",
-      "type_bounds": ["keypair"],
+      "type_bounds": ["pubkey"],
+      "required": true,
+      "defaultValue": "",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "leaf_owner",
+      "type_bounds": ["pubkey"],
+      "required": true,
+      "defaultValue": "",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "leaf_delegate",
+      "type_bounds": ["pubkey"],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
       "passthrough": false
     },
     {
-      "name": "max_depth",
-      "type_bounds": ["u32"],
-      "required": false,
+      "name": "metadata",
+      "type_bounds": ["json"],
+      "required": true,
       "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "max_buffer",
-      "type_bounds": ["u32"],
-      "required": false,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "canopy_levels",
-      "type_bounds": ["u32"],
-      "required": false,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "is_public",
-      "type_bounds": ["bool"],
-      "required": false,
-      "defaultValue": true,
       "tooltip": "",
       "passthrough": false
     },

@@ -3,10 +3,10 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "kv_write_item",
+    "node_id": "withdraw_streamflow_timelock",
     "version": "0.1",
-    "display_name": "Write Item",
-    "description": "Insert an item to the store, replace and return the old value if exists.",
+    "display_name": "Withdraw Streamflow Timelock",
+    "description": "",
     "tags": [],
     "related_to": [
       {
@@ -42,43 +42,75 @@
       "width": 0,
       "height": 0,
       "icon_url": "",
-      "backgroundColorDark": "#000000",
+      "backgroundColorDark": "#2e003f",
       "backgroundColor": "#fff"
     },
     "options": {}
   },
   "sources": [
     {
-      "name": "old_value",
-      "type": "free",
+      "name": "signature",
+      "type": "signature",
       "defaultValue": null,
       "tooltip": ""
     }
   ],
   "targets": [
     {
-      "name": "store",
-      "type_bounds": ["string"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "Name of the store.",
-      "passthrough": true
-    },
-    {
-      "name": "key",
-      "type_bounds": ["string"],
+      "name": "fee_payer",
+      "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": true
+      "passthrough": false
     },
     {
-      "name": "value",
-      "type_bounds": ["free"],
+      "name": "authority",
+      "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": true
+      "passthrough": false
+    },
+    {
+      "name": "recipient",
+      "type_bounds": ["pubkey"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "metadata",
+      "type_bounds": ["pubkey"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "data",
+      "type_bounds": ["json"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "partner",
+      "type_bounds": ["pubkey"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "submit",
+      "type_bounds": ["bool"],
+      "required": false,
+      "defaultValue": true,
+      "tooltip": "",
+      "passthrough": false
     }
   ],
   "targets_form.json_schema": {},

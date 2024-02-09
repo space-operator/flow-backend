@@ -6,8 +6,7 @@ use solana_sdk::pubkey::Pubkey;
 // Command Name
 const DELETE_INSTALL: &str = "delete_install";
 
-const DEFINITION: &str =
-    flow_lib::node_definition!("solana/xnft/delete_install.json");
+const DEFINITION: &str = flow_lib::node_definition!("xnft/delete_install.json");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;
