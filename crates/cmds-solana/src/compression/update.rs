@@ -49,7 +49,7 @@ pub struct Input {
     //
     #[serde(with = "value::pubkey")]
     pub leaf_delegate: Pubkey,
-    #[serde(default,with = "value::pubkey::opt")]
+    #[serde(default, with = "value::pubkey::opt")]
     pub collection_mint: Option<Pubkey>,
     //
     #[serde(default, with = "value::pubkey::opt")]
@@ -89,7 +89,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .iter()
         .map(|node| {
             let pubkey =
-                Pubkey::from_str(&node).map_err(|_| CommandError::msg("Invalid pubkey string"))?;
+                Pubkey::from_str(node).map_err(|_| CommandError::msg("Invalid pubkey string"))?;
             Ok(AccountMeta {
                 pubkey,
                 is_signer: false,
@@ -98,7 +98,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         })
         .collect();
 
-    let proof = proof?;
+    let _proof = proof?;
 
     // get root
     let root = match &input.root {

@@ -1,5 +1,5 @@
 use flow_lib::config::client::NodeDataSkipWasm;
-use serde_json::json;
+
 use utils::bs58_decode;
 
 use super::*;

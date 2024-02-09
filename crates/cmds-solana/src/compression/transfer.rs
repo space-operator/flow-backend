@@ -89,7 +89,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .iter()
         .map(|node| {
             let pubkey =
-                Pubkey::from_str(&node).map_err(|_| CommandError::msg("Invalid pubkey string"))?;
+                Pubkey::from_str(node).map_err(|_| CommandError::msg("Invalid pubkey string"))?;
             Ok(AccountMeta {
                 pubkey,
                 is_signer: false,

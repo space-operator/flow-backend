@@ -1,11 +1,7 @@
 use chrono::{DateTime, Utc};
 use flow_lib::command::prelude::*;
-use reqwest::{
-    header::{AUTHORIZATION, CONTENT_TYPE},
-    StatusCode,
-};
+use reqwest::{header::CONTENT_TYPE, StatusCode};
 use serde_json::json;
-use tracing::info;
 
 pub const NAME: &str = "das_api";
 
@@ -13,7 +9,7 @@ const DEFINITION: &str = flow_lib::node_definition!("das_api.json");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
-        BuilderCache::new(|| Ok(CmdBuilder::new(DEFINITION)?.check_name(NAME)?));
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
 
     Ok(CACHE.clone()?.build(run))
 }

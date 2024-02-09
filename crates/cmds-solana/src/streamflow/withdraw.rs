@@ -160,7 +160,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             input.authority.clone_keypair(),
         ]
         .into(),
-        instructions: vec![instruction].into(),
+        instructions: vec![instruction],
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

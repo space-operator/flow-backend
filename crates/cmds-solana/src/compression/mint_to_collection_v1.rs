@@ -1,12 +1,9 @@
 use crate::prelude::*;
-use anchor_lang::AnchorDeserialize;
-use mpl_bubblegum::{instructions::MintToCollectionV1Builder, types::LeafSchema};
-use solana_client::rpc_config::RpcTransactionConfig;
-use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey};
-use solana_transaction_status::{
-    option_serializer::OptionSerializer, parse_instruction::ParsedInstruction,
-    TransactionStatusMeta, UiInstruction, UiTransactionEncoding, UiTransactionStatusMeta,
-};
+
+use mpl_bubblegum::instructions::MintToCollectionV1Builder;
+
+use solana_sdk::pubkey::Pubkey;
+
 use tracing::info;
 
 use super::MetadataBubblegum;

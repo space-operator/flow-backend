@@ -6,7 +6,7 @@ use solana_sdk::pubkey::Pubkey;
 
 use super::{
     types::asset::{Asset, AssetProof},
-    GetAssetResponse, MetadataBubblegum,
+    GetAssetResponse,
 };
 
 // Command Name

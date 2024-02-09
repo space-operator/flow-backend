@@ -243,7 +243,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .public(input.is_public.is_some())
         .instruction();
 
-
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [
