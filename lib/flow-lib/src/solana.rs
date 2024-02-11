@@ -146,6 +146,9 @@ impl Instructions {
             &recent_blockhash,
         );
 
+        tracing::debug!("fee_payer = {}", self.fee_payer);
+        tracing::debug!("instructions.len() = {}", self.instructions.len());
+
         let mut tx = Transaction::new_unsigned(message);
 
         let msg: Bytes = tx.message_data().into();
@@ -155,7 +158,7 @@ impl Instructions {
                 .signers
                 .iter()
                 .find(|w| w.pubkey() == self.fee_payer)
-                .ok_or_else(|| Error::Other(Arc::new("fee payer is not in signers".into())))?;
+                .ok_or_else(|| Error::other("fee payer is not in signers"))?;
 
             if keypair.is_adapter_wallet() {
                 let fut = signer.call_ref(signer::SignatureRequest {
@@ -170,7 +173,7 @@ impl Instructions {
                 tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
                     .await
                     .map_err(|_| Error::Timeout)?
-                    .map_err(|error| Error::Other(Arc::new(error.into())))?
+                    .map_err(|error| Error::other(error))?
                     .signature
             } else {
                 keypair.sign_message(&msg)
@@ -245,7 +248,7 @@ impl Instructions {
         verify_precompiles(&tx, &FeatureSet::all_enabled())?;
 
         let commitment = CommitmentConfig::confirmed();
-        tracing::trace!("submitting transaction");
+        tracing::debug!("submitting transaction");
         let sig = rpc
             .send_and_confirm_transaction_with_spinner_and_commitment(&tx, commitment)
             .await?;
