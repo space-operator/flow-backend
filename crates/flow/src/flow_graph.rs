@@ -874,10 +874,13 @@ impl FlowGraph {
                         }
                         let mut resp = vec![Responder {
                             sender: w.resp,
-                            range: 1..ins.instructions.len(),
+                            range: 0..ins.instructions.len(),
                         }];
-                        while let Some(w) = tx.pop() {
+                        while let Some(mut w) = tx.pop() {
                             let old_len = ins.instructions.len();
+                            if let Some(signer) = self.overwrite_feepayer.as_ref() {
+                                w.instructions.set_feepayer(signer.clone_keypair());
+                            }
                             match ins.combine(w.instructions) {
                                 Ok(_) => {
                                     let new_len = ins.instructions.len();
