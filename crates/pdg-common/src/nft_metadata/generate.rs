@@ -367,11 +367,11 @@ impl RenderParams {
         self.fx6 = fx6;
         match fx6 {
             Fx6::No => {}
-            Fx6::Gold => self.gold_silver_amount = rng.gen_range(10.0..=30.0),
-            Fx6::Silver => self.gold_silver_amount = rng.gen_range(10.0..=30.0),
-            Fx6::RoseGold => self.gold_silver_amount = rng.gen_range(10.0..=30.0),
-            Fx6::Bronze => self.gold_silver_amount = rng.gen_range(10.0..=30.0),
-            Fx6::Copper => self.gold_silver_amount = rng.gen_range(10.0..=30.0),
+            Fx6::Gold => self.gold_silver_amount = rng.gen_range(5.0..=30.0),
+            Fx6::Silver => self.gold_silver_amount = rng.gen_range(5.0..=30.0),
+            Fx6::RoseGold => self.gold_silver_amount = rng.gen_range(5.0..=30.0),
+            Fx6::Bronze => self.gold_silver_amount = rng.gen_range(5.0..=30.0),
+            Fx6::Copper => self.gold_silver_amount = rng.gen_range(5.0..=30.0),
         }
 
         self
