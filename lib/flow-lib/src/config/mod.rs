@@ -212,13 +212,24 @@ impl SolanaNet {
         }
     }
 
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            SolanaNet::Devnet => "devnet",
+            SolanaNet::Testnet => "testnet",
+            SolanaNet::Mainnet => "mainnet-beta",
+        }
+    }
+
     pub fn from_url(url: &str) -> Result<Self, UnknownNetwork> {
-        Ok(match url.strip_suffix('/') {
-            Some("https://api.devnet.solana.com") => SolanaNet::Devnet,
-            Some("https://api.testnet.solana.com") => SolanaNet::Testnet,
-            Some("https://api.mainnet-beta.solana.com") => SolanaNet::Mainnet,
-            _ => return Err(UnknownNetwork(url.to_owned())),
-        })
+        if url.contains("devnet") {
+            Ok(SolanaNet::Devnet)
+        } else if url.contains("testnet") {
+            Ok(SolanaNet::Testnet)
+        } else if url.contains("mainnet") {
+            Ok(SolanaNet::Mainnet)
+        } else {
+            Err(UnknownNetwork(url.to_owned()))
+        }
     }
 }
 

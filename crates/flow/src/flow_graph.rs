@@ -874,7 +874,7 @@ impl FlowGraph {
                         }
                         let mut resp = vec![Responder {
                             sender: w.resp,
-                            range: 1..ins.instructions.len(),
+                            range: 0..ins.instructions.len(),
                         }];
                         while let Some(w) = tx.pop() {
                             let old_len = ins.instructions.len();

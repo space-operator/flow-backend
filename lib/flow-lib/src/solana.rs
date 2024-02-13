@@ -1,8 +1,13 @@
-use crate::{context::execute::Error, context::signer, FlowRunId};
+use crate::{
+    context::{execute::Error, signer},
+    FlowRunId, SolanaNet,
+};
 use anyhow::{anyhow, bail};
+use borsh::BorshDeserialize;
 use bytes::Bytes;
 use chrono::Utc;
 use futures::TryStreamExt;
+use once_cell::sync::Lazy;
 use solana_client::{
     client_error::{ClientError, ClientErrorKind},
     nonblocking::rpc_client::RpcClient,
@@ -11,15 +16,19 @@ use solana_client::{
 };
 use solana_sdk::{
     commitment_config::CommitmentConfig,
+    compute_budget::ComputeBudgetInstruction,
     feature_set::FeatureSet,
-    instruction::Instruction,
+    instruction::{CompiledInstruction, Instruction},
     message::Message,
     precompiles::verify_if_precompile,
     signature::Presigner,
     signer::{keypair::Keypair, Signer},
     transaction::Transaction,
 };
-use std::{sync::Arc, time::Duration};
+use spo_helius::{
+    GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
+};
+use std::time::Duration;
 use tower::ServiceExt;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(5 * 60);
@@ -100,6 +109,66 @@ pub struct Instructions {
     pub instructions: Vec<Instruction>,
 }
 
+fn is_set_compute_unit_price(
+    tx: &Transaction,
+    index: usize,
+    ins: &CompiledInstruction,
+) -> Option<()> {
+    let program_id = tx.message.program_id(index)?;
+    if solana_sdk::compute_budget::check_id(program_id) {
+        let data = ComputeBudgetInstruction::try_from_slice(&ins.data)
+            .map_err(|error| tracing::error!("could not decode instruction: {}", error))
+            .ok()?;
+        matches!(data, ComputeBudgetInstruction::SetComputeUnitPrice(_)).then_some(())
+    } else {
+        None
+    }
+}
+
+fn contains_set_compute_unit_price(tx: &Transaction) -> bool {
+    tx.message
+        .instructions
+        .iter()
+        .enumerate()
+        .any(|(index, ins)| is_set_compute_unit_price(tx, index, ins).is_some())
+}
+
+async fn get_priority_fee(tx: &Transaction, rpc: &RpcClient) -> Result<u64, anyhow::Error> {
+    static HTTP: Lazy<reqwest::Client> = Lazy::new(|| reqwest::Client::new());
+    if let Some(apikey) = std::env::var("HELIUS_API_KEY").ok() {
+        let helius = Helius::new(HTTP.clone(), &apikey);
+        let network = SolanaNet::from_url(&rpc.url())
+            .map_err(|_| tracing::warn!("could not guess cluster from url, using mainnet"))
+            .unwrap_or(SolanaNet::Mainnet);
+        let resp = helius
+            .get_priority_fee_estimate(
+                network.as_str(),
+                GetPriorityFeeEstimateRequest {
+                    account_keys: Some(
+                        tx.message
+                            .account_keys
+                            .iter()
+                            .map(|pk| pk.to_string())
+                            .collect(),
+                    ),
+                    options: Some(GetPriorityFeeEstimateOptions {
+                        priority_level: Some(PriorityLevel::Medium),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                },
+            )
+            .await?;
+        tracing::debug!("helius response: {:?}", resp);
+        Ok(resp
+            .priority_fee_estimate
+            .ok_or_else(|| anyhow!("helius didn't return fee"))?
+            .round() as u64)
+    } else {
+        bail!("no HELIUS_API_KEY env");
+    }
+}
+
 impl Instructions {
     fn push_signer(&mut self, new: Keypair) {
         let old = self.signers.iter_mut().find(|k| k.pubkey() == new.pubkey());
@@ -133,29 +202,52 @@ impl Instructions {
     }
 
     pub async fn execute(
-        self,
+        mut self,
         rpc: &RpcClient,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
     ) -> Result<Signature, Error> {
-        let recent_blockhash = rpc.get_latest_blockhash().await?;
-
         let message = Message::new_with_blockhash(
             &self.instructions,
             Some(&self.fee_payer),
-            &recent_blockhash,
+            &rpc.get_latest_blockhash().await?,
         );
 
         let mut tx = Transaction::new_unsigned(message);
 
+        if !contains_set_compute_unit_price(&tx) {
+            match get_priority_fee(&tx, rpc).await {
+                Ok(fee) => {
+                    tracing::info!("adding priority fee {}", fee);
+                    self.instructions
+                        .push(ComputeBudgetInstruction::set_compute_unit_limit(200000));
+                    self.instructions
+                        .push(ComputeBudgetInstruction::set_compute_unit_price(fee));
+                    let message = Message::new_with_blockhash(
+                        &self.instructions,
+                        Some(&self.fee_payer),
+                        &rpc.get_latest_blockhash().await?,
+                    );
+                    tx = Transaction::new_unsigned(message);
+                }
+                Err(error) => {
+                    tracing::warn!("{}, skipping priority fee", error);
+                }
+            }
+        }
+
         let msg: Bytes = tx.message_data().into();
+
+        tracing::info!("executing transaction");
+        tracing::info!("message size: {}", msg.len());
+        tracing::info!("fee payer: {}", self.fee_payer);
 
         let fee_payer_signature = {
             let keypair = self
                 .signers
                 .iter()
                 .find(|w| w.pubkey() == self.fee_payer)
-                .ok_or_else(|| Error::Other(Arc::new("fee payer is not in signers".into())))?;
+                .ok_or_else(|| Error::other("fee payer is not in signers"))?;
 
             if keypair.is_adapter_wallet() {
                 let fut = signer.call_ref(signer::SignatureRequest {
@@ -170,7 +262,7 @@ impl Instructions {
                 tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
                     .await
                     .map_err(|_| Error::Timeout)?
-                    .map_err(|error| Error::Other(Arc::new(error.into())))?
+                    .map_err(|error| Error::other(error))?
                     .signature
             } else {
                 keypair.sign_message(&msg)
@@ -238,14 +330,13 @@ impl Instructions {
                 }
             }
 
-            tx.try_sign(&signers, recent_blockhash)?;
+            tx.try_sign(&signers, tx.message.recent_blockhash)?;
         }
 
         // TODO: is it correct to use FeatureSet::all_enabled()?
         verify_precompiles(&tx, &FeatureSet::all_enabled())?;
 
         let commitment = CommitmentConfig::confirmed();
-        tracing::trace!("submitting transaction");
         let sig = rpc
             .send_and_confirm_transaction_with_spinner_and_commitment(&tx, commitment)
             .await?;

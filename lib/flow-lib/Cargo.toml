@@ -28,3 +28,5 @@ chrono = "0.4"
 # solana libs
 solana-sdk = "1"
 solana-client = "1"
+spo-helius.workspace = true
+borsh = "0.10"
