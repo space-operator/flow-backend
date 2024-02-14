@@ -2991,6 +2991,7 @@ dependencies = [
  "actix",
  "anyhow",
  "async-trait",
+ "borsh 0.10.3",
  "bytes",
  "chrono",
  "flow-value",
@@ -3004,6 +3005,7 @@ dependencies = [
  "serde_with 3.6.1",
  "solana-client",
  "solana-sdk",
+ "spo-helius",
  "thiserror",
  "tokio",
  "tower",
@@ -7400,9 +7402,12 @@ name = "spo-helius"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bs58 0.4.0",
  "reqwest",
  "serde",
  "serde_json",
+ "serde_with 3.6.1",
+ "tracing",
 ]
 
 [[package]]
