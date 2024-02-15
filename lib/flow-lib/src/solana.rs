@@ -220,9 +220,9 @@ impl Instructions {
                 Ok(fee) => {
                     tracing::info!("adding priority fee {}", fee);
                     self.instructions
-                        .push(ComputeBudgetInstruction::set_compute_unit_limit(200000));
+                        .insert(0, ComputeBudgetInstruction::set_compute_unit_limit(200000));
                     self.instructions
-                        .push(ComputeBudgetInstruction::set_compute_unit_price(fee));
+                        .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
                     let message = Message::new_with_blockhash(
                         &self.instructions,
                         Some(&self.fee_payer),
