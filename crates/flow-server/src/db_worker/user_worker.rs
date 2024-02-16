@@ -5,6 +5,7 @@ use super::{
 use crate::error::ErrorBody;
 use actix::{Actor, ActorFutureExt, AsyncContext, ResponseActFuture, ResponseFuture, WrapFuture};
 use actix_web::{http::StatusCode, ResponseError};
+use bytes::Bytes;
 use db::{pool::DbPool, Error as DbError};
 use flow::{
     flow_graph::StopSignal,
@@ -19,6 +20,7 @@ use flow_lib::{
         get_jwt,
         signer::{self, SignatureRequest},
     },
+    solana::is_same_message_logic,
     FlowId, FlowRunId, User, UserId,
 };
 use futures_channel::{mpsc, oneshot};
@@ -318,11 +320,12 @@ impl actix::Handler<signer::SignatureRequest> for UserWorker {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Debug)]
 pub struct SubmitSignature {
     pub user_id: UserId,
     pub id: i64,
     pub signature: [u8; 64],
+    pub new_msg: Option<Bytes>,
 }
 
 impl actix::Message for SubmitSignature {
@@ -335,8 +338,12 @@ pub enum SubmitError {
     Unauthorized,
     #[error("not found")]
     NotFound,
-    #[error("signature verification failed. id={}; signature={};", .id, .signature)]
-    WrongSignature { id: i64, signature: String },
+    #[error("could not update tx because it will invalidate existing signature")]
+    NotAllowChangeTx,
+    #[error("transaction changed: {}", .0)]
+    TxChanged(anyhow::Error),
+    #[error("signature verification failed")]
+    WrongSignature,
     #[error(transparent)]
     Db(#[from] DbError),
     #[error(transparent)]
@@ -348,7 +355,9 @@ impl ResponseError for SubmitError {
         match self {
             SubmitError::Unauthorized => StatusCode::UNAUTHORIZED,
             SubmitError::NotFound => StatusCode::NOT_FOUND,
-            SubmitError::WrongSignature { .. } => StatusCode::BAD_REQUEST,
+            SubmitError::NotAllowChangeTx => StatusCode::BAD_REQUEST,
+            SubmitError::WrongSignature => StatusCode::BAD_REQUEST,
+            SubmitError::TxChanged(_) => StatusCode::BAD_REQUEST,
             SubmitError::Db(_) => StatusCode::INTERNAL_SERVER_ERROR,
             SubmitError::Mailbox(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -362,41 +371,56 @@ impl ResponseError for SubmitError {
 impl actix::Handler<SubmitSignature> for UserWorker {
     type Result = ResponseFuture<Result<(), SubmitError>>;
 
-    fn handle(&mut self, msg: SubmitSignature, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, mut msg: SubmitSignature, _: &mut Self::Context) -> Self::Result {
         if self.user_id != msg.user_id {
-            Box::pin(ready(Err(SubmitError::Unauthorized)))
-        } else {
-            match self.sigreg.remove(&msg.id) {
-                Some(req) => {
-                    if Signature::from(msg.signature)
-                        .verify(&req.req.pubkey.to_bytes(), &req.req.message)
-                    {
-                        let db = self.db.clone();
-                        let user_id = self.user_id;
-                        req.resp
-                            .send(Ok(signer::SignatureResponse {
-                                signature: Signature::from(msg.signature),
-                            }))
-                            .ok();
-                        Box::pin(async move {
-                            db.get_user_conn(user_id)
-                                .await?
-                                .save_signature(&msg.id, &msg.signature)
-                                .await?;
-
-                            Ok(())
-                        })
-                    } else {
-                        self.sigreg.insert(msg.id, req);
-                        Box::pin(ready(Err(SubmitError::WrongSignature {
-                            id: msg.id,
-                            signature: bs58::encode(&msg.signature).into_string(),
-                        })))
-                    }
+            return Box::pin(ready(Err(SubmitError::Unauthorized)));
+        }
+        if !self.sigreg.contains_key(&msg.id) {
+            return Box::pin(ready(Err(SubmitError::NotFound)));
+        }
+        let req = self.sigreg.remove(&msg.id).unwrap();
+        let mut message = req.req.message.clone();
+        if let Some(new) = msg.new_msg {
+            if new == req.req.message {
+                msg.new_msg = None;
+            } else {
+                if !req
+                    .req
+                    .signatures
+                    .as_ref()
+                    .map(|s| s.is_empty())
+                    .unwrap_or(true)
+                {
+                    return Box::pin(ready(Err(SubmitError::NotAllowChangeTx)));
                 }
-                None => Box::pin(ready(Err(SubmitError::NotFound))),
+                if let Err(error) = is_same_message_logic(&req.req.message, &new) {
+                    self.sigreg.insert(msg.id, req);
+                    return Box::pin(ready(Err(SubmitError::TxChanged(error))));
+                }
+                msg.new_msg = Some(new.clone());
+                message = new;
             }
         }
+        if !Signature::from(msg.signature).verify(&req.req.pubkey.to_bytes(), &message) {
+            self.sigreg.insert(msg.id, req);
+            return Box::pin(ready(Err(SubmitError::WrongSignature)));
+        }
+        let db = self.db.clone();
+        let user_id = self.user_id;
+        req.resp
+            .send(Ok(signer::SignatureResponse {
+                signature: Signature::from(msg.signature),
+                new_message: msg.new_msg.clone(),
+            }))
+            .ok();
+        Box::pin(async move {
+            db.get_user_conn(user_id)
+                .await?
+                .save_signature(&msg.id, &msg.signature, msg.new_msg.as_ref())
+                .await?;
+
+            Ok(())
+        })
     }
 }
 

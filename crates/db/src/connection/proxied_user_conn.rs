@@ -237,9 +237,21 @@ impl UserConnectionTrait for ProxiedUserConn {
         .await
     }
 
-    async fn save_signature(&self, id: &i64, signature: &[u8; 64]) -> crate::Result<()> {
-        self.send("save_signature", &(&id, &Value::from(*signature)))
-            .await
+    async fn save_signature(
+        &self,
+        id: &i64,
+        signature: &[u8; 64],
+        new_message: Option<&Bytes>,
+    ) -> crate::Result<()> {
+        self.send(
+            "save_signature",
+            &(
+                &id,
+                &Value::from(*signature),
+                &new_message.map(base64::encode),
+            ),
+        )
+        .await
     }
 
     async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>> {
@@ -355,9 +367,16 @@ impl UserConnection {
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             "save_signature" => {
-                let (id, signature): (_, Value) = serde_json::from_str(req.params.get())?;
+                let (id, signature, new_message): (_, Value, Option<String>) =
+                    serde_json::from_str(req.params.get())?;
                 let signature = value::from_value::<ConstBytes<64>>(signature)?.0;
-                let res = self.save_signature(&id, &signature).await?;
+                let new_message = new_message
+                    .map(base64::decode)
+                    .transpose()?
+                    .map(Bytes::from);
+                let res = self
+                    .save_signature(&id, &signature, new_message.as_ref())
+                    .await?;
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             "read_item" => {

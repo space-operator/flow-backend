@@ -85,7 +85,7 @@ pub async fn try_sign_wallet(
         .await
         .map_err(|_| crate::Error::SignatureTimeout)??
         .into_iter()
-        .map(|(pk, sig)| Presigner::new(&pk, &sig))
+        .map(|(pk, res)| Presigner::new(&pk, &res.signature))
         .collect::<Vec<Presigner>>();
 
     let mut signers = Vec::<&dyn Signer>::with_capacity(keypairs.len());

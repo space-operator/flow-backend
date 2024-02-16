@@ -17,7 +17,7 @@ use crate::{
 use bytes::Bytes;
 use chrono::Utc;
 use solana_client::nonblocking::rpc_client::RpcClient as SolanaClient;
-use solana_sdk::{pubkey::Pubkey, signature::Signature};
+use solana_sdk::pubkey::Pubkey;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
 use tower::{Service, ServiceExt};
 
@@ -179,6 +179,7 @@ pub mod signer {
     #[derive(Debug)]
     pub struct SignatureResponse {
         pub signature: Signature,
+        pub new_message: Option<bytes::Bytes>,
     }
 
     pub fn unimplemented_svc() -> Svc {
@@ -221,8 +222,12 @@ pub mod execute {
         InsufficientSolanaBalance { needed: u64, balance: u64 },
         #[error("transaction simulation failed")]
         TxSimFailed,
-        #[error("{}", crate::solana::verbose_solana_error(.0))]
-        Solana(#[from] Arc<ClientError>),
+        #[error("{}", crate::solana::verbose_solana_error(.error))]
+        Solana {
+            #[source]
+            error: Arc<ClientError>,
+            inserted: usize,
+        },
         #[error(transparent)]
         Signer(#[from] Arc<SignerError>),
         #[error(transparent)]
@@ -235,15 +240,18 @@ pub mod execute {
         Other(#[from] Arc<BoxError>),
     }
 
-    impl From<anyhow::Error> for Error {
-        fn from(value: anyhow::Error) -> Self {
-            value.downcast::<Self>().unwrap_or_else(Self::other)
+    impl Error {
+        pub fn solana(error: ClientError, inserted: usize) -> Self {
+            Self::Solana {
+                error: Arc::new(error),
+                inserted,
+            }
         }
     }
 
-    impl From<ClientError> for Error {
-        fn from(value: ClientError) -> Self {
-            Error::Solana(Arc::new(value))
+    impl From<anyhow::Error> for Error {
+        fn from(value: anyhow::Error) -> Self {
+            value.downcast::<Self>().unwrap_or_else(Self::other)
         }
     }
 
@@ -427,11 +435,10 @@ impl Context {
         pubkey: Pubkey,
         message: Bytes,
         timeout: Duration,
-    ) -> Result<Signature, anyhow::Error> {
+    ) -> Result<signer::SignatureResponse, anyhow::Error> {
         let mut s = self.signer.clone();
 
-        let signer::SignatureResponse { signature } = s
-            .ready()
+        Ok(s.ready()
             .await?
             .call(signer::SignatureRequest {
                 id: None,
@@ -442,8 +449,7 @@ impl Context {
                 flow_run_id: self.command.as_ref().map(|ctx| ctx.flow_run_id),
                 signatures: None,
             })
-            .await?;
-        Ok(signature)
+            .await?)
     }
 
     /// Get an extension by type.

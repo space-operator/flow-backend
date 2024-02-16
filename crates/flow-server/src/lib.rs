@@ -121,6 +121,7 @@ pub struct Config {
     pub local_storage: PathBuf,
     #[serde(default = "Config::default_shutdown_timeout_secs")]
     pub shutdown_timeout_secs: u16,
+    pub helius_api_key: Option<String>,
 
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
@@ -137,6 +138,7 @@ impl Default for Config {
             local_storage: Self::default_local_storage(),
             shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
             blake3_key: rand::random(),
+            helius_api_key: None,
         }
     }
 }
