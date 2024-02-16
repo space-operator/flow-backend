@@ -71,12 +71,16 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Erro
     }
     ensure!(
         l.account_keys.len() == r.account_keys.len(),
-        "different account inputs length"
+        "different account inputs length, old = {}, new = {}",
+        l.account_keys.len(),
+        r.account_keys.len()
     );
     ensure!(!l.account_keys.is_empty(), "empty transaction");
     ensure!(
         l.instructions.len() == r.instructions.len(),
-        "empty transaction"
+        "different instructions count, old = {}, new = {}",
+        l.instructions.len(),
+        r.instructions.len()
     );
     ensure!(
         l.account_keys[0] == r.account_keys[0],
@@ -221,6 +225,10 @@ async fn get_priority_fee(message: &Message, rpc: &RpcClient) -> Result<u64, any
         let network = SolanaNet::from_url(&rpc.url())
             .map_err(|_| tracing::warn!("could not guess cluster from url, using mainnet"))
             .unwrap_or(SolanaNet::Mainnet);
+        if network != SolanaNet::Mainnet {
+            // TODO: not available on devnet and testnet
+            return Ok(100);
+        }
         let resp = helius
             .get_priority_fee_estimate(
                 network.as_str(),
