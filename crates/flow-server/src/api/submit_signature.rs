@@ -1,11 +1,16 @@
 use super::prelude::*;
 use crate::db_worker::user_worker::{SubmitError, SubmitSignature};
+use bytes::Bytes;
+use serde_with::{base64::Base64, serde_as};
 
+#[serde_as]
 #[derive(Deserialize)]
 pub struct Params {
     id: i64,
     #[serde(with = "utils::serde_bs58")]
     signature: [u8; 64],
+    #[serde_as(as = "Option<Base64>")]
+    new_msg: Option<Bytes>,
 }
 
 pub fn service(config: &Config) -> impl HttpServiceFactory {
@@ -25,6 +30,7 @@ async fn submit_signature(
             id: params.id,
             user_id: UserId::nil(),
             signature: params.signature,
+            new_msg: params.new_msg,
         })
         .await??;
 

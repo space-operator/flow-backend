@@ -35,6 +35,7 @@ impl bundlr_sdk::Signer for BundlrSigner {
                     ctx.request_signature(pubkey, msg, SIGNATURE_TIMEOUT),
                 )
                 .await
+                .map(|res| res.map(|res| res.signature))
             })
             .map_err(|e| BundlrError::SigningError(e.to_string()))?
             .map_err(|e| BundlrError::SigningError(e.to_string()))?
