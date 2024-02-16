@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-value = { workspace = true }
+value.workspace = true
+spo-helius.workspace = true
 
 anyhow = "1.0"
 inventory = "0.3"
@@ -24,7 +25,12 @@ futures = "0.3"
 once_cell = "1.17.1"
 reqwest = { version = "*", default-features = false }
 chrono = "0.4"
+bincode = "1.3.3"
+borsh = "0.10"
 
 # solana libs
-solana-sdk = "1"
+solana-sdk = { version = "1", default-features = false }
 solana-client = "1"
+
+[dev-dependencies]
+base64 = "0.21"

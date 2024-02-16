@@ -141,7 +141,12 @@ impl actix::Handler<SubmitSignature> for DBWorker {
         let users = self.actors.iter::<UserWorker>().collect::<Vec<_>>();
         async move {
             for (user_id, addr) in users {
-                let res = addr.send(SubmitSignature { user_id, ..msg }).await;
+                let res = addr
+                    .send(SubmitSignature {
+                        user_id,
+                        ..msg.clone()
+                    })
+                    .await;
                 match res {
                     Err(_) => continue,
                     Ok(Err(SubmitError::NotFound)) => continue,

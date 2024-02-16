@@ -4,7 +4,7 @@ exclude = ["crates/space-wasm/tests"]
 resolver = "2"
 
 [patch.crates-io]
-rhai = { git = "https://github.com/space-operator/rhai", rev = "1fce1c538a6a7c0bf1cffd1a1809aec906b43c21" }
+rhai = { git = "https://github.com/space-operator/rhai", rev = "b39d2bfb" }
 # fix zeroize and subtle dep conflict
 aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs", rev = "555ae1d82d000f01899498f969e6dc1d0a4fe467" }
 curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", rev = "8274d5cbb6fc3f38cdc742b4798173895cd2a290" }
@@ -34,6 +34,7 @@ value = { path = "lib/flow-value", version = "0.1.0", package = "flow-value" }
 flow-lib = { path = "lib/flow-lib", version = "0.1.0" }
 space-lib = { path = "lib/space-lib", version = "0.5.0" }
 space-macro = { path = "lib/space-macro", version = "0.2.1" }
+spo-helius = { path = "./lib/spo-helius", version = "0.1.0" }
 
 # Non-local crates
 serde = { version = "1", features = ["derive"] }

@@ -10,7 +10,7 @@ name = "gen"
 anyhow.workspace = true
 bs58.workspace = true
 flow-lib.workspace = true
-rhai = { version = "1.17", features = ["decimal", "indexmap"] }
+rhai = { version = "1.17.2", features = ["decimal", "indexmap"] }
 rhai-rand = { version = "0.1.6", features = ["decimal"] }
 serde.workspace = true
 serde_json.workspace = true

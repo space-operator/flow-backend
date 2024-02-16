@@ -1,5 +1,6 @@
 use crate::{Error, Wallet, WasmStorage};
 use async_trait::async_trait;
+use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use deadpool_postgres::Object as Connection;
 use flow_lib::{
@@ -146,7 +147,12 @@ pub trait UserConnectionTrait: Any + 'static {
         signatures: Option<&[Presigner]>,
     ) -> crate::Result<i64>;
 
-    async fn save_signature(&self, id: &i64, signature: &[u8; 64]) -> crate::Result<()>;
+    async fn save_signature(
+        &self,
+        id: &i64,
+        signature: &[u8; 64],
+        new_msg: Option<&Bytes>,
+    ) -> crate::Result<()>;
 
     async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>>;
 }
@@ -286,8 +292,13 @@ impl UserConnectionTrait for UserConnection {
             .await
     }
 
-    async fn save_signature(&self, id: &i64, signature: &[u8; 64]) -> crate::Result<()> {
-        self.save_signature(id, signature).await
+    async fn save_signature(
+        &self,
+        id: &i64,
+        signature: &[u8; 64],
+        new_message: Option<&Bytes>,
+    ) -> crate::Result<()> {
+        self.save_signature(id, signature, new_message).await
     }
 
     async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>> {

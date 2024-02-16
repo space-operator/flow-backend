@@ -50,6 +50,7 @@ impl actix::Handler<SignatureRequest> for SignerWorker {
             None => ready(Err(signer::Error::Pubkey(msg.pubkey.to_string()))).boxed(),
             Some(SignerType::Keypair(keypair)) => ready(Ok(signer::SignatureResponse {
                 signature: keypair.sign_message(&msg.message),
+                new_message: None,
             }))
             .boxed(),
             Some(SignerType::UserWallet { sender, .. }) => {

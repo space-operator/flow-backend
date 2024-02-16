@@ -131,6 +131,11 @@ async fn main() {
 
     let shutdown_timeout_secs = config.shutdown_timeout_secs;
 
+    if let Some(key) = &config.helius_api_key {
+        tracing::info!("setting HELIUS_API_KEY env");
+        std::env::set_var("HELIUS_API_KEY", key);
+    }
+
     HttpServer::new(move || {
         let auth = supabase_auth.as_ref().map(|supabase_auth| {
             web::scope("/auth")

@@ -1,5 +1,5 @@
+use bytes::Bytes;
 use flow_lib::config::client::NodeDataSkipWasm;
-
 use utils::bs58_decode;
 
 use super::*;
@@ -840,20 +840,27 @@ impl UserConnection {
         Ok(id)
     }
 
-    pub async fn save_signature(&self, id: &i64, signature: &[u8; 64]) -> crate::Result<()> {
+    pub async fn save_signature(
+        &self,
+        id: &i64,
+        signature: &[u8; 64],
+        new_message: Option<&Bytes>,
+    ) -> crate::Result<()> {
+        let new_msg_base64 = new_message.map(base64::encode);
         let signature = bs58::encode(signature).into_string();
         let stmt = self
             .conn
             .prepare_cached(
                 "UPDATE signature_requests
-                SET signature = $1
+                SET signature = $1,
+                    new_msg = $4
                 WHERE user_id = $2 AND id = $3 AND signature IS NULL
                 RETURNING id",
             )
             .await
             .map_err(Error::exec("prepare"))?;
         self.conn
-            .query_one(&stmt, &[&signature, &self.user_id, id])
+            .query_one(&stmt, &[&signature, &self.user_id, id, &new_msg_base64])
             .await
             .map_err(Error::exec("save_signature"))?;
 

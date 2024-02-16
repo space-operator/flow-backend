@@ -874,7 +874,7 @@ impl FlowGraph {
                         }
                         let mut resp = vec![Responder {
                             sender: w.resp,
-                            range: 1..ins.instructions.len(),
+                            range: 0..ins.instructions.len(),
                         }];
                         while let Some(w) = tx.pop() {
                             let old_len = ins.instructions.len();
@@ -926,7 +926,9 @@ impl FlowGraph {
 
                     let res = res.map(|s| execute::Response { signature: Some(s) });
                     let failed_instruction = res.as_ref().err().and_then(|e| match e {
-                        execute::Error::Solana(e) => find_failed_instruction(e),
+                        execute::Error::Solana { error, inserted } => {
+                            find_failed_instruction(error).map(|pos| pos - inserted)
+                        }
                         _ => None,
                     });
                     for resp in resp {
