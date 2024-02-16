@@ -37,12 +37,38 @@ pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 pub use solana_sdk::pubkey::Pubkey;
 pub use solana_sdk::signature::Signature;
 
-pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<(), anyhow::Error> {
+/// `l` is old, `r` is new
+pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Error> {
     let l = bincode::deserialize::<Message>(&l)?;
     let r = bincode::deserialize::<Message>(&r)?;
     l.sanitize()?;
     r.sanitize()?;
-    ensure!(l.header == r.header, "different message header");
+    ensure!(
+        l.header.num_required_signatures == r.header.num_required_signatures,
+        "different num_required_signatures"
+    );
+    ensure!(
+        l.header.num_readonly_signed_accounts >= r.header.num_readonly_signed_accounts,
+        "different num_readonly_signed_accounts"
+    );
+    if l.header.num_readonly_signed_accounts != r.header.num_readonly_signed_accounts {
+        tracing::warn!(
+            "less num_readonly_signed_accounts, old = {}, new = {}",
+            l.header.num_readonly_signed_accounts,
+            r.header.num_readonly_signed_accounts
+        );
+    }
+    ensure!(
+        l.header.num_readonly_unsigned_accounts >= r.header.num_readonly_unsigned_accounts,
+        "different num_readonly_unsigned_accounts"
+    );
+    if l.header.num_readonly_unsigned_accounts != r.header.num_readonly_unsigned_accounts {
+        tracing::warn!(
+            "less num_readonly_unsigned_accounts, old = {}, new = {}",
+            l.header.num_readonly_unsigned_accounts,
+            r.header.num_readonly_unsigned_accounts
+        );
+    }
     ensure!(
         l.account_keys.len() == r.account_keys.len(),
         "different account inputs length"
@@ -88,7 +114,7 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<(), anyhow::Error> {
             .collect::<Result<Vec<()>, _>>()?;
     }
 
-    Ok(())
+    Ok(r)
 }
 
 pub fn find_failed_instruction(err: &ClientError) -> Option<usize> {
@@ -325,10 +351,9 @@ impl Instructions {
                     .map_err(|_| Error::Timeout)?
                     .map_err(|error| Error::other(error))?;
                 if let Some(new) = resp.new_message {
-                    is_same_message_logic(&data, &new)?;
+                    let new_message = is_same_message_logic(&data, &new)?;
                     tracing::info!("updating transaction");
-                    message = bincode::deserialize::<Message>(&new)
-                        .map_err(|error| anyhow!("could not deserialize message: {}", error))?;
+                    message = new_message;
                     data = new;
                 }
                 resp.signature
