@@ -311,7 +311,9 @@ impl Instructions {
                     let count = self.instructions.len();
                     self.instructions.insert(
                         0,
-                        ComputeBudgetInstruction::set_compute_unit_limit(200000 * count),
+                        ComputeBudgetInstruction::set_compute_unit_limit(
+                            (200000 * count as u32).min(1400000),
+                        ),
                     );
                     self.instructions
                         .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
