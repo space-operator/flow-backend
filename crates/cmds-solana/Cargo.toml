@@ -112,3 +112,4 @@ rev = "b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1"
 [dev-dependencies]
 rust_decimal_macros = "1.26"
 inventory = "0.3"
+tracing-subscriber = "0.3"
