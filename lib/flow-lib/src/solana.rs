@@ -304,25 +304,35 @@ impl Instructions {
                 .map_err(|error| Error::solana(error, 0))?,
         );
 
+        let count = self.instructions.len();
+        let compute_units = match rpc
+            .simulate_transaction(&Transaction::new_unsigned(message.clone()))
+            .await
+        {
+            Err(error) => {
+                tracing::warn!("simulation failed: {}", error);
+                None
+            }
+            Ok(result) => result.value.units_consumed,
+        }
+        .unwrap_or_else(|| 100000 * count as u64)
+        .min(1400000) as u32;
+
         let inserted = if !contains_set_compute_unit_price(&message) {
             match get_priority_fee(&message, rpc).await {
                 Ok(fee) => {
-                    tracing::info!("adding priority fee {}", fee);
-                    let count = self.instructions.len();
+                    tracing::info!("setting compute unit limit {}", compute_units);
                     self.instructions.insert(
                         0,
-                        ComputeBudgetInstruction::set_compute_unit_limit(
-                            (200000 * count as u32).min(1400000),
-                        ),
+                        ComputeBudgetInstruction::set_compute_unit_limit(compute_units),
                     );
+                    tracing::info!("adding priority fee {}", fee);
                     self.instructions
                         .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
                     message = Message::new_with_blockhash(
                         &self.instructions,
                         Some(&self.fee_payer),
-                        &rpc.get_latest_blockhash()
-                            .await
-                            .map_err(|error| Error::solana(error, 2))?,
+                        &message.recent_blockhash,
                     );
                     2
                 }
@@ -334,6 +344,11 @@ impl Instructions {
         } else {
             0
         };
+
+        message.recent_blockhash = rpc
+            .get_latest_blockhash()
+            .await
+            .map_err(|error| Error::solana(error, inserted))?;
 
         let mut data: Bytes = message.serialize().into();
 
