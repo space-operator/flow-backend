@@ -308,8 +308,11 @@ impl Instructions {
             match get_priority_fee(&message, rpc).await {
                 Ok(fee) => {
                     tracing::info!("adding priority fee {}", fee);
-                    self.instructions
-                        .insert(0, ComputeBudgetInstruction::set_compute_unit_limit(200000));
+                    let count = self.instructions.len();
+                    self.instructions.insert(
+                        0,
+                        ComputeBudgetInstruction::set_compute_unit_limit(200000 * count),
+                    );
                     self.instructions
                         .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
                     message = Message::new_with_blockhash(
