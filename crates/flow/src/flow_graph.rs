@@ -927,7 +927,8 @@ impl FlowGraph {
                     let res = res.map(|s| execute::Response { signature: Some(s) });
                     let failed_instruction = res.as_ref().err().and_then(|e| match e {
                         execute::Error::Solana { error, inserted } => {
-                            find_failed_instruction(error).map(|pos| pos - inserted)
+                            find_failed_instruction(error)
+                                .and_then(|pos| pos.checked_sub(*inserted))
                         }
                         _ => None,
                     });

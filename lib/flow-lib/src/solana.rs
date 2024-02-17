@@ -311,9 +311,9 @@ impl Instructions {
                 tracing::warn!("simulation failed: {}", error);
                 None
             }
-            Ok(result) => result.value.units_consumed.map(|x| x * 3 / 2),
+            Ok(result) => result.value.units_consumed.map(|x| 1000 + x * 3 / 2),
         }
-        .unwrap_or(100000 * count as u64)
+        .unwrap_or(200000 * count as u64)
         .min(1400000) as u32;
 
         let inserted = if !contains_set_compute_unit_price(&message) {
