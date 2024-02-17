@@ -218,17 +218,15 @@ fn contains_set_compute_unit_price(message: &Message) -> bool {
         .any(|(index, ins)| is_set_compute_unit_price(message, index, ins).is_some())
 }
 
-async fn get_priority_fee(message: &Message, rpc: &RpcClient) -> Result<u64, anyhow::Error> {
+async fn get_priority_fee(message: &Message, _rpc: &RpcClient) -> Result<u64, anyhow::Error> {
     static HTTP: Lazy<reqwest::Client> = Lazy::new(|| reqwest::Client::new());
     if let Some(apikey) = std::env::var("HELIUS_API_KEY").ok() {
         let helius = Helius::new(HTTP.clone(), &apikey);
-        let network = SolanaNet::from_url(&rpc.url())
-            .map_err(|_| tracing::warn!("could not guess cluster from url, using mainnet"))
-            .unwrap_or(SolanaNet::Mainnet);
-        if network != SolanaNet::Mainnet {
-            // TODO: not available on devnet and testnet
-            return Ok(100);
-        }
+        let network = SolanaNet::Mainnet;
+        // TODO: not available on devnet and testnet
+        // let network = SolanaNet::from_url(&rpc.url())
+        //     .map_err(|_| tracing::warn!("could not guess cluster from url, using mainnet"))
+        //     .unwrap_or(SolanaNet::Mainnet);
         let resp = helius
             .get_priority_fee_estimate(
                 network.as_str(),
