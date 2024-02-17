@@ -1,9 +1,7 @@
-use std::{collections::HashMap, str::FromStr};
-
+use crate::supabase_error;
 use flow_lib::command::prelude::*;
 use reqwest::header::{HeaderName, AUTHORIZATION};
-
-use crate::supabase_error;
+use std::{collections::HashMap, str::FromStr};
 
 const NAME: &str = "postgrest_execute_query";
 
@@ -36,7 +34,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<ValueSet, CommandError> {
         req = req.header(k, v);
     }
     if contain_auth_header && is_supabase {
-        tracing::info!("using user's JWT");
+        tracing::info!("using JWT of user: {}", ctx.flow_owner.id);
         req = req.header("apikey", &ctx.endpoints.supabase_anon_key);
         req = req.header(AUTHORIZATION, ctx.get_jwt_header().await?);
     }

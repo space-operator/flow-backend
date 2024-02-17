@@ -1,7 +1,6 @@
 use flow_lib::command::prelude::*;
 use std::time::Duration;
 use tokio::time;
-use tracing::info;
 
 pub const NAME: &str = "wait";
 
@@ -26,13 +25,9 @@ pub struct Input {
 pub struct Output {}
 
 async fn run(_ctx: Context, input: Input) -> Result<Output, CommandError> {
-    info!("duration: {:?}", input.duration_ms);
-    match input.duration_ms {
-        Some(duration) => {
-            time::sleep(Duration::from_millis(duration)).await;
-        }
-        None => {}
-    };
+    if let Some(duration) = input.duration_ms {
+        time::sleep(Duration::from_millis(duration)).await;
+    }
 
     Ok(Output {})
 }

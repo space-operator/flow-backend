@@ -313,7 +313,7 @@ impl Instructions {
                 tracing::warn!("simulation failed: {}", error);
                 None
             }
-            Ok(result) => result.value.units_consumed,
+            Ok(result) => result.value.units_consumed.map(|x| x * 3 / 2),
         }
         .unwrap_or_else(|| 100000 * count as u64)
         .min(1400000) as u32;
