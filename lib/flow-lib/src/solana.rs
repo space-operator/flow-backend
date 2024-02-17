@@ -39,8 +39,8 @@ pub use solana_sdk::signature::Signature;
 
 /// `l` is old, `r` is new
 pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Error> {
-    let l = bincode::deserialize::<Message>(&l)?;
-    let r = bincode::deserialize::<Message>(&r)?;
+    let l = bincode::deserialize::<Message>(l)?;
+    let r = bincode::deserialize::<Message>(r)?;
     l.sanitize()?;
     r.sanitize()?;
     ensure!(
@@ -219,8 +219,8 @@ fn contains_set_compute_unit_price(message: &Message) -> bool {
 }
 
 async fn get_priority_fee(message: &Message, _rpc: &RpcClient) -> Result<u64, anyhow::Error> {
-    static HTTP: Lazy<reqwest::Client> = Lazy::new(|| reqwest::Client::new());
-    if let Some(apikey) = std::env::var("HELIUS_API_KEY").ok() {
+    static HTTP: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
+    if let Ok(apikey) = std::env::var("HELIUS_API_KEY") {
         let helius = Helius::new(HTTP.clone(), &apikey);
         let network = SolanaNet::Mainnet;
         // TODO: not available on devnet and testnet
@@ -313,32 +313,30 @@ impl Instructions {
             }
             Ok(result) => result.value.units_consumed.map(|x| x * 3 / 2),
         }
-        .unwrap_or_else(|| 100000 * count as u64)
+        .unwrap_or(100000 * count as u64)
         .min(1400000) as u32;
 
         let inserted = if !contains_set_compute_unit_price(&message) {
-            match get_priority_fee(&message, rpc).await {
-                Ok(fee) => {
-                    tracing::info!("setting compute unit limit {}", compute_units);
-                    self.instructions.insert(
-                        0,
-                        ComputeBudgetInstruction::set_compute_unit_limit(compute_units),
-                    );
-                    tracing::info!("adding priority fee {}", fee);
-                    self.instructions
-                        .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
-                    message = Message::new_with_blockhash(
-                        &self.instructions,
-                        Some(&self.fee_payer),
-                        &message.recent_blockhash,
-                    );
-                    2
-                }
-                Err(error) => {
-                    tracing::warn!("{}, skipping priority fee", error);
-                    0
-                }
-            }
+            let fee = get_priority_fee(&message, rpc)
+                .await
+                .map_err(|error| {
+                    tracing::warn!("get_priority_fee error: {}", error);
+                })
+                .unwrap_or(100);
+            tracing::info!("setting compute unit limit {}", compute_units);
+            self.instructions.insert(
+                0,
+                ComputeBudgetInstruction::set_compute_unit_limit(compute_units),
+            );
+            tracing::info!("adding priority fee {}", fee);
+            self.instructions
+                .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
+            message = Message::new_with_blockhash(
+                &self.instructions,
+                Some(&self.fee_payer),
+                &message.recent_blockhash,
+            );
+            2
         } else {
             0
         };
@@ -375,7 +373,7 @@ impl Instructions {
                 let resp = tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
                     .await
                     .map_err(|_| Error::Timeout)?
-                    .map_err(|error| Error::other(error))?;
+                    .map_err(Error::other)?;
                 if let Some(new) = resp.new_message {
                     let new_message = is_same_message_logic(&data, &new)?;
                     tracing::info!("updating transaction");
