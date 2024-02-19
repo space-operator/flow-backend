@@ -164,6 +164,10 @@ const DEFAULT_WEDGEATTRIBS: Attr<&[&str]> = Attr {
 };
 */
 
+fn default_logo_name() -> String {
+    "solana.png".to_owned()
+}
+
 /// Condensed metadata
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct RenderParams {
@@ -180,10 +184,15 @@ pub struct RenderParams {
     pub fx5: Fx5,
     pub fx6: Fx6,
 
+    #[serde(default)]
     pub fx0_bodyoff: Fx0BodyOff,
+    #[serde(default)]
     pub fx0_bodyoff_glass: Fx0BodyOffGlass,
+    #[serde(default)]
     pub body_material_variation: BodyMaterialVariations,
+    #[serde(default)]
     pub marble_variation: MarbleVariation,
+    #[serde(default)]
     pub wood_variation: WoodVariation,
 
     pub fx_jellifish: FxJellyfish,
@@ -192,8 +201,11 @@ pub struct RenderParams {
     pub env_reflection: EnvReflection,
     pub light_reflection_mult: LightReflectionMult,
 
+    #[serde(default)]
     pub glowing_logo: GlowingLogo,
+    #[serde(default)]
     pub logo_hue: f64,
+    #[serde(default = "default_logo_name")]
     pub logo_name: String,
 
     pub butterfly_amount: f64,
