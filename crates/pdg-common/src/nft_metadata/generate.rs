@@ -1,12 +1,17 @@
 use super::{
-    BodyMaterialVariations, BodyType, EnumRandExt, EnvLight, Fx0, Fx1, Fx1a, Fx2, Fx3, Fx4, Fx5,
-    Fx6, FxJellyfish, FxLineartHelper, GlowingLogo, HelmetLight, HelmetType, LightReflectionMult,
-    MarbleVariation, Pose, RenderParams, WoodVariation,
+    metaplex::COLOR_NAMES, BodyMaterialVariations, BodyType, EnumRandExt, EnvLight, Fx0, Fx1, Fx1a,
+    Fx2, Fx3, Fx4, Fx5, Fx6, FxJellyfish, FxLineartHelper, GlowingLogo, HelmetLight, HelmetType,
+    LightReflectionMult, MarbleVariation, Pose, RenderParams, WoodVariation,
 };
 use indexmap::IndexSet;
 use rand::{seq::SliceRandom, Rng};
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
+
+pub fn random_hue<R: rand::Rng + ?Sized>(rng: &mut R) -> f64 {
+    const NUM_COLORS: usize = COLOR_NAMES.len();
+    rng.gen_range(0..NUM_COLORS) as f64 * (360.0 / NUM_COLORS as f64)
+}
 
 /// Effects that an NFT can gain
 #[derive(
@@ -401,7 +406,7 @@ impl RenderParams {
     pub fn generate_helmet_lights<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.helmet_light {
             HelmetLight::Dots | HelmetLight::GlowingEyes => {
-                self.eye_color_random_hue = rng.gen::<f64>() * 360.0;
+                self.eye_color_random_hue = random_hue(rng);
                 self.eyes_light_intensity_amount = 100.0;
             }
             _ => {}
@@ -415,12 +420,12 @@ impl RenderParams {
     }
 
     pub fn generate_background_color<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
-        self.background_color_random_hue = rng.gen::<f64>() * 360.0;
+        self.background_color_random_hue = random_hue(rng);
         self
     }
 
     pub fn generate_dress_hue<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
-        self.dress_color_hue = rng.gen::<f64>() * 360.0;
+        self.dress_color_hue = random_hue(rng);
         self
     }
 
@@ -457,7 +462,7 @@ impl RenderParams {
     pub fn glowing_logo<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         self.glowing_logo = GlowingLogo::choose(rng);
         if self.glowing_logo == GlowingLogo::Yes {
-            self.logo_hue = rng.gen::<f64>() * 360.0;
+            self.logo_hue = random_hue(rng);
         }
         self
     }
@@ -483,10 +488,6 @@ impl RenderParams {
         }
         self
     }
-
-    //env_reflection, light_reflection, env_light
-    //
-    //
 }
 
 #[cfg(test)]
