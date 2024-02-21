@@ -249,6 +249,7 @@ impl RenderParams {
         .generate_wood_variation(rng)
         .glowing_logo(rng)
         .generate_smoke(rng)
+        .generate_random_value(rng)
     }
 
     pub fn adjust_base<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
@@ -270,7 +271,7 @@ impl RenderParams {
             }
             Fx0::Pixel => {
                 self.env_light = EnvLight::day_or_night(rng);
-                self.pixel_amount = rng.gen::<f64>() * 20.0;
+                self.pixel_amount = rng.gen::<f64>() * rng.gen_range(20.0..=40.0);
             }
             _ => {
                 self.env_light = EnvLight::day_or_night(rng);
@@ -358,19 +359,19 @@ impl RenderParams {
         self.fx5 = fx5;
         match fx5 {
             Fx5::No => {}
-            Fx5::Fungi => self.fungi_amount = rng.gen::<f64>() * 30.0,
-            Fx5::GrowFlower => self.grow_flower_amount = rng.gen::<f64>() * 30.0,
+            Fx5::Fungi => self.fungi_amount = rng.gen_range(10.0..=30.0),
+            Fx5::GrowFlower => self.grow_flower_amount = rng.gen_range(10.0..=30.0),
         }
 
         let fx6 = Fx6::choose(rng);
         self.fx6 = fx6;
         match fx6 {
             Fx6::No => {}
-            Fx6::Gold => self.gold_silver_amount = rng.gen::<f64>() * 30.0,
-            Fx6::Silver => self.gold_silver_amount = rng.gen::<f64>() * 30.0,
-            Fx6::RoseGold => self.gold_silver_amount = rng.gen::<f64>() * 30.0,
-            Fx6::Bronze => self.gold_silver_amount = rng.gen::<f64>() * 30.0,
-            Fx6::Copper => self.gold_silver_amount = rng.gen::<f64>() * 30.0,
+            Fx6::Gold => self.gold_silver_amount = rng.gen_range(5.0..=15.0),
+            Fx6::Silver => self.gold_silver_amount = rng.gen_range(5.0..=15.0),
+            Fx6::RoseGold => self.gold_silver_amount = rng.gen_range(5.0..=15.0),
+            Fx6::Bronze => self.gold_silver_amount = rng.gen_range(5.0..=15.0),
+            Fx6::Copper => self.gold_silver_amount = rng.gen_range(5.0..=15.0),
         }
 
         self
@@ -458,6 +459,11 @@ impl RenderParams {
         if self.glowing_logo == GlowingLogo::Yes {
             self.logo_hue = rng.gen::<f64>() * 360.0;
         }
+        self
+    }
+
+    pub fn generate_random_value<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
+        self.random_value = rng.gen::<f64>() * 360.0;
         self
     }
 

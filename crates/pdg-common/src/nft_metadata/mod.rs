@@ -1667,7 +1667,7 @@ impl_try_from_u32!(Fx5);
 pub enum Fx6 {
     #[strum(props(PDGName = "No"))]
     #[strum(props(MetaplexName = "No"))]
-    #[strum(props(weight = "50"))]
+    #[strum(props(weight = "69"))]
     #[default]
     No = 0,
     #[strum(props(PDGName = "Gold"))]
@@ -1676,19 +1676,19 @@ pub enum Fx6 {
     Gold = 1,
     #[strum(props(PDGName = "Silver"))]
     #[strum(props(MetaplexName = "Silver"))]
-    #[strum(props(weight = "10"))]
+    #[strum(props(weight = "8"))]
     Silver = 2,
     #[strum(props(PDGName = "Rose Gold"))]
     #[strum(props(MetaplexName = "Rose Gold"))]
-    #[strum(props(weight = "5"))]
+    #[strum(props(weight = "3"))]
     RoseGold = 3,
     #[strum(props(PDGName = "Copper"))]
     #[strum(props(MetaplexName = "Copper"))]
-    #[strum(props(weight = "15"))]
+    #[strum(props(weight = "5"))]
     Copper = 4,
     #[strum(props(PDGName = "Bronze"))]
     #[strum(props(MetaplexName = "Bronze"))]
-    #[strum(props(weight = "15"))]
+    #[strum(props(weight = "10"))]
     Bronze = 5,
 }
 
@@ -1709,15 +1709,13 @@ impl_try_from_u32!(Fx6);
 )]
 #[repr(u32)]
 pub enum Fx0BodyOff {
-    #[strum(props(PDGName = "No"))]
-    #[strum(props(MetaplexName = "No Body"))]
-    #[strum(props(weight = "50"))]
-    #[default]
-    No = 0,
     #[strum(props(PDGName = "Visible"))]
     #[strum(props(MetaplexName = "Visible"))]
-    #[strum(props(weight = "5"))]
-    On = 1,
+    #[default]
+    On = 0,
+    #[strum(props(PDGName = "No"))]
+    #[strum(props(MetaplexName = "No Body"))]
+    No = 1,
 }
 
 impl_try_from_u32!(Fx0BodyOff);
@@ -1738,12 +1736,12 @@ impl_try_from_u32!(Fx0BodyOff);
 pub enum Fx0BodyOffGlass {
     #[strum(props(PDGName = "No"))]
     #[strum(props(MetaplexName = "No Glass"))]
-    #[strum(props(weight = "50"))]
-    #[default]
+    #[strum(props(weight = "0"))]
     No = 0,
     #[strum(props(PDGName = "On"))]
     #[strum(props(MetaplexName = "Visible"))]
-    #[strum(props(weight = "5"))]
+    #[strum(props(weight = "100"))]
+    #[default]
     On = 1,
 }
 
@@ -1765,9 +1763,13 @@ impl_try_from_u32!(Fx0BodyOffGlass);
 #[repr(u32)]
 pub enum BodyMaterialVariations {
     #[default]
+    #[strum(props(weight = "50"))]
     StandardTextures = 0,
+    #[strum(props(weight = "5"))]
     Stripes = 1,
+    #[strum(props(weight = "10"))]
     Dots = 2,
+    #[strum(props(weight = "35"))]
     Felt = 3,
 }
 
@@ -1841,28 +1843,28 @@ pub enum WoodVariation {
     #[default]
     Zero = 0,
     #[strum(props(MetaplexName = "One"))]
-    #[strum(props(weight = "5"))]
+    #[strum(props(weight = "6"))]
     One = 1,
     #[strum(props(MetaplexName = "Two"))]
-    #[strum(props(weight = "10"))]
+    #[strum(props(weight = "6"))]
     Two = 2,
     #[strum(props(MetaplexName = "Three"))]
-    #[strum(props(weight = "5"))]
+    #[strum(props(weight = "6"))]
     Three = 3,
     #[strum(props(MetaplexName = "Four"))]
-    #[strum(props(weight = "15"))]
+    #[strum(props(weight = "6"))]
     Four = 4,
     #[strum(props(MetaplexName = "Five"))]
-    #[strum(props(weight = "15"))]
+    #[strum(props(weight = "6"))]
     Five = 5,
     #[strum(props(MetaplexName = "Six"))]
-    #[strum(props(weight = "15"))]
+    #[strum(props(weight = "6"))]
     Six = 6,
     #[strum(props(MetaplexName = "Seven"))]
-    #[strum(props(weight = "15"))]
+    #[strum(props(weight = "7"))]
     Seven = 7,
     #[strum(props(MetaplexName = "Eight"))]
-    #[strum(props(weight = "15"))]
+    #[strum(props(weight = "7"))]
     Eight = 8,
 }
 
