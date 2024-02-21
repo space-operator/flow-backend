@@ -2,19 +2,20 @@ use super::{generate::EffectsList, EnumExt, PropertyNotFound, RenderParams};
 use serde::{Deserialize, Serialize};
 use thiserror::Error as ThisError;
 
+// Using this wheel for names
+// https://i.pinimg.com/originals/bb/61/4e/bb614ebff2617fcd9e273ccc2d98201b.jpg
+pub const COLOR_NAMES: &[&str] = &[
+    "Red", "Brick", "Orange", "Gold", "Yellow", "Lime", "Green", "Teal", "Blue", "Indigo",
+    "Purple", "Violet",
+];
 pub fn hue_to_color_name(mut hue: f64) -> String {
-    // Using this wheel for names
-    // https://i.pinimg.com/originals/bb/61/4e/bb614ebff2617fcd9e273ccc2d98201b.jpg
-    const NAMES: &[&str] = &[
-        "Red", "Brick", "Orange", "Gold", "Yellow", "Lime", "Green", "Teal", "Blue", "Indigo",
-        "Purple", "Violet",
-    ];
+    // https://i.stack.imgur.com/pSUUV.jpg
     hue = (hue + 15.0) % 360f64;
     if hue < 0.0 {
         hue += 360.0;
     }
     let index = (hue / 30.0).floor() as usize;
-    NAMES[index].to_owned()
+    COLOR_NAMES[index].to_owned()
 }
 
 /// Traits that will be included when uploading to Metaplex
