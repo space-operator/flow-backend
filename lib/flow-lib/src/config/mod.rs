@@ -4,6 +4,8 @@ use std::{collections::HashMap, num::NonZeroU64, str::FromStr};
 use thiserror::Error as ThisError;
 use uuid::Uuid;
 
+use self::client::Network;
+
 pub mod client;
 pub mod node;
 
@@ -173,6 +175,25 @@ pub struct HttpClientConfig {
 pub struct SolanaClientConfig {
     pub url: String,
     pub cluster: SolanaNet,
+}
+
+impl From<Network> for SolanaClientConfig {
+    fn from(value: Network) -> Self {
+        Self {
+            url: value.url,
+            cluster: value.cluster,
+        }
+    }
+}
+
+impl Default for SolanaClientConfig {
+    fn default() -> Self {
+        let cluster = SolanaNet::Devnet;
+        Self {
+            url: cluster.url().to_owned(),
+            cluster,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

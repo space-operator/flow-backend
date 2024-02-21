@@ -1,8 +1,8 @@
 //! Parse JS front-end flow config into back-end flow config
 
 use crate::{
-    CmdInputDescription, CmdOutputDescription, CommandType, FlowId, FlowRunId, NodeId, SolanaNet,
-    UserId, ValueType,
+    CmdInputDescription, CmdOutputDescription, CommandType, FlowId, FlowRunId, NodeId,
+    SolanaClientConfig, SolanaNet, UserId, ValueType,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -78,6 +78,15 @@ pub enum BundlingMode {
 pub struct Network {
     pub url: String,
     pub cluster: SolanaNet,
+}
+
+impl From<SolanaClientConfig> for Network {
+    fn from(value: SolanaClientConfig) -> Self {
+        Self {
+            url: value.url,
+            cluster: value.cluster,
+        }
+    }
 }
 
 impl Default for Network {

@@ -164,6 +164,10 @@ const DEFAULT_WEDGEATTRIBS: Attr<&[&str]> = Attr {
 };
 */
 
+fn default_logo_name() -> String {
+    "solana.png".to_owned()
+}
+
 /// Condensed metadata
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct RenderParams {
@@ -180,10 +184,15 @@ pub struct RenderParams {
     pub fx5: Fx5,
     pub fx6: Fx6,
 
+    #[serde(default)]
     pub fx0_bodyoff: Fx0BodyOff,
+    #[serde(default)]
     pub fx0_bodyoff_glass: Fx0BodyOffGlass,
+    #[serde(default)]
     pub body_material_variation: BodyMaterialVariations,
+    #[serde(default)]
     pub marble_variation: MarbleVariation,
+    #[serde(default)]
     pub wood_variation: WoodVariation,
 
     pub fx_jellifish: FxJellyfish,
@@ -192,8 +201,11 @@ pub struct RenderParams {
     pub env_reflection: EnvReflection,
     pub light_reflection_mult: LightReflectionMult,
 
+    #[serde(default)]
     pub glowing_logo: GlowingLogo,
+    #[serde(default)]
     pub logo_hue: f64,
+    #[serde(default = "default_logo_name")]
     pub logo_name: String,
 
     pub butterfly_amount: f64,
@@ -751,6 +763,7 @@ impl RenderParams {
             );
         }
 
+        /*
         fn push_string_array_attr(
             m: &mut serde_json::Map<String, serde_json::Value>,
             path: &str,
@@ -765,6 +778,7 @@ impl RenderParams {
                 .unwrap(),
             );
         }
+        */
 
         fn push_int_attr(
             m: &mut serde_json::Map<String, serde_json::Value>,
@@ -853,12 +867,12 @@ impl RenderParams {
             wedgeindex,
             render_noise_threshold,
             render_resolution,
-            wedgeattribs,
+            wedgeattribs: _,
         } = &self;
 
         let mut m = serde_json::Map::new();
 
-        push_string_array_attr(&mut m, "wedgeattribs", &wedgeattribs[..]);
+        // push_string_array_attr(&mut m, "wedgeattribs", &wedgeattribs[..]);
 
         push_int_attr(&mut m, "Body_type", *body_type as u32);
         if human_readable {
@@ -920,8 +934,10 @@ impl RenderParams {
             push_string_attr(&mut m, "Fx_6", fx6.pdg_name()?);
         }
 
-        // Doesn't have human readable attribute
         push_int_attr(&mut m, "Fx_bodyoff_layer_0_1_1a", *fx0_bodyoff as u32);
+        if human_readable {
+            push_string_attr(&mut m, "Fx_bodyoff", fx0_bodyoff.pdg_name()?);
+        }
 
         // Doesn't have human readable attribute
         push_int_attr(
@@ -1682,6 +1698,7 @@ impl_try_from_u32!(Fx6);
 
 #[derive(
     strum::FromRepr,
+    strum::EnumProperty,
     strum::EnumIter,
     Debug,
     Clone,
@@ -1777,29 +1794,29 @@ impl_try_from_u32!(BodyMaterialVariations);
 )]
 #[repr(u32)]
 pub enum MarbleVariation {
-    #[strum(props(MetaplexName = "Zero"))]
+    #[strum(props(MetaplexName = "Grey"))]
     #[strum(props(weight = "50"))]
     #[default]
     Zero = 0,
-    #[strum(props(MetaplexName = "One"))]
+    #[strum(props(MetaplexName = "Concrete"))]
     #[strum(props(weight = "5"))]
     One = 1,
-    #[strum(props(MetaplexName = "Two"))]
+    #[strum(props(MetaplexName = "Layered Rock"))]
     #[strum(props(weight = "10"))]
     Two = 2,
-    #[strum(props(MetaplexName = "Three"))]
+    #[strum(props(MetaplexName = "Limestone"))]
     #[strum(props(weight = "5"))]
     Three = 3,
-    #[strum(props(MetaplexName = "Four"))]
+    #[strum(props(MetaplexName = "Chiseled"))]
     #[strum(props(weight = "15"))]
     Four = 4,
-    #[strum(props(MetaplexName = "Five"))]
+    #[strum(props(MetaplexName = "Zobra"))]
     #[strum(props(weight = "15"))]
     Five = 5,
-    #[strum(props(MetaplexName = "Six"))]
+    #[strum(props(MetaplexName = "Roman"))]
     #[strum(props(weight = "15"))]
     Six = 6,
-    #[strum(props(MetaplexName = "Seven"))]
+    #[strum(props(MetaplexName = "Seychelles"))]
     #[strum(props(weight = "15"))]
     Seven = 7,
 }
@@ -1823,32 +1840,32 @@ impl_try_from_u32!(MarbleVariation);
 )]
 #[repr(u32)]
 pub enum WoodVariation {
-    #[strum(props(MetaplexName = "Zero"))]
+    #[strum(props(MetaplexName = "Decaying"))]
     #[strum(props(weight = "50"))]
     #[default]
     Zero = 0,
-    #[strum(props(MetaplexName = "One"))]
+    #[strum(props(MetaplexName = "Maple Bark"))]
     #[strum(props(weight = "6"))]
     One = 1,
-    #[strum(props(MetaplexName = "Two"))]
+    #[strum(props(MetaplexName = "Polynesian Carving"))]
     #[strum(props(weight = "6"))]
     Two = 2,
-    #[strum(props(MetaplexName = "Three"))]
+    #[strum(props(MetaplexName = "Smooth Birch"))]
     #[strum(props(weight = "6"))]
     Three = 3,
-    #[strum(props(MetaplexName = "Four"))]
+    #[strum(props(MetaplexName = "Silver Birch"))]
     #[strum(props(weight = "6"))]
     Four = 4,
-    #[strum(props(MetaplexName = "Five"))]
+    #[strum(props(MetaplexName = "Bark"))]
     #[strum(props(weight = "6"))]
     Five = 5,
-    #[strum(props(MetaplexName = "Six"))]
+    #[strum(props(MetaplexName = "Old Bark"))]
     #[strum(props(weight = "6"))]
     Six = 6,
-    #[strum(props(MetaplexName = "Seven"))]
+    #[strum(props(MetaplexName = "Burl Walnut"))]
     #[strum(props(weight = "7"))]
     Seven = 7,
-    #[strum(props(MetaplexName = "Eight"))]
+    #[strum(props(MetaplexName = "Walnut"))]
     #[strum(props(weight = "7"))]
     Eight = 8,
 }

@@ -12,7 +12,7 @@ use flow_lib::{
     },
     context::{get_jwt, signer, User},
     utils::TowerClient,
-    CommandType, FlowConfig, FlowId, FlowRunId, NodeId, UserId, ValueSet,
+    CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
 };
 use futures::channel::oneshot;
 use hashbrown::HashMap;
@@ -315,11 +315,13 @@ impl FlowRegistry {
         partial_config: Option<PartialConfig>,
         collect_instructions: bool,
         origin: FlowRunOrigin,
+        solana_client: Option<SolanaClientConfig>,
     ) -> Result<(FlowRunId, tokio::task::JoinHandle<FlowRunResult>), new_flow_run::Error> {
         let config = self
             .flows
             .get(&flow_id)
             .ok_or(new_flow_run::Error::NotFound)?;
+        let solana_client = solana_client.unwrap_or(config.sol_network.clone().into());
 
         if self.depth >= MAX_CALL_DEPTH {
             return Err(new_flow_run::Error::MaxDepthReached);
@@ -338,6 +340,7 @@ impl FlowRegistry {
                 config: ClientConfig {
                     call_depth: self.depth,
                     origin,
+                    sol_network: solana_client.clone().into(),
                     collect_instructions,
                     partial_config: partial_config.clone(),
                     instructions_bundling: if collect_instructions
@@ -368,6 +371,7 @@ impl FlowRegistry {
             let user_id = this.flow_owner.id;
             let mut flow_config = FlowConfig::new(config.clone());
             flow_config.ctx.endpoints = this.endpoints.clone();
+            flow_config.ctx.solana_client = solana_client.clone();
             let mut flow = FlowGraph::from_cfg(flow_config, this, partial_config.as_ref()).await?;
 
             if collect_instructions {

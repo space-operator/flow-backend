@@ -1,4 +1,4 @@
-use anyhow::{bail, ensure};
+use anyhow::{anyhow, bail, ensure};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use serde_with::skip_serializing_none;
@@ -109,18 +109,23 @@ impl Helius {
             result: GetPriorityFeeEstimateResponse,
         }
 
+        #[derive(Deserialize)]
+        struct ErrorBody {
+            message: String,
+        }
+
+        #[derive(Deserialize)]
+        struct HeliusError {
+            error: ErrorBody,
+        }
+
         let url = self.get_url(solana_net)?;
-        let json = self
-            .client
-            .post(url)
-            .json(&req)
-            .send()
-            .await?
-            .error_for_status()?
-            .json::<JsonValue>()
-            .await?;
-        let parsed = serde_json::from_value::<HeliusResponse>(json)?;
-        Ok(parsed.result)
+        let resp = self.client.post(url).json(&req).send().await?;
+        if resp.status().is_success() {
+            Ok(resp.json::<HeliusResponse>().await?.result)
+        } else {
+            Err(anyhow!(resp.json::<HeliusError>().await?.error.message))
+        }
     }
 
     pub async fn get_assets_by_group(

@@ -39,8 +39,8 @@ pub use solana_sdk::signature::Signature;
 
 /// `l` is old, `r` is new
 pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Error> {
-    let l = bincode::deserialize::<Message>(&l)?;
-    let r = bincode::deserialize::<Message>(&r)?;
+    let l = bincode::deserialize::<Message>(l)?;
+    let r = bincode::deserialize::<Message>(r)?;
     l.sanitize()?;
     r.sanitize()?;
     ensure!(
@@ -71,12 +71,16 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Erro
     }
     ensure!(
         l.account_keys.len() == r.account_keys.len(),
-        "different account inputs length"
+        "different account inputs length, old = {}, new = {}",
+        l.account_keys.len(),
+        r.account_keys.len()
     );
     ensure!(!l.account_keys.is_empty(), "empty transaction");
     ensure!(
         l.instructions.len() == r.instructions.len(),
-        "empty transaction"
+        "different instructions count, old = {}, new = {}",
+        l.instructions.len(),
+        r.instructions.len()
     );
     ensure!(
         l.account_keys[0] == r.account_keys[0],
@@ -214,13 +218,15 @@ fn contains_set_compute_unit_price(message: &Message) -> bool {
         .any(|(index, ins)| is_set_compute_unit_price(message, index, ins).is_some())
 }
 
-async fn get_priority_fee(message: &Message, rpc: &RpcClient) -> Result<u64, anyhow::Error> {
-    static HTTP: Lazy<reqwest::Client> = Lazy::new(|| reqwest::Client::new());
-    if let Some(apikey) = std::env::var("HELIUS_API_KEY").ok() {
+async fn get_priority_fee(message: &Message, _rpc: &RpcClient) -> Result<u64, anyhow::Error> {
+    static HTTP: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
+    if let Ok(apikey) = std::env::var("HELIUS_API_KEY") {
         let helius = Helius::new(HTTP.clone(), &apikey);
-        let network = SolanaNet::from_url(&rpc.url())
-            .map_err(|_| tracing::warn!("could not guess cluster from url, using mainnet"))
-            .unwrap_or(SolanaNet::Mainnet);
+        let network = SolanaNet::Mainnet;
+        // TODO: not available on devnet and testnet
+        // let network = SolanaNet::from_url(&rpc.url())
+        //     .map_err(|_| tracing::warn!("could not guess cluster from url, using mainnet"))
+        //     .unwrap_or(SolanaNet::Mainnet);
         let resp = helius
             .get_priority_fee_estimate(
                 network.as_str(),
@@ -296,31 +302,49 @@ impl Instructions {
                 .map_err(|error| Error::solana(error, 0))?,
         );
 
-        let inserted = if !contains_set_compute_unit_price(&message) {
-            match get_priority_fee(&message, rpc).await {
-                Ok(fee) => {
-                    tracing::info!("adding priority fee {}", fee);
-                    self.instructions
-                        .insert(0, ComputeBudgetInstruction::set_compute_unit_limit(200000));
-                    self.instructions
-                        .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
-                    message = Message::new_with_blockhash(
-                        &self.instructions,
-                        Some(&self.fee_payer),
-                        &rpc.get_latest_blockhash()
-                            .await
-                            .map_err(|error| Error::solana(error, 2))?,
-                    );
-                    2
-                }
-                Err(error) => {
-                    tracing::warn!("{}, skipping priority fee", error);
-                    0
-                }
+        let count = self.instructions.len();
+        let compute_units = match rpc
+            .simulate_transaction(&Transaction::new_unsigned(message.clone()))
+            .await
+        {
+            Err(error) => {
+                tracing::warn!("simulation failed: {}", error);
+                None
             }
+            Ok(result) => result.value.units_consumed.map(|x| 1000 + x * 3 / 2),
+        }
+        .unwrap_or(200000 * count as u64)
+        .min(1400000) as u32;
+
+        let inserted = if !contains_set_compute_unit_price(&message) {
+            let fee = get_priority_fee(&message, rpc)
+                .await
+                .map_err(|error| {
+                    tracing::warn!("get_priority_fee error: {}", error);
+                })
+                .unwrap_or(100);
+            tracing::info!("setting compute unit limit {}", compute_units);
+            self.instructions.insert(
+                0,
+                ComputeBudgetInstruction::set_compute_unit_limit(compute_units),
+            );
+            tracing::info!("adding priority fee {}", fee);
+            self.instructions
+                .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
+            message = Message::new_with_blockhash(
+                &self.instructions,
+                Some(&self.fee_payer),
+                &message.recent_blockhash,
+            );
+            2
         } else {
             0
         };
+
+        message.recent_blockhash = rpc
+            .get_latest_blockhash()
+            .await
+            .map_err(|error| Error::solana(error, inserted))?;
 
         let mut data: Bytes = message.serialize().into();
 
@@ -349,7 +373,7 @@ impl Instructions {
                 let resp = tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
                     .await
                     .map_err(|_| Error::Timeout)?
-                    .map_err(|error| Error::other(error))?;
+                    .map_err(Error::other)?;
                 if let Some(new) = resp.new_message {
                     let new_message = is_same_message_logic(&data, &new)?;
                     tracing::info!("updating transaction");
