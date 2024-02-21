@@ -763,6 +763,7 @@ impl RenderParams {
             );
         }
 
+        /*
         fn push_string_array_attr(
             m: &mut serde_json::Map<String, serde_json::Value>,
             path: &str,
@@ -777,6 +778,7 @@ impl RenderParams {
                 .unwrap(),
             );
         }
+        */
 
         fn push_int_attr(
             m: &mut serde_json::Map<String, serde_json::Value>,
