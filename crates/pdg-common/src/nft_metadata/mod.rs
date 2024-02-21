@@ -1794,29 +1794,29 @@ impl_try_from_u32!(BodyMaterialVariations);
 )]
 #[repr(u32)]
 pub enum MarbleVariation {
-    #[strum(props(MetaplexName = "Zero"))]
+    #[strum(props(MetaplexName = "Grey"))]
     #[strum(props(weight = "50"))]
     #[default]
     Zero = 0,
-    #[strum(props(MetaplexName = "One"))]
+    #[strum(props(MetaplexName = "Concrete"))]
     #[strum(props(weight = "5"))]
     One = 1,
-    #[strum(props(MetaplexName = "Two"))]
+    #[strum(props(MetaplexName = "Layered Rock"))]
     #[strum(props(weight = "10"))]
     Two = 2,
-    #[strum(props(MetaplexName = "Three"))]
+    #[strum(props(MetaplexName = "Limestone"))]
     #[strum(props(weight = "5"))]
     Three = 3,
-    #[strum(props(MetaplexName = "Four"))]
+    #[strum(props(MetaplexName = "Chiseled"))]
     #[strum(props(weight = "15"))]
     Four = 4,
-    #[strum(props(MetaplexName = "Five"))]
+    #[strum(props(MetaplexName = "Zobra"))]
     #[strum(props(weight = "15"))]
     Five = 5,
-    #[strum(props(MetaplexName = "Six"))]
+    #[strum(props(MetaplexName = "Roman"))]
     #[strum(props(weight = "15"))]
     Six = 6,
-    #[strum(props(MetaplexName = "Seven"))]
+    #[strum(props(MetaplexName = "Seychelles"))]
     #[strum(props(weight = "15"))]
     Seven = 7,
 }
@@ -1840,32 +1840,32 @@ impl_try_from_u32!(MarbleVariation);
 )]
 #[repr(u32)]
 pub enum WoodVariation {
-    #[strum(props(MetaplexName = "Zero"))]
+    #[strum(props(MetaplexName = "Decaying"))]
     #[strum(props(weight = "50"))]
     #[default]
     Zero = 0,
-    #[strum(props(MetaplexName = "One"))]
+    #[strum(props(MetaplexName = "Maple Bark"))]
     #[strum(props(weight = "6"))]
     One = 1,
-    #[strum(props(MetaplexName = "Two"))]
+    #[strum(props(MetaplexName = "Polynesian Carving"))]
     #[strum(props(weight = "6"))]
     Two = 2,
-    #[strum(props(MetaplexName = "Three"))]
+    #[strum(props(MetaplexName = "Smooth Birch"))]
     #[strum(props(weight = "6"))]
     Three = 3,
-    #[strum(props(MetaplexName = "Four"))]
+    #[strum(props(MetaplexName = "Silver Birch"))]
     #[strum(props(weight = "6"))]
     Four = 4,
-    #[strum(props(MetaplexName = "Five"))]
+    #[strum(props(MetaplexName = "Bark"))]
     #[strum(props(weight = "6"))]
     Five = 5,
-    #[strum(props(MetaplexName = "Six"))]
+    #[strum(props(MetaplexName = "Old Bark"))]
     #[strum(props(weight = "6"))]
     Six = 6,
-    #[strum(props(MetaplexName = "Seven"))]
+    #[strum(props(MetaplexName = "Burl Walnut"))]
     #[strum(props(weight = "7"))]
     Seven = 7,
-    #[strum(props(MetaplexName = "Eight"))]
+    #[strum(props(MetaplexName = "Walnut"))]
     #[strum(props(weight = "7"))]
     Eight = 8,
 }
