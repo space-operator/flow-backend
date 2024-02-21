@@ -833,7 +833,7 @@ impl RenderParams {
             light_reflection_mult,
             glowing_logo,
             logo_hue,
-            logo_name,
+            logo_name: _,
             butterfly_amount,
             disintegration_amount,
             melt_amount,
@@ -865,12 +865,12 @@ impl RenderParams {
             wedgeindex,
             render_noise_threshold,
             render_resolution,
-            wedgeattribs,
+            wedgeattribs: _,
         } = &self;
 
         let mut m = serde_json::Map::new();
 
-        push_string_array_attr(&mut m, "wedgeattribs", &wedgeattribs[..]);
+        // push_string_array_attr(&mut m, "wedgeattribs", &wedgeattribs[..]);
 
         push_int_attr(&mut m, "Body_type", *body_type as u32);
         if human_readable {
@@ -932,8 +932,10 @@ impl RenderParams {
             push_string_attr(&mut m, "Fx_6", fx6.pdg_name()?);
         }
 
-        // Doesn't have human readable attribute
         push_int_attr(&mut m, "Fx_bodyoff_layer_0_1_1a", *fx0_bodyoff as u32);
+        if human_readable {
+            push_string_attr(&mut m, "Fx_bodyoff", fx0_bodyoff.pdg_name()?);
+        }
 
         // Doesn't have human readable attribute
         push_int_attr(
@@ -974,7 +976,7 @@ impl RenderParams {
 
         push_int_attr(&mut m, "Glowing_logo", *glowing_logo as u32);
         push_float_attr(&mut m, "Logo_hue", *logo_hue);
-        push_string_attr(&mut m, "logo_name", logo_name);
+        // push_string_attr(&mut m, "logo_name", logo_name);
 
         push_float_attr(&mut m, "Butterfly_amount", *butterfly_amount);
         push_float_attr(&mut m, "Desintegration_amount", *disintegration_amount);
@@ -1694,6 +1696,7 @@ impl_try_from_u32!(Fx6);
 
 #[derive(
     strum::FromRepr,
+    strum::EnumProperty,
     strum::EnumIter,
     Debug,
     Clone,
