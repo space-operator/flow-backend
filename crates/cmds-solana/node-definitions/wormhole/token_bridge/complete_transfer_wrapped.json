@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "node-registry/crates/cmds-solana/src/wormhole/token_bridge/complete_transfer_wrapped.rs",
+      "source_code_url": "crates/cmds-solana/src/wormhole/token_bridge/complete_transfer_wrapped.rs",
       "documentation_url": ""
     },
     "usage": {

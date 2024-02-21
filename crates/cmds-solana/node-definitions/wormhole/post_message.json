@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "node-registry/crates/cmds-solana/src/wormhole/post_message.rs",
+      "source_code_url": "crates/cmds-solana/src/wormhole/post_message.rs",
       "documentation_url": ""
     },
     "usage": {

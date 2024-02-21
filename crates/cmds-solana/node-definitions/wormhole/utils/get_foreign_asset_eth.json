@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "node-registry/crates/cmds-solana/src/wormhole/utils/get_foreign_asset_eth.rs",
+      "source_code_url": "crates/cmds-solana/src/wormhole/utils/get_foreign_asset_eth.rs",
       "documentation_url": ""
     },
     "usage": {

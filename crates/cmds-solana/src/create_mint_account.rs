@@ -55,6 +55,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             input.mint_account.clone_keypair(),
         ]
         .into(),
+
         instructions: [
             system_instruction::create_account(
                 &input.fee_payer.pubkey(),

@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "node-registry/crates/cmds-solana/src/wormhole/nft_bridge/transfer_native.rs",
+      "source_code_url": "crates/cmds-solana/src/wormhole/nft_bridge/transfer_native.rs",
       "documentation_url": ""
     },
     "usage": {
