@@ -600,7 +600,7 @@ impl RenderParams {
 
         let glowing_logo = try_get_enum::<GlowingLogo>(m, "Glowing_logo", defaults)?;
         let logo_hue = try_get_f64(m, "Logo_hue", defaults)?;
-        let logo_name = try_get_string(m, "logo_name", defaults)?;
+        let logo_name = try_get_string(m, "Logo_name", defaults)?;
 
         let butterfly_amount = try_get_f64(m, "Butterfly_amount", defaults)?;
         let disintegration_amount = try_get_f64(m, "Desintegration_amount", defaults)?;
@@ -758,6 +758,21 @@ impl RenderParams {
                 serde_json::to_value(Attr::<(String,)> {
                     cfg: AttrCfg::new_type(2),
                     value: (value.to_owned(),),
+                })
+                .unwrap(),
+            );
+        }
+
+        fn push_string_attr_no_array(
+            m: &mut serde_json::Map<String, serde_json::Value>,
+            path: &str,
+            value: &str,
+        ) {
+            m.insert(
+                path.to_owned(),
+                serde_json::to_value(Attr::<String> {
+                    cfg: AttrCfg::new_type(2),
+                    value: value.to_owned(),
                 })
                 .unwrap(),
             );
@@ -978,7 +993,7 @@ impl RenderParams {
 
         push_int_attr(&mut m, "Glowing_logo", *glowing_logo as u32);
         push_float_attr(&mut m, "Logo_hue", *logo_hue);
-        push_string_attr(&mut m, "Logo_name", logo_name);
+        push_string_attr_no_array(&mut m, "logo_name", logo_name);
 
         push_float_attr(&mut m, "Butterfly_amount", *butterfly_amount);
         push_float_attr(&mut m, "Desintegration_amount", *disintegration_amount);
