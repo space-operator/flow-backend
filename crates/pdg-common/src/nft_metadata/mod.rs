@@ -184,16 +184,11 @@ pub struct RenderParams {
     pub fx5: Fx5,
     pub fx6: Fx6,
 
-    #[serde(default)]
-    pub fx0_bodyoff: Fx0BodyOff,
-    #[serde(default)]
-    pub fx0_bodyoff_glass: Fx0BodyOffGlass,
-    #[serde(default)]
-    pub body_material_variation: BodyMaterialVariations,
-    #[serde(default)]
-    pub marble_variation: MarbleVariation,
-    #[serde(default)]
-    pub wood_variation: WoodVariation,
+    pub fx0_bodyoff: Option<Fx0BodyOff>,
+    pub fx0_bodyoff_glass: Option<Fx0BodyOffGlass>,
+    pub body_material_variation: Option<BodyMaterialVariations>,
+    pub marble_variation: Option<MarbleVariation>,
+    pub wood_variation: Option<WoodVariation>,
 
     pub fx_jellifish: FxJellyfish,
     pub fx_lineart_helper: FxLineartHelper,
@@ -201,12 +196,9 @@ pub struct RenderParams {
     pub env_reflection: EnvReflection,
     pub light_reflection_mult: LightReflectionMult,
 
-    #[serde(default)]
-    pub glowing_logo: GlowingLogo,
-    #[serde(default)]
-    pub logo_hue: f64,
-    #[serde(default = "default_logo_name")]
-    pub logo_name: String,
+    pub glowing_logo: Option<GlowingLogo>,
+    pub logo_hue: Option<f64>,
+    pub logo_name: Option<String>,
 
     pub butterfly_amount: f64,
     pub disintegration_amount: f64,
@@ -261,19 +253,19 @@ impl Default for RenderParams {
             fx4: Fx4::default(),
             fx5: Fx5::default(),
             fx6: Fx6::default(),
-            fx0_bodyoff: Fx0BodyOff::default(),
-            fx0_bodyoff_glass: Fx0BodyOffGlass::default(),
-            body_material_variation: BodyMaterialVariations::default(),
-            marble_variation: MarbleVariation::default(),
-            wood_variation: WoodVariation::default(),
+            fx0_bodyoff: None,
+            fx0_bodyoff_glass: None,
+            body_material_variation: None,
+            marble_variation: None,
+            wood_variation: None,
             fx_jellifish: FxJellyfish::default(),
             fx_lineart_helper: FxLineartHelper::default(),
             env_light: EnvLight::default(),
             env_reflection: EnvReflection::default(),
             light_reflection_mult: LightReflectionMult::default(),
-            glowing_logo: GlowingLogo::default(),
-            logo_hue: 0.0,
-            logo_name: "solana.png".to_owned(),
+            glowing_logo: None,
+            logo_hue: None,
+            logo_name: None,
             butterfly_amount: 0.0,
             disintegration_amount: 0.0,
             melt_amount: 0.0,
@@ -516,6 +508,14 @@ impl RenderParams {
             Ok(v)
         }
 
+        fn optional<T>(r: Result<T, FromPDGError>) -> Result<Option<T>, FromPDGError> {
+            match r {
+                Ok(t) => Ok(Some(t)),
+                Err(FromPDGError::NotFound(_)) => Ok(None),
+                Err(error) => Err(error),
+            }
+        }
+
         let body_type = try_get_enum::<BodyType>(m, "Body_type", defaults)?;
         if check_human_readable {
             check_enum_name(m, "Body_name", body_type.pdg_name()?)?;
@@ -573,16 +573,31 @@ impl RenderParams {
             check_enum_name(m, "Fx_6", fx6.pdg_name()?)?;
         }
 
-        let fx0_bodyoff = try_get_enum::<Fx0BodyOff>(m, "Fx_bodyoff_layer_0_1_1a", defaults)?;
-        let fx0_bodyoff_glass =
-            try_get_enum::<Fx0BodyOffGlass>(m, "Fx_bodyoff_layer_0_1_1a_glass", defaults)?;
+        let fx0_bodyoff = optional(try_get_enum::<Fx0BodyOff>(
+            m,
+            "Fx_bodyoff_layer_0_1_1a",
+            defaults,
+        ))?;
+        let fx0_bodyoff_glass = optional(try_get_enum::<Fx0BodyOffGlass>(
+            m,
+            "Fx_bodyoff_layer_0_1_1a_glass",
+            defaults,
+        ))?;
 
-        let body_material_variation =
-            try_get_enum::<BodyMaterialVariations>(m, "Body_material_variation", defaults)?;
+        let body_material_variation = optional(try_get_enum::<BodyMaterialVariations>(
+            m,
+            "Body_material_variation",
+            defaults,
+        ))?;
 
-        let marble_variation = try_get_enum::<MarbleVariation>(m, "Marble_variation", defaults)?;
+        let marble_variation = optional(try_get_enum::<MarbleVariation>(
+            m,
+            "Marble_variation",
+            defaults,
+        ))?;
 
-        let wood_variation = try_get_enum::<WoodVariation>(m, "Wood_variation", defaults)?;
+        let wood_variation =
+            optional(try_get_enum::<WoodVariation>(m, "Wood_variation", defaults))?;
 
         let fx_jellifish = try_get_enum::<FxJellyfish>(m, "Fx_Jellifish", defaults)?;
         if check_human_readable {
@@ -598,9 +613,9 @@ impl RenderParams {
         let light_reflection_mult =
             try_get_enum::<LightReflectionMult>(m, "light_reflection_mult", defaults)?;
 
-        let glowing_logo = try_get_enum::<GlowingLogo>(m, "Glowing_logo", defaults)?;
-        let logo_hue = try_get_f64(m, "Logo_hue", defaults)?;
-        let logo_name = try_get_string(m, "logo_name", defaults)?;
+        let glowing_logo = optional(try_get_enum::<GlowingLogo>(m, "Glowing_logo", defaults))?;
+        let logo_hue = optional(try_get_f64(m, "Logo_hue", defaults))?;
+        let logo_name = optional(try_get_string(m, "logo_name", defaults))?;
 
         let butterfly_amount = try_get_f64(m, "Butterfly_amount", defaults)?;
         let disintegration_amount = try_get_f64(m, "Desintegration_amount", defaults)?;
@@ -934,30 +949,40 @@ impl RenderParams {
             push_string_attr(&mut m, "Fx_6", fx6.pdg_name()?);
         }
 
-        push_int_attr(&mut m, "Fx_bodyoff_layer_0_1_1a", *fx0_bodyoff as u32);
-        if human_readable {
-            push_string_attr(&mut m, "Fx_bodyoff", fx0_bodyoff.pdg_name()?);
+        if let Some(fx0_bodyoff) = fx0_bodyoff {
+            push_int_attr(&mut m, "Fx_bodyoff_layer_0_1_1a", *fx0_bodyoff as u32);
+            if human_readable {
+                push_string_attr(&mut m, "Fx_bodyoff", fx0_bodyoff.pdg_name()?);
+            }
         }
 
-        // Doesn't have human readable attribute
-        push_int_attr(
-            &mut m,
-            "Fx_bodyoff_layer_0_1_1a_glass",
-            *fx0_bodyoff_glass as u32,
-        );
+        if let Some(fx0_bodyoff_glass) = fx0_bodyoff_glass {
+            // Doesn't have human readable attribute
+            push_int_attr(
+                &mut m,
+                "Fx_bodyoff_layer_0_1_1a_glass",
+                *fx0_bodyoff_glass as u32,
+            );
+        }
 
-        // Doesn't have human readable attribute
-        push_int_attr(
-            &mut m,
-            "Body_material_variation",
-            *body_material_variation as u32,
-        );
+        if let Some(body_material_variation) = body_material_variation {
+            // Doesn't have human readable attribute
+            push_int_attr(
+                &mut m,
+                "Body_material_variation",
+                *body_material_variation as u32,
+            );
+        }
 
-        // Doesn't have human readable attribute
-        push_int_attr(&mut m, "Marble_variation", *marble_variation as u32);
+        if let Some(marble_variation) = marble_variation {
+            // Doesn't have human readable attribute
+            push_int_attr(&mut m, "Marble_variation", *marble_variation as u32);
+        }
 
-        // Doesn't have human readable attribute
-        push_int_attr(&mut m, "Wood_variation", *wood_variation as u32);
+        if let Some(wood_variation) = wood_variation {
+            // Doesn't have human readable attribute
+            push_int_attr(&mut m, "Wood_variation", *wood_variation as u32);
+        }
 
         push_int_attr(&mut m, "Fx_Jellifish", *fx_jellifish as u32);
         if human_readable {
@@ -976,8 +1001,14 @@ impl RenderParams {
             *light_reflection_mult as u32,
         );
 
-        push_int_attr(&mut m, "Glowing_logo", *glowing_logo as u32);
-        push_float_attr(&mut m, "Logo_hue", *logo_hue);
+        if let Some(glowing_logo) = glowing_logo {
+            push_int_attr(&mut m, "Glowing_logo", *glowing_logo as u32);
+        }
+        if let Some(logo_hue) = logo_hue {
+            push_float_attr(&mut m, "Logo_hue", *logo_hue);
+        }
+
+        // TODO: logo_name produces render errors
         // push_string_attr(&mut m, "logo_name", logo_name);
 
         push_float_attr(&mut m, "Butterfly_amount", *butterfly_amount);
