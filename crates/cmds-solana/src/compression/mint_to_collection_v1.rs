@@ -1,12 +1,8 @@
-use crate::prelude::*;
-
-use mpl_bubblegum::instructions::MintToCollectionV1Builder;
-
-use solana_sdk::pubkey::Pubkey;
-
-use tracing::info;
-
 use super::MetadataBubblegum;
+use crate::prelude::*;
+use mpl_bubblegum::instructions::MintToCollectionV1Builder;
+use solana_sdk::pubkey::Pubkey;
+use tracing::info;
 
 // Command Name
 const MINT_COMPRESSED_NFT: &str = "mint_cNFT_to_collection";
@@ -139,32 +135,42 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     //         OptionSerializer::Skip => None,
     //     };
 
+    //     info!("tx_meta: {:?}", tx_meta);
+
     //     let inner_instruction = tx_meta
     //         .as_ref()
-    //         .unwrap()
+    //         .ok_or_else(|| CommandError::msg("tx_meta is None"))?
     //         .get(0)
-    //         .unwrap()
+    //         .ok_or_else(|| CommandError::msg("No inner instruction at index 0"))?
     //         .instructions
+    //         .get(1)
+    //         .ok_or_else(|| CommandError::msg("No instruction at index 1"))?
     //         .clone();
 
     //     info!("inner_instruction: {:?}", inner_instruction);
 
-    // let data = match inner_instruction {
-    //     UiInstruction::Parsed(instruction) => match instruction {
-    //         solana_transaction_status::UiParsedInstruction::PartiallyDecoded(instruction) => {
-    //             instruction.data.clone()
-    //         }
-    //         solana_transaction_status::UiParsedInstruction::Parsed(_) => {
-    //             return Err(CommandError::msg("Failed to parse instruction data"))
-    //         }
-    //     },
-    //     _ => return Err(CommandError::msg("Failed to parse instruction data")),
-    // };
+    //     let data = match inner_instruction {
+    //         UiInstruction::Parsed(instruction) => match instruction {
+    //             solana_transaction_status::UiParsedInstruction::PartiallyDecoded(instruction) => {
+    //                 instruction.data.clone()
+    //             }
+    //             solana_transaction_status::UiParsedInstruction::Parsed(_) => {
+    //                 return Err(CommandError::msg("Failed to parse instruction data"))
+    //             }
+    //         },
+    //         _ => return Err(CommandError::msg("Failed to parse instruction data")),
+    //     };
+    //     info!("data: {:?}", data);
 
-    // let leaf_schema: LeafSchema = LeafSchema::try_from_slice(&data.as_bytes()).unwrap();
+    //     let data_slice = &mut data[8..].as_bytes();
+    //     let leaf_schema: LeafSchema = LeafSchema::try_from_slice(data_slice).unwrap_or(
+    //         LeafSchema::deserialize(data_slice).map_err(|e| {
+    //             CommandError::msg(format!("Failed to deserialize LeafSchema: {}", e))
+    //         })?,
+    //     );
+    //     // let leaf_schema: LeafSchema = LeafSchema::deserialize(data_slice).unwrap();
 
-    // deserialize the transaction and get the instruction
-    // info!("tx: {:?}", leaf_schema);
+    //     info!("tx: {:?}", leaf_schema);
     // }
 
     Ok(Output { signature })

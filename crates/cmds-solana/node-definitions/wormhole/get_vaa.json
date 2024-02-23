@@ -21,7 +21,7 @@
     },
     "usage": {
       "license": "Apache-2.0",
-      "license_url": "node-registry/crates/cmds-solana/src/wormhole/get_vaa.rs",
+      "license_url": "crates/cmds-solana/src/wormhole/get_vaa.rs",
       "pricing": {
         "currency": "USDC",
         "purchase_price": 0,

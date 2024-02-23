@@ -162,11 +162,11 @@ const DEFAULT_WEDGEATTRIBS: Attr<&[&str]> = Attr {
         "random_value",
     ],
 };
-*/
 
 fn default_logo_name() -> String {
     "solana.png".to_owned()
 }
+*/
 
 /// Condensed metadata
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -778,6 +778,21 @@ impl RenderParams {
             );
         }
 
+        fn push_string_attr_no_array(
+            m: &mut serde_json::Map<String, serde_json::Value>,
+            path: &str,
+            value: &str,
+        ) {
+            m.insert(
+                path.to_owned(),
+                serde_json::to_value(Attr::<String> {
+                    cfg: AttrCfg::new_type(2),
+                    value: value.to_owned(),
+                })
+                .unwrap(),
+            );
+        }
+
         /*
         fn push_string_array_attr(
             m: &mut serde_json::Map<String, serde_json::Value>,
@@ -850,7 +865,7 @@ impl RenderParams {
             light_reflection_mult,
             glowing_logo,
             logo_hue,
-            logo_name: _,
+            logo_name,
             butterfly_amount,
             disintegration_amount,
             melt_amount,
@@ -1008,8 +1023,9 @@ impl RenderParams {
             push_float_attr(&mut m, "Logo_hue", *logo_hue);
         }
 
-        // TODO: logo_name produces render errors
-        // push_string_attr(&mut m, "logo_name", logo_name);
+        if let Some(logo_name) = logo_name {
+            push_string_attr_no_array(&mut m, "logo_name", logo_name);
+        }
 
         push_float_attr(&mut m, "Butterfly_amount", *butterfly_amount);
         push_float_attr(&mut m, "Desintegration_amount", *disintegration_amount);

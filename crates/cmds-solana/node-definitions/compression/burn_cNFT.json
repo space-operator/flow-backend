@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "",
+      "source_code_url": "crates/cmds-solana/src/compression/burn.rs",
       "documentation_url": ""
     },
     "usage": {
