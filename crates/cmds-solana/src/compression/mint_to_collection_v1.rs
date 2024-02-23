@@ -1,17 +1,8 @@
-use crate::prelude::*;
-
-use anchor_lang::AnchorDeserialize;
-use mpl_bubblegum::{instructions::MintToCollectionV1Builder, types::LeafSchema};
-
-use solana_client::rpc_config::RpcTransactionConfig;
-use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey};
-
-use solana_transaction_status::{
-    option_serializer::OptionSerializer, UiInstruction, UiTransactionEncoding,
-};
-use tracing::info;
-
 use super::MetadataBubblegum;
+use crate::prelude::*;
+use mpl_bubblegum::instructions::MintToCollectionV1Builder;
+use solana_sdk::pubkey::Pubkey;
+use tracing::info;
 
 // Command Name
 const MINT_COMPRESSED_NFT: &str = "mint_cNFT_to_collection";
