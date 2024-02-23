@@ -432,7 +432,7 @@ impl RenderParams {
     pub fn generate_body_material_variation<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.fx0 {
             Fx0::No => {
-                self.body_material_variation = BodyMaterialVariations::choose(rng);
+                self.body_material_variation = Some(BodyMaterialVariations::choose(rng));
             }
             _ => {}
         }
@@ -442,7 +442,7 @@ impl RenderParams {
     pub fn generate_marble_variation<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.fx0 {
             Fx0::Marble => {
-                self.marble_variation = MarbleVariation::choose(rng);
+                self.marble_variation = Some(MarbleVariation::choose(rng));
             }
             _ => {}
         }
@@ -452,7 +452,7 @@ impl RenderParams {
     pub fn generate_wood_variation<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
         match self.fx0 {
             Fx0::Wood => {
-                self.wood_variation = WoodVariation::choose(rng);
+                self.wood_variation = Some(WoodVariation::choose(rng));
             }
             _ => {}
         }
@@ -460,9 +460,9 @@ impl RenderParams {
     }
 
     pub fn glowing_logo<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
-        self.glowing_logo = GlowingLogo::choose(rng);
-        if self.glowing_logo == GlowingLogo::Yes {
-            self.logo_hue = random_hue(rng);
+        self.glowing_logo = Some(GlowingLogo::choose(rng));
+        if self.glowing_logo == Some(GlowingLogo::Yes) {
+            self.logo_hue = Some(random_hue(rng));
         }
         self
     }
