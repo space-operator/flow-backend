@@ -110,7 +110,7 @@ async fn get_leaf_schema(
             ));
         }
     };
-    let bytes = bs58::decode(data_bs58).into_vec()?;
+    let bytes = bs58::decode(data_bs58).into_vec().context("bs58::decode")?;
     let event =
         AccountCompressionEvent::try_from_slice(&bytes).context("parse AccountCompressionEvent")?;
     let AccountCompressionEvent::ApplicationData(ApplicationDataEvent::V1(
