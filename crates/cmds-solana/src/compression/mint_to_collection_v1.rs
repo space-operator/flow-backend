@@ -1,7 +1,19 @@
 use super::MetadataBubblegum;
 use crate::prelude::*;
+use anchor_lang::AnchorDeserialize;
+use anyhow::{anyhow, Context as _};
 use mpl_bubblegum::instructions::MintToCollectionV1Builder;
-use solana_sdk::pubkey::Pubkey;
+use mpl_bubblegum::LeafSchemaEvent;
+use solana_client::rpc_config::RpcTransactionConfig;
+use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey};
+use solana_transaction_status::UiParsedInstruction;
+use solana_transaction_status::{
+    option_serializer::OptionSerializer, UiInstruction, UiTransactionEncoding,
+};
+use spl_account_compression::{
+    events::{ApplicationDataEvent, ApplicationDataEventV1},
+    AccountCompressionEvent,
+};
 use tracing::info;
 
 // Command Name
@@ -51,6 +63,66 @@ pub struct Input {
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     signature: Option<Signature>,
+}
+
+async fn get_leaf_schema(
+    ctx: Context,
+    signature: Signature,
+) -> Result<LeafSchemaEvent, anyhow::Error> {
+    let config = RpcTransactionConfig {
+        encoding: Some(UiTransactionEncoding::JsonParsed),
+        commitment: Some(CommitmentConfig::confirmed()),
+        // we only send "legacy" tx at the moment
+        max_supported_transaction_version: None,
+    };
+    let tx_meta = ctx
+        .solana_client
+        .get_transaction_with_config(&signature, config)
+        .await?
+        .transaction
+        .meta
+        .and_then(|meta| Some(meta.inner_instructions));
+
+    let tx_meta = match tx_meta.unwrap() {
+        OptionSerializer::None => None,
+        OptionSerializer::Some(m) => Some(m),
+        OptionSerializer::Skip => None,
+    };
+
+    info!("tx_meta: {:?}", tx_meta);
+
+    let inner_instruction = tx_meta
+        .as_ref()
+        .ok_or_else(|| CommandError::msg("tx_meta is None"))?
+        .last() // Inserted 2 priority fee instructions at the beginning
+        .ok_or_else(|| CommandError::msg("No inner instruction"))?
+        .instructions
+        .get(1)
+        .ok_or_else(|| CommandError::msg("No instruction at index 1"))?
+        .clone();
+
+    let data_bs58 = match inner_instruction {
+        UiInstruction::Parsed(UiParsedInstruction::PartiallyDecoded(i)) => i.data,
+        _ => {
+            return Err(anyhow!(
+                "expected UiInstruction::Parsed(PartiallyDecoded(_)), got {:?}",
+                inner_instruction
+            ));
+        }
+    };
+    let bytes = bs58::decode(data_bs58).into_vec()?;
+    let event =
+        AccountCompressionEvent::try_from_slice(&bytes).context("parse AccountCompressionEvent")?;
+    let AccountCompressionEvent::ApplicationData(ApplicationDataEvent::V1(
+        ApplicationDataEventV1 { application_data },
+    )) = event
+    else {
+        return Err(anyhow!("wrong AccountCompressionEvent variant"));
+    };
+    let leaf_schema =
+        LeafSchemaEvent::try_from_slice(&application_data).context("parse LeafSchemaEvent")?;
+
+    Ok(leaf_schema)
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -115,63 +187,39 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    // if let Some(signature) = signature {
-    //     let config = RpcTransactionConfig {
-    //         encoding: Some(UiTransactionEncoding::JsonParsed),
-    //         commitment: Some(CommitmentConfig::confirmed()),
-    //         max_supported_transaction_version: Some(0),
-    //     };
-    //     let tx_meta = ctx
-    //         .solana_client
-    //         .get_transaction_with_config(&signature, config)
-    //         .await?
-    //         .transaction
-    //         .meta
-    //         .and_then(|meta| Some(meta.inner_instructions));
-
-    //     let tx_meta = match tx_meta.unwrap() {
-    //         OptionSerializer::None => None,
-    //         OptionSerializer::Some(m) => Some(m),
-    //         OptionSerializer::Skip => None,
-    //     };
-
-    //     info!("tx_meta: {:?}", tx_meta);
-
-    //     let inner_instruction = tx_meta
-    //         .as_ref()
-    //         .ok_or_else(|| CommandError::msg("tx_meta is None"))?
-    //         .get(0)
-    //         .ok_or_else(|| CommandError::msg("No inner instruction at index 0"))?
-    //         .instructions
-    //         .get(1)
-    //         .ok_or_else(|| CommandError::msg("No instruction at index 1"))?
-    //         .clone();
-
-    //     info!("inner_instruction: {:?}", inner_instruction);
-
-    //     let data = match inner_instruction {
-    //         UiInstruction::Parsed(instruction) => match instruction {
-    //             solana_transaction_status::UiParsedInstruction::PartiallyDecoded(instruction) => {
-    //                 instruction.data.clone()
-    //             }
-    //             solana_transaction_status::UiParsedInstruction::Parsed(_) => {
-    //                 return Err(CommandError::msg("Failed to parse instruction data"))
-    //             }
-    //         },
-    //         _ => return Err(CommandError::msg("Failed to parse instruction data")),
-    //     };
-    //     info!("data: {:?}", data);
-
-    //     let data_slice = &mut data[8..].as_bytes();
-    //     let leaf_schema: LeafSchema = LeafSchema::try_from_slice(data_slice).unwrap_or(
-    //         LeafSchema::deserialize(data_slice).map_err(|e| {
-    //             CommandError::msg(format!("Failed to deserialize LeafSchema: {}", e))
-    //         })?,
-    //     );
-    //     // let leaf_schema: LeafSchema = LeafSchema::deserialize(data_slice).unwrap();
-
-    //     info!("tx: {:?}", leaf_schema);
-    // }
+    if let Some(signature) = signature {
+        let leaf_schema = get_leaf_schema(ctx, signature).await;
+        info!("{:?}", leaf_schema);
+    }
 
     Ok(Output { signature })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_get_leaf_schema() {
+        tracing_subscriber::fmt::try_init().ok();
+        const SIGNATURE: &str = "3a4asE3CbWjmpEBpxLwctqgF2BfwzUhsaDdrQS9ZnanNrWJYfxc8hWfow7gCF9MVjdB2SQ1svg8QujDMjNknufCU";
+        let result = get_leaf_schema(<_>::default(), SIGNATURE.parse().unwrap()).await;
+        dbg!(&result);
+        result.unwrap();
+    }
+
+    #[test]
+    fn test_parse_instruction_data() {
+        const DATA: &str = "2GJh7oUmkZKnjHLqLHwKU8DSRK2PJ6gqTyCkQzE4TvouB75xxWG7AbvGgMBvuw5QTbGAFKcUJGy9ftDfxdkk55MRYXruCpNqFcHp5GijZRzf3SCuHveuURcjqJ6owS9T9DBxxij7cQgfwfZzuR7LavH7MsiDatmpEj3NnmQdJRxDGm3S3JcsVqxy6Zd9zieqHDKR899HohKdxhJ7rKkZfbubHLxmH9vGvChktsHX5DywH1CxHnoiG6918Yjx1xPdLduc71Wx97C3xs7cw9pd9etUtYRCE";
+        let bytes = bs58::decode(DATA).into_vec().unwrap();
+        let event = AccountCompressionEvent::try_from_slice(&bytes).unwrap();
+        let AccountCompressionEvent::ApplicationData(ApplicationDataEvent::V1(
+            ApplicationDataEventV1 { application_data },
+        )) = event
+        else {
+            panic!("wrong variant");
+        };
+        let leaf_schema = LeafSchemaEvent::try_from_slice(&application_data).unwrap();
+        dbg!(leaf_schema);
+    }
 }
