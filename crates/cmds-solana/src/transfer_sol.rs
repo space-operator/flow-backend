@@ -65,7 +65,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_valid() {
-        tracing_subscriber::fmt::init();
+        tracing_subscriber::fmt::try_init().ok();
         let ctx = Context::default();
 
         let sender = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ");
