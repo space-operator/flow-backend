@@ -162,11 +162,11 @@ const DEFAULT_WEDGEATTRIBS: Attr<&[&str]> = Attr {
         "random_value",
     ],
 };
-
-fn default_logo_name() -> String {
-    "solana.png".to_owned()
-}
 */
+
+const fn default_logo_name() -> &'static str {
+    "solana.png"
+}
 
 /// Condensed metadata
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -964,39 +964,44 @@ impl RenderParams {
             push_string_attr(&mut m, "Fx_6", fx6.pdg_name()?);
         }
 
-        if let Some(fx0_bodyoff) = fx0_bodyoff {
-            push_int_attr(&mut m, "Fx_bodyoff_layer_0_1_1a", *fx0_bodyoff as u32);
+        {
+            let fx0_bodyoff = fx0_bodyoff.unwrap_or_default();
+            push_int_attr(&mut m, "Fx_bodyoff_layer_0_1_1a", fx0_bodyoff as u32);
             if human_readable {
                 push_string_attr(&mut m, "Fx_bodyoff", fx0_bodyoff.pdg_name()?);
             }
         }
 
-        if let Some(fx0_bodyoff_glass) = fx0_bodyoff_glass {
+        {
+            let fx0_bodyoff_glass = fx0_bodyoff_glass.unwrap_or_default();
             // Doesn't have human readable attribute
             push_int_attr(
                 &mut m,
                 "Fx_bodyoff_layer_0_1_1a_glass",
-                *fx0_bodyoff_glass as u32,
+                fx0_bodyoff_glass as u32,
             );
         }
 
-        if let Some(body_material_variation) = body_material_variation {
+        {
+            let body_material_variation = body_material_variation.unwrap_or_default();
             // Doesn't have human readable attribute
             push_int_attr(
                 &mut m,
                 "Body_material_variation",
-                *body_material_variation as u32,
+                body_material_variation as u32,
             );
         }
 
-        if let Some(marble_variation) = marble_variation {
+        {
+            let marble_variation = marble_variation.unwrap_or_default();
             // Doesn't have human readable attribute
-            push_int_attr(&mut m, "Marble_variation", *marble_variation as u32);
+            push_int_attr(&mut m, "Marble_variation", marble_variation as u32);
         }
 
-        if let Some(wood_variation) = wood_variation {
+        {
+            let wood_variation = wood_variation.unwrap_or_default();
             // Doesn't have human readable attribute
-            push_int_attr(&mut m, "Wood_variation", *wood_variation as u32);
+            push_int_attr(&mut m, "Wood_variation", wood_variation as u32);
         }
 
         push_int_attr(&mut m, "Fx_Jellifish", *fx_jellifish as u32);
@@ -1016,14 +1021,20 @@ impl RenderParams {
             *light_reflection_mult as u32,
         );
 
-        if let Some(glowing_logo) = glowing_logo {
-            push_int_attr(&mut m, "Glowing_logo", *glowing_logo as u32);
+        {
+            let glowing_logo = glowing_logo.unwrap_or_default();
+            push_int_attr(&mut m, "Glowing_logo", glowing_logo as u32);
         }
-        if let Some(logo_hue) = logo_hue {
-            push_float_attr(&mut m, "Logo_hue", *logo_hue);
+        {
+            let logo_hue = logo_hue.unwrap_or_default();
+            push_float_attr(&mut m, "Logo_hue", logo_hue);
         }
 
-        if let Some(logo_name) = logo_name {
+        {
+            let logo_name = logo_name
+                .as_ref()
+                .map(String::as_str)
+                .unwrap_or(default_logo_name());
             push_string_attr_no_array(&mut m, "logo_name", logo_name);
         }
 
