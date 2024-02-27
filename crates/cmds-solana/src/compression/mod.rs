@@ -1,9 +1,24 @@
+use crate::prelude::*;
 use std::str::FromStr;
-
+use anchor_lang::AnchorDeserialize;
+use anyhow::{anyhow, Context as _};
+use flow_lib::command::CommandError;
+use mpl_bubblegum::types::LeafSchema;
 use mpl_bubblegum::types::{MetadataArgs, UpdateArgs};
+use mpl_bubblegum::LeafSchemaEvent;
 use serde::{Deserialize, Serialize};
+use solana_client::rpc_config::RpcTransactionConfig;
 use solana_program::pubkey::Pubkey;
-
+use solana_sdk::commitment_config::CommitmentConfig;
+use solana_transaction_status::UiParsedInstruction;
+use solana_transaction_status::{
+    option_serializer::OptionSerializer, UiInstruction, UiTransactionEncoding,
+};
+use spl_account_compression::{
+    events::{ApplicationDataEvent, ApplicationDataEventV1},
+    AccountCompressionEvent,
+};
+use tracing::info;
 pub mod burn;
 pub mod create_tree;
 pub mod mint_to_collection_v1;
@@ -176,4 +191,69 @@ pub struct GetAssetResponse<T> {
     pub id: String,
     pub result: T,
     pub jsonrpc: String,
+}
+
+pub async fn get_leaf_schema_event(
+    ctx: Context,
+    signature: Signature,
+    is_mint_to_collection: bool,
+) -> Result<(LeafSchemaEvent, LeafSchema), anyhow::Error> {
+    let index = if is_mint_to_collection { 1 } else { 0 };
+
+    let config = RpcTransactionConfig {
+        encoding: Some(UiTransactionEncoding::JsonParsed),
+        commitment: Some(CommitmentConfig::confirmed()),
+        // we only send "legacy" tx at the moment
+        max_supported_transaction_version: None,
+    };
+    let tx_meta = ctx
+        .solana_client
+        .get_transaction_with_config(&signature, config)
+        .await?
+        .transaction
+        .meta
+        .and_then(|meta| Some(meta.inner_instructions));
+
+    let tx_meta = match tx_meta.unwrap() {
+        OptionSerializer::None => None,
+        OptionSerializer::Some(m) => Some(m),
+        OptionSerializer::Skip => None,
+    };
+
+    info!("tx_meta: {:?}", tx_meta);
+
+    let inner_instruction = tx_meta
+        .as_ref()
+        .ok_or_else(|| CommandError::msg("tx_meta is None"))?
+        .last() // Inserted 2 priority fee instructions at the beginning
+        .ok_or_else(|| CommandError::msg("No inner instruction"))?
+        .instructions
+        .get(index)
+        .ok_or_else(|| CommandError::msg("No instruction at index 1"))?
+        .clone();
+
+    let data_bs58 = match inner_instruction {
+        UiInstruction::Parsed(UiParsedInstruction::PartiallyDecoded(i)) => i.data,
+        _ => {
+            return Err(anyhow!(
+                "expected UiInstruction::Parsed(PartiallyDecoded(_)), got {:?}",
+                inner_instruction
+            ));
+        }
+    };
+    let bytes = bs58::decode(data_bs58).into_vec().context("bs58::decode")?;
+    let event =
+        AccountCompressionEvent::try_from_slice(&bytes).context("parse AccountCompressionEvent")?;
+    let AccountCompressionEvent::ApplicationData(ApplicationDataEvent::V1(
+        ApplicationDataEventV1 { application_data },
+    )) = event
+    else {
+        return Err(anyhow!("wrong AccountCompressionEvent variant"));
+    };
+    let leaf_schema_event =
+        LeafSchemaEvent::try_from_slice(&application_data).context("parse LeafSchemaEvent")?;
+
+    let leaf_schema = leaf_schema_event.schema.clone();
+
+    Ok((leaf_schema_event, leaf_schema))
 }

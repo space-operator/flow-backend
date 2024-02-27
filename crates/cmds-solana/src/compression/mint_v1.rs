@@ -1,6 +1,8 @@
-use crate::prelude::*;
+use crate::{compression::get_leaf_schema_event, prelude::*};
 use mpl_bubblegum::instructions::MintV1Builder;
 use solana_sdk::pubkey::Pubkey;
+use tracing::info;
+use bytes::Bytes;
 
 use super::MetadataBubblegum;
 
@@ -43,6 +45,12 @@ pub struct Input {
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     signature: Option<Signature>,
+    #[serde(with = "value::pubkey::opt")]
+    id: Option<Pubkey>,
+    nonce: Option<u64>,
+    creator_hash: Option<Bytes>,
+    data_hash: Option<Bytes>,
+    leaf_hash: Option<Bytes>,
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -70,5 +78,29 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    Ok(Output { signature })
+    let mut leaf_schema = None;
+    if let Some(signature) = signature {
+        leaf_schema = Some(get_leaf_schema_event(ctx, signature, false).await?.1);
+        info!("{:?}", leaf_schema);
+    }
+
+    let id = leaf_schema.as_ref().map(|schema| schema.id());
+    let nonce = leaf_schema.as_ref().map(|schema| schema.nonce());
+    let data_hash = leaf_schema
+        .as_ref()
+        .map(|schema| bytes::Bytes::copy_from_slice(&schema.data_hash()));
+    let leaf_hash = leaf_schema
+        .as_ref()
+        .map(|schema| bytes::Bytes::copy_from_slice(&schema.hash()));
+    let creator_hash =
+        leaf_schema.map(|schema| bytes::Bytes::copy_from_slice(&schema.creator_hash()));
+
+    Ok(Output {
+        signature,
+        id,
+        nonce,
+        creator_hash,
+        data_hash,
+        leaf_hash,
+    })
 }
