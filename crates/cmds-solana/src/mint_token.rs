@@ -1,6 +1,5 @@
-use crate::{prelude::*, utils::ui_amount_to_amount};
+use crate::{get_decimals, prelude::*, utils::ui_amount_to_amount};
 use solana_program::program_pack::Pack;
-use solana_sdk::commitment_config::CommitmentConfig;
 use spl_token::instruction::mint_to_checked;
 use tracing::info;
 
@@ -42,32 +41,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn get_decimals(client: &RpcClient, mint_account: Pubkey) -> crate::Result<u8> {
-    let commitment = CommitmentConfig::confirmed();
-    info!("commitment: {:?}", commitment);
 
-    let response = client
-        .get_account_with_commitment(&mint_account, commitment)
-        .await
-        .map_err(|e| {
-            tracing::error!("Error: {:?}", e);
-            crate::Error::AccountNotFound(mint_account)
-        })?;
-    info!("s: {:?}", response);
-
-    let source_account = match response.value {
-        Some(account) => account,
-        None => return Err(crate::Error::AccountNotFound(mint_account)),
-    };
-
-    // let source_account = client.get_account(&mint_account).await.map_err(|e| {
-    //     tracing::error!("Error: {:?}", e);
-    //     crate::Error::AccountNotFound(mint_account)
-    // })?;
-    let source_account = spl_token::state::Mint::unpack(&source_account.data)?;
-
-    Ok(source_account.decimals)
-}
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let decimals = match input.decimals {

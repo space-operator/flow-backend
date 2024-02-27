@@ -10,6 +10,7 @@ pub mod verify_collection_v1;
 // pub mod transfer_v1;
 pub mod mint_v1;
 pub mod verify_creator_v1;
+pub mod burn_v1;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct AuthorizationData {

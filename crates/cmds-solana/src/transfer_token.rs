@@ -1,9 +1,12 @@
+use crate::get_decimals;
 use crate::{prelude::*, utils::ui_amount_to_amount};
 use solana_program::system_program;
+use solana_sdk::commitment_config::CommitmentConfig;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::program_pack::Pack;
 use spl_associated_token_account::instruction;
 use spl_token::instruction::transfer_checked;
+use tracing::info;
 
 const SOLANA_TRANSFER_TOKEN: &str = "transfer_token";
 
@@ -20,22 +23,12 @@ fn build() -> BuildResult {
 
 flow_lib::submit!(CommandDescription::new(SOLANA_TRANSFER_TOKEN, |_| build()));
 
-async fn get_decimals(client: &RpcClient, token_account: Pubkey) -> crate::Result<u8> {
-    let source_account = client
-        .get_token_account(&token_account)
-        .await
-        .map_err(|_| crate::Error::NotTokenAccount(token_account))?
-        .ok_or(crate::Error::NotTokenAccount(token_account))?;
-    Ok(source_account.token_amount.decimals)
-}
 
-// https://spl.solana.com/associated-token-account
-// https://github.com/solana-labs/solana-program-library/blob/master/token/cli/src/main.rs#L555
 #[allow(clippy::too_many_arguments)]
 async fn command_transfer_token(
     client: &RpcClient,
     fee_payer: &Pubkey,
-    token: Pubkey,
+    token_mint: Pubkey,
     ui_amount: Decimal,
     decimals: Option<u8>,
     recipient: Pubkey,
@@ -45,20 +38,28 @@ async fn command_transfer_token(
     fund_recipient: bool,
     memo: String,
 ) -> crate::Result<(Vec<Instruction>, Pubkey)> {
-    let sender = if let Some(sender) = sender {
+    let sender_token_acc = if let Some(sender) = sender {
         sender
     } else {
-        spl_associated_token_account::get_associated_token_address(&sender_owner, &token)
+        spl_associated_token_account::get_associated_token_address(&sender_owner, &token_mint)
     };
 
     let decimals = if let Some(d) = decimals {
         d
     } else {
-        get_decimals(client, sender).await?
+        get_decimals(client, token_mint).await?
     };
+
+    let commitment = CommitmentConfig::confirmed();
+
     let transfer_balance = {
         // TODO error handling
-        let sender_token_amount = client.get_token_account_balance(&sender).await?;
+        let sender_token_amount = client
+            .get_token_account_balance_with_commitment(&sender_token_acc, commitment)
+            .await?
+            .value;
+
+        info!("sender_token_amount: {:?}", sender_token_amount);
 
         // TODO error handling
         let sender_balance = sender_token_amount
@@ -81,7 +82,7 @@ async fn command_transfer_token(
 
     let recipient_is_token_account = {
         let recipient_account_info = client
-            .get_account_with_commitment(&recipient, client.commitment())
+            .get_account_with_commitment(&recipient, commitment)
             .await?
             .value
             .map(|account| {
@@ -95,20 +96,25 @@ async fn command_transfer_token(
         recipient_account_info.unwrap_or(false)
     };
 
+    info!(
+        "recipient_is_token_account: {:?}",
+        recipient_is_token_account
+    );
+
     let mut instructions = vec![];
     if !recipient_is_token_account {
         recipient_token_account =
-            spl_associated_token_account::get_associated_token_address(&recipient, &token);
+            spl_associated_token_account::get_associated_token_address(&recipient, &token_mint);
 
         let needs_funding = {
             if let Some(recipient_token_account_data) = client
-                .get_account_with_commitment(&recipient_token_account, client.commitment())
+                .get_account_with_commitment(&recipient_token_account, commitment)
                 .await?
                 .value
             {
                 match recipient_token_account_data.owner {
-                    x if x == system_program::id() => true,
-                    y if y == spl_token::id() => false,
+                    x if x == system_program::ID => true,
+                    y if y == spl_token::ID => false,
                     _ => {
                         return Err(crate::Error::UnsupportedRecipientAddress(
                             recipient.to_string(),
@@ -125,8 +131,8 @@ async fn command_transfer_token(
                 instructions.push(instruction::create_associated_token_account(
                     fee_payer,
                     &recipient,
-                    &token,
-                    &spl_associated_token_account::ID,
+                    &token_mint,
+                    &spl_token::ID,
                 ));
             } else {
                 // TODO: discuss the logic of this error
@@ -136,9 +142,9 @@ async fn command_transfer_token(
     }
 
     instructions.push(transfer_checked(
-        &spl_token::id(),
-        &sender,
-        &token,
+        &spl_token::ID,
+        &sender_token_acc,
+        &token_mint,
         &recipient_token_account,
         &sender_owner,
         &[&sender_owner, fee_payer],
