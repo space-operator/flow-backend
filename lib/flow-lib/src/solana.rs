@@ -37,6 +37,14 @@ pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 pub use solana_sdk::pubkey::Pubkey;
 pub use solana_sdk::signature::Signature;
 
+#[derive(Default, Debug, Clone, Copy)]
+pub enum Insertion {
+    #[default]
+    Auto,
+    No,
+    Value(u64),
+}
+
 /// `l` is old, `r` is new
 pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Error> {
     let l = bincode::deserialize::<Message>(l)?;
@@ -303,6 +311,7 @@ impl Instructions {
         );
 
         let count = self.instructions.len();
+        /*
         let compute_units = match rpc
             .simulate_transaction(&Transaction::new_unsigned(message.clone()))
             .await
@@ -315,6 +324,8 @@ impl Instructions {
         }
         .unwrap_or(200000 * count as u64)
         .min(1400000) as u32;
+        */
+        let compute_units = (100000 * count as u64).min(1400000) as u32;
 
         let inserted = if !contains_set_compute_unit_price(&message) {
             let fee = get_priority_fee(&message, rpc)
