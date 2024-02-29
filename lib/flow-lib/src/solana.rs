@@ -16,7 +16,7 @@ use solana_client::{
     rpc_response::RpcSimulateTransactionResult,
 };
 use solana_sdk::{
-    commitment_config::CommitmentConfig,
+    commitment_config::{CommitmentConfig, CommitmentLevel},
     compute_budget::{self, ComputeBudgetInstruction},
     feature_set::FeatureSet,
     instruction::{CompiledInstruction, Instruction},
@@ -296,16 +296,16 @@ pub enum InsertionBehavior {
     Value(u64),
 }
 
-const fn default_simulation_level() -> CommitmentConfig {
-    CommitmentConfig::confirmed()
+const fn default_simulation_level() -> CommitmentLevel {
+    CommitmentLevel::Confirmed
 }
 
-const fn default_tx_level() -> CommitmentConfig {
-    CommitmentConfig::finalized()
+const fn default_tx_level() -> CommitmentLevel {
+    CommitmentLevel::Finalized
 }
 
-const fn default_wait_level() -> CommitmentConfig {
-    CommitmentConfig::confirmed()
+const fn default_wait_level() -> CommitmentLevel {
+    CommitmentLevel::Confirmed
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -318,11 +318,11 @@ pub struct ExecutionConfig {
     #[serde(default)]
     pub priority_fee: InsertionBehavior,
     #[serde(default = "default_simulation_level")]
-    pub simulation_commitment_level: CommitmentConfig,
+    pub simulation_commitment_level: CommitmentLevel,
     #[serde(default)]
-    pub tx_commitment_level: CommitmentConfig,
+    pub tx_commitment_level: CommitmentLevel,
     #[serde(default)]
-    pub wait_commitment_level: CommitmentConfig,
+    pub wait_commitment_level: CommitmentLevel,
 }
 
 impl Clone for ExecutionConfig {
@@ -356,6 +356,10 @@ impl Default for ExecutionConfig {
             wait_commitment_level: default_wait_level(),
         }
     }
+}
+
+fn commitment(commitment: CommitmentLevel) -> CommitmentConfig {
+    CommitmentConfig { commitment }
 }
 
 impl Instructions {
@@ -398,7 +402,7 @@ impl Instructions {
         config: ExecutionConfig,
     ) -> Result<Signature, Error> {
         let simulation_blockhash = rpc
-            .get_latest_blockhash_with_commitment(config.simulation_commitment_level)
+            .get_latest_blockhash_with_commitment(commitment(config.simulation_commitment_level))
             .await
             .map_err(|error| Error::solana(error, 0))?
             .0;
@@ -470,7 +474,7 @@ impl Instructions {
         }
 
         message.recent_blockhash = rpc
-            .get_latest_blockhash_with_commitment(config.tx_commitment_level)
+            .get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
             .await
             .map_err(|error| Error::solana(error, inserted))?
             .0;
@@ -594,7 +598,7 @@ impl Instructions {
         let sig = rpc
             .send_and_confirm_transaction_with_spinner_and_commitment(
                 &tx,
-                config.wait_commitment_level,
+                commitment(config.wait_commitment_level),
             )
             .await
             .map_err(move |error| Error::solana(error, inserted))?;
