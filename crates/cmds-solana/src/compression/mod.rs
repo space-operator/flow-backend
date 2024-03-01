@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::str::FromStr;
 use anchor_lang::AnchorDeserialize;
 use anyhow::{anyhow, Context as _};
 use flow_lib::command::CommandError;
@@ -18,6 +17,7 @@ use spl_account_compression::{
     events::{ApplicationDataEvent, ApplicationDataEventV1},
     AccountCompressionEvent,
 };
+use std::str::FromStr;
 use tracing::info;
 pub mod burn;
 pub mod create_tree;

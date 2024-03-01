@@ -1,8 +1,8 @@
 use crate::{compression::get_leaf_schema_event, prelude::*};
+use bytes::Bytes;
 use mpl_bubblegum::instructions::MintV1Builder;
 use solana_sdk::pubkey::Pubkey;
 use tracing::info;
-use bytes::Bytes;
 
 use super::MetadataBubblegum;
 

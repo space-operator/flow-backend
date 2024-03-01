@@ -23,7 +23,6 @@ fn build() -> BuildResult {
 
 flow_lib::submit!(CommandDescription::new(SOLANA_TRANSFER_TOKEN, |_| build()));
 
-
 #[allow(clippy::too_many_arguments)]
 async fn command_transfer_token(
     client: &RpcClient,

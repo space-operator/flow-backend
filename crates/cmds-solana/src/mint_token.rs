@@ -1,7 +1,6 @@
 use crate::{get_decimals, prelude::*, utils::ui_amount_to_amount};
-use solana_program::program_pack::Pack;
+
 use spl_token::instruction::mint_to_checked;
-use tracing::info;
 
 const SOLANA_MINT_TOKEN: &str = "mint_token";
 
@@ -40,8 +39,6 @@ pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     signature: Option<Signature>,
 }
-
-
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let decimals = match input.decimals {
