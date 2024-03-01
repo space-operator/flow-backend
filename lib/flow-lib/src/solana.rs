@@ -707,7 +707,7 @@ mod tests {
         TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
     use base64::prelude::*;
-    use solana_sdk::pubkey;
+    use solana_sdk::{pubkey, system_instruction::transfer};
 
     #[test]
     fn test_compare_msg_logic() {
@@ -761,5 +761,37 @@ mod tests {
                 ..<_>::default()
             },
         )
+    }
+
+    #[tokio::test]
+    async fn test_build_message() {
+        let from = Keypair::new();
+        let to = Pubkey::new_unique();
+
+        let rpc = RpcClient::new(SolanaNet::Devnet.url().to_owned());
+        let mut ins = Instructions {
+            fee_payer: from.pubkey(),
+            signers: [from.clone_keypair()].into(),
+            instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
+        };
+        let (_msg, inserted) = ins.build_message(&rpc, &<_>::default()).await.unwrap();
+        assert_eq!(inserted, 2);
+
+        let mut ins = Instructions {
+            fee_payer: from.pubkey(),
+            signers: [from.clone_keypair()].into(),
+            instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
+        };
+        let (_msg, inserted) = ins
+            .build_message(
+                &rpc,
+                &ExecutionConfig {
+                    priority_fee: InsertionBehavior::No,
+                    ..<_>::default()
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(inserted, 1);
     }
 }
