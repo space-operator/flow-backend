@@ -21,6 +21,16 @@ use solana_sdk::pubkey::Pubkey;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
 use tower::{Service, ServiceExt};
 
+pub mod env {
+    pub const RUST_LOG: &str = "RUST_LOG";
+    pub const OVERWRITE_FEEPAYER: &str = "OVERWRITE_FEEPAYER";
+    pub const COMPUTE_BUDGET: &str = "COMPUTE_BUDGET";
+    pub const PRIORITY_FEE: &str = "PRIORITY_FEE";
+    pub const SIMULATION_COMMITMENT_LEVEL: &str = "SIMULATION_COMMITMENT_LEVEL";
+    pub const TX_COMMITMENT_LEVEL: &str = "TX_COMMITMENT_LEVEL";
+    pub const WAIT_COMMITMENT_LEVEL: &str = "WAIT_COMMITMENT_LEVEL";
+}
+
 /// Get user's JWT, require
 /// [`user_token`][crate::config::node::Permissions::user_tokens] permission.
 pub mod get_jwt {
@@ -189,7 +199,11 @@ pub mod signer {
 
 /// Output values and Solana instructions to be executed.
 pub mod execute {
-    use crate::{solana::Instructions, utils::TowerClient, BoxError, FlowRunId};
+    use crate::{
+        solana::{ExecutionConfig, Instructions},
+        utils::TowerClient,
+        BoxError, FlowRunId,
+    };
     use futures::channel::oneshot::Canceled;
     use solana_client::client_error::ClientError;
     use solana_sdk::{signature::Signature, signer::SignerError};
@@ -281,15 +295,25 @@ pub mod execute {
         Svc::unimplemented(|| Error::other("unimplemented"), Error::worker)
     }
 
-    pub fn simple(ctx: &super::Context, size: usize, flow_run_id: Option<FlowRunId>) -> Svc {
+    pub fn simple(
+        ctx: &super::Context,
+        size: usize,
+        flow_run_id: Option<FlowRunId>,
+        config: ExecutionConfig,
+    ) -> Svc {
         let rpc = ctx.solana_client.clone();
         let signer = ctx.signer.clone();
         let handle = move |req: Request| {
             let rpc = rpc.clone();
             let signer = signer.clone();
+            let config = config.clone();
             async move {
                 Ok(Response {
-                    signature: Some(req.instructions.execute(&rpc, signer, flow_run_id).await?),
+                    signature: Some(
+                        req.instructions
+                            .execute(&rpc, signer, flow_run_id, config)
+                            .await?,
+                    ),
                 })
             }
         };
@@ -331,7 +355,7 @@ impl Default for Context {
             Extensions::default(),
         );
         ctx.command = Some(CommandContext {
-            svc: execute::simple(&ctx, 1, None),
+            svc: execute::simple(&ctx, 1, None, <_>::default()),
             flow_run_id: uuid::Uuid::nil(),
             node_id: uuid::Uuid::nil(),
             times: 0,

@@ -812,7 +812,7 @@ impl UserConnection {
     ) -> crate::Result<i64> {
         let pubkey = bs58::encode(pubkey).into_string();
         let message = base64::encode(message);
-        let signatures = signatures.map(|arr| arr.iter().map(|p| Json(p)).collect::<Vec<_>>());
+        let signatures = signatures.map(|arr| arr.iter().map(Json).collect::<Vec<_>>());
         let stmt = self
             .conn
             .prepare_cached(

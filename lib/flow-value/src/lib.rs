@@ -881,7 +881,7 @@ mod tests {
         })
         .unwrap();
         assert_eq!(
-            v.remove("value").unwrap(),
+            v.swap_remove("value").unwrap(),
             Value::Array([1u64.into()].into())
         )
     }

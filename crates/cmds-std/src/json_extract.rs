@@ -51,8 +51,8 @@ mod tests {
         };
 
         let mut outputs = build().unwrap().run(<_>::default(), inputs).await.unwrap();
-        let value = outputs.remove("value").unwrap();
-        let trimmed = outputs.remove("trimmed_json").unwrap();
+        let value = outputs.swap_remove("value").unwrap();
+        let trimmed = outputs.swap_remove("trimmed_json").unwrap();
         assert_eq!(value, Value::I64(3));
         assert_eq!(
             trimmed,

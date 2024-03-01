@@ -11,7 +11,7 @@ use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
     context::{execute, get_jwt, CommandContext, Context},
-    solana::{find_failed_instruction, Instructions, KeypairExt},
+    solana::{find_failed_instruction, ExecutionConfig, Instructions, KeypairExt},
     utils::{Extensions, TowerClient},
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
 };
@@ -29,7 +29,7 @@ use petgraph::{
     visit::EdgeRef,
     Direction,
 };
-use solana_sdk::{pubkey::Pubkey, signature::Keypair};
+use solana_sdk::signature::Keypair;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
@@ -110,7 +110,7 @@ pub struct FlowGraph {
     pub mode: client::BundlingMode,
     pub output_instructions: bool,
     pub rhai_permit: Arc<Semaphore>,
-    pub overwrite_feepayer: Option<Keypair>,
+    pub tx_exec_config: ExecutionConfig,
 }
 
 pub struct UsePreviousValue {
@@ -355,17 +355,10 @@ impl FlowGraph {
         let signer = registry.signer.clone();
         let token = registry.token.clone();
         let rhai_permit = registry.rhai_permit.clone();
-        let overwrite_feepayer = c.ctx.environment.get("OVERWRITE_FEEPAYER").and_then(|s| {
-            let mut buf = [0u8; 64];
-            match bs58::decode(s).into(&mut buf).ok()? {
-                32 => Some(Keypair::new_adapter_wallet(Pubkey::new_from_array(
-                    buf[..32].try_into().unwrap(),
-                ))),
-                // TODO: check pubkey match secret key
-                64 => Some(Keypair::from_bytes(&buf).unwrap()),
-                _ => None,
-            }
-        });
+        let tx_exec_config = ExecutionConfig::from_env(&c.ctx.environment)
+            .inspect_err(|error| tracing::error!("error parsing ExecutionConfig: {}", error))
+            .unwrap_or_default();
+        tracing::debug!("execution config: {:?}", tx_exec_config);
 
         let ext = {
             let mut ext = Extensions::new();
@@ -484,7 +477,7 @@ impl FlowGraph {
             mode: c.instructions_bundling,
             output_instructions: false,
             rhai_permit,
-            overwrite_feepayer,
+            tx_exec_config,
         })
     }
 
@@ -869,7 +862,12 @@ impl FlowGraph {
 
                     let (ins, resp) = {
                         let mut ins = w.instructions;
-                        if let Some(signer) = self.overwrite_feepayer.as_ref() {
+                        if let Some(signer) = self
+                            .tx_exec_config
+                            .overwrite_feepayer
+                            .clone()
+                            .map(|x| x.to_keypair())
+                        {
                             ins.set_feepayer(signer.clone_keypair());
                         }
                         let mut resp = vec![Responder {
@@ -909,13 +907,15 @@ impl FlowGraph {
                         Err(execute::Error::Canceled)
                     } else {
                         tracing::info!("executing instructions");
+                        let config = self.tx_exec_config.clone();
                         s.stop
                             .race(
                                 std::pin::pin!(s.stop_shared.race(
                                     std::pin::pin!(ins.execute(
                                         &self.ctx.solana_client,
                                         self.ctx.signer.clone(),
-                                        Some(s.flow_run_id)
+                                        Some(s.flow_run_id),
+                                        config,
                                     )),
                                     execute::Error::Canceled,
                                 )),
@@ -1278,7 +1278,7 @@ impl FlowGraph {
             s.stop_shared.clone(),
             s.out_tx.clone(),
             self.mode.clone(),
-            self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair()),
+            self.tx_exec_config.clone(),
         );
         // let span = tracing::error_span!("node", node_id = node.id.to_string(), times = times);
         let handler = tokio::spawn(
@@ -1425,7 +1425,7 @@ async fn run_command(
     stop_shared: StopSignal,
     tx: mpsc::UnboundedSender<PartialOutput>,
     mode: client::BundlingMode,
-    overwrite_feepayer: Option<Keypair>,
+    tx_exec_config: ExecutionConfig,
 ) -> Finished {
     let svc = match mode {
         client::BundlingMode::Off => TowerClient::from_service(
@@ -1433,9 +1433,12 @@ async fn run_command(
                 node_id: node.id,
                 times,
                 tx: tx.clone(),
-                simple_svc: execute::simple(&ctx, 32, Some(flow_run_id)),
+                simple_svc: execute::simple(&ctx, 32, Some(flow_run_id), tx_exec_config.clone()),
                 stop_shared,
-                overwrite_feepayer,
+                overwrite_feepayer: tx_exec_config
+                    .overwrite_feepayer
+                    .clone()
+                    .map(|x| x.to_keypair()),
             },
             execute::Error::worker,
             32,

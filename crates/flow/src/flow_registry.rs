@@ -10,7 +10,7 @@ use flow_lib::{
         client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
         Endpoints,
     },
-    context::{get_jwt, signer, User},
+    context::{env::RUST_LOG, get_jwt, signer, User},
     utils::TowerClient,
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
 };
@@ -364,7 +364,7 @@ impl FlowRegistry {
 
         let subscriber = flow_run_events::build_tracing_subscriber(
             tx.clone(),
-            config.environment.get("RUST_LOG").map(String::as_str),
+            config.environment.get(RUST_LOG).map(String::as_str),
         );
         async move {
             let mut get_previous_values_svc = this.get_previous_values.clone();
