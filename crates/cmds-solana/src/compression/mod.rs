@@ -212,12 +212,11 @@ pub async fn get_leaf_schema_event(
         .await?
         .transaction
         .meta
-        .and_then(|meta| Some(meta.inner_instructions));
+        .map(|meta| meta.inner_instructions);
 
-    let tx_meta = match tx_meta.unwrap() {
-        OptionSerializer::None => None,
-        OptionSerializer::Some(m) => Some(m),
-        OptionSerializer::Skip => None,
+    let tx_meta = match tx_meta {
+        Some(OptionSerializer::Some(m)) => Some(m),
+        Some(OptionSerializer::None) | Some(OptionSerializer::Skip) | None => None,
     };
 
     info!("tx_meta: {:?}", tx_meta);

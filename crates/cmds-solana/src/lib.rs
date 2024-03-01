@@ -54,24 +54,6 @@ pub mod prelude {
     pub use value::{HashMap, Value};
 }
 
-#[cfg(test)]
-pub mod tests {
-    use crate::prelude::*;
-
-    #[test]
-    fn test_name_unique() {
-        let mut m = std::collections::HashSet::new();
-        let mut dup = false;
-        for CommandDescription { name, .. } in inventory::iter::<CommandDescription>() {
-            if !m.insert(name) {
-                println!("Dupicated: {}", name);
-                dup = true;
-            }
-        }
-        assert!(!dup);
-    }
-}
-
 // make a nodes out of this
 pub async fn get_decimals(client: &RpcClient, mint_account: Pubkey) -> crate::Result<u8> {
     let commitment = CommitmentConfig::confirmed();
@@ -98,4 +80,22 @@ pub async fn get_decimals(client: &RpcClient, mint_account: Pubkey) -> crate::Re
     let source_account = spl_token::state::Mint::unpack(&source_account.data)?;
     info!("source_account: {:?}", source_account);
     Ok(source_account.decimals)
+}
+
+#[cfg(test)]
+pub mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn test_name_unique() {
+        let mut m = std::collections::HashSet::new();
+        let mut dup = false;
+        for CommandDescription { name, .. } in inventory::iter::<CommandDescription>() {
+            if !m.insert(name) {
+                println!("Dupicated: {}", name);
+                dup = true;
+            }
+        }
+        assert!(!dup);
+    }
 }
