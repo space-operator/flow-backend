@@ -8,7 +8,7 @@ use bytes::Bytes;
 use chrono::Utc;
 use futures::TryStreamExt;
 use once_cell::sync::Lazy;
-use serde::{de::value::MapDeserializer, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use solana_client::{
     client_error::{ClientError, ClientErrorKind},
     nonblocking::rpc_client::RpcClient,
@@ -31,10 +31,15 @@ use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
 };
 use std::{
+    borrow::Cow,
     collections::{BTreeSet, HashMap},
+    fmt::Display,
+    num::ParseIntError,
+    str::FromStr,
     time::Duration,
 };
 use tower::ServiceExt;
+use value::Value;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
@@ -99,6 +104,7 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Erro
         let program_id_l = l
             .program_id(i)
             .ok_or_else(|| anyhow!("no program id for instruction {}", i))?;
+
         let program_id_r = r
             .program_id(i)
             .ok_or_else(|| anyhow!("no program id for instruction {}", i))?;
@@ -284,16 +290,55 @@ async fn get_priority_fee(message: &Message, _rpc: &RpcClient) -> Result<u64, an
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
 pub enum InsertionBehavior {
-    #[serde(alias = "auto")]
     #[default]
     Auto,
-    #[serde(alias = "no")]
-    #[serde(alias = "off")]
     No,
     Value(u64),
+}
+
+impl FromStr for InsertionBehavior {
+    type Err = ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "auto" => InsertionBehavior::Auto,
+            "no" => InsertionBehavior::No,
+            s => InsertionBehavior::Value(s.parse()?),
+        })
+    }
+}
+
+impl Display for InsertionBehavior {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InsertionBehavior::Auto => f.write_str("auto"),
+            InsertionBehavior::No => f.write_str("no"),
+            InsertionBehavior::Value(v) => v.fmt(f),
+        }
+    }
+}
+
+impl Serialize for InsertionBehavior {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.to_string().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for InsertionBehavior {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+        <Cow<'de, str> as Deserialize>::deserialize(deserializer)?
+            .parse()
+            .map_err(D::Error::custom)
+    }
 }
 
 const fn default_simulation_level() -> CommitmentLevel {
@@ -308,40 +353,56 @@ const fn default_wait_level() -> CommitmentLevel {
     CommitmentLevel::Confirmed
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum KeypairOrPubkey {
+    #[serde(with = "value::keypair")]
+    Keypair(Keypair),
+    #[serde(with = "value::pubkey")]
+    Pubkey(Pubkey),
+}
+
+impl Clone for KeypairOrPubkey {
+    fn clone(&self) -> Self {
+        match self {
+            KeypairOrPubkey::Keypair(k) => KeypairOrPubkey::Keypair(k.clone_keypair()),
+            KeypairOrPubkey::Pubkey(p) => KeypairOrPubkey::Pubkey(*p),
+        }
+    }
+}
+
+impl KeypairOrPubkey {
+    pub fn to_keypair(self) -> Keypair {
+        match self {
+            KeypairOrPubkey::Keypair(k) => k,
+            KeypairOrPubkey::Pubkey(p) => Keypair::new_adapter_wallet(p),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub struct ExecutionConfig {
-    #[serde(default, with = "value::keypair::opt")]
-    pub overwrite_feepayer: Option<Keypair>,
+    pub overwrite_feepayer: Option<KeypairOrPubkey>,
     #[serde(default)]
     pub compute_budget: InsertionBehavior,
     #[serde(default)]
     pub priority_fee: InsertionBehavior,
     #[serde(default = "default_simulation_level")]
     pub simulation_commitment_level: CommitmentLevel,
-    #[serde(default)]
+    #[serde(default = "default_tx_level")]
     pub tx_commitment_level: CommitmentLevel,
-    #[serde(default)]
+    #[serde(default = "default_wait_level")]
     pub wait_commitment_level: CommitmentLevel,
 }
 
-impl Clone for ExecutionConfig {
-    fn clone(&self) -> Self {
-        Self {
-            overwrite_feepayer: self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair()),
-            compute_budget: self.compute_budget,
-            priority_fee: self.priority_fee,
-            simulation_commitment_level: self.simulation_commitment_level,
-            tx_commitment_level: self.tx_commitment_level,
-            wait_commitment_level: self.wait_commitment_level,
-        }
-    }
-}
-
 impl ExecutionConfig {
-    pub fn from_env(map: &HashMap<String, String>) -> Result<Self, serde::de::value::Error> {
-        let d = MapDeserializer::new(map.iter().map(|(k, v)| (k.as_str(), v.as_str())));
-        Self::deserialize(d)
+    pub fn from_env(map: &HashMap<String, String>) -> Result<Self, value::Error> {
+        let map = map
+            .iter()
+            .map(|(k, v)| (k.clone(), Value::String(v.clone())))
+            .collect::<value::Map>();
+        value::from_map(map)
     }
 }
 
@@ -634,7 +695,13 @@ pub fn verify_precompiles(tx: &Transaction, feature_set: &FeatureSet) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::env::{
+        COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE, SIMULATION_COMMITMENT_LEVEL,
+        TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
+    };
     use base64::prelude::*;
+    use solana_sdk::pubkey;
+
     #[test]
     fn test_compare_msg_logic() {
         const OLD: &str = "AwEJE/I9QMIByO+GhMkfll9MXSsAYs1ITPmKAfxGS/USlNwuw0EUt8a41tLSp95YmtHPKWDGGcApBC0AEmN1Sd+5kfDOAq0G+/qWg2KKmXfDQF1HIuw9Op9LiSZK5iA7jcVQ9wceNyYLLzZIZ+cVomhs1zT04hQeIKdXkiMyUpH9KA95JukMx1A93RFsivUbXmW+wwO52yE0+21NxUpXL/eMTCpS1wQ6IUwmvO0o13hn6qE0Pi73WxtEGjlbBilP+HVyqFkAIKLtjJBJ25Jae9iO3Xe17TFanfbTgtEbgKAJ5nWVuJt84ctKVWEXbuPgqHbe6H8fchmNtE0iKLjuVOE0AJ3GIRyraKaGg0wqZXXkbS0qr6CQYxZVv7PeO7zsL/swgPucBbMHhqVF+Mv8NimuycfvB72jxeN3uhwn+c715MdKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADBkZv5SEXMv/srbpyw5vnvIzlu8X3EmssQ5s6QAAAAAan1RcYe9FmNdrUBFX9wsDBJMaPIVZ1pdu6y18IAAAABt324ddloZPZy+FGzut5rBy0he1fWzeROoz1hX7/AKkLcGWx49F8RTidUn9rBMPNWLhscxqg/bVJttG8A/gpRlM2SFRbPsgTT3LuOBLPsJzpVN5CeDaecGGyxbawEE6Kcy72NeMo2v4ccHESWqcHq3GioOBRqLHY25fQEpaeCVSLCKI3/q1QflOctOQHXPk3VuQhThJQPfn/dD3sEZbonYyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZdtEfrjiMo8c/EYJzRiXnOLehdv4i42eBpdbr4NYTAzkICwAJA+gDAAAAAAAACwAFAkANAwAOCQMFAQIAAgoMDdoBKgAYAAAAU3BhY2UgT3BlcmF0b3IgQ2hhbWVsZW9uBAAAAFNQT0NTAAAAaHR0cHM6Ly9hc3NldHMuc3BhY2VvcGVyYXRvci5jb20vbWV0YWRhdGEvMzU4NjY4MzItN2M4My00OWM2LWJmZjctY2FhMDBiNmE2NDE1Lmpzb276AAEBAAAAzgKtBvv6loNiipl3w0BdRyLsPTqfS4kmSuYgO43FUPcAZAABBAEAiwiiN/6tUH5TnLTkB1z5N1bkIU4SUD35/3Q97BGW6J0AAAABAAEBZAAAAAAAAAAOCAIOAxEJDwoMAjQBDggCDgMODg4KDAI0AA4OBxADBQQBCAIACgwNDg4DLAMADg8IAAMFBAECDgAKDA0SDg4LKwABAAAAAAAAAAAKAgAGDAIAAAAAu+6gAAAAAA==";
@@ -644,5 +711,48 @@ mod tests {
             &BASE64_STANDARD.decode(NEW).unwrap(),
         )
         .unwrap();
+    }
+
+    #[test]
+    fn test_parse_config() {
+        fn t<const N: usize>(kv: [(&str, &str); N], result: ExecutionConfig) {
+            let map = kv
+                .into_iter()
+                .map(|(k, v)| (k.to_owned(), v.to_owned()))
+                .collect::<HashMap<_, _>>();
+            let c = ExecutionConfig::from_env(&map).unwrap();
+            let l = serde_json::to_string_pretty(&c).unwrap();
+            let r = serde_json::to_string_pretty(&result).unwrap();
+            assert_eq!(l, r);
+        }
+        t(
+            [(
+                OVERWRITE_FEEPAYER,
+                "HJbqSuV94woJfyxFNnJyfQdACvvJYaNWsW1x6wmJ8kiq",
+            )],
+            ExecutionConfig {
+                overwrite_feepayer: Some(KeypairOrPubkey::Pubkey(pubkey!(
+                    "HJbqSuV94woJfyxFNnJyfQdACvvJYaNWsW1x6wmJ8kiq"
+                ))),
+                ..<_>::default()
+            },
+        );
+        t(
+            [
+                (COMPUTE_BUDGET, "100000"),
+                (PRIORITY_FEE, "auto"),
+                (SIMULATION_COMMITMENT_LEVEL, "confirmed"),
+                (TX_COMMITMENT_LEVEL, "finalized"),
+                (WAIT_COMMITMENT_LEVEL, "processed"),
+            ],
+            ExecutionConfig {
+                compute_budget: InsertionBehavior::Value(100000),
+                priority_fee: InsertionBehavior::Auto,
+                simulation_commitment_level: CommitmentLevel::Confirmed,
+                tx_commitment_level: CommitmentLevel::Finalized,
+                wait_commitment_level: CommitmentLevel::Processed,
+                ..<_>::default()
+            },
+        )
     }
 }

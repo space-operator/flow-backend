@@ -862,7 +862,12 @@ impl FlowGraph {
 
                     let (ins, resp) = {
                         let mut ins = w.instructions;
-                        if let Some(signer) = self.tx_exec_config.overwrite_feepayer.as_ref() {
+                        if let Some(signer) = self
+                            .tx_exec_config
+                            .overwrite_feepayer
+                            .clone()
+                            .map(|x| x.to_keypair())
+                        {
                             ins.set_feepayer(signer.clone_keypair());
                         }
                         let mut resp = vec![Responder {
@@ -1430,7 +1435,10 @@ async fn run_command(
                 tx: tx.clone(),
                 simple_svc: execute::simple(&ctx, 32, Some(flow_run_id), tx_exec_config.clone()),
                 stop_shared,
-                overwrite_feepayer: tx_exec_config.overwrite_feepayer,
+                overwrite_feepayer: tx_exec_config
+                    .overwrite_feepayer
+                    .clone()
+                    .map(|x| x.to_keypair()),
             },
             execute::Error::worker,
             32,
