@@ -130,7 +130,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let index = match input.index {
         Some(index) => index,
         None => match input.das_get_asset_proof.clone() {
-            Some(asset) => (asset.result.node_index as u32 - 2 * asset.result.proof.len() as u32)
+            Some(asset) => (asset.result.node_index - 2 * asset.result.proof.len() as i64)
                 .try_into()
                 .unwrap(),
             None => return Err(CommandError::msg("index is required")),

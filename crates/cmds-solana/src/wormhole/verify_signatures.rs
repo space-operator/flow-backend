@@ -71,7 +71,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let mut verify_txs: Vec<Vec<Instruction>> = Vec::new();
 
-    for (_tx_index, chunk) in signature_items.chunks(7).enumerate() {
+    for chunk in signature_items.chunks(7) {
         let mut secp_payload = Vec::new();
         let mut signature_status = [-1i8; 19];
 

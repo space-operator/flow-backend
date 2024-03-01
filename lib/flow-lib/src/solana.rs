@@ -8,6 +8,7 @@ use bytes::Bytes;
 use chrono::Utc;
 use futures::TryStreamExt;
 use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
 use solana_client::{
     client_error::{ClientError, ClientErrorKind},
     nonblocking::rpc_client::RpcClient,
@@ -15,7 +16,7 @@ use solana_client::{
     rpc_response::RpcSimulateTransactionResult,
 };
 use solana_sdk::{
-    commitment_config::CommitmentConfig,
+    commitment_config::{CommitmentConfig, CommitmentLevel},
     compute_budget::{self, ComputeBudgetInstruction},
     feature_set::FeatureSet,
     instruction::{CompiledInstruction, Instruction},
@@ -29,8 +30,16 @@ use solana_sdk::{
 use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
 };
-use std::time::Duration;
+use std::{
+    borrow::Cow,
+    collections::{BTreeSet, HashMap},
+    fmt::Display,
+    num::ParseIntError,
+    str::FromStr,
+    time::Duration,
+};
 use tower::ServiceExt;
+use value::Value;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
@@ -95,6 +104,7 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Erro
         let program_id_l = l
             .program_id(i)
             .ok_or_else(|| anyhow!("no program id for instruction {}", i))?;
+
         let program_id_r = r
             .program_id(i)
             .ok_or_else(|| anyhow!("no program id for instruction {}", i))?;
@@ -218,6 +228,30 @@ fn contains_set_compute_unit_price(message: &Message) -> bool {
         .any(|(index, ins)| is_set_compute_unit_price(message, index, ins).is_some())
 }
 
+fn is_set_compute_unit_limit(
+    message: &Message,
+    index: usize,
+    ins: &CompiledInstruction,
+) -> Option<()> {
+    let program_id = message.program_id(index)?;
+    if compute_budget::check_id(program_id) {
+        let data = ComputeBudgetInstruction::try_from_slice(&ins.data)
+            .map_err(|error| tracing::error!("could not decode instruction: {}", error))
+            .ok()?;
+        matches!(data, ComputeBudgetInstruction::SetComputeUnitLimit(_)).then_some(())
+    } else {
+        None
+    }
+}
+
+fn contains_set_compute_unit_limit(message: &Message) -> bool {
+    message
+        .instructions
+        .iter()
+        .enumerate()
+        .any(|(index, ins)| is_set_compute_unit_limit(message, index, ins).is_some())
+}
+
 async fn get_priority_fee(message: &Message, _rpc: &RpcClient) -> Result<u64, anyhow::Error> {
     static HTTP: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
     if let Ok(apikey) = std::env::var("HELIUS_API_KEY") {
@@ -256,6 +290,139 @@ async fn get_priority_fee(message: &Message, _rpc: &RpcClient) -> Result<u64, an
     }
 }
 
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+pub enum InsertionBehavior {
+    #[default]
+    Auto,
+    No,
+    Value(u64),
+}
+
+impl FromStr for InsertionBehavior {
+    type Err = ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "auto" => InsertionBehavior::Auto,
+            "no" => InsertionBehavior::No,
+            s => InsertionBehavior::Value(s.parse()?),
+        })
+    }
+}
+
+impl Display for InsertionBehavior {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InsertionBehavior::Auto => f.write_str("auto"),
+            InsertionBehavior::No => f.write_str("no"),
+            InsertionBehavior::Value(v) => v.fmt(f),
+        }
+    }
+}
+
+impl Serialize for InsertionBehavior {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.to_string().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for InsertionBehavior {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+        <Cow<'de, str> as Deserialize>::deserialize(deserializer)?
+            .parse()
+            .map_err(D::Error::custom)
+    }
+}
+
+const fn default_simulation_level() -> CommitmentLevel {
+    CommitmentLevel::Confirmed
+}
+
+const fn default_tx_level() -> CommitmentLevel {
+    CommitmentLevel::Finalized
+}
+
+const fn default_wait_level() -> CommitmentLevel {
+    CommitmentLevel::Confirmed
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum KeypairOrPubkey {
+    #[serde(with = "value::keypair")]
+    Keypair(Keypair),
+    #[serde(with = "value::pubkey")]
+    Pubkey(Pubkey),
+}
+
+impl Clone for KeypairOrPubkey {
+    fn clone(&self) -> Self {
+        match self {
+            KeypairOrPubkey::Keypair(k) => KeypairOrPubkey::Keypair(k.clone_keypair()),
+            KeypairOrPubkey::Pubkey(p) => KeypairOrPubkey::Pubkey(*p),
+        }
+    }
+}
+
+impl KeypairOrPubkey {
+    pub fn to_keypair(self) -> Keypair {
+        match self {
+            KeypairOrPubkey::Keypair(k) => k,
+            KeypairOrPubkey::Pubkey(p) => Keypair::new_adapter_wallet(p),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub struct ExecutionConfig {
+    pub overwrite_feepayer: Option<KeypairOrPubkey>,
+    #[serde(default)]
+    pub compute_budget: InsertionBehavior,
+    #[serde(default)]
+    pub priority_fee: InsertionBehavior,
+    #[serde(default = "default_simulation_level")]
+    pub simulation_commitment_level: CommitmentLevel,
+    #[serde(default = "default_tx_level")]
+    pub tx_commitment_level: CommitmentLevel,
+    #[serde(default = "default_wait_level")]
+    pub wait_commitment_level: CommitmentLevel,
+}
+
+impl ExecutionConfig {
+    pub fn from_env(map: &HashMap<String, String>) -> Result<Self, value::Error> {
+        let map = map
+            .iter()
+            .map(|(k, v)| (k.clone(), Value::String(v.clone())))
+            .collect::<value::Map>();
+        value::from_map(map)
+    }
+}
+
+impl Default for ExecutionConfig {
+    fn default() -> Self {
+        Self {
+            overwrite_feepayer: None,
+            compute_budget: InsertionBehavior::default(),
+            priority_fee: InsertionBehavior::default(),
+            simulation_commitment_level: default_simulation_level(),
+            tx_commitment_level: default_tx_level(),
+            wait_commitment_level: default_wait_level(),
+        }
+    }
+}
+
+fn commitment(commitment: CommitmentLevel) -> CommitmentConfig {
+    CommitmentConfig { commitment }
+}
+
 impl Instructions {
     fn push_signer(&mut self, new: Keypair) {
         let old = self.signers.iter_mut().find(|k| k.pubkey() == new.pubkey());
@@ -288,64 +455,98 @@ impl Instructions {
         Ok(())
     }
 
-    pub async fn execute(
-        mut self,
+    async fn build_message(
+        &mut self,
         rpc: &RpcClient,
-        signer: signer::Svc,
-        flow_run_id: Option<FlowRunId>,
-    ) -> Result<Signature, Error> {
-        let mut message = Message::new_with_blockhash(
+        config: &ExecutionConfig,
+    ) -> Result<(Message, usize), Error> {
+        let message = Message::new_with_blockhash(
             &self.instructions,
             Some(&self.fee_payer),
-            &rpc.get_latest_blockhash()
-                .await
-                .map_err(|error| Error::solana(error, 0))?,
-        );
-
-        let count = self.instructions.len();
-        let compute_units = match rpc
-            .simulate_transaction(&Transaction::new_unsigned(message.clone()))
+            &rpc.get_latest_blockhash_with_commitment(commitment(
+                config.simulation_commitment_level,
+            ))
             .await
-        {
-            Err(error) => {
-                tracing::warn!("simulation failed: {}", error);
-                None
-            }
-            Ok(result) => result.value.units_consumed.map(|x| 1000 + x * 3 / 2),
-        }
-        .unwrap_or(200000 * count as u64)
-        .min(1400000) as u32;
+            .map_err(|error| Error::solana(error, 0))?
+            .0,
+        );
+        let count = self.instructions.len();
 
-        let inserted = if !contains_set_compute_unit_price(&message) {
-            let fee = get_priority_fee(&message, rpc)
-                .await
-                .map_err(|error| {
-                    tracing::warn!("get_priority_fee error: {}", error);
-                })
-                .unwrap_or(100);
+        let mut inserted = 0;
+
+        if config.compute_budget != InsertionBehavior::No
+            && !contains_set_compute_unit_limit(&message)
+        {
+            let compute_units = if let InsertionBehavior::Value(x) = config.compute_budget {
+                x
+            } else {
+                match rpc
+                    .simulate_transaction(&Transaction::new_unsigned(message.clone()))
+                    .await
+                {
+                    Err(error) => {
+                        tracing::warn!("simulation failed: {}", error);
+                        None
+                    }
+                    Ok(result) => {
+                        let consumed = result.value.units_consumed;
+                        if consumed.is_none() || consumed == Some(0) {
+                            None
+                        } else {
+                            consumed.map(|x| 1000 + x * 3 / 2)
+                        }
+                    }
+                }
+                .unwrap_or(200_000 * count as u64)
+            }
+            .min(1_400_000) as u32;
             tracing::info!("setting compute unit limit {}", compute_units);
             self.instructions.insert(
                 0,
                 ComputeBudgetInstruction::set_compute_unit_limit(compute_units),
             );
+            inserted += 1;
+        }
+
+        if config.priority_fee != InsertionBehavior::No
+            && !contains_set_compute_unit_price(&message)
+        {
+            let fee = if let InsertionBehavior::Value(x) = config.priority_fee {
+                x
+            } else {
+                get_priority_fee(&message, rpc)
+                    .await
+                    .map_err(|error| {
+                        tracing::warn!("get_priority_fee error: {}", error);
+                    })
+                    .unwrap_or(100)
+            };
             tracing::info!("adding priority fee {}", fee);
             self.instructions
                 .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
-            message = Message::new_with_blockhash(
-                &self.instructions,
-                Some(&self.fee_payer),
-                &message.recent_blockhash,
-            );
-            2
-        } else {
-            0
-        };
+            inserted += 1;
+        }
 
-        message.recent_blockhash = rpc
-            .get_latest_blockhash()
-            .await
-            .map_err(|error| Error::solana(error, inserted))?;
+        let message = Message::new_with_blockhash(
+            &self.instructions,
+            Some(&self.fee_payer),
+            &rpc.get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
+                .await
+                .map_err(|error| Error::solana(error, inserted))?
+                .0,
+        );
 
+        Ok((message, inserted))
+    }
+
+    pub async fn execute(
+        mut self,
+        rpc: &RpcClient,
+        signer: signer::Svc,
+        flow_run_id: Option<FlowRunId>,
+        config: ExecutionConfig,
+    ) -> Result<Signature, Error> {
+        let (mut message, inserted) = self.build_message(rpc, &config).await?;
         let mut data: Bytes = message.serialize().into();
 
         tracing::info!("executing transaction");
@@ -386,7 +587,7 @@ impl Instructions {
             }
         };
 
-        let mut wallets = self
+        let wallets = self
             .signers
             .iter()
             .filter_map(|k| {
@@ -396,9 +597,7 @@ impl Instructions {
                     None
                 }
             })
-            .collect::<Vec<_>>();
-        wallets.sort();
-        wallets.dedup();
+            .collect::<BTreeSet<_>>();
 
         let reqs = wallets
             .iter()
@@ -419,18 +618,19 @@ impl Instructions {
             })
             .collect::<Vec<_>>();
 
-        let fut = signer
-            .call_all(futures::stream::iter(reqs))
-            .try_collect::<Vec<_>>();
-
-        let sigs = tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
-            .await
-            .map_err(|_| Error::Timeout)??;
+        let signature_results = tokio::time::timeout(
+            SIGNATURE_TIMEOUT,
+            signer
+                .call_all(futures::stream::iter(reqs))
+                .try_collect::<Vec<_>>(),
+        )
+        .await
+        .map_err(|_| Error::Timeout)??;
 
         let tx = {
             let mut presigners = wallets
                 .iter()
-                .zip(sigs.iter())
+                .zip(signature_results.iter())
                 .map(|(pk, resp)| {
                     (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
                         .then(|| Presigner::new(pk, &resp.signature))
@@ -458,12 +658,16 @@ impl Instructions {
             tx
         };
 
+        // SDK's error message of verify_precompiles is not infomative,
+        // so we run it manually
         // TODO: is it correct to use FeatureSet::all_enabled()?
         verify_precompiles(&tx, &FeatureSet::all_enabled())?;
 
-        let commitment = CommitmentConfig::confirmed();
         let sig = rpc
-            .send_and_confirm_transaction_with_spinner_and_commitment(&tx, commitment)
+            .send_and_confirm_transaction_with_spinner_and_commitment(
+                &tx,
+                commitment(config.wait_commitment_level),
+            )
             .await
             .map_err(move |error| Error::solana(error, inserted))?;
 
@@ -498,7 +702,13 @@ pub fn verify_precompiles(tx: &Transaction, feature_set: &FeatureSet) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::env::{
+        COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE, SIMULATION_COMMITMENT_LEVEL,
+        TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
+    };
     use base64::prelude::*;
+    use solana_sdk::{pubkey, system_instruction::transfer};
+
     #[test]
     fn test_compare_msg_logic() {
         const OLD: &str = "AwEJE/I9QMIByO+GhMkfll9MXSsAYs1ITPmKAfxGS/USlNwuw0EUt8a41tLSp95YmtHPKWDGGcApBC0AEmN1Sd+5kfDOAq0G+/qWg2KKmXfDQF1HIuw9Op9LiSZK5iA7jcVQ9wceNyYLLzZIZ+cVomhs1zT04hQeIKdXkiMyUpH9KA95JukMx1A93RFsivUbXmW+wwO52yE0+21NxUpXL/eMTCpS1wQ6IUwmvO0o13hn6qE0Pi73WxtEGjlbBilP+HVyqFkAIKLtjJBJ25Jae9iO3Xe17TFanfbTgtEbgKAJ5nWVuJt84ctKVWEXbuPgqHbe6H8fchmNtE0iKLjuVOE0AJ3GIRyraKaGg0wqZXXkbS0qr6CQYxZVv7PeO7zsL/swgPucBbMHhqVF+Mv8NimuycfvB72jxeN3uhwn+c715MdKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADBkZv5SEXMv/srbpyw5vnvIzlu8X3EmssQ5s6QAAAAAan1RcYe9FmNdrUBFX9wsDBJMaPIVZ1pdu6y18IAAAABt324ddloZPZy+FGzut5rBy0he1fWzeROoz1hX7/AKkLcGWx49F8RTidUn9rBMPNWLhscxqg/bVJttG8A/gpRlM2SFRbPsgTT3LuOBLPsJzpVN5CeDaecGGyxbawEE6Kcy72NeMo2v4ccHESWqcHq3GioOBRqLHY25fQEpaeCVSLCKI3/q1QflOctOQHXPk3VuQhThJQPfn/dD3sEZbonYyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZdtEfrjiMo8c/EYJzRiXnOLehdv4i42eBpdbr4NYTAzkICwAJA+gDAAAAAAAACwAFAkANAwAOCQMFAQIAAgoMDdoBKgAYAAAAU3BhY2UgT3BlcmF0b3IgQ2hhbWVsZW9uBAAAAFNQT0NTAAAAaHR0cHM6Ly9hc3NldHMuc3BhY2VvcGVyYXRvci5jb20vbWV0YWRhdGEvMzU4NjY4MzItN2M4My00OWM2LWJmZjctY2FhMDBiNmE2NDE1Lmpzb276AAEBAAAAzgKtBvv6loNiipl3w0BdRyLsPTqfS4kmSuYgO43FUPcAZAABBAEAiwiiN/6tUH5TnLTkB1z5N1bkIU4SUD35/3Q97BGW6J0AAAABAAEBZAAAAAAAAAAOCAIOAxEJDwoMAjQBDggCDgMODg4KDAI0AA4OBxADBQQBCAIACgwNDg4DLAMADg8IAAMFBAECDgAKDA0SDg4LKwABAAAAAAAAAAAKAgAGDAIAAAAAu+6gAAAAAA==";
@@ -508,5 +718,80 @@ mod tests {
             &BASE64_STANDARD.decode(NEW).unwrap(),
         )
         .unwrap();
+    }
+
+    #[test]
+    fn test_parse_config() {
+        fn t<const N: usize>(kv: [(&str, &str); N], result: ExecutionConfig) {
+            let map = kv
+                .into_iter()
+                .map(|(k, v)| (k.to_owned(), v.to_owned()))
+                .collect::<HashMap<_, _>>();
+            let c = ExecutionConfig::from_env(&map).unwrap();
+            let l = serde_json::to_string_pretty(&c).unwrap();
+            let r = serde_json::to_string_pretty(&result).unwrap();
+            assert_eq!(l, r);
+        }
+        t(
+            [(
+                OVERWRITE_FEEPAYER,
+                "HJbqSuV94woJfyxFNnJyfQdACvvJYaNWsW1x6wmJ8kiq",
+            )],
+            ExecutionConfig {
+                overwrite_feepayer: Some(KeypairOrPubkey::Pubkey(pubkey!(
+                    "HJbqSuV94woJfyxFNnJyfQdACvvJYaNWsW1x6wmJ8kiq"
+                ))),
+                ..<_>::default()
+            },
+        );
+        t(
+            [
+                (COMPUTE_BUDGET, "100000"),
+                (PRIORITY_FEE, "auto"),
+                (SIMULATION_COMMITMENT_LEVEL, "confirmed"),
+                (TX_COMMITMENT_LEVEL, "finalized"),
+                (WAIT_COMMITMENT_LEVEL, "processed"),
+            ],
+            ExecutionConfig {
+                compute_budget: InsertionBehavior::Value(100000),
+                priority_fee: InsertionBehavior::Auto,
+                simulation_commitment_level: CommitmentLevel::Confirmed,
+                tx_commitment_level: CommitmentLevel::Finalized,
+                wait_commitment_level: CommitmentLevel::Processed,
+                ..<_>::default()
+            },
+        )
+    }
+
+    #[tokio::test]
+    async fn test_build_message() {
+        let from = Keypair::new();
+        let to = Pubkey::new_unique();
+
+        let rpc = RpcClient::new(SolanaNet::Devnet.url().to_owned());
+        let mut ins = Instructions {
+            fee_payer: from.pubkey(),
+            signers: [from.clone_keypair()].into(),
+            instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
+        };
+        let (_msg, inserted) = ins.build_message(&rpc, &<_>::default()).await.unwrap();
+        assert_eq!(inserted, 2);
+
+        let mut ins = Instructions {
+            fee_payer: from.pubkey(),
+            signers: [from.clone_keypair()].into(),
+            instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
+        };
+        let (_msg, inserted) = ins
+            .build_message(
+                &rpc,
+                &ExecutionConfig {
+                    priority_fee: InsertionBehavior::No,
+                    ..<_>::default()
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(inserted, 1);
     }
 }

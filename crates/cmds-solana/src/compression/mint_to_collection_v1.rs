@@ -81,11 +81,11 @@ async fn get_leaf_schema(
         .await?
         .transaction
         .meta
-        .and_then(|meta| Some(meta.inner_instructions));
+        .map(|meta| meta.inner_instructions);
 
     let tx_meta = match tx_meta.unwrap() {
-        OptionSerializer::None => None,
         OptionSerializer::Some(m) => Some(m),
+        OptionSerializer::None => None,
         OptionSerializer::Skip => None,
     };
 
