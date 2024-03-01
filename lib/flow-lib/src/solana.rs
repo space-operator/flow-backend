@@ -527,18 +527,16 @@ impl Instructions {
             self.instructions
                 .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
             inserted += 1;
-            message = Message::new_with_blockhash(
-                &self.instructions,
-                Some(&self.fee_payer),
-                &message.recent_blockhash,
-            );
         }
 
-        message.recent_blockhash = rpc
-            .get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
-            .await
-            .map_err(|error| Error::solana(error, inserted))?
-            .0;
+        message = Message::new_with_blockhash(
+            &self.instructions,
+            Some(&self.fee_payer),
+            &rpc.get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
+                .await
+                .map_err(|error| Error::solana(error, inserted))?
+                .0,
+        );
 
         let mut data: Bytes = message.serialize().into();
 
