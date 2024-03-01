@@ -467,7 +467,7 @@ impl Instructions {
             .await
             .map_err(|error| Error::solana(error, 0))?
             .0;
-        let mut message = Message::new_with_blockhash(
+        let message = Message::new_with_blockhash(
             &self.instructions,
             Some(&self.fee_payer),
             &simulation_blockhash,
@@ -529,7 +529,7 @@ impl Instructions {
             inserted += 1;
         }
 
-        message = Message::new_with_blockhash(
+        let mut message = Message::new_with_blockhash(
             &self.instructions,
             Some(&self.fee_payer),
             &rpc.get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
