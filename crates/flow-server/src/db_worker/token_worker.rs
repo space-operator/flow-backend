@@ -90,7 +90,7 @@ impl ClaimWithApiKey {
         } = self
             .client
             .post(format!("{}/auth/claim_token", self.upstream_url))
-            .header(X_API_KEY, self.api_key)
+            .header(X_API_KEY.clone(), self.api_key)
             .send()
             .await
             .map_err(get_jwt::Error::other)?
@@ -365,7 +365,7 @@ pub async fn token_from_apikeys(
         ) -> Result<UserId, reqwest::Error> {
             let resp = client
                 .get(format!("{}/apikey/info", url))
-                .header(X_API_KEY, k)
+                .header(X_API_KEY.clone(), k)
                 .send()
                 .await?;
             let output = resp

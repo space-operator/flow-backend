@@ -70,7 +70,7 @@ pub struct FlowRunToken {
     pub id: FlowRunId,
 }
 
-pub const X_API_KEY: HeaderName = HeaderName::from_static("x-api-key");
+pub static X_API_KEY: HeaderName = HeaderName::from_static("x-api-key");
 
 pub struct ApiKey(pub String);
 
@@ -98,7 +98,7 @@ impl TryIntoHeaderValue for ApiKey {
 
 impl Header for ApiKey {
     fn name() -> HeaderName {
-        X_API_KEY
+        X_API_KEY.clone()
     }
 
     fn parse<M: HttpMessage>(msg: &M) -> Result<Self, actix_web::error::ParseError> {
@@ -367,8 +367,8 @@ impl ProxiedApiAuth {
             }
             req = req.header(AUTHORIZATION, value);
         }
-        if let Some(value) = r.headers().get(X_API_KEY) {
-            req = req.header(X_API_KEY, value);
+        if let Some(value) = r.headers().get(&X_API_KEY) {
+            req = req.header(X_API_KEY.clone(), value);
         }
         let output = req
             .send()
