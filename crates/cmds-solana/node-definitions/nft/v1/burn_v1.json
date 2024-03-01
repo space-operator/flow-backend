@@ -81,14 +81,6 @@
       "passthrough": false
     },
     {
-      "name": "mint_authority",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
       "name": "amount",
       "type_bounds": ["u64"],
       "required": false,
