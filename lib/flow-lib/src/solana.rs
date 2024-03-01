@@ -455,22 +455,20 @@ impl Instructions {
         Ok(())
     }
 
-    pub async fn execute(
-        mut self,
+    async fn build_message(
+        &mut self,
         rpc: &RpcClient,
-        signer: signer::Svc,
-        flow_run_id: Option<FlowRunId>,
-        config: ExecutionConfig,
-    ) -> Result<Signature, Error> {
-        let simulation_blockhash = rpc
-            .get_latest_blockhash_with_commitment(commitment(config.simulation_commitment_level))
-            .await
-            .map_err(|error| Error::solana(error, 0))?
-            .0;
+        config: &ExecutionConfig,
+    ) -> Result<(Message, usize), Error> {
         let message = Message::new_with_blockhash(
             &self.instructions,
             Some(&self.fee_payer),
-            &simulation_blockhash,
+            &rpc.get_latest_blockhash_with_commitment(commitment(
+                config.simulation_commitment_level,
+            ))
+            .await
+            .map_err(|error| Error::solana(error, 0))?
+            .0,
         );
         let count = self.instructions.len();
 
@@ -529,7 +527,7 @@ impl Instructions {
             inserted += 1;
         }
 
-        let mut message = Message::new_with_blockhash(
+        let message = Message::new_with_blockhash(
             &self.instructions,
             Some(&self.fee_payer),
             &rpc.get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
@@ -538,6 +536,17 @@ impl Instructions {
                 .0,
         );
 
+        Ok((message, inserted))
+    }
+
+    pub async fn execute(
+        mut self,
+        rpc: &RpcClient,
+        signer: signer::Svc,
+        flow_run_id: Option<FlowRunId>,
+        config: ExecutionConfig,
+    ) -> Result<Signature, Error> {
+        let (mut message, inserted) = self.build_message(rpc, &config).await?;
         let mut data: Bytes = message.serialize().into();
 
         tracing::info!("executing transaction");
