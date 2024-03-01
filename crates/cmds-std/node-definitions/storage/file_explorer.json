@@ -49,13 +49,13 @@
   },
   "sources": [
     {
-      "name": "Values",
+      "name": "Files",
       "type": "array",
       "tooltip": "",
       "defaultValue": []
     },
     {
-      "name": "KVS",
+      "name": "URLs",
       "type": "array",
       "tooltip": "",
       "defaultValue": []

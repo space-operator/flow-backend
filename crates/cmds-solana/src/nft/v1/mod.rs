@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
+
 use solana_program::pubkey::Pubkey;
 
 pub mod create_v1;
@@ -8,6 +9,7 @@ pub mod delegate_v1;
 pub mod update_v1;
 pub mod verify_collection_v1;
 // pub mod transfer_v1;
+pub mod burn_v1;
 pub mod mint_v1;
 pub mod verify_creator_v1;
 

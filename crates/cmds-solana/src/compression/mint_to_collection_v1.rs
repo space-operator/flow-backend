@@ -1,19 +1,10 @@
 use super::MetadataBubblegum;
+use crate::compression::get_leaf_schema_event;
 use crate::prelude::*;
-use anchor_lang::AnchorDeserialize;
-use anyhow::{anyhow, Context as _};
+
+use bytes::Bytes;
 use mpl_bubblegum::instructions::MintToCollectionV1Builder;
-use mpl_bubblegum::LeafSchemaEvent;
-use solana_client::rpc_config::RpcTransactionConfig;
-use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey};
-use solana_transaction_status::UiParsedInstruction;
-use solana_transaction_status::{
-    option_serializer::OptionSerializer, UiInstruction, UiTransactionEncoding,
-};
-use spl_account_compression::{
-    events::{ApplicationDataEvent, ApplicationDataEventV1},
-    AccountCompressionEvent,
-};
+use solana_sdk::pubkey::Pubkey;
 use tracing::info;
 
 // Command Name
@@ -63,66 +54,12 @@ pub struct Input {
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     signature: Option<Signature>,
-}
-
-async fn get_leaf_schema(
-    ctx: Context,
-    signature: Signature,
-) -> Result<LeafSchemaEvent, anyhow::Error> {
-    let config = RpcTransactionConfig {
-        encoding: Some(UiTransactionEncoding::JsonParsed),
-        commitment: Some(CommitmentConfig::confirmed()),
-        // we only send "legacy" tx at the moment
-        max_supported_transaction_version: None,
-    };
-    let tx_meta = ctx
-        .solana_client
-        .get_transaction_with_config(&signature, config)
-        .await?
-        .transaction
-        .meta
-        .map(|meta| meta.inner_instructions);
-
-    let tx_meta = match tx_meta.unwrap() {
-        OptionSerializer::Some(m) => Some(m),
-        OptionSerializer::None => None,
-        OptionSerializer::Skip => None,
-    };
-
-    info!("tx_meta: {:?}", tx_meta);
-
-    let inner_instruction = tx_meta
-        .as_ref()
-        .ok_or_else(|| CommandError::msg("tx_meta is None"))?
-        .last() // Inserted 2 priority fee instructions at the beginning
-        .ok_or_else(|| CommandError::msg("No inner instruction"))?
-        .instructions
-        .get(1)
-        .ok_or_else(|| CommandError::msg("No instruction at index 1"))?
-        .clone();
-
-    let data_bs58 = match inner_instruction {
-        UiInstruction::Parsed(UiParsedInstruction::PartiallyDecoded(i)) => i.data,
-        _ => {
-            return Err(anyhow!(
-                "expected UiInstruction::Parsed(PartiallyDecoded(_)), got {:?}",
-                inner_instruction
-            ));
-        }
-    };
-    let bytes = bs58::decode(data_bs58).into_vec().context("bs58::decode")?;
-    let event =
-        AccountCompressionEvent::try_from_slice(&bytes).context("parse AccountCompressionEvent")?;
-    let AccountCompressionEvent::ApplicationData(ApplicationDataEvent::V1(
-        ApplicationDataEventV1 { application_data },
-    )) = event
-    else {
-        return Err(anyhow!("wrong AccountCompressionEvent variant"));
-    };
-    let leaf_schema =
-        LeafSchemaEvent::try_from_slice(&application_data).context("parse LeafSchemaEvent")?;
-
-    Ok(leaf_schema)
+    #[serde(with = "value::pubkey::opt")]
+    id: Option<Pubkey>,
+    nonce: Option<u64>,
+    creator_hash: Option<Bytes>,
+    data_hash: Option<Bytes>,
+    leaf_hash: Option<Bytes>,
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
@@ -172,6 +109,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         // .system_program(system_program)
         .metadata(metadata.into())
         .instruction();
+
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [
@@ -187,23 +125,49 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
+    let mut leaf_schema = None;
     if let Some(signature) = signature {
-        let leaf_schema = get_leaf_schema(ctx, signature).await;
+        leaf_schema = Some(get_leaf_schema_event(ctx, signature, true).await?.1);
         info!("{:?}", leaf_schema);
     }
 
-    Ok(Output { signature })
+    let id = leaf_schema.as_ref().map(|schema| schema.id());
+    let nonce = leaf_schema.as_ref().map(|schema| schema.nonce());
+    let data_hash = leaf_schema
+        .as_ref()
+        .map(|schema| bytes::Bytes::copy_from_slice(&schema.data_hash()));
+    let leaf_hash = leaf_schema
+        .as_ref()
+        .map(|schema| bytes::Bytes::copy_from_slice(&schema.hash()));
+    let creator_hash =
+        leaf_schema.map(|schema| bytes::Bytes::copy_from_slice(&schema.creator_hash()));
+
+    Ok(Output {
+        signature,
+        id,
+        nonce,
+        creator_hash,
+        data_hash,
+        leaf_hash,
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use anchor_lang::AnchorDeserialize;
+    use mpl_bubblegum::LeafSchemaEvent;
+    use spl_account_compression::{
+        events::{ApplicationDataEvent, ApplicationDataEventV1},
+        AccountCompressionEvent,
+    };
+
+    use crate::compression::get_leaf_schema_event;
 
     #[tokio::test]
     async fn test_get_leaf_schema() {
         tracing_subscriber::fmt::try_init().ok();
         const SIGNATURE: &str = "3a4asE3CbWjmpEBpxLwctqgF2BfwzUhsaDdrQS9ZnanNrWJYfxc8hWfow7gCF9MVjdB2SQ1svg8QujDMjNknufCU";
-        let result = get_leaf_schema(<_>::default(), SIGNATURE.parse().unwrap()).await;
+        let result = get_leaf_schema_event(<_>::default(), SIGNATURE.parse().unwrap(), true).await;
         dbg!(&result);
         result.unwrap();
     }

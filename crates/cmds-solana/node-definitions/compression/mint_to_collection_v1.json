@@ -53,6 +53,36 @@
       "type": "string",
       "defaultValue": "",
       "tooltip": ""
+    },
+    {
+      "name": "id",
+      "type": "pubkey",
+      "defaultValue": "",
+      "tooltip": ""
+    },
+    {
+      "name": "nonce",
+      "type": "u64",
+      "defaultValue": "",
+      "tooltip": ""
+    },
+    {
+      "name": "creator_hash",
+      "type": "bytes",
+      "defaultValue": "",
+      "tooltip": ""
+    },
+    {
+      "name": "data_hash",
+      "type": "bytes",
+      "defaultValue": "",
+      "tooltip": ""
+    },
+    {
+      "name": "leaf_hash",
+      "type": "bytes",
+      "defaultValue": "",
+      "tooltip": ""
     }
   ],
   "targets": [

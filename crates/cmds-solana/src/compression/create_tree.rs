@@ -49,18 +49,28 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     // Allocate tree's account
 
-    // Only the following pesrmutations are valid:
-    //
-    // | max_depth | max_buffer_size       |
-    // | --------- | --------------------- |
-    // | 14        | (64, 256, 1024, 2048) |
-    // | 20        | (64, 256, 1024, 2048) |
-    // | 24        | (64, 256, 512, 1024, 2048) |
-    // | 26        | (64, 256, 512, 1024, 2048) |
-    // | 30        | (512, 1024, 2048) |
-    // const MAX_DEPTH: usize = 14;
-    // const MAX_BUFFER_SIZE: usize = 64;
+    // Only the following permutations are valid:
     let merkle_tree_account_size: usize = match input.max_depth {
+        3 => match input.max_buffer {
+            8 => {
+                const MAX_DEPTH: usize = 3;
+                const MAX_BUFFER_SIZE: usize = 8;
+                size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
+            }
+            _ => {
+                return Err(anyhow::anyhow!("invalid max_buffer_size"));
+            }
+        },
+        5 => match input.max_buffer {
+            8 => {
+                const MAX_DEPTH: usize = 5;
+                const MAX_BUFFER_SIZE: usize = 8;
+                size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
+            }
+            _ => {
+                return Err(anyhow::anyhow!("invalid max_buffer_size"));
+            }
+        },
         14 => match input.max_buffer {
             64 => {
                 const MAX_DEPTH: usize = 14;
@@ -80,6 +90,56 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             2048 => {
                 const MAX_DEPTH: usize = 14;
                 const MAX_BUFFER_SIZE: usize = 2048;
+                size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
+            }
+            _ => {
+                return Err(anyhow::anyhow!("invalid max_buffer_size"));
+            }
+        },
+        15 => match input.max_buffer {
+            64 => {
+                const MAX_DEPTH: usize = 15;
+                const MAX_BUFFER_SIZE: usize = 64;
+                size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
+            }
+            _ => {
+                return Err(anyhow::anyhow!("invalid max_buffer_size"));
+            }
+        },
+        16 => match input.max_buffer {
+            64 => {
+                const MAX_DEPTH: usize = 16;
+                const MAX_BUFFER_SIZE: usize = 64;
+                size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
+            }
+            _ => {
+                return Err(anyhow::anyhow!("invalid max_buffer_size"));
+            }
+        },
+        17 => match input.max_buffer {
+            64 => {
+                const MAX_DEPTH: usize = 17;
+                const MAX_BUFFER_SIZE: usize = 64;
+                size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
+            }
+            _ => {
+                return Err(anyhow::anyhow!("invalid max_buffer_size"));
+            }
+        },
+        18 => match input.max_buffer {
+            64 => {
+                const MAX_DEPTH: usize = 18;
+                const MAX_BUFFER_SIZE: usize = 64;
+                size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
+            }
+            _ => {
+                return Err(anyhow::anyhow!("invalid max_buffer_size"));
+            }
+        },
+        19 => match input.max_buffer {
+            64 => {
+                const MAX_DEPTH: usize = 19;
+                const MAX_BUFFER_SIZE: usize = 64;
                 size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
             }
             _ => {
@@ -142,16 +202,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             }
         },
         26 => match input.max_buffer {
-            64 => {
-                const MAX_DEPTH: usize = 26;
-                const MAX_BUFFER_SIZE: usize = 64;
-                size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
-            }
-            256 => {
-                const MAX_DEPTH: usize = 26;
-                const MAX_BUFFER_SIZE: usize = 256;
-                size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
-            }
             512 => {
                 const MAX_DEPTH: usize = 26;
                 const MAX_BUFFER_SIZE: usize = 512;
