@@ -206,7 +206,7 @@ impl From<TokenResponse> for Jwt {
         Self {
             access_token: resp.access_token,
             refresh_token: resp.refresh_token,
-            expires_at: Utc::now() + Duration::seconds(resp.expires_in as i64),
+            expires_at: Utc::now() + Duration::try_seconds(resp.expires_in as i64).unwrap(),
         }
     }
 }
@@ -314,7 +314,7 @@ impl actix::Handler<get_jwt::Request> for TokenWorker {
                     TokenState::Fetching([tx].into())
                 }
                 TokenState::Available(jwt) => {
-                    if jwt.expires_at - Utc::now() < Duration::minutes(5) {
+                    if jwt.expires_at - Utc::now() < Duration::try_minutes(5).unwrap() {
                         let refresh_token = jwt.refresh_token;
                         let endpoints = self.endpoints.clone();
                         tracing::info!("refresh JWT token, user_id={}", self.user_id);
