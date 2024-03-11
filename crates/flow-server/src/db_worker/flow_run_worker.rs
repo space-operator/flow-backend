@@ -48,7 +48,8 @@ impl Actor for FlowRunWorker {
 
     fn stopped(&mut self, _: &mut Self::Context) {
         tracing::info!("stopped FlowRunWorker {}", self.run_id);
-        self.stop_signal.stop(0);
+        self.stop_signal
+            .stop(0, Some("stopping FlowRunWorker".to_owned()));
     }
 }
 
@@ -78,7 +79,7 @@ impl actix::Handler<SystemShutdown> for FlowRunWorker {
                 let res = tokio::time::timeout(msg.timeout, rx.recv()).await;
                 if res.is_err() {
                     tracing::warn!("force stopping FlowRunWorker {}", id);
-                    stop_signal.stop(0);
+                    stop_signal.stop(0, Some("restarting server".to_owned()));
                     rx.recv().await.ok();
                 }
             }
@@ -127,6 +128,7 @@ pub struct StopFlow {
     pub user_id: UserId,
     pub run_id: FlowRunId,
     pub timeout_millies: u32,
+    pub reason: Option<String>,
 }
 
 impl actix::Message for StopFlow {
@@ -166,7 +168,8 @@ impl actix::Handler<StopFlow> for FlowRunWorker {
     fn handle(&mut self, msg: StopFlow, _: &mut Self::Context) -> Self::Result {
         if self.user_id != msg.user_id {
             if self.shared_with.contains(&msg.user_id) {
-                self.stop_shared_signal.stop(msg.timeout_millies);
+                self.stop_shared_signal
+                    .stop(msg.timeout_millies, msg.reason);
                 return Ok(());
             }
             return Err(StopError::Unauthorized {
@@ -176,7 +179,7 @@ impl actix::Handler<StopFlow> for FlowRunWorker {
         if self.run_id != msg.run_id {
             return Err(StopError::NotFound);
         }
-        self.stop_signal.stop(msg.timeout_millies);
+        self.stop_signal.stop(msg.timeout_millies, msg.reason);
         Ok(())
     }
 }

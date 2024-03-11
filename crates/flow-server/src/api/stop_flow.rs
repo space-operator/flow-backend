@@ -8,6 +8,7 @@ use crate::db_worker::{
 pub struct Params {
     #[serde(default)]
     pub timeout_millies: u32,
+    pub reason: Option<String>,
 }
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
@@ -25,8 +26,8 @@ async fn stop_flow(
 ) -> Result<web::Json<Success>, StopError> {
     let id = id.into_inner();
     let user = user.into_inner();
-    let timeout_millies = params
-        .map(|web::Json(Params { timeout_millies })| timeout_millies)
+    let (timeout_millies, reason) = params
+        .map(|p| (p.0.timeout_millies, p.0.reason))
         .unwrap_or_default();
 
     db_worker
@@ -37,6 +38,7 @@ async fn stop_flow(
             user_id: user.user_id,
             run_id: id,
             timeout_millies,
+            reason,
         })
         .await??;
 

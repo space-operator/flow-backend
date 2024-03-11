@@ -5,9 +5,11 @@ use pyth_sdk_solana::state::SolanaPriceAccount;
 const NAME: &str = "pyth_price";
 
 fn build() -> BuildResult {
-    Ok(CmdBuilder::new(flow_lib::node_definition!("pyth_price.json"))?
-        .check_name(NAME)?
-        .build(run))
+    Ok(
+        CmdBuilder::new(flow_lib::node_definition!("pyth_price.json"))?
+            .check_name(NAME)?
+            .build(run),
+    )
 }
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
