@@ -35,7 +35,7 @@ use std::{
     ops::ControlFlow,
     sync::{
         atomic::{AtomicU32, Ordering},
-        Arc,
+        Arc, RwLock,
     },
     task::Poll,
     time::Duration,
@@ -56,6 +56,7 @@ pub const MAX_STOP_TIMEOUT: u32 = Duration::from_secs(5 * 60).as_millis() as u32
 pub struct StopSignal {
     pub token: CancellationToken,
     pub timeout_millies: Arc<AtomicU32>,
+    pub reason: Arc<RwLock<Option<String>>>,
 }
 
 impl Default for StopSignal {
@@ -69,19 +70,26 @@ impl StopSignal {
         Self {
             token: CancellationToken::new(),
             timeout_millies: Arc::new(AtomicU32::new(0)),
+            reason: Arc::new(RwLock::new(None)),
         }
     }
 
-    pub fn stop(&self, timeout_millies: u32) {
+    pub fn stop(&self, timeout_millies: u32, reason: Option<String>) {
         if !self.token.is_cancelled() {
             let timeout = timeout_millies.min(MAX_STOP_TIMEOUT);
             self.timeout_millies.store(timeout, Ordering::Relaxed);
+            *self.reason.write().unwrap() = reason;
             self.token.cancel();
         }
     }
 
-    pub async fn race<F, O, E>(&self, task: F, canceled_error: E) -> Result<O, E>
+    pub fn get_reason(&self) -> Option<String> {
+        self.reason.read().unwrap().clone()
+    }
+
+    pub async fn race<F, O, E, FE>(&self, task: F, canceled_error: FE) -> Result<O, E>
     where
+        FE: FnOnce(Option<String>) -> E,
         F: std::future::Future<Output = Result<O, E>> + Unpin,
     {
         match futures::future::select(task, std::pin::pin!(self.token.cancelled())).await {
@@ -89,12 +97,12 @@ impl StopSignal {
             Either::Right((_, task)) => {
                 let timeout = self.timeout_millies.load(Ordering::Relaxed);
                 if timeout == 0 {
-                    Err(canceled_error)
+                    Err(canceled_error(self.get_reason()))
                 } else {
                     let duration = Duration::from_millis(timeout as u64);
                     match tokio::time::timeout(duration, task).await {
                         Ok(result) => result,
-                        Err(_) => Err(canceled_error),
+                        Err(_) => Err(canceled_error(self.get_reason())),
                     }
                 }
             }
@@ -899,12 +907,14 @@ impl FlowGraph {
                     // this flow is an "Interflow instructions"
                     if self.output_instructions {
                         for resp in resp {
-                            resp.sender.send(Err(execute::Error::Canceled)).ok();
+                            resp.sender.send(Err(execute::Error::Canceled(None))).ok();
                         }
                         return ControlFlow::Break(ins);
                     }
-                    let res = if s.stop.token.is_cancelled() || s.stop_shared.token.is_cancelled() {
-                        Err(execute::Error::Canceled)
+                    let res = if s.stop.token.is_cancelled() {
+                        Err(execute::Error::Canceled(s.stop.get_reason()))
+                    } else if s.stop_shared.token.is_cancelled() {
+                        Err(execute::Error::Canceled(s.stop_shared.get_reason()))
                     } else {
                         tracing::info!("executing instructions");
                         let config = self.tx_exec_config.clone();
@@ -1366,7 +1376,8 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
             rx.map(|r| r?).boxed()
         } else {
             if self.stop_shared.token.is_cancelled() {
-                return Box::pin(async { Err(execute::Error::Canceled) });
+                let reason = self.stop_shared.get_reason();
+                return Box::pin(async move { Err(execute::Error::Canceled(reason)) });
             }
             // execute before sending the partial output
             let mut svc = self.simple_svc.clone();
@@ -1477,7 +1488,9 @@ async fn run_command(
 
     tracing::trace!("starting node {}:{}", node.id, node.command.name());
     let result = stop
-        .race(node.command.run(ctx, inputs), crate::Error::Canceled.into())
+        .race(node.command.run(ctx, inputs), |reason| {
+            crate::Error::Canceled(reason).into()
+        })
         .await;
 
     Finished {
@@ -1571,14 +1584,14 @@ mod tests {
             let second = second.clone();
             async move {
                 tokio::time::sleep(Duration::from_secs(1)).await;
-                second.stop(0);
+                second.stop(0, None);
             }
         });
 
         let error = first
             .race(
-                std::pin::pin!(second.race(std::pin::pin!(task), anyhow!("second"))),
-                anyhow!("first"),
+                std::pin::pin!(second.race(std::pin::pin!(task), |_| anyhow!("second"))),
+                |_| anyhow!("first"),
             )
             .await
             .unwrap_err()

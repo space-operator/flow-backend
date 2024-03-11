@@ -222,10 +222,14 @@ pub mod execute {
         pub signature: Option<Signature>,
     }
 
+    fn unwrap(s: &Option<String>) -> &str {
+        s.as_ref().map(|v| v.as_str()).unwrap_or_default()
+    }
+
     #[derive(ThisError, Debug, Clone)]
     pub enum Error {
-        #[error("canceled")]
-        Canceled,
+        #[error("canceled {}", unwrap(.0))]
+        Canceled(Option<String>),
         #[error("not available on this Context")]
         NotAvailable,
         #[error("some node failed to provide instructions")]

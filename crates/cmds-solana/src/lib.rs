@@ -23,8 +23,8 @@ pub mod wallet;
 pub mod wormhole;
 // pub mod xnft;
 pub mod das;
-pub mod streamflow;
 pub mod pyth_price;
+pub mod streamflow;
 
 pub use error::{Error, Result};
 use tracing::info;
