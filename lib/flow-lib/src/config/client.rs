@@ -92,7 +92,7 @@ impl From<SolanaClientConfig> for Network {
 impl Default for Network {
     fn default() -> Self {
         Self {
-            url: "https://api.devnet.solana.com".to_owned(),
+            url: "https://norrie-yvr0sx-fast-devnet.helius-rpc.com".to_owned(),
             cluster: SolanaNet::Devnet,
         }
     }
