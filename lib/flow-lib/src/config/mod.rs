@@ -246,7 +246,10 @@ impl FromStr for SolanaNet {
 impl SolanaNet {
     pub fn url(&self) -> &'static str {
         match self {
+            #[cfg(not(test))]
             SolanaNet::Devnet => "https://api.devnet.solana.com",
+            #[cfg(test)]
+            SolanaNet::Devnet => "https://norrie-yvr0sx-fast-devnet.helius-rpc.com",
             SolanaNet::Testnet => "https://api.testnet.solana.com",
             SolanaNet::Mainnet => "https://api.mainnet-beta.solana.com",
         }
