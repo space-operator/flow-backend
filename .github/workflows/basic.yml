@@ -35,6 +35,6 @@ jobs:
       - name: Build WASM
         run: ./scripts/build_wasm_tests.bash
       - name: Build tests
-        run: cargo build --quiet --tests
+        run: cargo test --quiet --no-run
       - name: Run tests
         run: cargo test -- --skip need_key_

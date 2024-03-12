@@ -71,11 +71,19 @@ mod tests {
         let sender = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ");
         let recipient = solana_sdk::pubkey!("GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9");
 
-        // airdrop if necessary
-        let _ = ctx
+        let balance = ctx
             .solana_client
-            .request_airdrop(&sender.pubkey(), 1_000_000_000)
-            .await;
+            .get_balance(&sender.pubkey())
+            .await
+            .unwrap() as f64
+            / 1_000_000_000.0;
+
+        if balance < 0.1 {
+            let _ = ctx
+                .solana_client
+                .request_airdrop(&sender.pubkey(), 1_000_000_000)
+                .await;
+        }
 
         // Transfer
         let output = run(
