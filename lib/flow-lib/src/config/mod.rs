@@ -148,6 +148,7 @@ pub struct ContextConfig {
     pub endpoints: Endpoints,
 }
 
+#[cfg(not(test))]
 impl Default for ContextConfig {
     fn default() -> Self {
         ContextConfig {
@@ -157,6 +158,24 @@ impl Default for ContextConfig {
             },
             solana_client: SolanaClientConfig {
                 url: "https://api.devnet.solana.com".to_owned(),
+                cluster: SolanaNet::Devnet,
+            },
+            environment: <_>::default(),
+            endpoints: <_>::default(),
+        }
+    }
+}
+
+#[cfg(test)]
+impl Default for ContextConfig {
+    fn default() -> Self {
+        ContextConfig {
+            http_client: HttpClientConfig {
+                timeout_in_secs: NonZeroU64::new(100).unwrap(),
+                gzip: true,
+            },
+            solana_client: SolanaClientConfig {
+                url: "https://norrie-yvr0sx-fast-devnet.helius-rpc.com".to_owned(),
                 cluster: SolanaNet::Devnet,
             },
             environment: <_>::default(),
