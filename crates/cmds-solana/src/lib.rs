@@ -25,6 +25,7 @@ pub mod wormhole;
 pub mod das;
 pub mod pyth_price;
 pub mod streamflow;
+pub mod governance;
 
 pub use error::{Error, Result};
 use tracing::info;
