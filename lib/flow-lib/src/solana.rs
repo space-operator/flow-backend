@@ -489,6 +489,16 @@ impl Instructions {
                         None
                     }
                     Ok(result) => {
+                        if let Some(error) = result.value.err {
+                            tracing::warn!("simulation error: {}", error);
+                            for log in result.value.logs.unwrap_or_default() {
+                                tracing::info!("{}", log);
+                            }
+                        } else {
+                            for log in result.value.logs.unwrap_or_default() {
+                                tracing::debug!("{}", log);
+                            }
+                        }
                         let consumed = result.value.units_consumed;
                         if consumed.is_none() || consumed == Some(0) {
                             None
