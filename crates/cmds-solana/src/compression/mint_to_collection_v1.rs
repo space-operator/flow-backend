@@ -161,8 +161,10 @@ mod tests {
         AccountCompressionEvent,
     };
 
-    use crate::compression::get_leaf_schema_event;
+    // use crate::compression::get_leaf_schema_event;
 
+    /*
+     * devnet resetted
     #[tokio::test]
     async fn test_get_leaf_schema() {
         tracing_subscriber::fmt::try_init().ok();
@@ -171,6 +173,7 @@ mod tests {
         dbg!(&result);
         result.unwrap();
     }
+    */
 
     #[test]
     fn test_parse_instruction_data() {
