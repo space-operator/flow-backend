@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use flow_lib::{command::prelude::*, solana::Pubkey};
 use pyth_sdk_solana::state::SolanaPriceAccount;
 
@@ -36,7 +37,8 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
             .map_err(|_| CommandError::msg("Invalid price feed account"))?;
 
     let price = sol_price_feed.get_price_unchecked();
-    tracing::debug!("price: {:?}", price);
+    let age = Utc::now() - &DateTime::<Utc>::from_timestamp(price.publish_time, 0).unwrap();
+    tracing::debug!("price: {:?}, age: {}s", price, age.num_seconds());
     Ok(Output { price: price.price })
 }
 
