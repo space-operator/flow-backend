@@ -25,6 +25,7 @@ pub mod env {
     pub const RUST_LOG: &str = "RUST_LOG";
     pub const OVERWRITE_FEEPAYER: &str = "OVERWRITE_FEEPAYER";
     pub const COMPUTE_BUDGET: &str = "COMPUTE_BUDGET";
+    pub const FALLBACK_COMPUTE_BUDGET: &str = "FALLBACK_COMPUTE_BUDGET";
     pub const PRIORITY_FEE: &str = "PRIORITY_FEE";
     pub const SIMULATION_COMMITMENT_LEVEL: &str = "SIMULATION_COMMITMENT_LEVEL";
     pub const TX_COMMITMENT_LEVEL: &str = "TX_COMMITMENT_LEVEL";
