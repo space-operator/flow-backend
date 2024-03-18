@@ -101,17 +101,19 @@ impl RealDbPool {
 
         let builder = if let Some(ssl) = &cfg.ssl {
             let mut roots = rustls::RootCertStore::empty();
-            let cert = read_cert(&ssl.cert)?;
-            roots
-                .add(&cert)
-                .map_err(|e| Error::AddCert(e.to_string()))?;
-            /*
-            for cert in
-                rustls_native_certs::load_native_certs().expect("could not load platform certs")
-            {
-                roots.add(&rustls::Certificate(cert.0)).unwrap();
+            if let Some(path) = ssl.cert.as_ref() {
+                let cert = read_cert(path)?;
+                roots
+                    .add(&cert)
+                    .map_err(|e| Error::AddCert(e.to_string()))?;
             }
-            */
+            let certs = rustls_native_certs::load_native_certs()
+                .map_err(|e| Error::AddCert(e.to_string()))?;
+            for cert in certs {
+                roots
+                    .add(&rustls::Certificate(cert.0))
+                    .map_err(|e| Error::AddCert(e.to_string()))?;
+            }
             let config = rustls::ClientConfig::builder()
                 .with_safe_defaults()
                 .with_root_certificates(roots)

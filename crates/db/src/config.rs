@@ -12,7 +12,7 @@ pub struct DbConfig {
 
 #[derive(Deserialize, Clone)]
 pub struct SslConfig {
-    pub cert: std::path::PathBuf,
+    pub cert: Option<std::path::PathBuf>,
 }
 
 impl ToString for DbConfig {
