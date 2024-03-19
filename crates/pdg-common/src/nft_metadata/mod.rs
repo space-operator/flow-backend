@@ -2109,3 +2109,18 @@ mod tests {
     }
 }
 */
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn print_poses_name() {
+        let mut poses = BTreeMap::new();
+        for pose in Pose::iter() {
+            poses.insert(pose as u32, pose.metaplex_name().unwrap());
+        }
+        println!("{}", serde_json::to_string(&poses).unwrap());
+    }
+}
