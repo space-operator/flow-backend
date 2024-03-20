@@ -403,7 +403,7 @@ impl Context {
     ) -> Self {
         let solana_client = SolanaClient::new_with_timeouts_and_commitment(
             cfg.solana_client.url.clone(),
-            Duration::from_secs(15),
+            Duration::from_secs(30),
             CommitmentConfig {
                 commitment: CommitmentLevel::Finalized,
             },

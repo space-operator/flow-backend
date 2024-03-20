@@ -671,7 +671,7 @@ impl Instructions {
             }
 
             let mut tx = Transaction::new_unsigned(message);
-            tx.try_sign(&signers, tx.message.recent_blockhash)?;
+            tx.try_sign(&signers, *tx.get_recent_blockhash())?;
             tx
         };
 
@@ -688,7 +688,7 @@ impl Instructions {
 
         rpc.confirm_transaction_with_spinner(
             &signature,
-            &tx.message.recent_blockhash,
+            &tx.get_recent_blockhash(),
             commitment(config.wait_commitment_level),
         )
         .await
