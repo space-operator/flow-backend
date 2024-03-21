@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use solana_sdk::{
@@ -13,9 +15,10 @@ pub mod create_realm;
 pub mod create_token_owner_record;
 pub mod deposit_governing_tokens;
 pub mod insert_transaction;
+pub mod set_governance_delegate;
 pub mod sign_off_proposal;
 pub mod withdraw_governing_tokens;
-pub mod set_governance_delegate;
+pub mod finalize_vote;
 
 const SPL_GOVERNANCE_ID: &str = "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw";
 
@@ -856,7 +859,7 @@ pub enum MultiChoiceType {
     Weighted,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
 /// Enum to specify the authority by which the instruction should add a
 /// signatory
 pub enum AddSignatoryAuthority {
@@ -870,6 +873,37 @@ pub enum AddSignatoryAuthority {
     /// Anyone can add signatories that are required by the governance to a
     /// proposal
     None,
+}
+
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+/// Enum to specify the authority by which the instruction should add a
+/// signatory
+pub enum AddSignatoryAuthoritySPO {
+    /// Proposal owners can add optional signatories to a proposal
+    ProposalOwner {
+        /// Token owner or its delegate
+        governance_authority: String,
+        /// Token owner record of the Proposal owner
+        token_owner_record: String,
+    },
+    /// Anyone can add signatories that are required by the governance to a
+    /// proposal
+    None,
+}
+
+impl From<AddSignatoryAuthoritySPO> for AddSignatoryAuthority {
+    fn from(authority: AddSignatoryAuthoritySPO) -> Self {
+        match authority {
+            AddSignatoryAuthoritySPO::ProposalOwner {
+                governance_authority,
+                token_owner_record,
+            } => AddSignatoryAuthority::ProposalOwner {
+                governance_authority: Pubkey::from_str(&governance_authority).unwrap(),
+                token_owner_record: Pubkey::from_str(&token_owner_record).unwrap(),
+            },
+            AddSignatoryAuthoritySPO::None => AddSignatoryAuthority::None,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]

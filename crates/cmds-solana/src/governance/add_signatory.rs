@@ -5,7 +5,9 @@ use tracing_log::log::info;
 
 use crate::prelude::*;
 
-use super::{AddSignatoryAuthority, GovernanceInstruction, SPL_GOVERNANCE_ID};
+use super::{
+    AddSignatoryAuthority, AddSignatoryAuthoritySPO, GovernanceInstruction, SPL_GOVERNANCE_ID,
+};
 
 const NAME: &str = "add_signatory";
 
@@ -33,7 +35,7 @@ pub struct Input {
     pub signatory: Pubkey,
     #[serde(default, with = "value::keypair::opt")]
     pub governance_authority: Option<Keypair>,
-    pub add_signatory_authority: AddSignatoryAuthority,
+    pub add_signatory_authority: AddSignatoryAuthoritySPO,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -71,6 +73,7 @@ pub fn add_signatory(
             token_owner_record,
         } => {
             accounts.push(AccountMeta::new_readonly(*token_owner_record, false));
+            //TODO add as signer
             accounts.push(AccountMeta::new_readonly(*governance_authority, true));
         }
         AddSignatoryAuthority::None => {
@@ -104,7 +107,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &program_id,
         &input.governance,
         &input.proposal,
-        &input.add_signatory_authority,
+        &input.add_signatory_authority.into(),
         &input.fee_payer.pubkey(),
         &input.signatory,
     );

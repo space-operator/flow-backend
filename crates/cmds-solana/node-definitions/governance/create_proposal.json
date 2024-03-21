@@ -94,8 +94,8 @@
     },
     {
       "name": "governance_authority",
-      "type_bounds": ["pubkey"],
-      "required": false,
+      "type_bounds": ["keypair"],
+      "required": true,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false

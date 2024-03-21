@@ -31,8 +31,8 @@ pub struct Input {
     pub governance: Pubkey,
     #[serde(with = "value::pubkey")]
     pub proposal: Pubkey,
-    #[serde(with = "value::pubkey")]
-    pub signatory: Pubkey,
+    #[serde(with = "value::keypair")]
+    pub signatory: Keypair,
     #[serde(default, with = "value::pubkey::opt")]
     pub proposal_owner_record: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
@@ -89,13 +89,13 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &input.realm,
         &input.governance,
         &input.proposal,
-        &input.signatory,
+        &input.signatory.pubkey(),
         input.proposal_owner_record.as_ref(),
     );
 
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer.clone_keypair()].into(),
+        signers: [input.fee_payer.clone_keypair(), input.signatory.clone_keypair()].into(),
         instructions: [ix].into(),
     };
 

@@ -55,13 +55,7 @@
       "tooltip": ""
     },
     {
-      "name": "proposal_address",
-      "type": "pubkey",
-      "defaultValue": null,
-      "tooltip": ""
-    },
-    {
-      "name": "proposal_deposit_address",
+      "name": "signatory_record_address",
       "type": "pubkey",
       "defaultValue": null,
       "tooltip": ""
@@ -85,7 +79,7 @@
       "passthrough": true
     },
     {
-      "name": "proposal_owner_record",
+      "name": "proposal",
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
@@ -93,88 +87,24 @@
       "passthrough": true
     },
     {
+      "name": "signatory",
+      "type_bounds": ["pubkey"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
       "name": "governance_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": ["keypair"],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false
     },
     {
-      "name": "voter_weight_record",
-      "type_bounds": ["pubkey"],
-      "required": false,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "realm",
-      "type_bounds": ["pubkey"],
-      "required": false,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "name",
-      "type_bounds": ["string"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "description_link",
-      "type_bounds": ["string"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "governing_token_mint",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "vote_type",
+      "name": "add_signatory_authority",
       "type_bounds": ["json"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "use_deny_option",
-      "type_bounds": ["bool"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "options",
-      "type_bounds": ["array of strings"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "proposal_seed",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "proposal_seed",
-      "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
