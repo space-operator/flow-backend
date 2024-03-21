@@ -4,7 +4,7 @@ use solana_sdk::{instruction::AccountMeta, system_program, sysvar};
 
 use crate::prelude::*;
 
-use super::{AccountMetaData, GovernanceInstruction, InstructionData, SPL_GOVERNANCE_ID};
+use super::{GovernanceInstruction, InstructionData, SPL_GOVERNANCE_ID};
 
 const NAME: &str = "execute_transaction";
 
@@ -32,8 +32,7 @@ pub struct Input {
     pub proposal_transaction: Pubkey,
     #[serde(with = "value::pubkey")]
     pub instruction_program_id: Pubkey,
-    #[serde(with = "value::pubkey")]
-    pub instruction_accounts: AccountMetaData,
+    pub instruction_accounts: AccountMeta,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -73,7 +72,7 @@ pub fn execute_transaction(
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
-    let (ix) = execute_transaction(
+    let ix = execute_transaction(
         &program_id,
         &input.governance,
         &input.proposal,

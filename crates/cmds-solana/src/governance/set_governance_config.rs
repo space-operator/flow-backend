@@ -27,7 +27,6 @@ pub struct Input {
     pub fee_payer: Keypair,
     #[serde(with = "value::keypair")]
     pub governance: Keypair,
-    #[serde(with = "value::pubkey")]
     pub config: GovernanceConfig,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
@@ -60,30 +59,19 @@ pub fn set_governance_config(
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
-    let (ix, vote_record_address) = set_governance_delegate(
-        &program_id,
-        &input.governance_authority.pubkey(),
-        &input.realm,
-        &input.governing_token_mint,
-        &input.governing_token_owner,
-        &input.new_governance_delegate,
-    );
+    let ix = set_governance_config(&program_id, &input.governance.pubkey(), input.config);
 
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer.clone_keypair()].into(),
+        signers: [
+            input.fee_payer.clone_keypair(),
+            input.governance.clone_keypair(),
+        ]
+        .into(),
         instructions: [ix].into(),
     };
 
-    let signature = ctx
-        .execute(
-            instructions,
-            value::map!(
-                "vote_record_address" => vote_record_address,
-            ),
-        )
-        .await?
-        .signature;
+    let signature = ctx.execute(instructions, <_>::default()).await?.signature;
 
     Ok(Output { signature })
 }

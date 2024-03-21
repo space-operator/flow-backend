@@ -6,7 +6,7 @@ use tracing_log::log::info;
 use crate::prelude::*;
 
 use super::{
-    AddSignatoryAuthority, AddSignatoryAuthoritySPO, GovernanceInstruction, SPL_GOVERNANCE_ID,
+    AddSignatoryAuthority, GovernanceInstruction, SPL_GOVERNANCE_ID,
 };
 
 const NAME: &str = "add_signatory";
@@ -35,7 +35,7 @@ pub struct Input {
     pub signatory: Pubkey,
     #[serde(default, with = "value::keypair::opt")]
     pub governance_authority: Option<Keypair>,
-    pub add_signatory_authority: AddSignatoryAuthoritySPO,
+    pub add_signatory_authority: AddSignatoryAuthority,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -112,9 +112,18 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &input.signatory,
     );
 
+    let signers = match input.governance_authority {
+        Some(governance_authority) => {
+            vec![
+                input.fee_payer.clone_keypair(),
+                governance_authority.clone_keypair(),
+            ]
+        }
+        None => vec![input.fee_payer.clone_keypair()],
+    };
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer.clone_keypair()].into(),
+        signers: signers.into(),
         instructions: [ix].into(),
     };
 

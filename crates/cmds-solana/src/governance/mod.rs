@@ -3,22 +3,37 @@ use std::str::FromStr;
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use solana_sdk::{
+    clock::UnixTimestamp,
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
+pub mod add_required_signatory;
 pub mod add_signatory;
 pub mod cancel_proposal;
 pub mod cast_vote;
+pub mod complete_proposal;
 pub mod create_governance;
+pub mod create_native_treasury;
 pub mod create_proposal;
 pub mod create_realm;
 pub mod create_token_owner_record;
 pub mod deposit_governing_tokens;
+pub mod execute_transaction;
+pub mod finalize_vote;
 pub mod insert_transaction;
+pub mod refund_proposal_deposit;
+pub mod relinquish_token_owner_record_locks;
+pub mod relinquish_vote;
+pub mod remove_transaction;
+pub mod revoke_governing_tokens;
+pub mod set_governance_config;
+pub mod set_governance_delegate;
+pub mod set_realm_authority;
+pub mod set_realm_config;
+pub mod set_token_owner_record_lock;
 pub mod sign_off_proposal;
 pub mod withdraw_governing_tokens;
-pub mod set_governance_delegate;
 
 const SPL_GOVERNANCE_ID: &str = "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw";
 
@@ -327,11 +342,11 @@ pub enum GovernanceInstruction {
     ///
     ///   0. `[]` Realm account the Governance account belongs to
     ///   1. `[writable, signer]` The Governance account the config is for
-    // SetGovernanceConfig {
-    //     #[allow(dead_code)]
-    //     /// New governance config
-    //     config: GovernanceConfig,
-    // },
+    SetGovernanceConfig {
+        #[allow(dead_code)]
+        /// New governance config
+        config: GovernanceConfig,
+    },
 
     /// Legacy FlagTransactionError instruction
     /// Exists for backwards-compatibility
@@ -343,11 +358,11 @@ pub enum GovernanceInstruction {
     ///   1. `[signer]` Current Realm authority
     ///   2. `[]` New realm authority. Must be one of the realm governances when
     ///      set
-    // SetRealmAuthority {
-    //     #[allow(dead_code)]
-    //     /// Set action ( SetUnchecked, SetChecked, Remove)
-    //     action: SetRealmAuthorityAction,
-    // },
+    SetRealmAuthority {
+        #[allow(dead_code)]
+        /// Set action ( SetUnchecked, SetChecked, Remove)
+        action: SetRealmAuthorityAction,
+    },
 
     /// Sets realm config
     ///   0. `[writable]` Realm account
@@ -493,16 +508,16 @@ pub enum GovernanceInstruction {
     ///   3. `[signer]` Lock authority issuing the lock
     ///   4. `[signer]` Payer
     ///   5. `[]` System
-    // SetTokenOwnerRecordLock {
-    //     /// Custom lock id which can be used by the authority to issue
-    //     /// different locks
-    //     #[allow(dead_code)]
-    //     lock_id: u8,
+    SetTokenOwnerRecordLock {
+        /// Custom lock id which can be used by the authority to issue
+        /// different locks
+        #[allow(dead_code)]
+        lock_id: u8,
 
-    //     /// The timestamp when the lock expires or None if it never expires
-    //     #[allow(dead_code)]
-    //     expiry: Option<UnixTimestamp>,
-    // },
+        /// The timestamp when the lock expires or None if it never expires
+        #[allow(dead_code)]
+        expiry: Option<UnixTimestamp>,
+    },
 
     /// Removes all expired TokenOwnerRecord locks and if specified
     /// the locks identified by the given lock ids and authority
@@ -533,11 +548,11 @@ pub enum GovernanceInstruction {
     //   2. `[signer]`  Realm authority
     //   3. `[signer]` Payer
     //   4. `[]` System
-    // SetRealmConfigItem {
-    //     #[allow(dead_code)]
-    //     /// Config args
-    //     args: SetRealmConfigItemArgs,
-    // },
+    SetRealmConfigItem {
+        #[allow(dead_code)]
+        /// Config args
+        args: SetRealmConfigItemArgs,
+    },
 }
 
 /// Realm Config instruction args
@@ -997,3 +1012,52 @@ impl From<&InstructionData> for Instruction {
     }
 }
 
+/// SetRealmConfigItem instruction arguments to set a single Realm config item
+/// Note: In the current version only TokenOwnerRecordLockAuthority is supported
+/// Eventually all Realm config items should be supported for single config item
+/// change
+#[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+pub enum SetRealmConfigItemArgs {
+    /// Set TokenOwnerRecord lock authority
+    TokenOwnerRecordLockAuthority {
+        /// Action indicating whether to add or remove the lock authority
+        #[allow(dead_code)]
+        action: SetConfigItemActionType,
+        /// Mint of the governing token the lock authority is for
+        #[allow(dead_code)]
+        governing_token_mint: Pubkey,
+        /// Authority to change
+        #[allow(dead_code)]
+        authority: Pubkey,
+    },
+}
+
+/// Enum describing the action type for setting a config item
+#[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+pub enum SetConfigItemActionType {
+    /// Add config item
+    Add,
+
+    /// Remove config item
+    Remove,
+}
+
+/// SetRealmAuthority instruction action
+#[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+pub enum SetRealmAuthorityAction {
+    /// Sets realm authority without any checks
+    /// Uncheck option allows to set the realm authority to non governance
+    /// accounts
+    SetUnchecked,
+
+    /// Sets realm authority and checks the new new authority is one of the
+    /// realm's governances
+    // Note: This is not a security feature because governance creation is only
+    // gated with min_community_weight_to_create_governance.
+    // The check is done to prevent scenarios where the authority could be
+    // accidentally set to a wrong or none existing account.
+    SetChecked,
+
+    /// Removes realm authority
+    Remove,
+}

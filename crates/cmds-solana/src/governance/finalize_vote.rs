@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use solana_sdk::{instruction::AccountMeta, loader_instruction::finalize, system_program};
+use solana_sdk::instruction::AccountMeta;
 
 use crate::prelude::*;
 
@@ -34,15 +34,8 @@ pub struct Input {
     pub proposal_owner_record: Pubkey,
     #[serde(with = "value::pubkey")]
     pub governing_token_mint: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub governance_authority: Keypair,
-    #[serde(with = "value::pubkey")]
-    pub vote_governing_token_mint: Pubkey,
-    #[serde(default, with = "value::pubkey::opt")]
-    pub voter_weight_record: Option<Pubkey>,
     #[serde(default, with = "value::pubkey::opt")]
     pub max_voter_weight_record: Option<Pubkey>,
-    pub vote: Vote,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -91,13 +84,13 @@ pub fn finalize_vote(
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
-    let (ix) = finalize_vote(
+    let ix = finalize_vote(
         &program_id,
         &input.realm,
         &input.governance,
         &input.proposal,
         &input.proposal_owner_record,
-        &input.vote_governing_token_mint,
+        &input.governing_token_mint,
         input.max_voter_weight_record,
     );
 
@@ -107,15 +100,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         instructions: [ix].into(),
     };
 
-    let signature = ctx
-        .execute(
-            instructions,
-            value::map!(
-                "vote_record_address" => vote_record_address,
-            ),
-        )
-        .await?
-        .signature;
+    let signature = ctx.execute(instructions, <_>::default()).await?.signature;
 
     Ok(Output { signature })
 }

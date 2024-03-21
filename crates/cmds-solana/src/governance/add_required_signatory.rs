@@ -1,18 +1,18 @@
 use std::str::FromStr;
 
-use solana_sdk::instruction::AccountMeta;
+use solana_sdk::{instruction::AccountMeta, system_program};
 use tracing_log::log::info;
 
 use crate::prelude::*;
 
 use super::{GovernanceInstruction, SPL_GOVERNANCE_ID};
 
-const NAME: &str = "set_governance_delegate";
+const NAME: &str = "add_signatory";
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("/governance/set_governance_delegate.json");
+    const DEFINITION: &str = flow_lib::node_definition!("/governance/add_signatory.json");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?
@@ -26,15 +26,9 @@ pub struct Input {
     #[serde(with = "value::keypair")]
     pub fee_payer: Keypair,
     #[serde(with = "value::keypair")]
-    pub governance_authority: Keypair,
+    pub governance: Keypair,
     #[serde(with = "value::pubkey")]
-    pub realm: Pubkey,
-    #[serde(with = "value::pubkey")]
-    pub governing_token_mint: Pubkey,
-    #[serde(with = "value::pubkey")]
-    pub governing_token_owner: Pubkey,
-    #[serde(default, with = "value::pubkey::opt")]
-    pub new_governance_delegate: Option<Pubkey>,
+    pub signatory: Pubkey,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -44,33 +38,31 @@ pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     pub signature: Option<Signature>,
 }
-pub fn set_governance_delegate(
+
+pub fn add_required_signatory(
     program_id: &Pubkey,
     // Accounts
-    governance_authority: &Pubkey,
+    governance: &Pubkey,
+    payer: &Pubkey,
     // Args
-    realm: &Pubkey,
-    governing_token_mint: &Pubkey,
-    governing_token_owner: &Pubkey,
-    new_governance_delegate: &Option<Pubkey>,
+    signatory: &Pubkey,
 ) -> (Instruction, Pubkey) {
     let seeds = [
-        b"governance",
-        realm.as_ref(),
-        governing_token_mint.as_ref(),
-        governing_token_owner.as_ref(),
+        b"required-signatory".as_ref(),
+        governance.as_ref(),
+        signatory.as_ref(),
     ];
-    let vote_record_address = Pubkey::find_program_address(&seeds, program_id).0;
-
-    info!("vote_record_address: {:?}", vote_record_address);
+    let required_signatory_address = Pubkey::find_program_address(&seeds, program_id).0;
 
     let accounts = vec![
-        AccountMeta::new_readonly(*governance_authority, true),
-        AccountMeta::new(vote_record_address, false),
+        AccountMeta::new(*governance, true),
+        AccountMeta::new(required_signatory_address, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(system_program::id(), false),
     ];
 
-    let data = GovernanceInstruction::SetGovernanceDelegate {
-        new_governance_delegate: *new_governance_delegate,
+    let data = GovernanceInstruction::AddRequiredSignatory {
+        signatory: *signatory,
     };
 
     let instruction = Instruction {
@@ -78,27 +70,24 @@ pub fn set_governance_delegate(
         accounts,
         data: borsh::to_vec(&data).unwrap(),
     };
-
-    (instruction, vote_record_address)
+    (instruction, required_signatory_address)
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
-    let (ix, vote_record_address) = set_governance_delegate(
+    let (ix, required_signatory_address) = add_required_signatory(
         &program_id,
-        &input.governance_authority.pubkey(),
-        &input.realm,
-        &input.governing_token_mint,
-        &input.governing_token_owner,
-        &input.new_governance_delegate,
+        &input.governance.pubkey(),
+        &input.fee_payer.pubkey(),
+        &input.signatory,
     );
 
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
         signers: [
             input.fee_payer.clone_keypair(),
-            input.governance_authority.clone_keypair(),
+            input.governance.clone_keypair(),
         ]
         .into(),
         instructions: [ix].into(),
@@ -108,7 +97,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .execute(
             instructions,
             value::map!(
-                "vote_record_address" => vote_record_address,
+                "required_signatory_address" => required_signatory_address,
             ),
         )
         .await?
