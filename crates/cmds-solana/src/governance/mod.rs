@@ -8,6 +8,7 @@ use solana_sdk::{
 };
 
 pub mod add_signatory;
+pub mod cancel_proposal;
 pub mod cast_vote;
 pub mod create_governance;
 pub mod create_proposal;
@@ -15,10 +16,9 @@ pub mod create_realm;
 pub mod create_token_owner_record;
 pub mod deposit_governing_tokens;
 pub mod insert_transaction;
-pub mod set_governance_delegate;
 pub mod sign_off_proposal;
 pub mod withdraw_governing_tokens;
-pub mod finalize_vote;
+pub mod set_governance_delegate;
 
 const SPL_GOVERNANCE_ID: &str = "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw";
 
@@ -996,3 +996,4 @@ impl From<&InstructionData> for Instruction {
         }
     }
 }
+
