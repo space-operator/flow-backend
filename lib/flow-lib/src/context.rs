@@ -17,7 +17,10 @@ use crate::{
 use bytes::Bytes;
 use chrono::Utc;
 use solana_client::nonblocking::rpc_client::RpcClient as SolanaClient;
-use solana_sdk::pubkey::Pubkey;
+use solana_sdk::{
+    commitment_config::{CommitmentConfig, CommitmentLevel},
+    pubkey::Pubkey,
+};
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
 use tower::{Service, ServiceExt};
 
@@ -25,6 +28,7 @@ pub mod env {
     pub const RUST_LOG: &str = "RUST_LOG";
     pub const OVERWRITE_FEEPAYER: &str = "OVERWRITE_FEEPAYER";
     pub const COMPUTE_BUDGET: &str = "COMPUTE_BUDGET";
+    pub const FALLBACK_COMPUTE_BUDGET: &str = "FALLBACK_COMPUTE_BUDGET";
     pub const PRIORITY_FEE: &str = "PRIORITY_FEE";
     pub const SIMULATION_COMMITMENT_LEVEL: &str = "SIMULATION_COMMITMENT_LEVEL";
     pub const TX_COMMITMENT_LEVEL: &str = "TX_COMMITMENT_LEVEL";
@@ -397,7 +401,14 @@ impl Context {
         token_svc: get_jwt::Svc,
         extensions: Extensions,
     ) -> Self {
-        let solana_client = SolanaClient::new(cfg.solana_client.url.clone());
+        let solana_client = SolanaClient::new_with_timeouts_and_commitment(
+            cfg.solana_client.url.clone(),
+            Duration::from_secs(30),
+            CommitmentConfig {
+                commitment: CommitmentLevel::Finalized,
+            },
+            Duration::from_secs(180),
+        );
 
         Self {
             flow_owner,

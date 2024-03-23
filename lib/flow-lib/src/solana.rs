@@ -9,9 +9,11 @@ use chrono::Utc;
 use futures::TryStreamExt;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use serde_with::DisplayFromStr;
 use solana_client::{
     client_error::{ClientError, ClientErrorKind},
     nonblocking::rpc_client::RpcClient,
+    rpc_client::SerializableTransaction,
     rpc_request::{RpcError, RpcResponseErrorData},
     rpc_response::RpcSimulateTransactionResult,
 };
@@ -342,7 +344,7 @@ impl<'de> Deserialize<'de> for InsertionBehavior {
 }
 
 const fn default_simulation_level() -> CommitmentLevel {
-    CommitmentLevel::Confirmed
+    CommitmentLevel::Finalized
 }
 
 const fn default_tx_level() -> CommitmentLevel {
@@ -380,12 +382,15 @@ impl KeypairOrPubkey {
     }
 }
 
+#[serde_with::serde_as]
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub struct ExecutionConfig {
     pub overwrite_feepayer: Option<KeypairOrPubkey>,
     #[serde(default)]
     pub compute_budget: InsertionBehavior,
+    #[serde_as(as = "Option<DisplayFromStr>")]
+    pub fallback_compute_budget: Option<u64>,
     #[serde(default)]
     pub priority_fee: InsertionBehavior,
     #[serde(default = "default_simulation_level")]
@@ -411,6 +416,7 @@ impl Default for ExecutionConfig {
         Self {
             overwrite_feepayer: None,
             compute_budget: InsertionBehavior::default(),
+            fallback_compute_budget: None,
             priority_fee: InsertionBehavior::default(),
             simulation_commitment_level: default_simulation_level(),
             tx_commitment_level: default_tx_level(),
@@ -489,6 +495,16 @@ impl Instructions {
                         None
                     }
                     Ok(result) => {
+                        if let Some(error) = result.value.err {
+                            tracing::warn!("simulation error: {}", error);
+                            for log in result.value.logs.unwrap_or_default() {
+                                tracing::info!("{}", log);
+                            }
+                        } else {
+                            for log in result.value.logs.unwrap_or_default() {
+                                tracing::debug!("{}", log);
+                            }
+                        }
                         let consumed = result.value.units_consumed;
                         if consumed.is_none() || consumed == Some(0) {
                             None
@@ -497,6 +513,7 @@ impl Instructions {
                         }
                     }
                 }
+                .or(config.fallback_compute_budget)
                 .unwrap_or(200_000 * count as u64)
             }
             .min(1_400_000) as u32;
@@ -654,7 +671,7 @@ impl Instructions {
             }
 
             let mut tx = Transaction::new_unsigned(message);
-            tx.try_sign(&signers, tx.message.recent_blockhash)?;
+            tx.try_sign(&signers, *tx.get_recent_blockhash())?;
             tx
         };
 
@@ -663,15 +680,21 @@ impl Instructions {
         // TODO: is it correct to use FeatureSet::all_enabled()?
         verify_precompiles(&tx, &FeatureSet::all_enabled())?;
 
-        let sig = rpc
-            .send_and_confirm_transaction_with_spinner_and_commitment(
-                &tx,
-                commitment(config.wait_commitment_level),
-            )
+        let signature = rpc
+            .send_transaction(&tx)
             .await
             .map_err(move |error| Error::solana(error, inserted))?;
+        tracing::info!("submitted {}", signature);
 
-        Ok(sig)
+        rpc.confirm_transaction_with_spinner(
+            &signature,
+            &tx.get_recent_blockhash(),
+            commitment(config.wait_commitment_level),
+        )
+        .await
+        .map_err(move |error| Error::solana(error, inserted))?;
+
+        Ok(signature)
     }
 }
 
@@ -703,8 +726,8 @@ pub fn verify_precompiles(tx: &Transaction, feature_set: &FeatureSet) -> Result<
 mod tests {
     use super::*;
     use crate::context::env::{
-        COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE, SIMULATION_COMMITMENT_LEVEL,
-        TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
+        COMPUTE_BUDGET, FALLBACK_COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE,
+        SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
     use base64::prelude::*;
     use solana_sdk::{pubkey, system_instruction::transfer};
@@ -746,15 +769,17 @@ mod tests {
         );
         t(
             [
-                (COMPUTE_BUDGET, "100000"),
-                (PRIORITY_FEE, "auto"),
+                (COMPUTE_BUDGET, "auto"),
+                (FALLBACK_COMPUTE_BUDGET, "500000"),
+                (PRIORITY_FEE, "1000"),
                 (SIMULATION_COMMITMENT_LEVEL, "confirmed"),
                 (TX_COMMITMENT_LEVEL, "finalized"),
                 (WAIT_COMMITMENT_LEVEL, "processed"),
             ],
             ExecutionConfig {
-                compute_budget: InsertionBehavior::Value(100000),
-                priority_fee: InsertionBehavior::Auto,
+                compute_budget: InsertionBehavior::Auto,
+                fallback_compute_budget: Some(500000),
+                priority_fee: InsertionBehavior::Value(1000),
                 simulation_commitment_level: CommitmentLevel::Confirmed,
                 tx_commitment_level: CommitmentLevel::Finalized,
                 wait_commitment_level: CommitmentLevel::Processed,
