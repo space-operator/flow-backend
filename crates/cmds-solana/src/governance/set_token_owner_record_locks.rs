@@ -7,13 +7,13 @@ use crate::prelude::*;
 
 use super::{GovernanceInstruction, SPL_GOVERNANCE_ID};
 
-const NAME: &str = "set_token_owner_record_lock";
+const NAME: &str = "set_token_owner_record_locks";
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
     const DEFINITION: &str =
-        flow_lib::node_definition!("/governance/set_token_owner_record_lock.json");
+        flow_lib::node_definition!("/governance/set_token_owner_record_locks.json");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?

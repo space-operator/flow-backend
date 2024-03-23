@@ -5,7 +5,7 @@ use tracing::info;
 
 use crate::prelude::*;
 
-use super::{GovernanceInstruction, Vote, SPL_GOVERNANCE_ID};
+use super::{GovernanceInstruction, SPL_GOVERNANCE_ID};
 
 const NAME: &str = "relinquish_vote";
 

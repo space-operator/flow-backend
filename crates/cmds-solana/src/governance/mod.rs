@@ -32,7 +32,7 @@ pub mod set_governance_config;
 pub mod set_governance_delegate;
 pub mod set_realm_authority;
 pub mod set_realm_config;
-pub mod set_token_owner_record_lock;
+pub mod set_token_owner_record_locks;
 pub mod sign_off_proposal;
 pub mod withdraw_governing_tokens;
 
