@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use solana_sdk::{instruction::AccountMeta, system_program};
+use solana_sdk::instruction::AccountMeta;
 use tracing_log::log::info;
 
 use crate::prelude::*;
@@ -48,13 +48,14 @@ pub fn remove_required_signatory(
     governance: &Pubkey,
     signatory: &Pubkey,
     beneficiary: &Pubkey,
-) -> Instruction {
+) -> (Instruction, Pubkey) {
     let seeds = [
         b"required-signatory".as_ref(),
         governance.as_ref(),
         signatory.as_ref(),
     ];
     let required_signatory_address = Pubkey::find_program_address(&seeds, program_id).0;
+    info!("Required signatory address: {}", required_signatory_address);
 
     let accounts = vec![
         AccountMeta::new(*governance, true),
@@ -62,13 +63,14 @@ pub fn remove_required_signatory(
         AccountMeta::new(*beneficiary, false),
     ];
 
-    let instruction = GovernanceInstruction::RemoveRequiredSignatory;
+    let data = GovernanceInstruction::RemoveRequiredSignatory;
 
-    Instruction {
+    let instruction = Instruction {
         program_id: *program_id,
         accounts,
-        data: borsh::to_vec(&instruction).unwrap(),
-    }
+        data: borsh::to_vec(&data).unwrap(),
+    };
+    (instruction, required_signatory_address)
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {

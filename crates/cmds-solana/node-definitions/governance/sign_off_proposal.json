@@ -7,7 +7,7 @@
     "version": "0.1",
     "display_name": "Sign Off Proposal",
     "description": "",
-    "tags": [],
+    "tags": ["governance", "solana"],
     "related_to": [
       {
         "id": "",
@@ -42,8 +42,8 @@
       "width": 0,
       "height": 0,
       "icon_url": "",
-      "backgroundColorDark": "#2e003f",
-      "backgroundColor": "#fff"
+      "backgroundColorDark": "#1976d2",
+      "backgroundColor": "#1976d2"
     },
     "options": {}
   },
@@ -90,7 +90,7 @@
     },
     {
       "name": "signatory",
-      "type_bounds": ["pubkey"],
+      "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",

@@ -5,9 +5,7 @@ use tracing_log::log::info;
 
 use crate::prelude::*;
 
-use super::{
-    AddSignatoryAuthority, GovernanceInstruction, SPL_GOVERNANCE_ID,
-};
+use super::{AddSignatoryAuthority, GovernanceInstruction, SPL_GOVERNANCE_ID};
 
 const NAME: &str = "add_signatory";
 

@@ -7,12 +7,12 @@ use crate::prelude::*;
 
 use super::{GovernanceInstruction, SPL_GOVERNANCE_ID};
 
-const NAME: &str = "add_signatory";
+const NAME: &str = "add_required_signatory";
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("/governance/add_signatory.json");
+    const DEFINITION: &str = flow_lib::node_definition!("/governance/add_required_signatory.json");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?
@@ -53,6 +53,7 @@ pub fn add_required_signatory(
         signatory.as_ref(),
     ];
     let required_signatory_address = Pubkey::find_program_address(&seeds, program_id).0;
+    info!("required_signatory_address: {}", required_signatory_address);
 
     let accounts = vec![
         AccountMeta::new(*governance, true),

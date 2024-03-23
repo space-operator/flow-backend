@@ -3,9 +3,9 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "set_governance_delegate",
+    "node_id": "set_governance_config",
     "version": "0.1",
-    "display_name": "Set Governance Delegate",
+    "display_name": "Set Governance Config",
     "description": "",
     "tags": ["governance", "solana"],
     "related_to": [
@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "crates/cmds-solana/src/governance/set_governance_delegate.rs",
+      "source_code_url": "crates/cmds-solana/src/governance/set_governance_config.rs",
       "documentation_url": ""
     },
     "usage": {
@@ -53,12 +53,6 @@
       "type": "signature",
       "defaultValue": null,
       "tooltip": ""
-    },
-    {
-      "name": "vote_record_address",
-      "type": "pubkey",
-      "defaultValue": null,
-      "tooltip": ""
     }
   ],
   "targets": [
@@ -71,41 +65,17 @@
       "passthrough": true
     },
     {
-      "name": "governance_authority",
+      "name": "governance",
       "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": true
-    },
-    {
-      "name": "realm",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": true
-    },
-    {
-      "name": "governing_token_mint",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
       "passthrough": false
     },
     {
-      "name": "governing_token_owner",
-      "type_bounds": ["pubkey"],
+      "name": "config",
+      "type_bounds": ["json"],
       "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "new_governance_delegate",
-      "type_bounds": ["pubkey"],
-      "required": false,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false

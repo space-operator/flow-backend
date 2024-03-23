@@ -31,6 +31,8 @@ fn build() -> BuildResult {
 pub struct Input {
     #[serde(with = "value::keypair")]
     pub fee_payer: Keypair,
+    #[serde(with = "value::pubkey")]
+    pub realm: Pubkey,
     #[serde(with = "value::keypair")]
     pub realm_authority: Keypair,
     #[serde(with = "value::pubkey")]
@@ -125,7 +127,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ix = set_realm_config(
         &program_id,
-        &input.realm_authority.pubkey(),
+        &input.realm,
         &input.realm_authority.pubkey(),
         input.council_token_mint,
         &input.fee_payer.pubkey(),

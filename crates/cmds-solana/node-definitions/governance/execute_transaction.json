@@ -3,9 +3,9 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "set_governance_delegate",
+    "node_id": "execute_transaction",
     "version": "0.1",
-    "display_name": "Set Governance Delegate",
+    "display_name": "Execute Transaction",
     "description": "",
     "tags": ["governance", "solana"],
     "related_to": [
@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "crates/cmds-solana/src/governance/set_governance_delegate.rs",
+      "source_code_url": "crates/cmds-solana/src/governance/execute_transaction.rs",
       "documentation_url": ""
     },
     "usage": {
@@ -55,7 +55,7 @@
       "tooltip": ""
     },
     {
-      "name": "vote_record_address",
+      "name": "proposal_transaction_address",
       "type": "pubkey",
       "defaultValue": null,
       "tooltip": ""
@@ -71,15 +71,7 @@
       "passthrough": true
     },
     {
-      "name": "governance_authority",
-      "type_bounds": ["keypair"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": true
-    },
-    {
-      "name": "realm",
+      "name": "governance",
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
@@ -87,7 +79,15 @@
       "passthrough": true
     },
     {
-      "name": "governing_token_mint",
+      "name": "proposal",
+      "type_bounds": ["pubkey"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": true
+    },
+    {
+      "name": "proposal_transaction",
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
@@ -95,7 +95,7 @@
       "passthrough": false
     },
     {
-      "name": "governing_token_owner",
+      "name": "instruction_program_id",
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
@@ -103,8 +103,40 @@
       "passthrough": false
     },
     {
-      "name": "new_governance_delegate",
-      "type_bounds": ["pubkey"],
+      "name": "instruction_accounts",
+      "type_bounds": ["json"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "additional_signers",
+      "type_bounds": ["array of strings"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "signer_1",
+      "type_bounds": ["json"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "signer_2",
+      "type_bounds": ["json"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "signer_3",
+      "type_bounds": ["json"],
       "required": false,
       "defaultValue": null,
       "tooltip": "",

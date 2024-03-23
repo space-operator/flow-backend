@@ -7,7 +7,7 @@
     "version": "0.1",
     "display_name": "Insert Transaction",
     "description": "",
-    "tags": [],
+    "tags": ["governance", "solana"],
     "related_to": [
       {
         "id": "",
@@ -42,8 +42,8 @@
       "width": 0,
       "height": 0,
       "icon_url": "",
-      "backgroundColorDark": "#2e003f",
-      "backgroundColor": "#fff"
+      "backgroundColorDark": "#1976d2",
+      "backgroundColor": "#1976d2"
     },
     "options": {}
   },
@@ -120,7 +120,7 @@
     },
     {
       "name": "instructions",
-      "type_bounds": ["string"],
+      "type_bounds": ["instructions"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",

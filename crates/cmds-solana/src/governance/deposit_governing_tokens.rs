@@ -40,8 +40,6 @@ pub struct Input {
     pub submit: bool,
 }
 
-// community_token_config_args,
-// council_token_config_args,
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {

@@ -25,6 +25,7 @@ pub mod insert_transaction;
 pub mod refund_proposal_deposit;
 pub mod relinquish_token_owner_record_locks;
 pub mod relinquish_vote;
+pub mod remove_required_signatory;
 pub mod remove_transaction;
 pub mod revoke_governing_tokens;
 pub mod set_governance_config;

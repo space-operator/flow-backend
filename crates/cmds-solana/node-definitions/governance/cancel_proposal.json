@@ -3,10 +3,10 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "set_governance_delegate",
+    "node_id": "cancel_proposal",
     "version": "0.1",
-    "display_name": "Set Governance Delegate",
-    "description": "",
+    "display_name": "Cancel Proposal",
+    "description": "Change proposal state to Cancelled",
     "tags": ["governance", "solana"],
     "related_to": [
       {
@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "crates/cmds-solana/src/governance/set_governance_delegate.rs",
+      "source_code_url": "crates/cmds-solana/src/governance/cancel_proposal.rs",
       "documentation_url": ""
     },
     "usage": {
@@ -53,25 +53,12 @@
       "type": "signature",
       "defaultValue": null,
       "tooltip": ""
-    },
-    {
-      "name": "vote_record_address",
-      "type": "pubkey",
-      "defaultValue": null,
-      "tooltip": ""
     }
+  
   ],
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": true
-    },
-    {
-      "name": "governance_authority",
       "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": null,
@@ -87,7 +74,7 @@
       "passthrough": true
     },
     {
-      "name": "governing_token_mint",
+      "name": "governance",
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
@@ -95,7 +82,7 @@
       "passthrough": false
     },
     {
-      "name": "governing_token_owner",
+      "name": "proposal",
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
@@ -103,14 +90,22 @@
       "passthrough": false
     },
     {
-      "name": "new_governance_delegate",
+      "name": "proposal_owner_record",
       "type_bounds": ["pubkey"],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "TokenOwnerRecord account of the  Proposal owner",
       "passthrough": false
     },
     {
+      "name": "governance_authority",
+      "type_bounds": ["keypair"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "Governance Authority (Token Owner or Governance Delegate)",
+      "passthrough": false
+    },
+    {  
       "name": "submit",
       "type_bounds": ["bool"],
       "required": false,

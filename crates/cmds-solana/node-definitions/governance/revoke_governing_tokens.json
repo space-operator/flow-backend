@@ -3,9 +3,9 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "set_governance_delegate",
+    "node_id": "revoke_governing_tokens",
     "version": "0.1",
-    "display_name": "Set Governance Delegate",
+    "display_name": "Revoke Governing Tokens",
     "description": "",
     "tags": ["governance", "solana"],
     "related_to": [
@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "crates/cmds-solana/src/governance/set_governance_delegate.rs",
+      "source_code_url": "crates/cmds-solana/src/governance/revoke_governing_tokens.rs",
       "documentation_url": ""
     },
     "usage": {
@@ -55,7 +55,19 @@
       "tooltip": ""
     },
     {
-      "name": "vote_record_address",
+      "name": "realm_config_address",
+      "type": "pubkey",
+      "defaultValue": null,
+      "tooltip": ""
+    },
+    {
+      "name": "governing_token_holding_address",
+      "type": "pubkey",
+      "defaultValue": null,
+      "tooltip": ""
+    },
+    {
+      "name": "token_owner_record_address",
       "type": "pubkey",
       "defaultValue": null,
       "tooltip": ""
@@ -71,28 +83,12 @@
       "passthrough": true
     },
     {
-      "name": "governance_authority",
-      "type_bounds": ["keypair"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": true
-    },
-    {
       "name": "realm",
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": true
-    },
-    {
-      "name": "governing_token_mint",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
     },
     {
       "name": "governing_token_owner",
@@ -103,9 +99,25 @@
       "passthrough": false
     },
     {
-      "name": "new_governance_delegate",
+      "name": "governing_token_mint",
       "type_bounds": ["pubkey"],
-      "required": false,
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "revoke_authority",
+      "type_bounds": ["keypair"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "amount",
+      "type_bounds": ["u64"],
+      "required": true,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false

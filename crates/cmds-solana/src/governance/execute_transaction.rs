@@ -1,10 +1,11 @@
 use std::str::FromStr;
 
-use solana_sdk::{instruction::AccountMeta, system_program, sysvar};
+use solana_sdk::instruction::AccountMeta;
+use value::Key;
 
 use crate::prelude::*;
 
-use super::{GovernanceInstruction, InstructionData, SPL_GOVERNANCE_ID};
+use super::{GovernanceInstruction, SPL_GOVERNANCE_ID};
 
 const NAME: &str = "execute_transaction";
 
@@ -32,7 +33,15 @@ pub struct Input {
     pub proposal_transaction: Pubkey,
     #[serde(with = "value::pubkey")]
     pub instruction_program_id: Pubkey,
-    pub instruction_accounts: AccountMeta,
+    pub instruction_accounts: Vec<AccountMeta>,
+    // TODO workaround for testing
+    pub additional_signers: Option<Vec<String>>,
+    #[serde(with = "value::keypair::opt")]
+    pub signer_1: Option<Keypair>,
+    #[serde(with = "value::keypair::opt")]
+    pub signer_2: Option<Keypair>,
+    #[serde(with = "value::keypair::opt")]
+    pub signer_3: Option<Keypair>,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -78,12 +87,35 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &input.proposal,
         &input.proposal_transaction,
         &input.instruction_program_id,
-        &[input.instruction_accounts],
+        &input.instruction_accounts,
     );
+
+    let mut signers: Vec<Keypair> = [input.fee_payer.clone_keypair()].into();
+
+    match input.additional_signers {
+        None => {
+            if let Some(signer) = input.signer_1 {
+                signers.push(signer.clone_keypair());
+            }
+            if let Some(signer) = input.signer_2 {
+                signers.push(signer.clone_keypair());
+            }
+            if let Some(signer) = input.signer_3 {
+                signers.push(signer.clone_keypair());
+            }
+        }
+        Some(ref additional_signers) => {
+            let additional_signers: Vec<Keypair> = additional_signers
+                .iter()
+                .map(|s| Keypair::from_base58_string(s).clone_keypair())
+                .collect();
+            signers.extend(additional_signers);
+        }
+    }
 
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer.clone_keypair()].into(),
+        signers: signers,
         instructions: [ix].into(),
     };
 

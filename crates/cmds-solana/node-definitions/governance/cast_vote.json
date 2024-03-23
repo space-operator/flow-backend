@@ -7,7 +7,7 @@
     "version": "0.1",
     "display_name": "Cast Vote",
     "description": "",
-    "tags": [],
+    "tags": ["governance", "solana"],
     "related_to": [
       {
         "id": "",
@@ -42,8 +42,8 @@
       "width": 0,
       "height": 0,
       "icon_url": "",
-      "backgroundColorDark": "#2e003f",
-      "backgroundColor": "#fff"
+      "backgroundColorDark": "#1976d2",
+      "backgroundColor": "#1976d2"
     },
     "options": {}
   },
@@ -99,7 +99,7 @@
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "TokenOwnerRecord of the Proposal owner",
       "passthrough": false
     },
     {
@@ -107,7 +107,7 @@
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "TokenOwnerRecord of the voter",
       "passthrough": false
     },
     {
@@ -115,7 +115,7 @@
       "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Token Owner or Governance Delegate",
       "passthrough": false
     },
     {
@@ -129,7 +129,7 @@
     {
       "name": "voter_weight_record",
       "type_bounds": ["pubkey"],
-      "required": true,
+      "required": false,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false
@@ -137,7 +137,7 @@
     {
       "name": "max_voter_weight_record",
       "type_bounds": ["pubkey"],
-      "required": true,
+      "required": false,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false

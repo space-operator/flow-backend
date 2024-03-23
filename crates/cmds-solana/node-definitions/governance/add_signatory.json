@@ -6,8 +6,8 @@
     "node_id": "add_signatory",
     "version": "0.1",
     "display_name": "Add Signatory",
-    "description": "",
-    "tags": [],
+    "description": "Add a Signatory to a proposal. Cannot leave draft until Signatory signs",
+    "tags": ["governance", "solana"],
     "related_to": [
       {
         "id": "",
@@ -42,8 +42,8 @@
       "width": 0,
       "height": 0,
       "icon_url": "",
-      "backgroundColorDark": "#2e003f",
-      "backgroundColor": "#fff"
+      "backgroundColorDark": "#1976d2",
+      "backgroundColor": "#1976d2"
     },
     "options": {}
   },
@@ -83,15 +83,15 @@
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
-      "passthrough": true
+      "tooltip": "Proposal account associated with the governance",
+      "passthrough": false
     },
     {
       "name": "signatory",
       "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Signatory record account",
       "passthrough": false
     },
     {
@@ -99,7 +99,7 @@
       "type_bounds": ["keypair"],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Governance Authority (Token Owner or Governance Delegate)",
       "passthrough": false
     },
     {

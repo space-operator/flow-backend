@@ -1,18 +1,18 @@
 use std::str::FromStr;
 
-use solana_sdk::{instruction::AccountMeta, system_program};
+use solana_sdk::instruction::AccountMeta;
 use tracing::info;
 
 use crate::prelude::*;
 
-use super::{with_realm_config_accounts, GovernanceInstruction, Vote, SPL_GOVERNANCE_ID};
+use super::{GovernanceInstruction, Vote, SPL_GOVERNANCE_ID};
 
-const NAME: &str = "cast_vote";
+const NAME: &str = "relinquish_vote";
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("/governance/cast_vote.json");
+    const DEFINITION: &str = flow_lib::node_definition!("/governance/relinquish_vote.json");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?
@@ -39,7 +39,6 @@ pub struct Input {
     pub governance_authority: Option<Keypair>,
     #[serde(default, with = "value::pubkey::opt")]
     pub beneficiary: Option<Pubkey>,
-    pub vote: Vote,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
