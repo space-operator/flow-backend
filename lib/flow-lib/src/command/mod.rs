@@ -18,7 +18,6 @@ use std::borrow::Cow;
 use value::Value;
 
 pub mod builder;
-pub mod rpc;
 
 /// Import common types for writing commands.
 pub mod prelude {
