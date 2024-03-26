@@ -13,4 +13,4 @@ serde.workspace = true
 serde_json.workspace = true
 smartstring = { version = "1.0.1", features = ["serde"] }
 thiserror = "1.0.58"
-tower = "0.4.13"
+tower = { version = "0.4.13", features = ["filter"] }

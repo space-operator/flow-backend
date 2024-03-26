@@ -1,9 +1,12 @@
+use std::{convert::identity, fmt::Display};
+
 use actix::{Actor, ActorFutureExt, AsyncContext, Context, ResponseFuture, WrapFuture};
 use futures_channel::oneshot;
 use hashbrown::HashMap;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use thiserror::Error as ThisError;
-use tower::{util::BoxService, Service, ServiceExt};
+use tower::{util::BoxService, BoxError, Service, ServiceBuilder, ServiceExt};
 
 pub use smartstring::alias::String;
 
@@ -107,6 +110,30 @@ impl Server {
         .map(move |result, actor, _| actor.after_ready(result, req, tx));
         ctx.spawn(task);
         Ok(rx)
+    }
+
+    fn register_json_service<S, T>(&mut self, name: String, id: String, s: S)
+    where
+        S: tower::Service<T> + Send + 'static,
+        T: DeserializeOwned,
+        S::Error: std::error::Error + Send + Sync + 'static,
+        S::Response: Serialize,
+        S::Future: Send + 'static,
+    {
+        let s = ServiceBuilder::new()
+            .filter(|r: JsonValue| serde_json::from_value::<T>(r))
+            .map_result(
+                |r: Result<S::Response, S::Error>| -> Result<JsonValue, BoxError> {
+                    match r {
+                        Ok(t) => serde_json::to_value(&t).map_err(|e| e.into()),
+                        Err(e) => Err(e.into()),
+                    }
+                },
+            )
+            .check_service::<S, JsonValue, JsonValue, BoxError>()
+            .service(s)
+            .map_err(|error| JsonValue::String(error.to_string()))
+            .boxed();
     }
 }
 
