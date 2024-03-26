@@ -154,7 +154,7 @@ impl actix::Handler<Request> for Server {
     }
 }
 
-pub fn configure_server(addr: actix::Addr<Server>, s: &mut web::ServiceConfig) {
+pub fn configure_server(s: &mut web::ServiceConfig, addr: actix::Addr<Server>) {
     async fn call(
         body: web::Json<Request>,
         addr: web::Data<actix::Addr<Server>>,
