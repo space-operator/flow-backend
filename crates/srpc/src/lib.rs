@@ -1,15 +1,16 @@
-use std::{convert::identity, fmt::Display};
-
 use actix::{Actor, ActorFutureExt, AsyncContext, Context, ResponseFuture, WrapFuture};
+use actix_web::web;
 use futures_channel::oneshot;
 use hashbrown::HashMap;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 use serde_json::Value as JsonValue;
+use serde_tuple::*;
 use thiserror::Error as ThisError;
 use tower::{util::BoxService, BoxError, Service, ServiceBuilder, ServiceExt};
 
 pub use smartstring::alias::String;
 
+#[derive(Serialize_tuple, Deserialize_tuple, Debug, Clone)]
 pub struct Request {
     pub envelope: String,
     pub svc_name: String,
@@ -21,6 +22,7 @@ impl actix::Message for Request {
     type Result = Result<Response, Error>;
 }
 
+#[derive(Serialize_tuple, Deserialize_tuple, Debug, Clone)]
 pub struct Response {
     pub envelope: String,
     pub success: bool,
@@ -28,7 +30,7 @@ pub struct Response {
 }
 
 pub struct Server {
-    /// svc_name => (svc_id => _)
+    /// svc_name => (svc_id => S)
     services: HashMap<String, HashMap<String, BoxService<JsonValue, JsonValue, JsonValue>>>,
 }
 
@@ -112,7 +114,12 @@ impl Server {
         Ok(rx)
     }
 
-    fn register_json_service<S, T>(&mut self, name: String, id: String, s: S)
+    pub fn register_json_service<S, T>(
+        &mut self,
+        name: String,
+        id: String,
+        s: S,
+    ) -> Option<BoxService<JsonValue, JsonValue, JsonValue>>
     where
         S: tower::Service<T> + Send + 'static,
         T: DeserializeOwned,
@@ -134,6 +141,7 @@ impl Server {
             .service(s)
             .map_err(|error| JsonValue::String(error.to_string()))
             .boxed();
+        self.services.entry(name).or_default().insert(id, s)
     }
 }
 
@@ -144,4 +152,33 @@ impl actix::Handler<Request> for Server {
 
         Box::pin(async move { Ok(r?.await.map_err(|_| Error::Dropped)?) })
     }
+}
+
+pub fn configure_server(addr: actix::Addr<Server>, s: &mut web::ServiceConfig) {
+    async fn call(
+        body: web::Json<Request>,
+        addr: web::Data<actix::Addr<Server>>,
+    ) -> web::Json<Response> {
+        let req = body.into_inner();
+        let envelope = req.envelope.clone();
+        let result = addr.send(req).await;
+
+        web::Json(match result {
+            Ok(result) => match result {
+                Ok(resp) => resp,
+                Err(error) => Response {
+                    envelope,
+                    success: false,
+                    data: JsonValue::String(error.to_string()),
+                },
+            },
+            Err(error) => Response {
+                envelope,
+                success: false,
+                data: JsonValue::String(error.to_string()),
+            },
+        })
+    }
+    s.app_data(web::Data::new(addr))
+        .route("/call", web::post().to(call));
 }
