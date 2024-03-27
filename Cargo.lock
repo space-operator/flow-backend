@@ -1945,7 +1945,14 @@ dependencies = [
 
 [[package]]
 name = "command-rpc"
-version = "0.1.0"
+version = "0.0.0"
+dependencies = [
+ "async-trait",
+ "flow-lib",
+ "serde",
+ "srpc",
+ "url",
+]
 
 [[package]]
 name = "concurrent-queue"
@@ -6527,7 +6534,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fb72c633efbaa2dd666986505016c32c3044395ceaf881518399d2f4127ee29"
 dependencies = [
  "autocfg",
- "serde",
  "static_assertions",
  "version_check",
 ]
@@ -7736,7 +7742,7 @@ dependencies = [
 
 [[package]]
 name = "srpc"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "actix",
  "actix-web",
@@ -7745,7 +7751,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_tuple",
- "smartstring",
  "thiserror",
  "tower",
 ]

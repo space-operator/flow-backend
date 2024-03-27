@@ -16,6 +16,7 @@ use crate::{
 };
 use bytes::Bytes;
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use solana_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use solana_sdk::pubkey::Pubkey;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
@@ -369,7 +370,7 @@ impl Default for Context {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct User {
     pub id: UserId,
 }

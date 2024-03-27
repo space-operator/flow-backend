@@ -8,14 +8,12 @@ use serde_tuple::*;
 use thiserror::Error as ThisError;
 use tower::{util::BoxService, BoxError, Service, ServiceBuilder, ServiceExt};
 
-pub use smartstring::alias::String;
-
 #[derive(Serialize_tuple, Deserialize_tuple, Debug, Clone)]
-pub struct Request {
+pub struct Request<T: DeserializeOwned + Serialize = JsonValue> {
     pub envelope: String,
     pub svc_name: String,
     pub svc_id: String,
-    pub input: JsonValue,
+    pub input: T,
 }
 
 impl actix::Message for Request {
@@ -23,10 +21,10 @@ impl actix::Message for Request {
 }
 
 #[derive(Serialize_tuple, Deserialize_tuple, Debug, Clone)]
-pub struct Response {
+pub struct Response<T: DeserializeOwned + Serialize = JsonValue> {
     pub envelope: String,
     pub success: bool,
-    pub data: JsonValue,
+    pub data: T,
 }
 
 pub struct Server {
