@@ -102,6 +102,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@oak/oak@^14.2.0",
+      "jsr:@space-operator/deno-command-rpc@^0.1.0",
       "jsr:@space-operator/flow-lib@^0.3.0"
     ]
   }
