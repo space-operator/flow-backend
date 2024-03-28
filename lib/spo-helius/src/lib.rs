@@ -4,9 +4,11 @@ use serde_json::Value as JsonValue;
 use serde_with::skip_serializing_none;
 use std::sync::atomic::AtomicU64;
 
+pub use reqwest::Client as HttpClient;
+
 #[derive(Debug)]
 pub struct Helius {
-    client: reqwest::Client,
+    client: HttpClient,
     mainnet_url: String,
     devnet_url: String,
     id: AtomicU64,
@@ -69,7 +71,7 @@ pub struct MicroLamportPriorityFeeLevels {
 }
 
 impl Helius {
-    pub fn new(client: reqwest::Client, apikey: &str) -> Self {
+    pub fn new(client: HttpClient, apikey: &str) -> Self {
         Self {
             client,
             mainnet_url: format!("https://mainnet.helius-rpc.com/?api-key={apikey}"),

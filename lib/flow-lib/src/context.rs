@@ -16,6 +16,7 @@ use crate::{
 };
 use bytes::Bytes;
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use solana_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use solana_sdk::{
     commitment_config::{CommitmentConfig, CommitmentLevel},
@@ -372,7 +373,7 @@ impl Default for Context {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize, Debug)]
 pub struct User {
     pub id: UserId,
 }

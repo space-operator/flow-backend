@@ -1,0 +1,13 @@
+{
+  "name": "@space-operator/flow-lib",
+  "version": "0.3.0",
+  "exports": {
+    ".": "./src/mod.ts",
+    "./common": "./src/common.ts",
+    "./context": "./src/context.ts",
+    "./value": "./src/value.ts"
+  },
+  "imports": {
+    "@std/encoding": "jsr:@std/encoding@^0.220.1"
+  }
+}

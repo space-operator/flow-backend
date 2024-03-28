@@ -1,5 +1,4 @@
 use crate::SupabaseConfig;
-use actix_web::http::header::{self, HeaderName, HeaderValue};
 use bincode::{Decode, Encode};
 use db::{
     connection::Password,
@@ -8,6 +7,7 @@ use db::{
 use flow::BoxedError;
 use flow_lib::{FlowRunId, UserId};
 use rand::distributions::{Alphanumeric, DistString};
+use reqwest::header::{self, HeaderName, HeaderValue};
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;

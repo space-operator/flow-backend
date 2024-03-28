@@ -113,6 +113,15 @@ pub struct NodeData {
     pub targets_form: TargetsForm,
 }
 
+impl NodeData {
+    pub fn inputs(&self) -> Vec<CmdInputDescription> {
+        self.targets.iter().cloned().map(Into::into).collect()
+    }
+    pub fn outputs(&self) -> Vec<CmdOutputDescription> {
+        self.sources.iter().cloned().map(Into::into).collect()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NodeDataSkipWasm {
     pub r#type: CommandType,
