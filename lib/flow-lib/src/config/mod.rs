@@ -84,6 +84,8 @@ pub enum CommandType {
     Mock,
     #[serde(rename = "WASM")]
     Wasm,
+    #[serde(rename = "deno")]
+    Deno,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

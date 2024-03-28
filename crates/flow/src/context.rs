@@ -57,6 +57,7 @@ impl CommandFactory {
         match config.r#type {
             CommandType::Mock => Err(Error::custom("mock node")),
             CommandType::Native => self.new_native_command(name, config),
+            CommandType::Deno => Err(Error::custom("deno")),
             CommandType::Wasm => {
                 let bytes = config
                     .targets_form

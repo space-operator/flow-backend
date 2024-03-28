@@ -9,17 +9,14 @@
       "jsr:@std/assert@^0.218.2": "jsr:@std/assert@0.218.2",
       "jsr:@std/bytes@0.218": "jsr:@std/bytes@0.218.2",
       "jsr:@std/bytes@^0.218.2": "jsr:@std/bytes@0.218.2",
-      "jsr:@std/bytes@^0.220.1": "jsr:@std/bytes@0.220.1",
       "jsr:@std/crypto@0.218": "jsr:@std/crypto@0.218.2",
       "jsr:@std/encoding@0.218": "jsr:@std/encoding@0.218.2",
       "jsr:@std/encoding@^0.218.2": "jsr:@std/encoding@0.218.2",
       "jsr:@std/encoding@^0.220.1": "jsr:@std/encoding@0.220.1",
       "jsr:@std/http@0.218": "jsr:@std/http@0.218.2",
       "jsr:@std/io@0.218": "jsr:@std/io@0.218.2",
-      "jsr:@std/json@^0.220.1": "jsr:@std/json@0.220.1",
       "jsr:@std/media-types@0.218": "jsr:@std/media-types@0.218.2",
       "jsr:@std/path@0.218": "jsr:@std/path@0.218.2",
-      "jsr:@std/streams@^0.220.1": "jsr:@std/streams@0.220.1",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:path-to-regexp@6.2.1": "npm:path-to-regexp@6.2.1"
     },
@@ -54,9 +51,6 @@
       "@std/bytes@0.218.2": {
         "integrity": "91fe54b232dcca73856b79a817247f4a651dbb60d51baafafb6408c137241670"
       },
-      "@std/bytes@0.220.1": {
-        "integrity": "e522cdc7c152cfc8a09bd618618cbc710dcf57003ab6fab3a6c37ff4c88aa3db"
-      },
       "@std/crypto@0.218.2": {
         "integrity": "8c5031a3a1c3ac3bed3c0d4bed2fe7e7faedcb673bbfa0edd10570c8452f5cd2",
         "dependencies": [
@@ -83,12 +77,6 @@
           "jsr:@std/bytes@^0.218.2"
         ]
       },
-      "@std/json@0.220.1": {
-        "integrity": "21c90df70f12d84f2a13c4a15a084e937f16dd92ad6019c2ca3491daac0a18b9",
-        "dependencies": [
-          "jsr:@std/streams@^0.220.1"
-        ]
-      },
       "@std/media-types@0.218.2": {
         "integrity": "1ed3bd2a05e44bad3fc2bab1767d0ce7f2fd68baee62a980751ce51633acb788"
       },
@@ -96,12 +84,6 @@
         "integrity": "b568fd923d9e53ad76d17c513e7310bda8e755a3e825e6289a0ce536404e2662",
         "dependencies": [
           "jsr:@std/assert@^0.218.2"
-        ]
-      },
-      "@std/streams@0.220.1": {
-        "integrity": "f26c7cb98c471af89de8309a0246cccb4c9bb6f3c639bd84aee5488127dc8545",
-        "dependencies": [
-          "jsr:@std/bytes@^0.220.1"
         ]
       }
     },
@@ -120,9 +102,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@oak/oak@^14.2.0",
-      "jsr:@space-operator/flow-lib@^0.3.0",
-      "jsr:@std/json@^0.220.1",
-      "jsr:@std/streams@^0.220.1"
+      "jsr:@space-operator/flow-lib@^0.3.0"
     ]
   }
 }

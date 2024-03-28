@@ -1,4 +1,4 @@
-import { Context, IValue, Value } from "@space-operator/flow-lib";
+import { type Context, type IValue, Value } from "@space-operator/flow-lib";
 import { Application, Router, Status } from "@oak/oak";
 
 export const RUN_SVC = "run";
@@ -70,7 +70,7 @@ export async function start(cmd: CommandTrait) {
   });
   const app = new Application();
   app.addEventListener("listen", (ev) => {
-    console.log(ev.port);
+    Deno.stdout.writeSync(new TextEncoder().encode(ev.port.toString() + "\n"));
   });
   app.use(router.routes());
   app.use(router.allowedMethods());
