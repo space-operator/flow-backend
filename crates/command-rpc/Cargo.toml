@@ -11,3 +11,6 @@ flow-lib.workspace = true
 serde.workspace = true
 srpc.workspace = true
 url = "2.5.0"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros"] }

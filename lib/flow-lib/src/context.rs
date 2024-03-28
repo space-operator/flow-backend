@@ -370,7 +370,7 @@ impl Default for Context {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Clone, Copy, Serialize, Deserialize, Debug)]
 pub struct User {
     pub id: UserId,
 }

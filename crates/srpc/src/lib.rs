@@ -2,14 +2,13 @@ use actix::{Actor, ActorFutureExt, AsyncContext, Context, ResponseFuture, WrapFu
 use actix_web::web;
 use futures_channel::oneshot;
 use hashbrown::HashMap;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use serde_tuple::*;
 use thiserror::Error as ThisError;
 use tower::{util::BoxService, BoxError, Service, ServiceBuilder, ServiceExt};
 
-#[derive(Serialize_tuple, Deserialize_tuple, Debug, Clone)]
-pub struct Request<T: DeserializeOwned + Serialize = JsonValue> {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Request<T = JsonValue> {
     pub envelope: String,
     pub svc_name: String,
     pub svc_id: String,
@@ -20,8 +19,8 @@ impl actix::Message for Request {
     type Result = Result<Response, Error>;
 }
 
-#[derive(Serialize_tuple, Deserialize_tuple, Debug, Clone)]
-pub struct Response<T: DeserializeOwned + Serialize = JsonValue> {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Response<T = JsonValue> {
     pub envelope: String,
     pub success: bool,
     pub data: T,

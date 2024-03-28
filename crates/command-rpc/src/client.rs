@@ -10,14 +10,14 @@ use flow_lib::{
 use std::collections::HashMap;
 use url::Url;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CommandContextData {
     pub flow_run_id: FlowRunId,
     pub node_id: NodeId,
     pub times: u32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ContextData {
     pub flow_owner: User,
     pub started_by: User,
@@ -111,13 +111,13 @@ impl From<CommandContext> for CommandContextData {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RunInput {
     ctx: ContextData,
     params: ValueSet,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RunOutput(pub Result<ValueSet, String>);
 
 pub struct RpcCommandClient {
@@ -172,5 +172,38 @@ impl CommandTrait for RpcCommandClient {
             .await?;
 
         resp.data.0.map_err(CommandError::msg)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use flow_lib::value;
+
+    #[tokio::test]
+    async fn test_call() {
+        let ctx = Context::default();
+        let http = ctx.http.clone();
+        let result = http
+            .post("http://localhost:38143/call")
+            .json(&srpc::Request {
+                envelope: "".to_owned(),
+                svc_name: RUN_SVC.into(),
+                svc_id: "".to_owned(),
+                input: RunInput {
+                    ctx: ctx.into(),
+                    params: value::map! {
+                        "a" => 2,
+                        "b" => 3,
+                    },
+                },
+            })
+            .send()
+            .await
+            .unwrap()
+            .json::<srpc::Response<RunOutput>>()
+            .await
+            .unwrap();
+        dbg!(result);
     }
 }
