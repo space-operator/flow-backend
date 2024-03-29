@@ -1,4 +1,4 @@
-import { type Context, Value } from "@space-operator/flow-lib";
+import { type Context, Value } from "jsr:@space-operator/flow-lib";
 import { CommandTrait } from "../src/mod.ts";
 
 export default class Command implements CommandTrait {

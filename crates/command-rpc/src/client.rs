@@ -127,12 +127,12 @@ pub struct RpcCommandClient {
 }
 
 impl RpcCommandClient {
-    pub fn new(base_url: Url, svc_id: String, node_data: NodeData) -> Result<Self, CommandError> {
-        Ok(Self {
+    pub fn new(base_url: Url, svc_id: String, node_data: NodeData) -> Self {
+        Self {
             base_url,
             svc_id,
             node_data,
-        })
+        }
     }
 }
 
@@ -172,38 +172,5 @@ impl CommandTrait for RpcCommandClient {
             .await?;
 
         resp.data.0.map_err(CommandError::msg)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use flow_lib::value;
-
-    #[tokio::test]
-    async fn test_call() {
-        let ctx = Context::default();
-        let http = ctx.http.clone();
-        let result = http
-            .post("http://localhost:38143/call")
-            .json(&srpc::Request {
-                envelope: "".to_owned(),
-                svc_name: RUN_SVC.into(),
-                svc_id: "".to_owned(),
-                input: RunInput {
-                    ctx: ctx.into(),
-                    params: value::map! {
-                        "a" => 2,
-                        "b" => 3,
-                    },
-                },
-            })
-            .send()
-            .await
-            .unwrap()
-            .json::<srpc::Response<RunOutput>>()
-            .await
-            .unwrap();
-        dbg!(result);
     }
 }
