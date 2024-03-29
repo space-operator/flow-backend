@@ -1,5 +1,5 @@
 import { type Context, type IValue, Value } from "@space-operator/flow-lib";
-import { Application, Router, Status } from "@oak/oak";
+import { Application, type ListenOptions, Router, Status } from "@oak/oak";
 
 export const RUN_SVC = "run";
 
@@ -33,18 +33,22 @@ export interface Response<T> {
   data: T;
 }
 
-export async function start(cmd: CommandTrait) {
+export async function start(
+  cmd: CommandTrait,
+  listenOptions: Pick<ListenOptions, "hostname" | "port">
+) {
   const router = new Router();
   router.post("/call", async (ctx) => {
     const req: IRequest<any> = await ctx.request.body.json();
     console.log(req);
     if (req.svc_name === RUN_SVC) {
       const input = req.input as RunInput;
-      const params = Value.fromJSON({ M: input.params }).M!;
+      const params = Value.fromJSON({ M: input.params });
+      const jsParams = params.toJSObject();
       let data: RunOutput;
       let success = false;
       try {
-        data = { Ok: await cmd.run(input.ctx, params) };
+        data = { Ok: new Value(await cmd.run(input.ctx, jsParams)).M! };
         success = true;
       } catch (error) {
         data = { Err: error.toString() };
@@ -74,5 +78,8 @@ export async function start(cmd: CommandTrait) {
   });
   app.use(router.routes());
   app.use(router.allowedMethods());
-  await app.listen({ port: 0 });
+  await app.listen({
+    hostname: listenOptions.hostname,
+    port: listenOptions.port,
+  });
 }
