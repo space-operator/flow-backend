@@ -1951,6 +1951,7 @@ dependencies = [
  "flow-lib",
  "serde",
  "srpc",
+ "tokio",
  "url",
 ]
 
@@ -3006,6 +3007,7 @@ dependencies = [
  "chrono",
  "cmds-solana",
  "cmds-std",
+ "command-rpc",
  "crossbeam-channel",
  "derive_more",
  "flow-lib",
@@ -3023,6 +3025,7 @@ dependencies = [
  "serde_json",
  "solana-sdk",
  "space-wasm",
+ "tempfile",
  "thiserror",
  "tokio",
  "tokio-util 0.7.10",
@@ -3030,6 +3033,7 @@ dependencies = [
  "tracing",
  "tracing-log 0.1.4",
  "tracing-subscriber",
+ "url",
  "utils",
  "uuid 1.8.0",
 ]
@@ -6204,27 +6208,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_tuple"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4f025b91216f15a2a32aa39669329a475733590a015835d1783549a56d09427"
-dependencies = [
- "serde",
- "serde_tuple_macros",
-]
-
-[[package]]
-name = "serde_tuple_macros"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4076151d1a2b688e25aaf236997933c66e18b870d0369f8b248b8ab2be630d7e"
-dependencies = [
- "proc-macro2 1.0.79",
- "quote 1.0.35",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "serde_urlencoded"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7750,7 +7733,6 @@ dependencies = [
  "hashbrown 0.14.2",
  "serde",
  "serde_json",
- "serde_tuple",
  "thiserror",
  "tower",
 ]
