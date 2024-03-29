@@ -37,7 +37,6 @@ export async function start(
   const router = new Router();
   router.post("/call", async (ctx) => {
     const req: IRequest<any> = await ctx.request.body.json();
-    console.log(req);
     if (req.svc_name === RUN_SVC) {
       const input = req.input as RunInput;
       const params = Value.fromJSON({ M: input.params });
