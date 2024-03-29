@@ -4,10 +4,7 @@ import { Application, type ListenOptions, Router, Status } from "@oak/oak";
 export const RUN_SVC = "run";
 
 export interface CommandTrait {
-  run(
-    ctx: Context,
-    params: Record<string, Value>
-  ): Promise<Record<string, Value>>;
+  run(ctx: Context, params: Record<string, any>): Promise<Record<string, any>>;
 }
 
 export interface IRequest<T> {
