@@ -4,6 +4,7 @@ use futures_channel::oneshot;
 use hashbrown::HashMap;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value as JsonValue;
+use std::marker::PhantomData;
 use thiserror::Error as ThisError;
 use tower::{util::BoxService, BoxError, Service, ServiceBuilder, ServiceExt};
 
@@ -26,9 +27,22 @@ pub struct Response<T = JsonValue> {
     pub data: T,
 }
 
+pub struct RegisterJsonService<S, T> {
+    pub name: String,
+    pub id: String,
+    pub service: S,
+    _phantom: PhantomData<T>,
+}
+
+impl<S, T> actix::Message for RegisterJsonService<S, T> {
+    type Result = Option<BoxService<JsonValue, JsonValue, JsonValue>>;
+}
+
+pub type JsonService = BoxService<JsonValue, JsonValue, JsonValue>;
+
 pub struct Server {
     /// svc_name => (svc_id => S)
-    services: HashMap<String, HashMap<String, BoxService<JsonValue, JsonValue, JsonValue>>>,
+    services: HashMap<String, HashMap<String, JsonService>>,
 }
 
 #[derive(ThisError, Debug)]
@@ -143,11 +157,25 @@ impl Server {
 }
 
 impl actix::Handler<Request> for Server {
-    type Result = ResponseFuture<Result<Response, Error>>;
+    type Result = ResponseFuture<<Request as actix::Message>::Result>;
     fn handle(&mut self, msg: Request, ctx: &mut Self::Context) -> Self::Result {
         let r = self.process_request(ctx, msg);
 
         Box::pin(async move { Ok(r?.await.map_err(|_| Error::Dropped)?) })
+    }
+}
+
+impl<S, T> actix::Handler<RegisterJsonService<S, T>> for Server
+where
+    S: tower::Service<T> + Send + 'static,
+    T: DeserializeOwned,
+    S::Error: std::error::Error + Send + Sync + 'static,
+    S::Response: Serialize,
+    S::Future: Send + 'static,
+{
+    type Result = <RegisterJsonService<S, T> as actix::Message>::Result;
+    fn handle(&mut self, msg: RegisterJsonService<S, T>, _: &mut Self::Context) -> Self::Result {
+        self.register_json_service(msg.name, msg.id, msg.service)
     }
 }
 
