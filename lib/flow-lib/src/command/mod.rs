@@ -17,6 +17,8 @@ use crate::{
 use std::borrow::Cow;
 use value::Value;
 
+pub mod builder;
+
 /// Import common types for writing commands.
 pub mod prelude {
     pub use crate::{
@@ -35,8 +37,6 @@ pub mod prelude {
     pub use thiserror::Error as ThisError;
     pub use value::{self, Value};
 }
-
-pub mod builder;
 
 /// Error type of commmands.
 pub type CommandError = anyhow::Error;

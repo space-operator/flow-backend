@@ -1,8 +1,7 @@
 use crate::prelude::*;
 use anyhow::anyhow;
 use flow_lib::command::builder::{BuildResult, BuilderCache};
-use hyper::client::connect::dns::Name as DomainName;
-use reqwest::Url;
+use reqwest::{dns::Name as DomainName, Url};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
 const HTTP_REQUEST: &str = "http_request";
@@ -57,11 +56,11 @@ fn is_global(ip: &IpAddr) -> bool {
     }
 }
 
-impl reqwest::dns::Resolve for Resolver {
-    fn resolve(&self, name: DomainName) -> reqwest::dns::Resolving {
+impl Resolver {
+    fn resolve_impl(&self, name: String) -> reqwest::dns::Resolving {
         Box::pin(async move {
             tracing::debug!("resolving {}", name.as_str());
-            let host = name.as_str().to_owned() + ":0";
+            let host = name + ":0";
 
             let addrs = tokio::net::lookup_host(host).await?.collect::<Vec<_>>();
             if let Some(addr) = addrs.iter().find(|addr| !is_global(&addr.ip())) {
@@ -70,6 +69,12 @@ impl reqwest::dns::Resolve for Resolver {
             let addrs: Box<dyn Iterator<Item = SocketAddr> + Send> = Box::new(addrs.into_iter());
             Ok(addrs)
         })
+    }
+}
+
+impl reqwest::dns::Resolve for Resolver {
+    fn resolve(&self, name: DomainName) -> reqwest::dns::Resolving {
+        self.resolve_impl(name.as_str().to_owned())
     }
 }
 
@@ -169,9 +174,8 @@ impl Ipv6Ext for Ipv6Addr {
 async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     match input.url.host() {
         Some(url::Host::Domain(domain)) => {
-            use reqwest::dns::Resolve;
             let _ = Resolver
-                .resolve(domain.parse()?)
+                .resolve_impl(domain.to_owned())
                 .await
                 .map_err(|error| anyhow!(error))?;
         }
