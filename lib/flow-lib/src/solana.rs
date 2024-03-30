@@ -13,6 +13,7 @@ use serde_with::DisplayFromStr;
 use solana_client::{
     client_error::{ClientError, ClientErrorKind},
     nonblocking::rpc_client::RpcClient,
+    rpc_client::SerializableTransaction,
     rpc_request::{RpcError, RpcResponseErrorData},
     rpc_response::RpcSimulateTransactionResult,
 };
@@ -343,7 +344,7 @@ impl<'de> Deserialize<'de> for InsertionBehavior {
 }
 
 const fn default_simulation_level() -> CommitmentLevel {
-    CommitmentLevel::Confirmed
+    CommitmentLevel::Finalized
 }
 
 const fn default_tx_level() -> CommitmentLevel {
@@ -670,7 +671,7 @@ impl Instructions {
             }
 
             let mut tx = Transaction::new_unsigned(message);
-            tx.try_sign(&signers, tx.message.recent_blockhash)?;
+            tx.try_sign(&signers, *tx.get_recent_blockhash())?;
             tx
         };
 
@@ -679,15 +680,21 @@ impl Instructions {
         // TODO: is it correct to use FeatureSet::all_enabled()?
         verify_precompiles(&tx, &FeatureSet::all_enabled())?;
 
-        let sig = rpc
-            .send_and_confirm_transaction_with_spinner_and_commitment(
-                &tx,
-                commitment(config.wait_commitment_level),
-            )
+        let signature = rpc
+            .send_transaction(&tx)
             .await
             .map_err(move |error| Error::solana(error, inserted))?;
+        tracing::info!("submitted {}", signature);
 
-        Ok(sig)
+        rpc.confirm_transaction_with_spinner(
+            &signature,
+            &tx.get_recent_blockhash(),
+            commitment(config.wait_commitment_level),
+        )
+        .await
+        .map_err(move |error| Error::solana(error, inserted))?;
+
+        Ok(signature)
     }
 }
 
