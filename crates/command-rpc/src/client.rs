@@ -184,23 +184,43 @@ impl CommandTrait for RpcCommandClient {
 
     async fn run(&self, ctx: Context, params: ValueSet) -> Result<ValueSet, CommandError> {
         let url = self.base_url.join("call").unwrap();
-        let resp = ctx
-            .http
-            .post(url)
-            .json(&srpc::Request {
-                envelope: "".to_owned(),
-                svc_name: RUN_SVC.into(),
-                svc_id: self.svc_id.clone(),
-                input: RunInput {
-                    ctx: ContextData::new(ctx).await?,
-                    params,
-                },
-            })
-            .send()
-            .await?
-            .json::<srpc::Response<RunOutput>>()
-            .await?;
+        let http = ctx.http.clone();
+        let rpc = ctx
+            .extensions
+            .get::<actix::Addr<srpc::Server>>()
+            .ok_or_else(|| CommandError::msg("srpc::Server not available"))?
+            .clone();
+        let ctx_data = ContextData::new(ctx).await?;
+        let signer = ctx_data.signer.clone();
+        let resp = async move {
+            Result::<_, CommandError>::Ok(
+                http.post(url)
+                    .json(&srpc::Request {
+                        envelope: "".to_owned(),
+                        svc_name: RUN_SVC.into(),
+                        svc_id: self.svc_id.clone(),
+                        input: RunInput {
+                            ctx: ctx_data,
+                            params,
+                        },
+                    })
+                    .send()
+                    .await?
+                    .json::<srpc::Response<RunOutput>>()
+                    .await?,
+            )
+        };
 
-        resp.data.0.map_err(CommandError::msg)
+        rpc.do_send(srpc::RemoveService {
+            name: signer.name,
+            id: signer.id,
+        });
+
+        let resp = match resp.await {
+            Ok(x) => x.data.0.map_err(CommandError::msg),
+            Err(x) => Err(x),
+        };
+
+        resp
     }
 }

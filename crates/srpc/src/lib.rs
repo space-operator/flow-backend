@@ -59,6 +59,15 @@ impl<S, T> actix::Message for RegisterJsonService<S, T> {
     type Result = RegisterServiceResult;
 }
 
+pub struct RemoveService {
+    pub name: String,
+    pub id: String,
+}
+
+impl actix::Message for RemoveService {
+    type Result = Option<JsonService>;
+}
+
 pub struct Server {
     /// svc_name => (svc_id => S)
     services: HashMap<String, HashMap<String, JsonService>>,
@@ -227,6 +236,17 @@ where
             id: msg.id,
             base_url: self.base_url(),
         })
+    }
+}
+
+impl actix::Handler<RemoveService> for Server {
+    type Result = actix::Response<<RemoveService as actix::Message>::Result>;
+    fn handle(&mut self, msg: RemoveService, _: &mut Self::Context) -> Self::Result {
+        actix::Response::reply(
+            self.services
+                .get_mut(&msg.name)
+                .and_then(|map| map.remove(&msg.id)),
+        )
     }
 }
 
