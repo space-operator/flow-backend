@@ -62,7 +62,7 @@ mod tests {
         tracing_subscriber::fmt::try_init().ok();
         const SOURCE: &str = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/test_files/deno/add.ts"
+            "/test_files/deno_add/add.ts"
         ));
         let (cmd, child) = new(&NodeData {
             r#type: flow_lib::CommandType::Deno,
