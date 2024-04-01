@@ -65,7 +65,7 @@ mod tests {
 
     use super::*;
 
-    #[tokio::test]
+    #[actix_web::test]
     async fn test_run() {
         tracing_subscriber::fmt::try_init().ok();
         const SOURCE: &str = include_str!(concat!(
