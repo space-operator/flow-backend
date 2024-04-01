@@ -4,7 +4,7 @@
     "specifiers": {
       "jsr:@oak/commons@0.7": "jsr:@oak/commons@0.7.0",
       "jsr:@oak/oak@^14.2.0": "jsr:@oak/oak@14.2.0",
-      "jsr:@space-operator/flow-lib@^0.4.0": "jsr:@space-operator/flow-lib@0.4.0",
+      "jsr:@space-operator/flow-lib@^0.4.1": "jsr:@space-operator/flow-lib@0.4.1",
       "jsr:@std/assert@0.218": "jsr:@std/assert@0.218.2",
       "jsr:@std/assert@^0.218.2": "jsr:@std/assert@0.218.2",
       "jsr:@std/bytes@0.218": "jsr:@std/bytes@0.218.2",
@@ -40,8 +40,8 @@
           "npm:path-to-regexp@6.2.1"
         ]
       },
-      "@space-operator/flow-lib@0.4.0": {
-        "integrity": "d7f778c6f7544b6c9f06f0f4d52e00fae7e9cd9cb796abfc7b7de8b111d1645d",
+      "@space-operator/flow-lib@0.4.1": {
+        "integrity": "52bd1ec7c471bebd3eb41ebc97d02ac902a523f7320343eef92574795a6fc67e",
         "dependencies": [
           "jsr:@std/encoding@^0.220.1",
           "npm:@solana/web3.js@^1.91.2"
@@ -384,7 +384,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@oak/oak@^14.2.0",
-      "jsr:@space-operator/flow-lib@^0.4.0"
+      "jsr:@space-operator/flow-lib@^0.4.1"
     ]
   }
 }
