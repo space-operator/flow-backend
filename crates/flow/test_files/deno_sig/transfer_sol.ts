@@ -1,5 +1,5 @@
-import * as rpc from "jsr:@space-operator/deno-command-rpc@^0.4.0";
-import * as lib from "jsr:@space-operator/flow-lib@^0.4.0";
+import * as rpc from "jsr:@space-operator/deno-command-rpc";
+import * as lib from "jsr:@space-operator/flow-lib";
 import * as web3 from "npm:@solana/web3.js";
 
 export default class TransferSol implements rpc.CommandTrait {
@@ -34,6 +34,8 @@ export default class TransferSol implements rpc.CommandTrait {
       tx = web3.Transaction.from(new_message);
     }
     tx.addSignature(fromPubkey, signature);
-    return { signature: await client.sendRawTransaction(tx.serialize()) };
+    return {
+      signature: new lib.Value(await client.sendRawTransaction(tx.serialize())),
+    };
   }
 }

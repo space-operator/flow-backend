@@ -6,6 +6,7 @@ export interface CommandContext {
   flow_run_id: FlowRunId;
   node_id: NodeId;
   times: number;
+  
 }
 
 export interface ServiceProxy {
