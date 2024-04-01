@@ -53,6 +53,7 @@ export class Context {
     data: Buffer
   ): Promise<RequestSignatureResponse> {
     const resp = await fetch(new URL("call", this.signer.base_url), {
+      method: "POST",
       body: JSON.stringify({
         envelope: "",
         svc_name: this.signer.name,
