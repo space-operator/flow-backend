@@ -211,15 +211,15 @@ impl CommandTrait for RpcCommandClient {
             )
         };
 
-        rpc.do_send(srpc::RemoveService {
-            name: signer.name,
-            id: signer.id,
-        });
-
         let resp = match resp.await {
             Ok(x) => x.data.0.map_err(CommandError::msg),
             Err(x) => Err(x),
         };
+
+        rpc.do_send(srpc::RemoveService {
+            name: signer.name,
+            id: signer.id,
+        });
 
         resp
     }

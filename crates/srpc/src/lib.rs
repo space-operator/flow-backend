@@ -77,8 +77,8 @@ pub struct Server {
 
 #[derive(ThisError, Debug)]
 pub enum Error {
-    #[error("not found")]
-    NotFound,
+    #[error("service not found: {}", .0)]
+    NotFound(String),
     #[error("service dropped without sending a response")]
     Dropped,
     #[error("bind error: {}", .0)]
@@ -143,8 +143,7 @@ impl Server {
                 self.services
                     .get_mut(&req.svc_name)
                     .unwrap()
-                    .insert(req.svc_id, s)
-                    .unwrap();
+                    .insert(req.svc_id, s);
             }
             Err(error) => {
                 let _ = responder.send(Response {
@@ -164,9 +163,9 @@ impl Server {
         let mut s = self
             .services
             .get_mut(&req.svc_name)
-            .ok_or(Error::NotFound)?
+            .ok_or_else(|| Error::NotFound(format!("svc_name: {}", req.svc_name)))?
             .remove(&req.svc_id)
-            .ok_or(Error::NotFound)?;
+            .ok_or_else(|| Error::NotFound(format!("svc_id: {}", req.svc_id)))?;
 
         let (tx, rx) = oneshot::channel();
         let task = async move {
@@ -192,6 +191,7 @@ impl Server {
         S::Response: Serialize,
         S::Future: Send + 'static,
     {
+        tracing::info!("inserting {}::{}", name, id);
         let s = ServiceBuilder::new()
             .filter(|r: JsonValue| serde_json::from_value::<T>(r))
             .map_result(
@@ -242,6 +242,7 @@ where
 impl actix::Handler<RemoveService> for Server {
     type Result = actix::Response<<RemoveService as actix::Message>::Result>;
     fn handle(&mut self, msg: RemoveService, _: &mut Self::Context) -> Self::Result {
+        tracing::info!("removing {}::{}", msg.name, msg.id);
         actix::Response::reply(
             self.services
                 .get_mut(&msg.name)
