@@ -25,12 +25,20 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
     let dir = tempdir()?;
     tokio::fs::write(dir.path().join("__cmd.ts"), source).await?;
     tokio::fs::write(dir.path().join("__run.ts"), include_str!("./__run.ts")).await?;
+    let deno_dir = std::env::var("DENO_DIR").unwrap_or_else(|_| {
+        let mut home = home::home_dir().unwrap();
+        home.push(".cache");
+        home.push("deno");
+        home.display().to_string()
+    });
     let mut spawned = tokio::process::Command::new("deno")
         .current_dir(dir.path())
         .stdout(Stdio::piped())
+        .env("DENO_DIR", &deno_dir)
         .kill_on_drop(true)
         .arg("run")
         .arg("--allow-net")
+        .arg("--no-prompt")
         .arg("__run.ts")
         .spawn()?;
     let mut stdout = BufReader::new(spawned.stdout.take().unwrap()).lines();
@@ -57,12 +65,12 @@ mod tests {
 
     use super::*;
 
-    #[tokio::test]
+    #[actix_web::test]
     async fn test_run() {
         tracing_subscriber::fmt::try_init().ok();
         const SOURCE: &str = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/test_files/deno/add.ts"
+            "/test_files/deno_add/add.ts"
         ));
         let (cmd, child) = new(&NodeData {
             r#type: flow_lib::CommandType::Deno,
@@ -102,8 +110,12 @@ mod tests {
         })
         .await
         .unwrap();
+        let mut ctx = Context::default();
+        Arc::get_mut(&mut ctx.extensions)
+            .unwrap()
+            .insert(srpc::Server::start_http_server().unwrap());
         let output = cmd
-            .run(<_>::default(), value::map! { "a" => 12, "b" => 13 })
+            .run(ctx, value::map! { "a" => 12, "b" => 13 })
             .await
             .unwrap();
         let c = value::from_value::<u32>(output["c"].clone()).unwrap();

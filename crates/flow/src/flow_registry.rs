@@ -53,6 +53,8 @@ pub struct FlowRegistry {
 
     pub(crate) rhai_permit: Arc<Semaphore>,
     rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
+
+    pub(crate) rpc_server: Option<actix::Addr<srpc::Server>>,
 }
 
 impl Default for FlowRegistry {
@@ -66,7 +68,7 @@ impl Default for FlowRegistry {
             flow_owner: User::new(UserId::nil()),
             started_by: User::new(UserId::nil()),
             shared_with: <_>::default(),
-            flows: Arc::new(HashMap::new()),
+            flows: <_>::default(),
             endpoints: <_>::default(),
             signers_info: <_>::default(),
             signer,
@@ -75,6 +77,7 @@ impl Default for FlowRegistry {
             get_previous_values,
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
+            rpc_server: None, // TODO: try this
         }
     }
 }
@@ -237,6 +240,9 @@ impl FlowRegistry {
             endpoints,
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
+            rpc_server: srpc::Server::start_http_server()
+                .inspect_err(|error| tracing::info!("srpc error: {}", error))
+                .ok(),
         })
     }
 

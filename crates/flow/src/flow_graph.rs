@@ -372,6 +372,9 @@ impl FlowGraph {
 
         let ext = {
             let mut ext = Extensions::new();
+            if let Some(rpc) = registry.rpc_server.clone() {
+                ext.insert(rpc);
+            }
             ext.insert(registry);
             ext.insert(tokio::runtime::Handle::current());
             ext
