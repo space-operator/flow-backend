@@ -102,8 +102,12 @@ mod tests {
         })
         .await
         .unwrap();
+        let mut ctx = Context::default();
+        Arc::get_mut(&mut ctx.extensions)
+            .unwrap()
+            .insert(srpc::Server::start_http_server().unwrap());
         let output = cmd
-            .run(<_>::default(), value::map! { "a" => 12, "b" => 13 })
+            .run(ctx, value::map! { "a" => 12, "b" => 13 })
             .await
             .unwrap();
         let c = value::from_value::<u32>(output["c"].clone()).unwrap();
