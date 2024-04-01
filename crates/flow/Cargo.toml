@@ -41,6 +41,7 @@ tempfile = "3.10.1"
 url = "2.5.0"
 command-rpc.workspace = true
 srpc.workspace = true
+home = "0.5.9"
 
 [dev-dependencies]
 cmds-std = { workspace = true }
