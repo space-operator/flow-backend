@@ -7737,6 +7737,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tower",
+ "tracing",
  "url",
 ]
 

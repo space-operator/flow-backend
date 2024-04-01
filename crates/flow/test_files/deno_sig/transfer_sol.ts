@@ -9,13 +9,17 @@ export default class TransferSol implements rpc.CommandTrait {
   ): Promise<Record<string, any>> {
     const client = new web3.Connection(ctx.cfg.solana_client.url);
     const fromPubkey = new web3.PublicKey(params.from);
-    let tx = new web3.Transaction().add(
-      web3.SystemProgram.transfer({
-        fromPubkey,
-        toPubkey: new web3.PublicKey(params.to),
-        lamports: params.amount,
-      })
-    );
+    let tx = new web3.Transaction()
+      .add(
+        web3.ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1000 })
+      )
+      .add(
+        web3.SystemProgram.transfer({
+          fromPubkey,
+          toPubkey: new web3.PublicKey(params.to),
+          lamports: params.amount,
+        })
+      );
     const { blockhash, lastValidBlockHeight } =
       await client.getLatestBlockhash();
     tx.recentBlockhash = blockhash;
