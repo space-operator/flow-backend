@@ -1,4 +1,9 @@
-import { type Context, type IValue, Value } from "@space-operator/flow-lib";
+import {
+  Context,
+  type IValue,
+  Value,
+  type ContextData,
+} from "@space-operator/flow-lib";
 import { Application, type ListenOptions, Router, Status } from "@oak/oak";
 
 export const RUN_SVC = "run";
@@ -15,7 +20,7 @@ export interface IRequest<T> {
 }
 
 export interface RunInput {
-  ctx: Context;
+  ctx: ContextData;
   params: Record<string, IValue>;
 }
 
@@ -43,8 +48,9 @@ export async function start(
       const jsParams = params.toJSObject();
       let data: RunOutput;
       let success = false;
+      const context = new Context(input.ctx);
       try {
-        data = { Ok: new Value(await cmd.run(input.ctx, jsParams)).M! };
+        data = { Ok: new Value(await cmd.run(context, jsParams)).M! };
         success = true;
       } catch (error) {
         data = { Err: error.toString() };
