@@ -14,3 +14,4 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror = "1.0.58"
 tower = { version = "0.4.13", features = ["filter", "util"] }
+url = { version = "2.5.0", features = ["serde"] }

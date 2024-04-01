@@ -191,9 +191,12 @@ pub mod signer {
         type Result = Result<SignatureResponse, Error>;
     }
 
-    #[derive(Debug)]
+    #[serde_as]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct SignatureResponse {
+        #[serde_as(as = "DisplayFromStr")]
         pub signature: Signature,
+        #[serde_as(as = "Option<Base64>")]
         pub new_message: Option<bytes::Bytes>,
     }
 

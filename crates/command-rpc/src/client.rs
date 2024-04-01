@@ -11,6 +11,13 @@ use std::collections::HashMap;
 use url::Url;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ServiceProxy {
+    pub name: String,
+    pub id: String,
+    pub base_url: Url,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CommandContextData {
     pub flow_run_id: FlowRunId,
     pub node_id: NodeId,
@@ -25,10 +32,11 @@ pub struct ContextData {
     pub environment: HashMap<String, String>,
     pub endpoints: Endpoints,
     pub command: Option<CommandContextData>,
+    pub signer: ServiceProxy,
 }
 
-impl From<Context> for ContextData {
-    fn from(
+impl ContextData {
+    pub async fn new(
         Context {
             flow_owner,
             started_by,
@@ -37,20 +45,41 @@ impl From<Context> for ContextData {
             solana_client: _,
             environment,
             endpoints,
-            extensions: _,
+            extensions,
             command,
-            signer: _,
+            signer,
             get_jwt: _,
         }: Context,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, CommandError> {
+        let server = extensions
+            .get::<actix::Addr<srpc::Server>>()
+            .ok_or_else(|| CommandError::msg("srpc::Server not available"))?;
+        let flow_run_id = command
+            .as_ref()
+            .map(|c| c.flow_run_id)
+            .ok_or_else(|| CommandError::msg("CommandContext not available"))?;
+
+        let signer = server
+            .send(srpc::RegisterJsonService::new(
+                "signer".to_string(),
+                flow_run_id.to_string(),
+                signer,
+            ))
+            .await?;
+
+        Ok(Self {
             flow_owner,
             started_by,
             cfg,
             environment,
             endpoints,
             command: command.map(Into::into),
-        }
+            signer: ServiceProxy {
+                name: signer.name,
+                id: signer.id,
+                base_url: signer.base_url,
+            },
+        })
     }
 }
 
@@ -80,6 +109,7 @@ impl From<ContextData> for Context {
             environment,
             endpoints,
             command,
+            signer: _,
         }: ContextData,
     ) -> Self {
         Self {
@@ -162,7 +192,7 @@ impl CommandTrait for RpcCommandClient {
                 svc_name: RUN_SVC.into(),
                 svc_id: self.svc_id.clone(),
                 input: RunInput {
-                    ctx: ctx.into(),
+                    ctx: ContextData::new(ctx).await?,
                     params,
                 },
             })
