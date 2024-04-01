@@ -7,6 +7,7 @@ export default class TransferSol implements rpc.CommandTrait {
     ctx: lib.Context,
     params: Record<string, any>
   ): Promise<Record<string, any>> {
+    const client = new web3.Connection(ctx.cfg.solana_client.url);
     const fromPubkey = new web3.PublicKey(params.from);
     let tx = new web3.Transaction().add(
       web3.SystemProgram.transfer({
@@ -15,6 +16,11 @@ export default class TransferSol implements rpc.CommandTrait {
         lamports: params.amount,
       })
     );
+    const { blockhash, lastValidBlockHeight } =
+      await client.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.lastValidBlockHeight = lastValidBlockHeight;
+    tx.feePayer = fromPubkey;
 
     const { signature, new_message } = await ctx.requestSignature(
       fromPubkey,
@@ -24,7 +30,6 @@ export default class TransferSol implements rpc.CommandTrait {
       tx = web3.Transaction.from(new_message);
     }
     tx.addSignature(fromPubkey, signature);
-    const client = new web3.Connection(ctx.cfg.solana_client.url);
     return { signature: await client.sendRawTransaction(tx.serialize()) };
   }
 }

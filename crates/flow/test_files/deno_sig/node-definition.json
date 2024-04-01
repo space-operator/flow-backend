@@ -57,7 +57,7 @@
     ],
     "targets": [
         {
-            "name": "sender",
+            "name": "from",
             "type_bounds": [
                 "pubkey"
             ],
@@ -67,7 +67,7 @@
             "passthrough": false
         },
         {
-            "name": "recipient",
+            "name": "to",
             "type_bounds": [
                 "pubkey"
             ],

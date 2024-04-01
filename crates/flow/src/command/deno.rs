@@ -30,7 +30,7 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
         .stdout(Stdio::piped())
         .kill_on_drop(true)
         .arg("run")
-        .arg("--allow-net")
+        .arg("-A") // TODO
         .arg("__run.ts")
         .spawn()?;
     let mut stdout = BufReader::new(spawned.stdout.take().unwrap()).lines();
