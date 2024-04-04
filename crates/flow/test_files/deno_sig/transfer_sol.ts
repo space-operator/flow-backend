@@ -1,5 +1,4 @@
-import * as rpc from "jsr:@space-operator/deno-command-rpc";
-import * as lib from "jsr:@space-operator/flow-lib";
+import * as lib from "jsr:@space-operator/flow-lib@0.5.0";
 import * as web3 from "npm:@solana/web3.js";
 
 export default class TransferSol implements rpc.CommandTrait {

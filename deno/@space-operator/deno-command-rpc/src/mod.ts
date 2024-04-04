@@ -3,33 +3,30 @@ import {
   type IValue,
   Value,
   type ContextData,
+  type CommandTrait,
 } from "@space-operator/flow-lib";
 import { Application, type ListenOptions, Router, Status } from "@oak/oak";
 
-export const RUN_SVC = "run";
+const RUN_SVC = "run";
 
-export interface CommandTrait {
-  run(ctx: Context, params: Record<string, any>): Promise<Record<string, any>>;
-}
-
-export interface IRequest<T> {
+interface IRequest<T> {
   envelope: string;
   svc_name: string;
   svc_id: string;
   input: T;
 }
 
-export interface RunInput {
+interface RunInput {
   ctx: ContextData;
   params: Record<string, IValue>;
 }
 
-export interface RunOutput {
+interface RunOutput {
   Ok?: Record<string, IValue>;
   Err?: string;
 }
 
-export interface Response<T> {
+interface Response<T> {
   envelope: string;
   success: boolean;
   data: T;
