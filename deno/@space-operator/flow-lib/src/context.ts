@@ -76,7 +76,7 @@ export class Context {
     this.endpoints = data.endpoints;
     this.command = data.command;
     this._signer = data.signer;
-    this.solana = new web3.Connection(this._cfg.solana_client.cluster);
+    this.solana = new web3.Connection(this._cfg.solana_client.url);
   }
 
   /**
