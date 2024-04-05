@@ -1,5 +1,4 @@
-import { Context } from "jsr:@space-operator/flow-lib";
-import { CommandTrait } from "jsr:@space-operator/deno-command-rpc@0.3.0";
+import { Context, CommandTrait } from "jsr:@space-operator/flow-lib";
 
 export default class MyCommand implements CommandTrait {
   async run(

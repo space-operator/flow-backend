@@ -1,5 +1,8 @@
 import { bs58, base64, Buffer } from "./deps.ts";
 
+/**
+ * 
+ */
 export interface IValue {
   S?: string;
   D?: string;

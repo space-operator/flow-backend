@@ -15,6 +15,24 @@ struct Extra {
     source: String,
 }
 
+#[cfg(test)]
+fn copy_dir_all(
+    src: impl AsRef<std::path::Path>,
+    dst: impl AsRef<std::path::Path>,
+) -> std::io::Result<()> {
+    std::fs::create_dir_all(&dst)?;
+    for entry in std::fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        } else {
+            std::fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+
 pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), CommandError> {
     let extra = &nd.targets_form.extra.rest;
     let source = Extra::deserialize(MapDeserializer::new(
@@ -25,6 +43,11 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
     let dir = tempdir()?;
     tokio::fs::write(dir.path().join("__cmd.ts"), source).await?;
     tokio::fs::write(dir.path().join("__run.ts"), include_str!("./__run.ts")).await?;
+    #[cfg(test)]
+    {
+        let libs = concat!(env!("CARGO_MANIFEST_DIR"), "/../../deno/@space-operator");
+        copy_dir_all(libs, &format!("{}/@space-operator", dir.path().display()))?;
+    }
     let deno_dir = std::env::var("DENO_DIR").unwrap_or_else(|_| {
         let mut home = home::home_dir().unwrap();
         home.push(".cache");

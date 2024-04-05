@@ -1,6 +1,9 @@
+/**
+ * Providing services and information about the current invocation for nodes to use.
+ */
+
 import type { FlowRunId, NodeId, User } from "./common.ts";
-import type { PublicKey } from "@solana/web3.js";
-import { Buffer, base64, bs58 } from "./deps.ts";
+import { Buffer, base64, bs58, web3 } from "./deps.ts";
 
 export interface CommandContext {
   flow_run_id: FlowRunId;
@@ -14,6 +17,9 @@ export interface ServiceProxy {
   base_url: string;
 }
 
+/**
+ * ContextData is Context when serialized and sent over the network.
+ */
 export interface ContextData {
   flow_owner: User;
   started_by: User;
@@ -29,35 +35,73 @@ export interface RequestSignatureResponse {
   new_message?: Buffer;
 }
 
+/**
+ * Providing services and information about the current invocation for nodes to use.
+ */
 export class Context {
+  /**
+   * Owner of current flow.
+   */
   flow_owner: User;
+  /**
+   * Who started the invocation.
+   */
   started_by: User;
-  cfg: ContextConfig;
+  private _cfg: ContextConfig;
+  /**
+   * Environment variables.
+   */
   environment: Record<string, string>;
+  /**
+   * URLs to call other services.
+   */
   endpoints: Endpoints;
+  /**
+   * Context of the current node.
+   */
   command?: CommandContext;
-  signer: ServiceProxy;
+  /**
+   * Solana RPC client.
+   */
+  solana: web3.Connection;
+
+  private _signer: ServiceProxy;
 
   constructor(data: ContextData) {
     this.flow_owner = data.flow_owner;
     this.started_by = data.started_by;
-    this.cfg = data.cfg;
+    this._cfg = data.cfg;
     this.environment = data.environment;
     this.endpoints = data.endpoints;
     this.command = data.command;
-    this.signer = data.signer;
+    this._signer = data.signer;
+    this.solana = new web3.Connection(this._cfg.solana_client.url);
   }
 
+  /**
+   * Request a signature from user.
+   * The backend with automaticaly find out who is the owner of the specified public key.
+   *
+   * Message data should be a serialized Solana message, produced by
+   * [Transaction.serializeMessage](https://solana-labs.github.io/solana-web3.js/classes/Transaction.html#serializeMessage)
+   * or [Message.serialize](https://solana-labs.github.io/solana-web3.js/classes/Message.html#serialize).
+   * We only support legacy transaction at the moment.
+   *
+   *
+   * @param pubkey Public key
+   * @param data Message data
+   * @returns Signature and the (optional) [updated transaction message](https://docs.phantom.app/developer-powertools/solana-priority-fees#how-phantom-applies-priority-fees-to-dapp-transactions)
+   */
   async requestSignature(
-    pubkey: PublicKey,
+    pubkey: web3.PublicKey,
     data: Buffer
   ): Promise<RequestSignatureResponse> {
-    const resp = await fetch(new URL("call", this.signer.base_url), {
+    const resp = await fetch(new URL("call", this._signer.base_url), {
       method: "POST",
       body: JSON.stringify({
         envelope: "",
-        svc_name: this.signer.name,
-        svc_id: this.signer.id,
+        svc_name: this._signer.name,
+        svc_id: this._signer.id,
         input: {
           id: null,
           time: Date.now(),

@@ -3,7 +3,7 @@
   "packages": {
     "specifiers": {
       "jsr:@std/encoding@^0.220.1": "jsr:@std/encoding@0.220.1",
-      "npm:@solana/web3.js@^1.91.2": "npm:@solana/web3.js@1.91.2"
+      "npm:@solana/web3.js@^1.91.4": "npm:@solana/web3.js@1.91.4"
     },
     "jsr": {
       "@std/encoding@0.220.1": {
@@ -11,8 +11,8 @@
       }
     },
     "npm": {
-      "@babel/runtime@7.24.1": {
-        "integrity": "sha512-+BIznRzyqBf+2wCTxcKE3wDjfGeCoVE61KSHGpkzqrLi8qxqFwBeUFyId2cxkTmm55fzDGnm0+yCxaxygrLUnQ==",
+      "@babel/runtime@7.24.4": {
+        "integrity": "sha512-dkxf7+hn8mFBwKjs9bvBlArzLVxVbS8usaPUDd5p2a9JCL9tB8OaOVN1isD4+Xyk4ns89/xeOmbQvgdK7IIVdA==",
         "dependencies": {
           "regenerator-runtime": "regenerator-runtime@0.14.1"
         }
@@ -33,10 +33,10 @@
           "buffer": "buffer@6.0.3"
         }
       },
-      "@solana/web3.js@1.91.2": {
-        "integrity": "sha512-WXPl5VXtfNKWM2RkGj7mvX6dKcZURDKe1lWBFAt/RqDBI9Rjr9hr7Y+U+yz2+TyViMmoinfJVlkS4gk2FPDG/g==",
+      "@solana/web3.js@1.91.4": {
+        "integrity": "sha512-zconqecIcBqEF6JiM4xYF865Xc4aas+iWK5qnu7nwKPq9ilRYcn+2GiwpYXqUqqBUe0XCO17w18KO0F8h+QATg==",
         "dependencies": {
-          "@babel/runtime": "@babel/runtime@7.24.1",
+          "@babel/runtime": "@babel/runtime@7.24.4",
           "@noble/curves": "@noble/curves@1.4.0",
           "@noble/hashes": "@noble/hashes@1.4.0",
           "@solana/buffer-layout": "@solana/buffer-layout@4.0.1",
@@ -235,7 +235,7 @@
       "rpc-websockets@7.9.0_bufferutil@4.0.8_utf-8-validate@5.0.10": {
         "integrity": "sha512-DwKewQz1IUA5wfLvgM8wDpPRcr+nWSxuFxx5CbrI2z/MyyZ4nXLM86TvIA+cI1ZAdqC8JIBR1mZR55dzaLU+Hw==",
         "dependencies": {
-          "@babel/runtime": "@babel/runtime@7.24.1",
+          "@babel/runtime": "@babel/runtime@7.24.4",
           "bufferutil": "bufferutil@4.0.8",
           "eventemitter3": "eventemitter3@4.0.7",
           "utf-8-validate": "utf-8-validate@5.0.10",
@@ -297,11 +297,5 @@
       }
     }
   },
-  "remote": {},
-  "workspace": {
-    "dependencies": [
-      "jsr:@std/encoding@^0.220.1",
-      "npm:@solana/web3.js@^1.91.2"
-    ]
-  }
+  "remote": {}
 }
