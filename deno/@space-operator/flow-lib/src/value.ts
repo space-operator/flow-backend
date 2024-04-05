@@ -1,8 +1,5 @@
-import { bs58, base64, Buffer } from "./deps.ts";
+import { bs58, base64, web3, type Buffer } from "./deps.ts";
 
-/**
- * 
- */
 export interface IValue {
   S?: string;
   D?: string;
@@ -70,12 +67,19 @@ export class Value implements IValue {
     return value;
   }
 
+  toFlowValue(): Value {
+    return this;
+  }
+
   public static inferFromJSType(
     x: any,
     customConvert?: (x: any) => Value | null
   ): Value | null {
     if (x instanceof Value) {
       return x;
+    }
+    if (typeof x?.toFlowValue === "function") {
+      return x.toFlowValue();
     }
     switch (typeof x) {
       case "function":
@@ -232,6 +236,33 @@ export class Value implements IValue {
       throw new Error("value out of range");
     }
     return Value.fromJSON({ I1: i.toString() });
+  }
+
+  public static PublicKey(x: web3.PublicKeyInitData): Value {
+    return Value.fromJSON({ B3: new web3.PublicKey(x).toBase58() });
+  }
+
+  public static Signature(
+    x: string | Buffer | Uint8Array | ArrayBuffer
+  ): Value {
+    if (typeof x === "string") return Value.fromJSON({ B6: x });
+    else return Value.fromJSON({ B6: bs58.encodeBase58(x) });
+  }
+
+  public static Keypair(
+    x: string | Buffer | Uint8Array | ArrayBuffer | web3.Keypair
+  ): Value {
+    if (typeof x === "string") {
+      return Value.fromJSON({ B6: x });
+    }
+    if ((x as web3.Keypair).secretKey != null) {
+      return Value.fromJSON({
+        B6: bs58.encodeBase58((x as web3.Keypair).secretKey),
+      });
+    }
+    return Value.fromJSON({
+      B6: bs58.encodeBase58(x as any),
+    });
   }
 
   public toJSObject(): any {
