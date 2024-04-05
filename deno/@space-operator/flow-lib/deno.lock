@@ -3,8 +3,7 @@
   "packages": {
     "specifiers": {
       "jsr:@std/encoding@^0.220.1": "jsr:@std/encoding@0.220.1",
-      "npm:@solana/web3.js@^1.91.4": "npm:@solana/web3.js@1.91.4",
-      "npm:@types/node": "npm:@types/node@18.16.19"
+      "npm:@solana/web3.js@^1.91.4": "npm:@solana/web3.js@1.91.4"
     },
     "jsr": {
       "@std/encoding@0.220.1": {
@@ -298,11 +297,5 @@
       }
     }
   },
-  "remote": {},
-  "workspace": {
-    "dependencies": [
-      "jsr:@std/encoding@^0.220.1",
-      "npm:@solana/web3.js@^1.91.4"
-    ]
-  }
+  "remote": {}
 }

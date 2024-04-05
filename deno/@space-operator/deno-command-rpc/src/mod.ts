@@ -4,8 +4,11 @@ import {
   Value,
   type ContextData,
   type CommandTrait,
-} from "@space-operator/flow-lib";
-import { Application, type ListenOptions, Router, Status } from "@oak/oak";
+  Application,
+  type ListenOptions,
+  Router,
+  Status,
+} from "./deps.ts";
 
 const RUN_SVC = "run";
 

@@ -3,7 +3,6 @@
  */
 
 import type { FlowRunId, NodeId, User } from "./common.ts";
-import type { PublicKey } from "@solana/web3.js";
 import { Buffer, base64, bs58, web3 } from "./deps.ts";
 
 export interface CommandContext {
@@ -94,7 +93,7 @@ export class Context {
    * @returns Signature and the (optional) [updated transaction message](https://docs.phantom.app/developer-powertools/solana-priority-fees#how-phantom-applies-priority-fees-to-dapp-transactions)
    */
   async requestSignature(
-    pubkey: PublicKey,
+    pubkey: web3.PublicKey,
     data: Buffer
   ): Promise<RequestSignatureResponse> {
     const resp = await fetch(new URL("call", this._signer.base_url), {
