@@ -1,12 +1,11 @@
-import * as lib from "jsr:@space-operator/flow-lib@0.5.0";
+import * as lib from "jsr:@space-operator/flow-lib";
 import * as web3 from "npm:@solana/web3.js";
 
-export default class TransferSol implements rpc.CommandTrait {
+export default class TransferSol implements lib.CommandTrait {
   async run(
     ctx: lib.Context,
     params: Record<string, any>
   ): Promise<Record<string, any>> {
-    const client = new web3.Connection(ctx.cfg.solana_client.url);
     const fromPubkey = new web3.PublicKey(params.from);
     let tx = new web3.Transaction()
       .add(
@@ -20,7 +19,7 @@ export default class TransferSol implements rpc.CommandTrait {
         })
       );
     const { blockhash, lastValidBlockHeight } =
-      await client.getLatestBlockhash();
+      await lib.solana.getLatestBlockhash();
     tx.recentBlockhash = blockhash;
     tx.lastValidBlockHeight = lastValidBlockHeight;
     tx.feePayer = fromPubkey;
@@ -34,7 +33,7 @@ export default class TransferSol implements rpc.CommandTrait {
     }
     tx.addSignature(fromPubkey, signature);
     return {
-      signature: new lib.Value(await client.sendRawTransaction(tx.serialize())),
+      signature: new lib.Value(await ctx.solana.sendRawTransaction(tx.serialize())),
     };
   }
 }

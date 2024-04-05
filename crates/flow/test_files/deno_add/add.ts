@@ -1,4 +1,4 @@
-import { Context, CommandTrait } from "jsr:@space-operator/flow-lib@0.5.0";
+import { Context, CommandTrait } from "jsr:@space-operator/flow-lib";
 
 export default class MyCommand implements CommandTrait {
   async run(
