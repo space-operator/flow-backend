@@ -1,3 +1,4 @@
+use anyhow::Context as _;
 use command_rpc::client::RpcCommandClient;
 use serde::de::value::MapDeserializer;
 use std::process::Stdio;
@@ -41,12 +42,17 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
     .source;
 
     let dir = tempdir()?;
-    tokio::fs::write(dir.path().join("__cmd.ts"), source).await?;
-    tokio::fs::write(dir.path().join("__run.ts"), include_str!("./__run.ts")).await?;
+    tokio::fs::write(dir.path().join("__cmd.ts"), source)
+        .await
+        .context("write __cm.ts")?;
+    tokio::fs::write(dir.path().join("__run.ts"), include_str!("./__run.ts"))
+        .await
+        .context("write __run.ts")?;
     #[cfg(test)]
     {
         let libs = concat!(env!("CARGO_MANIFEST_DIR"), "/../../deno/@space-operator");
-        copy_dir_all(libs, &format!("{}/@space-operator", dir.path().display()))?;
+        copy_dir_all(libs, &format!("{}/@space-operator", dir.path().display()))
+            .context("copy dirs")?;
     }
     let deno_dir = std::env::var("DENO_DIR").unwrap_or_else(|_| {
         let mut home = home::home_dir().unwrap();
@@ -57,14 +63,14 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
     let mut spawned = tokio::process::Command::new("deno")
         .current_dir(dir.path())
         .stdout(Stdio::piped())
-        .env_clear()
         .env("DENO_DIR", &deno_dir)
         .kill_on_drop(true)
         .arg("run")
         .arg("--allow-net")
         .arg("--no-prompt")
         .arg("__run.ts")
-        .spawn()?;
+        .spawn()
+        .context("spawn")?;
     let mut stdout = BufReader::new(spawned.stdout.take().unwrap()).lines();
     let port = stdout
         .next_line()
