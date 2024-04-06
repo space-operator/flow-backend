@@ -2,12 +2,29 @@
   "version": "3",
   "packages": {
     "specifiers": {
+      "jsr:@std/bytes@^0.221.0": "jsr:@std/bytes@0.221.0",
       "jsr:@std/encoding@^0.220.1": "jsr:@std/encoding@0.220.1",
-      "npm:@solana/web3.js@^1.91.4": "npm:@solana/web3.js@1.91.4"
+      "jsr:@std/encoding@^0.221.0": "jsr:@std/encoding@0.221.0",
+      "jsr:@std/msgpack": "jsr:@std/msgpack@0.221.0",
+      "jsr:@std/msgpack@0.221.0": "jsr:@std/msgpack@0.221.0",
+      "npm:@solana/web3.js@^1.91.4": "npm:@solana/web3.js@1.91.4",
+      "npm:@types/node": "npm:@types/node@18.16.19"
     },
     "jsr": {
+      "@std/bytes@0.221.0": {
+        "integrity": "64a047011cf833890a4a2ab7293ac55a1b4f5a050624ebc6a0159c357de91966"
+      },
       "@std/encoding@0.220.1": {
         "integrity": "8dc38dd72e36cd68857a5837e24eb09a64bb296b96c295239c75eec17d45d23f"
+      },
+      "@std/encoding@0.221.0": {
+        "integrity": "d1dd76ef0dc5d14088411e6dc1dede53bf8308c95d1537df1214c97137208e45"
+      },
+      "@std/msgpack@0.221.0": {
+        "integrity": "78a99bca814808f08f49dd2b21a55185540a5ebba861d29d3ee63429157ad490",
+        "dependencies": [
+          "jsr:@std/bytes@^0.221.0"
+        ]
       }
     },
     "npm": {

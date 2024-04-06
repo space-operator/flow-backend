@@ -57,6 +57,7 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
     let mut spawned = tokio::process::Command::new("deno")
         .current_dir(dir.path())
         .stdout(Stdio::piped())
+        .env_clear()
         .env("DENO_DIR", &deno_dir)
         .kill_on_drop(true)
         .arg("run")

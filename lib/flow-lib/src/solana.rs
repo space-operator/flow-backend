@@ -9,7 +9,7 @@ use chrono::Utc;
 use futures::TryStreamExt;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use serde_with::DisplayFromStr;
+use serde_with::{serde_as, serde_conv, DisplayFromStr};
 use solana_client::{
     client_error::{ClientError, ClientErrorKind},
     nonblocking::rpc_client::RpcClient,
@@ -41,7 +41,7 @@ use std::{
     time::Duration,
 };
 use tower::ServiceExt;
-use value::Value;
+use value::{ConstBytes, Value};
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
@@ -199,9 +199,21 @@ impl KeypairExt for Keypair {
     }
 }
 
-#[derive(Default, Debug)]
+fn to_bytes(k: &Keypair) -> ConstBytes<64> {
+    ConstBytes(k.to_bytes())
+}
+
+fn from_bytes(b: ConstBytes<64>) -> Result<Keypair, anyhow::Error> {
+    Ok(Keypair::from_bytes(&b.0)?)
+}
+
+serde_conv!(AsKeypair, Keypair, to_bytes, from_bytes);
+
+#[serde_as]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Instructions {
     pub fee_payer: Pubkey,
+    #[serde_as(as = "Vec<AsKeypair>")]
     pub signers: Vec<Keypair>,
     pub instructions: Vec<Instruction>,
 }

@@ -2,41 +2,64 @@
 
 use async_trait::async_trait;
 use flow_lib::{
-    command::prelude::*,
-    config::Endpoints,
-    context::{execute, CommandContext},
-    ContextConfig, FlowRunId, NodeId, User,
+    command::prelude::*, config::Endpoints, context::CommandContext, ContextConfig, FlowRunId,
+    NodeId, User,
 };
 use std::collections::HashMap;
 use url::Url;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ServiceProxy {
-    pub name: String,
-    pub id: String,
-    pub base_url: Url,
+#[derive(Serialize, Deserialize, Debug)]
+struct ServiceProxy {
+    name: String,
+    id: String,
+    base_url: Url,
+    #[serde(skip)]
+    drop: Option<actix::Addr<srpc::Server>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CommandContextData {
-    pub flow_run_id: FlowRunId,
-    pub node_id: NodeId,
-    pub times: u32,
+impl Drop for ServiceProxy {
+    fn drop(&mut self) {
+        if let Some(addr) = &self.drop {
+            addr.do_send(srpc::RemoveService {
+                name: self.name.clone(),
+                id: self.id.clone(),
+            });
+        }
+    }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ContextData {
-    pub flow_owner: User,
-    pub started_by: User,
-    pub cfg: ContextConfig,
-    pub environment: HashMap<String, String>,
-    pub endpoints: Endpoints,
-    pub command: Option<CommandContextData>,
-    pub signer: ServiceProxy,
+impl ServiceProxy {
+    fn new(result: srpc::RegisterServiceResult, server: &actix::Addr<srpc::Server>) -> Self {
+        Self {
+            name: result.name,
+            id: result.id,
+            base_url: result.base_url,
+            drop: result.old_service.is_none().then(|| server.clone()),
+        }
+    }
 }
 
-impl ContextData {
-    pub async fn new(
+#[derive(Serialize, Deserialize, Debug)]
+struct CommandContextData {
+    flow_run_id: FlowRunId,
+    node_id: NodeId,
+    times: u32,
+    svc: ServiceProxy,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ContextProxy {
+    flow_owner: User,
+    started_by: User,
+    cfg: ContextConfig,
+    environment: HashMap<String, String>,
+    endpoints: Endpoints,
+    command: Option<CommandContextData>,
+    signer: ServiceProxy,
+}
+
+impl ContextProxy {
+    async fn new(
         Context {
             flow_owner,
             started_by,
@@ -67,88 +90,57 @@ impl ContextData {
             ))
             .await?;
 
+        let command = match command {
+            Some(command) => Some(CommandContextData::new(command, server).await?),
+            None => None,
+        };
+
         Ok(Self {
             flow_owner,
             started_by,
             cfg,
             environment,
             endpoints,
-            command: command.map(Into::into),
-            signer: ServiceProxy {
-                name: signer.name,
-                id: signer.id,
-                base_url: signer.base_url,
-            },
+            command,
+            signer: ServiceProxy::new(signer, server),
         })
     }
 }
 
-impl From<CommandContextData> for CommandContext {
-    fn from(
-        CommandContextData {
-            flow_run_id,
-            node_id,
-            times,
-        }: CommandContextData,
-    ) -> Self {
-        Self {
-            svc: execute::unimplemented_svc(),
-            flow_run_id,
-            node_id,
-            times,
-        }
-    }
-}
-
-impl From<ContextData> for Context {
-    fn from(
-        ContextData {
-            flow_owner,
-            started_by,
-            cfg,
-            environment,
-            endpoints,
-            command,
-            signer: _,
-        }: ContextData,
-    ) -> Self {
-        Self {
-            flow_owner,
-            started_by,
-            cfg,
-            environment,
-            endpoints,
-            command: command.map(Into::into),
-            ..<_>::default()
-        }
-    }
-}
-
-impl From<CommandContext> for CommandContextData {
-    fn from(
+impl CommandContextData {
+    async fn new(
         CommandContext {
-            svc: _,
+            svc,
             flow_run_id,
             node_id,
             times,
         }: CommandContext,
-    ) -> Self {
-        Self {
+        server: &actix::Addr<srpc::Server>,
+    ) -> Result<Self, CommandError> {
+        let svc = server
+            .send(srpc::RegisterJsonService::new(
+                "execute".to_string(),
+                format!("{}::{}::{}", flow_run_id, node_id, times),
+                svc,
+            ))
+            .await?;
+        Ok(Self {
             flow_run_id,
             node_id,
             times,
-        }
+            svc: ServiceProxy::new(svc, server),
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RunInput {
-    ctx: ContextData,
+#[derive(Serialize, Debug)]
+struct RunInput<'a> {
+    ctx: &'a ContextProxy,
     params: ValueSet,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RunOutput(pub Result<ValueSet, String>);
+struct RunOutput(Result<ValueSet, String>);
 
 pub struct RpcCommandClient {
     base_url: Url,
@@ -185,41 +177,31 @@ impl CommandTrait for RpcCommandClient {
     async fn run(&self, ctx: Context, params: ValueSet) -> Result<ValueSet, CommandError> {
         let url = self.base_url.join("call").unwrap();
         let http = ctx.http.clone();
-        let rpc = ctx
-            .extensions
-            .get::<actix::Addr<srpc::Server>>()
-            .ok_or_else(|| CommandError::msg("srpc::Server not available"))?
-            .clone();
-        let ctx_data = ContextData::new(ctx).await?;
-        let signer = ctx_data.signer.clone();
-        let resp = async move {
-            Result::<_, CommandError>::Ok(
-                http.post(url)
-                    .json(&srpc::Request {
-                        envelope: "".to_owned(),
-                        svc_name: RUN_SVC.into(),
-                        svc_id: self.svc_id.clone(),
-                        input: RunInput {
-                            ctx: ctx_data,
-                            params,
-                        },
-                    })
-                    .send()
-                    .await?
-                    .json::<srpc::Response<RunOutput>>()
-                    .await?,
-            )
-        };
+        let ctx_proxy = ContextProxy::new(ctx).await?;
+        let resp = http
+            .post(url)
+            .json(&srpc::Request {
+                // HTTP protocol doesn't need an envelope
+                envelope: "".to_owned(),
+                svc_name: RUN_SVC.into(),
+                svc_id: self.svc_id.clone(),
+                input: RunInput {
+                    ctx: &ctx_proxy,
+                    params,
+                },
+            })
+            .send()
+            .await?
+            .json::<srpc::Response<RunOutput>>()
+            .await?
+            .data
+            .0
+            .map_err(CommandError::msg);
 
-        let resp = match resp.await {
-            Ok(x) => x.data.0.map_err(CommandError::msg),
-            Err(x) => Err(x),
-        };
-
-        rpc.do_send(srpc::RemoveService {
-            name: signer.name,
-            id: signer.id,
-        });
+        // ctx_proxy must persist for the duration of the HTTP request
+        // although rust won't drop it early
+        // we call drop here to make the intention explicit
+        drop(ctx_proxy);
 
         resp
     }
