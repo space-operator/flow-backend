@@ -1,5 +1,14 @@
 pub struct ConstBytes<const N: usize>(pub [u8; N]);
 
+impl<const N: usize> serde::Serialize for ConstBytes<N> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_bytes(&self.0)
+    }
+}
+
 impl<'de, const N: usize> serde::Deserialize<'de> for ConstBytes<N> {
     fn deserialize<D>(d: D) -> Result<Self, D::Error>
     where

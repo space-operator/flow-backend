@@ -3,12 +3,14 @@
  */
 
 import type { FlowRunId, NodeId, User } from "./common.ts";
+import { msgpack } from "./deps.ts";
 import { Buffer, base64, bs58, web3 } from "./deps.ts";
 
 export interface CommandContext {
   flow_run_id: FlowRunId;
   node_id: NodeId;
   times: number;
+  svc: ServiceProxy;
 }
 
 export interface ServiceProxy {
@@ -33,6 +35,54 @@ export interface ContextData {
 export interface RequestSignatureResponse {
   signature: Buffer;
   new_message?: Buffer;
+}
+
+export interface ExecuteResponse {
+  signature?: Buffer;
+}
+
+function isPubkey(x: web3.PublicKey | web3.Keypair): x is web3.PublicKey {
+  return (x as any)._bn !== undefined;
+}
+
+export class Instructions {
+  #data: {
+    fee_payer: Uint8Array;
+    signers: Uint8Array[];
+    instructions: msgpack.ValueMap[];
+  };
+
+  constructor(
+    feePayer: web3.PublicKey,
+    signers: Array<web3.Keypair | web3.PublicKey>,
+    instructions: web3.TransactionInstruction[]
+  ) {
+    this.#data = {
+      fee_payer: feePayer.toBytes(),
+      signers: signers.map((x) => {
+        if (isPubkey(x)) {
+          const bytes = new Uint8Array(64);
+          bytes.set(x.toBytes(), 32);
+          return bytes;
+        } else {
+          return x.secretKey;
+        }
+      }),
+      instructions: instructions.map((i) => ({
+        program_id: i.programId.toBytes(),
+        accounts: i.keys.map((k) => ({
+          pubkey: k.pubkey.toBytes(),
+          is_signer: k.isSigner,
+          is_writeable: k.isWritable,
+        })),
+        data: new Uint8Array(i.data),
+      })),
+    };
+  }
+
+  encode(): string {
+    return base64.encodeBase64(msgpack.encode(this.#data));
+  }
 }
 
 /**
@@ -129,6 +179,42 @@ export class Context {
     return {
       signature,
       new_message,
+    };
+  }
+
+  async execute(
+    instrutions: Instructions,
+    output: Record<string, any>
+  ): Promise<ExecuteResponse> {
+    const svc = this.command?.svc;
+    if (!svc) throw new Error("service not available");
+
+    const resp = await fetch(new URL("call", this._signer.base_url), {
+      method: "POST",
+      body: JSON.stringify({
+        envelope: "",
+        svc_name: svc.name,
+        svc_id: svc.id,
+        input: {
+          instrutions: instrutions.encode(),
+          output,
+        },
+      }),
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+
+    const result = await resp.json();
+    if (result.success === false) {
+      throw new Error(String(result.data));
+    }
+    const data = result.data;
+    const signature = data.signature
+      ? Buffer.from(bs58.decodeBase58(data.signature))
+      : undefined;
+    return {
+      signature,
     };
   }
 }

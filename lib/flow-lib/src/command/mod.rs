@@ -118,7 +118,7 @@ pub trait CommandTrait: Send + Sync + 'static {
 /// Specify the order with which a command will return its output:
 /// - [`before`][InstructionInfo::before]: list of output names returned before instructions are
 /// sent.
-/// - [`signature`][InstructionInfo::signature]: name of the signature output.
+/// - [`signature`][InstructionInfo::signature]: name of the signature output port.
 /// - [`after`][InstructionInfo::after]: list of output names returned after instructions are sent.
 #[derive(Debug, Clone)]
 pub struct InstructionInfo {
