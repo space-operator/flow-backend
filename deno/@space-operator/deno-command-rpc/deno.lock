@@ -5,6 +5,7 @@
       "jsr:@oak/commons@0.7": "jsr:@oak/commons@0.7.0",
       "jsr:@oak/oak@14.2.0": "jsr:@oak/oak@14.2.0",
       "jsr:@space-operator/flow-lib@0.8.2": "jsr:@space-operator/flow-lib@0.8.2",
+      "jsr:@space-operator/flow-lib@0.8.3": "jsr:@space-operator/flow-lib@0.8.3",
       "jsr:@std/assert@0.218": "jsr:@std/assert@0.218.2",
       "jsr:@std/assert@^0.218.2": "jsr:@std/assert@0.218.2",
       "jsr:@std/bytes@0.218": "jsr:@std/bytes@0.218.2",
@@ -20,6 +21,7 @@
       "jsr:@std/msgpack@0.221.0": "jsr:@std/msgpack@0.221.0",
       "jsr:@std/path@0.218": "jsr:@std/path@0.218.2",
       "npm:@solana/web3.js@^1.91.4": "npm:@solana/web3.js@1.91.4",
+      "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:path-to-regexp@6.2.1": "npm:path-to-regexp@6.2.1"
     },
     "jsr": {
@@ -43,6 +45,14 @@
       },
       "@space-operator/flow-lib@0.8.2": {
         "integrity": "a56eaf147eedec9516e99ab99457e5ec437ac5d8914839ae06f2e0dd9b794998",
+        "dependencies": [
+          "jsr:@std/encoding@^0.221.0",
+          "jsr:@std/msgpack@0.221.0",
+          "npm:@solana/web3.js@^1.91.4"
+        ]
+      },
+      "@space-operator/flow-lib@0.8.3": {
+        "integrity": "f9638deb0beedd13eb7600e8a6028cbd05aee0a0a7ef6b25e35af3661ff4191a",
         "dependencies": [
           "jsr:@std/encoding@^0.221.0",
           "jsr:@std/msgpack@0.221.0",
