@@ -5,6 +5,7 @@
 import type { FlowRunId, NodeId, User } from "./common.ts";
 import { msgpack } from "./deps.ts";
 import { Buffer, base64, bs58, web3 } from "./deps.ts";
+import { Value } from "./mod.ts";
 
 export interface CommandContext {
   flow_run_id: FlowRunId;
@@ -189,7 +190,7 @@ export class Context {
     const svc = this.command?.svc;
     if (!svc) throw new Error("service not available");
 
-    const resp = await fetch(new URL("call", this._signer.base_url), {
+    const resp = await fetch(new URL("call", svc.base_url), {
       method: "POST",
       body: JSON.stringify({
         envelope: "",
@@ -197,7 +198,7 @@ export class Context {
         svc_id: svc.id,
         input: {
           instrutions: instrutions.encode(),
-          output,
+          output: Value.fromJSON(output).M!,
         },
       }),
       headers: {
