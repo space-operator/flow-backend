@@ -184,7 +184,7 @@ export class Context {
   }
 
   async execute(
-    instrutions: Instructions,
+    instructions: Instructions,
     output: Record<string, any>
   ): Promise<ExecuteResponse> {
     const svc = this.command?.svc;
@@ -197,7 +197,7 @@ export class Context {
         svc_name: svc.name,
         svc_id: svc.id,
         input: {
-          instrutions: instrutions.encode(),
+          instructions: instructions.encode(),
           output: Value.fromJSON(output).M!,
         },
       }),
