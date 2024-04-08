@@ -198,7 +198,7 @@ export class Context {
         svc_id: svc.id,
         input: {
           instructions: instructions.encode(),
-          output: Value.fromJSON(output).M!,
+          output: new Value(output).M!,
         },
       }),
       headers: {
