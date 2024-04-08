@@ -74,7 +74,7 @@ export class Instructions {
         accounts: i.keys.map((k) => ({
           pubkey: k.pubkey.toBytes(),
           is_signer: k.isSigner,
-          is_writeable: k.isWritable,
+          is_writable: k.isWritable,
         })),
         data: new Uint8Array(i.data),
       })),
