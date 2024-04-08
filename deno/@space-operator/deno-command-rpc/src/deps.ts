@@ -4,7 +4,7 @@ export {
   Value,
   type ContextData,
   type CommandTrait,
-} from "jsr:@space-operator/flow-lib@0.7.0";
+} from "jsr:@space-operator/flow-lib@0.8.0";
 export {
   Application,
   type ListenOptions,
