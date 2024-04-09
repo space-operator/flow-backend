@@ -98,7 +98,9 @@ impl Server {
         let ctx = Context::<Self>::new();
         let addr = ctx.address();
         let server = HttpServer::new(move || {
-            App::new().configure(|s| configure_server(s, addr.downgrade()))
+            App::new()
+                .wrap(actix_web::middleware::Logger::new(r#""%r" %s %b %Dms"#))
+                .configure(|s| configure_server(s, addr.downgrade()))
         })
         .workers(1)
         .bind("127.0.0.1:0")
@@ -193,7 +195,10 @@ impl Server {
     {
         tracing::info!("inserting {}::{}", name, id);
         let s = ServiceBuilder::new()
-            .filter(|r: JsonValue| serde_json::from_value::<T>(r))
+            .filter(|r: JsonValue| {
+                tracing::debug!("request: {}", r);
+                serde_json::from_value::<T>(r)
+            })
             .map_result(
                 |r: Result<S::Response, S::Error>| -> Result<JsonValue, BoxError> {
                     match r {
@@ -205,6 +210,13 @@ impl Server {
             .check_service::<S, JsonValue, JsonValue, BoxError>()
             .service(s)
             .map_err(|error| JsonValue::String(error.to_string()))
+            .map_result(|r| {
+                match &r {
+                    Ok(x) => tracing::debug!("success: {}", x),
+                    Err(x) => tracing::debug!("error: {}", x),
+                }
+                r
+            })
             .boxed();
         self.services.entry(name).or_default().insert(id, s)
     }

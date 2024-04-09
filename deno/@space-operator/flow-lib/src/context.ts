@@ -5,6 +5,7 @@
 import type { FlowRunId, NodeId, User } from "./common.ts";
 import { msgpack } from "./deps.ts";
 import { Buffer, base64, bs58, web3 } from "./deps.ts";
+import { Value } from "./mod.ts";
 
 export interface CommandContext {
   flow_run_id: FlowRunId;
@@ -73,7 +74,7 @@ export class Instructions {
         accounts: i.keys.map((k) => ({
           pubkey: k.pubkey.toBytes(),
           is_signer: k.isSigner,
-          is_writeable: k.isWritable,
+          is_writable: k.isWritable,
         })),
         data: new Uint8Array(i.data),
       })),
@@ -183,21 +184,21 @@ export class Context {
   }
 
   async execute(
-    instrutions: Instructions,
+    instructions: Instructions,
     output: Record<string, any>
   ): Promise<ExecuteResponse> {
     const svc = this.command?.svc;
     if (!svc) throw new Error("service not available");
 
-    const resp = await fetch(new URL("call", this._signer.base_url), {
+    const resp = await fetch(new URL("call", svc.base_url), {
       method: "POST",
       body: JSON.stringify({
         envelope: "",
         svc_name: svc.name,
         svc_id: svc.id,
         input: {
-          instrutions: instrutions.encode(),
-          output,
+          instructions: instructions.encode(),
+          output: new Value(output).M!,
         },
       }),
       headers: {
