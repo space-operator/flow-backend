@@ -9,7 +9,7 @@ use chrono::Utc;
 use futures::TryStreamExt;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use serde_with::DisplayFromStr;
+use serde_with::{serde_as, serde_conv, DisplayFromStr};
 use solana_client::{
     client_error::{ClientError, ClientErrorKind},
     nonblocking::rpc_client::RpcClient,
@@ -21,7 +21,7 @@ use solana_sdk::{
     commitment_config::{CommitmentConfig, CommitmentLevel},
     compute_budget::{self, ComputeBudgetInstruction},
     feature_set::FeatureSet,
-    instruction::{CompiledInstruction, Instruction},
+    instruction::{AccountMeta, CompiledInstruction, Instruction},
     message::Message,
     precompiles::verify_if_precompile,
     sanitize::Sanitize,
@@ -35,13 +35,14 @@ use spo_helius::{
 use std::{
     borrow::Cow,
     collections::{BTreeSet, HashMap},
+    convert::Infallible,
     fmt::Display,
     num::ParseIntError,
     str::FromStr,
     time::Duration,
 };
 use tower::ServiceExt;
-use value::Value;
+use value::{ConstBytes, Value};
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
@@ -199,10 +200,85 @@ impl KeypairExt for Keypair {
     }
 }
 
-#[derive(Default, Debug)]
+fn keypair_to_bytes(k: &Keypair) -> ConstBytes<64> {
+    ConstBytes(k.to_bytes())
+}
+fn keypair_from_bytes(b: ConstBytes<64>) -> Result<Keypair, anyhow::Error> {
+    Ok(Keypair::from_bytes(&b.0)?)
+}
+serde_conv!(AsKeypair, Keypair, keypair_to_bytes, keypair_from_bytes);
+
+fn pubkey_to_bytes(k: &Pubkey) -> ConstBytes<32> {
+    ConstBytes(k.to_bytes())
+}
+fn pubkey_from_bytes(b: ConstBytes<32>) -> Result<Pubkey, Infallible> {
+    Ok(Pubkey::new_from_array(b.0))
+}
+serde_conv!(AsPubkey, Pubkey, pubkey_to_bytes, pubkey_from_bytes);
+
+#[serde_as]
+#[derive(Serialize, Deserialize, Debug, Default)]
+struct AsAccountMetaImpl {
+    #[serde_as(as = "AsPubkey")]
+    pubkey: Pubkey,
+    is_signer: bool,
+    is_writable: bool,
+}
+fn account_meta_ser(i: &AccountMeta) -> AsAccountMetaImpl {
+    AsAccountMetaImpl {
+        pubkey: i.pubkey,
+        is_signer: i.is_signer,
+        is_writable: i.is_writable,
+    }
+}
+fn account_meta_de(i: AsAccountMetaImpl) -> Result<AccountMeta, Infallible> {
+    Ok(AccountMeta {
+        pubkey: i.pubkey,
+        is_signer: i.is_signer,
+        is_writable: i.is_writable,
+    })
+}
+serde_conv!(
+    AsAccountMeta,
+    AccountMeta,
+    account_meta_ser,
+    account_meta_de
+);
+
+#[serde_as]
+#[derive(Serialize, Deserialize, Debug, Default)]
+struct AsInstructionImpl {
+    #[serde_as(as = "AsPubkey")]
+    program_id: Pubkey,
+    #[serde_as(as = "Vec<AsAccountMeta>")]
+    accounts: Vec<AccountMeta>,
+    #[serde_as(as = "serde_with::Bytes")]
+    data: Vec<u8>,
+}
+fn instruction_ser(i: &Instruction) -> AsInstructionImpl {
+    AsInstructionImpl {
+        program_id: i.program_id,
+        accounts: i.accounts.clone(),
+        data: i.data.clone(),
+    }
+}
+fn instruction_de(i: AsInstructionImpl) -> Result<Instruction, Infallible> {
+    Ok(Instruction {
+        program_id: i.program_id,
+        accounts: i.accounts,
+        data: i.data,
+    })
+}
+serde_conv!(AsInstruction, Instruction, instruction_ser, instruction_de);
+
+#[serde_as]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Instructions {
+    #[serde_as(as = "AsPubkey")]
     pub fee_payer: Pubkey,
+    #[serde_as(as = "Vec<AsKeypair>")]
     pub signers: Vec<Keypair>,
+    #[serde_as(as = "Vec<AsInstruction>")]
     pub instructions: Vec<Instruction>,
 }
 

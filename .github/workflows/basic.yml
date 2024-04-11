@@ -32,6 +32,10 @@ jobs:
         run: .github/assert_cargo_lock_unchanged.bash
       - name: Install wasm32-wasi
         run: rustup target add wasm32-wasi
+      - name: Install deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
       - name: Build WASM
         run: ./scripts/build_wasm_tests.bash
       - name: Build tests

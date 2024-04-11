@@ -1,0 +1,17 @@
+[package]
+name = "command-rpc"
+version = "0.0.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix = "0.13.3"
+async-trait = "0.1.79"
+flow-lib.workspace = true
+serde.workspace = true
+srpc.workspace = true
+url = { version = "2.5.0", features = ["serde"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros"] }

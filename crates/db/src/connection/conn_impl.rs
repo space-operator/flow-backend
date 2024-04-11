@@ -241,7 +241,8 @@ impl UserConnection {
                     environment,
                     nodes,
                     edges,
-                    user_id
+                    user_id,
+                    parent_flow
                 ) SELECT
                     guide,
                     CONCAT('[CLONED] ', name) AS name,
@@ -254,7 +255,8 @@ impl UserConnection {
                     environment,
                     nodes,
                     edges,
-                    $2 AS user_id
+                    $2 AS user_id,
+                    id as parent_flow
                     FROM flows WHERE id = $1
                 RETURNING id"#,
             )

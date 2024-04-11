@@ -22,6 +22,7 @@ use db::{
 use flow_lib::{FlowRunId, UserId};
 use futures_util::{future::LocalBoxFuture, FutureExt};
 use hmac::{Hmac, Mac};
+use reqwest::header as req;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use std::{convert::Infallible, future::Ready, panic::Location, rc::Rc, str::FromStr, sync::Arc};
@@ -365,10 +366,10 @@ impl ProxiedApiAuth {
                 ext.insert(Unverified { pubkey });
                 return Ok(());
             }
-            req = req.header(AUTHORIZATION, value);
+            req = req.header(req::AUTHORIZATION, value.as_bytes());
         }
         if let Some(value) = r.headers().get(&X_API_KEY) {
-            req = req.header(X_API_KEY.clone(), value);
+            req = req.header(X_API_KEY.as_str(), value.as_bytes());
         }
         let output = req
             .send()

@@ -16,6 +16,7 @@ use crate::{
 };
 use bytes::Bytes;
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use solana_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use solana_sdk::{
     commitment_config::{CommitmentConfig, CommitmentLevel},
@@ -190,9 +191,12 @@ pub mod signer {
         type Result = Result<SignatureResponse, Error>;
     }
 
-    #[derive(Debug)]
+    #[serde_as]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct SignatureResponse {
+        #[serde_as(as = "DisplayFromStr")]
         pub signature: Signature,
+        #[serde_as(as = "Option<Base64>")]
         pub new_message: Option<bytes::Bytes>,
     }
 
@@ -209,6 +213,8 @@ pub mod execute {
         BoxError, FlowRunId,
     };
     use futures::channel::oneshot::Canceled;
+    use serde::{Deserialize, Serialize};
+    use serde_with::{base64::Base64, serde_as, DisplayFromStr};
     use solana_client::client_error::ClientError;
     use solana_sdk::{signature::Signature, signer::SignerError};
     use std::sync::Arc;
@@ -216,13 +222,35 @@ pub mod execute {
 
     pub type Svc = TowerClient<Request, Response, Error>;
 
+    #[derive(Deserialize)]
+    #[serde(try_from = "RequestRepr")]
     pub struct Request {
         pub instructions: Instructions,
         pub output: value::Map,
     }
 
-    #[derive(Clone, Copy)]
+    #[serde_as]
+    #[derive(Deserialize)]
+    struct RequestRepr {
+        #[serde_as(as = "Base64")]
+        instructions: Vec<u8>,
+        output: value::Map,
+    }
+
+    impl TryFrom<RequestRepr> for Request {
+        type Error = rmp_serde::decode::Error;
+        fn try_from(value: RequestRepr) -> Result<Self, Self::Error> {
+            Ok(Self {
+                instructions: rmp_serde::from_slice(&value.instructions)?,
+                output: value.output,
+            })
+        }
+    }
+
+    #[serde_as]
+    #[derive(Serialize, Clone, Copy)]
     pub struct Response {
+        #[serde_as(as = "Option<DisplayFromStr>")]
         pub signature: Option<Signature>,
     }
 
@@ -372,7 +400,7 @@ impl Default for Context {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize, Debug)]
 pub struct User {
     pub id: UserId,
 }
