@@ -1,8 +1,5 @@
-use std::str::FromStr;
-
-use tracing_log::log::info;
-
 use crate::{prelude::*, wormhole::token_bridge::eth::TransferFromEthResponse};
+use tracing::info;
 
 // Command Name
 const NAME: &str = "transfer_from_eth";
@@ -69,8 +66,8 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     let emitter = response.output.emitter_address.clone();
     let sequence = response.output.sequence.clone();
 
-    let recipient_ata = Pubkey::from_str(&response.output.recipient_ata).unwrap();
-    let mint = Pubkey::from_str(&response.output.mint).unwrap();
+    let recipient_ata = response.output.recipient_ata.parse()?;
+    let mint = response.output.mint.parse()?;
 
     info!("recipient_ata: {:?}", recipient_ata);
     info!("mint: {:?}", mint);

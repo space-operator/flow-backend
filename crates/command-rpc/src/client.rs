@@ -6,6 +6,8 @@ use flow_lib::{
     NodeId, User,
 };
 use std::collections::HashMap;
+use tower::util::ServiceExt;
+use tracing::Instrument;
 use url::Url;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -84,7 +86,7 @@ impl ContextProxy {
 
         let signer = server
             .send(srpc::RegisterJsonService::new(
-                "signer".to_string(),
+                "signer".to_owned(),
                 flow_run_id.to_string(),
                 signer,
             ))
@@ -117,11 +119,12 @@ impl CommandContextData {
         }: CommandContext,
         server: &actix::Addr<srpc::Server>,
     ) -> Result<Self, CommandError> {
+        let span = tracing::Span::current();
         let svc = server
             .send(srpc::RegisterJsonService::new(
-                "execute".to_string(),
+                "execute".to_owned(),
                 format!("{}::{}::{}", flow_run_id, node_id, times),
-                svc,
+                svc.map_future(move |f| f.instrument(span.clone())),
             ))
             .await?;
         Ok(Self {

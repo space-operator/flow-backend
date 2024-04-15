@@ -1,6 +1,6 @@
 use super::{
     flow_run_worker::FlowRunWorker, messages::SubscribeError, signer::SignerWorker, Counter,
-    DBWorker, FindActor, GetTokenWorker, StartFlowRunWorker,
+    DBWorker, FindActor, GetTokenWorker, RegisterLogs, StartFlowRunWorker,
 };
 use crate::error::ErrorBody;
 use actix::{Actor, ActorFutureExt, AsyncContext, ResponseActFuture, ResponseFuture, WrapFuture};
@@ -17,6 +17,7 @@ use flow_lib::{
         Endpoints,
     },
     context::{
+        env::RUST_LOG,
         get_jwt,
         signer::{self, SignatureRequest},
     },
@@ -286,10 +287,19 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
             .await?
             .map_err(|_| new_flow_run::Error::Other("could not start worker".into()))?;
 
+            let span = root
+                .send(RegisterLogs {
+                    tx: msg.tx,
+                    filter: msg.config.environment.get(RUST_LOG).cloned(),
+                })
+                .await?
+                .map_err(new_flow_run::Error::Other)?;
+
             Ok(new_flow_run::Response {
                 flow_run_id: run_id,
                 stop_signal,
                 stop_shared_signal,
+                span,
             })
         })
     }
