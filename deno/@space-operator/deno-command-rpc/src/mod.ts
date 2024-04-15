@@ -55,7 +55,7 @@ class PromiseSet {
   }
 
   async wait(): Promise<void> {
-    const promises = this.#promises;
+    const promises = [...this.#promises.values()];
     this.#promises = new Map();
     await Promise.allSettled(promises);
   }
