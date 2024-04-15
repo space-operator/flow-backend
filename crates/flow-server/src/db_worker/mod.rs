@@ -7,7 +7,7 @@ use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
     FlowRunLogsRow,
 };
-use flow::flow_run_events::{EventSender, DEFAULT_LOG_FILTER};
+use flow::flow_run_events::{EventSender, DEFAULT_LOG_FILTER, FLOW_SPAN_NAME};
 use flow_lib::{config::Endpoints, context::get_jwt, BoxError, FlowRunId, UserId};
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
@@ -247,7 +247,7 @@ impl actix::Message for RegisterLogs {
 impl actix::Handler<RegisterLogs> for DBWorker {
     type Result = <RegisterLogs as actix::Message>::Result;
     fn handle(&mut self, msg: RegisterLogs, _: &mut Self::Context) -> Self::Result {
-        let span = tracing::error_span!("flow_logs", flow_run_id = msg.flow_run_id.to_string());
+        let span = tracing::error_span!(FLOW_SPAN_NAME, flow_run_id = msg.flow_run_id.to_string());
         let id = span.id().ok_or("span ID is None")?;
         let filter = EnvFilter::builder()
             .with_default_directive(LevelFilter::ERROR.into())

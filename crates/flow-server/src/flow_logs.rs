@@ -1,5 +1,5 @@
 use chrono::Utc;
-use flow::flow_run_events::{Event, EventSender, FlowLog, NodeLog};
+use flow::flow_run_events::{Event, EventSender, FlowLog, NodeLog, FLOW_SPAN_NAME, NODE_SPAN_NAME};
 use flow_lib::NodeId;
 use hashbrown::HashMap;
 use std::sync::{Arc, RwLock};
@@ -132,10 +132,10 @@ where
         &self,
         attrs: &span::Attributes<'_>,
         id: &span::Id,
-        ctx: tracing_subscriber::layer::Context<'_, S>,
+        cx: tracing_subscriber::layer::Context<'_, S>,
     ) {
-        if attrs.metadata().name() == "node_logs" {
-            let span = match ctx.span(id) {
+        if attrs.metadata().name() == NODE_SPAN_NAME {
+            let span = match cx.span(id) {
                 None => return,
                 Some(span) => span,
             };
@@ -150,20 +150,24 @@ where
         }
     }
 
-    fn on_close(&self, id: span::Id, _: tracing_subscriber::layer::Context<'_, S>) {
-        self.map.write().unwrap().remove(&id);
+    fn on_close(&self, id: span::Id, cx: tracing_subscriber::layer::Context<'_, S>) {
+        if let Some(span) = cx.span(&id) {
+            if span.name() == FLOW_SPAN_NAME {
+                self.map.write().unwrap().remove(&id);
+            }
+        }
     }
 
-    fn on_event(&self, event: &tracing::Event<'_>, ctx: tracing_subscriber::layer::Context<'_, S>) {
+    fn on_event(&self, event: &tracing::Event<'_>, cx: tracing_subscriber::layer::Context<'_, S>) {
         let map = self.map.read().unwrap();
-        let result = ctx
+        let result = cx
             .event_scope(event)
             .and_then(|mut iter| iter.find_map(|span| map.get_key_value(&span.id())));
         match result {
             None => return,
             Some((id, data)) => {
                 let id = id.clone();
-                if Filter::enabled(&data.filter, event.metadata(), &ctx) {
+                if Filter::enabled(&data.filter, event.metadata(), &cx) {
                     let content = match get_message(event) {
                         Some(s) => s,
                         None => return,
@@ -177,7 +181,7 @@ where
                     let level = *meta.level();
                     let module = meta.module_path().map(<_>::to_owned);
 
-                    let node_log = ctx.event_scope(event).and_then(|mut iter| {
+                    let node_log = cx.event_scope(event).and_then(|mut iter| {
                         iter.find_map(|span| span.extensions().get::<NodeLogSpan>().cloned())
                     });
 

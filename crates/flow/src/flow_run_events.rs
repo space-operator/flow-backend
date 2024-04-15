@@ -151,3 +151,5 @@ pub fn event_channel() -> (EventSender, EventReceiver) {
 }
 
 pub const DEFAULT_LOG_FILTER: &str = "info,solana_client=debug";
+pub const FLOW_SPAN_NAME: &str = "flow_logs";
+pub const NODE_SPAN_NAME: &str = "node_logs";
