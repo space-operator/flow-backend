@@ -82,7 +82,7 @@ class CaptureLog implements Console {
   }
 
   #call(level: Level, data: any[]) {
-    fetch(this.#service.base_url, {
+    fetch(new URL("call", this.#service.base_url), {
       method: "POST",
       headers: {
         "content-type": "application/json",
