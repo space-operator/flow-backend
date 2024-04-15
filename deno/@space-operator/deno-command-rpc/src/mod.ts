@@ -42,9 +42,15 @@ type Level = "INFO" | "ERROR" | "WARN" | "DEBUG" | "TRACE";
 class CaptureLog implements Console {
   #original: Console;
   #service: ServiceProxy;
-  constructor(original: Console, service: ServiceProxy) {
+  #promises: Promise<void>[];
+  constructor(
+    original: Console,
+    service: ServiceProxy,
+    promises: Promise<void>[]
+  ) {
     this.#original = original;
     this.#service = service;
+    this.#promises = promises;
   }
 
   #formatLogContent(data: any[]): string {
@@ -82,7 +88,7 @@ class CaptureLog implements Console {
   }
 
   #call(level: Level, data: any[]) {
-    fetch(new URL("call", this.#service.base_url), {
+    const promise = fetch(new URL("call", this.#service.base_url), {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -96,7 +102,8 @@ class CaptureLog implements Console {
           content: this.#formatLogContent(data),
         },
       }),
-    });
+    }).then(() => {});
+    this.#promises.push(promise);
   }
 
   clear(): void {}
@@ -181,12 +188,14 @@ export async function start(
       const jsParams = params.toJSObject();
       let data: RunOutput;
       let success = false;
+      const logPromises: Promise<void>[] = [];
       try {
         const context = new Context(input.ctx);
         if (context.command?.log) {
           globalThis.console = new CaptureLog(
             originalConsole,
-            context.command?.log
+            context.command?.log,
+            logPromises
           );
         } else {
           globalThis.console = originalConsole;
@@ -197,6 +206,7 @@ export async function start(
         data = { Err: error.toString() };
         success = false;
       }
+      await Promise.allSettled(logPromises);
       const resp: Response<RunOutput> = {
         envelope: req.envelope,
         success,
