@@ -247,7 +247,7 @@ impl actix::Handler<RegisterLogs> for DBWorker {
     type Result = <RegisterLogs as actix::Message>::Result;
     fn handle(&mut self, msg: RegisterLogs, _: &mut Self::Context) -> Self::Result {
         let span = tracing::error_span!("flow_logs");
-        let id = span.id().ok_or_else("span ID is None")?;
+        let id = span.id().ok_or("span ID is None")?;
         let filter = EnvFilter::builder()
             .with_default_directive(LevelFilter::ERROR.into())
             .parse_lossy(
