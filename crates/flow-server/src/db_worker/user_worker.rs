@@ -289,6 +289,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
 
             let span = root
                 .send(RegisterLogs {
+                    flow_run_id: run_id,
                     tx: msg.tx,
                     filter: msg.config.environment.get(RUST_LOG).cloned(),
                 })

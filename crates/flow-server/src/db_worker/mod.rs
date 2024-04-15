@@ -8,7 +8,7 @@ use db::{
     FlowRunLogsRow,
 };
 use flow::flow_run_events::{EventSender, DEFAULT_LOG_FILTER};
-use flow_lib::{config::Endpoints, context::get_jwt, BoxError, UserId};
+use flow_lib::{config::Endpoints, context::get_jwt, BoxError, FlowRunId, UserId};
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
 use std::{
@@ -235,6 +235,7 @@ impl actix::Handler<GetTokenWorker> for DBWorker {
 }
 
 pub struct RegisterLogs {
+    pub flow_run_id: FlowRunId,
     pub tx: EventSender,
     pub filter: Option<String>,
 }
@@ -246,7 +247,7 @@ impl actix::Message for RegisterLogs {
 impl actix::Handler<RegisterLogs> for DBWorker {
     type Result = <RegisterLogs as actix::Message>::Result;
     fn handle(&mut self, msg: RegisterLogs, _: &mut Self::Context) -> Self::Result {
-        let span = tracing::error_span!("flow_logs");
+        let span = tracing::error_span!("flow_logs", flow_run_id = msg.flow_run_id.to_string());
         let id = span.id().ok_or("span ID is None")?;
         let filter = EnvFilter::builder()
             .with_default_directive(LevelFilter::ERROR.into())
