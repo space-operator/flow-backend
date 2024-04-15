@@ -1,6 +1,6 @@
 {
   "name": "@space-operator/deno-command-rpc",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "exports": "./src/mod.ts",
   "imports": {}
 }
