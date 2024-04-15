@@ -11,6 +11,8 @@ async-trait = "0.1.79"
 flow-lib.workspace = true
 serde.workspace = true
 srpc.workspace = true
+tower = "0.4.13"
+tracing = "0.1.40"
 url = { version = "2.5.0", features = ["serde"] }
 
 [dev-dependencies]

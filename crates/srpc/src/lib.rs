@@ -227,7 +227,7 @@ impl actix::Handler<Request> for Server {
     fn handle(&mut self, msg: Request, ctx: &mut Self::Context) -> Self::Result {
         let r = self.process_request(ctx, msg);
 
-        Box::pin(async move { Ok(r?.await.map_err(|_| Error::Dropped)?) })
+        Box::pin(async move { r?.await.map_err(|_| Error::Dropped) })
     }
 }
 

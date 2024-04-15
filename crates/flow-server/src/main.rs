@@ -8,11 +8,13 @@ use either::Either;
 use flow_server::{
     api::{self, prelude::Success},
     db_worker::{token_worker::token_from_apikeys, DBWorker, SystemShutdown},
+    flow_logs,
     user::SupabaseAuth,
     ws, Config,
 };
 use futures_util::{future::ok, TryFutureExt};
 use std::{borrow::Cow, collections::BTreeSet, convert::Infallible, time::Duration};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Layer};
 use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
@@ -22,7 +24,15 @@ use cmds_std as _;
 
 #[actix::main]
 async fn main() {
-    tracing_subscriber::fmt::init();
+    let (flow_logs, tracing_data) = flow_logs::FlowLogs::new();
+    tracing_subscriber::Registry::default()
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_filter(tracing_subscriber::EnvFilter::from_default_env())
+                .with_filter(flow_logs::IgnoreFlowLogs::new(tracing_data.clone())),
+        )
+        .with(flow_logs)
+        .init();
 
     let config = Config::get_config();
 
@@ -111,7 +121,9 @@ async fn main() {
         }
     }
 
-    let db_worker = DBWorker::create(|ctx| DBWorker::new(db.clone(), config.clone(), actors, ctx));
+    let db_worker = DBWorker::create(|ctx| {
+        DBWorker::new(db.clone(), config.clone(), actors, tracing_data, ctx)
+    });
 
     let sig_auth = config.signature_auth();
     let supabase_auth = match SupabaseAuth::new(&config.supabase, db.clone()) {

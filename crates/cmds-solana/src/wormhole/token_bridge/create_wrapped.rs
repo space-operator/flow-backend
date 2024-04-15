@@ -1,15 +1,11 @@
-use crate::wormhole::{PostVAAData, VAA};
-
+use super::{CreateWrappedData, PayloadAssetMeta, TokenBridgeInstructions};
 use crate::prelude::*;
-
+use crate::wormhole::{PostVAAData, VAA};
 use borsh::BorshSerialize;
-
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
 use solana_sdk::pubkey::Pubkey;
-use tracing_log::log::info;
+use tracing::info;
 use wormhole_sdk::token::Message;
-
-use super::{CreateWrappedData, PayloadAssetMeta, TokenBridgeInstructions};
 
 // Command Name
 const NAME: &str = "create_wrapped";

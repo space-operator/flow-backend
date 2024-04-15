@@ -1,15 +1,12 @@
+use super::TokenBridgeInstructions;
+use crate::prelude::*;
 use crate::wormhole::token_bridge::TransferTokensArgs;
 use crate::wormhole::token_bridge::{eth::hex_to_address, get_sequence_number_from_message};
-
-use crate::prelude::*;
-
 use borsh::BorshSerialize;
 use rand::Rng;
 use solana_program::instruction::AccountMeta;
 use solana_sdk::pubkey::Pubkey;
-use tracing_log::log::info;
-
-use super::TokenBridgeInstructions;
+use tracing::info;
 
 // Command Name
 const NAME: &str = "transfer_wrapped";

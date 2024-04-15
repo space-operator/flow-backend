@@ -8,6 +8,9 @@ flow-lib = { workspace = true }
 value = { workspace = true }
 utils = { workspace = true }
 space-wasm = { workspace = true }
+rhai-script.workspace = true
+command-rpc.workspace = true
+srpc.workspace = true
 
 anyhow = "1.0"
 bs58 = "0.4"
@@ -32,18 +35,14 @@ derive_more = "0.99"
 indexmap = "2"
 rust_decimal = { version = "1", features = ["serde-with-float"] }
 reqwest = { version = "0.12", features = ["json"] }
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tracing-log = "0.1.3"
 mime_guess = "2.0.4"
-rhai-script.workspace = true
 crossbeam-channel = "0.5.8"
 tempfile = "3.10.1"
 url = "2.5.0"
-command-rpc.workspace = true
-srpc.workspace = true
 home = "0.5.9"
 
 [dev-dependencies]
 cmds-std = { workspace = true }
 cmds-solana = { workspace = true }
 actix-web = "4.5.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
