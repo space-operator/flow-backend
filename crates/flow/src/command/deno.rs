@@ -44,7 +44,7 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
     let dir = tempdir()?;
     tokio::fs::write(dir.path().join("__cmd.ts"), source)
         .await
-        .context("write __cm.ts")?;
+        .context("write __cmd.ts")?;
     tokio::fs::write(dir.path().join("__run.ts"), include_str!("./__run.ts"))
         .await
         .context("write __run.ts")?;

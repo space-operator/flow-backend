@@ -4,7 +4,8 @@ export {
   Value,
   type ContextData,
   type CommandTrait,
-} from "jsr:@space-operator/flow-lib@0.8.3";
+  type ServiceProxy,
+} from "jsr:@space-operator/flow-lib@0.9.0";
 export {
   Application,
   type ListenOptions,

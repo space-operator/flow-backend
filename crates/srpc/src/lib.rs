@@ -1,12 +1,13 @@
 use actix::{Actor, ActorFutureExt, AsyncContext, Context, ResponseFuture, WrapFuture};
 use actix_web::{dev::ServerHandle, web, App, HttpServer};
 use futures_channel::oneshot;
+use futures_util::TryFutureExt;
 use hashbrown::HashMap;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use std::marker::PhantomData;
+use std::{collections::VecDeque, marker::PhantomData};
 use thiserror::Error as ThisError;
-use tower::{util::BoxService, BoxError, Service, ServiceBuilder, ServiceExt};
+use tower::{util::BoxService, BoxError, Service as _, ServiceBuilder, ServiceExt};
 use url::Url;
 
 pub type JsonService = BoxService<JsonValue, JsonValue, JsonValue>;
@@ -65,12 +66,27 @@ pub struct RemoveService {
 }
 
 impl actix::Message for RemoveService {
-    type Result = Option<JsonService>;
+    type Result = bool;
+}
+
+struct Service {
+    svc: Option<JsonService>,
+    queue: VecDeque<(Request, oneshot::Sender<Response>)>,
+}
+
+impl Default for Service {
+    fn default() -> Self {
+        Self {
+            svc: None,
+            queue: <_>::default(),
+        }
+    }
 }
 
 pub struct Server {
     /// svc_name => (svc_id => S)
-    services: HashMap<String, HashMap<String, JsonService>>,
+    services: HashMap<String, HashMap<String, Service>>,
+    dead_services: HashMap<String, HashMap<String, Service>>,
     port: u16,
     server_handle: ServerHandle,
 }
@@ -99,7 +115,7 @@ impl Server {
         let addr = ctx.address();
         let server = HttpServer::new(move || {
             App::new()
-                .wrap(actix_web::middleware::Logger::new(r#""%r" %s %b %Dms"#))
+                // .wrap(actix_web::middleware::Logger::new(r#""%r" %s %b %Dms"#))
                 .configure(|s| configure_server(s, addr.downgrade()))
         })
         .workers(1)
@@ -111,6 +127,7 @@ impl Server {
         actix::spawn(server);
         Ok(ctx.run(Self {
             services: <_>::default(),
+            dead_services: <_>::default(),
             server_handle,
             port,
         }))
@@ -125,10 +142,11 @@ impl Server {
         result: Result<BoxService<JsonValue, JsonValue, JsonValue>, JsonValue>,
         req: Request,
         responder: oneshot::Sender<Response>,
+        ctx: &mut actix::Context<Self>,
     ) {
         match result {
-            Ok(mut s) => {
-                let future = s.call(req.input);
+            Ok(mut svc) => {
+                let future = svc.call(req.input);
                 actix::spawn(async move {
                     let (success, data) = match future.await {
                         Ok(x) => (true, x),
@@ -142,10 +160,29 @@ impl Server {
                         })
                         .ok();
                 });
-                self.services
+                let s = self
+                    .services
                     .get_mut(&req.svc_name)
-                    .unwrap()
-                    .insert(req.svc_id, s);
+                    .and_then(|map| map.get_mut(&req.svc_id));
+                match s {
+                    Some(s) => {
+                        if let Some((req, tx)) = s.queue.pop_front() {
+                            self.process_request_with_svc(ctx, req, tx, svc);
+                        } else {
+                            s.svc.replace(svc);
+                        }
+                    }
+                    None => {
+                        let queue = self
+                            .dead_services
+                            .get_mut(&req.svc_name)
+                            .and_then(|map| map.remove(&req.svc_id))
+                            .map(|s| s.queue);
+                        if let Some(queue) = queue {
+                            actix::spawn(finish_requests(svc, queue));
+                        }
+                    }
+                }
             }
             Err(error) => {
                 let _ = responder.send(Response {
@@ -157,27 +194,41 @@ impl Server {
         }
     }
 
+    fn process_request_with_svc(
+        &mut self,
+        ctx: &mut actix::Context<Self>,
+        req: Request,
+        tx: oneshot::Sender<Response>,
+        svc: JsonService,
+    ) {
+        let task = svc
+            .ready_oneshot()
+            .into_actor(&*self)
+            .map(move |result, actor, ctx| actor.after_ready(result, req, tx, ctx));
+        ctx.spawn(task);
+    }
+
     fn process_request(
         &mut self,
         ctx: &mut actix::Context<Self>,
         req: Request,
-    ) -> Result<oneshot::Receiver<Response>, Error> {
-        let mut s = self
+        tx: oneshot::Sender<Response>,
+    ) -> Result<(), Error> {
+        let s = self
             .services
             .get_mut(&req.svc_name)
             .ok_or_else(|| Error::NotFound(format!("svc_name: {}", req.svc_name)))?
-            .remove(&req.svc_id)
+            .get_mut(&req.svc_id)
             .ok_or_else(|| Error::NotFound(format!("svc_id: {}", req.svc_id)))?;
 
-        let (tx, rx) = oneshot::channel();
-        let task = async move {
-            s.ready().await?;
-            Ok(s)
+        match s.svc.take() {
+            Some(svc) => self.process_request_with_svc(ctx, req, tx, svc),
+            None => {
+                s.queue.push_back((req, tx));
+            }
         }
-        .into_actor(&*self)
-        .map(move |result, actor, _| actor.after_ready(result, req, tx));
-        ctx.spawn(task);
-        Ok(rx)
+
+        Ok(())
     }
 
     pub fn register_json_service<S, T>(
@@ -194,7 +245,7 @@ impl Server {
         S::Future: Send + 'static,
     {
         tracing::info!("inserting {}::{}", name, id);
-        let s = ServiceBuilder::new()
+        let svc = ServiceBuilder::new()
             .filter(|r: JsonValue| {
                 tracing::debug!("request: {}", r);
                 serde_json::from_value::<T>(r)
@@ -218,16 +269,28 @@ impl Server {
                 r
             })
             .boxed();
-        self.services.entry(name).or_default().insert(id, s)
+        self.services
+            .entry(name)
+            .or_default()
+            .entry(id)
+            .or_default()
+            .svc
+            .replace(svc)
     }
 }
 
 impl actix::Handler<Request> for Server {
     type Result = ResponseFuture<<Request as actix::Message>::Result>;
     fn handle(&mut self, msg: Request, ctx: &mut Self::Context) -> Self::Result {
-        let r = self.process_request(ctx, msg);
-
-        Box::pin(async move { r?.await.map_err(|_| Error::Dropped) })
+        let (tx, rx) = oneshot::channel();
+        let result = self.process_request(ctx, msg, tx);
+        match result {
+            Ok(()) => Box::pin(rx.map_err(|_| Error::Dropped)),
+            Err(error) => {
+                tracing::debug!("error: {}", error);
+                Box::pin(std::future::ready(Err(error)))
+            }
+        }
     }
 }
 
@@ -251,6 +314,35 @@ where
     }
 }
 
+async fn finish_requests(
+    mut svc: JsonService,
+    mut queue: VecDeque<(Request, oneshot::Sender<Response>)>,
+) {
+    while let Some((req, tx)) = queue.pop_front() {
+        let envelope = req.envelope.clone();
+        let response = match svc.ready().await {
+            Ok(svc) => match svc.call(req.input).await {
+                Ok(data) => Response {
+                    envelope,
+                    success: true,
+                    data,
+                },
+                Err(error) => Response {
+                    envelope,
+                    success: false,
+                    data: error,
+                },
+            },
+            Err(error) => Response {
+                envelope,
+                success: false,
+                data: error,
+            },
+        };
+        tx.send(response).ok();
+    }
+}
+
 impl actix::Handler<RemoveService> for Server {
     type Result = actix::Response<<RemoveService as actix::Message>::Result>;
     fn handle(&mut self, msg: RemoveService, _: &mut Self::Context) -> Self::Result {
@@ -258,7 +350,19 @@ impl actix::Handler<RemoveService> for Server {
         actix::Response::reply(
             self.services
                 .get_mut(&msg.name)
-                .and_then(|map| map.remove(&msg.id)),
+                .and_then(|map| map.remove(&msg.id))
+                .map(|Service { svc, queue }| {
+                    if let Some(svc) = svc {
+                        actix::spawn(finish_requests(svc, queue));
+                    } else {
+                        self.dead_services
+                            .entry(msg.name)
+                            .or_default()
+                            .insert(msg.id, Service { svc: None, queue });
+                    }
+                    true
+                })
+                .unwrap_or(false),
         )
     }
 }
