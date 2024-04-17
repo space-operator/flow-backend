@@ -10,7 +10,10 @@ actix = "0.13.3"
 async-trait = "0.1.79"
 flow-lib.workspace = true
 serde.workspace = true
+serde_with = "3.7.0"
 srpc.workspace = true
+tower = "0.4.13"
+tracing = "0.1.40"
 url = { version = "2.5.0", features = ["serde"] }
 
 [dev-dependencies]

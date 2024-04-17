@@ -5,8 +5,47 @@ use flow_lib::{
     command::prelude::*, config::Endpoints, context::CommandContext, ContextConfig, FlowRunId,
     NodeId, User,
 };
-use std::collections::HashMap;
+use serde_with::{serde_as, DisplayFromStr};
+use std::{collections::HashMap, convert::Infallible};
+use tower::util::ServiceExt;
+use tracing::Instrument;
 use url::Url;
+
+struct LogSvc {
+    span: tracing::Span,
+}
+
+#[serde_as]
+#[derive(Deserialize, Serialize, Debug)]
+struct Log {
+    #[serde_as(as = "DisplayFromStr")]
+    level: tracing::Level,
+    content: String,
+}
+
+impl tower::Service<Log> for LogSvc {
+    type Error = Infallible;
+    type Response = ();
+    type Future = std::future::Ready<Result<(), Infallible>>;
+    fn poll_ready(
+        &mut self,
+        _: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        std::task::Poll::Ready(Ok(()))
+    }
+    fn call(&mut self, req: Log) -> Self::Future {
+        self.span.in_scope(|| {
+            match req.level {
+                tracing::Level::ERROR => tracing::error!(message = req.content),
+                tracing::Level::WARN => tracing::warn!(message = req.content),
+                tracing::Level::INFO => tracing::info!(message = req.content),
+                tracing::Level::DEBUG => tracing::debug!(message = req.content),
+                tracing::Level::TRACE => tracing::trace!(message = req.content),
+            }
+            std::future::ready(Ok(()))
+        })
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ServiceProxy {
@@ -45,6 +84,7 @@ struct CommandContextData {
     node_id: NodeId,
     times: u32,
     svc: ServiceProxy,
+    log: ServiceProxy,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -84,7 +124,7 @@ impl ContextProxy {
 
         let signer = server
             .send(srpc::RegisterJsonService::new(
-                "signer".to_string(),
+                "signer".to_owned(),
                 flow_run_id.to_string(),
                 signer,
             ))
@@ -117,11 +157,22 @@ impl CommandContextData {
         }: CommandContext,
         server: &actix::Addr<srpc::Server>,
     ) -> Result<Self, CommandError> {
+        let span = tracing::Span::current();
         let svc = server
             .send(srpc::RegisterJsonService::new(
-                "execute".to_string(),
-                format!("{}::{}::{}", flow_run_id, node_id, times),
-                svc,
+                "execute".to_owned(),
+                format!("{};{};{}", flow_run_id, node_id, times),
+                svc.map_future({
+                    let span = span.clone();
+                    move |f| f.instrument(span.clone())
+                }),
+            ))
+            .await?;
+        let log = server
+            .send(srpc::RegisterJsonService::new(
+                "log".to_owned(),
+                format!("{};{};{}", flow_run_id, node_id, times),
+                LogSvc { span },
             ))
             .await?;
         Ok(Self {
@@ -129,6 +180,7 @@ impl CommandContextData {
             node_id,
             times,
             svc: ServiceProxy::new(svc, server),
+            log: ServiceProxy::new(log, server),
         })
     }
 }

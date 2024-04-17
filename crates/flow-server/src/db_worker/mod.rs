@@ -1,4 +1,4 @@
-use crate::Config;
+use crate::{flow_logs, Config};
 use actix::{
     fut::wrap_future, Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context,
     ResponseActFuture, ResponseFuture, WrapFuture,
@@ -7,7 +7,8 @@ use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
     FlowRunLogsRow,
 };
-use flow_lib::{config::Endpoints, context::get_jwt, UserId};
+use flow::flow_run_events::{EventSender, DEFAULT_LOG_FILTER, FLOW_SPAN_NAME};
+use flow_lib::{config::Endpoints, context::get_jwt, BoxError, FlowRunId, UserId};
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
 use std::{
@@ -16,6 +17,8 @@ use std::{
 };
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast;
+use tracing::{level_filters::LevelFilter, Span};
+use tracing_subscriber::EnvFilter;
 use utils::address_book::{AddressBook, ManagableActor};
 
 pub mod flow_run_worker;
@@ -50,6 +53,7 @@ pub struct DBWorker {
     /// All actors in the system
     actors: AddressBook,
     counter: Counter,
+    tracing_data: flow_logs::Map,
     tx: mpsc::UnboundedSender<Vec<FlowRunLogsRow>>,
     done_tx: broadcast::Sender<()>,
 }
@@ -59,6 +63,7 @@ impl DBWorker {
         db: DbPool,
         config: Config,
         actors: AddressBook,
+        tracing_data: flow_logs::Map,
         ctx: &mut actix::Context<Self>,
     ) -> Self {
         let (tx, rx) = mpsc::unbounded();
@@ -81,6 +86,7 @@ impl DBWorker {
             actors,
             counter: Counter::default(),
             tx,
+            tracing_data,
             done_tx: broadcast::channel(1).0,
         }
     }
@@ -225,6 +231,35 @@ impl actix::Handler<GetTokenWorker> for DBWorker {
                 .upgrade()
                 .ok_or(get_jwt::Error::other("TokenWorker stopped")),
         }
+    }
+}
+
+pub struct RegisterLogs {
+    pub flow_run_id: FlowRunId,
+    pub tx: EventSender,
+    pub filter: Option<String>,
+}
+
+impl actix::Message for RegisterLogs {
+    type Result = Result<Span, BoxError>;
+}
+
+impl actix::Handler<RegisterLogs> for DBWorker {
+    type Result = <RegisterLogs as actix::Message>::Result;
+    fn handle(&mut self, msg: RegisterLogs, _: &mut Self::Context) -> Self::Result {
+        let span = tracing::error_span!(FLOW_SPAN_NAME, flow_run_id = msg.flow_run_id.to_string());
+        let id = span.id().ok_or("span ID is None")?;
+        let filter = EnvFilter::builder()
+            .with_default_directive(LevelFilter::ERROR.into())
+            .parse_lossy(
+                msg.filter
+                    .as_ref()
+                    .map(|s| s.as_str())
+                    .unwrap_or(DEFAULT_LOG_FILTER),
+            );
+        let mut map = self.tracing_data.write().unwrap();
+        map.insert(id, flow_logs::Data { tx: msg.tx, filter });
+        Ok(span)
     }
 }
 

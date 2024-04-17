@@ -10,7 +10,7 @@ use flow_lib::{
         client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
         Endpoints,
     },
-    context::{env::RUST_LOG, get_jwt, signer, User},
+    context::{get_jwt, signer, User},
     utils::TowerClient,
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
 };
@@ -21,7 +21,7 @@ use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
 use tokio::sync::Semaphore;
 use tokio_util::sync::CancellationToken;
-use tracing::instrument::WithSubscriber;
+use tracing::Instrument;
 use utils::actix_service::ActixService;
 
 pub const MAX_CALL_DEPTH: u32 = 32;
@@ -337,7 +337,7 @@ impl FlowRegistry {
             ..self.clone()
         };
 
-        let (tx, rx) = futures::channel::mpsc::unbounded();
+        let (tx, rx) = flow_run_events::channel();
         let run = self
             .new_flow_run
             .call_ref(new_flow_run::Request {
@@ -360,6 +360,7 @@ impl FlowRegistry {
                     ..config.clone()
                 },
                 inputs: inputs.clone(),
+                tx: tx.clone(),
                 stream: Box::pin(rx),
             })
             .await?;
@@ -368,10 +369,6 @@ impl FlowRegistry {
         let stop = run.stop_signal;
         let stop_shared = run.stop_shared_signal;
 
-        let subscriber = flow_run_events::build_tracing_subscriber(
-            tx.clone(),
-            config.environment.get(RUST_LOG).map(String::as_str),
-        );
         async move {
             let mut get_previous_values_svc = this.get_previous_values.clone();
             let user_id = this.flow_owner.id;
@@ -417,12 +414,12 @@ impl FlowRegistry {
                     flow.run(tx, flow_run_id, inputs, stop, stop_shared, previous_values)
                         .await
                 }
-                .with_current_subscriber(),
+                .in_current_span(),
             );
 
             Ok((flow_run_id, join_handle))
         }
-        .with_subscriber(subscriber)
+        .instrument(run.span)
         .await
     }
 }
@@ -446,7 +443,10 @@ pub mod run_rhai {
 }
 
 pub mod new_flow_run {
-    use crate::{flow_graph::StopSignal, flow_run_events};
+    use crate::{
+        flow_graph::StopSignal,
+        flow_run_events::{Event, EventSender},
+    };
     use flow_lib::{
         config::client::ClientConfig, utils::TowerClient, BoxError, FlowRunId, UserId, ValueSet,
     };
@@ -460,7 +460,8 @@ pub mod new_flow_run {
         pub config: ClientConfig,
         pub shared_with: Vec<UserId>,
         pub inputs: ValueSet,
-        pub stream: BoxStream<'static, flow_run_events::Event>,
+        pub tx: EventSender,
+        pub stream: BoxStream<'static, Event>,
     }
 
     impl actix::Message for Request {
@@ -497,6 +498,7 @@ pub mod new_flow_run {
         pub flow_run_id: FlowRunId,
         pub stop_signal: StopSignal,
         pub stop_shared_signal: StopSignal,
+        pub span: tracing::Span,
     }
 
     pub fn unimplemented_svc() -> Svc {

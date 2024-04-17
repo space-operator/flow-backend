@@ -3,7 +3,8 @@ use crate::{
     context::CommandFactory,
     flow_registry::FlowRegistry,
     flow_run_events::{
-        EventSender, FlowError, FlowFinish, FlowStart, NodeError, NodeFinish, NodeOutput, NodeStart,
+        EventSender, FlowError, FlowFinish, FlowStart, NodeError, NodeFinish, NodeOutput,
+        NodeStart, NODE_SPAN_NAME,
     },
 };
 use chrono::{DateTime, Utc};
@@ -47,7 +48,7 @@ use tokio::{
     task::{JoinError, JoinHandle},
 };
 use tokio_util::sync::CancellationToken;
-use tracing::instrument::WithSubscriber;
+use tracing::Instrument;
 use uuid::Uuid;
 use value::Value;
 
@@ -1286,6 +1287,8 @@ impl FlowGraph {
         outputs.push(<_>::default());
         let rhai_permit = self.rhai_permit.clone();
         let is_rhai_script = rhai_script::is_rhai_script(&node.command.name());
+        let span =
+            tracing::error_span!(NODE_SPAN_NAME, node_id = node.id.to_string(), times = times);
         let task = run_command(
             node,
             s.flow_run_id,
@@ -1299,7 +1302,6 @@ impl FlowGraph {
             self.mode.clone(),
             self.tx_exec_config.clone(),
         );
-        // let span = tracing::error_span!("node", node_id = node.id.to_string(), times = times);
         let handler = tokio::spawn(
             async move {
                 if is_rhai_script {
@@ -1311,8 +1313,7 @@ impl FlowGraph {
                     task.await
                 }
             }
-            // .instrument(span)
-            .with_current_subscriber(),
+            .instrument(span),
         );
 
         s.running.push(handler);
