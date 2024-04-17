@@ -26,6 +26,7 @@ pub mod das;
 pub mod pyth_price;
 pub mod streamflow;
 pub mod governance;
+pub mod spl_token_2022;
 
 pub use error::{Error, Result};
 use tracing::info;
