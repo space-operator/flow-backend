@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use solana_sdk::{instruction::AccountMeta, system_program};
-use tracing_log::log::info;
+use tracing::info;
 
 use crate::{
     governance::{create_realm::with_governing_token_config_args, RealmConfigArgs},

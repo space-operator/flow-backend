@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use solana_sdk::{clock::UnixTimestamp, instruction::AccountMeta, system_program};
-use tracing_log::log::info;
+use tracing::info;
 
 use crate::prelude::*;
 
