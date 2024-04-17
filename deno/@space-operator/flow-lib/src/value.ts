@@ -65,7 +65,7 @@ export class Value implements IValue {
       return Value.Null();
     }
 
-    const value = Value.inferFromJSType(x, customConvert);
+    const value = Value.#inferFromJSType(x, customConvert);
     if (value === null) throw TypeError("null");
     return value;
   }
@@ -74,7 +74,7 @@ export class Value implements IValue {
     return this;
   }
 
-  private static inferFromJSType(
+  static #inferFromJSType(
     x: any,
     customConvert?: (x: any) => Value | null
   ): Value | null {
@@ -142,14 +142,14 @@ export class Value implements IValue {
         if (Object.prototype.isPrototypeOf.call(Array.prototype, x)) {
           return Value.fromJSON({
             A: Array.from(x)
-              .map((x) => Value.inferFromJSType(x, customConvert))
+              .map((x) => Value.#inferFromJSType(x, customConvert))
               .filter((x) => x != null) as IValue[],
           });
         }
         return Value.fromJSON({
           M: Object.fromEntries(
             Object.entries(x)
-              .map(([k, v]) => [k, Value.inferFromJSType(v, customConvert)])
+              .map(([k, v]) => [k, Value.#inferFromJSType(v, customConvert)])
               .filter(([_k, v]) => v != null)
           ),
         });
