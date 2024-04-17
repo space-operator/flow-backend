@@ -27,7 +27,7 @@ interface MaybeKeypair {
   secretKey: Uint8Array;
 }
 
-function maybePublicKey(x: MaybePubkey): boolean {
+function maybePublicKey(x: MaybePubkey): x is web3.PublicKey {
   if (x == null) return false;
   return (
     typeof x.toBase58 === "function" &&
@@ -36,7 +36,7 @@ function maybePublicKey(x: MaybePubkey): boolean {
   );
 }
 
-function maybeKeypair(x: MaybeKeypair): boolean {
+function maybeKeypair(x: MaybeKeypair): x is web3.Keypair {
   if (x == null) return false;
   return maybePublicKey(x.publicKey) && x.secretKey?.byteLength === 32;
 }
@@ -108,10 +108,9 @@ export class Value implements IValue {
           return Value.fromJSON({ B3: x.toBase58() });
         }
         if (maybeKeypair(x)) {
-          const k = x as MaybeKeypair;
           return Value.fromJSON({
             B6: bs58.encodeBase58(
-              new Uint8Array([...k.secretKey, ...k.publicKey.toBuffer()])
+              new Uint8Array([...x.secretKey, ...x.publicKey.toBuffer()])
             ),
           });
         }
