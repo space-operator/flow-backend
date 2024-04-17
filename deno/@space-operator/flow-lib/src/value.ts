@@ -1,5 +1,8 @@
 import { bs58, base64, web3, type Buffer } from "./deps.ts";
 
+/**
+ * JSON representation of Value
+ */
 export interface IValue {
   S?: string;
   D?: string;
@@ -71,7 +74,7 @@ export class Value implements IValue {
     return this;
   }
 
-  public static inferFromJSType(
+  private static inferFromJSType(
     x: any,
     customConvert?: (x: any) => Value | null
   ): Value | null {
