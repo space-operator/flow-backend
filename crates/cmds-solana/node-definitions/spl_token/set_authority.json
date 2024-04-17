@@ -3,9 +3,9 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "set_authority_2022",
+    "node_id": "set_authority",
     "version": "0.1",
-    "display_name": "Set Authority 2022",
+    "display_name": "Set Authority",
     "description": "",
     "tags": [],
     "related_to": [
@@ -16,7 +16,7 @@
       }
     ],
     "resources": {
-      "source_code_url": "crates/cmds-solana/src/spl_token_2022/set_authority.rs",
+      "source_code_url": "crates/cmds-solana/src/spl_token/set_authority.rs",
       "documentation_url": ""
     },
     "usage": {

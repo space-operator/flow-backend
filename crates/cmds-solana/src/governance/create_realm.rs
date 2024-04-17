@@ -6,9 +6,17 @@ use tracing_log::log::info;
 use crate::prelude::*;
 
 use super::{
-    GovernanceInstruction, GoverningTokenConfigAccountArgs, GoverningTokenConfigArgs,
-    MintMaxVoterWeightSource, RealmConfigArgs, SPL_GOVERNANCE_ID,
+    GovernanceInstruction,
+    GoverningTokenConfigAccountArgs,
+    GoverningTokenConfigArgs,
+    MintMaxVoterWeightSource,
+    RealmConfigArgs,
+    // SPL_GOVERNANCE_ID,
 };
+
+// TEST program id
+// https://github.com/solana-labs/solana-program-library/tree/master/governance#2-shared-instance
+const SPL_GOVERNANCE_ID: &str = "GTesTBiEWE32WHXXE2S4XbZvA5CrEc4xs6ZgRe895dP";
 
 const NAME: &str = "create_realm";
 
@@ -42,8 +50,6 @@ pub struct Input {
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
-
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {

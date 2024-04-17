@@ -1,13 +1,11 @@
-use spl_token_2022::instruction::AuthorityType;
-
 use crate::prelude::*;
 
-const NAME: &str = "set_authority_2022";
+const NAME: &str = "set_authority";
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("/spl_token_2022/set_authority.json");
+    const DEFINITION: &str = flow_lib::node_definition!("/spl_token/set_authority.json");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?
@@ -39,11 +37,11 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let ix = spl_token_2022::instruction::set_authority(
-        &spl_token_2022::id(),
+    let ix = spl_token::instruction::set_authority(
+        &spl_token::id(),
         &input.owned_pubkey,
         input.new_authority.as_ref(),
-        input.authority_type,
+        input.authority_type.into(),
         &input.owner_pubkey,
         &input.signer_pubkeys.iter().collect::<Vec<_>>(),
     )?;
@@ -58,4 +56,27 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let signature = ctx.execute(instructions, <_>::default()).await?.signature;
 
     Ok(Output { signature })
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum AuthorityType {
+    /// Authority to mint new tokens
+    MintTokens,
+    /// Authority to freeze any account associated with the Mint
+    FreezeAccount,
+    /// Owner of a given token account
+    AccountOwner,
+    /// Authority to close a token account
+    CloseAccount,
+}
+
+impl From<AuthorityType> for spl_token::instruction::AuthorityType {
+    fn from(value: AuthorityType) -> Self {
+        match value {
+            AuthorityType::MintTokens => Self::MintTokens,
+            AuthorityType::FreezeAccount => Self::FreezeAccount,
+            AuthorityType::AccountOwner => Self::AccountOwner,
+            AuthorityType::CloseAccount => Self::CloseAccount,
+        }
+    }
 }
