@@ -11,12 +11,12 @@ use super::{
     GoverningTokenConfigArgs,
     MintMaxVoterWeightSource,
     RealmConfigArgs,
-    // SPL_GOVERNANCE_ID,
+    SPL_GOVERNANCE_ID,
 };
 
 // TEST program id
 // https://github.com/solana-labs/solana-program-library/tree/master/governance#2-shared-instance
-const SPL_GOVERNANCE_ID: &str = "GTesTBiEWE32WHXXE2S4XbZvA5CrEc4xs6ZgRe895dP";
+// const SPL_GOVERNANCE_ID: &str = "GTesTBiEWE32WHXXE2S4XbZvA5CrEc4xs6ZgRe895dP";
 
 const NAME: &str = "create_realm";
 

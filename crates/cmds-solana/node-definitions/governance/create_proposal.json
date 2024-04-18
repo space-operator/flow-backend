@@ -114,7 +114,7 @@
       "required": false,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "name",

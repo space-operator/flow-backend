@@ -34,7 +34,7 @@ pub struct Input {
     pub governance_authority: Keypair,
     pub option_index: u8,
     pub index: u16,
-    pub instruction: Vec<Instruction>,
+    pub instructions: Vec<Instruction>,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -106,7 +106,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         input.option_index,
         input.index,
         input
-            .instruction
+            .instructions
             .into_iter()
             .map(|i| i.into())
             .collect::<Vec<InstructionData>>(),
