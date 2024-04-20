@@ -56,7 +56,9 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
         .await
         .context("write cmd.ts")?;
 
-    let node_data_json = serde_json::to_string(nd).context("serialize NodeData")?;
+    let mut node_data = nd.clone();
+    node_data.targets_form.extra.rest.remove("source");
+    let node_data_json = serde_json::to_string(&node_data).context("serialize NodeData")?;
     tokio::fs::write(dir.path().join("node-data.json"), node_data_json)
         .await
         .context("write node-data.json")?;
@@ -119,7 +121,7 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
         }
     };
     let base_url = Url::parse(&format!("http://127.0.0.1:{}", port)).unwrap();
-    let cmd = RpcCommandClient::new(base_url, String::new(), nd.clone());
+    let cmd = RpcCommandClient::new(base_url, String::new(), node_data.clone());
     tokio::spawn(async move {
         while let Ok(Some(line)) = stdout.next_line().await {
             tracing::debug!("{}", line);
