@@ -1,4 +1,4 @@
-import { bs58, base64, web3, type Buffer } from "./deps.ts";
+import { bs58, base64, web3, Buffer } from "./deps.ts";
 
 /**
  * JSON representation of Value
@@ -156,6 +156,9 @@ export class Value implements IValue {
     }
   }
 
+  /**
+   * New Value from JSON data.
+   */
   public static fromJSON(obj: IValue): Value {
     if (obj instanceof Value) {
       return obj;
@@ -169,14 +172,6 @@ export class Value implements IValue {
       );
     }
     return Object.assign(Object.create(Value.prototype), obj);
-  }
-
-  public type(): string {
-    return Object.keys(this)[0];
-  }
-
-  public value(): string | 0 | boolean | Value[] | Record<string, Value> {
-    return Object.values(this)[0];
   }
 
   public static U64(x: string | number | bigint): Value {
@@ -265,6 +260,71 @@ export class Value implements IValue {
     return Value.fromJSON({
       B6: bs58.encodeBase58(x as any),
     });
+  }
+
+  public static Bytes(x: Buffer | Uint8Array | ArrayBuffer): Value {
+    switch (x.byteLength) {
+      case 32:
+        return Value.fromJSON({ B3: bs58.encodeBase58(x) });
+      case 64:
+        return Value.fromJSON({ B6: bs58.encodeBase58(x) });
+      default:
+        return Value.fromJSON({ BY: base64.encodeBase64(x) });
+    }
+  }
+
+  public asBool(): boolean | undefined {
+    if (this.B) return this.B;
+    return undefined;
+  }
+
+  public asNumber(): number | undefined {
+    if (this.U) return parseInt(this.U);
+    if (this.I) return parseInt(this.I);
+    if (this.F) return parseFloat(this.F);
+    if (this.U1) return parseInt(this.U1);
+    if (this.I1) return parseInt(this.I1);
+    return undefined;
+  }
+
+  public asBigInt(): bigint | undefined {
+    if (this.U) return BigInt(this.U);
+    if (this.I) return BigInt(this.I);
+    if (this.U1) return BigInt(this.U1);
+    if (this.I1) return BigInt(this.I1);
+    return undefined;
+  }
+
+  public asString(): string | undefined {
+    if (this.S) return this.S;
+    return undefined;
+  }
+
+  public asPubkey(): web3.PublicKey | undefined {
+    if (this.B3) return new web3.PublicKey(this.B3);
+    return undefined;
+  }
+
+  public asKeypair(): web3.Keypair | undefined {
+    if (this.B6) return web3.Keypair.fromSecretKey(bs58.decodeBase58(this.B6));
+    return undefined;
+  }
+
+  public asBytes(): Uint8Array | undefined {
+    if (this.B3) return bs58.decodeBase58(this.B3);
+    if (this.B6) return bs58.decodeBase58(this.B6);
+    if (this.BY) return base64.decodeBase64(this.BY);
+    return undefined;
+  }
+
+  public asArray(): Value[] | undefined {
+    if (this.A) return this.A;
+    return undefined;
+  }
+
+  public asMap(): Record<string, Value> | undefined {
+    if (this.M) return this.M;
+    return undefined;
   }
 
   public toJSObject(): any {

@@ -4,7 +4,7 @@ use serde::de::value::MapDeserializer;
 use std::process::Stdio;
 use tempfile::tempdir;
 use tokio::{
-    io::{AsyncBufReadExt, BufReader},
+    io::{AsyncBufReadExt, AsyncReadExt, BufReader},
     process::Child,
 };
 use url::Url;
@@ -16,7 +16,7 @@ struct Extra {
     source: String,
 }
 
-#[cfg(test)]
+// #[cfg(test)]
 fn copy_dir_all(
     src: impl AsRef<std::path::Path>,
     dst: impl AsRef<std::path::Path>,
@@ -42,13 +42,18 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
     .source;
 
     let dir = tempdir()?;
+
     tokio::fs::write(dir.path().join("__cmd.ts"), source)
         .await
         .context("write __cmd.ts")?;
-    tokio::fs::write(dir.path().join("__run.ts"), include_str!("./__run.ts"))
+
+    let node_data_json = serde_json::to_string(nd).context("serialize node data")?;
+    let run_ts = format!("const __NODE_DATA = {};\n", node_data_json) + include_str!("./__run.ts");
+    tokio::fs::write(dir.path().join("__run.ts"), &run_ts)
         .await
         .context("write __run.ts")?;
-    #[cfg(test)]
+
+    // #[cfg(test)]
     {
         let libs = concat!(env!("CARGO_MANIFEST_DIR"), "/../../deno/@space-operator");
         copy_dir_all(libs, &format!("{}/@space-operator", dir.path().display()))
@@ -63,7 +68,9 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
     let mut spawned = tokio::process::Command::new("deno")
         .current_dir(dir.path())
         .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .env("DENO_DIR", &deno_dir)
+        .env("NO_COLOR", "1")
         .kill_on_drop(true)
         .arg("run")
         .arg("--allow-net")
@@ -72,11 +79,18 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
         .spawn()
         .context("spawn")?;
     let mut stdout = BufReader::new(spawned.stdout.take().unwrap()).lines();
-    let port = stdout
-        .next_line()
-        .await?
-        .ok_or_else(|| CommandError::msg("port not found"))?
-        .parse::<u16>()?;
+    let port = match stdout.next_line().await? {
+        Some(line) => line.parse::<u16>()?,
+        None => {
+            let mut error = String::new();
+            let mut stderr = BufReader::new(spawned.stderr.take().unwrap());
+            stderr.read_to_string(&mut error).await.map_err(|error| {
+                tracing::warn!("read error: {}", error);
+                CommandError::msg("could not start command")
+            })?;
+            return Err(CommandError::msg(error));
+        }
+    };
     let base_url = Url::parse(&format!("http://127.0.0.1:{}", port)).unwrap();
     let cmd = RpcCommandClient::new(base_url, String::new(), nd.clone());
     tokio::spawn(async move {
