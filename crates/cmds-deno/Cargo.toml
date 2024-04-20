@@ -1,0 +1,30 @@
+[package]
+name = "cmds-deno"
+version = "0.0.0"
+edition = "2021"
+
+[features]
+default = ["local-deps"]
+local-deps = []
+
+[dependencies]
+command-rpc.workspace = true
+flow-lib.workspace = true
+
+serde_json.workspace = true
+serde.workspace = true
+anyhow.workspace = true
+
+tempfile = "3.10.1"
+tokio = "1"
+url = "2.5.0"
+home = "0.5.9"
+tracing = "0.1"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+[dev-dependencies]
+srpc.workspace = true
+value.workspace = true
+
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+actix-web = "4.5.1"
