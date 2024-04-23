@@ -301,12 +301,25 @@ export class Value implements IValue {
   }
 
   public asPubkey(): web3.PublicKey | undefined {
-    if (this.B3) return new web3.PublicKey(this.B3);
+    const x = this.S ? bs58.decodeBase58(this.S) : this.asBytes();
+    if (x !== undefined) {
+      if (x.byteLength === 32) {
+        return new web3.PublicKey(x);
+      } else if (x.byteLength === 64) {
+        return new web3.PublicKey(x.slice(32));
+      }
+    }
     return undefined;
   }
 
   public asKeypair(): web3.Keypair | undefined {
-    if (this.B6) return web3.Keypair.fromSecretKey(bs58.decodeBase58(this.B6));
+    if (this.S) {
+      return web3.Keypair.fromSecretKey(bs58.decodeBase58(this.S));
+    }
+    const x = this.asBytes();
+    if (x !== undefined) {
+      return web3.Keypair.fromSecretKey(x);
+    }
     return undefined;
   }
 
@@ -314,6 +327,16 @@ export class Value implements IValue {
     if (this.B3) return bs58.decodeBase58(this.B3);
     if (this.B6) return bs58.decodeBase58(this.B6);
     if (this.BY) return base64.decodeBase64(this.BY);
+    if (this.A) {
+      const x = this.A.map((v) => v.asNumber());
+      if (
+        x.every(
+          (v) => v !== undefined && 0 <= v && v <= 255 && Number.isInteger(v)
+        )
+      ) {
+        return new Uint8Array(x as number[]);
+      }
+    }
     return undefined;
   }
 
