@@ -6,6 +6,8 @@ use flow_lib::{
 };
 use serde::de::value::MapDeserializer;
 use serde::Deserialize;
+use std::future::Future;
+use std::pin::Pin;
 use std::process::Stdio;
 use tempfile::tempdir;
 use tokio::{
@@ -20,21 +22,23 @@ struct Extra {
 }
 
 #[cfg(feature = "local-deps")]
-async fn copy_dir_all(
+fn copy_dir_all(
     src: impl AsRef<std::path::Path>,
     dst: impl AsRef<std::path::Path>,
-) -> std::io::Result<()> {
-    std::fs::create_dir_all(&dst)?;
-    let mut files = tokio::fs::read_dir(src).await?;
-    while let Some(entry) = files.next_entry().await? {
-        let ty = entry.file_type().await?;
-        if ty.is_dir() {
-            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name())).await?;
-        } else {
-            tokio::fs::copy(entry.path(), dst.as_ref().join(entry.file_name())).await?;
+) -> Pin<Box<impl Future<Output = std::io::Result<()>>>> {
+    Box::pin(async move {
+        std::fs::create_dir_all(&dst)?;
+        let mut files = tokio::fs::read_dir(src).await?;
+        while let Some(entry) = files.next_entry().await? {
+            let ty = entry.file_type().await?;
+            if ty.is_dir() {
+                copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name())).await?;
+            } else {
+                tokio::fs::copy(entry.path(), dst.as_ref().join(entry.file_name())).await?;
+            }
         }
-    }
-    Ok(())
+        Ok(())
+    })
 }
 
 macro_rules! include {
@@ -131,73 +135,75 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
     Ok((Box::new(cmd), spawned))
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use flow_lib::{
-//         config::client::{Extra, Source, Target, TargetsForm},
-//         Context, ValueType,
-//     };
-//     use serde_json::Value as JsonValue;
-//     use std::sync::Arc;
-//     use uuid::Uuid;
+#[cfg(test)]
+mod tests {
+    use flow_lib::{
+        config::{
+            client::{Extra, Source, Target, TargetsForm},
+            node::Definition,
+        },
+        Context, ValueType,
+    };
+    use serde_json::Value as JsonValue;
+    use std::sync::Arc;
+    use uuid::Uuid;
 
-//     use super::*;
+    use super::*;
 
-//     #[actix_web::test]
-//     async fn test_run() {
-//         tracing_subscriber::fmt::try_init().ok();
-//         const SOURCE: &str = include_str!(concat!(
-//             env!("CARGO_MANIFEST_DIR"),
-//             "/test_files/deno_add/add.ts"
-//         ));
-//         let (cmd, child) = new(&NodeData {
-//             r#type: flow_lib::CommandType::Deno,
-//             node_id: "my_node".to_owned(),
-//             sources: [Source {
-//                 id: Uuid::nil(),
-//                 name: "c".to_owned(),
-//                 r#type: ValueType::F64,
-//                 optional: false,
-//             }]
-//             .into(),
-//             targets: [
-//                 Target {
-//                     id: Uuid::nil(),
-//                     name: "a".to_owned(),
-//                     type_bounds: [ValueType::F64].into(),
-//                     required: true,
-//                     passthrough: false,
-//                 },
-//                 Target {
-//                     id: Uuid::nil(),
-//                     name: "b".to_owned(),
-//                     type_bounds: [ValueType::F64].into(),
-//                     required: true,
-//                     passthrough: false,
-//                 },
-//             ]
-//             .into(),
-//             targets_form: TargetsForm {
-//                 form_data: JsonValue::Null,
-//                 wasm_bytes: None,
-//                 extra: Extra {
-//                     supabase_id: None,
-//                     rest: [("source".to_owned(), SOURCE.into())].into(),
-//                 },
-//             },
-//         })
-//         .await
-//         .unwrap();
-//         let mut ctx = Context::default();
-//         Arc::get_mut(&mut ctx.extensions)
-//             .unwrap()
-//             .insert(srpc::Server::start_http_server().unwrap());
-//         let output = cmd
-//             .run(ctx, value::map! { "a" => 12, "b" => 13 })
-//             .await
-//             .unwrap();
-//         let c = value::from_value::<u32>(output["c"].clone()).unwrap();
-//         assert_eq!(c, 25);
-//         drop(child);
-//     }
-// }
+    fn node_data(def: &str, source: &str) -> NodeData {
+        let def = serde_json::from_str::<Definition>(def).unwrap();
+        NodeData {
+            r#type: def.r#type,
+            node_id: def.data.node_id,
+            sources: def
+                .sources
+                .into_iter()
+                .map(|x| Source {
+                    id: Uuid::new_v4(),
+                    name: x.name,
+                    optional: x.optional,
+                    r#type: x.r#type,
+                })
+                .collect(),
+            targets: def
+                .targets
+                .into_iter()
+                .map(|x| Target {
+                    id: Uuid::new_v4(),
+                    name: x.name,
+                    required: x.required,
+                    passthrough: x.passthrough,
+                    type_bounds: x.type_bounds,
+                })
+                .collect(),
+            targets_form: TargetsForm {
+                form_data: JsonValue::Null,
+                wasm_bytes: None,
+                extra: Extra {
+                    supabase_id: None,
+                    rest: [("source".to_owned(), source.into())].into(),
+                },
+            },
+        }
+    }
+
+    #[actix_web::test]
+    async fn test_run() {
+        tracing_subscriber::fmt::try_init().ok();
+        const SOURCE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/add.ts"));
+        const JSON: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/add.json"));
+        let nd = node_data(JSON, SOURCE);
+        let (cmd, child) = new(&nd).await.unwrap();
+        let mut ctx = Context::default();
+        Arc::get_mut(&mut ctx.extensions)
+            .unwrap()
+            .insert(srpc::Server::start_http_server().unwrap());
+        let output = cmd
+            .run(ctx, value::map! { "a" => 12, "b" => 13 })
+            .await
+            .unwrap();
+        let c = value::from_value::<f64>(output["c"].clone()).unwrap();
+        assert_eq!(c, 25.0);
+        drop(child);
+    }
+}
