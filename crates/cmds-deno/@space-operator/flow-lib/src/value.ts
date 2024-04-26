@@ -1,7 +1,12 @@
-import { bs58, base64, web3, Buffer } from "./deps.ts";
+/**
+ * @module
+ * Node's inputs and outputs are encoded as `IValue`.
+ */
+
+import { bs58, base64, web3, type Buffer } from "./deps.ts";
 
 /**
- * JSON representation of Value
+ * JSON representation of `Value`.
  */
 export interface IValue {
   S?: string;
@@ -18,6 +23,26 @@ export interface IValue {
   BY?: string;
   A?: IValue[];
   M?: Record<string, IValue>;
+}
+
+export function isIValue(v: IValue): v is IValue {
+  const keys = Object.keys(v);
+  if (keys.length !== 1) return false;
+  if (v.S !== undefined) return typeof v.S === "string";
+  if (v.D !== undefined) return typeof v.D === "string";
+  if (v.I !== undefined) return typeof v.I === "string";
+  if (v.U !== undefined) return typeof v.U === "string";
+  if (v.I1 !== undefined) return typeof v.I1 === "string";
+  if (v.U1 !== undefined) return typeof v.U1 === "string";
+  if (v.F !== undefined) return typeof v.F === "string";
+  if (v.B !== undefined) return typeof v.B === "boolean";
+  if (v.N !== undefined) return v.N === 0;
+  if (v.B3 !== undefined) return typeof v.B3 === "string";
+  if (v.B6 !== undefined) return typeof v.B6 === "string";
+  if (v.BY !== undefined) return typeof v.BY === "string";
+  if (v.A !== undefined) return Array.isArray(v.A) && v.A.every(isIValue);
+  if (v.M !== undefined) return Object.values(v.M).every(isIValue);
+  return false;
 }
 
 interface MaybePubkey {
@@ -44,6 +69,33 @@ function maybeKeypair(x: MaybeKeypair): x is web3.Keypair {
   return maybePublicKey(x.publicKey) && x.secretKey?.byteLength === 32;
 }
 
+function validateFloat(s: string) {
+  if (!s.match(/^\-?[0-9]+(e[0-9]+)?(\.[0-9]+)?$/)) {
+    throw new SyntaxError(`invalid number: ${s}`);
+  }
+}
+
+function validateInt(s: string) {
+  BigInt(s);
+}
+
+function validateUInt(s: string) {
+  if (BigInt(s) < 0n) {
+    throw new SyntaxError("number is negative");
+  }
+}
+
+function validateBase58(s: string, length: number) {
+  const bytes = bs58.decodeBase58(s);
+  if (bytes.byteLength !== length) {
+    throw new SyntaxError(`bytes length ${bytes.byteLength} != ${length}`);
+  }
+}
+
+function validateBase64(s: string) {
+  base64.decodeBase64(s);
+}
+
 export class Value implements IValue {
   S?: string;
   D?: string;
@@ -60,13 +112,13 @@ export class Value implements IValue {
   A?: Value[];
   M?: Record<string, Value>;
 
-  constructor(x?: any, customConvert?: (x: any) => Value | null) {
+  constructor(x?: any, customConvert?: (x: any) => Value | undefined) {
     if (x === undefined) {
       return Value.Null();
     }
 
     const value = Value.#inferFromJSType(x, customConvert);
-    if (value === null) throw TypeError("null");
+    if (value === undefined) throw TypeError("undefined");
     return value;
   }
 
@@ -76,8 +128,8 @@ export class Value implements IValue {
 
   static #inferFromJSType(
     x: any,
-    customConvert?: (x: any) => Value | null
-  ): Value | null {
+    customConvert?: (x: any) => Value | undefined
+  ): Value | undefined {
     if (x instanceof Value) {
       return x;
     }
@@ -86,7 +138,7 @@ export class Value implements IValue {
     }
     switch (typeof x) {
       case "function":
-        return null;
+        return undefined;
       case "number":
         return Value.Decimal(x);
       case "boolean":
@@ -117,7 +169,7 @@ export class Value implements IValue {
             ),
           });
         }
-        if (x.byteLength != null) {
+        if (typeof x.byteLength === "number") {
           switch (x.byteLength) {
             case 32:
               return Value.fromJSON({
@@ -135,7 +187,7 @@ export class Value implements IValue {
         }
         if (customConvert !== undefined) {
           const result = customConvert(x);
-          if (result != null) {
+          if (result !== undefined) {
             return result;
           }
         }
@@ -143,35 +195,60 @@ export class Value implements IValue {
           return Value.fromJSON({
             A: Array.from(x)
               .map((x) => Value.#inferFromJSType(x, customConvert))
-              .filter((x) => x != null) as IValue[],
+              .filter((x) => x !== undefined) as IValue[],
           });
         }
         return Value.fromJSON({
           M: Object.fromEntries(
             Object.entries(x)
               .map(([k, v]) => [k, Value.#inferFromJSType(v, customConvert)])
-              .filter(([_k, v]) => v != null)
+              .filter(([_k, v]) => v !== undefined)
           ),
         });
     }
+  }
+
+  public validate() {
+    if (!isIValue(this)) throw SyntaxError("invalid JSON data");
+    if (this.S !== undefined) return;
+    if (this.D !== undefined) validateFloat(this.D);
+    if (this.I !== undefined) validateInt(this.I);
+    if (this.U !== undefined) validateUInt(this.U);
+    if (this.I1 !== undefined) validateInt(this.I1);
+    if (this.U1 !== undefined) validateUInt(this.U1);
+    if (this.F !== undefined) validateFloat(this.F);
+    if (this.B !== undefined) return;
+    if (this.N !== undefined) return;
+    if (this.B3 !== undefined) validateBase58(this.B3, 32);
+    if (this.B6 !== undefined) validateBase58(this.B6, 64);
+    if (this.BY !== undefined) validateBase64(this.BY);
+    if (this.A !== undefined) this.A.forEach((v) => v.validate());
+    if (this.M !== undefined)
+      Object.values(this.M).forEach((v) => v.validate());
+  }
+
+  static #fromJSONUnchecked(obj: IValue): Value {
+    if (obj instanceof Value) {
+      return obj;
+    }
+
+    if (obj.A !== undefined) {
+      obj.A = obj.A.map(Value.#fromJSONUnchecked);
+    } else if (obj.M !== undefined) {
+      obj.M = Object.fromEntries(
+        Object.entries(obj.M).map(([k, v]) => [k, Value.#fromJSONUnchecked(v)])
+      );
+    }
+    return Object.assign(Object.create(Value.prototype), obj);
   }
 
   /**
    * New Value from JSON data.
    */
   public static fromJSON(obj: IValue): Value {
-    if (obj instanceof Value) {
-      return obj;
-    }
-
-    if (obj.A) {
-      obj.A = obj.A.map(Value.fromJSON);
-    } else if (obj.M) {
-      obj.M = Object.fromEntries(
-        Object.entries(obj.M).map(([k, v]) => [k, Value.fromJSON(v)])
-      );
-    }
-    return Object.assign(Object.create(Value.prototype), obj);
+    const value = Value.#fromJSONUnchecked(obj);
+    value.validate();
+    return value;
   }
 
   public static U64(x: string | number | bigint): Value {
@@ -179,7 +256,7 @@ export class Value implements IValue {
     if (i < BigInt(0) || i > BigInt("18446744073709551615")) {
       throw new Error("value out of range");
     }
-    return Value.fromJSON({ U: i.toString() });
+    return Value.#fromJSONUnchecked({ U: i.toString() });
   }
 
   public static I64(x: string | number | bigint): Value {
@@ -190,27 +267,27 @@ export class Value implements IValue {
     ) {
       throw new Error("value out of range");
     }
-    return Value.fromJSON({ I: i.toString() });
+    return Value.#fromJSONUnchecked({ I: i.toString() });
   }
 
   public static String(x: string): Value {
-    return Value.fromJSON({ S: x });
+    return Value.#fromJSONUnchecked({ S: x });
   }
 
   public static Float(x: number): Value {
-    return Value.fromJSON({ F: x.toString() });
+    return Value.#fromJSONUnchecked({ F: x.toString() });
   }
 
-  public static Decimal(x: number | string | BigInt): Value {
-    return Value.fromJSON({ D: x.toString() });
+  public static Decimal(x: number | string | bigint): Value {
+    return Value.#fromJSONUnchecked({ D: x.toString() });
   }
 
   public static Null(): Value {
-    return Value.fromJSON({ N: 0 });
+    return Value.#fromJSONUnchecked({ N: 0 });
   }
 
   public static Boolean(x: boolean): Value {
-    return Value.fromJSON({ B: x });
+    return Value.#fromJSONUnchecked({ B: x });
   }
 
   public static U128(x: string | number | bigint): Value {
@@ -221,7 +298,7 @@ export class Value implements IValue {
     ) {
       throw new Error("value out of range");
     }
-    return Value.fromJSON({ U1: i.toString() });
+    return Value.#fromJSONUnchecked({ U1: i.toString() });
   }
 
   public static I128(x: string | number | bigint): Value {
@@ -232,18 +309,18 @@ export class Value implements IValue {
     ) {
       throw new Error("value out of range");
     }
-    return Value.fromJSON({ I1: i.toString() });
+    return Value.#fromJSONUnchecked({ I1: i.toString() });
   }
 
   public static PublicKey(x: web3.PublicKeyInitData): Value {
-    return Value.fromJSON({ B3: new web3.PublicKey(x).toBase58() });
+    return Value.#fromJSONUnchecked({ B3: new web3.PublicKey(x).toBase58() });
   }
 
   public static Signature(
     x: string | Buffer | Uint8Array | ArrayBuffer
   ): Value {
     if (typeof x === "string") return Value.fromJSON({ B6: x });
-    else return Value.fromJSON({ B6: bs58.encodeBase58(x) });
+    else return Value.#fromJSONUnchecked({ B6: bs58.encodeBase58(x) });
   }
 
   public static Keypair(
@@ -252,7 +329,7 @@ export class Value implements IValue {
     if (typeof x === "string") {
       return Value.fromJSON({ B6: x });
     }
-    if ((x as web3.Keypair).secretKey != null) {
+    if ((x as web3.Keypair).secretKey !== undefined) {
       return Value.fromJSON({
         B6: bs58.encodeBase58((x as web3.Keypair).secretKey),
       });
@@ -265,38 +342,38 @@ export class Value implements IValue {
   public static Bytes(x: Buffer | Uint8Array | ArrayBuffer): Value {
     switch (x.byteLength) {
       case 32:
-        return Value.fromJSON({ B3: bs58.encodeBase58(x) });
+        return Value.#fromJSONUnchecked({ B3: bs58.encodeBase58(x) });
       case 64:
-        return Value.fromJSON({ B6: bs58.encodeBase58(x) });
+        return Value.#fromJSONUnchecked({ B6: bs58.encodeBase58(x) });
       default:
-        return Value.fromJSON({ BY: base64.encodeBase64(x) });
+        return Value.#fromJSONUnchecked({ BY: base64.encodeBase64(x) });
     }
   }
 
   public asBool(): boolean | undefined {
-    if (this.B) return this.B;
+    if (this.B !== undefined) return this.B;
     return undefined;
   }
 
   public asNumber(): number | undefined {
-    if (this.U) return parseInt(this.U);
-    if (this.I) return parseInt(this.I);
-    if (this.F) return parseFloat(this.F);
-    if (this.U1) return parseInt(this.U1);
-    if (this.I1) return parseInt(this.I1);
+    if (this.U !== undefined) return parseInt(this.U);
+    if (this.I !== undefined) return parseInt(this.I);
+    if (this.F !== undefined) return parseFloat(this.F);
+    if (this.U1 !== undefined) return parseInt(this.U1);
+    if (this.I1 !== undefined) return parseInt(this.I1);
     return undefined;
   }
 
   public asBigInt(): bigint | undefined {
-    if (this.U) return BigInt(this.U);
-    if (this.I) return BigInt(this.I);
-    if (this.U1) return BigInt(this.U1);
-    if (this.I1) return BigInt(this.I1);
+    if (this.U !== undefined) return BigInt(this.U);
+    if (this.I !== undefined) return BigInt(this.I);
+    if (this.U1 !== undefined) return BigInt(this.U1);
+    if (this.I1 !== undefined) return BigInt(this.I1);
     return undefined;
   }
 
   public asString(): string | undefined {
-    if (this.S) return this.S;
+    if (this.S !== undefined) return this.S;
     return undefined;
   }
 
@@ -313,7 +390,7 @@ export class Value implements IValue {
   }
 
   public asKeypair(): web3.Keypair | undefined {
-    if (this.S) {
+    if (this.S !== undefined) {
       return web3.Keypair.fromSecretKey(bs58.decodeBase58(this.S));
     }
     const x = this.asBytes();
@@ -324,10 +401,10 @@ export class Value implements IValue {
   }
 
   public asBytes(): Uint8Array | undefined {
-    if (this.B3) return bs58.decodeBase58(this.B3);
-    if (this.B6) return bs58.decodeBase58(this.B6);
-    if (this.BY) return base64.decodeBase64(this.BY);
-    if (this.A) {
+    if (this.B3 !== undefined) return bs58.decodeBase58(this.B3);
+    if (this.B6 !== undefined) return bs58.decodeBase58(this.B6);
+    if (this.BY !== undefined) return base64.decodeBase64(this.BY);
+    if (this.A !== undefined) {
       const x = this.A.map((v) => v.asNumber());
       if (
         x.every(
@@ -341,30 +418,30 @@ export class Value implements IValue {
   }
 
   public asArray(): Value[] | undefined {
-    if (this.A) return this.A;
+    if (this.A !== undefined) return this.A;
     return undefined;
   }
 
   public asMap(): Record<string, Value> | undefined {
-    if (this.M) return this.M;
+    if (this.M !== undefined) return this.M;
     return undefined;
   }
 
   public toJSObject(): any {
-    if (this.S != null) return this.S;
-    if (this.D != null) return parseFloat(this.D);
-    if (this.I != null) return parseFloat(this.I);
-    if (this.U != null) return parseFloat(this.U);
-    if (this.I1 != null) return BigInt(this.I1);
-    if (this.U1 != null) return BigInt(this.U1);
-    if (this.F != null) return parseFloat(this.F);
-    if (this.B != null) return this.B;
-    if (this.N != null) return null;
-    if (this.B3 != null) return bs58.decodeBase58(this.B3);
-    if (this.B6 != null) return bs58.decodeBase58(this.B6);
-    if (this.BY != null) return new TextEncoder().encode(atob(this.BY));
-    if (this.A != null) return this.A.map((x) => x.toJSObject());
-    if (this.M != null)
+    if (this.S != undefined) return this.S;
+    if (this.D != undefined) return parseFloat(this.D);
+    if (this.I != undefined) return parseFloat(this.I);
+    if (this.U != undefined) return parseFloat(this.U);
+    if (this.I1 != undefined) return BigInt(this.I1);
+    if (this.U1 != undefined) return BigInt(this.U1);
+    if (this.F != undefined) return parseFloat(this.F);
+    if (this.B != undefined) return this.B;
+    if (this.N !== undefined) return null;
+    if (this.B3 !== undefined) return bs58.decodeBase58(this.B3);
+    if (this.B6 !== undefined) return bs58.decodeBase58(this.B6);
+    if (this.BY !== undefined) return new TextEncoder().encode(atob(this.BY));
+    if (this.A !== undefined) return this.A.map((x) => x.toJSObject());
+    if (this.M !== undefined)
       return Object.fromEntries(
         Object.entries(this.M).map(([k, v]) => [k, v.toJSObject()])
       );

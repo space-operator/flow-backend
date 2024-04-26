@@ -1,3 +1,9 @@
+/**
+ * @module
+ * - CommandTrait: An interface that commands has to implement.
+ * - BaseCommand: A class implementing CommandTrait, providing default behaviors.
+ */
+
 import type { Context } from "./context.ts";
 import { Value } from "./mod.ts";
 
@@ -18,7 +24,17 @@ import { Value } from "./mod.ts";
  * ```
  */
 export interface CommandTrait {
+  /**
+   * Deserialize each inputs from `Value` to the type of your choice.
+   * This function will be called before passing inputs to `run()`.
+   * If not implemented, `Value.toJSObject()` will be called for each inputs.
+   */
   deserializeInputs?(inputs: Record<string, Value>): Record<string, any>;
+  /**
+   * Serialize each output to a `Value`.
+   * This function will be called after each `run()`.
+   * If not implemented, `new Value(output)` will be called for each outputs.
+   */
   serializeOutputs?(outputs: Record<string, any>): Record<string, Value>;
   /**
    * This function will be called every time the command is run.
@@ -55,7 +71,10 @@ export interface NodeData {
   // targets_form: any;
 }
 
-function deserializeInput(port: Target, input: Value): any | undefined {
+export function deserializeInput(
+  port: Pick<Target, "type_bounds">,
+  input: Value
+): any | undefined {
   for (const type of port.type_bounds) {
     switch (type) {
       case "bool":
@@ -109,7 +128,10 @@ function deserializeInput(port: Target, input: Value): any | undefined {
   return undefined;
 }
 
-function serializeOutput(port: Source, output: any): Value | undefined {
+export function serializeOutput(
+  port: Pick<Source, "type">,
+  output: any
+): Value | undefined {
   switch (port.type) {
     case "bool":
       return Value.Boolean(Boolean(output));
