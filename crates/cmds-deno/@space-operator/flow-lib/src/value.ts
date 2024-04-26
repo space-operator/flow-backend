@@ -148,7 +148,7 @@ export class Value implements IValue {
       case "undefined":
         return Value.Null();
       case "bigint":
-        if (x < BigInt(0)) {
+        if (x < 0n) {
           return Value.I128(x);
         } else {
           return Value.U128(x);
@@ -253,7 +253,7 @@ export class Value implements IValue {
 
   public static U64(x: string | number | bigint): Value {
     const i = BigInt(x);
-    if (i < BigInt(0) || i > BigInt("18446744073709551615")) {
+    if (i < 0n || i > 18446744073709551615n) {
       throw new Error("value out of range");
     }
     return Value.#fromJSONUnchecked({ U: i.toString() });
@@ -261,10 +261,7 @@ export class Value implements IValue {
 
   public static I64(x: string | number | bigint): Value {
     const i = BigInt(x);
-    if (
-      i < BigInt("-9223372036854775808") ||
-      i > BigInt("9223372036854775807")
-    ) {
+    if (i < -9223372036854775808n || i > 9223372036854775807n) {
       throw new Error("value out of range");
     }
     return Value.#fromJSONUnchecked({ I: i.toString() });
@@ -292,10 +289,7 @@ export class Value implements IValue {
 
   public static U128(x: string | number | bigint): Value {
     const i = BigInt(x);
-    if (
-      i < BigInt(0) ||
-      i > BigInt("340282366920938463463374607431768211455")
-    ) {
+    if (i < 0n || i > 340282366920938463463374607431768211455n) {
       throw new Error("value out of range");
     }
     return Value.#fromJSONUnchecked({ U1: i.toString() });
@@ -304,8 +298,8 @@ export class Value implements IValue {
   public static I128(x: string | number | bigint): Value {
     const i = BigInt(x);
     if (
-      i < BigInt("-170141183460469231731687303715884105728") ||
-      i > BigInt("170141183460469231731687303715884105727")
+      i < -170141183460469231731687303715884105728n ||
+      i > 170141183460469231731687303715884105727n
     ) {
       throw new Error("value out of range");
     }
