@@ -1,8 +1,5 @@
 use crate::{
-    command::{
-        deno,
-        wasm::{Description, WasmCommand},
-    },
+    command::wasm::{Description, WasmCommand},
     Error,
 };
 use flow_lib::{
@@ -58,7 +55,7 @@ impl CommandFactory {
         config: &NodeData,
         spawned: &mut Vec<Child>,
     ) -> crate::Result<Box<dyn CommandTrait>> {
-        let (cmd, child) = deno::new(config).await.map_err(Error::custom)?;
+        let (cmd, child) = cmds_deno::new(config).await.map_err(Error::custom)?;
         spawned.push(child);
         Ok(cmd)
     }
