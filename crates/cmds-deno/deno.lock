@@ -2,34 +2,27 @@
   "version": "3",
   "packages": {
     "specifiers": {
-      "jsr:@std/assert": "jsr:@std/assert@0.223.0",
+      "jsr:@space-operator/flow-lib": "jsr:@space-operator/flow-lib@0.10.0",
       "jsr:@std/bytes@^0.221.0": "jsr:@std/bytes@0.221.0",
-      "jsr:@std/encoding@^0.220.1": "jsr:@std/encoding@0.220.1",
       "jsr:@std/encoding@^0.221.0": "jsr:@std/encoding@0.221.0",
-      "jsr:@std/fmt@^0.223.0": "jsr:@std/fmt@0.223.0",
-      "jsr:@std/msgpack": "jsr:@std/msgpack@0.221.0",
       "jsr:@std/msgpack@0.221.0": "jsr:@std/msgpack@0.221.0",
-      "npm:@solana/web3.js@^1.91.4": "npm:@solana/web3.js@1.91.4",
+      "npm:@solana/web3.js@^1.91.4": "npm:@solana/web3.js@1.91.7",
       "npm:@types/node": "npm:@types/node@18.16.19"
     },
     "jsr": {
-      "@std/assert@0.223.0": {
-        "integrity": "eb8d6d879d76e1cc431205bd346ed4d88dc051c6366365b1af47034b0670be24",
+      "@space-operator/flow-lib@0.10.0": {
+        "integrity": "d6f74303435982c9b70319bf9c75b419e1c15549c675468a75a1918b19a41fe1",
         "dependencies": [
-          "jsr:@std/fmt@^0.223.0"
+          "jsr:@std/encoding@^0.221.0",
+          "jsr:@std/msgpack@0.221.0",
+          "npm:@solana/web3.js@^1.91.4"
         ]
       },
       "@std/bytes@0.221.0": {
         "integrity": "64a047011cf833890a4a2ab7293ac55a1b4f5a050624ebc6a0159c357de91966"
       },
-      "@std/encoding@0.220.1": {
-        "integrity": "8dc38dd72e36cd68857a5837e24eb09a64bb296b96c295239c75eec17d45d23f"
-      },
       "@std/encoding@0.221.0": {
         "integrity": "d1dd76ef0dc5d14088411e6dc1dede53bf8308c95d1537df1214c97137208e45"
-      },
-      "@std/fmt@0.223.0": {
-        "integrity": "6deb37794127dfc7d7bded2586b9fc6f5d50e62a8134846608baf71ffc1a5208"
       },
       "@std/msgpack@0.221.0": {
         "integrity": "78a99bca814808f08f49dd2b21a55185540a5ebba861d29d3ee63429157ad490",
@@ -61,8 +54,8 @@
           "buffer": "buffer@6.0.3"
         }
       },
-      "@solana/web3.js@1.91.4": {
-        "integrity": "sha512-zconqecIcBqEF6JiM4xYF865Xc4aas+iWK5qnu7nwKPq9ilRYcn+2GiwpYXqUqqBUe0XCO17w18KO0F8h+QATg==",
+      "@solana/web3.js@1.91.7": {
+        "integrity": "sha512-HqljZKDwk6Z4TajKRGhGLlRsbGK4S8EY27DA7v1z6yakewiUY3J7ZKDZRxcqz2MYV/ZXRrJ6wnnpiHFkPdv0WA==",
         "dependencies": {
           "@babel/runtime": "@babel/runtime@7.24.4",
           "@noble/curves": "@noble/curves@1.4.0",
@@ -77,7 +70,7 @@
           "fast-stable-stringify": "fast-stable-stringify@1.0.0",
           "jayson": "jayson@4.1.0_ws@7.5.9",
           "node-fetch": "node-fetch@2.7.0",
-          "rpc-websockets": "rpc-websockets@7.9.0_bufferutil@4.0.8_utf-8-validate@5.0.10",
+          "rpc-websockets": "rpc-websockets@7.10.0_bufferutil@4.0.8_utf-8-validate@5.0.10",
           "superstruct": "superstruct@0.14.2"
         }
       },
@@ -260,8 +253,8 @@
         "integrity": "sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==",
         "dependencies": {}
       },
-      "rpc-websockets@7.9.0_bufferutil@4.0.8_utf-8-validate@5.0.10": {
-        "integrity": "sha512-DwKewQz1IUA5wfLvgM8wDpPRcr+nWSxuFxx5CbrI2z/MyyZ4nXLM86TvIA+cI1ZAdqC8JIBR1mZR55dzaLU+Hw==",
+      "rpc-websockets@7.10.0_bufferutil@4.0.8_utf-8-validate@5.0.10": {
+        "integrity": "sha512-cemZ6RiDtYZpPiBzYijdOrkQQzmBCmug0E9SdRH2gIUNT15ql4mwCYWIp0VnSZq6Qrw/JkGUygp4PrK1y9KfwQ==",
         "dependencies": {
           "@babel/runtime": "@babel/runtime@7.24.4",
           "bufferutil": "bufferutil@4.0.8",

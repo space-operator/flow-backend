@@ -25,7 +25,8 @@ export interface IValue {
   M?: Record<string, IValue>;
 }
 
-export function isIValue(v: IValue): v is IValue {
+export function isIValue(v: any): v is IValue {
+  if (typeof v !== "object" || v === null) return false;
   const keys = Object.keys(v);
   if (keys.length !== 1) return false;
   if (v.S !== undefined) return typeof v.S === "string";
