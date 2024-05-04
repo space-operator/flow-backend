@@ -163,8 +163,8 @@ pub struct PartialOutput {
 pub struct Edge {
     pub from: Name,
     pub to: Name,
-    pub required: bool,
-    pub optional: bool,
+    pub is_required_input: bool,
+    pub is_optional_output: bool,
     pub values: VecDeque<EdgeValue>,
 }
 
@@ -499,8 +499,8 @@ impl FlowGraph {
                     from: from.1.clone(),
                     to: to.1.clone(),
                     values: <_>::default(),
-                    required,
-                    optional,
+                    is_required_input: required,
+                    is_optional_output: optional,
                 },
             );
         }
@@ -623,8 +623,8 @@ impl FlowGraph {
             let w = e.weight();
             w.values
                 .front()
-                .map(|EdgeValue { value, .. }| value.is_some() || !w.required)
-                .unwrap_or_else(|| !w.required && finished(self, s, e.source()))
+                .map(|EdgeValue { value, .. }| value.is_some() || !w.is_required_input)
+                .unwrap_or_else(|| !w.is_required_input && finished(self, s, e.source()))
         });
         if !filled {
             return false;
@@ -698,7 +698,7 @@ impl FlowGraph {
             .out_edges(info.node_idx)
             .filter_map(|e| {
                 let w = e.weight();
-                (w.optional && !output.contains_key(&w.from)).then_some(e.id())
+                (w.is_optional_output && !output.contains_key(&w.from)).then_some(e.id())
             })
             .collect::<Vec<_>>();
         for eid in edges {
@@ -1175,8 +1175,8 @@ impl FlowGraph {
                             from: format!("{}/{}", node_id, output_name),
                             to: input_name.clone(),
                             values: <_>::default(),
-                            required: true,
-                            optional: false,
+                            is_required_input: true,
+                            is_optional_output: false,
                         },
                     );
                 } else {
@@ -1612,7 +1612,7 @@ fn finished_recursive(
         {
             has_array_input |= tracker.is_array();
         } else {
-            if e.weight().required {
+            if e.weight().is_required_input {
                 let source_finished = finished_recursive(f, s, e.source(), visited);
                 all_sources_not_finished &= !source_finished;
                 filled = false;
