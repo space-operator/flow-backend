@@ -83,7 +83,6 @@ trait Ipv4Ext {
     fn is_global(&self) -> bool;
     fn is_shared(&self) -> bool;
     fn is_benchmarking(&self) -> bool;
-    fn is_documentation(&self) -> bool;
     fn is_reserved(&self) -> bool;
 }
 
@@ -108,13 +107,6 @@ impl Ipv4Ext for Ipv4Addr {
 
     fn is_benchmarking(&self) -> bool {
         self.octets()[0] == 198 && (self.octets()[1] & 0xfe) == 18
-    }
-
-    fn is_documentation(&self) -> bool {
-        matches!(
-            self.octets(),
-            [192, 0, 2, _] | [198, 51, 100, _] | [203, 0, 113, _]
-        )
     }
 
     fn is_reserved(&self) -> bool {
