@@ -6,8 +6,6 @@ use flow_lib::{
 };
 use serde::de::value::MapDeserializer;
 use serde::Deserialize;
-use std::future::Future;
-use std::pin::Pin;
 use std::process::Stdio;
 use tempfile::tempdir;
 use tokio::{
@@ -25,7 +23,7 @@ struct Extra {
 fn copy_dir_all(
     src: impl AsRef<std::path::Path>,
     dst: impl AsRef<std::path::Path>,
-) -> Pin<Box<impl Future<Output = std::io::Result<()>>>> {
+) -> std::pin::Pin<Box<impl std::future::Future<Output = std::io::Result<()>>>> {
     Box::pin(async move {
         std::fs::create_dir_all(&dst)?;
         let mut files = tokio::fs::read_dir(src).await?;

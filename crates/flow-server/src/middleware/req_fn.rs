@@ -27,21 +27,6 @@ pub trait Function: 'static {
     fn call(&self, req: ServiceRequest) -> Result<ServiceRequest, ServiceResponse>;
 }
 
-struct FnRefMut<F>(F);
-
-impl<F, E> Function for FnRefMut<F>
-where
-    F: for<'r> Fn(&'r mut ServiceRequest) -> Result<(), E> + 'static,
-    E: ResponseError + 'static,
-{
-    fn call(&self, mut req: ServiceRequest) -> Result<ServiceRequest, ServiceResponse> {
-        match self.0(&mut req) {
-            Ok(_) => Ok(req),
-            Err(e) => Err(req.error_response(e)),
-        }
-    }
-}
-
 struct FnRef<F>(F);
 
 impl<F, E> Function for FnRef<F>

@@ -77,6 +77,8 @@ impl Command {
                 None => {
                     if i.required {
                         tracing::warn!("missing input: {}", i.name);
+                    } else {
+                        scope.push_dynamic(&i.name, Dynamic::UNIT);
                     }
                 }
             }
