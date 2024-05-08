@@ -14,6 +14,7 @@ use solana_client::{
     client_error::{ClientError, ClientErrorKind},
     nonblocking::rpc_client::RpcClient,
     rpc_client::SerializableTransaction,
+    rpc_config::RpcSendTransactionConfig,
     rpc_request::{RpcError, RpcResponseErrorData},
     rpc_response::RpcSimulateTransactionResult,
 };
@@ -420,11 +421,11 @@ impl<'de> Deserialize<'de> for InsertionBehavior {
 }
 
 const fn default_simulation_level() -> CommitmentLevel {
-    CommitmentLevel::Finalized
+    CommitmentLevel::Confirmed
 }
 
 const fn default_tx_level() -> CommitmentLevel {
-    CommitmentLevel::Finalized
+    CommitmentLevel::Confirmed
 }
 
 const fn default_wait_level() -> CommitmentLevel {
@@ -747,8 +748,9 @@ impl Instructions {
                 }
             }
 
+            let blockhash = message.recent_blockhash;
             let mut tx = Transaction::new_unsigned(message);
-            tx.try_sign(&signers, *tx.get_recent_blockhash())?;
+            tx.try_sign(&signers, blockhash)?;
             tx
         };
 
@@ -758,7 +760,13 @@ impl Instructions {
         verify_precompiles(&tx, &FeatureSet::all_enabled())?;
 
         let signature = rpc
-            .send_transaction(&tx)
+            .send_transaction_with_config(
+                &tx,
+                RpcSendTransactionConfig {
+                    preflight_commitment: Some(config.tx_commitment_level),
+                    ..<_>::default()
+                },
+            )
             .await
             .map_err(move |error| Error::solana(error, inserted))?;
         tracing::info!("submitted {}", signature);
