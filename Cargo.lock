@@ -1823,6 +1823,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmds-deno"
+version = "0.0.0"
+dependencies = [
+ "actix-web",
+ "anyhow",
+ "command-rpc",
+ "flow-lib",
+ "flow-value",
+ "home",
+ "serde",
+ "serde_json",
+ "srpc",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid 1.8.0",
+]
+
+[[package]]
 name = "cmds-pdg"
 version = "0.0.0"
 dependencies = [
@@ -3009,6 +3030,7 @@ dependencies = [
  "bs58 0.4.0",
  "bytes",
  "chrono",
+ "cmds-deno",
  "cmds-solana",
  "cmds-std",
  "command-rpc",

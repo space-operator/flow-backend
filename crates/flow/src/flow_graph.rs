@@ -25,10 +25,11 @@ use futures::{
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexMap;
 use petgraph::{
+    csr::DefaultIx,
     graph::EdgeIndex,
-    stable_graph::{NodeIndex, StableGraph},
+    stable_graph::{Edges, NodeIndex, StableGraph},
     visit::EdgeRef,
-    Direction,
+    Directed, Direction,
 };
 use solana_sdk::signature::Keypair;
 use std::{
@@ -162,6 +163,8 @@ pub struct PartialOutput {
 pub struct Edge {
     pub from: Name,
     pub to: Name,
+    pub is_required_input: bool,
+    pub is_optional_output: bool,
     pub values: VecDeque<EdgeValue>,
 }
 
@@ -225,7 +228,7 @@ impl TrackEdgeValue {
 
 #[derive(Clone, Debug)]
 pub struct EdgeValue {
-    value: Value,
+    value: Option<Value>,
     tracker: TrackEdgeValue,
 }
 
@@ -435,7 +438,7 @@ impl FlowGraph {
                 return Err(BuildGraphError::EdgesSameTarget.into());
             }
 
-            let to_idx = match nodes.get(&to.0) {
+            let (to_idx, required) = match nodes.get(&to.0) {
                 None => {
                     if !all_nodes.contains(&from.0) {
                         return Err(BuildGraphError::EdgeSourceNotFound(from.0).into());
@@ -447,9 +450,9 @@ impl FlowGraph {
                         continue;
                     }
                 }
-                Some(n) => n.idx,
+                Some(n) => (n.idx, n.command.input_is_required(&to.1).unwrap_or(true)),
             };
-            let from_idx = match nodes.get(&from.0) {
+            let (from_idx, optional) = match nodes.get(&from.0) {
                 None => {
                     if !all_nodes.contains(&from.0) {
                         return Err(BuildGraphError::EdgeSourceNotFound(from.0).into());
@@ -472,7 +475,10 @@ impl FlowGraph {
                         continue;
                     }
                 }
-                Some(n) => n.idx,
+                Some(n) => (
+                    n.idx,
+                    n.command.output_is_optional(&from.1).unwrap_or(false),
+                ),
             };
 
             g.add_edge(
@@ -482,6 +488,8 @@ impl FlowGraph {
                     from: from.1.clone(),
                     to: to.1.clone(),
                     values: <_>::default(),
+                    is_required_input: required,
+                    is_optional_output: optional,
                 },
             );
         }
@@ -581,12 +589,18 @@ impl FlowGraph {
         Ok(result)
     }
 
-    fn ready(&self, idx: NodeIndex<u32>, s: &State) -> bool {
-        let in_edges = || self.g.edges_directed(idx, Direction::Incoming);
+    fn in_edges(&self, idx: NodeIndex<u32>) -> Edges<'_, Edge, Directed, DefaultIx> {
+        self.g.edges_directed(idx, Direction::Incoming)
+    }
 
+    fn out_edges(&self, idx: NodeIndex<u32>) -> Edges<'_, Edge, Directed, DefaultIx> {
+        self.g.edges_directed(idx, Direction::Outgoing)
+    }
+
+    fn ready(&self, idx: NodeIndex<u32>, s: &State) -> bool {
         let id = self.g[idx];
         if self.nodes[&id].command.name() == crate::command::collect::COLLECT {
-            let source = match in_edges().next() {
+            let source = match self.in_edges(idx).next() {
                 None => return true,
                 Some(e) => e.source(),
             };
@@ -594,18 +608,25 @@ impl FlowGraph {
             return !s.ran.contains_key(&id) && finished(self, s, source);
         }
 
-        let filled = in_edges().all(|e| !e.weight().values.is_empty());
+        let filled = self.in_edges(idx).all(|e| {
+            let w = e.weight();
+            w.values
+                .front()
+                .map(|EdgeValue { value, .. }| value.is_some() || !w.is_required_input)
+                .unwrap_or_else(|| !w.is_required_input && finished(self, s, e.source()))
+        });
         if !filled {
             return false;
         }
 
         if s.ran.contains_key(&id) {
             // must have at least 1 input from an array
-            in_edges().any(|e| {
-                !matches!(
-                    e.weight().values.front().unwrap().tracker,
-                    TrackEdgeValue::None
-                )
+            self.in_edges(idx).any(|e| {
+                e.weight()
+                    .values
+                    .front()
+                    .map(|v| v.tracker.is_array())
+                    .unwrap_or(false)
             })
         } else {
             true
@@ -613,28 +634,25 @@ impl FlowGraph {
     }
 
     fn take_inputs(&mut self, idx: NodeIndex<u32>) -> (ValueSet, TrackEdgeValue) {
-        let in_edges = self
-            .g
-            .edges_directed(idx, Direction::Incoming)
-            .map(|e| e.id())
-            .collect::<Vec<_>>();
+        let in_edges = self.in_edges(idx).map(|e| e.id()).collect::<Vec<_>>();
         let mut values = ValueSet::new();
         let mut tracker = TrackEdgeValue::None;
         for edge_id in in_edges {
             let w = self.g.edge_weight_mut(edge_id).unwrap();
-            let is_from_array = w
-                .values
-                .front()
-                .expect("ready() == true")
-                .tracker
-                .is_array();
-            let edge_value = if is_from_array {
-                w.values.pop_front().unwrap()
-            } else {
-                w.values.front().unwrap().clone()
-            };
-            tracker = tracker.zip(&edge_value.tracker);
-            values.insert(w.to.clone(), edge_value.value);
+            match w.values.front() {
+                Some(EdgeValue {
+                    value: Some(value),
+                    tracker: edge_tracker,
+                }) => {
+                    let is_from_array = edge_tracker.is_array();
+                    tracker = tracker.zip(&edge_tracker);
+                    values.insert(w.to.clone(), value.clone());
+                    if is_from_array {
+                        w.values.pop_front();
+                    }
+                }
+                _ => {}
+            }
         }
         (values, tracker)
     }
@@ -649,11 +667,36 @@ impl FlowGraph {
             Some(e) => {
                 let w = self.g.edge_weight_mut(e.id()).unwrap();
                 let queue = std::mem::take(&mut w.values);
-                queue.into_iter().map(|v| v.value).collect()
+                queue.into_iter().filter_map(|v| v.value).collect()
             }
         };
 
         (value::map! { ELEMENT => array }, TrackEdgeValue::None)
+    }
+
+    fn save_missing_optional_outputs(&mut self, node_id: NodeId, times: u32, s: &mut State) {
+        let info = s
+            .running_info
+            .get(&(node_id, times))
+            .expect("node must be running");
+
+        tracing::trace!("saving {}:{}", info.id, info.command_name);
+
+        let output = &s.result.node_outputs[&node_id][times as usize];
+        let edges = self
+            .out_edges(info.node_idx)
+            .filter_map(|e| {
+                let w = e.weight();
+                (w.is_optional_output && !output.contains_key(&w.from)).then_some(e.id())
+            })
+            .collect::<Vec<_>>();
+        for eid in edges {
+            let w = self.g.edge_weight_mut(eid).unwrap();
+            w.values.push_back(EdgeValue {
+                value: None,
+                tracker: info.tracker.clone(),
+            });
+        }
     }
 
     fn save_outputs(&mut self, o: PartialOutput, s: &mut State) {
@@ -717,14 +760,14 @@ impl FlowGraph {
                         };
                         let array_iter =
                             array.into_iter().enumerate().map(|(i, value)| EdgeValue {
-                                value,
+                                value: Some(value),
                                 tracker: info.tracker.nest((nid, i as u32)),
                             });
 
                         w.values.extend(array_iter);
                     } else {
                         w.values.push_back(EdgeValue {
-                            value,
+                            value: Some(value),
                             tracker: info.tracker.clone(),
                         });
                     }
@@ -799,13 +842,16 @@ impl FlowGraph {
                     s,
                 );
 
+                self.save_missing_optional_outputs(node.id, times, s);
+
                 let output = &s.result.node_outputs[&node.id][times as usize];
                 let missing = node
                     .command
                     .outputs()
-                    .iter()
-                    .filter(|o| !o.optional && !output.contains_key(&o.name))
-                    .map(|o| o.name.clone())
+                    .into_iter()
+                    .filter_map(|o| {
+                        (!o.optional && !output.contains_key(&o.name)).then_some(o.name)
+                    })
                     .collect::<Vec<String>>();
                 if !missing.is_empty() {
                     node_error(
@@ -984,8 +1030,7 @@ impl FlowGraph {
 
     fn supply_partial_run_values(&mut self, fake_node: NodeIndex<u32>, s: &mut State) {
         let out_edges = self
-            .g
-            .edges_directed(fake_node, Direction::Outgoing)
+            .out_edges(fake_node)
             .map(|e| (e.id(), e.target()))
             .collect::<Vec<_>>();
         for (eid, target) in out_edges {
@@ -1020,7 +1065,7 @@ impl FlowGraph {
                     if let Value::Array(array) = value {
                         for value in array {
                             w.values.push_back(EdgeValue {
-                                value,
+                                value: Some(value),
                                 tracker: TrackEdgeValue::Element(fake_node, i as u32),
                             });
                             i += 1;
@@ -1030,13 +1075,15 @@ impl FlowGraph {
                     }
                 } else {
                     let tracker = if use_element {
-                        let t = TrackEdgeValue::Element(fake_node, i as u32);
-                        i += 1;
-                        t
+                        TrackEdgeValue::Element(fake_node, i as u32)
                     } else {
                         TrackEdgeValue::None
                     };
-                    w.values.push_back(EdgeValue { value, tracker });
+                    w.values.push_back(EdgeValue {
+                        value: Some(value),
+                        tracker,
+                    });
+                    i += 1;
                 }
             }
             tracing::trace!("{} values for fake edge {}:{}", i, node_id, output_name);
@@ -1108,6 +1155,8 @@ impl FlowGraph {
             ) in &n.use_previous_values
             {
                 if s.previous_values.contains_key(node_id) {
+                    let is_required_input =
+                        n.command.input_is_required(&input_name).unwrap_or(true);
                     self.g.add_edge(
                         fake_node,
                         n.idx,
@@ -1115,6 +1164,8 @@ impl FlowGraph {
                             from: format!("{}/{}", node_id, output_name),
                             to: input_name.clone(),
                             values: <_>::default(),
+                            is_required_input,
+                            is_optional_output: !is_required_input,
                         },
                     );
                 } else {
@@ -1534,9 +1585,7 @@ fn finished_recursive(
 
     let ran = s.ran.contains_key(&f.g[nid]);
 
-    let in_edges = || f.g.edges_directed(nid, Direction::Incoming);
-
-    if in_edges().count() == 0 {
+    if f.in_edges(nid).count() == 0 {
         return ran;
     }
 
@@ -1544,14 +1593,20 @@ fn finished_recursive(
     let mut filled = true;
     let mut all_sources_not_finished = true;
 
-    for e in in_edges() {
-        if let Some(value) = e.weight().values.front() {
-            let is_from_array = value.tracker.is_array();
-            has_array_input |= is_from_array;
+    for e in f.in_edges(nid) {
+        if let Some(EdgeValue {
+            value: Some(_),
+            tracker,
+        }) = e.weight().values.front()
+        {
+            has_array_input |= tracker.is_array();
         } else {
-            let source_finished = finished_recursive(f, s, e.source(), visited);
-            all_sources_not_finished &= !source_finished;
-            filled = false;
+            if e.weight().is_required_input {
+                let source_finished = finished_recursive(f, s, e.source(), visited);
+                all_sources_not_finished &= !source_finished;
+                filled = false;
+            } else {
+            }
         }
     }
 

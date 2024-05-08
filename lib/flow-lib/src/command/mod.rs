@@ -113,6 +113,18 @@ pub trait CommandTrait: Send + Sync + 'static {
     fn permissions(&self) -> Permissions {
         Permissions::default()
     }
+
+    fn input_is_required(&self, name: &str) -> Option<bool> {
+        self.inputs()
+            .into_iter()
+            .find_map(|i| (i.name == name).then_some(i.required))
+    }
+
+    fn output_is_optional(&self, name: &str) -> Option<bool> {
+        self.outputs()
+            .into_iter()
+            .find_map(|o| (o.name == name).then_some(o.optional))
+    }
 }
 
 /// Specify the order with which a command will return its output:

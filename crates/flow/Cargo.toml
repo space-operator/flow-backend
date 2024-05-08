@@ -11,6 +11,7 @@ space-wasm = { workspace = true }
 rhai-script.workspace = true
 command-rpc.workspace = true
 srpc.workspace = true
+cmds-deno.workspace = true
 
 anyhow = "1.0"
 bs58 = "0.4"
@@ -42,7 +43,7 @@ url = "2.5.0"
 home = "0.5.9"
 
 [dev-dependencies]
-cmds-std = { workspace = true }
-cmds-solana = { workspace = true }
+cmds-std.workspace = true
+cmds-solana.workspace = true
 actix-web = "4.5.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

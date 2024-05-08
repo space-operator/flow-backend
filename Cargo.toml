@@ -30,6 +30,7 @@ cmds-solana = { path = "crates/cmds-solana", version = "0.0.0" }
 rhai-script = { path = "crates/rhai-script", version = "0.0.0" }
 srpc = { path = "crates/srpc", version = "0.0.0" }
 command-rpc = { path = "crates/command-rpc", version = "0.0.0" }
+cmds-deno = { path = "crates/cmds-deno", version = "0.0.0" }
 
 # lib/
 value = { path = "lib/flow-value", version = "0.1.0", package = "flow-value" }

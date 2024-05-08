@@ -12,11 +12,6 @@ struct Input {
     pub headers: Vec<(String, String)>,
 }
 
-#[derive(Serialize, Debug)]
-struct Output {
-    result: Value,
-}
-
 async fn run(mut ctx: Context, input: Input) -> Result<ValueSet, CommandError> {
     let contain_auth_header = !input.headers.iter().any(|(k, _)| {
         HeaderName::from_str(k)
