@@ -1030,8 +1030,7 @@ impl FlowGraph {
 
     fn supply_partial_run_values(&mut self, fake_node: NodeIndex<u32>, s: &mut State) {
         let out_edges = self
-            .g
-            .edges_directed(fake_node, Direction::Outgoing)
+            .out_edges(fake_node)
             .map(|e| (e.id(), e.target()))
             .collect::<Vec<_>>();
         for (eid, target) in out_edges {
@@ -1076,9 +1075,7 @@ impl FlowGraph {
                     }
                 } else {
                     let tracker = if use_element {
-                        let t = TrackEdgeValue::Element(fake_node, i as u32);
-                        i += 1;
-                        t
+                        TrackEdgeValue::Element(fake_node, i as u32)
                     } else {
                         TrackEdgeValue::None
                     };
@@ -1086,6 +1083,7 @@ impl FlowGraph {
                         value: Some(value),
                         tracker,
                     });
+                    i += 1;
                 }
             }
             tracing::trace!("{} values for fake edge {}:{}", i, node_id, output_name);
