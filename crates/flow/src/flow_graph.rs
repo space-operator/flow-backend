@@ -450,14 +450,7 @@ impl FlowGraph {
                         continue;
                     }
                 }
-                Some(n) => (
-                    n.idx,
-                    n.command
-                        .inputs()
-                        .iter()
-                        .find_map(|i| (i.name == to.1).then_some(i.required))
-                        .unwrap_or(true),
-                ),
+                Some(n) => (n.idx, n.command.input_is_required(&to.1).unwrap_or(true)),
             };
             let (from_idx, optional) = match nodes.get(&from.0) {
                 None => {
@@ -484,11 +477,7 @@ impl FlowGraph {
                 }
                 Some(n) => (
                     n.idx,
-                    n.command
-                        .outputs()
-                        .iter()
-                        .find_map(|i| (i.name == from.1).then_some(i.optional))
-                        .unwrap_or(false),
+                    n.command.output_is_optional(&from.1).unwrap_or(false),
                 ),
             };
 
@@ -1168,6 +1157,8 @@ impl FlowGraph {
             ) in &n.use_previous_values
             {
                 if s.previous_values.contains_key(node_id) {
+                    let is_required_input =
+                        n.command.input_is_required(&input_name).unwrap_or(true);
                     self.g.add_edge(
                         fake_node,
                         n.idx,
@@ -1175,8 +1166,8 @@ impl FlowGraph {
                             from: format!("{}/{}", node_id, output_name),
                             to: input_name.clone(),
                             values: <_>::default(),
-                            is_required_input: true,
-                            is_optional_output: false,
+                            is_required_input,
+                            is_optional_output: !is_required_input,
                         },
                     );
                 } else {

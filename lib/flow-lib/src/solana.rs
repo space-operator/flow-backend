@@ -645,6 +645,7 @@ impl Instructions {
         tracing::info!("executing transaction");
         tracing::info!("message size: {}", data.len());
         tracing::info!("fee payer: {}", self.fee_payer);
+        tracing::debug!("execution config: {:?}", config);
 
         let fee_payer_signature = {
             let keypair = self
