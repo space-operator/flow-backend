@@ -9,7 +9,6 @@ use value::Value;
 pub struct Params {
     #[serde(default)]
     pub inputs: HashMap<String, Value>,
-    #[serde(default)]
     pub partial_config: Option<PartialConfig>,
     #[serde(default)]
     pub environment: HashMap<String, String>,
@@ -45,6 +44,10 @@ async fn start_flow(
         )
         .unwrap_or_default();
     let inputs = inputs.into_iter().collect::<ValueSet>();
+
+    if let Some(partial_config) = &partial_config {
+        tracing::debug!("partial config: {:?}", partial_config);
+    }
 
     let flow_run_id = db_worker
         .send(GetUserWorker {
