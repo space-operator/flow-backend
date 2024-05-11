@@ -27,8 +27,8 @@ impl Interflow {
             .map(|x| Input {
                 name: x.name.clone(),
                 type_bounds: [ValueType::Free].to_vec(),
-                required: false,
-                passthrough: false,
+                required: x.required,
+                passthrough: x.passthrough,
             })
             .collect();
 
@@ -38,7 +38,7 @@ impl Interflow {
             .map(|x| Output {
                 name: x.name.clone(),
                 r#type: ValueType::Free,
-                optional: false,
+                optional: x.optional,
             })
             .collect();
 
