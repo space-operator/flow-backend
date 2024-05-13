@@ -1,16 +1,9 @@
-CREATE ROLE "flow_runner";
-ALTER ROLE "flow_runner" WITH INHERIT NOCREATEROLE CREATEDB NOLOGIN REPLICATION BYPASSRLS;
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
+
+CREATE ROLE "flow_runner";
+ALTER ROLE "flow_runner" WITH INHERIT NOCREATEROLE CREATEDB LOGIN REPLICATION BYPASSRLS;
 
 CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
 
