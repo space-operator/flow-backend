@@ -1,3 +1,5 @@
+grant usage on schema auth to flow_runner;
+
 create table if not exists auth.passwords (
     user_id uuid not null,
     password varchar not null,
