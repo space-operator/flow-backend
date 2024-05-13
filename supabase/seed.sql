@@ -1,3 +1,5 @@
+CREATE ROLE "flow_runner";
+ALTER ROLE "flow_runner" WITH INHERIT NOCREATEROLE CREATEDB NOLOGIN REPLICATION BYPASSRLS;
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -9,9 +11,6 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
-CREATE ROLE "flow_runner";
-ALTER ROLE "flow_runner" WITH INHERIT NOCREATEROLE NOCREATEDB LOGIN REPLICATION BYPASSRLS;
 
 CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
 
