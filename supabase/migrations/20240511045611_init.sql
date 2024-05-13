@@ -1,9 +1,14 @@
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
-
-CREATE ROLE "flow_runner";
-ALTER ROLE "flow_runner" WITH INHERIT NOCREATEROLE CREATEDB LOGIN REPLICATION BYPASSRLS;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
 
 CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
 
@@ -701,3 +706,60 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "service_role";
 
 RESET ALL;
+
+--
+-- Dumped schema changes for auth and storage
+--
+
+CREATE OR REPLACE FUNCTION "auth"."validate_user"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+declare
+myrec record;
+begin
+    select * into myrec from public.pubkey_whitelists
+    where pubkey = new.raw_user_meta_data->>'pub_key' and pubkey is not null;
+    if not found then
+        raise exception 'pubkey is not in whitelists, %', new.raw_user_meta_data->>'pub_key';
+    end if;
+
+    return new;
+end;
+$$;
+
+ALTER FUNCTION "auth"."validate_user"() OWNER TO "postgres";
+
+CREATE TABLE IF NOT EXISTS "auth"."passwords" (
+    "user_id" "uuid" NOT NULL,
+    "password" character varying NOT NULL
+);
+
+ALTER TABLE "auth"."passwords" OWNER TO "postgres";
+
+ALTER TABLE ONLY "auth"."passwords"
+    ADD CONSTRAINT "passwords_pkey" PRIMARY KEY ("user_id");
+
+CREATE OR REPLACE TRIGGER "on_auth_check_whitelists" BEFORE INSERT ON "auth"."users" FOR EACH ROW EXECUTE FUNCTION "auth"."validate_user"();
+
+ALTER TABLE ONLY "auth"."passwords"
+    ADD CONSTRAINT "fk-user_id" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+CREATE POLICY "user-pubic-storages xeg75m_0" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = 'user-public-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+
+CREATE POLICY "user-pubic-storages xeg75m_1" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = 'user-public-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+
+CREATE POLICY "user-pubic-storages xeg75m_2" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = 'user-public-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+
+CREATE POLICY "user-public-storages xeg75m_0" ON "storage"."objects" FOR SELECT TO "authenticated", "anon" USING (("bucket_id" = 'user-public-storages'::"text"));
+
+CREATE POLICY "user-storage w6lp96_0" ON "storage"."objects" FOR SELECT TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+
+CREATE POLICY "user-storage w6lp96_1" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+
+CREATE POLICY "user-storage w6lp96_2" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+
+CREATE POLICY "user-storage w6lp96_3" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+
+GRANT ALL ON TABLE "auth"."passwords" TO "flow_runner";
+
+GRANT UPDATE ON TABLE "auth"."users" TO "flow_runner";
