@@ -1,4 +1,6 @@
 # Supabase
 .branches
 .temp
+volumes/db/data
+volumes/storage
 .env
