@@ -1,3 +1,4 @@
+\set password `echo "$FLOW_RUNNER_PASSWORD"`
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -37,7 +38,7 @@ CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
 CREATE ROLE "flow_runner";
-ALTER ROLE "flow_runner" WITH INHERIT NOCREATEROLE CREATEDB LOGIN REPLICATION BYPASSRLS;
+ALTER ROLE "flow_runner" WITH INHERIT NOCREATEROLE CREATEDB LOGIN REPLICATION BYPASSRLS PASSWORD :'password';
 
 CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER

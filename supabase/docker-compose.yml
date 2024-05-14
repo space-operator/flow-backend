@@ -386,6 +386,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXP: ${JWT_EXPIRY}
+      FLOW_RUNNER_PASSWORD: ${FLOW_RUNNER_PASSWORD}
     volumes:
       - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
       # Must be superuser to create event trigger
