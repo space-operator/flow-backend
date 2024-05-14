@@ -1,21 +1,26 @@
 #!/usr/bin/env bash
-set -Eeuxo pipefail
+set -Eeuo pipefail
 
-mkdir -p ./target/container
+NAME="x0y3s9r8/flow-server"
+DOCKERFILE="crates/flow-server/Dockerfile"
 
-time docker run --rm --name BUILD-SPACE \
-    -v "${PWD}":/build:Z,ro \
-    -v "${PWD}/target/container":/build/target:Z,rw \
-    -v SPACE-CARGO:/usr/local/cargo \
-    -e RUSTFLAGS="-C target-cpu=haswell" \
-    rust:latest \
-    bash -c "
-    cd /build/
-    cargo build --release -p flow-server
-    "
+DIRTY=""
+if [[ "$(git describe --always --dirty)" == *-dirty ]]; then
+    DIRTY="-dirty"
+fi
 
-mkdir -p ./target/container_bin
-cp ./target/container/release/flow-server ./target/container_bin
-strip ./target/container_bin/*
+set -x
+time docker build --pull=always --target rustc -t "$NAME-rustc:latest" -f "$DOCKERFILE" .
+time docker build --pull=always --target planner -t "$NAME-planner:latest" -f "$DOCKERFILE" .
+time docker build --pull=always --target cacher -t "$NAME-cacher:latest" -f "$DOCKERFILE" .
 
-docker build -t flow-server:latest -f ./crates/flow-server/Dockerfile ./target/container_bin
+BUILDER_TAG=$RANDOM
+time docker build --pull=always --target builder -t "$NAME-builder:$BUILDER_TAG" -f "$DOCKERFILE" .
+
+COMMIT="$(git rev-parse --verify HEAD)$DIRTY"
+time docker build --pull=always -t "$NAME:$COMMIT" -f "$DOCKERFILE" .
+
+BRANCH="${BRANCH:-$(git rev-parse --abbrev-ref HEAD)$DIRTY}"
+docker tag $NAME:$COMMIT $NAME:$BRANCH
+
+docker image rm "$NAME-builder:$BUILDER_TAG"

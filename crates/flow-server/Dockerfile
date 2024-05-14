@@ -20,8 +20,7 @@ COPY . .
 # Copy over the cached dependencies from above
 COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
-RUN cargo build --release \
-    --bin flow-server
+RUN cargo build --release --bin flow-server
 
 FROM denoland/deno as deno
 
@@ -29,7 +28,7 @@ FROM denoland/deno as deno
 # Create a tiny output image.
 # It only contains our final binaries.
 FROM debian:stable-slim as runtime
-COPY ./flow-backend/certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
+COPY ./certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
 RUN apt-get update && \
     apt-get install -y libssl3 ca-certificates wget && \
     wget https://github.com/supabase/cli/releases/download/v1.167.4/supabase_1.167.4_linux_amd64.deb && \
