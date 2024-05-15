@@ -43,7 +43,7 @@ async fn main() {
     tracing::info!("allow CORS origins: {:?}", config.cors_origins);
 
     let wasm_storage = match WasmStorage::new(
-        &config.supabase.project_id,
+        config.supabase.get_endpoint(),
         &config.supabase.anon_key,
         &config.supabase.wasm_bucket,
     ) {

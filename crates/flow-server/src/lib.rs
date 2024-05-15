@@ -11,6 +11,7 @@ use middleware::{
 };
 use serde::Deserialize;
 use std::{path::PathBuf, rc::Rc};
+use url::Url;
 use user::SignatureAuth;
 
 pub mod api;
@@ -57,15 +58,49 @@ pub fn match_wildcard(pat: &str, origin: &HeaderValue) -> bool {
     true
 }
 
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum EndpointConfigUnchecked {
+    ProjectId { project_id: String },
+    Endpoint { endpoint: Url },
+}
+
+#[derive(Deserialize, Clone)]
+#[serde(try_from = "EndpointConfigUnchecked")]
+pub struct EndpointConfig {
+    url: Url,
+}
+
+impl TryFrom<EndpointConfigUnchecked> for EndpointConfig {
+    type Error = url::ParseError;
+    fn try_from(value: EndpointConfigUnchecked) -> Result<Self, Self::Error> {
+        Ok(match value {
+            EndpointConfigUnchecked::Endpoint { endpoint } => Self { url: endpoint },
+            EndpointConfigUnchecked::ProjectId { project_id } => Self {
+                url: format!("https://{}.supabase.co", project_id).parse()?,
+            },
+        })
+    }
+}
+
+impl Default for EndpointConfig {
+    fn default() -> Self {
+        Self {
+            // default location of Supabase CLI local development
+            url: "http://localhost:54321".parse().unwrap(),
+        }
+    }
+}
+
 #[derive(Deserialize, Clone)]
 pub struct SupabaseConfig {
+    #[serde(flatten)]
+    pub endpoint: EndpointConfig,
     pub jwt_key: Option<String>,
     pub anon_key: String,
     pub service_key: Option<String>,
-    pub project_id: String,
     #[serde(default = "SupabaseConfig::default_bucket")]
     pub wasm_bucket: String,
-    pub endpoint: Option<String>,
     #[serde(default = "SupabaseConfig::default_open_whitelists")]
     pub open_whitelists: bool,
 }
@@ -79,22 +114,19 @@ impl SupabaseConfig {
         false
     }
 
-    pub fn get_endpoint(&self) -> String {
-        self.endpoint
-            .clone()
-            .unwrap_or_else(|| format!("https://{}.supabase.co", self.project_id))
+    pub fn get_endpoint(&self) -> Url {
+        self.endpoint.url.clone()
     }
 }
 
 impl Default for SupabaseConfig {
     fn default() -> Self {
         Self {
+            endpoint: <_>::default(),
             jwt_key: None,
             anon_key: String::new(),
             service_key: None,
-            project_id: String::new(),
             wasm_bucket: Self::default_bucket(),
-            endpoint: None,
             open_whitelists: Self::default_open_whitelists(),
         }
     }
@@ -204,27 +236,35 @@ impl Config {
         }
     }
 
-    pub fn supabase_endpoint(&self) -> String {
-        self.supabase.get_endpoint()
+    fn supabase_endpoint(&self) -> String {
+        // TODO: strip / to avoid breaking changes
+        let mut s = self.supabase.get_endpoint().to_string();
+        if s.ends_with('/') {
+            s.pop();
+        }
+        s
     }
 
     /// Build a CORS middleware.
     pub fn cors(&self) -> actix_cors::Cors {
-        /*
-        for origin in &self.cors_origins {
-            if origin.contains('*') {
-                let pattern = origin.clone();
-                cors = cors.allowed_origin_fn(move |origin, _| match_wildcard(&pattern, origin));
-            } else {
-                cors = cors.allowed_origin(origin);
-            }
-        }
-        */
-        actix_cors::Cors::default()
+        let mut cors = actix_cors::Cors::default()
             .allow_any_header()
             .allow_any_method()
-            .allow_any_origin()
-            .supports_credentials()
+            .supports_credentials();
+        if self.cors_origins.iter().any(|v| v == "*") {
+            cors = cors.allow_any_origin();
+        } else {
+            for origin in &self.cors_origins {
+                if origin.contains('*') {
+                    let pattern = origin.clone();
+                    cors =
+                        cors.allowed_origin_fn(move |origin, _| match_wildcard(&pattern, origin));
+                } else {
+                    cors = cors.allowed_origin(origin);
+                }
+            }
+        }
+        cors
     }
 
     pub fn signature_auth(&self) -> SignatureAuth {
