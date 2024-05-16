@@ -6,7 +6,6 @@ on:
       - "main"
       - "devops"
 
-
 env:
   BRANCH: main
 

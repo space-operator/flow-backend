@@ -29,6 +29,7 @@ FROM denoland/deno as deno
 # It only contains our final binaries.
 FROM debian:stable-slim as runtime
 COPY ./certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
+COPY ./crates/flow-server/entrypoint.bash /space-operator/
 RUN apt-get update && \
     apt-get install -y libssl3 ca-certificates wget && \
     wget https://github.com/supabase/cli/releases/download/v1.167.4/supabase_1.167.4_linux_amd64.deb && \
