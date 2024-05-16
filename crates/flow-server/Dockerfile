@@ -40,4 +40,4 @@ RUN deno --version
 WORKDIR /space-operator/
 COPY --from=builder /build/target/release/flow-server .
 RUN bash -c "ldd * | (! grep 'not found')"
-ENTRYPOINT ["sh"]
+ENTRYPOINT ["./entrypoint.bash"]
