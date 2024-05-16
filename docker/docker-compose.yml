@@ -3,7 +3,7 @@
 #   Stop:           docker compose down
 #   Stop and clean: docker compose down -v
 
-name: flow-backend
+name: flow
 
 secrets:
   flow-server-config:
@@ -11,6 +11,7 @@ secrets:
 
 services:
   flow-server:
+    container_name: flow-server
     image: public.ecr.aws/x0y3s9r8/flow-server:devops
     restart: unless-stopped
     healthcheck:
@@ -248,21 +249,11 @@ services:
       analytics:
         condition: service_healthy
     healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "-sSfL",
-          "--head",
-          "-o",
-          "/dev/null",
-          "-H",
-          "Authorization: Bearer ${ANON_KEY}",
-          "http://localhost:4000/api/tenants/realtime-dev/health",
-        ]
+      test: >
+        curl -sSfL --head -o /dev/null -H "Authorization: Bearer $ANON_KEY" "http://$HOSTNAME:4000/api/tenants/realtime-dev/health"
       timeout: 5s
       interval: 5s
-      retries: 3
+      retries: 10
     restart: unless-stopped
     environment:
       PORT: 4000
