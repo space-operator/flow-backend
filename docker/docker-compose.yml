@@ -1,5 +1,5 @@
 # Usage
-#   Start:          docker compose up
+#   Start:          docker compose up -d --wait
 #   Stop:           docker compose down
 #   Stop and clean: docker compose down -v
 
@@ -9,9 +9,14 @@ secrets:
   flow-server-config:
     file: ./.config.toml
 
+volumes:
+  db-config:
+  db-data:
+  storage:
+  flow-server-data:
+
 services:
   flow-server:
-    container_name: flow-server
     image: public.ecr.aws/x0y3s9r8/flow-server:devops
     restart: unless-stopped
     healthcheck:
@@ -37,43 +42,36 @@ services:
       - flow-server-config
     volumes:
       - ./supabase:/space-operator/supabase:ro
+      - flow-server-data:/data
 
-  studio:
-    container_name: supabase-studio
-    image: supabase/studio:20240422-5cf8f30
+  kong:
+    image: kong:2.8.1
     restart: unless-stopped
-    healthcheck:
-      test: node -e "fetch('http://studio:3000/api/profile').then(r => {if (r.status !== 200) throw 'error';})"
-      timeout: 5s
-      interval: 5s
-      retries: 10
+    # https://unix.stackexchange.com/a/294837
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    ports:
+      - ${KONG_HTTP_PORT}:8000/tcp
+      - ${KONG_HTTPS_PORT}:8443/tcp
     depends_on:
       analytics:
         condition: service_healthy
     environment:
-      STUDIO_PG_META_URL: http://meta:8080
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-
-      DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION}
-      DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT}
-
-      SUPABASE_URL: http://kong:8000
-      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      # https://github.com/supabase/cli/issues/14
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
-
-      LOGFLARE_API_KEY: ${LOGFLARE_API_KEY}
-      LOGFLARE_URL: http://analytics:4000
-      NEXT_PUBLIC_ENABLE_LOGS: true
-      # Comment to use Big Query backend for analytics
-      NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
-      # Uncomment to use Big Query backend for analytics
-      # NEXT_ANALYTICS_BACKEND_PROVIDER: bigquery
-
-  # Comment out everything below this point if you are using an external Postgres database
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
+    volumes:
+      # https://github.com/supabase/supabase/issues/12661
+      - ./volumes/api/kong.yml:/home/kong/temp.yml:ro
 
   db:
-    container_name: supabase-db
     image: supabase/postgres:15.1.1.41
     healthcheck:
       test: pg_isready -U postgres -h localhost
@@ -119,36 +117,38 @@ services:
       # Use named volume to persist pgsodium decryption key between restarts
       - db-config:/etc/postgresql-custom
 
-  kong:
-    container_name: supabase-kong
-    image: kong:2.8.1
+  studio:
+    image: supabase/studio:20240422-5cf8f30
     restart: unless-stopped
-    # https://unix.stackexchange.com/a/294837
-    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
-    ports:
-      - ${KONG_HTTP_PORT}:8000/tcp
-      - ${KONG_HTTPS_PORT}:8443/tcp
+    healthcheck:
+      test: node -e "fetch('http://studio:3000/api/profile').then(r => {if (r.status !== 200) throw 'error';})"
+      timeout: 5s
+      interval: 5s
+      retries: 10
     depends_on:
       analytics:
         condition: service_healthy
     environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
-      # https://github.com/supabase/cli/issues/14
-      KONG_DNS_ORDER: LAST,A,CNAME
-      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
-      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
-      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+      DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION}
+      DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT}
+
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
-      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
-      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
-    volumes:
-      # https://github.com/supabase/supabase/issues/12661
-      - ./volumes/api/kong.yml:/home/kong/temp.yml:ro
+
+      LOGFLARE_API_KEY: ${LOGFLARE_API_KEY}
+      LOGFLARE_URL: http://analytics:4000
+      NEXT_PUBLIC_ENABLE_LOGS: true
+      # Comment to use Big Query backend for analytics
+      NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
+      # Uncomment to use Big Query backend for analytics
+      # NEXT_ANALYTICS_BACKEND_PROVIDER: bigquery
 
   auth:
-    container_name: supabase-auth
     image: supabase/gotrue:v2.151.0
     depends_on:
       db:
@@ -219,7 +219,6 @@ services:
       # GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_URI="pg-functions://postgres/public/password_verification_attempt"
 
   rest:
-    container_name: supabase-rest
     image: postgrest/postgrest:v12.0.1
     depends_on:
       db:
@@ -240,7 +239,6 @@ services:
 
   realtime:
     # This container name looks inconsistent but is correct because realtime constructs tenant id by parsing the subdomain
-    container_name: realtime-dev.supabase-realtime
     image: supabase/realtime:v2.28.32
     depends_on:
       db:
@@ -277,7 +275,6 @@ services:
 
   # To use S3 backed storage: docker compose -f docker-compose.yml -f docker-compose.s3.yml up
   storage:
-    container_name: supabase-storage
     image: supabase/storage-api:v1.0.6
     depends_on:
       db:
@@ -312,7 +309,6 @@ services:
       - storage:/var/lib/storage
 
   imgproxy:
-    container_name: supabase-imgproxy
     image: darthsim/imgproxy:v3.8.0
     healthcheck:
       test: ["CMD", "imgproxy", "health"]
@@ -328,7 +324,6 @@ services:
       - storage:/var/lib/storage
 
   meta:
-    container_name: supabase-meta
     image: supabase/postgres-meta:v0.80.0
     depends_on:
       db:
@@ -346,7 +341,6 @@ services:
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
 
   functions:
-    container_name: supabase-edge-functions
     image: supabase/edge-runtime:v1.45.2
     restart: unless-stopped
     depends_on:
@@ -368,7 +362,6 @@ services:
       - /home/deno/functions/main
 
   analytics:
-    container_name: supabase-analytics
     image: supabase/logflare:1.4.0
     healthcheck:
       test: ["CMD", "curl", "http://localhost:4000/health"]
@@ -410,7 +403,6 @@ services:
       - 4000:4000
 
   vector:
-    container_name: supabase-vector
     image: timberio/vector:0.28.1-alpine
     healthcheck:
       test:
@@ -432,7 +424,3 @@ services:
       LOGFLARE_API_KEY: ${LOGFLARE_API_KEY}
     command: ["--config", "etc/vector/vector.yml"]
 
-volumes:
-  db-config:
-  db-data:
-  storage:
