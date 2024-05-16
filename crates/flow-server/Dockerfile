@@ -7,12 +7,12 @@ WORKDIR /build/
 # Step 1: Compute a recipe file
 FROM rustc as planner
 COPY . .
-RUN cargo chef prepare --recipe-path recipe.json --quiet
+RUN cargo chef prepare --recipe-path recipe.json
 
 # Step 2: Cache project dependencies
 FROM rustc as cacher
 COPY --from=planner /build/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json --quiet
+RUN cargo chef cook --release --recipe-path recipe.json
 
 # Step 3: Build the binary
 FROM rustc as builder
