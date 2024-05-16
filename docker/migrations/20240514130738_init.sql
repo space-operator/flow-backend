@@ -576,6 +576,7 @@ REVOKE USAGE ON SCHEMA "public" FROM PUBLIC;
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
+GRANT USAGE ON SCHEMA "public" TO "flow_runner";
 GRANT ALL ON SCHEMA "public" TO PUBLIC;
 
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "anon";
