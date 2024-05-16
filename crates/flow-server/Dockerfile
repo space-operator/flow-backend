@@ -1,18 +1,18 @@
 FROM rust as rustc
 RUN apt-get update && apt-get install -y clang lld && rm -rf /var/lib/apt/lists/*
 ENV RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=lld"
-RUN cargo install cargo-chef
+RUN cargo install cargo-chef --quiet
 WORKDIR /build/
 
 # Step 1: Compute a recipe file
 FROM rustc as planner
 COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
+RUN cargo chef prepare --recipe-path recipe.json --quiet
 
 # Step 2: Cache project dependencies
 FROM rustc as cacher
 COPY --from=planner /build/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json --quiet
 
 # Step 3: Build the binary
 FROM rustc as builder
@@ -20,7 +20,7 @@ COPY . .
 # Copy over the cached dependencies from above
 COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
-RUN cargo build --release --bin flow-server
+RUN cargo build --release --bin flow-server --quiet
 
 FROM denoland/deno as deno
 
