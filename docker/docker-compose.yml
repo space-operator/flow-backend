@@ -14,6 +14,11 @@ services:
     container_name: flow-server
     image: public.ecr.aws/x0y3s9r8/flow-server:devops
     restart: unless-stopped
+    healthcheck:
+      test: deno eval 'fetch("http://localhost:8080/healthcheck")'
+      interval: 5s
+      timeout: 5s
+      retries: 10
     ports:
       - 8080:8080
     depends_on:
