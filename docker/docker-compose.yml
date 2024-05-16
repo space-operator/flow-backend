@@ -15,7 +15,7 @@ services:
     image: public.ecr.aws/x0y3s9r8/flow-server:devops
     restart: unless-stopped
     healthcheck:
-      test: deno eval "fetch('http://$HOSTNAME:8080/healthcheck').then(r => {if (r.status !== 200) throw 'error';})"
+      test: deno eval "fetch('http://flow-server:8080/healthcheck').then(r => {if (r.status !== 200) throw 'error';})"
       interval: 5s
       timeout: 5s
       retries: 10
