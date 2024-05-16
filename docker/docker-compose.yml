@@ -36,7 +36,7 @@ services:
     secrets:
       - flow-server-config
     volumes:
-      - ./migrations:/space-operator/migrations:ro
+      - ./supabase:/space-operator/supabase:ro
 
   studio:
     container_name: supabase-studio
