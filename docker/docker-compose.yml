@@ -1,4 +1,5 @@
 # Usage
+#   Pull images   : docker compose pull
 #   Start:          docker compose up -d --wait
 #   Stop:           docker compose down
 #   Stop and clean: docker compose down -v
