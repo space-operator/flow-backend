@@ -13,8 +13,6 @@ CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
 
 CREATE EXTENSION IF NOT EXISTS "pgsodium" WITH SCHEMA "pgsodium";
 
-ALTER SCHEMA "public" OWNER TO "postgres";
-
 COMMENT ON SCHEMA "public" IS 'standard public schema';
 
 CREATE EXTENSION IF NOT EXISTS "autoinc" WITH SCHEMA "extensions";
@@ -56,25 +54,17 @@ CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
   RETURN new;
 END;$$;
 
-ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
-
 CREATE OR REPLACE FUNCTION "public"."increase_credit"("user_id" "uuid", "amount" bigint) RETURNS bigint
     LANGUAGE "sql"
     AS $_$UPDATE user_quotas SET credit = credit + $2 WHERE user_id = $1 AND $2 >= 0 RETURNING credit;$_$;
-
-ALTER FUNCTION "public"."increase_credit"("user_id" "uuid", "amount" bigint) OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."increase_used_credit"("user_id" "uuid", "amount" bigint) RETURNS bigint
     LANGUAGE "sql"
     AS $_$UPDATE user_quotas SET used_credit = used_credit + $2 WHERE user_id = $1 AND $2 >= 0 AND used_credit + $2 <= credit RETURNING used_credit;$_$;
 
-ALTER FUNCTION "public"."increase_used_credit"("user_id" "uuid", "amount" bigint) OWNER TO "postgres";
-
 CREATE OR REPLACE FUNCTION "public"."is_nft_admin"("user_id" "uuid") RETURNS boolean
     LANGUAGE "sql" STABLE SECURITY DEFINER
     AS $_$SELECT EXISTS (SELECT user_id FROM nft_admins WHERE user_id = $1);$_$;
-
-ALTER FUNCTION "public"."is_nft_admin"("user_id" "uuid") OWNER TO "postgres";
 
 SET default_tablespace = '';
 
@@ -87,8 +77,6 @@ CREATE TABLE IF NOT EXISTS "public"."apikeys" (
     "trimmed_key" "text" NOT NULL,
     "created_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
-
-ALTER TABLE "public"."apikeys" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."flow_run" (
     "user_id" "uuid" NOT NULL,
@@ -112,8 +100,6 @@ CREATE TABLE IF NOT EXISTS "public"."flow_run" (
     "signers" "jsonb" NOT NULL
 );
 
-ALTER TABLE "public"."flow_run" OWNER TO "postgres";
-
 CREATE TABLE IF NOT EXISTS "public"."flow_run_logs" (
     "user_id" "uuid" NOT NULL,
     "flow_run_id" "uuid" NOT NULL,
@@ -126,14 +112,10 @@ CREATE TABLE IF NOT EXISTS "public"."flow_run_logs" (
     "module" "text"
 );
 
-ALTER TABLE "public"."flow_run_logs" OWNER TO "postgres";
-
 CREATE TABLE IF NOT EXISTS "public"."flow_run_shared" (
     "flow_run_id" "uuid" NOT NULL,
     "user_id" "uuid" NOT NULL
 );
-
-ALTER TABLE "public"."flow_run_shared" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."flows" (
     "id" integer NOT NULL,
@@ -160,8 +142,6 @@ CREATE TABLE IF NOT EXISTS "public"."flows" (
     "start_unverified" boolean DEFAULT false NOT NULL
 );
 
-ALTER TABLE "public"."flows" OWNER TO "postgres";
-
 COMMENT ON COLUMN "public"."flows"."isPublic" IS 'To know if this flow is public or not';
 
 COMMENT ON COLUMN "public"."flows"."parent_flow" IS 'This means the flow was cloned';
@@ -185,15 +165,11 @@ CREATE TABLE IF NOT EXISTS "public"."kvstore" (
     "last_updated" timestamp without time zone DEFAULT "now"()
 );
 
-ALTER TABLE "public"."kvstore" OWNER TO "postgres";
-
 CREATE TABLE IF NOT EXISTS "public"."kvstore_metadata" (
     "user_id" "uuid" DEFAULT "auth"."uid"() NOT NULL,
     "store_name" "text" NOT NULL,
     "stats_size" bigint DEFAULT 0 NOT NULL
 );
-
-ALTER TABLE "public"."kvstore_metadata" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."node_run" (
     "user_id" "uuid" NOT NULL,
@@ -206,8 +182,6 @@ CREATE TABLE IF NOT EXISTS "public"."node_run" (
     "errors" "text"[],
     "input" "jsonb" DEFAULT '{"M": {}}'::"jsonb" NOT NULL
 );
-
-ALTER TABLE "public"."node_run" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."nodes" (
     "id" bigint NOT NULL,
@@ -228,8 +202,6 @@ CREATE TABLE IF NOT EXISTS "public"."nodes" (
     "storage_path" "text",
     "licenses" "text"[]
 );
-
-ALTER TABLE "public"."nodes" OWNER TO "postgres";
 
 COMMENT ON TABLE "public"."nodes" IS 'Nodes Table';
 
@@ -253,16 +225,12 @@ CREATE TABLE IF NOT EXISTS "public"."pubkey_whitelists" (
     "info" "text"
 );
 
-ALTER TABLE "public"."pubkey_whitelists" OWNER TO "postgres";
-
 CREATE SEQUENCE IF NOT EXISTS "public"."seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
-ALTER TABLE "public"."seq" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."signature_requests" (
     "user_id" "uuid" NOT NULL,
@@ -276,16 +244,12 @@ CREATE TABLE IF NOT EXISTS "public"."signature_requests" (
     "new_msg" "text"
 );
 
-ALTER TABLE "public"."signature_requests" OWNER TO "postgres";
-
 CREATE SEQUENCE IF NOT EXISTS "public"."signature_requests_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
-ALTER TABLE "public"."signature_requests_id_seq" OWNER TO "postgres";
 
 ALTER SEQUENCE "public"."signature_requests_id_seq" OWNED BY "public"."signature_requests"."id";
 
@@ -298,8 +262,6 @@ CREATE TABLE IF NOT EXISTS "public"."user_quotas" (
     "credit" bigint DEFAULT '30'::bigint NOT NULL,
     "used_credit" bigint DEFAULT 0 NOT NULL
 );
-
-ALTER TABLE "public"."user_quotas" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."users_public" (
     "email" "text" NOT NULL,
@@ -314,8 +276,6 @@ CREATE TABLE IF NOT EXISTS "public"."users_public" (
     "node_skills" "jsonb" DEFAULT '[]'::"jsonb",
     "tasks_skills" "jsonb" DEFAULT '[]'::"jsonb"
 );
-
-ALTER TABLE "public"."users_public" OWNER TO "postgres";
 
 COMMENT ON TABLE "public"."users_public" IS 'Profile data for each user.';
 
@@ -335,8 +295,6 @@ CREATE TABLE IF NOT EXISTS "public"."wallets" (
     "icon" "text",
     "keypair" "text"
 );
-
-ALTER TABLE "public"."wallets" OWNER TO "postgres";
 
 ALTER TABLE "public"."wallets" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
     SEQUENCE NAME "public"."wallets_id_seq"
@@ -562,8 +520,6 @@ ALTER TABLE "public"."users_public" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."wallets" ENABLE ROW LEVEL SECURITY;
 
-ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
-
 ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."flow_run";
 
 ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."flow_run_logs";
@@ -573,138 +529,47 @@ ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."node_run";
 ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."signature_requests";
 
 REVOKE USAGE ON SCHEMA "public" FROM PUBLIC;
-GRANT USAGE ON SCHEMA "public" TO "anon";
-GRANT USAGE ON SCHEMA "public" TO "authenticated";
-GRANT USAGE ON SCHEMA "public" TO "service_role";
 GRANT USAGE ON SCHEMA "public" TO "flow_runner";
 GRANT ALL ON SCHEMA "public" TO PUBLIC;
 
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "anon";
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."increase_credit"("user_id" "uuid", "amount" bigint) TO "anon";
-GRANT ALL ON FUNCTION "public"."increase_credit"("user_id" "uuid", "amount" bigint) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."increase_credit"("user_id" "uuid", "amount" bigint) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."increase_used_credit"("user_id" "uuid", "amount" bigint) TO "anon";
-GRANT ALL ON FUNCTION "public"."increase_used_credit"("user_id" "uuid", "amount" bigint) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."increase_used_credit"("user_id" "uuid", "amount" bigint) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."is_nft_admin"("user_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."is_nft_admin"("user_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."is_nft_admin"("user_id" "uuid") TO "service_role";
-
-GRANT ALL ON TABLE "public"."apikeys" TO "anon";
-GRANT ALL ON TABLE "public"."apikeys" TO "authenticated";
-GRANT ALL ON TABLE "public"."apikeys" TO "service_role";
 GRANT ALL ON TABLE "public"."apikeys" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."flow_run" TO "anon";
-GRANT ALL ON TABLE "public"."flow_run" TO "authenticated";
-GRANT ALL ON TABLE "public"."flow_run" TO "service_role";
 GRANT ALL ON TABLE "public"."flow_run" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."flow_run_logs" TO "anon";
-GRANT ALL ON TABLE "public"."flow_run_logs" TO "authenticated";
-GRANT ALL ON TABLE "public"."flow_run_logs" TO "service_role";
 GRANT ALL ON TABLE "public"."flow_run_logs" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."flow_run_shared" TO "anon";
-GRANT ALL ON TABLE "public"."flow_run_shared" TO "authenticated";
-GRANT ALL ON TABLE "public"."flow_run_shared" TO "service_role";
 GRANT ALL ON TABLE "public"."flow_run_shared" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."flows" TO "anon";
-GRANT ALL ON TABLE "public"."flows" TO "authenticated";
-GRANT ALL ON TABLE "public"."flows" TO "service_role";
 GRANT ALL ON TABLE "public"."flows" TO "flow_runner";
 
-GRANT ALL ON SEQUENCE "public"."flows_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."flows_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."flows_id_seq" TO "service_role";
 GRANT SELECT ON SEQUENCE "public"."flows_id_seq" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."kvstore" TO "anon";
-GRANT ALL ON TABLE "public"."kvstore" TO "authenticated";
-GRANT ALL ON TABLE "public"."kvstore" TO "service_role";
 GRANT ALL ON TABLE "public"."kvstore" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."kvstore_metadata" TO "anon";
-GRANT ALL ON TABLE "public"."kvstore_metadata" TO "authenticated";
-GRANT ALL ON TABLE "public"."kvstore_metadata" TO "service_role";
 GRANT ALL ON TABLE "public"."kvstore_metadata" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."node_run" TO "anon";
-GRANT ALL ON TABLE "public"."node_run" TO "authenticated";
-GRANT ALL ON TABLE "public"."node_run" TO "service_role";
 GRANT ALL ON TABLE "public"."node_run" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."nodes" TO "anon";
-GRANT ALL ON TABLE "public"."nodes" TO "authenticated";
-GRANT ALL ON TABLE "public"."nodes" TO "service_role";
 GRANT ALL ON TABLE "public"."nodes" TO "flow_runner";
 
-GRANT ALL ON SEQUENCE "public"."nodes_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."nodes_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."nodes_id_seq" TO "service_role";
 GRANT SELECT ON SEQUENCE "public"."nodes_id_seq" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."pubkey_whitelists" TO "anon";
-GRANT ALL ON TABLE "public"."pubkey_whitelists" TO "authenticated";
-GRANT ALL ON TABLE "public"."pubkey_whitelists" TO "service_role";
 GRANT ALL ON TABLE "public"."pubkey_whitelists" TO "flow_runner";
 GRANT SELECT ON TABLE "public"."pubkey_whitelists" TO "supabase_auth_admin";
 
-GRANT ALL ON SEQUENCE "public"."seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."seq" TO "service_role";
 GRANT SELECT ON SEQUENCE "public"."seq" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."signature_requests" TO "anon";
-GRANT ALL ON TABLE "public"."signature_requests" TO "authenticated";
-GRANT ALL ON TABLE "public"."signature_requests" TO "service_role";
 GRANT ALL ON TABLE "public"."signature_requests" TO "flow_runner";
 
-GRANT ALL ON SEQUENCE "public"."signature_requests_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."signature_requests_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."signature_requests_id_seq" TO "service_role";
 GRANT SELECT,USAGE ON SEQUENCE "public"."signature_requests_id_seq" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."user_quotas" TO "anon";
-GRANT ALL ON TABLE "public"."user_quotas" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_quotas" TO "service_role";
 GRANT ALL ON TABLE "public"."user_quotas" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."users_public" TO "anon";
-GRANT ALL ON TABLE "public"."users_public" TO "authenticated";
-GRANT ALL ON TABLE "public"."users_public" TO "service_role";
 GRANT SELECT ON TABLE "public"."users_public" TO "flow_runner";
 
-GRANT ALL ON TABLE "public"."wallets" TO "anon";
-GRANT ALL ON TABLE "public"."wallets" TO "authenticated";
-GRANT ALL ON TABLE "public"."wallets" TO "service_role";
 GRANT SELECT ON TABLE "public"."wallets" TO "flow_runner";
 
-GRANT ALL ON SEQUENCE "public"."wallets_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."wallets_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."wallets_id_seq" TO "service_role";
 GRANT SELECT ON SEQUENCE "public"."wallets_id_seq" TO "flow_runner";
-
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "service_role";
-
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "service_role";
-
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "service_role";
 
 --
 -- Dumped schema changes for auth and storage
@@ -726,16 +591,12 @@ begin
 end;
 $$;
 
-ALTER FUNCTION "auth"."validate_user"() OWNER TO "postgres";
-
 GRANT UPDATE ON TABLE "auth"."users" TO "flow_runner";
 
 CREATE TABLE IF NOT EXISTS "auth"."passwords" (
     "user_id" "uuid" NOT NULL,
     "password" "text" NOT NULL
 );
-
-ALTER TABLE "auth"."passwords" OWNER TO "postgres";
 
 ALTER TABLE ONLY "auth"."passwords"
     ADD CONSTRAINT "passwords_pkey" PRIMARY KEY ("user_id");
