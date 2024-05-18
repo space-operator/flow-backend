@@ -37,6 +37,9 @@ pub struct ExportedUserData {
     pub users_public: String,
     pub wallets: String,
     pub apikeys: String,
+    pub user_quotas: String,
+    pub kvstore: String,
+    pub kvstore_metadata: String,
     pub flows: String,
     pub nodes: String,
 }

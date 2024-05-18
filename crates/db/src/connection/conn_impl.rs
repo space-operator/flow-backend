@@ -970,6 +970,30 @@ impl UserConnection {
         .await?;
         let flows = clear_column(flows, "lastest_flow_run_id")?;
 
+        let user_quotas = copy_out(
+            &tx,
+            &format!(
+                "SELECT * FROM user_quotas WHERE user_id = '{}'",
+                self.user_id
+            ),
+        )
+        .await?;
+
+        let kvstore = copy_out(
+            &tx,
+            &format!("SELECT * FROM kvstore WHERE user_id = '{}'", self.user_id),
+        )
+        .await?;
+
+        let kvstore_metadata = copy_out(
+            &tx,
+            &format!(
+                "SELECT * FROM kvstore_metadata WHERE user_id = '{}'",
+                self.user_id
+            ),
+        )
+        .await?;
+
         let nodes = copy_out(
             &tx,
             &format!(
@@ -989,6 +1013,9 @@ impl UserConnection {
             pubkey_whitelists,
             users_public,
             wallets,
+            user_quotas,
+            kvstore,
+            kvstore_metadata,
             apikeys,
             flows,
             nodes,

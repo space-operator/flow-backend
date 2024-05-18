@@ -526,6 +526,9 @@ impl AdminConn {
         copy_in(&tx, "users_public", data.users_public).await?;
         copy_in(&tx, "wallets", data.wallets).await?;
         copy_in(&tx, "apikeys", data.apikeys).await?;
+        copy_in(&tx, "user_quotas", data.user_quotas).await?;
+        copy_in(&tx, "kvstore", data.kvstore).await?;
+        copy_in(&tx, "kvstore_metadata", data.kvstore_metadata).await?;
         copy_in(&tx, "flows", data.flows).await?;
         copy_in(&tx, "nodes", data.nodes).await?;
 
