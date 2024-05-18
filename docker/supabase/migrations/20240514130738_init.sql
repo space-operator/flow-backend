@@ -530,6 +530,8 @@ ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."signature_request
 
 REVOKE USAGE ON SCHEMA "public" FROM PUBLIC;
 GRANT USAGE ON SCHEMA "public" TO "flow_runner";
+GRANT USAGE ON SCHEMA "auth" TO "flow_runner";
+GRANT USAGE ON SCHEMA "storage" TO "flow_runner";
 GRANT ALL ON SCHEMA "public" TO PUBLIC;
 
 GRANT ALL ON TABLE "public"."apikeys" TO "flow_runner";
@@ -542,7 +544,7 @@ GRANT ALL ON TABLE "public"."flow_run_shared" TO "flow_runner";
 
 GRANT ALL ON TABLE "public"."flows" TO "flow_runner";
 
-GRANT SELECT ON SEQUENCE "public"."flows_id_seq" TO "flow_runner";
+GRANT SELECT,USAGE ON SEQUENCE "public"."flows_id_seq" TO "flow_runner";
 
 GRANT ALL ON TABLE "public"."kvstore" TO "flow_runner";
 
@@ -552,12 +554,11 @@ GRANT ALL ON TABLE "public"."node_run" TO "flow_runner";
 
 GRANT ALL ON TABLE "public"."nodes" TO "flow_runner";
 
-GRANT SELECT ON SEQUENCE "public"."nodes_id_seq" TO "flow_runner";
+GRANT SELECT,USAGE ON SEQUENCE "public"."nodes_id_seq" TO "flow_runner";
 
 GRANT ALL ON TABLE "public"."pubkey_whitelists" TO "flow_runner";
-GRANT SELECT ON TABLE "public"."pubkey_whitelists" TO "supabase_auth_admin";
 
-GRANT SELECT ON SEQUENCE "public"."seq" TO "flow_runner";
+GRANT SELECT,USAGE ON SEQUENCE "public"."seq" TO "flow_runner";
 
 GRANT ALL ON TABLE "public"."signature_requests" TO "flow_runner";
 
@@ -565,11 +566,13 @@ GRANT SELECT,USAGE ON SEQUENCE "public"."signature_requests_id_seq" TO "flow_run
 
 GRANT ALL ON TABLE "public"."user_quotas" TO "flow_runner";
 
-GRANT SELECT ON TABLE "public"."users_public" TO "flow_runner";
+GRANT ALL ON TABLE "public"."users_public" TO "flow_runner";
 
-GRANT SELECT ON TABLE "public"."wallets" TO "flow_runner";
+GRANT ALL ON TABLE "public"."wallets" TO "flow_runner";
 
-GRANT SELECT ON SEQUENCE "public"."wallets_id_seq" TO "flow_runner";
+GRANT SELECT,USAGE ON SEQUENCE "public"."wallets_id_seq" TO "flow_runner";
+
+GRANT SELECT ON TABLE "public"."pubkey_whitelists" TO "supabase_auth_admin";
 
 --
 -- Dumped schema changes for auth and storage
