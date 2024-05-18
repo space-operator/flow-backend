@@ -630,3 +630,28 @@ CREATE POLICY "user-storage w6lp96_1" ON "storage"."objects" FOR INSERT TO "auth
 CREATE POLICY "user-storage w6lp96_2" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
 
 CREATE POLICY "user-storage w6lp96_3" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+
+CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
+LANGUAGE "plpgsql"
+SECURITY DEFINER
+AS $$
+BEGIN
+  INSERT INTO public.users_public
+  (email, user_id, username, pub_key)
+  VALUES (
+    new.email,
+    new.id,
+    new.raw_user_meta_data->>'pub_key',
+    new.raw_user_meta_data->>'pub_key'
+  );
+
+  INSERT INTO public.user_quotas (user_id) VALUES (new.id);
+
+  INSERT INTO public.wallets (user_id, public_key, type, name, description)
+  VALUES (new.id, new.raw_user_meta_data->>'pub_key', 'ADAPTER', 'Main wallet', 'Wallet used to sign up');
+
+  RETURN new;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER "on_auth_user_created" AFTER INSERT ON "auth"."users" FOR EACH ROW EXECUTE FUNCTION "public"."handle_new_user"();

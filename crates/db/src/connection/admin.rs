@@ -510,6 +510,10 @@ impl AdminConn {
             .await
             .map_err(Error::exec("start"))?;
 
+        tx.execute("SELECT auth.disable_users_triggers()", &[])
+            .await
+            .map_err(Error::exec("disable trigger"))?;
+
         tx.execute("CREATE TEMP TABLE tmp_table (LIKE pubkey_whitelists INCLUDING DEFAULTS) ON COMMIT DROP", &[]).await.map_err(Error::exec("create temp table"))?;
         copy_in(&tx, "tmp_table", data.pubkey_whitelists).await?;
         tx.execute(
@@ -535,6 +539,10 @@ impl AdminConn {
         let user_id = data.user_id;
         let pw = rand_password();
         reset_password(&tx, &user_id, &pw).await?;
+
+        tx.execute("SELECT auth.enable_users_triggers()", &[])
+            .await
+            .map_err(Error::exec("enable trigger"))?;
 
         tx.commit().await.map_err(Error::exec("commit"))?;
 
