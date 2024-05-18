@@ -36,6 +36,7 @@ pub struct ExportedUserData {
     pub pubkey_whitelists: String,
     pub users_public: String,
     pub wallets: String,
+    pub apikeys: String,
     pub flows: String,
     pub nodes: String,
 }

@@ -957,6 +957,12 @@ impl UserConnection {
         )
         .await?;
 
+        let apikeys = copy_out(
+            &tx,
+            &format!("SELECT * FROM apikeys WHERE user_id = '{}'", self.user_id),
+        )
+        .await?;
+
         let flows = copy_out(
             &tx,
             &format!("SELECT * FROM flows WHERE user_id = '{}'", self.user_id),
@@ -983,6 +989,7 @@ impl UserConnection {
             pubkey_whitelists,
             users_public,
             wallets,
+            apikeys,
             flows,
             nodes,
         })

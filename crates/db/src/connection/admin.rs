@@ -525,6 +525,7 @@ impl AdminConn {
         copy_in(&tx, "auth.identities", data.identities).await?;
         copy_in(&tx, "users_public", data.users_public).await?;
         copy_in(&tx, "wallets", data.wallets).await?;
+        copy_in(&tx, "apikeys", data.apikeys).await?;
         copy_in(&tx, "flows", data.flows).await?;
         copy_in(&tx, "nodes", data.nodes).await?;
 
