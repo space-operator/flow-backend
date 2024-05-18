@@ -524,6 +524,9 @@ impl AdminConn {
         copy_in(&tx, "auth.users", data.users).await?;
         copy_in(&tx, "auth.identities", data.identities).await?;
         copy_in(&tx, "users_public", data.users_public).await?;
+        copy_in(&tx, "wallets", data.wallets).await?;
+        copy_in(&tx, "flows", data.flows).await?;
+        copy_in(&tx, "nodes", data.nodes).await?;
 
         let user_id = data.user_id;
         let pw = rand_password();
@@ -547,7 +550,7 @@ async fn copy_in(tx: &Transaction<'_>, table: &str, data: String) -> crate::Resu
             if !r.is_empty() {
                 r.push(',');
             }
-            r.push_str(header);
+            std::fmt::write(&mut r, format_args!("{:?}", header)).unwrap();
             r
         });
     let query = format!(

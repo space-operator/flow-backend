@@ -951,6 +951,30 @@ impl UserConnection {
         )
         .await?;
 
+        let wallets = copy_out(
+            &tx,
+            &format!("SELECT * FROM wallets WHERE user_id = '{}'", self.user_id),
+        )
+        .await?;
+
+        let flows = copy_out(
+            &tx,
+            &format!("SELECT * FROM flows WHERE user_id = '{}'", self.user_id),
+        )
+        .await?;
+        let flows = clear_column(flows, "lastest_flow_run_id")?;
+
+        let nodes = copy_out(
+            &tx,
+            &format!(
+                r#"SELECT * FROM nodes WHERE
+                    user_id = '{}'
+                    OR (user_id IS NULL AND "isPublic")"#,
+                self.user_id
+            ),
+        )
+        .await?;
+
         tx.commit().await.map_err(Error::exec("commit"))?;
         Ok(ExportedUserData {
             user_id: self.user_id,
@@ -958,6 +982,9 @@ impl UserConnection {
             identities,
             pubkey_whitelists,
             users_public,
+            wallets,
+            flows,
+            nodes,
         })
     }
 }

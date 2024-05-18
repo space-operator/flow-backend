@@ -35,6 +35,9 @@ pub struct ExportedUserData {
     pub identities: String,
     pub pubkey_whitelists: String,
     pub users_public: String,
+    pub wallets: String,
+    pub flows: String,
+    pub nodes: String,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
