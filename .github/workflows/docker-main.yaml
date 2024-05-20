@@ -1,11 +1,12 @@
-name: Docker
+name: Docker - main branch
 
 on:
-  pull_request:
+  push:
+    branches:
+      - "main"
 
 jobs:
   build:
-    if: contains(github.event.pull_request.labels.*.name, 'docker')
     name: Build docker image
     runs-on: self-hosted
     env:
