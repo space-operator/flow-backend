@@ -261,7 +261,7 @@ impl UserConnectionTrait for ProxiedUserConn {
     }
 
     async fn export_user_data(&self) -> crate::Result<ExportedUserData> {
-        todo!();
+        self.send("export_user_data", &()).await
     }
 }
 
@@ -388,6 +388,10 @@ impl UserConnection {
             "read_item" => {
                 let (store, key): (String, String) = serde_json::from_str(req.params.get())?;
                 let res = self.read_item(&store, &key).await?;
+                Ok(serde_json::value::to_raw_value(&res)?)
+            }
+            "export_user_data" => {
+                let res = self.export_user_data().await?;
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             name => Err(format!("unknown method: {}", name).into()),
