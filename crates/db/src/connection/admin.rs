@@ -14,7 +14,7 @@ use tokio_postgres::{
 use uuid::Uuid;
 use value::Value;
 
-use super::ExportedUserData;
+use super::{csv_export, ExportedUserData};
 
 pub struct AdminConn {
     pub conn: Connection,
@@ -551,9 +551,7 @@ impl AdminConn {
 }
 
 async fn copy_in(tx: &Transaction<'_>, table: &str, data: String) -> crate::Result<()> {
-    let header = csv::ReaderBuilder::new()
-        .delimiter(';' as u8)
-        .quote('\'' as u8)
+    let header = csv_export::reader()
         .from_reader(data.as_bytes())
         .headers()
         .map_err(Error::parsing("csv"))?

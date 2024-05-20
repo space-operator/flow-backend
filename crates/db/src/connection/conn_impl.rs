@@ -1,5 +1,4 @@
 use bytes::{Bytes, BytesMut};
-use csv::StringRecord;
 use deadpool_postgres::Transaction;
 use flow_lib::config::client::NodeDataSkipWasm;
 use futures_util::StreamExt;
@@ -920,8 +919,8 @@ impl UserConnection {
             &format!("SELECT * FROM auth.users WHERE id = '{}'", self.user_id),
         )
         .await?;
-        let users = clear_column(users, "encrypted_password")?;
-        let users = remove_column(users, "confirmed_at")?;
+        let users = csv_export::clear_column(users, "encrypted_password")?;
+        let users = csv_export::remove_column(users, "confirmed_at")?;
 
         let identities = copy_out(
             &tx,
@@ -931,7 +930,7 @@ impl UserConnection {
             ),
         )
         .await?;
-        let identities = remove_column(identities, "email")?;
+        let identities = csv_export::remove_column(identities, "email")?;
 
         let pubkey_whitelists = copy_out(
             &tx,
@@ -968,7 +967,7 @@ impl UserConnection {
             &format!("SELECT * FROM flows WHERE user_id = '{}'", self.user_id),
         )
         .await?;
-        let flows = clear_column(flows, "lastest_flow_run_id")?;
+        let flows = csv_export::clear_column(flows, "lastest_flow_run_id")?;
 
         let user_quotas = copy_out(
             &tx,
@@ -1040,98 +1039,6 @@ async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<String> {
     }
     let text = String::from_utf8(buffer.into()).map_err(Error::parsing("UTF8"))?;
     Ok(text)
-}
-
-fn clear_column(data: String, column: &str) -> crate::Result<String> {
-    let mut reader = csv::ReaderBuilder::new()
-        .delimiter(';' as u8)
-        .quote('\'' as u8)
-        .from_reader(data.as_bytes());
-    let headers = reader
-        .headers()
-        .map_err(Error::parsing("csv headers"))?
-        .clone();
-    let col_idx = headers
-        .iter()
-        .position(|col| col == column)
-        .ok_or_else(|| Error::not_found("column", column))?;
-    let records = reader
-        .records()
-        .map(|r| {
-            r.map_err(Error::parsing("csv iter")).map(|r| {
-                r.into_iter()
-                    .enumerate()
-                    .map(|(i, v)| if i == col_idx { "" } else { v })
-                    .collect::<StringRecord>()
-            })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    let mut buffer = Vec::new();
-    let mut writer = csv::WriterBuilder::new()
-        .delimiter(';' as u8)
-        .quote('\'' as u8)
-        .from_writer(&mut buffer);
-    writer
-        .write_record(&headers)
-        .map_err(Error::parsing("build csv"))?;
-    for r in records {
-        writer
-            .write_record(&r)
-            .map_err(Error::parsing("build csv"))?;
-    }
-    writer.flush().map_err(Error::parsing("build csv"))?;
-    drop(writer);
-    Ok(String::from_utf8(buffer).map_err(Error::parsing("UTF8"))?)
-}
-
-fn remove_column(data: String, column: &str) -> crate::Result<String> {
-    let mut reader = csv::ReaderBuilder::new()
-        .delimiter(';' as u8)
-        .quote('\'' as u8)
-        .from_reader(data.as_bytes());
-    let headers = reader
-        .headers()
-        .map_err(Error::parsing("csv headers"))?
-        .clone();
-    let col_idx = headers
-        .iter()
-        .position(|col| col == column)
-        .ok_or_else(|| Error::not_found("column", column))?;
-    let records = reader
-        .records()
-        .map(|r| {
-            r.map_err(Error::parsing("csv iter")).map(|r| {
-                r.into_iter()
-                    .enumerate()
-                    .filter_map(|(i, v)| (i != col_idx).then_some(v))
-                    .collect::<StringRecord>()
-            })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-
-    let mut buffer = Vec::new();
-    let mut writer = csv::WriterBuilder::new()
-        .delimiter(';' as u8)
-        .quote('\'' as u8)
-        .from_writer(&mut buffer);
-    writer
-        .write_record(
-            &headers
-                .into_iter()
-                .enumerate()
-                .filter_map(|(i, v)| (i != col_idx).then_some(v))
-                .collect::<StringRecord>(),
-        )
-        .map_err(Error::parsing("build csv"))?;
-    for r in records {
-        writer
-            .write_record(&r)
-            .map_err(Error::parsing("build csv"))?;
-    }
-    writer.flush().map_err(Error::parsing("build csv"))?;
-    drop(writer);
-
-    Ok(String::from_utf8(buffer).map_err(Error::parsing("UTF8"))?)
 }
 
 #[cfg(test)]
