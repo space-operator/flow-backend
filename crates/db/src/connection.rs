@@ -175,7 +175,7 @@ pub trait UserConnectionTrait: Any + 'static {
 
     async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>>;
 
-    async fn export_user_data(&self) -> crate::Result<ExportedUserData>;
+    async fn export_user_data(&mut self) -> crate::Result<ExportedUserData>;
 }
 
 #[async_trait]
@@ -326,7 +326,7 @@ impl UserConnectionTrait for UserConnection {
         self.read_item(store, key).await
     }
 
-    async fn export_user_data(&self) -> crate::Result<ExportedUserData> {
+    async fn export_user_data(&mut self) -> crate::Result<ExportedUserData> {
         self.export_user_data().await
     }
 }
