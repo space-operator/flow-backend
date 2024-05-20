@@ -773,7 +773,7 @@ impl Instructions {
 
         rpc.confirm_transaction_with_spinner(
             &signature,
-            &tx.get_recent_blockhash(),
+            tx.get_recent_blockhash(),
             commitment(config.wait_commitment_level),
         )
         .await
