@@ -216,7 +216,13 @@ async fn main() {
             app = app.service(db_proxy);
         }
 
+        let data = {
+            let svc = web::scope("/data").service(api::data_export::service(&config, db.clone()));
+            svc
+        };
+
         app.service(flow)
+            .service(data)
             .service(signature)
             .service(apikeys)
             .service(websocket)
