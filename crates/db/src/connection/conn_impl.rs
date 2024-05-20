@@ -1142,6 +1142,7 @@ mod tests {
     use toml::value::Table;
 
     #[tokio::test]
+    #[ignore]
     async fn test_export() {
         let user_id = std::env::var("USER_ID").unwrap().parse::<UserId>().unwrap();
         let full_config: Table = toml::from_str(

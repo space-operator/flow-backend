@@ -620,6 +620,7 @@ mod tests {
     use toml::value::Table;
 
     #[tokio::test]
+    #[ignore]
     async fn test_import() {
         let full_config: Table =
             toml::from_str(&std::fs::read_to_string("/tmp/local.toml").unwrap()).unwrap();
