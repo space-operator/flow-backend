@@ -18,7 +18,7 @@ volumes:
 
 services:
   flow-server:
-    image: public.ecr.aws/x0y3s9r8/flow-server:devops
+    image: public.ecr.aws/space-operator/flow-server:main
     restart: unless-stopped
     healthcheck:
       test: deno eval "fetch('http://flow-server:8080/healthcheck').then(r => {if (r.status !== 200) throw 'error';})"
@@ -274,7 +274,6 @@ services:
     command: >
       sh -c "/app/bin/migrate && /app/bin/realtime eval 'Realtime.Release.seeds(Realtime.Repo)' && /app/bin/server"
 
-  # To use S3 backed storage: docker compose -f docker-compose.yml -f docker-compose.s3.yml up
   storage:
     image: supabase/storage-api:v1.0.6
     depends_on:
@@ -365,7 +364,7 @@ services:
   analytics:
     image: supabase/logflare:1.4.0
     healthcheck:
-      test: ["CMD", "curl", "http://localhost:4000/health"]
+      test: ["CMD", "curl", "http://analytics:4000/health"]
       timeout: 5s
       interval: 5s
       retries: 10
@@ -400,8 +399,6 @@ services:
       # Uncomment to use Big Query backend for analytics
       # GOOGLE_PROJECT_ID: ${GOOGLE_PROJECT_ID}
       # GOOGLE_PROJECT_NUMBER: ${GOOGLE_PROJECT_NUMBER}
-    ports:
-      - 4000:4000
 
   vector:
     image: timberio/vector:0.28.1-alpine

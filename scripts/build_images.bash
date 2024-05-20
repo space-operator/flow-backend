@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-NAME="x0y3s9r8/flow-server"
+NAME="space-operator/flow-server"
 DOCKERFILE="crates/flow-server/Dockerfile"
 
 DIRTY=""

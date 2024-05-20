@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuxo pipefail
 
-ORG=x0y3s9r8
+ORG=space-operator
 IMAGE=flow-server
 NAME="$ORG/$IMAGE"
 
