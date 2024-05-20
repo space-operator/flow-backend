@@ -1037,8 +1037,7 @@ async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<String> {
             Err(error) => return Err(Error::exec("read copy-out stream")(error)),
         }
     }
-    let text = String::from_utf8(buffer.into()).map_err(Error::parsing("UTF8"))?;
-    Ok(text)
+    String::from_utf8(buffer.into()).map_err(Error::parsing("UTF8"))
 }
 
 #[cfg(test)]

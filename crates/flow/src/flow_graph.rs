@@ -639,19 +639,17 @@ impl FlowGraph {
         let mut tracker = TrackEdgeValue::None;
         for edge_id in in_edges {
             let w = self.g.edge_weight_mut(edge_id).unwrap();
-            match w.values.front() {
-                Some(EdgeValue {
-                    value: Some(value),
-                    tracker: edge_tracker,
-                }) => {
-                    let is_from_array = edge_tracker.is_array();
-                    tracker = tracker.zip(&edge_tracker);
-                    values.insert(w.to.clone(), value.clone());
-                    if is_from_array {
-                        w.values.pop_front();
-                    }
+            if let Some(EdgeValue {
+                value: Some(value),
+                tracker: edge_tracker,
+            }) = w.values.front()
+            {
+                let is_from_array = edge_tracker.is_array();
+                tracker = tracker.zip(edge_tracker);
+                values.insert(w.to.clone(), value.clone());
+                if is_from_array {
+                    w.values.pop_front();
                 }
-                _ => {}
             }
         }
         (values, tracker)
@@ -1155,8 +1153,7 @@ impl FlowGraph {
             ) in &n.use_previous_values
             {
                 if s.previous_values.contains_key(node_id) {
-                    let is_required_input =
-                        n.command.input_is_required(&input_name).unwrap_or(true);
+                    let is_required_input = n.command.input_is_required(input_name).unwrap_or(true);
                     self.g.add_edge(
                         fake_node,
                         n.idx,
@@ -1600,13 +1597,10 @@ fn finished_recursive(
         }) = e.weight().values.front()
         {
             has_array_input |= tracker.is_array();
-        } else {
-            if e.weight().is_required_input {
-                let source_finished = finished_recursive(f, s, e.source(), visited);
-                all_sources_not_finished &= !source_finished;
-                filled = false;
-            } else {
-            }
+        } else if e.weight().is_required_input {
+            let source_finished = finished_recursive(f, s, e.source(), visited);
+            all_sources_not_finished &= !source_finished;
+            filled = false;
         }
     }
 

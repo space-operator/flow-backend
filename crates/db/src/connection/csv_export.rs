@@ -45,7 +45,7 @@ pub fn clear_column(data: String, column: &str) -> crate::Result<String> {
     }
     writer.flush().map_err(Error::parsing("build csv"))?;
     drop(writer);
-    Ok(String::from_utf8(buffer).map_err(Error::parsing("UTF8"))?)
+    String::from_utf8(buffer).map_err(Error::parsing("UTF8"))
 }
 
 pub fn remove_column(data: String, column: &str) -> crate::Result<String> {
@@ -89,5 +89,5 @@ pub fn remove_column(data: String, column: &str) -> crate::Result<String> {
     writer.flush().map_err(Error::parsing("build csv"))?;
     drop(writer);
 
-    Ok(String::from_utf8(buffer).map_err(Error::parsing("UTF8"))?)
+    String::from_utf8(buffer).map_err(Error::parsing("UTF8"))
 }

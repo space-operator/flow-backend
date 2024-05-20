@@ -163,51 +163,48 @@ where
         let result = cx
             .event_scope(event)
             .and_then(|mut iter| iter.find_map(|span| map.get_key_value(&span.id())));
-        match result {
-            None => return,
-            Some((id, data)) => {
-                let id = id.clone();
-                if Filter::enabled(&data.filter, event.metadata(), &cx) {
-                    let content = match get_message(event) {
-                        Some(s) => s,
-                        None => return,
-                    };
+        if let Some((id, data)) = result {
+            let id = id.clone();
+            if Filter::enabled(&data.filter, event.metadata(), &cx) {
+                let content = match get_message(event) {
+                    Some(s) => s,
+                    None => return,
+                };
 
-                    let normalized_metadata = event.normalized_metadata();
-                    let meta = normalized_metadata
-                        .as_ref()
-                        .unwrap_or_else(|| event.metadata());
+                let normalized_metadata = event.normalized_metadata();
+                let meta = normalized_metadata
+                    .as_ref()
+                    .unwrap_or_else(|| event.metadata());
 
-                    let level = *meta.level();
-                    let module = meta.module_path().map(<_>::to_owned);
+                let level = *meta.level();
+                let module = meta.module_path().map(<_>::to_owned);
 
-                    let node_log = cx.event_scope(event).and_then(|mut iter| {
-                        iter.find_map(|span| span.extensions().get::<NodeLogSpan>().cloned())
-                    });
+                let node_log = cx.event_scope(event).and_then(|mut iter| {
+                    iter.find_map(|span| span.extensions().get::<NodeLogSpan>().cloned())
+                });
 
-                    let time = Utc::now();
-                    let log = match node_log {
-                        None => Event::FlowLog(FlowLog {
-                            time,
-                            level: level.into(),
-                            module,
-                            content,
-                        }),
-                        Some(NodeLogSpan { node_id, times }) => Event::NodeLog(NodeLog {
-                            time,
-                            node_id,
-                            times,
-                            level: level.into(),
-                            module,
-                            content,
-                        }),
-                    };
+                let time = Utc::now();
+                let log = match node_log {
+                    None => Event::FlowLog(FlowLog {
+                        time,
+                        level: level.into(),
+                        module,
+                        content,
+                    }),
+                    Some(NodeLogSpan { node_id, times }) => Event::NodeLog(NodeLog {
+                        time,
+                        node_id,
+                        times,
+                        level: level.into(),
+                        module,
+                        content,
+                    }),
+                };
 
-                    if data.tx.unbounded_send(log).is_err() {
-                        drop(map);
+                if data.tx.unbounded_send(log).is_err() {
+                    drop(map);
 
-                        self.map.write().unwrap().remove(&id);
-                    }
+                    self.map.write().unwrap().remove(&id);
                 }
             }
         }
