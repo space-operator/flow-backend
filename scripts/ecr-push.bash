@@ -23,3 +23,8 @@ docker push public.ecr.aws/$NAME:$COMMIT
 
 docker tag $NAME:$BRANCH public.ecr.aws/$NAME:$BRANCH
 docker push public.ecr.aws/$NAME:$BRANCH
+
+if [[ "$BRANCH" == "main" ]]; then
+    docker tag $NAME:$COMMIT public.ecr.aws/$NAME:latest
+    docker push public.ecr.aws/$NAME:latest
+fi
