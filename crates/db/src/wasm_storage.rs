@@ -29,18 +29,20 @@ pub enum StorageError {
 }
 
 impl WasmStorage {
-    pub fn new(project_id: &str, anon_key: &str, wasm_bucket: &str) -> Result<Self, StorageError> {
+    pub fn new(
+        supabase_endpoint: Url,
+        anon_key: &str,
+        wasm_bucket: &str,
+    ) -> Result<Self, StorageError> {
         let anon_key = HeaderValue::from_str(&format!("Bearer {}", anon_key))
             .map_err(|_| StorageError::InvalidAnonKey)?;
         let client = reqwest::Client::builder()
             .default_headers([(AUTHORIZATION, anon_key)].into_iter().collect())
             .build()
             .map_err(StorageError::BuildClient)?;
-        let base_url = Url::parse(&format!(
-            "https://{}.supabase.co/storage/v1/object/{}/",
-            project_id, wasm_bucket,
-        ))
-        .map_err(StorageError::BuildUrl)?;
+        let base_url = supabase_endpoint
+            .join(&format!("storage/v1/object/{}/", wasm_bucket))
+            .map_err(StorageError::BuildUrl)?;
 
         Ok(Self { client, base_url })
     }

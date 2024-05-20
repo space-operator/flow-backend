@@ -221,10 +221,7 @@ impl SupabaseAuth {
             DbPool::Real(pool) => pool,
             _ => return Err("need database credentials".into()),
         };
-        let base_url = Url::parse(&format!(
-            "https://{}.supabase.co/auth/v1/",
-            config.project_id,
-        ))?;
+        let base_url = config.endpoint.url.join("auth/v1/")?;
         let service_key = config.service_key.as_ref().ok_or("need service_key")?;
         let login_url = base_url.join("token?grant_type=password")?;
         let create_user_url = base_url.join("admin/users")?;

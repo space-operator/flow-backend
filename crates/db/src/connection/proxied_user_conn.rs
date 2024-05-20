@@ -259,6 +259,10 @@ impl UserConnectionTrait for ProxiedUserConn {
     async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>> {
         self.send("read_item", &(&store, &key)).await
     }
+
+    async fn export_user_data(&self) -> crate::Result<ExportedUserData> {
+        todo!();
+    }
 }
 
 impl UserConnection {

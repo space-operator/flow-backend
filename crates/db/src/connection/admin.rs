@@ -2,8 +2,9 @@ use crate::{Error, FlowRunLogsRow};
 use anyhow::anyhow;
 use bytes::Bytes;
 use chrono::Utc;
-use deadpool_postgres::Object as Connection;
+use deadpool_postgres::{Object as Connection, Transaction};
 use flow_lib::UserId;
+use futures_util::SinkExt;
 use rand::distributions::{Alphanumeric, DistString};
 use std::borrow::Borrow;
 use tokio_postgres::{
@@ -12,6 +13,8 @@ use tokio_postgres::{
 };
 use uuid::Uuid;
 use value::Value;
+
+use super::{csv_export, ExportedUserData};
 
 pub struct AdminConn {
     pub conn: Connection,
@@ -231,32 +234,13 @@ impl AdminConn {
     }
 
     pub async fn reset_password(&mut self, user_id: &UserId, pw: &str) -> crate::Result<()> {
-        let hash = bcrypt::hash(pw, 10).map_err(|_| Error::Bcrypt)?;
-
         let tx = self
             .conn
             .transaction()
             .await
             .map_err(Error::exec("reset_pw_start"))?;
 
-        let stmt = tx
-            .prepare_cached("UPDATE auth.users SET encrypted_password = $1 WHERE id = $2")
-            .await
-            .map_err(Error::exec("prepare"))?;
-        tx.execute(&stmt, &[&hash, user_id])
-            .await
-            .map_err(Error::exec("reset_pw_hash"))?;
-
-        let stmt = tx
-            .prepare_cached(
-                "INSERT INTO auth.passwords (user_id, password) VALUES ($1, $2)
-                ON CONFLICT (user_id) DO UPDATE SET password = $2",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        tx.execute(&stmt, &[user_id, &pw])
-            .await
-            .map_err(Error::exec("reset_pw_pass"))?;
+        reset_password(&tx, user_id, pw).await?;
 
         tx.commit().await.map_err(Error::exec("reset_pw_commit"))?;
 
@@ -517,5 +501,135 @@ impl AdminConn {
             .await
             .map_err(Error::exec("remove_item commit"))?;
         Ok(old_value)
+    }
+
+    pub async fn import_data(&mut self, data: ExportedUserData) -> crate::Result<()> {
+        let tx = self
+            .conn
+            .transaction()
+            .await
+            .map_err(Error::exec("start"))?;
+
+        tx.execute("SELECT auth.disable_users_triggers()", &[])
+            .await
+            .map_err(Error::exec("disable trigger"))?;
+
+        tx.execute("CREATE TEMP TABLE tmp_table (LIKE pubkey_whitelists INCLUDING DEFAULTS) ON COMMIT DROP", &[]).await.map_err(Error::exec("create temp table"))?;
+        copy_in(&tx, "tmp_table", data.pubkey_whitelists).await?;
+        tx.execute(
+            "INSERT INTO pubkey_whitelists
+                SELECT * FROM tmp_table
+                ON CONFLICT DO NOTHING;",
+            &[],
+        )
+        .await
+        .map_err(Error::exec("bulk insert"))?;
+
+        copy_in(&tx, "auth.users", data.users).await?;
+        copy_in(&tx, "auth.identities", data.identities).await?;
+        copy_in(&tx, "users_public", data.users_public).await?;
+        copy_in(&tx, "wallets", data.wallets).await?;
+        copy_in(&tx, "apikeys", data.apikeys).await?;
+        copy_in(&tx, "user_quotas", data.user_quotas).await?;
+        copy_in(&tx, "kvstore", data.kvstore).await?;
+        copy_in(&tx, "kvstore_metadata", data.kvstore_metadata).await?;
+        copy_in(&tx, "flows", data.flows).await?;
+        copy_in(&tx, "nodes", data.nodes).await?;
+
+        let user_id = data.user_id;
+        let pw = rand_password();
+        reset_password(&tx, &user_id, &pw).await?;
+
+        tx.execute("SELECT auth.enable_users_triggers()", &[])
+            .await
+            .map_err(Error::exec("enable trigger"))?;
+
+        tx.commit().await.map_err(Error::exec("commit"))?;
+
+        Ok(())
+    }
+}
+
+async fn copy_in(tx: &Transaction<'_>, table: &str, data: String) -> crate::Result<()> {
+    let header = csv_export::reader()
+        .from_reader(data.as_bytes())
+        .headers()
+        .map_err(Error::parsing("csv"))?
+        .into_iter()
+        .fold(String::new(), |mut r, header| {
+            if !r.is_empty() {
+                r.push(',');
+            }
+            std::fmt::write(&mut r, format_args!("{:?}", header)).unwrap();
+            r
+        });
+    let query = format!(
+        "COPY {} ({}) FROM stdin WITH (FORMAT csv, DELIMITER ';', QUOTE '''', HEADER MATCH)",
+        table, header
+    );
+    let sink = tx
+        .copy_in::<_, Bytes>(&query)
+        .await
+        .map_err(Error::exec("copy-in users"))?;
+    futures_util::pin_mut!(sink);
+    sink.send(data.into())
+        .await
+        .map_err(Error::data("write copy-in"))?;
+    sink.finish().await.map_err(Error::data("finish copy_in"))?;
+
+    Ok(())
+}
+
+async fn reset_password(tx: &Transaction<'_>, user_id: &UserId, pw: &str) -> crate::Result<()> {
+    let hash = bcrypt::hash(pw, 10).map_err(|_| Error::Bcrypt)?;
+
+    let stmt = tx
+        .prepare_cached("UPDATE auth.users SET encrypted_password = $1 WHERE id = $2")
+        .await
+        .map_err(Error::exec("prepare"))?;
+    tx.execute(&stmt, &[&hash, user_id])
+        .await
+        .map_err(Error::exec("reset_pw_hash"))?;
+
+    let stmt = tx
+        .prepare_cached(
+            "INSERT INTO auth.passwords (user_id, password) VALUES ($1, $2)
+                ON CONFLICT (user_id) DO UPDATE SET password = $2",
+        )
+        .await
+        .map_err(Error::exec("prepare"))?;
+    tx.execute(&stmt, &[user_id, &pw])
+        .await
+        .map_err(Error::exec("reset_pw_pass"))?;
+
+    Ok(())
+}
+
+fn rand_password() -> String {
+    Alphanumeric.sample_string(&mut rand::thread_rng(), 24)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        config::DbConfig, connection::ExportedUserData, pool::RealDbPool, LocalStorage, WasmStorage,
+    };
+    use serde::Deserialize;
+    use toml::value::Table;
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_import() {
+        let full_config: Table =
+            toml::from_str(&std::fs::read_to_string("/tmp/local.toml").unwrap()).unwrap();
+        let db_config = DbConfig::deserialize(full_config["db"].clone()).unwrap();
+        let wasm = WasmStorage::new("http://localhost".parse().unwrap(), "", "").unwrap();
+        let temp = tempfile::tempdir().unwrap();
+        let local = LocalStorage::new(temp.path()).unwrap();
+        let pool = RealDbPool::new(&db_config, wasm, local).await.unwrap();
+        let mut conn = pool.get_admin_conn().await.unwrap();
+        let data: ExportedUserData =
+            serde_json::from_str(&std::fs::read_to_string("/tmp/data.json").unwrap()).unwrap();
+        conn.import_data(data).await.unwrap();
     }
 }
