@@ -1033,7 +1033,9 @@ async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<String> {
     let mut buffer = BytesMut::new();
     while let Some(result) = stream.next().await {
         match result {
-            Ok(data) => buffer.extend_from_slice(&data[..]),
+            Ok(data) => {
+                tracing::debug!("read {} bytes", data.len());
+                buffer.extend_from_slice(&data[..]);},
             Err(error) => return Err(Error::exec("read copy-out stream")(error)),
         }
     }
