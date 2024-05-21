@@ -1035,7 +1035,8 @@ async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<String> {
         match result {
             Ok(data) => {
                 tracing::debug!("read {} bytes", data.len());
-                buffer.extend_from_slice(&data[..]);},
+                buffer.extend_from_slice(&data[..]);
+            }
             Err(error) => return Err(Error::exec("read copy-out stream")(error)),
         }
     }
