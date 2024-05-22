@@ -1037,7 +1037,10 @@ async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<String> {
                 tracing::debug!("read {} bytes", data.len());
                 buffer.extend_from_slice(&data[..]);
             }
-            Err(error) => return Err(Error::exec("read copy-out stream")(error)),
+            Err(error) => {
+                tracing::debug!("{}", String::from_utf8_lossy(&buffer));
+                return Err(Error::exec("read copy-out stream")(error));
+            }
         }
     }
     String::from_utf8(buffer.into()).map_err(Error::parsing("UTF8"))
