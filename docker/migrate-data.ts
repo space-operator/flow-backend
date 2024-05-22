@@ -20,6 +20,7 @@ if (resp.status !== 200) {
   console.log(await resp.text());
   Deno.exit(1);
 }
+console.log(resp.headers);
 const data = await resp.json();
 console.log(data);
 Deno.exit(0);
