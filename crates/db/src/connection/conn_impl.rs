@@ -922,6 +922,17 @@ impl UserConnection {
         let users = csv_export::clear_column(users, "encrypted_password")?;
         let users = csv_export::remove_column(users, "confirmed_at")?;
 
+        let nodes = copy_out(
+            &tx,
+            &format!(
+                r#"SELECT * FROM nodes WHERE
+                    user_id = '{}'
+                    OR (user_id IS NULL AND "isPublic")"#,
+                self.user_id
+            ),
+        )
+        .await?;
+
         let identities = copy_out(
             &tx,
             &format!(
@@ -988,17 +999,6 @@ impl UserConnection {
             &tx,
             &format!(
                 "SELECT * FROM kvstore_metadata WHERE user_id = '{}'",
-                self.user_id
-            ),
-        )
-        .await?;
-
-        let nodes = copy_out(
-            &tx,
-            &format!(
-                r#"SELECT * FROM nodes WHERE
-                    user_id = '{}'
-                    OR (user_id IS NULL AND "isPublic")"#,
                 self.user_id
             ),
         )
