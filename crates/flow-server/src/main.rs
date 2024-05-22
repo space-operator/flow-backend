@@ -202,8 +202,8 @@ async fn main() {
         };
 
         let app = App::new()
-            .wrap(Logger::new(r#""%r" %s %b %{accept-encoding}i %{content-encoding}o %Dms"#).exclude("/healthcheck"))
             .wrap(Compress::default())
+            .wrap(Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#).exclude("/healthcheck"))
             .app_data(web::Data::new(db.clone()))
             .app_data(web::Data::new(db_worker.clone()));
 
