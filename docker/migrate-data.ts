@@ -9,7 +9,7 @@ await load({ export: true });
 const SERVICE_ROLE_KEY = nonNull(Deno.env.get("SERVICE_ROLE_KEY"));
 const APIKEY = nonNull(Deno.env.get("APIKEY"));
 ("https://dev-api.spaceoperator.com");
-const resp = await fetch("https://dev-api.spaceoperator.com/data/export", {
+const resp = await fetch("https://fix.spaceoperator.com/data/export", {
   method: "POST",
   headers: {
     "x-api-key": APIKEY,
