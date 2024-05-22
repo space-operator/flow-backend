@@ -1,5 +1,8 @@
 use actix::Actor;
-use actix_web::{middleware::Logger, web, App, HttpServer};
+use actix_web::{
+    middleware::{Compress, Logger},
+    web, App, HttpServer,
+};
 use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
     LocalStorage, WasmStorage,
@@ -199,6 +202,7 @@ async fn main() {
         };
 
         let app = App::new()
+            .wrap(Compress::default())
             .wrap(Logger::new(r#""%r" %s %b %Dms"#).exclude("/healthcheck"))
             .app_data(web::Data::new(db.clone()))
             .app_data(web::Data::new(db_worker.clone()));
