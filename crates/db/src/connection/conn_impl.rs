@@ -995,15 +995,12 @@ impl UserConnection {
 
         let nodes = copy_out(
             &tx,
-            &"SELECT * FROM nodes WHERE false",
-            /*
             &format!(
                 r#"SELECT * FROM nodes WHERE
                     user_id = '{}'
                     OR (user_id IS NULL AND "isPublic")"#,
                 self.user_id
             ),
-            */
         )
         .await?;
 
