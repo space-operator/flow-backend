@@ -35,8 +35,52 @@ pub mod set_realm_config;
 pub mod set_token_owner_record_locks;
 pub mod sign_off_proposal;
 pub mod withdraw_governing_tokens;
+// CHAT
+pub mod post_message;
 
-const SPL_GOVERNANCE_ID: &str = "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw";
+pub const SPL_GOVERNANCE_ID: &str = "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw";
+pub const SPL_GOVERNANCE_CHAT_ID: &str = "gCHAtYKrUUktTVzE4hEnZdLV4LXrdBf6Hh9qMaJALET";
+
+/// Instructions supported by the GovernanceChat program
+#[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize)]
+#[allow(clippy::large_enum_variant)]
+pub enum GovernanceChatInstruction {
+    /// Posts a message with a comment for a Proposal
+    ///
+    ///   0. `[]` Governance program id
+    ///   1. `[]` Realm account of the Proposal
+    ///   2. `[]` Governance account the Proposal is for
+    ///   3. `[]` Proposal account
+    ///   4. `[]` TokenOwnerRecord account for the message author
+    ///   5. `[signer]` Governance Authority (TokenOwner or Governance Delegate)
+    ///   6. `[writable, signer]` ChatMessage account
+    ///   7. `[signer]` Payer
+    ///   8. `[]` System program
+    ///   9. `[]` ReplyTo Message account (optional)
+    ///    10. `[]` Optional Voter Weight Record
+    PostMessage {
+        #[allow(dead_code)]
+        /// Message body (text or reaction)
+        body: MessageBody,
+
+        #[allow(dead_code)]
+        /// Indicates whether the message is a reply to another message
+        /// If yes then ReplyTo Message account has to be provided
+        is_reply: bool,
+    },
+}
+
+/// Chat message body
+#[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+pub enum MessageBody {
+    /// Text message encoded as utf-8 string
+    Text(String),
+
+    /// Emoticon encoded using utf-8 characters
+    /// In the UI reactions are displayed together under the parent message (as
+    /// opposed to hierarchical replies)
+    Reaction(String),
+}
 
 /// Instructions supported by the Governance program
 #[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize)]
