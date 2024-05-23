@@ -39,6 +39,6 @@ RUN apt-get update && \
 COPY --from=deno /usr/bin/deno /usr/local/bin
 RUN deno --version
 WORKDIR /space-operator/
-COPY --from=builder /build/target/release/flow-server .
-RUN bash -c "ldd * | (! grep 'not found')"
+COPY --from=builder /build/target/release/flow-server /usr/local/bin
+RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')"
 ENTRYPOINT ["./entrypoint.bash"]

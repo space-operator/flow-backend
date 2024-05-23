@@ -12,7 +12,7 @@ const APIKEY = nonNull(Deno.env.get("APIKEY"));
 const resp = await fetch("https://fix.spaceoperator.com/data/export", {
   method: "POST",
   headers: {
-    "accept-encoding": "br",
+    "accept-encoding": "br, gzip",
     "x-api-key": APIKEY,
   },
 });
