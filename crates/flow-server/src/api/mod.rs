@@ -23,6 +23,7 @@ pub mod db_rpc;
 pub mod ws_auth_proxy;
 
 pub mod data_export;
+pub mod data_import;
 
 pub mod prelude {
     pub use crate::{db_worker::DBWorker, error::Error, middleware::auth, Config};

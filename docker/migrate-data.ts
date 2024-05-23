@@ -8,8 +8,8 @@ function nonNull<T>(v: T | undefined | null): T {
 await load({ export: true });
 const SERVICE_ROLE_KEY = nonNull(Deno.env.get("SERVICE_ROLE_KEY"));
 const APIKEY = nonNull(Deno.env.get("APIKEY"));
-("https://dev-api.spaceoperator.com");
-const resp = await fetch("https://fix.spaceoperator.com/data/export", {
+console.log("exporting data from https://dev-api.spaceoperator.com");
+const resp = await fetch("https://dev-api.spaceoperator.com/data/export", {
   method: "POST",
   headers: {
     "accept-encoding": "br, gzip",
@@ -20,10 +20,9 @@ if (resp.status !== 200) {
   console.log(await resp.text());
   Deno.exit(1);
 }
-console.log(resp.headers);
 const data = await resp.json();
-console.log(data);
 Deno.exit(0);
+console.log("importing data to http://localhost:8080");
 await fetch("http://localhost:8080/data/import", {
   headers: {
     authorization: `BEARER ${SERVICE_ROLE_KEY}`,

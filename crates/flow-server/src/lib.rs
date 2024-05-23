@@ -1,4 +1,4 @@
-use actix_web::http::header::{HeaderName, HeaderValue};
+use actix_web::http::header::{HeaderName, HeaderValue, AUTHORIZATION};
 use db::{
     config::{DbConfig, ProxiedDbConfig},
     pool::DbPool,
@@ -303,6 +303,24 @@ impl Config {
             Some(v) if key.as_bytes() == v => Ok(()),
             _ => Err(error::ApiKey),
         })
+    }
+
+    /// Build a middleware to validate `Authorization` header
+    /// with Supabase's service-role key.
+    pub fn service_key(&self) -> Option<ReqFn<Rc<dyn Function>>> {
+        let key = self.supabase.service_key.clone()?;
+        Some(req_fn::rc_fn_ref(move |r| {
+            match r.headers().get(&AUTHORIZATION) {
+                Some(v) => {
+                    if v.as_bytes().strip_prefix(b"Bearer ") == Some(key.as_bytes()) {
+                        Ok(())
+                    } else {
+                        Err(error::ApiKey)
+                    }
+                }
+                _ => Err(error::ApiKey),
+            }
+        }))
     }
 }
 
