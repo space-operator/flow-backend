@@ -15,7 +15,7 @@ cmds-std = { workspace = true }
 cmds-solana = { workspace = true }
 
 actix = "0.13"
-actix-web = { version = "4", default-features = false }
+actix-web = "4"
 actix-web-actors = "4"
 actix-cors = "0.6"
 reqwest = { version = "0.12", features = ["rustls-tls"] }

@@ -922,6 +922,17 @@ impl UserConnection {
         let users = csv_export::clear_column(users, "encrypted_password")?;
         let users = csv_export::remove_column(users, "confirmed_at")?;
 
+        let nodes = copy_out(
+            &tx,
+            &format!(
+                r#"SELECT * FROM nodes WHERE
+                    user_id = '{}'
+                    OR (user_id IS NULL AND "isPublic")"#,
+                self.user_id
+            ),
+        )
+        .await?;
+
         let identities = copy_out(
             &tx,
             &format!(
@@ -993,17 +1004,6 @@ impl UserConnection {
         )
         .await?;
 
-        let nodes = copy_out(
-            &tx,
-            &format!(
-                r#"SELECT * FROM nodes WHERE
-                    user_id = '{}'
-                    OR (user_id IS NULL AND "isPublic")"#,
-                self.user_id
-            ),
-        )
-        .await?;
-
         tx.commit().await.map_err(Error::exec("commit"))?;
         Ok(ExportedUserData {
             user_id: self.user_id,
@@ -1033,8 +1033,14 @@ async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<String> {
     let mut buffer = BytesMut::new();
     while let Some(result) = stream.next().await {
         match result {
-            Ok(data) => buffer.extend_from_slice(&data[..]),
-            Err(error) => return Err(Error::exec("read copy-out stream")(error)),
+            Ok(data) => {
+                // tracing::debug!("read {} bytes", data.len());
+                buffer.extend_from_slice(&data[..]);
+            }
+            Err(error) => {
+                // tracing::debug!("{}", String::from_utf8_lossy(&buffer));
+                return Err(Error::exec("read copy-out stream")(error));
+            }
         }
     }
     String::from_utf8(buffer.into()).map_err(Error::parsing("UTF8"))
