@@ -1,14 +1,16 @@
 import { load } from "@std/dotenv";
 
-function nonNull<T>(v: T | undefined | null): T {
-  if (v === null || v === undefined) throw "value is null";
-  return v;
+function getEnv(key: string): string {
+  const value = Deno.env.get(key);
+  if (value === undefined)
+    throw new Error(`environment variable ${key} not found`);
+  return value;
 }
 
 await load({ export: true });
-const SERVICE_ROLE_KEY = nonNull(Deno.env.get("SERVICE_ROLE_KEY"));
-const APIKEY = nonNull(Deno.env.get("APIKEY"));
-console.log("exporting data from https://dev-api.spaceoperator.com");
+const SERVICE_ROLE_KEY = getEnv("SERVICE_ROLE_KEY");
+const APIKEY = getEnv("APIKEY");
+console.log("Exporting data from https://dev-api.spaceoperator.com");
 const exportResp = await fetch(
   "https://dev-api.spaceoperator.com/data/export",
   {
@@ -24,7 +26,7 @@ if (exportResp.status !== 200) {
   Deno.exit(1);
 }
 const data = await exportResp.json();
-console.log("importing data to http://localhost:8080");
+console.log("Importing data to http://localhost:8080");
 const importResp = await fetch("http://localhost:8080/data/import", {
   headers: {
     authorization: `Bearer ${SERVICE_ROLE_KEY}`,

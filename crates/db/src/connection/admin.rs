@@ -550,6 +550,8 @@ impl AdminConn {
     }
 }
 
+async fn update_id_sequence() {}
+
 async fn copy_in(tx: &Transaction<'_>, table: &str, data: String) -> crate::Result<()> {
     let header = csv_export::reader()
         .from_reader(data.as_bytes())

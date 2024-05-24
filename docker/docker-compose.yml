@@ -18,7 +18,7 @@ volumes:
 
 services:
   flow-server:
-    image: public.ecr.aws/space-operator/flow-server:latest
+    image: public.ecr.aws/space-operator/flow-server:devops
     restart: unless-stopped
     healthcheck:
       test: deno eval "fetch('http://flow-server:8080/healthcheck').then(r => {if (r.status !== 200) throw 'error';})"
