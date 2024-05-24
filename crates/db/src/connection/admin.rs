@@ -536,8 +536,12 @@ impl AdminConn {
         copy_in(&tx, "user_quotas", data.user_quotas).await?;
         copy_in(&tx, "kvstore", data.kvstore).await?;
         copy_in(&tx, "kvstore_metadata", data.kvstore_metadata).await?;
+
         copy_in(&tx, "flows", data.flows).await?;
+        update_id_sequence(&tx, "flows", "id", "flows_id_seq").await?;
+
         copy_in(&tx, "nodes", data.nodes).await?;
+        update_id_sequence(&tx, "nodes", "id", "nodes_id_seq").await?;
 
         let user_id = data.user_id;
         let pw = rand_password();
