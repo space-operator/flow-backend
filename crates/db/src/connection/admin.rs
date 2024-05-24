@@ -528,7 +528,10 @@ impl AdminConn {
         copy_in(&tx, "auth.users", data.users).await?;
         copy_in(&tx, "auth.identities", data.identities).await?;
         copy_in(&tx, "users_public", data.users_public).await?;
+
         copy_in(&tx, "wallets", data.wallets).await?;
+        update_id_sequence(&tx, "wallet", "id", "wallets_id_seq").await?;
+
         copy_in(&tx, "apikeys", data.apikeys).await?;
         copy_in(&tx, "user_quotas", data.user_quotas).await?;
         copy_in(&tx, "kvstore", data.kvstore).await?;
@@ -550,7 +553,25 @@ impl AdminConn {
     }
 }
 
-async fn update_id_sequence() {}
+async fn update_id_sequence(
+    tx: &Transaction<'_>,
+    table: &str,
+    column: &str,
+    sequence_name: &str,
+) -> crate::Result<()> {
+    let query = format!(
+        "SELECT setval('{}', (SELECT max({}) FROM {}), TRUE)",
+        sequence_name, column, table
+    );
+    let stmt = tx
+        .prepare_cached(&query)
+        .await
+        .map_err(Error::exec("prepare"))?;
+    tx.execute(&stmt, &[])
+        .await
+        .map_err(Error::exec("update sequence"))?;
+    Ok(())
+}
 
 async fn copy_in(tx: &Transaction<'_>, table: &str, data: String) -> crate::Result<()> {
     let header = csv_export::reader()
