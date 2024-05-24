@@ -530,7 +530,7 @@ impl AdminConn {
         copy_in(&tx, "users_public", data.users_public).await?;
 
         copy_in(&tx, "wallets", data.wallets).await?;
-        update_id_sequence(&tx, "wallet", "id", "wallets_id_seq").await?;
+        update_id_sequence(&tx, "wallets", "id", "wallets_id_seq").await?;
 
         copy_in(&tx, "apikeys", data.apikeys).await?;
         copy_in(&tx, "user_quotas", data.user_quotas).await?;
