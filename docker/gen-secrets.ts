@@ -1,3 +1,5 @@
+#!/usr/bin/env -S deno run --allow-read --allow-write
+
 import { encodeBase64Url, encodeBase58, encodeBase64 } from "@std/encoding";
 import { load } from "@std/dotenv";
 import { crypto } from "@std/crypto/crypto";

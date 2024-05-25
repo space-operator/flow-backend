@@ -1,3 +1,5 @@
+#!/usr/bin/env -S deno run --allow-env --allow-net --allow-read
+
 import { load } from "@std/dotenv";
 
 function getEnv(key: string): string {

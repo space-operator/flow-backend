@@ -534,8 +534,8 @@ impl AdminConn {
 
         copy_in(&tx, "apikeys", data.apikeys).await?;
         copy_in(&tx, "user_quotas", data.user_quotas).await?;
-        copy_in(&tx, "kvstore", data.kvstore).await?;
         copy_in(&tx, "kvstore_metadata", data.kvstore_metadata).await?;
+        copy_in(&tx, "kvstore", data.kvstore).await?;
 
         copy_in(&tx, "flows", data.flows).await?;
         update_id_sequence(&tx, "flows", "id", "flows_id_seq").await?;
