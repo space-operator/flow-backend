@@ -8,6 +8,7 @@ on:
 
 jobs:
   unit-test:
+    if: ${{ ! contains(github.event.pull_request.labels.*.name, 'no-test') }}
     name: Unit test
     runs-on: self-hosted
     steps:

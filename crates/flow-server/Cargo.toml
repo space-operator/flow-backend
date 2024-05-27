@@ -3,6 +3,10 @@ name = "flow-server"
 version = "0.0.0"
 edition = "2021"
 
+[features]
+default = ["import"]
+import = []
+
 [dependencies]
 db = { workspace = true }
 flow = { workspace = true }

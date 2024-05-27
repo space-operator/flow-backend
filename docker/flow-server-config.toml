@@ -22,3 +22,6 @@ port = 5432
 user = "flow_runner"
 password = "flow_runner"
 dbname = "postgres"
+
+[db.ssl]
+enabled = false

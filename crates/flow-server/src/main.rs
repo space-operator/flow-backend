@@ -221,7 +221,12 @@ async fn main() {
         }
 
         let data = {
-            let svc = web::scope("/data").service(api::data_export::service(&config, db.clone()));
+            let mut svc =
+                web::scope("/data").service(api::data_export::service(&config, db.clone()));
+            #[cfg(feature = "import")]
+            if let Some(import) = api::data_import::service(&config) {
+                svc = svc.service(import);
+            }
             svc
         };
 
