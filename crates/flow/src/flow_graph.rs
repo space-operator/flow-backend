@@ -155,7 +155,7 @@ impl std::fmt::Debug for Node {
 pub struct PartialOutput {
     pub node_id: NodeId,
     pub times: u32,
-    pub output: Result<(Instructions, ValueSet), CommandError>,
+    pub output: Result<(Option<Instructions>, ValueSet), CommandError>,
     pub resp: oneshot::Sender<Result<execute::Response, execute::Error>>,
 }
 
@@ -790,11 +790,11 @@ impl FlowGraph {
                     .expect("bug in start_node")
                     .extend(values);
 
-                if ins.instructions.is_empty() {
+                if ins.is_none() {
                     o.resp.send(Ok(execute::Response { signature: None })).ok();
                 } else if info.instruction_info.is_some() {
                     info.waiting = Some(Waiting {
-                        instructions: ins,
+                        instructions: ins.expect("ins.is_none() == false"),
                         resp: o.resp,
                     });
                 } else {
@@ -834,7 +834,7 @@ impl FlowGraph {
                     PartialOutput {
                         node_id: node.id,
                         times,
-                        output: result.map(|v| (Instructions::default(), v)),
+                        output: result.map(|v| (None, v)),
                         resp,
                     },
                     s,
@@ -969,6 +969,8 @@ impl FlowGraph {
                         Err(execute::Error::Canceled(s.stop.get_reason()))
                     } else if s.stop_shared.token.is_cancelled() {
                         Err(execute::Error::Canceled(s.stop_shared.get_reason()))
+                    } else if ins.instructions.is_empty() {
+                        Ok(None)
                     } else {
                         tracing::info!("executing instructions");
                         let config = self.tx_exec_config.clone();
@@ -986,9 +988,10 @@ impl FlowGraph {
                                 execute::Error::Canceled,
                             )
                             .await
+                            .map(Some)
                     };
 
-                    let res = res.map(|s| execute::Response { signature: Some(s) });
+                    let res = res.map(|signature| execute::Response { signature });
                     let failed_instruction = res.as_ref().err().and_then(|e| match e {
                         execute::Error::Solana { error, inserted } => {
                             find_failed_instruction(error)
@@ -1390,7 +1393,7 @@ impl tower::Service<execute::Request> for ExecuteWithBundling {
             .unbounded_send(PartialOutput {
                 node_id: self.node_id,
                 times: self.times,
-                output: Ok((req.instructions, req.output)),
+                output: Ok((Some(req.instructions), req.output)),
                 resp: tx,
             })
             .ok();
@@ -1419,59 +1422,44 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
     }
     fn call(&mut self, mut req: execute::Request) -> Self::Future {
         use tower::ServiceExt;
-        if req.instructions.instructions.is_empty() {
-            // empty instructions wont be bundled,
-            // so just process like normal
-            let (tx, rx) = oneshot::channel();
-            self.tx
-                .unbounded_send(PartialOutput {
-                    node_id: self.node_id,
-                    times: self.times,
-                    output: Ok((req.instructions, req.output)),
-                    resp: tx,
+        if self.stop_shared.token.is_cancelled() {
+            let reason = self.stop_shared.get_reason();
+            return Box::pin(async move { Err(execute::Error::Canceled(reason)) });
+        }
+        // execute before sending the partial output
+        let mut svc = self.simple_svc.clone();
+        let tx = self.tx.clone();
+        let node_id = self.node_id;
+        let times = self.times;
+        let output = req.output.clone();
+        let overwrite_feepayer = self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair());
+        let task = async move {
+            if let Some(signer) = overwrite_feepayer {
+                req.instructions.set_feepayer(signer);
+            }
+            let res = svc.ready().await?.call(req).await;
+            let output = match &res {
+                Ok(_) => Ok((Instructions::default(), output)),
+                Err(error) => Err(error.clone().into()),
+            };
+            // send output with empty instructions after we've executed them
+            // only send on Ok, because the node should send Err by itself
+            if output.is_ok() {
+                let (resp, rx) = oneshot::channel();
+                tx.unbounded_send(PartialOutput {
+                    node_id,
+                    times,
+                    output: output.map(|(ins, output)| (Some(ins), output)),
+                    resp,
                 })
                 .ok();
-            rx.map(|r| r?).boxed()
-        } else {
-            if self.stop_shared.token.is_cancelled() {
-                let reason = self.stop_shared.get_reason();
-                return Box::pin(async move { Err(execute::Error::Canceled(reason)) });
+                rx.await.ok();
             }
-            // execute before sending the partial output
-            let mut svc = self.simple_svc.clone();
-            let tx = self.tx.clone();
-            let node_id = self.node_id;
-            let times = self.times;
-            let output = req.output.clone();
-            let overwrite_feepayer = self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair());
-            let task = async move {
-                if let Some(signer) = overwrite_feepayer {
-                    req.instructions.set_feepayer(signer);
-                }
-                let res = svc.ready().await?.call(req).await;
-                let output = match &res {
-                    Ok(_) => Ok((Instructions::default(), output)),
-                    Err(error) => Err(error.clone().into()),
-                };
-                // send output with empty instructions after we've executed them
-                // only send on Ok, because the node should send Err by itself
-                if output.is_ok() {
-                    let (resp, rx) = oneshot::channel();
-                    tx.unbounded_send(PartialOutput {
-                        node_id,
-                        times,
-                        output,
-                        resp,
-                    })
-                    .ok();
-                    rx.await.ok();
-                }
-                res
-            }
-            .boxed();
-            let stop = self.stop_shared.clone();
-            Box::pin(async move { stop.race(task, execute::Error::Canceled).await })
+            res
         }
+        .boxed();
+        let stop = self.stop_shared.clone();
+        Box::pin(async move { stop.race(task, execute::Error::Canceled).await })
     }
 }
 
