@@ -40,9 +40,9 @@ pub struct Input {
     #[serde(with = "value::keypair")]
     pub chat_message: Keypair,
     pub body: MessageBody,
-    #[serde(with = "value::pubkey::opt")]
+    #[serde(default, with = "value::pubkey::opt")]
     pub reply_to: Option<Pubkey>,
-    #[serde(with = "value::pubkey::opt")]
+    #[serde(default, with = "value::pubkey::opt")]
     pub voter_weight_record: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,

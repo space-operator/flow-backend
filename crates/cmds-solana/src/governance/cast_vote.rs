@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use solana_sdk::{instruction::AccountMeta, system_program};
+use tracing::info;
 
 use crate::prelude::*;
 
@@ -96,6 +97,7 @@ pub fn cast_vote(
         voter_weight_record,
         max_voter_weight_record,
     );
+    info!("accounts: {:?}", accounts);
 
     let data = GovernanceInstruction::CastVote { vote };
 
