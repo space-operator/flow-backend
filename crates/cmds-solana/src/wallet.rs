@@ -117,6 +117,7 @@ mod tests {
                 extra: Extra::default(),
                 wasm_bytes: None,
             },
+            instruction_info: None,
         };
         assert_eq!(Wallet::new(&nd).form.unwrap().pubkey, PUBKEY);
     }

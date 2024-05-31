@@ -2,7 +2,7 @@ use crate::command::prelude::*;
 
 #[derive(Debug)]
 pub struct FlowOutputCommand {
-    rename: Name,
+    pub rename: Name,
 }
 
 pub const FLOW_OUTPUT: &str = "flow_output";

@@ -1,4 +1,4 @@
-use crate::flow_graph::BuildGraphError;
+use crate::{flow_graph::BuildGraphError, flow_registry::get_flow};
 use flow_lib::{command::CommandError, Name};
 use std::error::Error as StdError;
 use thiserror::Error as ThisError;
@@ -23,6 +23,14 @@ pub enum Error {
     CreateCmd(#[source] CommandError),
     #[error(transparent)]
     BuildGraphError(#[from] BuildGraphError),
+    #[error(transparent)]
+    GetFlow(#[from] get_flow::Error),
+    #[error("graph has cycle")]
+    Cycle,
+    #[error("flow must contain exactly 1 tx")]
+    NeedOneTx,
+    #[error("flow must have exactly 1 Flow Output node connected to a signature output")]
+    NeedOneSignatureOutput,
 }
 
 impl Error {

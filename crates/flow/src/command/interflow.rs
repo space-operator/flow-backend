@@ -1,5 +1,6 @@
 use crate::{command::prelude::*, flow_registry::FlowRegistry};
 use anyhow::anyhow;
+use flow_lib::command::InstructionInfo;
 
 pub const INTERFLOW: &str = "interflow";
 
@@ -7,6 +8,7 @@ pub struct Interflow {
     id: FlowId,
     inputs: Vec<Input>,
     outputs: Vec<Output>,
+    instruction_info: Option<InstructionInfo>,
 }
 
 pub fn get_interflow_id(n: &NodeData) -> Result<FlowId, serde_json::Error> {
@@ -46,6 +48,7 @@ impl Interflow {
             id,
             inputs,
             outputs,
+            instruction_info: n.instruction_info.clone(),
         })
     }
 }
@@ -78,6 +81,13 @@ impl CommandTrait for Interflow {
                 ctx.new_interflow_origin()
                     .ok_or_else(|| anyhow::anyhow!("this is a bug"))?,
                 Some(ctx.cfg.solana_client.clone()),
+                Some(
+                    ctx.command
+                        .as_ref()
+                        .ok_or_else(|| CommandError::msg("command context not found"))?
+                        .svc
+                        .clone(),
+                ),
             )
             .await?;
         let result = handle.await?;
@@ -91,6 +101,10 @@ impl CommandTrait for Interflow {
             }
             Err(anyhow!(errors))
         }
+    }
+
+    fn instruction_info(&self) -> Option<InstructionInfo> {
+        self.instruction_info.clone()
     }
 }
 
