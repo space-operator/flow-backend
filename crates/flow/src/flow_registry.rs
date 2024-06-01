@@ -147,9 +147,8 @@ async fn get_all_flows(
             .await?;
             config.interflow_instruction_info = g
                 .get_interflow_instruction_info()
-                .inspect_err(|error| tracing::info!("flow {}: {}", id, error))
-                .ok();
-            if let Some(i) = config.interflow_instruction_info.as_ref() {
+                .map_err(|error| error.to_string());
+            if let Ok(i) = config.interflow_instruction_info.as_ref() {
                 info.insert(*id, i.clone());
             }
         }
@@ -412,6 +411,12 @@ impl FlowRegistry {
         let stop_shared = run.stop_shared_signal;
 
         async move {
+            this.flows.iter().for_each(|(id, flow)| {
+                if let Err(error) = &flow.interflow_instruction_info {
+                    tracing::info!("flow {} no instruction_info: {}", id, error);
+                }
+            });
+
             let mut get_previous_values_svc = this.get_previous_values.clone();
             let user_id = this.flow_owner.id;
             let mut flow_config = FlowConfig::new(config.clone());

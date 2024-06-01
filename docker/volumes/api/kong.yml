@@ -34,6 +34,16 @@ basicauth_credentials:
 ### API Routes
 ###
 services:
+  ## flow-server
+  - name: flow-server
+    _comment: 'Flow Server: /flow-server/* -> http://flow-server:8080/*'
+    url: http://flow-server:8080/
+    routes:
+      - name: flow-server-all
+        strip_path: true
+        paths:
+          - /flow-server/
+
   ## Open Auth routes
   - name: auth-v1-open
     url: http://auth:9999/verify
