@@ -25,12 +25,12 @@ async function initHmac(secret: string): Promise<CryptoKey> {
 }
 
 async function generateKey(secret: CryptoKey, role: string): Promise<string> {
-  const now = new Date();
+  const now = Math.floor((new Date().getTime() / 1000));
   const payload = JSON.stringify({
     role,
     iss: "supabase",
-    iat: now.getTime(),
-    exp: now.getTime() + 5 * 365 * 3600 * 24, // 5 years
+    iat: now,
+    exp: now + 5 * 365 * 3600 * 24, // 5 years
   });
   const headers = JSON.stringify({
     alg: "HS256",
