@@ -11,6 +11,10 @@ use std::collections::HashMap;
 use uuid::Uuid;
 use value::default::bool_false;
 
+fn default_interflow_instruction_info() -> Result<InstructionInfo, String> {
+    Err("not available".to_string())
+}
+
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ClientConfig {
@@ -35,7 +39,8 @@ pub struct ClientConfig {
     pub origin: FlowRunOrigin,
     #[serde(default)]
     pub signers: JsonValue,
-    pub interflow_instruction_info: Option<InstructionInfo>,
+    #[serde(default = "default_interflow_instruction_info")]
+    pub interflow_instruction_info: Result<InstructionInfo, String>,
 }
 
 const fn default_origin() -> FlowRunOrigin {

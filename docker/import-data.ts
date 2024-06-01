@@ -28,16 +28,20 @@ if (exportResp.status !== 200) {
   Deno.exit(1);
 }
 const data = await exportResp.json();
-console.log("Importing data to http://localhost:8080");
-const importResp = await fetch("http://localhost:8080/data/import", {
-  headers: {
-    authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-    "content-type": "application/json",
-  },
-  body: JSON.stringify(data),
-  method: "POST",
-});
+console.log("Importing data to http://localhost:8000/flow-server");
+const importResp = await fetch(
+  "http://localhost:8000/flow-server/data/import",
+  {
+    headers: {
+      authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(data),
+    method: "POST",
+  }
+);
 if (importResp.status !== 200) {
+  console.error("Error:", importResp.status);
   console.error(await importResp.text());
   Deno.exit(1);
 }
