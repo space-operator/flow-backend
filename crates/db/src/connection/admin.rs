@@ -534,7 +534,9 @@ impl AdminConn {
                 email_change_token_new = '',
                 email_change = '',
                 email_change_token_current = '',
-                reauthentication_token = ''
+                reauthentication_token = '',
+                phone_change = '',
+                phone_change_token = ''
             WHERE id = $1
             ",
             &[&data.user_id],
