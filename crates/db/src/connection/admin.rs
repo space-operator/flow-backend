@@ -526,6 +526,24 @@ impl AdminConn {
         .map_err(Error::exec("bulk insert"))?;
 
         copy_in(&tx, "auth.users", data.users).await?;
+        tx.execute(
+            "UPDATE auth.users
+            SET
+                confirmation_token = '',
+                recovery_token = '',
+                email_change_token_new = '',
+                email_change = '',
+                email_change_token_current = '',
+                reauthentication_token = '',
+                phone_change = '',
+                phone_change_token = ''
+            WHERE id = $1
+            ",
+            &[&data.user_id],
+        )
+        .await
+        .map_err(Error::exec("fix users row"))?;
+
         copy_in(&tx, "auth.identities", data.identities).await?;
         copy_in(&tx, "users_public", data.users_public).await?;
 

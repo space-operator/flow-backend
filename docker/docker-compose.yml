@@ -36,7 +36,7 @@ services:
         condition: service_healthy
     environment:
       MIGRATION_DB_URL: postgres://supabase_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-      RUST_LOG: info,actix_web=debug,wasmer_compiler_cranelift=warn
+      RUST_LOG: info,actix_web=debug,wasmer_compiler_cranelift=warn,db=debug,tokio_postgres=debug
       DENO_DIR: /data/deno
       CONFIG_FILE: /run/secrets/flow-server-config
     secrets:

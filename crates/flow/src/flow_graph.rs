@@ -27,7 +27,7 @@ use indexmap::IndexMap;
 use petgraph::{
     csr::DefaultIx,
     graph::EdgeIndex,
-    stable_graph::{Edges, NodeIndex, NodeIndices, StableGraph},
+    stable_graph::{Edges, NodeIndex, StableGraph},
     visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
     Directed, Direction,
 };

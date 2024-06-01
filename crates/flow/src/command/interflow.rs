@@ -72,6 +72,18 @@ impl CommandTrait for Interflow {
             .get::<FlowRegistry>()
             .ok_or_else(|| anyhow::anyhow!("FlowRegistry not found"))?;
 
+        let svc = if self.instruction_info.is_some() {
+            Some(
+                ctx.command
+                    .as_ref()
+                    .ok_or_else(|| CommandError::msg("command context not found"))?
+                    .svc
+                    .clone(),
+            )
+        } else {
+            None
+        };
+
         let (_, handle) = registry
             .start(
                 self.id,
@@ -81,13 +93,7 @@ impl CommandTrait for Interflow {
                 ctx.new_interflow_origin()
                     .ok_or_else(|| anyhow::anyhow!("this is a bug"))?,
                 Some(ctx.cfg.solana_client.clone()),
-                Some(
-                    ctx.command
-                        .as_ref()
-                        .ok_or_else(|| CommandError::msg("command context not found"))?
-                        .svc
-                        .clone(),
-                ),
+                svc,
             )
             .await?;
         let result = handle.await?;

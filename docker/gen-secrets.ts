@@ -25,12 +25,12 @@ async function initHmac(secret: string): Promise<CryptoKey> {
 }
 
 async function generateKey(secret: CryptoKey, role: string): Promise<string> {
-  const now = new Date();
+  const now = Math.floor(new Date().getTime() / 1000);
   const payload = JSON.stringify({
     role,
     iss: "supabase",
-    iat: now.getTime(),
-    exp: now.getTime() + 5 * 365 * 3600 * 24, // 5 years
+    iat: now,
+    exp: now + 5 * 365 * 3600 * 24, // 5 years
   });
   const headers = JSON.stringify({
     alg: "HS256",
@@ -71,9 +71,10 @@ env["ANON_KEY"] = anonKey;
 env["SERVICE_ROLE_KEY"] = serviceRoleKey;
 env["DASHBOARD_PASSWORD"] = dashboardPassword;
 env["FLOW_RUNNER_PASSWORD"] = flowRunnerPassword;
-const envContent = Object.entries(env)
-  .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-  .join("\n");
+const envContent =
+  Object.entries(env)
+    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+    .join("\n") + "\n";
 
 // deno-lint-ignore no-explicit-any
 const config: any = toml.parse(await Deno.readTextFile(CONFIG_TEMPLATE));
@@ -81,7 +82,7 @@ config.supabase.jwt_key = jwtSecret;
 config.supabase.service_key = serviceRoleKey;
 config.supabase.anon_key = anonKey;
 config.db.password = flowRunnerPassword;
-const configContent = toml.stringify(config);
+const configContent = toml.stringify(config) + "\n";
 
 const fileExists: string[] = [];
 if (await fs.exists(ENV_PATH)) fileExists.push(ENV_PATH);
