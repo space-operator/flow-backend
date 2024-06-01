@@ -27,8 +27,8 @@ use indexmap::IndexMap;
 use petgraph::{
     csr::DefaultIx,
     graph::EdgeIndex,
-    stable_graph::{Edges, NodeIndex, StableGraph},
-    visit::EdgeRef,
+    stable_graph::{Edges, NodeIndex, NodeIndices, StableGraph},
+    visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
     Directed, Direction,
 };
 use solana_sdk::signature::Keypair;
@@ -123,6 +123,7 @@ pub struct FlowGraph {
     pub rhai_permit: Arc<Semaphore>,
     pub tx_exec_config: ExecutionConfig,
     pub spawned: Vec<Child>,
+    pub parent_flow_execute: Option<execute::Svc>,
 }
 
 pub struct UsePreviousValue {
@@ -159,7 +160,7 @@ pub struct PartialOutput {
     pub resp: oneshot::Sender<Result<execute::Response, execute::Error>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Edge {
     pub from: Name,
     pub to: Name,
@@ -372,6 +373,7 @@ impl FlowGraph {
         let tx_exec_config = ExecutionConfig::from_env(&c.ctx.environment)
             .inspect_err(|error| tracing::error!("error parsing ExecutionConfig: {}", error))
             .unwrap_or_default();
+        let parent_flow_execute = registry.parent_flow_execute.clone();
         tracing::debug!("execution config: {:?}", tx_exec_config);
 
         let ext = {
@@ -504,6 +506,99 @@ impl FlowGraph {
             rhai_permit,
             tx_exec_config,
             spawned,
+            parent_flow_execute,
+        })
+    }
+
+    pub fn get_interflow_instruction_info(&self) -> crate::Result<InstructionInfo> {
+        let mut txs = self.sort_transactions()?;
+        if txs.len() != 1 {
+            return Err(crate::Error::NeedOneTx);
+        }
+        let tx = txs.pop().unwrap();
+
+        // find siganture output
+        let mut signature = tx
+            .iter()
+            .filter_map(|node_id| {
+                let idx = self.nodes[node_id].idx;
+                let mut flow_output = self
+                    .out_edges(idx)
+                    .map(|e| self.g[e.target()])
+                    .filter_map(|node_id| {
+                        let cmd = &self.nodes[&node_id].command;
+                        if cmd.name() == FLOW_OUTPUT {
+                            cmd.outputs().pop().map(|o| o.name)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                if flow_output.len() != 1 {
+                    return None;
+                }
+                Some(flow_output.pop().expect("flow_output.len() != 1"))
+            })
+            .collect::<Vec<_>>();
+        if signature.len() != 1 {
+            return Err(crate::Error::NeedOneSignatureOutput);
+        }
+        let signature = signature.pop().unwrap();
+
+        // find after outputs
+        let g = self.g.filter_map(
+            |_, n| Some(n),
+            |eid, e| {
+                let (source, _) = self.g.edge_endpoints(eid)?;
+                let source_id = self.g[source];
+                if tx.contains(&source_id) {
+                    let info = self.nodes[&source_id]
+                        .command
+                        .instruction_info()
+                        .expect("node is in tx");
+                    if !(info.signature == e.from || info.after.contains(&e.from)) {
+                        return None;
+                    }
+                }
+                Some(Edge {
+                    from: e.from.clone(),
+                    to: e.to.clone(),
+                    is_required_input: e.is_required_input,
+                    is_optional_output: e.is_optional_output,
+                    values: <_>::default(),
+                })
+            },
+        );
+        let mut bfs = new_bfs(&g, tx.iter().map(|id| self.nodes[id].idx));
+        let mut after = Vec::new();
+        while let Some(nid) = bfs.next(&g) {
+            let node = &self.nodes[g[nid]];
+            if node.command.name() == FLOW_OUTPUT {
+                let label = match node.command.outputs().pop() {
+                    Some(label) => label.name,
+                    None => continue,
+                };
+                if label != signature {
+                    after.push(label);
+                }
+            }
+        }
+
+        let before = self
+            .nodes
+            .values()
+            .filter_map(|n| {
+                (n.command.name() == FLOW_OUTPUT)
+                    .then(|| n.command.outputs().pop().map(|o| o.name))
+                    .flatten()
+            })
+            .filter(|name| name != &signature && !after.contains(name))
+            .collect();
+
+        Ok(InstructionInfo {
+            signature,
+            before,
+            after,
         })
     }
 
@@ -514,9 +609,9 @@ impl FlowGraph {
             .collect()
     }
 
-    pub fn sort_transactions(&self) -> Result<Vec<Vec<NodeId>>, anyhow::Error> {
+    pub fn sort_transactions(&self) -> crate::Result<Vec<Vec<NodeId>>> {
         let nodes = petgraph::algo::toposort(&self.g, None)
-            .map_err(|_| anyhow::anyhow!("graph has cycle"))?
+            .map_err(|_| crate::Error::Cycle)?
             .into_iter()
             .map(|idx| self.g[idx])
             .collect::<Vec<_>>();
@@ -597,9 +692,24 @@ impl FlowGraph {
         self.g.edges_directed(idx, Direction::Outgoing)
     }
 
+    fn submit_is_false(&self, idx: NodeIndex<u32>) -> bool {
+        self.in_edges(idx)
+            .find_map(|e| (e.weight().to == "submit").then(|| e.weight().values.front()))
+            .flatten()
+            .map(|v| v.value == Some(Value::Bool(false)))
+            .unwrap_or(false)
+    }
+
     fn ready(&self, idx: NodeIndex<u32>, s: &State) -> bool {
         let id = self.g[idx];
-        if self.nodes[&id].command.name() == crate::command::collect::COLLECT {
+        let cmd = &self.nodes[&id].command;
+        if cmd.instruction_info().is_some() {
+            // Don't start node if it has a `false` submit input
+            if self.submit_is_false(idx) {
+                return false;
+            }
+        }
+        if cmd.name() == crate::command::collect::COLLECT {
             let source = match self.in_edges(idx).next() {
                 None => return true,
                 Some(e) => e.source(),
@@ -912,9 +1022,20 @@ impl FlowGraph {
 
         for tx in txs {
             debug_assert!(!tx.is_empty());
-            let is_complete = tx.values().all(Option::is_some);
+            let is_complete = tx.iter().all(|(node_id, wait)| {
+                match self.nodes.get(node_id) {
+                    Some(node) => {
+                        // node is not running
+                        self.submit_is_false(node.idx)
+                    }
+                    None => {
+                        // none mean it is running
+                        wait.is_some()
+                    }
+                }
+            });
             if is_complete {
-                let mut tx = tx.into_values().rev().collect::<Option<Vec<_>>>().unwrap();
+                let mut tx = tx.into_values().rev().flatten().collect::<Vec<_>>();
                 while let Some(w) = tx.pop() {
                     use std::ops::Range;
                     struct Responder {
@@ -970,7 +1091,21 @@ impl FlowGraph {
                     } else if s.stop_shared.token.is_cancelled() {
                         Err(execute::Error::Canceled(s.stop_shared.get_reason()))
                     } else if ins.instructions.is_empty() {
-                        Ok(None)
+                        Ok(execute::Response { signature: None })
+                    } else if let Some(exec) = &self.parent_flow_execute {
+                        self.collect_flow_output(s);
+                        s.stop
+                            .race(
+                                std::pin::pin!(s.stop_shared.race(
+                                    std::pin::pin!(exec.call_ref(execute::Request {
+                                        instructions: ins,
+                                        output: s.result.output.clone(),
+                                    })),
+                                    execute::Error::Canceled,
+                                )),
+                                execute::Error::Canceled,
+                            )
+                            .await
                     } else {
                         tracing::info!("executing instructions");
                         let config = self.tx_exec_config.clone();
@@ -988,10 +1123,11 @@ impl FlowGraph {
                                 execute::Error::Canceled,
                             )
                             .await
-                            .map(Some)
+                            .map(|signature| execute::Response {
+                                signature: Some(signature),
+                            })
                     };
 
-                    let res = res.map(|signature| execute::Response { signature });
                     let failed_instruction = res.as_ref().err().and_then(|e| match e {
                         execute::Error::Solana { error, inserted } => {
                             find_failed_instruction(error)
@@ -1601,6 +1737,20 @@ fn finished_recursive(
     } else {
         !all_sources_not_finished
     }
+}
+
+fn new_bfs<G, I>(graph: G, entrypoint: I) -> Bfs<G::NodeId, G::Map>
+where
+    G: GraphRef + Visitable,
+    I: IntoIterator<Item = G::NodeId>,
+{
+    let mut discovered = graph.visit_map();
+    let mut stack = VecDeque::new();
+    for id in entrypoint.into_iter() {
+        discovered.visit(id);
+        stack.push_back(id);
+    }
+    Bfs { stack, discovered }
 }
 
 #[cfg(test)]

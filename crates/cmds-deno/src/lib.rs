@@ -182,6 +182,7 @@ mod tests {
                     rest: [("source".to_owned(), source.into())].into(),
                 },
             },
+            instruction_info: None,
         }
     }
 

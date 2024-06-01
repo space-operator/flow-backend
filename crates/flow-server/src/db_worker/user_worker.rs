@@ -448,7 +448,7 @@ pub enum StartError {
     #[error("unauthorized")]
     Unauthorized,
     #[error(transparent)]
-    GetFlow(#[from] get_flow::Error),
+    Flow(#[from] flow::Error),
     #[error(transparent)]
     NewFlowRun(#[from] new_flow_run::Error),
     #[error(transparent)]
@@ -463,13 +463,27 @@ impl ResponseError for StartError {
     fn status_code(&self) -> StatusCode {
         match self {
             StartError::Unauthorized => StatusCode::NOT_FOUND,
-            StartError::GetFlow(e) => match e {
-                get_flow::Error::NotFound => StatusCode::NOT_FOUND,
-                get_flow::Error::Unauthorized => StatusCode::UNAUTHORIZED,
-                get_flow::Error::InvalidInferflow { .. }
-                | get_flow::Error::Worker(_)
-                | get_flow::Error::MailBox(_)
-                | get_flow::Error::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            StartError::Flow(e) => match e {
+                flow::Error::Any(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                flow::Error::Canceled(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                flow::Error::ValueNotFound(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                flow::Error::CreateCmd(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                flow::Error::BuildGraphError(e) => match e {
+                    flow::flow_graph::BuildGraphError::EdgesSameTarget => StatusCode::BAD_REQUEST,
+                    flow::flow_graph::BuildGraphError::EdgeSourceNotFound(_) => StatusCode::BAD_REQUEST,
+                    flow::flow_graph::BuildGraphError::NodeNotFoundInPartialConfig(_) => StatusCode::BAD_REQUEST,
+                },
+                flow::Error::GetFlow(e) => match e {
+                    get_flow::Error::NotFound => StatusCode::NOT_FOUND,
+                    get_flow::Error::Unauthorized => StatusCode::UNAUTHORIZED,
+                    get_flow::Error::InvalidInferflow { .. }
+                    | get_flow::Error::Worker(_)
+                    | get_flow::Error::MailBox(_)
+                    | get_flow::Error::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                },
+                flow::Error::Cycle => StatusCode::BAD_REQUEST,
+                flow::Error::NeedOneTx => StatusCode::BAD_REQUEST,
+                flow::Error::NeedOneSignatureOutput => StatusCode::BAD_REQUEST,
             },
             StartError::NewFlowRun(e) => match e {
                 new_flow_run::Error::BuildFlow(_) | new_flow_run::Error::GetPreviousValues(_) => {
@@ -547,6 +561,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     msg.partial_config,
                     false,
                     FlowRunOrigin::Start {},
+                    None,
                     None,
                 )
                 .await?
@@ -627,6 +642,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     FlowRunOrigin::StartShared {
                         started_by: msg.started_by.0,
                     },
+                    None,
                     None,
                 )
                 .await?

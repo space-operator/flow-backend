@@ -14,6 +14,7 @@ use crate::{
     context::Context,
     ValueType,
 };
+use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use value::Value;
 
@@ -132,7 +133,7 @@ pub trait CommandTrait: Send + Sync + 'static {
 /// sent.
 /// - [`signature`][InstructionInfo::signature]: name of the signature output port.
 /// - [`after`][InstructionInfo::after]: list of output names returned after instructions are sent.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct InstructionInfo {
     pub before: Vec<Name>,
     pub signature: Name,
