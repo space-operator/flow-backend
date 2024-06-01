@@ -27,8 +27,8 @@ use indexmap::IndexMap;
 use petgraph::{
     csr::DefaultIx,
     graph::EdgeIndex,
-    stable_graph::{Edges, NodeIndex, StableGraph},
-    visit::EdgeRef,
+    stable_graph::{Edges, NodeIndex, NodeIndices, StableGraph},
+    visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
     Directed, Direction,
 };
 use solana_sdk::signature::Keypair;
@@ -160,7 +160,7 @@ pub struct PartialOutput {
     pub resp: oneshot::Sender<Result<execute::Response, execute::Error>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Edge {
     pub from: Name,
     pub to: Name,
@@ -516,6 +516,8 @@ impl FlowGraph {
             return Err(crate::Error::NeedOneTx);
         }
         let tx = txs.pop().unwrap();
+
+        // find siganture output
         let mut signature = tx
             .iter()
             .filter_map(|node_id| {
@@ -542,10 +544,61 @@ impl FlowGraph {
             return Err(crate::Error::NeedOneSignatureOutput);
         }
         let signature = signature.pop().unwrap();
+
+        // find after outputs
+        let g = self.g.filter_map(
+            |_, n| Some(n),
+            |eid, e| {
+                let (source, _) = self.g.edge_endpoints(eid)?;
+                let source_id = self.g[source];
+                if tx.contains(&source_id) {
+                    let info = self.nodes[&source_id]
+                        .command
+                        .instruction_info()
+                        .expect("node is in tx");
+                    if !(info.signature == e.from || info.after.contains(&e.from)) {
+                        return None;
+                    }
+                }
+                Some(Edge {
+                    from: e.from.clone(),
+                    to: e.to.clone(),
+                    is_required_input: e.is_required_input,
+                    is_optional_output: e.is_optional_output,
+                    values: <_>::default(),
+                })
+            },
+        );
+        let mut bfs = new_bfs(&g, tx.iter().map(|id| self.nodes[id].idx));
+        let mut after = Vec::new();
+        while let Some(nid) = bfs.next(&g) {
+            let node = &self.nodes[g[nid]];
+            if node.command.name() == FLOW_OUTPUT {
+                let label = match node.command.outputs().pop() {
+                    Some(label) => label.name,
+                    None => continue,
+                };
+                if label != signature {
+                    after.push(label);
+                }
+            }
+        }
+
+        let before = self
+            .nodes
+            .values()
+            .filter_map(|n| {
+                (n.command.name() == FLOW_OUTPUT)
+                    .then(|| n.command.outputs().pop().map(|o| o.name))
+                    .flatten()
+            })
+            .filter(|name| name != &signature && !after.contains(name))
+            .collect();
+
         Ok(InstructionInfo {
             signature,
-            before: <_>::default(),
-            after: <_>::default(),
+            before,
+            after,
         })
     }
 
@@ -1683,6 +1736,20 @@ fn finished_recursive(
     } else {
         !all_sources_not_finished
     }
+}
+
+fn new_bfs<G, I>(graph: G, entrypoint: I) -> Bfs<G::NodeId, G::Map>
+where
+    G: GraphRef + Visitable,
+    I: IntoIterator<Item = G::NodeId>,
+{
+    let mut discovered = graph.visit_map();
+    let mut stack = VecDeque::new();
+    for id in entrypoint.into_iter() {
+        discovered.visit(id);
+        stack.push_back(id);
+    }
+    Bfs { stack, discovered }
 }
 
 #[cfg(test)]
