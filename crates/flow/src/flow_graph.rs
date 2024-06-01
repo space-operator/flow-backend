@@ -1093,12 +1093,13 @@ impl FlowGraph {
                     } else if ins.instructions.is_empty() {
                         Ok(execute::Response { signature: None })
                     } else if let Some(exec) = &self.parent_flow_execute {
+                        self.collect_flow_output(s);
                         s.stop
                             .race(
                                 std::pin::pin!(s.stop_shared.race(
                                     std::pin::pin!(exec.call_ref(execute::Request {
                                         instructions: ins,
-                                        output: <_>::default()
+                                        output: s.result.output.clone(),
                                     })),
                                     execute::Error::Canceled,
                                 )),
