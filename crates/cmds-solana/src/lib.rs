@@ -23,7 +23,10 @@ pub mod wallet;
 pub mod wormhole;
 // pub mod xnft;
 pub mod das;
+pub mod governance;
 pub mod pyth_price;
+pub mod spl;
+pub mod spl_token_2022;
 pub mod streamflow;
 
 pub use error::{Error, Result};

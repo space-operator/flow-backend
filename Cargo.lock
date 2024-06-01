@@ -7561,8 +7561,10 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2881dddfca792737c0706fa0175345ab282b1b0879c7d877bad129645737c079"
 dependencies = [
+ "base64 0.21.7",
  "borsh 0.10.3",
  "bytemuck",
+ "serde",
  "solana-program",
  "solana-zk-token-sdk",
  "spl-program-error",
@@ -7698,10 +7700,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4abf34a65ba420584a0c35f3903f8d727d1f13ababbdc3f714c6b065a686e86"
 dependencies = [
  "arrayref",
+ "base64 0.21.7",
  "bytemuck",
  "num-derive 0.4.2",
  "num-traits",
  "num_enum 0.7.2",
+ "serde",
+ "serde_with 3.7.0",
  "solana-program",
  "solana-zk-token-sdk",
  "spl-memo 4.0.0",
