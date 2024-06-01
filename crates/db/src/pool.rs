@@ -91,17 +91,19 @@ impl RealDbPool {
             dbname: Some(cfg.dbname.clone()),
             host: Some(cfg.host.clone()),
             port: Some(cfg.port),
-            ssl_mode: Some(if cfg.ssl.is_some() {
+            ssl_mode: Some(if cfg.ssl.enabled {
                 SslMode::Require
             } else {
                 SslMode::Disable
             }),
             ..Config::default()
         };
+        tracing::info!("SSL enabled: {}", cfg.ssl.enabled);
 
-        let builder = if let Some(ssl) = &cfg.ssl {
+        let builder = if cfg.ssl.enabled {
             let mut roots = rustls::RootCertStore::empty();
-            if let Some(path) = ssl.cert.as_ref() {
+            if let Some(path) = cfg.ssl.cert.as_ref() {
+                tracing::info!("adding certificate: {}", path.display());
                 let cert = read_cert(path)?;
                 roots
                     .add(&cert)

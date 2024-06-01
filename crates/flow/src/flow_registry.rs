@@ -10,7 +10,7 @@ use flow_lib::{
         client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
         Endpoints,
     },
-    context::{get_jwt, signer, User},
+    context::{execute, get_jwt, signer, User},
     utils::TowerClient,
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
 };
@@ -50,6 +50,7 @@ pub struct FlowRegistry {
     pub(crate) token: get_jwt::Svc,
     new_flow_run: new_flow_run::Svc,
     get_previous_values: get_previous_values::Svc,
+    pub(crate) parent_flow_execute: Option<execute::Svc>,
 
     pub(crate) rhai_permit: Arc<Semaphore>,
     rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
@@ -75,6 +76,7 @@ impl Default for FlowRegistry {
             token,
             new_flow_run,
             get_previous_values,
+            parent_flow_execute: None,
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
             rpc_server: None, // TODO: try this
@@ -87,7 +89,7 @@ async fn get_all_flows(
     user_id: UserId,
     mut get_flow: get_flow::Svc,
     environment: HashMap<String, String>,
-) -> Result<HashMap<FlowId, ClientConfig>, get_flow::Error> {
+) -> crate::Result<HashMap<FlowId, ClientConfig>> {
     let mut flows = HashMap::new();
 
     let mut queue = [entrypoint].to_vec();
@@ -126,11 +128,48 @@ async fn get_all_flows(
                         flow_id,
                         node_id,
                         error,
-                    })
+                    }
+                    .into())
                 }
             }
         }
         flows.insert(flow_id, config);
+    }
+
+    let mut info = HashMap::new();
+    for (id, config) in flows.iter_mut() {
+        if config.instructions_bundling != BundlingMode::Off {
+            let g = FlowGraph::from_cfg(
+                FlowConfig::new(config.clone()),
+                FlowRegistry::default(),
+                None,
+            )
+            .await?;
+            config.interflow_instruction_info = g
+                .get_interflow_instruction_info()
+                .inspect_err(|error| tracing::info!("flow {}: {}", id, error))
+                .ok();
+            if let Some(i) = config.interflow_instruction_info.as_ref() {
+                info.insert(*id, i.clone());
+            }
+        }
+    }
+
+    for (parent_flow, config) in flows.iter_mut() {
+        let interflows = config.nodes.iter_mut().filter(|n| {
+            n.data.r#type == CommandType::Native && n.data.node_id == interflow::INTERFLOW
+        });
+
+        for n in interflows {
+            let flow_id = interflow::get_interflow_id(&n.data).map_err(|error| {
+                get_flow::Error::InvalidInferflow {
+                    flow_id: *parent_flow,
+                    node_id: n.id,
+                    error,
+                }
+            })?;
+            n.data.instruction_info = info.get(&flow_id).cloned();
+        }
     }
 
     Ok(flows)
@@ -224,7 +263,7 @@ impl FlowRegistry {
         token: get_jwt::Svc,
         environment: HashMap<String, String>,
         endpoints: Endpoints,
-    ) -> Result<Self, get_flow::Error> {
+    ) -> crate::Result<Self> {
         let flows = get_all_flows(entrypoint, flow_owner.id, get_flow, environment).await?;
         Ok(Self {
             depth: 0,
@@ -236,6 +275,7 @@ impl FlowRegistry {
             signers_info,
             new_flow_run,
             get_previous_values,
+            parent_flow_execute: None,
             token,
             endpoints,
             rhai_permit: Arc::new(Semaphore::new(1)),
@@ -279,7 +319,7 @@ impl FlowRegistry {
         token: actix::Recipient<get_jwt::Request>,
         environment: HashMap<String, String>,
         endpoints: Endpoints,
-    ) -> Result<Self, get_flow::Error> {
+    ) -> crate::Result<Self> {
         Self::new(
             flow_owner,
             started_by,
@@ -322,6 +362,7 @@ impl FlowRegistry {
         collect_instructions: bool,
         origin: FlowRunOrigin,
         solana_client: Option<SolanaClientConfig>,
+        parent_flow_execute: Option<execute::Svc>,
     ) -> Result<(FlowRunId, tokio::task::JoinHandle<FlowRunResult>), new_flow_run::Error> {
         let config = self
             .flows
@@ -334,6 +375,7 @@ impl FlowRegistry {
         }
         let this = Self {
             depth: self.depth + 1,
+            parent_flow_execute,
             ..self.clone()
         };
 

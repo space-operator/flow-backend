@@ -9,11 +9,14 @@ use flow_lib::{
     CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
 };
 use hashbrown::{HashMap, HashSet};
+use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::any::Any;
 use tokio_postgres::{types::Json, Row};
 use uuid::Uuid;
 use value::Value;
+
+pub mod csv_export;
 
 mod admin;
 pub use admin::AdminConn;
@@ -25,6 +28,22 @@ pub struct UserConnection {
     pub wasm_storage: WasmStorage,
     pub conn: Connection,
     pub user_id: Uuid,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ExportedUserData {
+    pub user_id: UserId,
+    pub users: String,
+    pub identities: String,
+    pub pubkey_whitelists: String,
+    pub users_public: String,
+    pub wallets: String,
+    pub apikeys: String,
+    pub user_quotas: String,
+    pub kvstore: String,
+    pub kvstore_metadata: String,
+    pub flows: String,
+    pub nodes: String,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -155,6 +174,8 @@ pub trait UserConnectionTrait: Any + 'static {
     ) -> crate::Result<()>;
 
     async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>>;
+
+    async fn export_user_data(&mut self) -> crate::Result<ExportedUserData>;
 }
 
 #[async_trait]
@@ -303,6 +324,10 @@ impl UserConnectionTrait for UserConnection {
 
     async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>> {
         self.read_item(store, key).await
+    }
+
+    async fn export_user_data(&mut self) -> crate::Result<ExportedUserData> {
+        self.export_user_data().await
     }
 }
 

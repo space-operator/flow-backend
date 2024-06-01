@@ -7,11 +7,13 @@ pub struct DbConfig {
     pub dbname: String,
     pub host: String,
     pub port: u16,
-    pub ssl: Option<SslConfig>,
+    #[serde(default)]
+    pub ssl: SslConfig,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Default)]
 pub struct SslConfig {
+    pub enabled: bool,
     pub cert: Option<std::path::PathBuf>,
 }
 
@@ -32,7 +34,7 @@ impl Default for DbConfig {
             dbname: "space-operator-db".into(),
             host: "127.0.0.1".into(),
             port: 7979,
-            ssl: None,
+            ssl: <_>::default(),
         }
     }
 }

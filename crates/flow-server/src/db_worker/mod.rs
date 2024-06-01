@@ -251,12 +251,7 @@ impl actix::Handler<RegisterLogs> for DBWorker {
         let id = span.id().ok_or("span ID is None")?;
         let filter = EnvFilter::builder()
             .with_default_directive(LevelFilter::ERROR.into())
-            .parse_lossy(
-                msg.filter
-                    .as_ref()
-                    .map(|s| s.as_str())
-                    .unwrap_or(DEFAULT_LOG_FILTER),
-            );
+            .parse_lossy(msg.filter.as_deref().unwrap_or(DEFAULT_LOG_FILTER));
         let mut map = self.tracing_data.write().unwrap();
         map.insert(id, flow_logs::Data { tx: msg.tx, filter });
         Ok(span)

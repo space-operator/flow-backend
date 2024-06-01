@@ -1,5 +1,7 @@
-use bytes::Bytes;
+use bytes::{Bytes, BytesMut};
+use deadpool_postgres::Transaction;
 use flow_lib::config::client::NodeDataSkipWasm;
+use futures_util::StreamExt;
 use utils::bs58_decode;
 
 use super::*;
@@ -891,5 +893,181 @@ impl UserConnection {
             )),
             None => Ok(None),
         }
+    }
+
+    pub async fn export_user_data(&mut self) -> crate::Result<ExportedUserData> {
+        let tx = self
+            .conn
+            .transaction()
+            .await
+            .map_err(Error::exec("start"))?;
+
+        let stmt = tx
+            .prepare_cached("SELECT pub_key FROM users_public WHERE user_id = $1")
+            .await
+            .map_err(Error::exec("prepare"))?;
+        let pubkey = tx
+            .query_one(&stmt, &[&self.user_id])
+            .await
+            .map_err(Error::exec("get pub_key"))?
+            .try_get::<_, String>(0)
+            .map_err(Error::data("users_public.pub_key"))?;
+        bs58_decode::<32>(&pubkey).map_err(Error::parsing("base58"))?;
+
+        let users = copy_out(
+            &tx,
+            &format!("SELECT * FROM auth.users WHERE id = '{}'", self.user_id),
+        )
+        .await?;
+        let users = csv_export::clear_column(users, "encrypted_password")?;
+        let users = csv_export::remove_column(users, "confirmed_at")?;
+
+        let nodes = copy_out(
+            &tx,
+            &format!(
+                r#"SELECT * FROM nodes WHERE
+                    user_id = '{}'
+                    OR (user_id IS NULL AND "isPublic")"#,
+                self.user_id
+            ),
+        )
+        .await?;
+
+        let identities = copy_out(
+            &tx,
+            &format!(
+                "SELECT * FROM auth.identities WHERE user_id = '{}'",
+                self.user_id
+            ),
+        )
+        .await?;
+        let identities = csv_export::remove_column(identities, "email")?;
+
+        let pubkey_whitelists = copy_out(
+            &tx,
+            &format!(
+                "SELECT * FROM pubkey_whitelists WHERE pubkey = '{}'",
+                pubkey
+            ),
+        )
+        .await?;
+
+        let users_public = copy_out(
+            &tx,
+            &format!(
+                "SELECT * FROM users_public WHERE user_id = '{}'",
+                self.user_id
+            ),
+        )
+        .await?;
+
+        let wallets = copy_out(
+            &tx,
+            &format!("SELECT * FROM wallets WHERE user_id = '{}'", self.user_id),
+        )
+        .await?;
+
+        let apikeys = copy_out(
+            &tx,
+            &format!("SELECT * FROM apikeys WHERE user_id = '{}'", self.user_id),
+        )
+        .await?;
+
+        let flows = copy_out(
+            &tx,
+            &format!("SELECT * FROM flows WHERE user_id = '{}'", self.user_id),
+        )
+        .await?;
+        let flows = csv_export::clear_column(flows, "lastest_flow_run_id")?;
+
+        let user_quotas = copy_out(
+            &tx,
+            &format!(
+                "SELECT * FROM user_quotas WHERE user_id = '{}'",
+                self.user_id
+            ),
+        )
+        .await?;
+
+        let kvstore = copy_out(
+            &tx,
+            &format!("SELECT * FROM kvstore WHERE user_id = '{}'", self.user_id),
+        )
+        .await?;
+
+        let kvstore_metadata = copy_out(
+            &tx,
+            &format!(
+                "SELECT * FROM kvstore_metadata WHERE user_id = '{}'",
+                self.user_id
+            ),
+        )
+        .await?;
+
+        tx.commit().await.map_err(Error::exec("commit"))?;
+        Ok(ExportedUserData {
+            user_id: self.user_id,
+            users,
+            identities,
+            pubkey_whitelists,
+            users_public,
+            wallets,
+            user_quotas,
+            kvstore,
+            kvstore_metadata,
+            apikeys,
+            flows,
+            nodes,
+        })
+    }
+}
+
+async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<String> {
+    let query = format!(
+        r#"COPY ({}) TO stdout WITH (FORMAT csv, DELIMITER ';', QUOTE '''', HEADER)"#,
+        query
+    );
+    let stream = tx.copy_out(&query).await.map_err(Error::exec("copy-out"))?;
+    futures_util::pin_mut!(stream);
+
+    let mut buffer = BytesMut::new();
+    while let Some(result) = stream.next().await {
+        match result {
+            Ok(data) => {
+                // tracing::debug!("read {} bytes", data.len());
+                buffer.extend_from_slice(&data[..]);
+            }
+            Err(error) => {
+                // tracing::debug!("{}", String::from_utf8_lossy(&buffer));
+                return Err(Error::exec("read copy-out stream")(error));
+            }
+        }
+    }
+    String::from_utf8(buffer.into()).map_err(Error::parsing("UTF8"))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{config::DbConfig, pool::RealDbPool, LocalStorage, WasmStorage};
+    use flow_lib::UserId;
+    use serde::Deserialize;
+    use toml::value::Table;
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_export() {
+        let user_id = std::env::var("USER_ID").unwrap().parse::<UserId>().unwrap();
+        let full_config: Table = toml::from_str(
+            &std::fs::read_to_string(std::env::var("CONFIG_FILE").unwrap()).unwrap(),
+        )
+        .unwrap();
+        let db_config = DbConfig::deserialize(full_config["db"].clone()).unwrap();
+        let wasm = WasmStorage::new("http://localhost".parse().unwrap(), "", "").unwrap();
+        let temp = tempfile::tempdir().unwrap();
+        let local = LocalStorage::new(temp.path()).unwrap();
+        let pool = RealDbPool::new(&db_config, wasm, local).await.unwrap();
+        let mut conn = pool.get_user_conn(user_id).await.unwrap();
+        let result = conn.export_user_data().await.unwrap();
+        std::fs::write("/tmp/data.json", serde_json::to_vec(&result).unwrap()).unwrap();
     }
 }

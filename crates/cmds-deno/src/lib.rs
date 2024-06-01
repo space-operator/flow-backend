@@ -140,7 +140,7 @@ mod tests {
             client::{Extra, Source, Target, TargetsForm},
             node::Definition,
         },
-        Context, ValueType,
+        Context,
     };
     use serde_json::Value as JsonValue;
     use std::sync::Arc;
@@ -182,6 +182,7 @@ mod tests {
                     rest: [("source".to_owned(), source.into())].into(),
                 },
             },
+            instruction_info: None,
         }
     }
 

@@ -1,8 +1,8 @@
 //! Parse JS front-end flow config into back-end flow config
 
 use crate::{
-    CmdInputDescription, CmdOutputDescription, CommandType, FlowId, FlowRunId, NodeId,
-    SolanaClientConfig, SolanaNet, UserId, ValueType,
+    command::InstructionInfo, CmdInputDescription, CmdOutputDescription, CommandType, FlowId,
+    FlowRunId, NodeId, SolanaClientConfig, SolanaNet, UserId, ValueType,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -35,6 +35,7 @@ pub struct ClientConfig {
     pub origin: FlowRunOrigin,
     #[serde(default)]
     pub signers: JsonValue,
+    pub interflow_instruction_info: Option<InstructionInfo>,
 }
 
 const fn default_origin() -> FlowRunOrigin {
@@ -111,6 +112,7 @@ pub struct NodeData {
     pub sources: Vec<Source>,
     pub targets: Vec<Target>,
     pub targets_form: TargetsForm,
+    pub instruction_info: Option<InstructionInfo>,
 }
 
 impl NodeData {
@@ -129,6 +131,7 @@ pub struct NodeDataSkipWasm {
     pub sources: Vec<Source>,
     pub targets: Vec<Target>,
     pub targets_form: TargetsFormSkipWasm,
+    pub instruction_info: Option<InstructionInfo>,
 }
 
 impl From<NodeData> for NodeDataSkipWasm {
@@ -139,6 +142,7 @@ impl From<NodeData> for NodeDataSkipWasm {
             sources,
             targets,
             targets_form,
+            instruction_info,
         }: NodeData,
     ) -> Self {
         let TargetsForm {
@@ -150,6 +154,7 @@ impl From<NodeData> for NodeDataSkipWasm {
             sources,
             targets,
             targets_form: TargetsFormSkipWasm { form_data, extra },
+            instruction_info,
         }
     }
 }

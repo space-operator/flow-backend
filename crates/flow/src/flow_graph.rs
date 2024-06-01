@@ -27,8 +27,8 @@ use indexmap::IndexMap;
 use petgraph::{
     csr::DefaultIx,
     graph::EdgeIndex,
-    stable_graph::{Edges, NodeIndex, StableGraph},
-    visit::EdgeRef,
+    stable_graph::{Edges, NodeIndex, NodeIndices, StableGraph},
+    visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
     Directed, Direction,
 };
 use solana_sdk::signature::Keypair;
@@ -123,6 +123,7 @@ pub struct FlowGraph {
     pub rhai_permit: Arc<Semaphore>,
     pub tx_exec_config: ExecutionConfig,
     pub spawned: Vec<Child>,
+    pub parent_flow_execute: Option<execute::Svc>,
 }
 
 pub struct UsePreviousValue {
@@ -155,11 +156,11 @@ impl std::fmt::Debug for Node {
 pub struct PartialOutput {
     pub node_id: NodeId,
     pub times: u32,
-    pub output: Result<(Instructions, ValueSet), CommandError>,
+    pub output: Result<(Option<Instructions>, ValueSet), CommandError>,
     pub resp: oneshot::Sender<Result<execute::Response, execute::Error>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Edge {
     pub from: Name,
     pub to: Name,
@@ -372,6 +373,7 @@ impl FlowGraph {
         let tx_exec_config = ExecutionConfig::from_env(&c.ctx.environment)
             .inspect_err(|error| tracing::error!("error parsing ExecutionConfig: {}", error))
             .unwrap_or_default();
+        let parent_flow_execute = registry.parent_flow_execute.clone();
         tracing::debug!("execution config: {:?}", tx_exec_config);
 
         let ext = {
@@ -504,6 +506,99 @@ impl FlowGraph {
             rhai_permit,
             tx_exec_config,
             spawned,
+            parent_flow_execute,
+        })
+    }
+
+    pub fn get_interflow_instruction_info(&self) -> crate::Result<InstructionInfo> {
+        let mut txs = self.sort_transactions()?;
+        if txs.len() != 1 {
+            return Err(crate::Error::NeedOneTx);
+        }
+        let tx = txs.pop().unwrap();
+
+        // find siganture output
+        let mut signature = tx
+            .iter()
+            .filter_map(|node_id| {
+                let idx = self.nodes[node_id].idx;
+                let mut flow_output = self
+                    .out_edges(idx)
+                    .map(|e| self.g[e.target()])
+                    .filter_map(|node_id| {
+                        let cmd = &self.nodes[&node_id].command;
+                        if cmd.name() == FLOW_OUTPUT {
+                            cmd.outputs().pop().map(|o| o.name)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                if flow_output.len() != 1 {
+                    return None;
+                }
+                Some(flow_output.pop().expect("flow_output.len() != 1"))
+            })
+            .collect::<Vec<_>>();
+        if signature.len() != 1 {
+            return Err(crate::Error::NeedOneSignatureOutput);
+        }
+        let signature = signature.pop().unwrap();
+
+        // find after outputs
+        let g = self.g.filter_map(
+            |_, n| Some(n),
+            |eid, e| {
+                let (source, _) = self.g.edge_endpoints(eid)?;
+                let source_id = self.g[source];
+                if tx.contains(&source_id) {
+                    let info = self.nodes[&source_id]
+                        .command
+                        .instruction_info()
+                        .expect("node is in tx");
+                    if !(info.signature == e.from || info.after.contains(&e.from)) {
+                        return None;
+                    }
+                }
+                Some(Edge {
+                    from: e.from.clone(),
+                    to: e.to.clone(),
+                    is_required_input: e.is_required_input,
+                    is_optional_output: e.is_optional_output,
+                    values: <_>::default(),
+                })
+            },
+        );
+        let mut bfs = new_bfs(&g, tx.iter().map(|id| self.nodes[id].idx));
+        let mut after = Vec::new();
+        while let Some(nid) = bfs.next(&g) {
+            let node = &self.nodes[g[nid]];
+            if node.command.name() == FLOW_OUTPUT {
+                let label = match node.command.outputs().pop() {
+                    Some(label) => label.name,
+                    None => continue,
+                };
+                if label != signature {
+                    after.push(label);
+                }
+            }
+        }
+
+        let before = self
+            .nodes
+            .values()
+            .filter_map(|n| {
+                (n.command.name() == FLOW_OUTPUT)
+                    .then(|| n.command.outputs().pop().map(|o| o.name))
+                    .flatten()
+            })
+            .filter(|name| name != &signature && !after.contains(name))
+            .collect();
+
+        Ok(InstructionInfo {
+            signature,
+            before,
+            after,
         })
     }
 
@@ -514,9 +609,9 @@ impl FlowGraph {
             .collect()
     }
 
-    pub fn sort_transactions(&self) -> Result<Vec<Vec<NodeId>>, anyhow::Error> {
+    pub fn sort_transactions(&self) -> crate::Result<Vec<Vec<NodeId>>> {
         let nodes = petgraph::algo::toposort(&self.g, None)
-            .map_err(|_| anyhow::anyhow!("graph has cycle"))?
+            .map_err(|_| crate::Error::Cycle)?
             .into_iter()
             .map(|idx| self.g[idx])
             .collect::<Vec<_>>();
@@ -597,9 +692,24 @@ impl FlowGraph {
         self.g.edges_directed(idx, Direction::Outgoing)
     }
 
+    fn submit_is_false(&self, idx: NodeIndex<u32>) -> bool {
+        self.in_edges(idx)
+            .find_map(|e| (e.weight().to == "submit").then(|| e.weight().values.front()))
+            .flatten()
+            .map(|v| v.value == Some(Value::Bool(false)))
+            .unwrap_or(false)
+    }
+
     fn ready(&self, idx: NodeIndex<u32>, s: &State) -> bool {
         let id = self.g[idx];
-        if self.nodes[&id].command.name() == crate::command::collect::COLLECT {
+        let cmd = &self.nodes[&id].command;
+        if cmd.instruction_info().is_some() {
+            // Don't start node if it has a `false` submit input
+            if self.submit_is_false(idx) {
+                return false;
+            }
+        }
+        if cmd.name() == crate::command::collect::COLLECT {
             let source = match self.in_edges(idx).next() {
                 None => return true,
                 Some(e) => e.source(),
@@ -639,19 +749,17 @@ impl FlowGraph {
         let mut tracker = TrackEdgeValue::None;
         for edge_id in in_edges {
             let w = self.g.edge_weight_mut(edge_id).unwrap();
-            match w.values.front() {
-                Some(EdgeValue {
-                    value: Some(value),
-                    tracker: edge_tracker,
-                }) => {
-                    let is_from_array = edge_tracker.is_array();
-                    tracker = tracker.zip(&edge_tracker);
-                    values.insert(w.to.clone(), value.clone());
-                    if is_from_array {
-                        w.values.pop_front();
-                    }
+            if let Some(EdgeValue {
+                value: Some(value),
+                tracker: edge_tracker,
+            }) = w.values.front()
+            {
+                let is_from_array = edge_tracker.is_array();
+                tracker = tracker.zip(edge_tracker);
+                values.insert(w.to.clone(), value.clone());
+                if is_from_array {
+                    w.values.pop_front();
                 }
-                _ => {}
             }
         }
         (values, tracker)
@@ -792,11 +900,11 @@ impl FlowGraph {
                     .expect("bug in start_node")
                     .extend(values);
 
-                if ins.instructions.is_empty() {
+                if ins.is_none() {
                     o.resp.send(Ok(execute::Response { signature: None })).ok();
                 } else if info.instruction_info.is_some() {
                     info.waiting = Some(Waiting {
-                        instructions: ins,
+                        instructions: ins.expect("ins.is_none() == false"),
                         resp: o.resp,
                     });
                 } else {
@@ -836,7 +944,7 @@ impl FlowGraph {
                     PartialOutput {
                         node_id: node.id,
                         times,
-                        output: result.map(|v| (Instructions::default(), v)),
+                        output: result.map(|v| (None, v)),
                         resp,
                     },
                     s,
@@ -914,9 +1022,20 @@ impl FlowGraph {
 
         for tx in txs {
             debug_assert!(!tx.is_empty());
-            let is_complete = tx.values().all(Option::is_some);
+            let is_complete = tx.iter().all(|(node_id, wait)| {
+                match self.nodes.get(node_id) {
+                    Some(node) => {
+                        // node is not running
+                        self.submit_is_false(node.idx)
+                    }
+                    None => {
+                        // none mean it is running
+                        wait.is_some()
+                    }
+                }
+            });
             if is_complete {
-                let mut tx = tx.into_values().rev().collect::<Option<Vec<_>>>().unwrap();
+                let mut tx = tx.into_values().rev().flatten().collect::<Vec<_>>();
                 while let Some(w) = tx.pop() {
                     use std::ops::Range;
                     struct Responder {
@@ -971,6 +1090,22 @@ impl FlowGraph {
                         Err(execute::Error::Canceled(s.stop.get_reason()))
                     } else if s.stop_shared.token.is_cancelled() {
                         Err(execute::Error::Canceled(s.stop_shared.get_reason()))
+                    } else if ins.instructions.is_empty() {
+                        Ok(execute::Response { signature: None })
+                    } else if let Some(exec) = &self.parent_flow_execute {
+                        self.collect_flow_output(s);
+                        s.stop
+                            .race(
+                                std::pin::pin!(s.stop_shared.race(
+                                    std::pin::pin!(exec.call_ref(execute::Request {
+                                        instructions: ins,
+                                        output: s.result.output.clone(),
+                                    })),
+                                    execute::Error::Canceled,
+                                )),
+                                execute::Error::Canceled,
+                            )
+                            .await
                     } else {
                         tracing::info!("executing instructions");
                         let config = self.tx_exec_config.clone();
@@ -988,9 +1123,11 @@ impl FlowGraph {
                                 execute::Error::Canceled,
                             )
                             .await
+                            .map(|signature| execute::Response {
+                                signature: Some(signature),
+                            })
                     };
 
-                    let res = res.map(|s| execute::Response { signature: Some(s) });
                     let failed_instruction = res.as_ref().err().and_then(|e| match e {
                         execute::Error::Solana { error, inserted } => {
                             find_failed_instruction(error)
@@ -1155,8 +1292,7 @@ impl FlowGraph {
             ) in &n.use_previous_values
             {
                 if s.previous_values.contains_key(node_id) {
-                    let is_required_input =
-                        n.command.input_is_required(&input_name).unwrap_or(true);
+                    let is_required_input = n.command.input_is_required(input_name).unwrap_or(true);
                     self.g.add_edge(
                         fake_node,
                         n.idx,
@@ -1393,7 +1529,7 @@ impl tower::Service<execute::Request> for ExecuteWithBundling {
             .unbounded_send(PartialOutput {
                 node_id: self.node_id,
                 times: self.times,
-                output: Ok((req.instructions, req.output)),
+                output: Ok((Some(req.instructions), req.output)),
                 resp: tx,
             })
             .ok();
@@ -1422,59 +1558,44 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
     }
     fn call(&mut self, mut req: execute::Request) -> Self::Future {
         use tower::ServiceExt;
-        if req.instructions.instructions.is_empty() {
-            // empty instructions wont be bundled,
-            // so just process like normal
-            let (tx, rx) = oneshot::channel();
-            self.tx
-                .unbounded_send(PartialOutput {
-                    node_id: self.node_id,
-                    times: self.times,
-                    output: Ok((req.instructions, req.output)),
-                    resp: tx,
+        if self.stop_shared.token.is_cancelled() {
+            let reason = self.stop_shared.get_reason();
+            return Box::pin(async move { Err(execute::Error::Canceled(reason)) });
+        }
+        // execute before sending the partial output
+        let mut svc = self.simple_svc.clone();
+        let tx = self.tx.clone();
+        let node_id = self.node_id;
+        let times = self.times;
+        let output = req.output.clone();
+        let overwrite_feepayer = self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair());
+        let task = async move {
+            if let Some(signer) = overwrite_feepayer {
+                req.instructions.set_feepayer(signer);
+            }
+            let res = svc.ready().await?.call(req).await;
+            let output = match &res {
+                Ok(_) => Ok((Instructions::default(), output)),
+                Err(error) => Err(error.clone().into()),
+            };
+            // send output with empty instructions after we've executed them
+            // only send on Ok, because the node should send Err by itself
+            if output.is_ok() {
+                let (resp, rx) = oneshot::channel();
+                tx.unbounded_send(PartialOutput {
+                    node_id,
+                    times,
+                    output: output.map(|(ins, output)| (Some(ins), output)),
+                    resp,
                 })
                 .ok();
-            rx.map(|r| r?).boxed()
-        } else {
-            if self.stop_shared.token.is_cancelled() {
-                let reason = self.stop_shared.get_reason();
-                return Box::pin(async move { Err(execute::Error::Canceled(reason)) });
+                rx.await.ok();
             }
-            // execute before sending the partial output
-            let mut svc = self.simple_svc.clone();
-            let tx = self.tx.clone();
-            let node_id = self.node_id;
-            let times = self.times;
-            let output = req.output.clone();
-            let overwrite_feepayer = self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair());
-            let task = async move {
-                if let Some(signer) = overwrite_feepayer {
-                    req.instructions.set_feepayer(signer);
-                }
-                let res = svc.ready().await?.call(req).await;
-                let output = match &res {
-                    Ok(_) => Ok((Instructions::default(), output)),
-                    Err(error) => Err(error.clone().into()),
-                };
-                // send output with empty instructions after we've executed them
-                // only send on Ok, because the node should send Err by itself
-                if output.is_ok() {
-                    let (resp, rx) = oneshot::channel();
-                    tx.unbounded_send(PartialOutput {
-                        node_id,
-                        times,
-                        output,
-                        resp,
-                    })
-                    .ok();
-                    rx.await.ok();
-                }
-                res
-            }
-            .boxed();
-            let stop = self.stop_shared.clone();
-            Box::pin(async move { stop.race(task, execute::Error::Canceled).await })
+            res
         }
+        .boxed();
+        let stop = self.stop_shared.clone();
+        Box::pin(async move { stop.race(task, execute::Error::Canceled).await })
     }
 }
 
@@ -1600,13 +1721,10 @@ fn finished_recursive(
         }) = e.weight().values.front()
         {
             has_array_input |= tracker.is_array();
-        } else {
-            if e.weight().is_required_input {
-                let source_finished = finished_recursive(f, s, e.source(), visited);
-                all_sources_not_finished &= !source_finished;
-                filled = false;
-            } else {
-            }
+        } else if e.weight().is_required_input {
+            let source_finished = finished_recursive(f, s, e.source(), visited);
+            all_sources_not_finished &= !source_finished;
+            filled = false;
         }
     }
 
@@ -1619,6 +1737,20 @@ fn finished_recursive(
     } else {
         !all_sources_not_finished
     }
+}
+
+fn new_bfs<G, I>(graph: G, entrypoint: I) -> Bfs<G::NodeId, G::Map>
+where
+    G: GraphRef + Visitable,
+    I: IntoIterator<Item = G::NodeId>,
+{
+    let mut discovered = graph.visit_map();
+    let mut stack = VecDeque::new();
+    for id in entrypoint.into_iter() {
+        discovered.visit(id);
+        stack.push_back(id);
+    }
+    Bfs { stack, discovered }
 }
 
 #[cfg(test)]

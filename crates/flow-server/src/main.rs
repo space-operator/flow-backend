@@ -1,5 +1,8 @@
 use actix::Actor;
-use actix_web::{middleware::Logger, web, App, HttpServer};
+use actix_web::{
+    middleware::{Compress, Logger},
+    web, App, HttpServer,
+};
 use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
     LocalStorage, WasmStorage,
@@ -43,7 +46,7 @@ async fn main() {
     tracing::info!("allow CORS origins: {:?}", config.cors_origins);
 
     let wasm_storage = match WasmStorage::new(
-        &config.supabase.project_id,
+        config.supabase.get_endpoint(),
         &config.supabase.anon_key,
         &config.supabase.wasm_bucket,
     ) {
@@ -199,7 +202,8 @@ async fn main() {
         };
 
         let app = App::new()
-            .wrap(Logger::new(r#""%r" %s %b %Dms"#).exclude("/healthcheck"))
+            .wrap(Compress::default())
+            .wrap(Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#).exclude("/healthcheck"))
             .app_data(web::Data::new(db.clone()))
             .app_data(web::Data::new(db_worker.clone()));
 
@@ -216,7 +220,18 @@ async fn main() {
             app = app.service(db_proxy);
         }
 
+        let data = {
+            let mut svc =
+                web::scope("/data").service(api::data_export::service(&config, db.clone()));
+            #[cfg(feature = "import")]
+            if let Some(import) = api::data_import::service(&config) {
+                svc = svc.service(import);
+            }
+            svc
+        };
+
         app.service(flow)
+            .service(data)
             .service(signature)
             .service(apikeys)
             .service(websocket)
