@@ -6,6 +6,7 @@ plugins:
     config:
       account_email: $KONG_ACME_EMAIL
       allow_any_domain: true
+      tos_accepted: true
 
 ###
 ### Consumers / Users
