@@ -12,7 +12,7 @@ function getEnv(key: string): string {
 
 await load({ export: true });
 
-const SERVER = "http://localhost:8000/flow-server";
+const SERVER = `http://localhost:${getEnv("KONG_HTTP_PORT")}/flow-server`;
 
 const keyB58 = Deno.env.get("KEYPAIR");
 let key;
