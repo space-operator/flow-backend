@@ -1,6 +1,11 @@
 _format_version: '2.1'
 _transform: true
 
+plugins:
+  - name: acme
+    config:
+      account_email: $KONG_ACME_EMAIL
+
 ###
 ### Consumers / Users
 ###
