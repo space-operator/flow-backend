@@ -5,6 +5,7 @@ plugins:
   - name: acme
     config:
       account_email: $KONG_ACME_EMAIL
+      allow_any_domain: true
 
 ###
 ### Consumers / Users

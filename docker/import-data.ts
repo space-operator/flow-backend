@@ -28,9 +28,10 @@ if (exportResp.status !== 200) {
   Deno.exit(1);
 }
 const data = await exportResp.json();
-console.log("Importing data to http://localhost:8000/flow-server");
+const SERVER = `http://localhost:${getEnv("KONG_HTTP_PORT")}/flow-server`;
+console.log(`Importing data to ${SERVER}`);
 const importResp = await fetch(
-  "http://localhost:8000/flow-server/data/import",
+  `${SERVER}/data/import`,
   {
     headers: {
       authorization: `Bearer ${SERVICE_ROLE_KEY}`,
