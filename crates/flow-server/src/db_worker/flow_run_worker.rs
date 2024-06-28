@@ -6,7 +6,7 @@ use super::{
 use crate::{api::prelude::auth::TokenType, error::ErrorBody};
 use actix::{
     fut::wrap_future, Actor, ActorContext, ActorFutureExt, AsyncContext, ResponseActFuture,
-    StreamHandler, WrapFuture,
+    ResponseFuture, StreamHandler, WrapFuture,
 };
 use actix_web::http::StatusCode;
 use db::{pool::DbPool, FlowRunLogsRow};
@@ -19,10 +19,10 @@ use flow::{
 };
 use flow_lib::{FlowRunId, UserId};
 use futures_channel::mpsc;
-use futures_util::{stream::BoxStream, StreamExt};
+use futures_util::{stream::BoxStream, FutureExt, StreamExt};
 use hashbrown::{HashMap, HashSet};
 use thiserror::Error as ThisError;
-use tokio::sync::broadcast;
+use tokio::sync::broadcast::{self, error::RecvError};
 use utils::address_book::ManagableActor;
 use value::Value;
 
@@ -58,6 +58,20 @@ impl ManagableActor for FlowRunWorker {
 
     fn id(&self) -> Self::ID {
         self.run_id
+    }
+}
+
+pub struct WaitFinish;
+
+impl actix::Message for WaitFinish {
+    type Result = Result<(), RecvError>;
+}
+
+impl actix::Handler<WaitFinish> for FlowRunWorker {
+    type Result = ResponseFuture<<WaitFinish as actix::Message>::Result>;
+    fn handle(&mut self, _: WaitFinish, _: &mut Self::Context) -> Self::Result {
+        let mut rx = self.done_tx.subscribe();
+        async move { rx.recv().await }.boxed()
     }
 }
 

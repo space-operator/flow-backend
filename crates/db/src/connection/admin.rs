@@ -3,10 +3,11 @@ use anyhow::anyhow;
 use bytes::Bytes;
 use chrono::Utc;
 use deadpool_postgres::{Object as Connection, Transaction};
-use flow_lib::UserId;
+use flow_lib::{FlowRunId, UserId};
 use futures_util::SinkExt;
 use rand::distributions::{Alphanumeric, DistString};
 use std::borrow::Borrow;
+use tokio_pg_mapper::PostgresMapper;
 use tokio_postgres::{
     binary_copy::BinaryCopyInWriter,
     types::{Json, Type},
@@ -27,9 +28,66 @@ pub struct Password {
     pub password: Option<String>,
 }
 
+#[derive(Debug)]
+pub struct FlowRunInfo {
+    pub user_id: UserId,
+    pub shared_with: Vec<UserId>,
+}
+
 impl AdminConn {
     pub fn new(conn: Connection) -> AdminConn {
         Self { conn }
+    }
+
+    pub async fn get_flow_run_info(&self, run_id: FlowRunId) -> crate::Result<FlowRunInfo> {
+        let stmt = self
+            .conn
+            .prepare_cached("SELECT user_id FROM flow_run WHERE id = $1")
+            .await
+            .map_err(Error::exec("prepare"))?;
+        let user_id: UserId = self
+            .conn
+            .query_one(&stmt, &[&run_id])
+            .await
+            .map_err(Error::exec("query flow_run table"))?
+            .try_get(0)
+            .map_err(Error::data("flow_run.user_id"))?;
+
+        let stmt = self
+            .conn
+            .prepare_cached("SELECT user_id FROM flow_run_shared WHERE flow_run_id = $1")
+            .await
+            .map_err(Error::exec("prepare"))?;
+        let shared_with = self
+            .conn
+            .query(&stmt, &[&run_id])
+            .await
+            .map_err(Error::exec("query flow_run_shared"))?
+            .into_iter()
+            .map(|row| row.try_get(0))
+            .collect::<Result<Vec<UserId>, _>>()
+            .map_err(Error::data("flow_run_shared.user_id"))?;
+        Ok(FlowRunInfo {
+            user_id,
+            shared_with,
+        })
+    }
+
+    pub async fn get_flow_run_output(&self, run_id: FlowRunId) -> crate::Result<Value> {
+        let stmt = self
+            .conn
+            .prepare_cached("SELECT output FROM flow_run WHERE id = $1")
+            .await
+            .map_err(Error::exec("prepare"))?;
+        let output = self
+            .conn
+            .query_one(&stmt, &[&run_id])
+            .await
+            .map_err(Error::exec("query flow_run"))?
+            .try_get::<_, Json<Value>>(0)
+            .map_err(Error::data("flow_run.output"))?
+            .0;
+        Ok(output)
     }
 
     pub async fn insert_whitelist(&self, pk_bs58: &str) -> crate::Result<()> {

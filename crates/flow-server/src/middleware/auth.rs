@@ -273,11 +273,13 @@ impl RealApiAuth {
                 jwt: Some(String::from_utf8(token.to_owned()).map_err(|_| unauthorized())?),
                 api_key: None,
             });
+            ext.insert(TokenType::JWT(payload));
             Ok(())
         } else if let Some(token) = bytes.strip_prefix(FLOW_RUN_TOKEN_PREFIX.as_bytes()) {
             let id = verify_flow_run_token(token, self.sig)?;
             let mut ext = r.extensions_mut();
             ext.insert(FlowRunToken { id });
+            ext.insert(TokenType::FlowRun(FlowRunToken { id }));
             Ok(())
         } else {
             let pubkey = decode_base58_pubkey(header)?;
@@ -305,15 +307,17 @@ impl RealApiAuth {
             .get_user_from_apikey(apikey)
             .await
             .map_err(|_| unauthorized())?;
-        let mut ext = r.extensions_mut();
-        ext.insert(JWTPayload {
+        let payload = JWTPayload {
             pubkey: user.pubkey,
             user_id: user.user_id,
-        });
+        };
+        let mut ext = r.extensions_mut();
+        ext.insert(payload);
         ext.insert(Token {
             jwt: None,
             api_key: Some(apikey.to_owned()),
         });
+        ext.insert(TokenType::ApiKey(payload));
         Ok(())
     }
 

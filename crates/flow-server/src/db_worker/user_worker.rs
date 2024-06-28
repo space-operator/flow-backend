@@ -439,6 +439,7 @@ pub struct StartFlowFresh {
     pub user: User,
     pub flow_id: FlowId,
     pub input: value::Map,
+    pub output_instruction: bool,
     pub partial_config: Option<PartialConfig>,
     pub environment: HashMap<String, String>,
 }
@@ -470,8 +471,12 @@ impl ResponseError for StartError {
                 flow::Error::CreateCmd(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 flow::Error::BuildGraphError(e) => match e {
                     flow::flow_graph::BuildGraphError::EdgesSameTarget => StatusCode::BAD_REQUEST,
-                    flow::flow_graph::BuildGraphError::EdgeSourceNotFound(_) => StatusCode::BAD_REQUEST,
-                    flow::flow_graph::BuildGraphError::NodeNotFoundInPartialConfig(_) => StatusCode::BAD_REQUEST,
+                    flow::flow_graph::BuildGraphError::EdgeSourceNotFound(_) => {
+                        StatusCode::BAD_REQUEST
+                    }
+                    flow::flow_graph::BuildGraphError::NodeNotFoundInPartialConfig(_) => {
+                        StatusCode::BAD_REQUEST
+                    }
                 },
                 flow::Error::GetFlow(e) => match e {
                     get_flow::Error::NotFound => StatusCode::NOT_FOUND,
@@ -559,7 +564,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     msg.flow_id,
                     msg.input,
                     msg.partial_config,
-                    false,
+                    msg.output_instruction,
                     FlowRunOrigin::Start {},
                     None,
                     None,
@@ -575,6 +580,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
 pub struct StartFlowShared {
     pub flow_id: FlowId,
     pub input: value::Map,
+    pub output_instruction: bool,
     pub started_by: (UserId, actix::Addr<UserWorker>),
 }
 
@@ -592,6 +598,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     user: User { id: self.user_id },
                     flow_id: msg.flow_id,
                     input: msg.input,
+                    output_instruction: msg.output_instruction,
                     partial_config: None,
                     environment: <_>::default(),
                 },
@@ -638,7 +645,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     msg.flow_id,
                     msg.input,
                     None,
-                    false,
+                    msg.output_instruction,
                     FlowRunOrigin::StartShared {
                         started_by: msg.started_by.0,
                     },
