@@ -439,7 +439,7 @@ pub struct StartFlowFresh {
     pub user: User,
     pub flow_id: FlowId,
     pub input: value::Map,
-    pub output_instruction: bool,
+    pub output_instructions: bool,
     pub partial_config: Option<PartialConfig>,
     pub environment: HashMap<String, String>,
 }
@@ -564,7 +564,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     msg.flow_id,
                     msg.input,
                     msg.partial_config,
-                    msg.output_instruction,
+                    msg.output_instructions,
                     FlowRunOrigin::Start {},
                     None,
                     None,
@@ -580,7 +580,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
 pub struct StartFlowShared {
     pub flow_id: FlowId,
     pub input: value::Map,
-    pub output_instruction: bool,
+    pub output_instructions: bool,
     pub started_by: (UserId, actix::Addr<UserWorker>),
 }
 
@@ -598,7 +598,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     user: User { id: self.user_id },
                     flow_id: msg.flow_id,
                     input: msg.input,
-                    output_instruction: msg.output_instruction,
+                    output_instructions: msg.output_instructions,
                     partial_config: None,
                     environment: <_>::default(),
                 },
@@ -645,7 +645,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     msg.flow_id,
                     msg.input,
                     None,
-                    msg.output_instruction,
+                    msg.output_instructions,
                     FlowRunOrigin::StartShared {
                         started_by: msg.started_by.0,
                     },

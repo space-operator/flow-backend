@@ -165,7 +165,8 @@ async fn main() {
             .service(api::start_flow::service(&config, db.clone()))
             .service(api::stop_flow::service(&config, db.clone()))
             .service(api::start_flow_shared::service(&config, db.clone()))
-            .service(api::clone_flow::service(&config, db.clone()));
+            .service(api::clone_flow::service(&config, db.clone()))
+            .service(api::get_flow_output::service(&config, db.clone()));
         if let Some(supabase_auth) = &supabase_auth {
             flow = flow.service(api::start_flow_unverified::service(
                 &config,

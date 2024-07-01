@@ -12,7 +12,7 @@ pub struct Params {
     pub partial_config: Option<PartialConfig>,
     #[serde(default)]
     pub environment: HashMap<String, String>,
-    pub output_instruction: bool,
+    pub output_instructions: bool,
 }
 
 #[derive(Serialize)]
@@ -35,14 +35,14 @@ async fn start_flow(
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let user = user.into_inner();
-    let (inputs, partial_config, environment, output_instruction) = params
+    let (inputs, partial_config, environment, output_instructions) = params
         .map(
             |web::Json(Params {
                  inputs,
                  partial_config,
                  environment,
-                 output_instruction,
-             })| (inputs, partial_config, environment, output_instruction),
+                 output_instructions,
+             })| (inputs, partial_config, environment, output_instructions),
         )
         .unwrap_or_default();
     let inputs = inputs.into_iter().collect::<ValueSet>();
@@ -62,7 +62,7 @@ async fn start_flow(
             input: inputs,
             partial_config,
             environment,
-            output_instruction,
+            output_instructions,
         })
         .await??;
 

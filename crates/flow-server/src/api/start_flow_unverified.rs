@@ -12,7 +12,7 @@ pub struct Params {
     #[serde(default)]
     pub inputs: HashMap<String, Value>,
     #[serde(default)]
-    pub output_instruction: bool,
+    pub output_instructions: bool,
 }
 
 #[derive(Serialize)]
@@ -62,12 +62,12 @@ async fn start_flow_unverified(
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let user = user.into_inner();
-    let (inputs, output_instruction) = params
+    let (inputs, output_instructions) = params
         .map(
             |web::Json(Params {
                  inputs,
-                 output_instruction,
-             })| (inputs, output_instruction),
+                 output_instructions,
+             })| (inputs, output_instructions),
         )
         .unwrap_or_default();
     let inputs = inputs.into_iter().collect::<ValueSet>();
@@ -94,7 +94,7 @@ async fn start_flow_unverified(
         .send(StartFlowShared {
             flow_id,
             input: inputs,
-            output_instruction,
+            output_instructions,
             started_by: (user_id, starter),
         })
         .await??;
