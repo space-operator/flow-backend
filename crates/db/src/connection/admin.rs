@@ -7,7 +7,6 @@ use flow_lib::{FlowRunId, UserId};
 use futures_util::SinkExt;
 use rand::distributions::{Alphanumeric, DistString};
 use std::borrow::Borrow;
-use tokio_pg_mapper::PostgresMapper;
 use tokio_postgres::{
     binary_copy::BinaryCopyInWriter,
     types::{Json, Type},

@@ -8,6 +8,7 @@ use value::Value;
 pub struct Params {
     #[serde(default)]
     pub inputs: HashMap<String, Value>,
+    pub output_instruction: bool,
 }
 
 #[derive(Serialize)]
@@ -31,8 +32,13 @@ async fn start_flow_shared(
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let user = user.into_inner();
-    let inputs = params
-        .map(|web::Json(Params { inputs })| inputs)
+    let (inputs, output_instruction) = params
+        .map(
+            |web::Json(Params {
+                 inputs,
+                 output_instruction,
+             })| (inputs, output_instruction),
+        )
         .unwrap_or_default();
     let inputs = inputs.into_iter().collect::<ValueSet>();
 
@@ -60,6 +66,7 @@ async fn start_flow_shared(
         .send(StartFlowShared {
             flow_id,
             input: inputs,
+            output_instruction,
             started_by: (user.user_id, starter),
         })
         .await??;
