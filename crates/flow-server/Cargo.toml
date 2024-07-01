@@ -56,6 +56,7 @@ once_cell = "1.17.2"
 rhai-script.workspace = true
 tracing-log = "0.2.0"
 url = { version = "2.5.0", features = ["serde"] }
+async-trait = "0.1.80"
 
 [dev-dependencies]
 criterion = "0.5"

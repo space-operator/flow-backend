@@ -6,6 +6,7 @@ pub mod start_flow;
 pub mod start_flow_shared;
 pub mod start_flow_unverified;
 pub mod stop_flow;
+pub mod get_flow_output;
 
 pub mod clone_flow;
 

@@ -7,6 +7,7 @@ use crate::{
         NodeStart, NODE_SPAN_NAME,
     },
 };
+use base64::prelude::*;
 use chrono::{DateTime, Utc};
 use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
@@ -1093,7 +1094,7 @@ impl FlowGraph {
                     } else if ins.instructions.is_empty() {
                         Ok(execute::Response { signature: None })
                     } else if let Some(exec) = &self.parent_flow_execute {
-                        self.collect_flow_output(s);
+                        self.collect_flow_output(s).await;
                         s.stop
                             .race(
                                 std::pin::pin!(s.stop_shared.race(
@@ -1388,7 +1389,7 @@ impl FlowGraph {
             }
         }
 
-        self.collect_flow_output(&mut s);
+        self.collect_flow_output(&mut s).await;
 
         let failed = s
             .result
@@ -1416,7 +1417,7 @@ impl FlowGraph {
         s.result
     }
 
-    fn collect_flow_output(&self, s: &mut State) {
+    async fn collect_flow_output(&self, s: &mut State) {
         for (id, n) in self
             .nodes
             .iter()
@@ -1435,6 +1436,25 @@ impl FlowGraph {
                     _ => Value::Array(values),
                 };
                 s.result.output.insert(name.clone(), value);
+            }
+        }
+        if let Some(ins) = s.result.instructions.take() {
+            if !s.result.output.contains_key("transaction") {
+                match ins
+                    .build_and_parital_sign(&self.ctx.solana_client, self.tx_exec_config.clone())
+                    .await
+                {
+                    Ok(tx) => {
+                        let tx_bytes = bincode::serialize(&tx).unwrap();
+                        let tx_base64 = BASE64_STANDARD.encode(&tx_bytes);
+                        s.result
+                            .output
+                            .insert("transaction".into(), Value::String(tx_base64));
+                    }
+                    Err(error) => {
+                        s.flow_error(error.to_string());
+                    }
+                }
             }
         }
     }

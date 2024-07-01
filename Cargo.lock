@@ -1146,9 +1146,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.79"
+version = "0.1.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a507401cad91ec6a857ed5513a2073c82a9b9048762b885bb98655b306964681"
+checksum = "c6fa2087f2753a7da8cc1c0dbfcf89579dd57458e36769de5ac750b4671737ca"
 dependencies = [
  "proc-macro2 1.0.79",
  "quote 1.0.35",
@@ -1232,6 +1232,12 @@ name = "base64"
 version = "0.21.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
+
+[[package]]
+name = "base64"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
 name = "base64ct"
@@ -2541,6 +2547,7 @@ dependencies = [
  "tempfile",
  "thiserror",
  "tokio",
+ "tokio-pg-mapper",
  "tokio-postgres",
  "tokio-postgres-rustls",
  "toml",
@@ -3050,6 +3057,8 @@ dependencies = [
  "actix-web",
  "anyhow",
  "async-trait",
+ "base64 0.22.1",
+ "bincode 1.3.3",
  "bs58 0.4.0",
  "bytes",
  "chrono",
@@ -3129,6 +3138,7 @@ dependencies = [
  "actix-web",
  "actix-web-actors",
  "anyhow",
+ "async-trait",
  "base64 0.13.1",
  "bincode 2.0.0-rc.2",
  "blake3",
@@ -8274,6 +8284,27 @@ checksum = "bbae76ab933c85776efabc971569dd6119c580d8f5d448769dec1764bf796ef2"
 dependencies = [
  "native-tls",
  "tokio",
+]
+
+[[package]]
+name = "tokio-pg-mapper"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93f2b78f3566383ffabc553c72bbb2f129962a54886c5c4d8e8c706f84eceab8"
+dependencies = [
+ "tokio-pg-mapper-derive",
+ "tokio-postgres",
+]
+
+[[package]]
+name = "tokio-pg-mapper-derive"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8548f756cd6eb4069c5af0fb0cec57001fb42bd1fb7330d8f24067ee3fa62608"
+dependencies = [
+ "quote 1.0.35",
+ "syn 1.0.109",
+ "tokio-postgres",
 ]
 
 [[package]]

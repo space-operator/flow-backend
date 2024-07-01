@@ -633,6 +633,16 @@ impl Instructions {
         Ok((message, inserted))
     }
 
+    pub async fn build_and_parital_sign(
+        mut self,
+        rpc: &RpcClient,
+        config: ExecutionConfig,
+    ) -> Result<Transaction, Error> {
+        let (message, _) = self.build_message(rpc, &config).await?;
+        // TODO: sign hardcoded wallets
+        Ok(Transaction::new_unsigned(message))
+    }
+
     pub async fn execute(
         mut self,
         rpc: &RpcClient,
