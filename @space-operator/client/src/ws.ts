@@ -1,7 +1,8 @@
-import { FlowRunId } from './types/common.ts';
+import { FlowRunId } from "./types/common.ts";
 import {
   AuthenticateRequest,
   AuthenticateResponse,
+  FlowFinish,
   FlowRunEvent,
   SignatureRequest,
   SignatureRequestsEvent,
@@ -10,7 +11,7 @@ import {
   SubscribeSignatureRequestsRequest,
   SubscribeSignatureRequestsResponse,
   WsResponse,
-} from './types/ws.ts';
+} from "./types/ws.ts";
 
 export interface WcClientOptions {
   url?: string;
@@ -18,12 +19,12 @@ export interface WcClientOptions {
   logger?: (msg: string, data: any) => any;
 }
 
-export const WS_URL = 'wss://dev-api.spaceoperator.com/ws';
+export const WS_URL = "wss://dev-api.spaceoperator.com/ws";
 
 function noop() {}
 
 export class WsClient {
-  private identity?: AuthenticateResponse['Ok'];
+  private identity?: AuthenticateResponse["Ok"];
   private logger: Function = noop;
   private url: string;
   private conn?: WebSocket;
@@ -40,7 +41,7 @@ export class WsClient {
     this.logger = options.logger ?? noop;
   }
 
-  public getIdentity(): WsClient['identity'] {
+  public getIdentity(): WsClient["identity"] {
     return this.identity;
   }
 
@@ -55,23 +56,33 @@ export class WsClient {
   public async subscribeFlowRunEvents(
     callback: (ev: FlowRunEvent) => any,
     id: FlowRunId,
-    token?: string
+    token?: string,
+    finishCallback?: (ev: FlowFinish) => any
   ) {
     const result: SubscribeFlowRunEventsResponse = await this.send(
       new SubscribeFlowRunEventsRequest(this.nextId(), id, token)
     );
-    if (result.Err != null) {
-      throw result.Err;
+    if (result.Err !== undefined) {
+      throw new Error(result.Err);
     }
-    if (result.Ok != null) {
-      this.streamCallbacks.set(result.Ok.stream_id, {
+    if (result.Ok !== undefined) {
+      const id = result.Ok.stream_id;
+      this.streamCallbacks.set(id, {
         callback: (ev: FlowRunEvent) => {
-          if (ev.event === 'SignatureRequest') {
+          if (ev.event === "SignatureRequest") {
             ev.data = new SignatureRequest(ev.data);
           }
           callback(ev);
+          if (ev.event === "FlowFinish") {
+            if (finishCallback !== undefined) {
+              finishCallback(ev.data);
+              this.streamCallbacks.delete(id);
+            }
+          }
         },
       });
+    } else {
+      throw new Error("response must contains Ok or Err");
     }
   }
 
@@ -81,35 +92,38 @@ export class WsClient {
     const result: SubscribeSignatureRequestsResponse = await this.send(
       new SubscribeSignatureRequestsRequest(this.nextId())
     );
-    if (result.Err != null) {
-      throw result.Err;
+    if (result.Err !== undefined) {
+      throw new Error(result.Err);
     }
-    if (result.Ok != null) {
+    if (result.Ok !== undefined) {
       this.streamCallbacks.set(result.Ok.stream_id, {
         callback: (ev: SignatureRequestsEvent) => {
-          if (ev.event === 'SignatureRequest') {
+          if (ev.event === "SignatureRequest") {
             ev.data = new SignatureRequest(ev.data);
           }
           callback(ev);
         },
       });
+    } else {
+      throw new Error("response must contains Ok or Err");
     }
   }
 
-  private async getToken(): Promise<string | null> {
-    if (this.token == null) return null;
+  private async getToken(): Promise<string> {
     switch (typeof this.token) {
-      case 'string':
+      case "undefined":
+        throw new Error("no authentication token");
+      case "string":
         return this.token;
-      case 'function':
+      case "function":
         return await this.token();
       default:
-        throw 'invalid token type';
+        throw new TypeError("invalid token type");
     }
   }
 
   private connect() {
-    if (this.conn != null) return;
+    if (this.conn !== undefined) return;
     this.conn = new WebSocket(this.url);
     this.conn.onopen = () => this.onConnOpen();
     this.conn.onmessage = (event) => this.onConnMessage(event);
@@ -120,26 +134,26 @@ export class WsClient {
   private disconnect() {
     this.conn = undefined;
     this.reqCallbacks.forEach(({ reject }) => {
-      reject('disconnected');
+      reject("disconnected");
     });
     this.streamCallbacks.clear();
     this.reqCallbacks.clear();
   }
 
   private onConnClose(event: any) {
-    this.log('closing', event);
+    this.log("closing", event);
     this.disconnect();
   }
 
   private onConnError(event: any) {
-    this.log('error', event);
+    this.log("error", event);
     this.disconnect();
   }
 
   private onConnMessage(msg: { data: any }) {
-    if (typeof msg.data === 'string') {
+    if (typeof msg.data === "string") {
       const json = JSON.parse(msg.data);
-      this.log('received', json);
+      this.log("received", json);
       if (json.id != null) {
         const cb = this.reqCallbacks.get(json.id);
         if (cb != null) {
@@ -156,7 +170,7 @@ export class WsClient {
           throw `no callback for stream ${json.steam_id}`;
         }
       } else {
-        throw 'invalid message';
+        throw new Error("invalid message");
       }
     }
   }
@@ -177,11 +191,11 @@ export class WsClient {
     params: any;
   }): Promise<WsResponse<any>> {
     const text = JSON.stringify(msg);
-    if (this.conn != null) {
-      this.log('sending', msg);
+    if (this.conn !== undefined) {
+      this.log("sending", msg);
       this.conn.send(text);
     } else {
-      this.log('queueing', msg);
+      this.log("queueing", msg);
       this.queue.push(text);
       this.connect();
     }
@@ -191,25 +205,26 @@ export class WsClient {
   }
 
   async authenticate() {
+    if (this.token === undefined) return;
     const token = await this.getToken();
-    if (token != null) {
-      const result: AuthenticateResponse = await this.send(
-        new AuthenticateRequest(this.nextId(), token)
-      );
-      if (result.Err != null) {
-        console.error('Authenticate error', result.Err);
-      }
-      if (result.Ok != null) {
-        this.identity = result.Ok;
-      }
+    const result: AuthenticateResponse = await this.send(
+      new AuthenticateRequest(this.nextId(), token)
+    );
+    if (result.Err !== undefined) {
+      console.error("Authenticate error", result.Err);
+    }
+    if (result.Ok !== undefined) {
+      this.identity = result.Ok;
+    } else {
+      throw new Error("response must contains Ok or Err");
     }
   }
 
   private async onConnOpen() {
     await this.authenticate();
     this.queue = this.queue.filter((msg) => {
-      if (this.conn != undefined) {
-        this.log('sending queued message', msg);
+      if (this.conn !== undefined) {
+        this.log("sending queued message", msg);
         this.conn.send(msg);
         return false;
       } else {

@@ -3,7 +3,9 @@ use super::{
     DBWorker, FindActor, GetTokenWorker, RegisterLogs, StartFlowRunWorker,
 };
 use crate::error::ErrorBody;
-use actix::{Actor, ActorFutureExt, AsyncContext, ResponseActFuture, ResponseFuture, WrapFuture};
+use actix::{
+    Actor, ActorFutureExt, AsyncContext, Response, ResponseActFuture, ResponseFuture, WrapFuture,
+};
 use actix_web::{http::StatusCode, ResponseError};
 use bytes::Bytes;
 use db::{pool::DbPool, Error as DbError};
@@ -171,6 +173,22 @@ impl UserWorker {
             }
             Err(error) => Box::pin(ready(Err(signer::Error::Other(error.into())))),
         }
+    }
+}
+
+pub struct SigReqExists {
+    pub id: i64,
+}
+
+impl actix::Message for SigReqExists {
+    type Result = bool;
+}
+
+impl actix::Handler<SigReqExists> for UserWorker {
+    type Result = Response<<SigReqExists as actix::Message>::Result>;
+
+    fn handle(&mut self, msg: SigReqExists, _: &mut Self::Context) -> Self::Result {
+        Response::reply(self.sigreg.contains_key(&msg.id))
     }
 }
 

@@ -4,13 +4,6 @@ use crate::db_worker::{
     FindActor,
 };
 
-#[derive(Deserialize)]
-pub struct Params {
-    #[serde(default)]
-    pub timeout_millies: u32,
-    pub reason: Option<String>,
-}
-
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
     web::resource("/output/{run_id}")
         .wrap(config.all_auth(db))
