@@ -2,8 +2,10 @@
 
 use async_trait::async_trait;
 use flow_lib::{
-    command::prelude::*, config::Endpoints, context::CommandContext, ContextConfig, FlowRunId,
-    NodeId, User,
+    command::{prelude::*, InstructionInfo},
+    config::Endpoints,
+    context::CommandContext,
+    ContextConfig, FlowRunId, NodeId, User,
 };
 use serde_with::{serde_as, DisplayFromStr};
 use std::{collections::HashMap, convert::Infallible};
@@ -256,5 +258,9 @@ impl CommandTrait for RpcCommandClient {
         drop(ctx_proxy);
 
         resp
+    }
+
+    fn instruction_info(&self) -> Option<InstructionInfo> {
+        self.node_data.instruction_info.clone()
     }
 }
