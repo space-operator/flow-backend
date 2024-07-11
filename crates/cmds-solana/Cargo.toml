@@ -67,6 +67,7 @@ anchor-spl = "=0.28.0"
 # clockwork-sdk = "=2.0.1"
 spl-token-2022 = { version = "0.9.0", features = ["serde-traits"] }
 pyth-sdk-solana = "0.10.0"
+mpl-core = { version = "0.7.2", features = ["serde"] }
 
 [dependencies.anchor-lang-26]
 package = "anchor-lang"
