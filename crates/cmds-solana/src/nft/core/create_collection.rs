@@ -141,3 +141,20 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     Ok(Output { signature })
 }
+
+
+// [
+//     {
+//         "plugin": {
+//             "VerifiedCreators": {
+//                 "signatures": [
+//                     {
+//                         "address": "DpfvhHU7z1CK8eP5xbEz8c4WBNHUfqUVtAE7opP2kJBc",
+//                         "verified": true
+//                     }
+//                 ]
+//             }
+//         },
+//         "authority": "Owner"
+//     }
+// ]
