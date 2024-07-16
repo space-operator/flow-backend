@@ -1,10 +1,5 @@
 import { Value, isIValue } from "../src/value.ts";
-import {
-  assertEquals,
-  assertStrictEquals,
-  assert,
-  assertThrows,
-} from "jsr:@std/assert";
+import { assertStrictEquals, assert, assertThrows } from "jsr:@std/assert";
 
 Deno.test("isIValue", () => {
   assert(isIValue({ S: "" }));

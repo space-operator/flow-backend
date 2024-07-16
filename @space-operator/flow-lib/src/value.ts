@@ -25,6 +25,10 @@ export interface IValue {
   M?: Record<string, IValue>;
 }
 
+export class Map {
+  [key: string]: IValue;
+}
+
 export function isIValue(v: any): v is IValue {
   if (typeof v !== "object" || v === null) return false;
   const keys = Object.keys(v);
@@ -113,12 +117,12 @@ export class Value implements IValue {
   A?: Value[];
   M?: Record<string, Value>;
 
-  constructor(x?: any, customConvert?: (x: any) => Value | undefined) {
+  constructor(x?: any) {
     if (x === undefined) {
       return Value.Null();
     }
 
-    const value = Value.#inferFromJSType(x, customConvert);
+    const value = Value.#inferFromJSType(x);
     if (value === undefined) throw TypeError("undefined");
     return value;
   }
@@ -127,10 +131,7 @@ export class Value implements IValue {
     return this;
   }
 
-  static #inferFromJSType(
-    x: any,
-    customConvert?: (x: any) => Value | undefined
-  ): Value | undefined {
+  static #inferFromJSType(x: any): Value | undefined {
     if (x instanceof Value) {
       return x;
     }
@@ -186,23 +187,17 @@ export class Value implements IValue {
               });
           }
         }
-        if (customConvert !== undefined) {
-          const result = customConvert(x);
-          if (result !== undefined) {
-            return result;
-          }
-        }
         if (Object.prototype.isPrototypeOf.call(Array.prototype, x)) {
           return Value.fromJSON({
             A: Array.from(x)
-              .map((x) => Value.#inferFromJSType(x, customConvert))
+              .map((x) => Value.#inferFromJSType(x))
               .filter((x) => x !== undefined) as IValue[],
           });
         }
         return Value.fromJSON({
           M: Object.fromEntries(
             Object.entries(x)
-              .map(([k, v]) => [k, Value.#inferFromJSType(v, customConvert)])
+              .map(([k, v]) => [k, Value.#inferFromJSType(v)])
               .filter(([_k, v]) => v !== undefined)
           ),
         });
@@ -252,6 +247,9 @@ export class Value implements IValue {
     return value;
   }
 
+  /**
+   * Construct a U64 value.
+   */
   public static U64(x: string | number | bigint): Value {
     const i = BigInt(x);
     if (i < 0n || i > 18446744073709551615n) {
@@ -260,6 +258,9 @@ export class Value implements IValue {
     return Value.#fromJSONUnchecked({ U: i.toString() });
   }
 
+  /**
+   * Construct an I64 value.
+   */
   public static I64(x: string | number | bigint): Value {
     const i = BigInt(x);
     if (i < -9223372036854775808n || i > 9223372036854775807n) {
@@ -268,26 +269,44 @@ export class Value implements IValue {
     return Value.#fromJSONUnchecked({ I: i.toString() });
   }
 
+  /**
+   * Construct a String value.
+   */
   public static String(x: string): Value {
     return Value.#fromJSONUnchecked({ S: x });
   }
 
+  /**
+   * Construct a 64-bit Float value.
+   */
   public static Float(x: number): Value {
     return Value.#fromJSONUnchecked({ F: x.toString() });
   }
 
+  /**
+   * Construct a [Decimal](https://docs.rs/rust_decimal) value.
+   */
   public static Decimal(x: number | string | bigint): Value {
-    return Value.#fromJSONUnchecked({ D: x.toString() });
+    return Value.fromJSON({ D: x.toString() });
   }
 
+  /**
+   * Construct a Null value.
+   */
   public static Null(): Value {
     return Value.#fromJSONUnchecked({ N: 0 });
   }
 
+  /**
+   * Construct a Boolean value.
+   */
   public static Boolean(x: boolean): Value {
     return Value.#fromJSONUnchecked({ B: x });
   }
 
+  /**
+   * Construct a U128 value.
+   */
   public static U128(x: string | number | bigint): Value {
     const i = BigInt(x);
     if (i < 0n || i > 340282366920938463463374607431768211455n) {
@@ -296,6 +315,9 @@ export class Value implements IValue {
     return Value.#fromJSONUnchecked({ U1: i.toString() });
   }
 
+  /**
+   * Construct an I128 value.
+   */
   public static I128(x: string | number | bigint): Value {
     const i = BigInt(x);
     if (
@@ -307,10 +329,16 @@ export class Value implements IValue {
     return Value.#fromJSONUnchecked({ I1: i.toString() });
   }
 
+  /**
+   * Construct a Solana Public Key value.
+   */
   public static PublicKey(x: web3.PublicKeyInitData): Value {
     return Value.#fromJSONUnchecked({ B3: new web3.PublicKey(x).toBase58() });
   }
 
+  /**
+   * Construct a Solana Signature value.
+   */
   public static Signature(
     x: string | Buffer | Uint8Array | ArrayBuffer
   ): Value {
@@ -318,6 +346,9 @@ export class Value implements IValue {
     else return Value.#fromJSONUnchecked({ B6: bs58.encodeBase58(x) });
   }
 
+  /**
+   * Construct a Solana Keypair value.
+   */
   public static Keypair(
     x: string | Buffer | Uint8Array | ArrayBuffer | web3.Keypair
   ): Value {
@@ -334,6 +365,9 @@ export class Value implements IValue {
     });
   }
 
+  /**
+   * Construct a Bytes value.
+   */
   public static Bytes(x: Buffer | Uint8Array | ArrayBuffer): Value {
     switch (x.byteLength) {
       case 32:

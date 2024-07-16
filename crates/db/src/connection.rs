@@ -20,6 +20,7 @@ pub mod csv_export;
 
 mod admin;
 pub use admin::AdminConn;
+pub use admin::FlowRunInfo;
 pub use admin::Password;
 
 pub mod proxied_user_conn;
