@@ -645,7 +645,7 @@ impl Instructions {
         let wallets = self
             .signers
             .iter()
-            .filter(|keypair| keypair.pubkey() != self.fee_payer)
+            .filter(|keypair| keypair.is_adapter_wallet() && keypair.pubkey() != self.fee_payer)
             .map(|keypair| keypair.pubkey())
             .collect::<BTreeSet<_>>();
         let data: Bytes = message.serialize().into();
