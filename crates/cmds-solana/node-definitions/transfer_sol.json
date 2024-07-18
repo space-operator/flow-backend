@@ -57,6 +57,14 @@
   ],
   "targets": [
     {
+      "name": "fee_payer",
+      "type_bounds": ["keypair"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
       "name": "sender",
       "type_bounds": ["keypair"],
       "required": true,
