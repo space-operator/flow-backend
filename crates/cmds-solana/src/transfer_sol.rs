@@ -16,6 +16,8 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
+    #[serde(default, with = "value::keypair::opt")]
+    pub fee_payer: Option<Keypair>,
     #[serde(with = "value::keypair")]
     pub sender: Keypair,
     #[serde(with = "value::pubkey")]
@@ -38,11 +40,19 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let instruction =
         solana_sdk::system_instruction::transfer(&input.sender.pubkey(), &input.recipient, amount);
 
+    let mut signers = vec![input.sender.clone_keypair()];
+    if let Some(fee_payer) = input.fee_payer.as_ref() {
+        if fee_payer.pubkey() != input.sender.pubkey() {
+            signers.push(fee_payer.clone_keypair());
+        }
+    }
     let instructions = if input.submit {
         Instructions {
-            fee_payer: input.sender.pubkey(),
-            signers: vec![input.sender.clone_keypair()],
-
+            fee_payer: input
+                .fee_payer
+                .map(|k| k.pubkey())
+                .unwrap_or_else(|| input.sender.pubkey()),
+            signers,
             instructions: [instruction].into(),
         }
     } else {
