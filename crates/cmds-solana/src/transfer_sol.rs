@@ -100,6 +100,7 @@ mod tests {
         let output = run(
             ctx,
             Input {
+                fee_payer: None,
                 sender,
                 recipient,
                 amount: rust_decimal_macros::dec!(0.1),
