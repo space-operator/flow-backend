@@ -24,6 +24,8 @@ pub struct Input {
     pub fee_payer: Keypair,
     #[serde(with = "value::keypair")]
     pub asset: Keypair,
+    #[serde(with = "value::keypair::opt")]
+    pub authority: Option<Keypair>,
     pub name: String,
     pub uri: String,
     #[serde(default, with = "value::pubkey::opt")]
@@ -47,6 +49,12 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .name(input.name)
         .uri(input.uri);
 
+    let builder = if let Some(ref authority) = input.authority {
+        builder.authority(Some(authority.pubkey()))
+    } else {
+        builder.authority(None)
+    };
+
     let builder = if let Some(collection) = input.collection {
         builder.collection(Some(collection))
     } else {
@@ -55,7 +63,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = builder.instruction();
 
-    let signers = vec![input.fee_payer.clone_keypair(), input.asset.clone_keypair()];
+    let mut signers = vec![input.fee_payer.clone_keypair(), input.asset.clone_keypair()];
+
+    if let Some(authority) = input.authority.as_ref() {
+        signers.push(authority.clone_keypair());
+    }
 
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),

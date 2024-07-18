@@ -73,6 +73,14 @@
       "passthrough": false
     },
     {
+      "name": "authority",
+      "type_bounds": ["keypair"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
       "name": "name",
       "type_bounds": ["string"],
       "required": true,
