@@ -1441,7 +1441,12 @@ impl FlowGraph {
         if let Some(ins) = s.result.instructions.take() {
             if !s.result.output.contains_key("transaction") {
                 match ins
-                    .build_and_parital_sign(&self.ctx.solana_client, self.tx_exec_config.clone())
+                    .build_and_partial_sign(
+                        &self.ctx.solana_client,
+                        self.ctx.signer.clone(),
+                        Some(s.flow_run_id),
+                        self.tx_exec_config.clone(),
+                    )
                     .await
                 {
                     Ok(tx) => {

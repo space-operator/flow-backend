@@ -2,11 +2,13 @@ pub mod claim_token;
 pub mod confirm_auth;
 pub mod init_auth;
 
+pub mod get_flow_output;
+pub mod get_signature_request;
+
 pub mod start_flow;
 pub mod start_flow_shared;
 pub mod start_flow_unverified;
 pub mod stop_flow;
-pub mod get_flow_output;
 
 pub mod clone_flow;
 

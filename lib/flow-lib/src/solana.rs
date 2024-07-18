@@ -633,14 +633,76 @@ impl Instructions {
         Ok((message, inserted))
     }
 
-    pub async fn build_and_parital_sign(
+    // Sign all signatures except for fee_payer
+    pub async fn build_and_partial_sign(
         mut self,
         rpc: &RpcClient,
+        signer: signer::Svc,
+        flow_run_id: Option<FlowRunId>,
         config: ExecutionConfig,
     ) -> Result<Transaction, Error> {
         let (message, _) = self.build_message(rpc, &config).await?;
-        // TODO: sign hardcoded wallets
-        Ok(Transaction::new_unsigned(message))
+        let wallets = self
+            .signers
+            .iter()
+            .filter(|keypair| keypair.pubkey() != self.fee_payer)
+            .map(|keypair| keypair.pubkey())
+            .collect::<BTreeSet<_>>();
+        let data: Bytes = message.serialize().into();
+        let reqs = wallets
+            .iter()
+            .map(|&pubkey| signer::SignatureRequest {
+                id: None,
+                time: Utc::now(),
+                pubkey,
+                message: data.clone(),
+                timeout: SIGNATURE_TIMEOUT,
+                flow_run_id,
+                signatures: None,
+            })
+            .collect::<Vec<_>>();
+
+        let signature_results = tokio::time::timeout(
+            SIGNATURE_TIMEOUT,
+            signer
+                .call_all(futures::stream::iter(reqs))
+                .try_collect::<Vec<_>>(),
+        )
+        .await
+        .map_err(|_| Error::Timeout)??;
+
+        let presigners = wallets
+            .iter()
+            .zip(signature_results.iter())
+            .map(|(pk, resp)| {
+                (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
+                    .then(|| Presigner::new(pk, &resp.signature))
+                    .ok_or_else(|| {
+                        anyhow!("{} signature failed: not allowed to change transaction", pk)
+                    })
+            })
+            .collect::<Result<Vec<_>, anyhow::Error>>()?;
+
+        let tx = {
+            let mut signers = Vec::<&dyn Signer>::with_capacity(self.signers.len() - 1);
+
+            for p in &presigners {
+                signers.push(p);
+            }
+
+            for k in &self.signers {
+                if !k.is_adapter_wallet() && k.pubkey() != self.fee_payer {
+                    signers.push(k);
+                }
+            }
+
+            let blockhash = message.recent_blockhash;
+            let mut tx = Transaction::new_unsigned(message);
+            tx.try_partial_sign(&signers, blockhash)?;
+            tx
+        };
+
+        Ok(tx)
     }
 
     pub async fn execute(
