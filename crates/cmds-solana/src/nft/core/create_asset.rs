@@ -1,4 +1,8 @@
-use mpl_core::instructions::{CreateV1Builder, CreateV2Builder};
+use mpl_core::{
+    instructions::{CreateV1Builder, CreateV2Builder},
+    types::{Plugin, PluginAuthorityPair},
+};
+use tracing::info;
 
 use crate::prelude::*;
 
@@ -28,6 +32,9 @@ pub struct Input {
     pub authority: Option<Keypair>,
     pub name: String,
     pub uri: String,
+    pub plugins: Vec<PluginAuthorityPair>,
+    #[serde(with = "value::keypair::opt")]
+    pub verified_creator: Option<Keypair>,
     #[serde(default, with = "value::pubkey::opt")]
     pub collection: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
@@ -41,6 +48,61 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+    let mut additional_signers: Vec<Keypair> = Vec::new();
+    let mut creators: Vec<Pubkey> = Vec::new();
+
+    let plugins: Vec<PluginAuthorityPair> = input
+        .plugins
+        .iter()
+        .map(|plugin_authority_pair| {
+            let plugin = match &plugin_authority_pair.plugin {
+                Plugin::Royalties(royalties) => Plugin::Royalties(royalties.clone()),
+                Plugin::FreezeDelegate(freeze_delegate) => {
+                    Plugin::FreezeDelegate(freeze_delegate.clone())
+                }
+                Plugin::BurnDelegate(burn_delegate) => Plugin::BurnDelegate(burn_delegate.clone()),
+                Plugin::TransferDelegate(transfer_delegate) => {
+                    Plugin::TransferDelegate(transfer_delegate.clone())
+                }
+                Plugin::UpdateDelegate(update_delegate) => {
+                    Plugin::UpdateDelegate(update_delegate.clone())
+                }
+                Plugin::PermanentFreezeDelegate(permanent_freeze_delegate) => {
+                    Plugin::PermanentFreezeDelegate(permanent_freeze_delegate.clone())
+                }
+                Plugin::Attributes(attributes) => Plugin::Attributes(attributes.clone()),
+                Plugin::PermanentTransferDelegate(permanent_transfer_delegate) => {
+                    Plugin::PermanentTransferDelegate(permanent_transfer_delegate.clone())
+                }
+                Plugin::PermanentBurnDelegate(permanent_burn_delegate) => {
+                    Plugin::PermanentBurnDelegate(permanent_burn_delegate.clone())
+                }
+                Plugin::Edition(edition) => Plugin::Edition(edition.clone()),
+                Plugin::MasterEdition(master_edition) => {
+                    Plugin::MasterEdition(master_edition.clone())
+                }
+                Plugin::AddBlocker(add_blocker) => Plugin::AddBlocker(add_blocker.clone()),
+                Plugin::ImmutableMetadata(immutable_metadata) => {
+                    Plugin::ImmutableMetadata(immutable_metadata.clone())
+                }
+                Plugin::VerifiedCreators(verified_creators) => {
+                    for signature in &verified_creators.signatures {
+                        if signature.verified {
+                            info!("verified creator: {}", signature.address);
+                            creators.push(signature.address);
+                        }
+                    }
+                    Plugin::VerifiedCreators(verified_creators.clone())
+                }
+                Plugin::Autograph(autograph) => Plugin::Autograph(autograph.clone()),
+            };
+            PluginAuthorityPair {
+                plugin,
+                authority: plugin_authority_pair.authority.clone(),
+            }
+        })
+        .collect();
+
     let mut builder = CreateV1Builder::new();
 
     let builder = builder
@@ -61,12 +123,22 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         builder
     };
 
+    let builder = if !plugins.is_empty() {
+        builder.plugins(plugins)
+    } else {
+        builder
+    };
+
     let ins = builder.instruction();
 
     let mut signers = vec![input.fee_payer.clone_keypair(), input.asset.clone_keypair()];
 
     if let Some(authority) = input.authority.as_ref() {
         signers.push(authority.clone_keypair());
+    }
+
+    if let Some(verified_creator) = input.verified_creator {
+        signers.push(verified_creator.clone_keypair());
     }
 
     let ins = Instructions {

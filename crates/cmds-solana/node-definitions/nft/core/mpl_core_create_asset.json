@@ -105,6 +105,22 @@
       "passthrough": false
     },
     {
+      "name": "verified_creator",
+      "type_bounds": ["keypair"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "plugins",
+      "type_bounds": ["json"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
       "name": "submit",
       "type_bounds": ["bool"],
       "required": false,
