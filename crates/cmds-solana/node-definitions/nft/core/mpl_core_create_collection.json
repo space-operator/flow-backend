@@ -53,6 +53,12 @@
       "type": "signature",
       "defaultValue": null,
       "tooltip": ""
+    },
+    {
+      "name": "collection",
+      "type": "pubkey",
+      "defaultValue": null,
+      "tooltip": ""
     }
   ],
   "targets": [
@@ -73,8 +79,16 @@
       "passthrough": true
     },
     {
+      "name": "verified_creator",
+      "type_bounds": ["keypair"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
       "name": "update_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": ["keypair"],
       "required": false,
       "defaultValue": null,
       "tooltip": "",

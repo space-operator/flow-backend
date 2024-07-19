@@ -1,4 +1,4 @@
-use mpl_core::instructions::CreateV2Builder;
+use mpl_core::instructions::{CreateV1Builder, CreateV2Builder};
 
 use crate::prelude::*;
 
@@ -41,7 +41,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let mut builder = CreateV2Builder::new();
+    let mut builder = CreateV1Builder::new();
 
     let builder = builder
         .asset(input.asset.pubkey())

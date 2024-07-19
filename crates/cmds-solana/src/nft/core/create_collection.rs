@@ -1,9 +1,13 @@
 use std::borrow::BorrowMut;
 
 use mpl_core::{
-    instructions::CreateCollectionV2Builder,
-    types::{Plugin, PluginAuthorityPair},
+    instructions::{CreateCollectionV2Builder, WriteExternalPluginAdapterDataV1Builder},
+    types::{
+        DataStoreInitInfo, ExternalPluginAdapterInitInfo, ExternalPluginAdapterKey,
+        ExternalPluginAdapterSchema, Plugin, PluginAuthority, PluginAuthorityPair,
+    },
 };
+use tracing::info;
 
 use crate::prelude::*;
 
@@ -29,8 +33,11 @@ pub struct Input {
     pub fee_payer: Keypair,
     #[serde(with = "value::keypair")]
     pub collection: Keypair,
-    #[serde(default, with = "value::pubkey::opt")]
-    pub update_authority: Option<Pubkey>,
+    #[serde(default, with = "value::keypair::opt")]
+    pub update_authority: Option<Keypair>,
+    // TODO: should be an array of keypairs
+    #[serde(default, with = "value::keypair::opt")]
+    pub verified_creator: Option<Keypair>,
     pub name: String,
     pub uri: String,
     pub plugins: Vec<PluginAuthorityPair>,
@@ -45,6 +52,9 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+    let mut additional_signers: Vec<Keypair> = Vec::new();
+    let mut creators: Vec<Pubkey> = Vec::new();
+
     let plugins: Vec<PluginAuthorityPair> = input
         .plugins
         .iter()
@@ -80,6 +90,12 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
                     Plugin::ImmutableMetadata(immutable_metadata.clone())
                 }
                 Plugin::VerifiedCreators(verified_creators) => {
+                    for signature in &verified_creators.signatures {
+                        if signature.verified {
+                            info!("verified creator: {}", signature.address);
+                            creators.push(signature.address);
+                        }
+                    }
                     Plugin::VerifiedCreators(verified_creators.clone())
                 }
                 Plugin::Autograph(autograph) => Plugin::Autograph(autograph.clone()),
@@ -91,8 +107,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         })
         .collect();
 
-    // let update_authority = input.update_authority.as_ref().map(|k| k.pubkey());
-
     let mut builder = CreateCollectionV2Builder::new();
 
     let builder = builder.borrow_mut();
@@ -101,6 +115,13 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .collection(input.collection.pubkey())
         .payer(input.fee_payer.pubkey())
         .name(input.name)
+        .external_plugin_adapters(vec![ExternalPluginAdapterInitInfo::DataStore(
+            DataStoreInitInfo {
+                data_authority: mpl_core::types::PluginAuthority::Owner,
+                init_plugin_authority: Some(mpl_core::types::PluginAuthority::UpdateAuthority),
+                schema: Some(ExternalPluginAdapterSchema::Binary),
+            },
+        )])
         .uri(input.uri);
 
     let builder = if !plugins.is_empty() {
@@ -110,38 +131,43 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     };
 
     let builder = if let Some(update_authority) = input.update_authority {
-        builder.update_authority(Some(update_authority))
+        builder.update_authority(Some(update_authority.pubkey()))
     } else {
         builder
     };
 
     let ins = builder.instruction();
 
-    // let signers = if let Some(collection_authority) = input.update_authority {
-    //     vec![
-    //         input.fee_payer.clone_keypair(),
-    //         collection_authority.clone_keypair(),
-    //     ]
-    // } else {
-    //     vec![input.fee_payer.clone_keypair()]
-    // };
+    let mut signers = vec![
+        input.fee_payer.clone_keypair(),
+        input.collection.clone_keypair(),
+    ];
+    //
+    // fee payer is creator of collection
+    if let Some(verified_creator) = input.verified_creator {
+        signers.push(verified_creator.clone_keypair());
+    }
 
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: vec![
-            input.fee_payer.clone_keypair(),
-            input.collection.clone_keypair(),
-        ],
+        signers,
         instructions: [ins].into(),
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
 
-    let signature = ctx.execute(ins, <_>::default()).await?.signature;
+    let signature = ctx
+        .execute(
+            ins,
+            value::map! {
+                "collection" => input.collection.pubkey(),
+            },
+        )
+        .await?
+        .signature;
 
     Ok(Output { signature })
 }
-
 
 // [
 //     {
