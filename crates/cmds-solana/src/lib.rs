@@ -25,7 +25,7 @@ pub mod wormhole;
 pub mod das;
 pub mod governance;
 pub mod memo;
-// pub mod pyth_price;
+pub mod pyth_price;
 pub mod record;
 pub mod spl;
 pub mod spl_token_2022;
