@@ -1,5 +1,5 @@
 use mpl_core::{
-    instructions::{CreateV1Builder, CreateV2Builder},
+    instructions::CreateV2Builder,
     types::{Plugin, PluginAuthorityPair},
 };
 use tracing::info;
@@ -48,7 +48,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let mut additional_signers: Vec<Keypair> = Vec::new();
+    // let mut additional_signers: Vec<Keypair> = Vec::new();
     let mut creators: Vec<Pubkey> = Vec::new();
 
     let plugins: Vec<PluginAuthorityPair> = input
@@ -103,7 +103,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         })
         .collect();
 
-    let mut builder = CreateV1Builder::new();
+    let mut builder = CreateV2Builder::new();
 
     let builder = builder
         .asset(input.asset.pubkey())

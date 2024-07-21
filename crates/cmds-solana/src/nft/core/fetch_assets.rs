@@ -1,9 +1,4 @@
-use mpl_core::{
-    accounts::BaseAssetV1,
-    instructions::UpdateV1Builder,
-    types::{Key, UpdateAuthority},
-    Collection, ID,
-};
+use mpl_core::{accounts::BaseAssetV1, types::Key};
 use solana_client::{
     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
     rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
@@ -63,7 +58,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
                     )),
                     RpcFilterType::Memcmp(Memcmp::new(
                         35,
-                        MemcmpEncodedBytes::Base58(input.collection.to_string()),
+                        MemcmpEncodedBytes::Base58(collection.to_string()),
                     )),
                 ]),
                 account_config: RpcAccountInfoConfig {
@@ -83,6 +78,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let mut assets: Vec<BaseAssetV1> = vec![];
 
     for account in accounts_iter {
+        info!("Account {:?}", account);
         let asset: BaseAssetV1 = BaseAssetV1::from_bytes(&account.data).unwrap();
         assets.push(asset);
     }

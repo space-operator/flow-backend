@@ -1,11 +1,8 @@
 use std::borrow::BorrowMut;
 
 use mpl_core::{
-    instructions::{CreateCollectionV2Builder, WriteExternalPluginAdapterDataV1Builder},
-    types::{
-        DataStoreInitInfo, ExternalPluginAdapterInitInfo, ExternalPluginAdapterKey,
-        ExternalPluginAdapterSchema, Plugin, PluginAuthority, PluginAuthorityPair,
-    },
+    instructions::CreateCollectionV2Builder,
+    types::{Plugin, PluginAuthorityPair},
 };
 use tracing::info;
 
@@ -52,7 +49,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let mut additional_signers: Vec<Keypair> = Vec::new();
+    // let mut additional_signers: Vec<Keypair> = Vec::new();
     let mut creators: Vec<Pubkey> = Vec::new();
 
     let plugins: Vec<PluginAuthorityPair> = input
@@ -115,13 +112,13 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .collection(input.collection.pubkey())
         .payer(input.fee_payer.pubkey())
         .name(input.name)
-        .external_plugin_adapters(vec![ExternalPluginAdapterInitInfo::DataStore(
-            DataStoreInitInfo {
-                data_authority: mpl_core::types::PluginAuthority::Owner,
-                init_plugin_authority: Some(mpl_core::types::PluginAuthority::UpdateAuthority),
-                schema: Some(ExternalPluginAdapterSchema::Binary),
-            },
-        )])
+        // .external_plugin_adapters(vec![ExternalPluginAdapterInitInfo::DataStore(
+        //     DataStoreInitInfo {
+        //         data_authority: mpl_core::types::PluginAuthority::Owner,
+        //         init_plugin_authority: Some(mpl_core::types::PluginAuthority::UpdateAuthority),
+        //         schema: Some(ExternalPluginAdapterSchema::Binary),
+        //     },
+        // )])
         .uri(input.uri);
 
     let builder = if !plugins.is_empty() {
