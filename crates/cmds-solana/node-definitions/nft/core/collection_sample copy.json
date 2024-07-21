@@ -1,0 +1,43 @@
+[
+  {
+    "plugin": {
+      "VerifiedCreators": {
+        "signatures": [
+          {
+            "address": "DpfvhHU7z1CK8eP5xbEz8c4WBNHUfqUVtAE7opP2kJBc",
+            "verified": true
+          }
+        ]
+      }
+    },
+    "authority": "UpdateAuthority"
+  },
+  {
+    "plugin": {
+      "Attributes": {
+        "attribute_list": [
+          {
+            "key": "blinks_gg",
+            "value": "test_value"
+          }
+        ]
+      }
+    },
+    "authority": "UpdateAuthority"
+  },
+  {
+    "plugin": {
+      "Royalties": {
+        "basis_points": 750,
+        "creators": [
+          {
+            "address": "DpfvhHU7z1CK8eP5xbEz8c4WBNHUfqUVtAE7opP2kJBc",
+            "percentage": 100
+          }
+        ],
+        "rule_set": "None"
+      }
+    },
+    "authority": "UpdateAuthority"
+  }
+]

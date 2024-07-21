@@ -37,6 +37,8 @@ hex = "0.4.3"
 byteorder = "1.4.3"
 primitive-types = { version = "0.9.0", default-features = false }
 chrono = "0.4.33"
+bytemuck = { version = "1.16.1" }
+bytemuck_derive = { version = "1.7.0" }
 
 # solana libs
 solana-sdk = "=1.16.27"
@@ -55,7 +57,7 @@ mpl-token-auth-rules = "=1.4.3"
 mpl-token-metadata = "=3.1.0"
 mpl-candy-machine-core = { version = "=2.0.1", features = ["no-entrypoint"] }
 mpl-candy-guard = { version = "=2.0.0", features = ["no-entrypoint"] }
-mpl-bubblegum = { version = "=1.2.0" }
+mpl-bubblegum = { version = "=1.4.0" }
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
     "solana",
 ] }
@@ -66,7 +68,8 @@ anchor-spl = "=0.28.0"
 # clockwork-thread-program = "=2.0.1"
 # clockwork-sdk = "=2.0.1"
 spl-token-2022 = { version = "0.9.0", features = ["serde-traits"] }
-pyth-sdk-solana = "0.10.0"
+pyth-sdk-solana = "=0.10.0"
+mpl-core = { version = "0.7.2", features = ["serde"] }
 
 [dependencies.anchor-lang-26]
 package = "anchor-lang"
