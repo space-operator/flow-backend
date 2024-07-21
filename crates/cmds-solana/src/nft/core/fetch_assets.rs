@@ -32,7 +32,7 @@ pub struct Output {
     pub assets: Vec<BaseAssetV1>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     // let rpc_data = ctx
     //     .solana_client
     //     .get_account_data(&input.collection)

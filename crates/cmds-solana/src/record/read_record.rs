@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use serde_json::{json, Value as JsonValue};
 
 use super::{pod_from_bytes, RecordData};
 
