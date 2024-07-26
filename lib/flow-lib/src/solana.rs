@@ -50,6 +50,9 @@ pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 pub use solana_sdk::pubkey::Pubkey;
 pub use solana_sdk::signature::Signature;
 
+pub mod utils;
+pub use utils::*;
+
 /// `l` is old, `r` is new
 pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Error> {
     let l = bincode::deserialize::<Message>(l)?;
@@ -133,50 +136,6 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Erro
     }
 
     Ok(r)
-}
-
-pub fn find_failed_instruction(err: &ClientError) -> Option<usize> {
-    if let ClientErrorKind::RpcError(RpcError::RpcResponseError { message, .. }) = &err.kind {
-        if let Some(s) =
-            message.strip_prefix("Transaction simulation failed: Error processing Instruction ")
-        {
-            let index = s
-                .chars()
-                .take_while(char::is_ascii_digit)
-                .collect::<String>();
-            index.parse().ok()
-        } else {
-            None
-        }
-    } else {
-        None
-    }
-}
-
-pub fn verbose_solana_error(err: &ClientError) -> String {
-    use std::fmt::Write;
-    if let ClientErrorKind::RpcError(RpcError::RpcResponseError {
-        code,
-        message,
-        data,
-    }) = &err.kind
-    {
-        let mut s = String::new();
-        writeln!(s, "{} ({})", message, code).unwrap();
-        if let RpcResponseErrorData::SendTransactionPreflightFailure(
-            RpcSimulateTransactionResult {
-                logs: Some(logs), ..
-            },
-        ) = data
-        {
-            for (i, log) in logs.iter().enumerate() {
-                writeln!(s, "{}: {}", i + 1, log).unwrap();
-            }
-        }
-        s
-    } else {
-        err.to_string()
-    }
 }
 
 pub trait KeypairExt {
@@ -331,7 +290,7 @@ fn contains_set_compute_unit_limit(message: &Message) -> bool {
         .any(|(index, ins)| is_set_compute_unit_limit(message, index, ins).is_some())
 }
 
-async fn get_priority_fee(message: &Message, _rpc: &RpcClient) -> Result<u64, anyhow::Error> {
+async fn get_priority_fee(message: &Message) -> Result<u64, anyhow::Error> {
     static HTTP: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
     if let Ok(apikey) = std::env::var("HELIUS_API_KEY") {
         let helius = Helius::new(HTTP.clone(), &apikey);
@@ -608,7 +567,7 @@ impl Instructions {
             let fee = if let InsertionBehavior::Value(x) = config.priority_fee {
                 x
             } else {
-                get_priority_fee(&message, rpc)
+                get_priority_fee(&message)
                     .await
                     .map_err(|error| {
                         tracing::warn!("get_priority_fee error: {}", error);
@@ -634,7 +593,7 @@ impl Instructions {
     }
 
     // Sign all signatures except for fee_payer
-    pub async fn build_and_partial_sign(
+    pub async fn build_for_solana_action(
         mut self,
         rpc: &RpcClient,
         signer: signer::Svc,

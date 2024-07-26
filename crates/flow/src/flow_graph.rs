@@ -1441,7 +1441,7 @@ impl FlowGraph {
         if let Some(ins) = s.result.instructions.take() {
             if !s.result.output.contains_key("transaction") {
                 match ins
-                    .build_and_partial_sign(
+                    .build_for_solana_action(
                         &self.ctx.solana_client,
                         self.ctx.signer.clone(),
                         Some(s.flow_run_id),
