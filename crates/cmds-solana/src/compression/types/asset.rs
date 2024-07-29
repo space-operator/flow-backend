@@ -194,17 +194,17 @@ impl From<String> for RoyaltyModel {
     }
 }
 
-#[cfg(feature = "sql_types")]
-impl From<RoyaltyTargetType> for RoyaltyModel {
-    fn from(s: RoyaltyTargetType) -> Self {
-        match s {
-            RoyaltyTargetType::Creators => RoyaltyModel::Creators,
-            RoyaltyTargetType::Fanout => RoyaltyModel::Fanout,
-            RoyaltyTargetType::Single => RoyaltyModel::Single,
-            _ => RoyaltyModel::Creators,
-        }
-    }
-}
+// #[cfg(feature = "sql_types")]
+// impl From<RoyaltyTargetType> for RoyaltyModel {
+//     fn from(s: RoyaltyTargetType) -> Self {
+//         match s {
+//             RoyaltyTargetType::Creators => RoyaltyModel::Creators,
+//             RoyaltyTargetType::Fanout => RoyaltyModel::Fanout,
+//             RoyaltyTargetType::Single => RoyaltyModel::Single,
+//             _ => RoyaltyModel::Creators,
+//         }
+//     }
+// }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Royalty {
@@ -245,16 +245,16 @@ impl From<String> for OwnershipModel {
     }
 }
 
-#[cfg(feature = "sql_types")]
-impl From<OwnerType> for OwnershipModel {
-    fn from(s: OwnerType) -> Self {
-        match s {
-            OwnerType::Token => OwnershipModel::Token,
-            OwnerType::Single => OwnershipModel::Single,
-            _ => OwnershipModel::Single,
-        }
-    }
-}
+// #[cfg(feature = "sql_types")]
+// impl From<OwnerType> for OwnershipModel {
+//     fn from(s: OwnerType) -> Self {
+//         match s {
+//             OwnerType::Token => OwnershipModel::Token,
+//             OwnerType::Single => OwnershipModel::Single,
+//             _ => OwnershipModel::Single,
+//         }
+//     }
+// }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Ownership {
