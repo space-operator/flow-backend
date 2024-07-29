@@ -3,6 +3,7 @@ use crate::{
     FlowRunId, SolanaNet,
 };
 use anyhow::{anyhow, bail, ensure};
+use base64::prelude::*;
 use borsh::BorshDeserialize;
 use bytes::Bytes;
 use chrono::Utc;
@@ -11,12 +12,8 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv, DisplayFromStr};
 use solana_client::{
-    client_error::{ClientError, ClientErrorKind},
-    nonblocking::rpc_client::RpcClient,
-    rpc_client::SerializableTransaction,
+    nonblocking::rpc_client::RpcClient, rpc_client::SerializableTransaction,
     rpc_config::RpcSendTransactionConfig,
-    rpc_request::{RpcError, RpcResponseErrorData},
-    rpc_response::RpcSimulateTransactionResult,
 };
 use solana_sdk::{
     commitment_config::{CommitmentConfig, CommitmentLevel},
@@ -30,6 +27,8 @@ use solana_sdk::{
     signer::{keypair::Keypair, Signer},
     transaction::Transaction,
 };
+use solana_transaction_status::extract_memos::ExtractMemos;
+use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
 use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
 };
@@ -465,6 +464,40 @@ fn commitment(commitment: CommitmentLevel) -> CommitmentConfig {
     CommitmentConfig { commitment }
 }
 
+async fn action_identity_memo(
+    identity: Pubkey,
+    run_id: FlowRunId,
+    signer: &mut signer::Svc,
+) -> Result<Instruction, signer::Error> {
+    let reference_bytes = [
+        Utc::now().timestamp().to_le_bytes().as_ref(),
+        run_id.to_bytes_le().as_ref(),
+        &[0u8; 32], // unused
+    ]
+    .concat();
+    let reference = bs58::encode(&reference_bytes).into_string();
+    let signature = signer
+        .call_mut(signer::SignatureRequest {
+            id: None,
+            time: Utc::now(),
+            pubkey: identity,
+            message: reference_bytes.into(),
+            timeout: SIGNATURE_TIMEOUT,
+            flow_run_id: Some(run_id),
+            signatures: None,
+        })
+        .await?
+        .signature;
+    let memo = format!("solana-action:{}:{}:{}", identity, reference, signature);
+    Ok(Instruction {
+        program_id: spl_memo::v1::ID,
+        accounts: Vec::new(),
+        data: memo.as_bytes().to_owned(),
+    })
+    // memo v3 fails
+    // Ok(spl_memo::build_memo(memo.as_bytes(), signers))
+}
+
 impl Instructions {
     fn push_signer(&mut self, new: Keypair) {
         let old = self.signers.iter_mut().find(|k| k.pubkey() == new.pubkey());
@@ -497,11 +530,11 @@ impl Instructions {
         Ok(())
     }
 
-    async fn build_message(
+    async fn insert_priority_fee(
         &mut self,
         rpc: &RpcClient,
         config: &ExecutionConfig,
-    ) -> Result<(Message, usize), Error> {
+    ) -> Result<usize, Error> {
         let message = Message::new_with_blockhash(
             &self.instructions,
             Some(&self.fee_payer),
@@ -580,6 +613,16 @@ impl Instructions {
             inserted += 1;
         }
 
+        Ok(inserted)
+    }
+
+    async fn build_message(
+        &mut self,
+        rpc: &RpcClient,
+        config: &ExecutionConfig,
+    ) -> Result<(Message, usize), Error> {
+        let inserted = self.insert_priority_fee(rpc, config).await?;
+
         let message = Message::new_with_blockhash(
             &self.instructions,
             Some(&self.fee_payer),
@@ -592,19 +635,59 @@ impl Instructions {
         Ok((message, inserted))
     }
 
-    // Sign all signatures except for fee_payer
     pub async fn build_for_solana_action(
         mut self,
+        action_signer: Pubkey,
+        action_identity: Option<Pubkey>,
         rpc: &RpcClient,
-        signer: signer::Svc,
+        mut signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: ExecutionConfig,
     ) -> Result<Transaction, Error> {
-        let (message, _) = self.build_message(rpc, &config).await?;
+        let inserted = self.insert_priority_fee(rpc, &config).await?;
+        if let Some(action_identity) = action_identity {
+            if !self
+                .instructions
+                .iter()
+                .flat_map(|i| i.accounts.iter())
+                .any(|a| a.pubkey == action_identity)
+            {
+                let non_memo = self
+                    .instructions
+                    .iter_mut()
+                    .find(|i| i.program_id != spl_memo::ID && i.program_id != spl_memo::v1::ID)
+                    .ok_or_else(|| Error::other("at least 1 non-memo instruction is required"))?;
+                non_memo.accounts.push(AccountMeta {
+                    pubkey: action_identity,
+                    is_signer: false,
+                    is_writable: false,
+                });
+            }
+            self.instructions.push(
+                action_identity_memo(
+                    action_identity,
+                    flow_run_id.unwrap_or_default(),
+                    &mut signer,
+                )
+                .await
+                .map_err(Error::other)?,
+            );
+        }
+
+        let message = Message::new_with_blockhash(
+            &self.instructions,
+            Some(&self.fee_payer),
+            &rpc.get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
+                .await
+                .map_err(|error| Error::solana(error, inserted))?
+                .0,
+        );
+
+        // Sign all signatures except for action_signer
         let wallets = self
             .signers
             .iter()
-            .filter(|keypair| keypair.is_adapter_wallet() && keypair.pubkey() != self.fee_payer)
+            .filter(|keypair| keypair.is_adapter_wallet() && keypair.pubkey() != action_signer)
             .map(|keypair| keypair.pubkey())
             .collect::<BTreeSet<_>>();
         let data: Bytes = message.serialize().into();
@@ -650,7 +733,7 @@ impl Instructions {
             }
 
             for k in &self.signers {
-                if !k.is_adapter_wallet() && k.pubkey() != self.fee_payer {
+                if !k.is_adapter_wallet() && k.pubkey() != action_signer {
                     signers.push(k);
                 }
             }
@@ -814,6 +897,29 @@ impl Instructions {
     }
 }
 
+pub async fn get_memos(
+    rpc: &RpcClient,
+    signature: &Signature,
+) -> Result<Vec<String>, anyhow::Error> {
+    let result = rpc
+        .get_transaction(
+            &signature,
+            solana_transaction_status::UiTransactionEncoding::Base64,
+        )
+        .await?;
+    let EncodedTransaction::Binary(tx_base64, TransactionBinaryEncoding::Base64) =
+        result.transaction.transaction
+    else {
+        return Err(anyhow!("RPC return wrong tx encoding"));
+    };
+
+    let tx_bytes = BASE64_STANDARD.decode(&tx_base64).map_err(Error::other)?;
+    let tx: Transaction = bincode::deserialize(&tx_bytes).map_err(Error::other)?;
+    let memos = tx.message.extract_memos();
+
+    Ok(memos)
+}
+
 /// Verify the precompiled programs in this transaction.
 pub fn verify_precompiles(tx: &Transaction, feature_set: &FeatureSet) -> Result<(), anyhow::Error> {
     for (index, instruction) in tx.message().instructions.iter().enumerate() {
@@ -845,7 +951,6 @@ mod tests {
         COMPUTE_BUDGET, FALLBACK_COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE,
         SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
-    use base64::prelude::*;
     use solana_sdk::{pubkey, system_instruction::transfer};
 
     #[test]

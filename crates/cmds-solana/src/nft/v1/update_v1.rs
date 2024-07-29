@@ -769,10 +769,7 @@ impl From<CollectionToggle> for mpl_token_metadata::types::CollectionToggle {
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct Collection {
     pub verified: bool,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
+    #[serde(with = "serde_with::As::<serde_with::DisplayFromStr>")]
     pub key: Pubkey,
 }
 

@@ -23,7 +23,7 @@ use flow_lib::{
         get_jwt,
         signer::{self, SignatureRequest},
     },
-    solana::is_same_message_logic,
+    solana::{is_same_message_logic, Pubkey},
     FlowId, FlowRunId, User, UserId,
 };
 use futures_channel::{mpsc, oneshot};
@@ -458,6 +458,7 @@ pub struct StartFlowFresh {
     pub flow_id: FlowId,
     pub input: value::Map,
     pub output_instructions: bool,
+    pub action_identity: Option<Pubkey>,
     pub partial_config: Option<PartialConfig>,
     pub environment: HashMap<String, String>,
 }
@@ -583,6 +584,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     msg.input,
                     msg.partial_config,
                     msg.output_instructions,
+                    msg.action_identity,
                     FlowRunOrigin::Start {},
                     None,
                     None,
@@ -599,6 +601,7 @@ pub struct StartFlowShared {
     pub flow_id: FlowId,
     pub input: value::Map,
     pub output_instructions: bool,
+    pub action_identity: Option<Pubkey>,
     pub started_by: (UserId, actix::Addr<UserWorker>),
 }
 
@@ -617,6 +620,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     flow_id: msg.flow_id,
                     input: msg.input,
                     output_instructions: msg.output_instructions,
+                    action_identity: msg.action_identity,
                     partial_config: None,
                     environment: <_>::default(),
                 },
@@ -664,6 +668,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     msg.input,
                     None,
                     msg.output_instructions,
+                    msg.action_identity,
                     FlowRunOrigin::StartShared {
                         started_by: msg.started_by.0,
                     },

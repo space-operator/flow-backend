@@ -683,10 +683,7 @@ pub enum DelegateArgs {
     },
     LockedTransferV1 {
         amount: u64,
-        #[cfg_attr(
-            feature = "serde",
-            serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-        )]
+        #[serde(with = "serde_with::As::<serde_with::DisplayFromStr>")]
         locked_address: Pubkey,
         authorization_data: Option<AuthorizationData>,
     },

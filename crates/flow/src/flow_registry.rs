@@ -11,6 +11,7 @@ use flow_lib::{
         Endpoints,
     },
     context::{execute, get_jwt, signer, User},
+    solana::Pubkey,
     utils::TowerClient,
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
 };
@@ -359,6 +360,7 @@ impl FlowRegistry {
         inputs: ValueSet,
         partial_config: Option<PartialConfig>,
         collect_instructions: bool,
+        action_identity: Option<Pubkey>,
         origin: FlowRunOrigin,
         solana_client: Option<SolanaClientConfig>,
         parent_flow_execute: Option<execute::Svc>,
@@ -429,6 +431,7 @@ impl FlowRegistry {
                     flow.mode = BundlingMode::Automatic;
                 }
                 flow.output_instructions = true;
+                flow.action_identity = action_identity;
             }
 
             let nodes = flow.need_previous_outputs();

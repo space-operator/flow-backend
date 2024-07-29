@@ -13,7 +13,7 @@ use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
     context::{execute, get_jwt, CommandContext, Context},
-    solana::{find_failed_instruction, ExecutionConfig, Instructions, KeypairExt},
+    solana::{find_failed_instruction, ExecutionConfig, Instructions, KeypairExt, Pubkey},
     utils::{Extensions, TowerClient},
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
 };
@@ -121,6 +121,7 @@ pub struct FlowGraph {
     pub nodes: HashMap<NodeId, Node>,
     pub mode: client::BundlingMode,
     pub output_instructions: bool,
+    pub action_identity: Option<Pubkey>,
     pub rhai_permit: Arc<Semaphore>,
     pub tx_exec_config: ExecutionConfig,
     pub spawned: Vec<Child>,
@@ -504,6 +505,7 @@ impl FlowGraph {
             nodes,
             mode: c.instructions_bundling,
             output_instructions: false,
+            action_identity: None,
             rhai_permit,
             tx_exec_config,
             spawned,
@@ -1439,9 +1441,12 @@ impl FlowGraph {
             }
         }
         if let Some(ins) = s.result.instructions.take() {
+            let fee_payer = ins.fee_payer;
             if !s.result.output.contains_key("transaction") {
                 match ins
                     .build_for_solana_action(
+                        fee_payer,
+                        self.action_identity,
                         &self.ctx.solana_client,
                         self.ctx.signer.clone(),
                         Some(s.flow_run_id),

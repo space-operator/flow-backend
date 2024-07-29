@@ -90,6 +90,7 @@ impl CommandTrait for Interflow {
                 inputs,
                 None,
                 false,
+                None,
                 ctx.new_interflow_origin()
                     .ok_or_else(|| anyhow::anyhow!("this is a bug"))?,
                 Some(ctx.cfg.solana_client.clone()),

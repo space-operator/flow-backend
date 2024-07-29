@@ -4,6 +4,7 @@ import { IValue, Value } from '../../deps.ts';
 export interface StartFlowUnverifiedParams {
   inputs?: Record<string, IValue>;
   output_instructions?: boolean;
+  action_identity?: string;
 }
 
 export interface StartFlowUnverifiedOutput {

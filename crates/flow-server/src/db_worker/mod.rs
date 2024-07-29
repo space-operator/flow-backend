@@ -15,7 +15,6 @@ use std::{
     sync::{atomic::AtomicU64, Arc},
     time::Duration,
 };
-use thiserror::Error as ThisError;
 use tokio::sync::broadcast;
 use tracing::{level_filters::LevelFilter, Span};
 use tracing_subscriber::EnvFilter;
@@ -108,10 +107,6 @@ impl Actor for DBWorker {
 pub struct SystemShutdown {
     pub timeout: Duration,
 }
-
-#[derive(ThisError, Debug, Clone)]
-#[error("shutdown timeout")]
-pub struct ShutdownTimedout(String);
 
 impl actix::Message for SystemShutdown {
     type Result = ();
