@@ -472,9 +472,10 @@ async fn action_identity_memo(
     let reference_bytes = [
         Utc::now().timestamp().to_le_bytes().as_ref(),
         run_id.to_bytes_le().as_ref(),
-        &[0u8; 32], // unused
+        &[0u8; 8], // unused
     ]
     .concat();
+    debug_assert_eq!(reference_bytes.len(), 32);
     let reference = bs58::encode(&reference_bytes).into_string();
     let signature = signer
         .call_mut(signer::SignatureRequest {
