@@ -471,7 +471,7 @@ async fn action_identity_memo(
 ) -> Result<Instruction, signer::Error> {
     let reference_bytes = [
         Utc::now().timestamp().to_le_bytes().as_ref(),
-        run_id.to_bytes_le().as_ref(),
+        run_id.into_bytes().as_ref(),
         &[0u8; 8], // unused
     ]
     .concat();
