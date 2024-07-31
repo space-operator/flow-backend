@@ -21,14 +21,11 @@ use solana_sdk::{
     feature_set::FeatureSet,
     instruction::{AccountMeta, CompiledInstruction, Instruction},
     message::Message,
-    precompiles::verify_if_precompile,
     sanitize::Sanitize,
     signature::Presigner,
     signer::{keypair::Keypair, Signer},
     transaction::Transaction,
 };
-use solana_transaction_status::extract_memos::ExtractMemos;
-use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
 use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
 };
@@ -896,53 +893,6 @@ impl Instructions {
 
         Ok(signature)
     }
-}
-
-pub async fn get_memos(
-    rpc: &RpcClient,
-    signature: &Signature,
-) -> Result<Vec<String>, anyhow::Error> {
-    let result = rpc
-        .get_transaction(
-            &signature,
-            solana_transaction_status::UiTransactionEncoding::Base64,
-        )
-        .await?;
-    let EncodedTransaction::Binary(tx_base64, TransactionBinaryEncoding::Base64) =
-        result.transaction.transaction
-    else {
-        return Err(anyhow!("RPC return wrong tx encoding"));
-    };
-
-    let tx_bytes = BASE64_STANDARD.decode(&tx_base64).map_err(Error::other)?;
-    let tx: Transaction = bincode::deserialize(&tx_bytes).map_err(Error::other)?;
-    let memos = tx.message.extract_memos();
-
-    Ok(memos)
-}
-
-/// Verify the precompiled programs in this transaction.
-pub fn verify_precompiles(tx: &Transaction, feature_set: &FeatureSet) -> Result<(), anyhow::Error> {
-    for (index, instruction) in tx.message().instructions.iter().enumerate() {
-        // The Transaction may not be sanitized at this point
-        if instruction.program_id_index as usize >= tx.message().account_keys.len() {
-            bail!(
-                "instruction #{} error: program ID not found {}",
-                index,
-                instruction.program_id_index
-            );
-        }
-        let program_id = &tx.message().account_keys[instruction.program_id_index as usize];
-
-        verify_if_precompile(
-            program_id,
-            instruction,
-            &tx.message().instructions,
-            feature_set,
-        )
-        .map_err(|error| anyhow!("instruction #{} error: {}", index, error))?;
-    }
-    Ok(())
 }
 
 #[cfg(test)]
