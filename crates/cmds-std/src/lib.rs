@@ -14,6 +14,7 @@ pub mod std;
 pub mod storage;
 pub mod supabase;
 pub mod wait_cmd;
+pub mod lbc_curve;
 
 pub mod prelude {
     pub use async_trait::async_trait;
