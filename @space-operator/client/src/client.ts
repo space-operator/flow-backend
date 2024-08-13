@@ -1,22 +1,22 @@
-import { bs58, lib, web3, Value, IValue } from "./deps.ts";
-import { FlowId, FlowRunId, RestResult } from "./types/common.ts";
-import { StartFlowOutput, StartFlowParams } from "./types/rest/start-flow.ts";
+import { bs58, web3, Value, type IValue } from "./deps.ts";
 import {
-  StartFlowUnverifiedOutput,
-  StartFlowUnverifiedParams,
-} from "./types/rest/start-flow-unverified.ts";
-import {
-  StartFlowSharedOutput,
-  StartFlowSharedParams,
-} from "./types/rest/start-flow-shared.ts";
-import { StopFlowOutput, StopFlowParams } from "./types/rest/stop-flow.ts";
-import {
-  SubmitSignatureOutput,
-  SubmitSignatureParams,
-} from "./types/rest/submit-signature.ts";
-import { SignatureRequest } from "./types/ws.ts";
-import { GetFlowOutputOutput } from "./types/rest/get-flow-output.ts";
-import { ErrorBody, ISignatureRequest } from "./mod.ts";
+  type ErrorBody,
+  type ISignatureRequest,
+  type StartFlowOutput,
+  type StartFlowParams,
+  type StartFlowSharedOutput,
+  type StartFlowSharedParams,
+  type StartFlowUnverifiedOutput,
+  type StartFlowUnverifiedParams,
+  type StopFlowOutput,
+  type StopFlowParams,
+  type SubmitSignatureOutput,
+  type SubmitSignatureParams,
+  type GetFlowOutputOutput,
+  type FlowId,
+  type FlowRunId,
+  SignatureRequest,
+} from "./mod.ts";
 
 export interface ClientOptions {
   host?: string;
