@@ -3116,6 +3116,7 @@ dependencies = [
  "flow-value",
  "futures",
  "inventory",
+ "nom",
  "once_cell",
  "pin-project-lite",
  "reqwest 0.12.1",

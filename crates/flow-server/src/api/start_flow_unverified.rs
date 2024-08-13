@@ -4,7 +4,7 @@ use crate::{
     user::{SignatureAuth, SupabaseAuth},
 };
 use db::pool::DbPool;
-use flow_lib::solana::SolanaActionConfig;
+use flow_lib::solana::{Pubkey, SolanaActionConfig};
 use hashbrown::HashMap;
 use value::Value;
 
@@ -14,6 +14,8 @@ pub struct Params {
     pub inputs: HashMap<String, Value>,
     #[serde(default)]
     pub output_instructions: bool,
+    #[serde(default, with = "value::pubkey::opt")]
+    pub action_identity: Option<Pubkey>,
     pub action_config: Option<SolanaActionConfig>,
 }
 
@@ -64,7 +66,7 @@ async fn start_flow_unverified(
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let user = user.into_inner();
-    let params = params.map(|web::Json(params)| params).unwrap_or_default();
+    let params = params.map(|params| params.0).unwrap_or_default();
     let inputs = params.inputs.into_iter().collect::<ValueSet>();
 
     let flow = db
@@ -90,6 +92,7 @@ async fn start_flow_unverified(
             flow_id,
             input: inputs,
             output_instructions: params.output_instructions,
+            action_identity: params.action_identity,
             action_config: params.action_config,
             started_by: (user_id, starter),
         })

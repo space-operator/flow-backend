@@ -67,6 +67,7 @@ async fn start_flow_shared(
             flow_id,
             input: inputs,
             output_instructions,
+            action_identity: None,
             action_config: None,
             started_by: (user.user_id, starter),
         })
