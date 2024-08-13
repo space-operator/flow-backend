@@ -34,6 +34,7 @@ pub mod env {
     pub const SIMULATION_COMMITMENT_LEVEL: &str = "SIMULATION_COMMITMENT_LEVEL";
     pub const TX_COMMITMENT_LEVEL: &str = "TX_COMMITMENT_LEVEL";
     pub const WAIT_COMMITMENT_LEVEL: &str = "WAIT_COMMITMENT_LEVEL";
+    pub const EXECUTE_ON: &str = "EXECUTE_ON";
 }
 
 /// Get user's JWT, require

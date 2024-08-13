@@ -63,7 +63,7 @@ async fn start_flow(
             partial_config,
             environment,
             output_instructions,
-            action_identity: None,
+            action_config: None,
         })
         .await??;
 

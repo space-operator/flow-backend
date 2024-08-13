@@ -3,7 +3,6 @@ use crate::{
     FlowRunId, SolanaNet,
 };
 use anyhow::{anyhow, bail, ensure};
-use base64::prelude::*;
 use borsh::BorshDeserialize;
 use bytes::Bytes;
 use chrono::Utc;
@@ -48,6 +47,9 @@ pub use solana_sdk::signature::Signature;
 
 pub mod utils;
 pub use utils::*;
+
+pub mod watcher;
+pub use watcher::*;
 
 /// `l` is old, `r` is new
 pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Error> {
@@ -419,18 +421,38 @@ impl KeypairOrPubkey {
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub struct ExecutionConfig {
     pub overwrite_feepayer: Option<KeypairOrPubkey>,
+
     #[serde(default)]
     pub compute_budget: InsertionBehavior,
     #[serde_as(as = "Option<DisplayFromStr>")]
     pub fallback_compute_budget: Option<u64>,
     #[serde(default)]
     pub priority_fee: InsertionBehavior,
+
     #[serde(default = "default_simulation_level")]
     pub simulation_commitment_level: CommitmentLevel,
     #[serde(default = "default_tx_level")]
     pub tx_commitment_level: CommitmentLevel,
     #[serde(default = "default_wait_level")]
     pub wait_commitment_level: CommitmentLevel,
+
+    #[serde(skip)]
+    pub execute_on: ExecuteOn,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SolanaActionConfig {
+    #[serde(with = "value::pubkey")]
+    pub action_signer: Pubkey,
+    #[serde(with = "value::pubkey")]
+    pub action_identity: Pubkey,
+}
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+pub enum ExecuteOn {
+    SolanaAction(SolanaActionConfig),
+    #[default]
+    CurrentMachine,
 }
 
 impl ExecutionConfig {
@@ -453,6 +475,7 @@ impl Default for ExecutionConfig {
             simulation_commitment_level: default_simulation_level(),
             tx_commitment_level: default_tx_level(),
             wait_commitment_level: default_wait_level(),
+            execute_on: ExecuteOn::default(),
         }
     }
 }
@@ -461,18 +484,62 @@ fn commitment(commitment: CommitmentLevel) -> CommitmentConfig {
     CommitmentConfig { commitment }
 }
 
-async fn action_identity_memo(
-    identity: Pubkey,
-    run_id: FlowRunId,
-    signer: &mut signer::Svc,
-) -> Result<Instruction, signer::Error> {
+pub fn build_action_reference(timestamp: i64, run_id: FlowRunId) -> Vec<u8> {
     let reference_bytes = [
-        Utc::now().timestamp().to_le_bytes().as_ref(),
+        timestamp.to_le_bytes().as_ref(),
         run_id.into_bytes().as_ref(),
         &[0u8; 8], // unused
     ]
     .concat();
     debug_assert_eq!(reference_bytes.len(), 32);
+    reference_bytes
+}
+
+pub struct ParsedMemo {
+    pub identity: Pubkey,
+    pub timestamp: i64,
+    pub run_id: FlowRunId,
+}
+
+pub fn parse_action_memo(reference: &str) -> Result<ParsedMemo, anyhow::Error> {
+    let mut parts = reference.split(':');
+    let scheme = parts.next();
+    ensure!(scheme == Some("solana-action"), "scheme != solana-action");
+
+    let identity: Pubkey = parts
+        .next()
+        .ok_or_else(|| anyhow!("no identity pubkey"))?
+        .parse()?;
+
+    let reference = parts.next().ok_or_else(|| anyhow!("no reference"))?;
+    let reference = bs58::decode(reference).into_vec()?;
+    ensure!(reference.len() == 32, "decoded length != 32");
+
+    let signature: Signature = parts
+        .next()
+        .ok_or_else(|| anyhow!("no signature"))?
+        .parse()?;
+
+    ensure!(
+        signature.verify(&identity.to_bytes(), &reference),
+        "signature verification failed"
+    );
+
+    let timestamp = i64::from_le_bytes(reference[0..size_of::<i64>()].try_into().unwrap());
+    let run_id = FlowRunId::from_slice(&reference[size_of::<i64>()..(size_of::<i64>() + 16)])?;
+    Ok(ParsedMemo {
+        identity,
+        timestamp,
+        run_id,
+    })
+}
+
+async fn action_identity_memo(
+    identity: Pubkey,
+    run_id: FlowRunId,
+    signer: &mut signer::Svc,
+) -> Result<String, signer::Error> {
+    let reference_bytes = build_action_reference(Utc::now().timestamp(), run_id);
     let reference = bs58::encode(&reference_bytes).into_string();
     let signature = signer
         .call_mut(signer::SignatureRequest {
@@ -486,12 +553,16 @@ async fn action_identity_memo(
         })
         .await?
         .signature;
-    let memo = format!("solana-action:{}:{}:{}", identity, reference, signature);
-    Ok(Instruction {
-        program_id: spl_memo::v1::ID,
-        accounts: Vec::new(),
-        data: memo.as_bytes().to_owned(),
-    })
+    Ok(format!(
+        "solana-action:{}:{}:{}",
+        identity, reference, signature
+    ))
+
+    // Ok(Instruction {
+    //     program_id: spl_memo::v1::ID,
+    //     accounts: Vec::new(),
+    //     data: memo.as_bytes().to_owned(),
+    // })
     // memo v3 fails
     // Ok(spl_memo::build_memo(memo.as_bytes(), signers))
 }
@@ -640,10 +711,10 @@ impl Instructions {
         rpc: &RpcClient,
         mut signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
-        config: ExecutionConfig,
-    ) -> Result<Transaction, Error> {
+        config: &ExecutionConfig,
+    ) -> Result<(Transaction, usize, Option<String>), Error> {
         let inserted = self.insert_priority_fee(rpc, &config).await?;
-        if let Some(action_identity) = action_identity {
+        let memo = if let Some(action_identity) = action_identity {
             if !self
                 .instructions
                 .iter()
@@ -661,16 +732,22 @@ impl Instructions {
                     is_writable: false,
                 });
             }
-            self.instructions.push(
-                action_identity_memo(
-                    action_identity,
-                    flow_run_id.unwrap_or_default(),
-                    &mut signer,
-                )
-                .await
-                .map_err(Error::other)?,
-            );
-        }
+            let memo = action_identity_memo(
+                action_identity,
+                flow_run_id.unwrap_or_default(),
+                &mut signer,
+            )
+            .await
+            .map_err(Error::other)?;
+            self.instructions.push(Instruction {
+                program_id: spl_memo::v1::ID,
+                accounts: Vec::new(),
+                data: memo.as_bytes().to_owned(),
+            });
+            Some(memo)
+        } else {
+            None
+        };
 
         let message = Message::new_with_blockhash(
             &self.instructions,
@@ -742,24 +819,18 @@ impl Instructions {
             tx
         };
 
-        Ok(tx)
+        Ok((tx, inserted, memo))
     }
 
-    pub async fn execute(
+    async fn build_and_sign_tx(
         mut self,
         rpc: &RpcClient,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
-        config: ExecutionConfig,
-    ) -> Result<Signature, Error> {
+        config: &ExecutionConfig,
+    ) -> Result<(Transaction, usize), Error> {
         let (mut message, inserted) = self.build_message(rpc, &config).await?;
         let mut data: Bytes = message.serialize().into();
-
-        tracing::info!("executing transaction");
-        tracing::info!("message size: {}", data.len());
-        tracing::info!("fee payer: {}", self.fee_payer);
-        tracing::debug!("execution config: {:?}", config);
-
         let fee_payer_signature = {
             let keypair = self
                 .signers
@@ -863,8 +934,23 @@ impl Instructions {
             let blockhash = message.recent_blockhash;
             let mut tx = Transaction::new_unsigned(message);
             tx.try_sign(&signers, blockhash)?;
+
             tx
         };
+
+        Ok((tx, inserted))
+    }
+
+    async fn execute_current_machine(
+        self,
+        rpc: &RpcClient,
+        signer: signer::Svc,
+        flow_run_id: Option<FlowRunId>,
+        config: &ExecutionConfig,
+    ) -> Result<Signature, Error> {
+        let (tx, inserted) = self
+            .build_and_sign_tx(rpc, signer, flow_run_id, &config)
+            .await?;
 
         // SDK's error message of verify_precompiles is not infomative,
         // so we run it manually
@@ -883,7 +969,8 @@ impl Instructions {
             .map_err(move |error| Error::solana(error, inserted))?;
         tracing::info!("submitted {}", signature);
 
-        rpc.confirm_transaction_with_spinner(
+        confirm_transaction(
+            rpc,
             &signature,
             tx.get_recent_blockhash(),
             commitment(config.wait_commitment_level),
@@ -893,15 +980,78 @@ impl Instructions {
 
         Ok(signature)
     }
+
+    async fn execute_solana_action(
+        self,
+        rpc: &RpcClient,
+        mut signer: signer::Svc,
+        flow_run_id: Option<FlowRunId>,
+        config: &ExecutionConfig,
+        action_config: &SolanaActionConfig,
+    ) -> Result<Signature, Error> {
+        let (tx, _, memo) = self
+            .build_for_solana_action(
+                action_config.action_signer,
+                Some(action_config.action_identity),
+                rpc,
+                signer.clone(),
+                flow_run_id,
+                config,
+            )
+            .await?;
+        let memo = memo.expect("action_identity != None");
+        let req = signer::SignatureRequest {
+            id: None,
+            time: Utc::now(),
+            pubkey: action_config.action_signer,
+            message: tx.message_data().into(),
+            timeout: Duration::from_secs(0),
+            flow_run_id,
+            signatures: list_signatures(&tx),
+        };
+        if let Err(error) = signer.call_mut(req).await {
+            if !matches!(error, signer::Error::Timeout) {
+                return Err(Error::other(error));
+            }
+        }
+        let signature = confirm_action_transaction(
+            rpc,
+            action_config.action_identity,
+            memo,
+            config.wait_commitment_level,
+        )
+        .await?;
+        Ok(signature)
+    }
+
+    pub async fn execute(
+        self,
+        rpc: &RpcClient,
+        signer: signer::Svc,
+        flow_run_id: Option<FlowRunId>,
+        config: ExecutionConfig,
+    ) -> Result<Signature, Error> {
+        match &config.execute_on {
+            ExecuteOn::CurrentMachine => {
+                self.execute_current_machine(rpc, signer, flow_run_id, &config)
+                    .await
+            }
+            ExecuteOn::SolanaAction(action_config) => {
+                self.execute_solana_action(rpc, signer, flow_run_id, &config, action_config)
+                    .await
+            }
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::context::env::{
-        COMPUTE_BUDGET, FALLBACK_COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE,
+        COMPUTE_BUDGET, EXECUTE_ON, FALLBACK_COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE,
         SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
+    use base64::prelude::*;
     use solana_sdk::{pubkey, system_instruction::transfer};
 
     #[test]
@@ -957,7 +1107,7 @@ mod tests {
                 wait_commitment_level: CommitmentLevel::Processed,
                 ..<_>::default()
             },
-        )
+        );
     }
 
     #[tokio::test]

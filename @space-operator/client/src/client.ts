@@ -16,7 +16,7 @@ import {
 } from "./types/rest/submit-signature.ts";
 import { SignatureRequest } from "./types/ws.ts";
 import { GetFlowOutputOutput } from "./types/rest/get-flow-output.ts";
-import { ErrorBody } from "./mod.ts";
+import { ErrorBody, ISignatureRequest } from "./mod.ts";
 
 export interface ClientOptions {
   host?: string;
@@ -171,6 +171,17 @@ export class Client {
       token ?? (await this.getToken())
     );
     return Value.fromJSON(value);
+  }
+
+  async getSignatureRequest(
+    runId: FlowRunId,
+    token?: string
+  ): Promise<SignatureRequest> {
+    const value: ISignatureRequest = await this.#sendJSONGet(
+      `${this.host}/flow/signature_request/${runId}`,
+      token ?? (await this.getToken())
+    );
+    return new SignatureRequest(value);
   }
 
   async stopFlow(

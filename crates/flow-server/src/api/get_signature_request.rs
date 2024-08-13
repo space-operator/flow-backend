@@ -30,6 +30,7 @@ async fn exists_in_user(
     })
 }
 
+#[allow(dead_code)]
 async fn exists(
     db_worker: &actix::Addr<DBWorker>,
     req_id: i64,
@@ -75,11 +76,14 @@ async fn get_signature_request(
             .map_err(|_| Error::custom(StatusCode::INTERNAL_SERVER_ERROR, "channel closed"))?;
         while let Some(event) = events.next().await {
             if let Event::SignatureRequest(req) = event {
+                return Ok(web::Json(req));
+                /*
                 if let Some(req_id) = req.id {
                     if exists(&db_worker, req_id, &run_info).await? {
                         return Ok(web::Json(req));
                     }
                 }
+                */
             }
         }
     }

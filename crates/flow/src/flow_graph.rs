@@ -1450,7 +1450,7 @@ impl FlowGraph {
                         &self.ctx.solana_client,
                         self.ctx.signer.clone(),
                         Some(s.flow_run_id),
-                        self.tx_exec_config.clone(),
+                        &self.tx_exec_config,
                     )
                     .await
                 {

@@ -4,18 +4,17 @@ use crate::{
     user::{SignatureAuth, SupabaseAuth},
 };
 use db::pool::DbPool;
-use flow_lib::solana::Pubkey;
+use flow_lib::solana::SolanaActionConfig;
 use hashbrown::HashMap;
 use value::Value;
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 pub struct Params {
     #[serde(default)]
     pub inputs: HashMap<String, Value>,
     #[serde(default)]
     pub output_instructions: bool,
-    #[serde(default, with = "value::pubkey::opt")]
-    pub action_identity: Option<Pubkey>,
+    pub action_config: Option<SolanaActionConfig>,
 }
 
 #[derive(Serialize)]
@@ -65,16 +64,8 @@ async fn start_flow_unverified(
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let user = user.into_inner();
-    let (inputs, output_instructions, action_identity) = params
-        .map(
-            |web::Json(Params {
-                 inputs,
-                 output_instructions,
-                 action_identity,
-             })| (inputs, output_instructions, action_identity),
-        )
-        .unwrap_or_default();
-    let inputs = inputs.into_iter().collect::<ValueSet>();
+    let params = params.map(|web::Json(params)| params).unwrap_or_default();
+    let inputs = params.inputs.into_iter().collect::<ValueSet>();
 
     let flow = db
         .get_user_conn(UserId::nil())
@@ -98,8 +89,8 @@ async fn start_flow_unverified(
         .send(StartFlowShared {
             flow_id,
             input: inputs,
-            output_instructions,
-            action_identity,
+            output_instructions: params.output_instructions,
+            action_config: params.action_config,
             started_by: (user_id, starter),
         })
         .await??;
