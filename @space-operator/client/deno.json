@@ -1,5 +1,5 @@
 {
     "name": "@space-operator/client",
-    "version": "0.0.1",
+    "version": "0.3.0",
     "exports": "./src/mod.ts"
 }

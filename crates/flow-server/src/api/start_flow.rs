@@ -64,6 +64,7 @@ async fn start_flow(
             environment,
             output_instructions,
             action_identity: None,
+            action_config: None,
         })
         .await??;
 
