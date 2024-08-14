@@ -12,6 +12,7 @@ pub struct Params {
     pub partial_config: Option<PartialConfig>,
     #[serde(default)]
     pub environment: HashMap<String, String>,
+    #[serde(default)]
     pub output_instructions: bool,
 }
 
