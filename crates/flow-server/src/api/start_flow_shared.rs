@@ -8,6 +8,7 @@ use value::Value;
 pub struct Params {
     #[serde(default)]
     pub inputs: HashMap<String, Value>,
+    #[serde(default)]
     pub output_instructions: bool,
 }
 
