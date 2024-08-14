@@ -157,9 +157,24 @@ export class SignatureRequest implements ISignatureRequest {
   buildTransaction(): web3.Transaction {
     const buffer = Buffer.from(this.message, "base64");
     const solMsg = web3.Message.from(buffer);
-    const tx = web3.Transaction.populate(solMsg);
 
-    const newTx = tx;
+    let sigs = undefined;
+    if (this.signatures) {
+      sigs = [];
+      const defaultSignature = bs58.encodeBase58(new Uint8Array(64));
+      for (let i = 0; i < solMsg.header.numRequiredSignatures; i++) {
+        const pubkey = solMsg.accountKeys[i].toBase58();
+        let signature = this.signatures.find(
+          (x) => x.pubkey === pubkey
+        )?.signature;
+        if (signature === undefined) {
+          signature = defaultSignature;
+        }
+        sigs.push(signature);
+      }
+    }
+
+    return web3.Transaction.populate(solMsg, sigs);
 
     // TODO: not sure if we still need this
     // https://github.com/anza-xyz/wallet-adapter/issues/806
@@ -186,17 +201,6 @@ export class SignatureRequest implements ISignatureRequest {
     //   };
     //   newTx.add(new TransactionInstruction(init));
     // });
-
-    if (this.signatures) {
-      this.signatures.map(({ pubkey, signature }) =>
-        newTx.addSignature(
-          new web3.PublicKey(pubkey),
-          Buffer.from(bs58.decodeBase58(signature))
-        )
-      );
-    }
-
-    return newTx;
   }
 }
 
