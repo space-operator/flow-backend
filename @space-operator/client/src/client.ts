@@ -194,7 +194,7 @@ export class Client {
   async submitSignature(
     params: SubmitSignatureParams
   ): Promise<SubmitSignatureOutput> {
-    return await this.#sendJSONPost(`${this.host}/signature/submit`, params);
+    return await this.#sendJSONPost(`${this.host}/signature/submit`, params, false);
   }
 
   async signAndSubmitSignature(
