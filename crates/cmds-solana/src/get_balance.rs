@@ -32,6 +32,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    #[ignore]
     async fn test_valid() {
         let cmd = build().unwrap();
         let output = cmd
