@@ -244,9 +244,16 @@ impl SupabaseAuth {
     pub async fn login(&self, payload: &Payload) -> Result<(Box<RawValue>, bool), LoginError> {
         let pk = bs58::encode(&payload.pubkey).into_string();
 
-        let (cred, new_user) = match self.get_or_reset_password(&pk).await? {
-            Some(pw) => (pw, false),
-            None => (self.create_user(&payload.pubkey).await?.0, true),
+        tracing::debug!("login {}", pk);
+        let (cred, new_user) = {
+            let limit = self.limit.acquire().await.unwrap();
+
+            let (cred, new_user) = match self.get_or_reset_password(&pk).await? {
+                Some(pw) => (pw, false),
+                None => (self.create_user(&payload.pubkey).await?.0, true),
+            };
+            std::mem::drop(limit);
+            (cred, new_user)
         };
 
         tracing::debug!("calling supabase login");
