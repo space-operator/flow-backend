@@ -249,6 +249,7 @@ impl SupabaseAuth {
             None => (self.create_user(&payload.pubkey).await?.0, true),
         };
 
+        tracing::debug!("calling supabase login");
         let resp = self
             .client
             .post(self.login_url.clone())

@@ -28,7 +28,9 @@ async fn confirm_auth(
     sup: web::Data<SupabaseAuth>,
 ) -> Result<web::Json<Output>, Error> {
     let Params { token } = params.into_inner();
+    tracing::debug!("comfirming signature");
     let payload = sig.confirm(chrono::Utc::now().timestamp(), &token)?;
+    tracing::debug!("logining to supabase");
     let (session, new_user) = sup.login(&payload).await?;
     Ok(web::Json(Output { session, new_user }))
 }
