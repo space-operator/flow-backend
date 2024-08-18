@@ -6,6 +6,8 @@ use thiserror::Error as ThisError;
 pub enum Error<E = anyhow::Error> {
     #[error("not supported")]
     NotSupported,
+    #[error("time-out")]
+    Timeout,
     #[error("failed to create database connection pool:\n{0}")]
     CreatePool(deadpool_postgres::ConfigError),
     #[error("failed to get a database connection from pool:\n{0}")]
@@ -78,6 +80,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 impl<E: Into<anyhow::Error>> Error<E> {
     pub fn erase_type(self) -> Error {
         match self {
+            Error::Timeout => Error::Timeout,
             Error::NotSupported => Error::NotSupported,
             Error::LogicError(e) => Error::LogicError(anyhow::anyhow!(e)),
             Error::CreatePool(e) => Error::CreatePool(e),

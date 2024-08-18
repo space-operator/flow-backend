@@ -11,8 +11,9 @@ use reqwest::header::{self, HeaderName, HeaderValue};
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
-use std::panic::Location;
+use std::{panic::Location, sync::Arc};
 use thiserror::Error as ThisError;
+use tokio::sync::Semaphore;
 use uuid::Uuid;
 
 pub const FLOW_RUN_TOKEN_PREFIX: &str = "fr-";
@@ -139,6 +140,7 @@ pub struct SupabaseAuth {
     create_user_url: Url,
     admin_token: HeaderValue,
     open_whitelists: bool,
+    limit: Arc<Semaphore>,
 }
 
 #[derive(ThisError, Debug)]
@@ -235,15 +237,23 @@ impl SupabaseAuth {
             admin_token,
             pool,
             open_whitelists: config.open_whitelists,
+            limit: Arc::new(Semaphore::new(1)),
         })
     }
 
     pub async fn login(&self, payload: &Payload) -> Result<(Box<RawValue>, bool), LoginError> {
         let pk = bs58::encode(&payload.pubkey).into_string();
 
-        let (cred, new_user) = match self.get_or_reset_password(&pk).await? {
-            Some(pw) => (pw, false),
-            None => (self.create_user(&payload.pubkey).await?.0, true),
+        tracing::debug!("login {}", pk);
+        let (cred, new_user) = {
+            let limit = self.limit.acquire().await.unwrap();
+
+            let (cred, new_user) = match self.get_or_reset_password(&pk).await? {
+                Some(pw) => (pw, false),
+                None => (self.create_user(&payload.pubkey).await?.0, true),
+            };
+            std::mem::drop(limit);
+            (cred, new_user)
         };
 
         tracing::debug!("calling supabase login");
@@ -268,6 +278,7 @@ impl SupabaseAuth {
         &self,
         pk: &str,
     ) -> Result<Option<PasswordLogin>, LoginError> {
+        tracing::debug!("flow_server::get_or_reset_password {}", pk);
         let mut conn = self
             .pool
             .get_admin_conn()
