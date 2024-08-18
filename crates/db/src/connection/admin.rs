@@ -201,12 +201,14 @@ impl AdminConn {
         &mut self,
         user_id: &UserId,
     ) -> crate::Result<Option<Password>> {
+        tracing::debug!("get_or_reset_password {}", user_id);
         let tx = self
             .conn
             .transaction()
             .await
             .map_err(Error::exec("start"))?;
 
+        tracing::debug!("select password {}", user_id);
         let stmt = tx
             .prepare_cached(
                 "SELECT t1.email, t2.password
@@ -233,6 +235,7 @@ impl AdminConn {
                 let pw = Alphanumeric.sample_string(&mut rand::thread_rng(), 24);
                 let hash = bcrypt::hash(&pw, 10).map_err(|_| Error::Bcrypt)?;
 
+                tracing::debug!("update password {}", user_id);
                 let stmt = tx
                     .prepare_cached("UPDATE auth.users SET encrypted_password = $1 WHERE id = $2")
                     .await
@@ -241,6 +244,7 @@ impl AdminConn {
                     .await
                     .map_err(Error::exec("reset_pw_hash"))?;
 
+                tracing::debug!("insert password {}", user_id);
                 let stmt = tx
                     .prepare_cached(
                         "INSERT INTO auth.passwords (user_id, password) VALUES ($1, $2)
@@ -252,10 +256,12 @@ impl AdminConn {
                     .await
                     .map_err(Error::exec("reset_pw_pass"))?;
 
+                tracing::debug!("commit {}", user_id);
                 tx.commit().await.map_err(Error::exec("reset_pw_commit"))?;
                 password.password = Some(pw);
                 Ok(Some(password))
             } else {
+                tracing::debug!("commit {}", user_id);
                 tx.commit().await.map_err(Error::exec("reset_pw_commit"))?;
                 Ok(Some(password))
             }
