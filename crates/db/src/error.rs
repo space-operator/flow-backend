@@ -6,6 +6,8 @@ use thiserror::Error as ThisError;
 pub enum Error<E = anyhow::Error> {
     #[error("not supported")]
     NotSupported,
+    #[error("time-out")]
+    Timeout,
     #[error("failed to create database connection pool:\n{0}")]
     CreatePool(deadpool_postgres::ConfigError),
     #[error("failed to get a database connection from pool:\n{0}")]
