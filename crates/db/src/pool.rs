@@ -6,7 +6,7 @@ use crate::{
     },
     Error, LocalStorage, WasmStorage,
 };
-use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, SslMode};
+use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, PoolConfig, SslMode};
 use flow_lib::{context::get_jwt, UserId};
 use futures_util::FutureExt;
 use hashbrown::HashMap;
@@ -95,6 +95,10 @@ impl RealDbPool {
                 SslMode::Require
             } else {
                 SslMode::Disable
+            }),
+            pool: Some(PoolConfig {
+                max_size: 24,
+                ..Default::default()
             }),
             ..Config::default()
         };

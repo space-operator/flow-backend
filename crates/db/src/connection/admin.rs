@@ -271,6 +271,7 @@ impl AdminConn {
     }
 
     pub async fn get_password(&self, pk_bs58: &str) -> crate::Result<Option<Password>> {
+        tracing::debug!("get_password {}", pk_bs58);
         let stmt = self
             .conn
             .prepare_cached(
@@ -297,6 +298,7 @@ impl AdminConn {
     }
 
     pub async fn reset_password(&mut self, user_id: &UserId, pw: &str) -> crate::Result<()> {
+        tracing::debug!("reset_password {}", user_id);
         let tx = self
             .conn
             .transaction()

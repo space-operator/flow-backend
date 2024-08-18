@@ -267,6 +267,7 @@ impl SupabaseAuth {
         &self,
         pk: &str,
     ) -> Result<Option<PasswordLogin>, LoginError> {
+        tracing::debug!("flow_server::get_or_reset_password {}", pk);
         let mut conn = self
             .pool
             .get_admin_conn()
