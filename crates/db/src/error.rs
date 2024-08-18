@@ -80,6 +80,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 impl<E: Into<anyhow::Error>> Error<E> {
     pub fn erase_type(self) -> Error {
         match self {
+            Error::Timeout => Error::Timeout,
             Error::NotSupported => Error::NotSupported,
             Error::LogicError(e) => Error::LogicError(anyhow::anyhow!(e)),
             Error::CreatePool(e) => Error::CreatePool(e),
