@@ -11,8 +11,9 @@ use reqwest::header::{self, HeaderName, HeaderValue};
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
-use std::panic::Location;
+use std::{panic::Location, sync::Arc};
 use thiserror::Error as ThisError;
+use tokio::sync::Semaphore;
 use uuid::Uuid;
 
 pub const FLOW_RUN_TOKEN_PREFIX: &str = "fr-";
@@ -139,6 +140,7 @@ pub struct SupabaseAuth {
     create_user_url: Url,
     admin_token: HeaderValue,
     open_whitelists: bool,
+    limit: Arc<Semaphore>,
 }
 
 #[derive(ThisError, Debug)]
@@ -235,6 +237,7 @@ impl SupabaseAuth {
             admin_token,
             pool,
             open_whitelists: config.open_whitelists,
+            limit: Arc::new(Semaphore::new(1)),
         })
     }
 
