@@ -244,7 +244,7 @@ impl SupabaseAuth {
     pub async fn login(&self, payload: &Payload) -> Result<(Box<RawValue>, bool), LoginError> {
         let pk = bs58::encode(&payload.pubkey).into_string();
 
-        tracing::debug!("login {}", pk);
+        tracing::info!("login {}", pk);
         let (cred, new_user) = {
             let limit = self.limit.acquire().await.unwrap();
 

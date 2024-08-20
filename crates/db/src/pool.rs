@@ -97,7 +97,7 @@ impl RealDbPool {
                 SslMode::Disable
             }),
             pool: Some(PoolConfig {
-                max_size: 24,
+                max_size: 32,
                 ..Default::default()
             }),
             ..Config::default()
@@ -145,7 +145,7 @@ impl RealDbPool {
     }
 
     pub async fn get_conn(&self) -> crate::Result<Connection> {
-        let conn = tokio::time::timeout(Duration::from_secs(8), self.pg.get())
+        let conn = tokio::time::timeout(Duration::from_secs(240), self.pg.get())
             .await
             .map_err(|_| Error::Timeout)?
             .map_err(Error::GetDbConnection)?;
