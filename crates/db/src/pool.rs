@@ -46,6 +46,12 @@ pub struct RealDbPool {
     local: LocalStorage,
 }
 
+impl Drop for RealDbPool {
+    fn drop(&mut self) {
+        self.pg.close();
+    }
+}
+
 fn read_cert(path: &std::path::Path) -> crate::Result<rustls::Certificate> {
     let cert = std::fs::read(path)?;
     let mut buf = cert.as_slice();
@@ -140,6 +146,21 @@ impl RealDbPool {
 
         // Test to see if we can connect
         let _conn = pg.get().await.map_err(Error::GetDbConnection)?;
+
+        {
+            // close connections if they are unused for 30 secs
+            let pg = pg.clone();
+            let max_age = Duration::from_secs(30);
+            tokio::spawn(async move {
+                loop {
+                    tokio::time::sleep(Duration::from_secs(45)).await;
+                    if pg.is_closed() {
+                        break;
+                    }
+                    pg.retain(|_, metrics| metrics.last_used() < max_age);
+                }
+            });
+        };
 
         Ok(Self { pg, wasm, local })
     }
