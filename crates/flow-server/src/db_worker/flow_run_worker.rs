@@ -425,6 +425,7 @@ async fn save_to_db(
                 Event::SignatureRequest(_) => {}
             }
         }
+        drop(conn);
         if !logs.is_empty() && tx.send(CopyIn(logs)).await.is_err() {
             tracing::error!("failed to send to DBWorker, dropping event.")
         }

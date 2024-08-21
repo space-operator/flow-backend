@@ -96,8 +96,8 @@ impl RealDbPool {
             } else {
                 SslMode::Disable
             }),
-            pool: Some(PoolConfig {
-                max_size: 32,
+            pool: cfg.max_pool_size.map(|size| PoolConfig {
+                max_size: size,
                 ..Default::default()
             }),
             ..Config::default()

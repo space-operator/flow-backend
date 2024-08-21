@@ -9,6 +9,7 @@ pub struct DbConfig {
     pub port: u16,
     #[serde(default)]
     pub ssl: SslConfig,
+    pub max_pool_size: Option<usize>,
 }
 
 #[derive(Deserialize, Clone, Default)]
@@ -35,6 +36,7 @@ impl Default for DbConfig {
             host: "127.0.0.1".into(),
             port: 7979,
             ssl: <_>::default(),
+            max_pool_size: None,
         }
     }
 }
