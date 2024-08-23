@@ -11,7 +11,7 @@ use bytes::Bytes;
 use db::{pool::DbPool, Error as DbError};
 use flow::{
     flow_graph::StopSignal,
-    flow_registry::{get_flow, get_previous_values, new_flow_run, FlowRegistry},
+    flow_registry::{get_flow, get_previous_values, new_flow_run, FlowRegistry, StartFlowOptions},
 };
 use flow_lib::{
     config::{
@@ -460,6 +460,7 @@ pub struct StartFlowFresh {
     pub output_instructions: bool,
     pub action_identity: Option<Pubkey>,
     pub action_config: Option<SolanaActionConfig>,
+    pub fees: Vec<(Pubkey, u64)>,
     pub partial_config: Option<PartialConfig>,
     pub environment: HashMap<String, String>,
 }
@@ -583,13 +584,15 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 .start(
                     msg.flow_id,
                     msg.input,
-                    msg.partial_config,
-                    msg.output_instructions,
-                    msg.action_identity,
-                    msg.action_config,
-                    FlowRunOrigin::Start {},
-                    None,
-                    None,
+                    StartFlowOptions {
+                        partial_config: msg.partial_config,
+                        collect_instructions: msg.output_instructions,
+                        action_identity: msg.action_identity,
+                        action_config: msg.action_config,
+                        fees: msg.fees,
+                        origin: FlowRunOrigin::Start {},
+                        ..Default::default()
+                    },
                 )
                 .await?
                 .0;
@@ -605,6 +608,7 @@ pub struct StartFlowShared {
     pub output_instructions: bool,
     pub action_identity: Option<Pubkey>,
     pub action_config: Option<SolanaActionConfig>,
+    pub fees: Vec<(Pubkey, u64)>,
     pub started_by: (UserId, actix::Addr<UserWorker>),
 }
 
@@ -625,6 +629,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     output_instructions: msg.output_instructions,
                     action_identity: msg.action_identity,
                     action_config: msg.action_config,
+                    fees: msg.fees,
                     partial_config: None,
                     environment: <_>::default(),
                 },
@@ -670,15 +675,16 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                 .start(
                     msg.flow_id,
                     msg.input,
-                    None,
-                    msg.output_instructions,
-                    msg.action_identity,
-                    msg.action_config,
-                    FlowRunOrigin::StartShared {
-                        started_by: msg.started_by.0,
+                    StartFlowOptions {
+                        collect_instructions: msg.output_instructions,
+                        action_identity: msg.action_identity,
+                        action_config: msg.action_config,
+                        origin: FlowRunOrigin::StartShared {
+                            started_by: msg.started_by.0,
+                        },
+                        fees: msg.fees,
+                        ..Default::default()
                     },
-                    None,
-                    None,
                 )
                 .await?
                 .0;

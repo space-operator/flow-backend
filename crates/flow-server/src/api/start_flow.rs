@@ -66,6 +66,7 @@ async fn start_flow(
             output_instructions,
             action_identity: None,
             action_config: None,
+            fees: Vec::new(),
         })
         .await??;
 
