@@ -32,7 +32,7 @@ pub mod prelude {
     pub use crate::{db_worker::DBWorker, error::Error, middleware::auth, Config};
     pub use actix_web::{dev::HttpServiceFactory, http::StatusCode, web};
     pub use db::{
-        connection::UserConnection,
+        connection::{UserConnection, UserConnectionTrait},
         pool::{DbPool, RealDbPool},
         Error as DbError,
     };

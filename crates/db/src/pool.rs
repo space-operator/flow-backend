@@ -4,7 +4,7 @@ use crate::{
         proxied_user_conn::{self, ProxiedUserConn},
         AdminConn, UserConnection, UserConnectionTrait,
     },
-    Error, LocalStorage, WasmStorage,
+    CacheContainer, Error, LocalStorage, WasmStorage,
 };
 use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, PoolConfig, SslMode};
 use flow_lib::{context::get_jwt, UserId};
@@ -44,6 +44,7 @@ pub struct RealDbPool {
     pg: Pool,
     wasm: WasmStorage,
     local: LocalStorage,
+    cache: CacheContainer,
 }
 
 fn read_cert(path: &std::path::Path) -> crate::Result<rustls::Certificate> {
@@ -141,9 +142,10 @@ impl RealDbPool {
         // Test to see if we can connect
         let _conn = pg.get().await.map_err(Error::GetDbConnection)?;
 
+        let cache = CacheContainer::default();
         {
-            // close connections if they are unused for 30 secs
             let pg = pg.clone();
+            let cache = cache.clone();
             let max_age = Duration::from_secs(30);
             tokio::spawn(async move {
                 loop {
@@ -151,12 +153,22 @@ impl RealDbPool {
                     if pg.is_closed() {
                         break;
                     }
+                    if let Ok(mut cache) = cache.try_lock() {
+                        cache.cleanup();
+                    }
+
+                    // close connections if they are unused for 30 secs
                     pg.retain(|_, metrics| metrics.last_used() < max_age);
                 }
             });
         };
 
-        Ok(Self { pg, wasm, local })
+        Ok(Self {
+            pg,
+            wasm,
+            local,
+            cache,
+        })
     }
 
     pub async fn get_conn(&self) -> crate::Result<Connection> {
@@ -168,9 +180,9 @@ impl RealDbPool {
     }
 
     pub async fn get_user_conn(&self, user_id: UserId) -> crate::Result<UserConnection> {
-        self.get_conn()
-            .await
-            .map(move |conn| UserConnection::new(conn, self.wasm.clone(), user_id))
+        self.get_conn().await.map(move |conn| {
+            UserConnection::new(conn, self.wasm.clone(), user_id, self.cache.clone())
+        })
     }
 
     pub async fn get_admin_conn(&self) -> crate::Result<AdminConn> {
