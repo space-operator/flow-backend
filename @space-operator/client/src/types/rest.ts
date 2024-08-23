@@ -21,6 +21,7 @@ export interface StartFlowUnverifiedParams {
   output_instructions?: boolean;
   action_identity?: string;
   action_config?: SolanaActionConfig;
+  fees?: Array<[string, number]>;
 }
 
 export interface StartFlowUnverifiedOutput {

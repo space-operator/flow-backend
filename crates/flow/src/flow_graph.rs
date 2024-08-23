@@ -32,7 +32,7 @@ use petgraph::{
     visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
     Directed, Direction,
 };
-use solana_sdk::signature::Keypair;
+use solana_sdk::{signature::Keypair, system_instruction::transfer_many};
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
@@ -126,6 +126,7 @@ pub struct FlowGraph {
     pub tx_exec_config: ExecutionConfig,
     pub spawned: Vec<Child>,
     pub parent_flow_execute: Option<execute::Svc>,
+    pub fees: Vec<(Pubkey, u64)>,
 }
 
 pub struct UsePreviousValue {
@@ -506,6 +507,7 @@ impl FlowGraph {
             mode: c.instructions_bundling,
             output_instructions: false,
             action_identity: None,
+            fees: Vec::new(),
             rhai_permit,
             tx_exec_config,
             spawned,
@@ -1046,7 +1048,7 @@ impl FlowGraph {
                         range: Range<usize>,
                     }
 
-                    let (ins, resp) = {
+                    let (mut ins, resp) = {
                         let mut ins = w.instructions;
                         if let Some(signer) = self
                             .tx_exec_config
@@ -1081,6 +1083,14 @@ impl FlowGraph {
                         }
                         (ins, resp)
                     };
+                    if !self.fees.is_empty() {
+                        ins.combine(Instructions {
+                            fee_payer: ins.fee_payer,
+                            signers: vec![],
+                            instructions: transfer_many(&ins.fee_payer, &self.fees),
+                        })
+                        .expect("same fee payer");
+                    }
 
                     // this flow is an "Interflow instructions"
                     if self.output_instructions {

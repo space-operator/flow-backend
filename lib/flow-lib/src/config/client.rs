@@ -60,6 +60,12 @@ pub enum FlowRunOrigin {
     },
 }
 
+impl Default for FlowRunOrigin {
+    fn default() -> Self {
+        Self::Start {}
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ValuesConfig {
     #[serde(default)]

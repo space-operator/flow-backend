@@ -1,4 +1,7 @@
-use crate::{command::prelude::*, flow_registry::FlowRegistry};
+use crate::{
+    command::prelude::*,
+    flow_registry::{FlowRegistry, StartFlowOptions},
+};
 use anyhow::anyhow;
 use flow_lib::command::InstructionInfo;
 
@@ -88,14 +91,14 @@ impl CommandTrait for Interflow {
             .start(
                 self.id,
                 inputs,
-                None,
-                false,
-                None,
-                None,
-                ctx.new_interflow_origin()
-                    .ok_or_else(|| anyhow::anyhow!("this is a bug"))?,
-                Some(ctx.cfg.solana_client.clone()),
-                svc,
+                StartFlowOptions {
+                    origin: ctx
+                        .new_interflow_origin()
+                        .ok_or_else(|| anyhow::anyhow!("this is a bug"))?,
+                    solana_client: Some(ctx.cfg.solana_client.clone()),
+                    parent_flow_execute: svc,
+                    ..Default::default()
+                },
             )
             .await?;
         let result = handle.await?;

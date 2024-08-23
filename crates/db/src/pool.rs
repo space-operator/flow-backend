@@ -46,12 +46,6 @@ pub struct RealDbPool {
     local: LocalStorage,
 }
 
-impl Drop for RealDbPool {
-    fn drop(&mut self) {
-        self.pg.close();
-    }
-}
-
 fn read_cert(path: &std::path::Path) -> crate::Result<rustls::Certificate> {
     let cert = std::fs::read(path)?;
     let mut buf = cert.as_slice();

@@ -4,6 +4,7 @@
     "specifiers": {
       "jsr:@space-operator/flow-lib@0.10.0": "jsr:@space-operator/flow-lib@0.10.0",
       "jsr:@std/bytes@^0.221.0": "jsr:@std/bytes@0.221.0",
+      "jsr:@std/dotenv": "jsr:@std/dotenv@0.224.0",
       "jsr:@std/encoding@^0.221.0": "jsr:@std/encoding@0.221.0",
       "jsr:@std/msgpack@0.221.0": "jsr:@std/msgpack@0.221.0",
       "npm:@solana/web3.js@1.94.0": "npm:@solana/web3.js@1.94.0",
@@ -20,6 +21,9 @@
       },
       "@std/bytes@0.221.0": {
         "integrity": "64a047011cf833890a4a2ab7293ac55a1b4f5a050624ebc6a0159c357de91966"
+      },
+      "@std/dotenv@0.224.0": {
+        "integrity": "d9234cdf551507dcda60abb6c474289843741d8c07ee8ce540c60f5c1b220a1d"
       },
       "@std/encoding@0.221.0": {
         "integrity": "d1dd76ef0dc5d14088411e6dc1dede53bf8308c95d1537df1214c97137208e45"

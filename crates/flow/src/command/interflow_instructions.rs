@@ -1,5 +1,9 @@
 use super::interflow::get_interflow_id;
-use crate::{command::prelude::*, flow_graph::FlowRunResult, flow_registry::FlowRegistry};
+use crate::{
+    command::prelude::*,
+    flow_graph::FlowRunResult,
+    flow_registry::{FlowRegistry, StartFlowOptions},
+};
 use bytes::Bytes;
 
 pub const INTERFLOW_INSTRUCTIONS: &str = "interflow_instructions";
@@ -81,14 +85,14 @@ impl CommandTrait for Interflow {
             .start(
                 self.id,
                 inputs,
-                None,
-                true,
-                None,
-                None,
-                ctx.new_interflow_origin()
-                    .ok_or_else(|| anyhow::anyhow!("this is a bug"))?,
-                Some(ctx.cfg.solana_client.clone()),
-                None,
+                StartFlowOptions {
+                    collect_instructions: true,
+                    origin: ctx
+                        .new_interflow_origin()
+                        .ok_or_else(|| anyhow::anyhow!("this is a bug"))?,
+                    solana_client: Some(ctx.cfg.solana_client.clone()),
+                    ..Default::default()
+                },
             )
             .await?;
         let result = handle.await?;

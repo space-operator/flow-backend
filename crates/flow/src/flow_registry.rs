@@ -35,6 +35,18 @@ pub enum StopError {
     Forbidden,
 }
 
+#[derive(Default)]
+pub struct StartFlowOptions {
+    pub partial_config: Option<PartialConfig>,
+    pub collect_instructions: bool,
+    pub action_identity: Option<Pubkey>,
+    pub action_config: Option<SolanaActionConfig>,
+    pub fees: Vec<(Pubkey, u64)>,
+    pub origin: FlowRunOrigin,
+    pub solana_client: Option<SolanaClientConfig>,
+    pub parent_flow_execute: Option<execute::Svc>,
+}
+
 /// A collection of flows config to run together
 #[derive(Clone)]
 pub struct FlowRegistry {
@@ -358,14 +370,18 @@ impl FlowRegistry {
         &self,
         flow_id: FlowId,
         inputs: ValueSet,
-        partial_config: Option<PartialConfig>,
-        collect_instructions: bool,
-        action_identity: Option<Pubkey>,
-        action_config: Option<SolanaActionConfig>,
-        origin: FlowRunOrigin,
-        solana_client: Option<SolanaClientConfig>,
-        parent_flow_execute: Option<execute::Svc>,
+        options: StartFlowOptions,
     ) -> Result<(FlowRunId, tokio::task::JoinHandle<FlowRunResult>), new_flow_run::Error> {
+        let StartFlowOptions {
+            partial_config,
+            collect_instructions,
+            action_identity,
+            action_config,
+            fees,
+            origin,
+            solana_client,
+            parent_flow_execute,
+        } = options;
         let config = self
             .flows
             .get(&flow_id)
@@ -431,6 +447,7 @@ impl FlowRegistry {
                 flow.tx_exec_config.execute_on = ExecuteOn::SolanaAction(config);
             }
             flow.action_identity = action_identity;
+            flow.fees = fees;
 
             if collect_instructions {
                 if let BundlingMode::Off = flow.mode {

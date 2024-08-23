@@ -6,8 +6,10 @@ use crate::{
 use db::pool::DbPool;
 use flow_lib::solana::{Pubkey, SolanaActionConfig};
 use hashbrown::HashMap;
+use serde_with::{serde_as, DisplayFromStr};
 use value::Value;
 
+#[serde_as]
 #[derive(Default, Deserialize, Debug)]
 pub struct Params {
     #[serde(default)]
@@ -17,6 +19,9 @@ pub struct Params {
     #[serde(default, with = "value::pubkey::opt")]
     pub action_identity: Option<Pubkey>,
     pub action_config: Option<SolanaActionConfig>,
+    #[serde(default)]
+    #[serde_as(as = "Vec<(DisplayFromStr, _)>")]
+    pub fees: Vec<(Pubkey, u64)>,
 }
 
 #[derive(Serialize)]
@@ -94,6 +99,7 @@ async fn start_flow_unverified(
             output_instructions: params.output_instructions,
             action_identity: params.action_identity,
             action_config: params.action_config,
+            fees: params.fees,
             started_by: (user_id, starter),
         })
         .await??;
