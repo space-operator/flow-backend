@@ -128,22 +128,6 @@ impl UserConnectionTrait for ProxiedUserConn {
         self.send("push_flow_error", &(&id, &error)).await
     }
 
-    async fn push_flow_log(
-        &self,
-        id: &FlowRunId,
-        index: &i32,
-        time: &DateTime<Utc>,
-        level: &str,
-        module: &Option<String>,
-        content: &str,
-    ) -> crate::Result<()> {
-        self.send(
-            "push_flow_log",
-            &(&id, &index, &time, &level, &module, &content),
-        )
-        .await
-    }
-
     async fn set_run_result(
         &self,
         id: &FlowRunId,
@@ -187,26 +171,6 @@ impl UserConnectionTrait for ProxiedUserConn {
     ) -> crate::Result<()> {
         self.send("push_node_error", &(&id, &node_id, &times, &error))
             .await
-    }
-
-    async fn push_node_log(
-        &self,
-        id: &FlowRunId,
-        index: &i32,
-        node_id: &NodeId,
-        times: &i32,
-        time: &DateTime<Utc>,
-        level: &str,
-        module: &Option<String>,
-        content: &str,
-    ) -> crate::Result<()> {
-        self.send(
-            "push_node_log",
-            &(
-                &id, &index, &node_id, &times, &time, &level, &module, &content,
-            ),
-        )
-        .await
     }
 
     async fn set_node_finish(
@@ -312,14 +276,6 @@ impl UserConnection {
             "push_flow_error" => {
                 let (id, error): (_, String) = serde_json::from_str(req.params.get())?;
                 let res = self.push_flow_error(&id, &error).await?;
-                Ok(serde_json::value::to_raw_value(&res)?)
-            }
-            "push_flow_log" => {
-                let (id, index, time, level, module, content): (_, _, _, String, _, String) =
-                    serde_json::from_str(req.params.get())?;
-                let res = self
-                    .push_flow_log(&id, &index, &time, &level, &module, &content)
-                    .await?;
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             "set_run_result" => {

@@ -2,7 +2,7 @@ use crate::{Cache, CacheContainer, CacheValue, Error, Wallet, WasmStorage};
 use async_trait::async_trait;
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
-use deadpool_postgres::Object as Connection;
+use deadpool_postgres::{Object as Connection, Transaction};
 use flow_lib::{
     config::client::{self, ClientConfig},
     context::signer::Presigner,
@@ -13,10 +13,14 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::{
     any::Any,
+    future::Future,
     sync::{Arc, Mutex},
     time::Duration,
 };
-use tokio_postgres::{types::Json, Row};
+use tokio_postgres::{
+    types::{Json, ToSql},
+    Error as PgError, Row,
+};
 use uuid::Uuid;
 use value::Value;
 
@@ -105,16 +109,6 @@ pub trait UserConnectionTrait: Any + 'static {
 
     async fn push_flow_error(&self, id: &FlowRunId, error: &str) -> crate::Result<()>;
 
-    async fn push_flow_log(
-        &self,
-        id: &FlowRunId,
-        index: &i32,
-        time: &DateTime<Utc>,
-        level: &str,
-        module: &Option<String>,
-        content: &str,
-    ) -> crate::Result<()>;
-
     async fn set_run_result(
         &self,
         id: &FlowRunId,
@@ -148,18 +142,6 @@ pub trait UserConnectionTrait: Any + 'static {
         error: &str,
     ) -> crate::Result<()>;
 
-    async fn push_node_log(
-        &self,
-        id: &FlowRunId,
-        index: &i32,
-        node_id: &NodeId,
-        times: &i32,
-        time: &DateTime<Utc>,
-        level: &str,
-        module: &Option<String>,
-        content: &str,
-    ) -> crate::Result<()>;
-
     async fn set_node_finish(
         &self,
         id: &FlowRunId,
@@ -186,6 +168,104 @@ pub trait UserConnectionTrait: Any + 'static {
     async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>>;
 
     async fn export_user_data(&mut self) -> crate::Result<ExportedUserData>;
+}
+
+pub trait DbClient {
+    #[track_caller]
+    fn do_query_one(
+        &self,
+        stmt: &str,
+        params: &[&(dyn ToSql + Sync)],
+    ) -> impl Future<Output = Result<Row, PgError>>;
+
+    #[track_caller]
+    fn do_query(
+        &self,
+        stmt: &str,
+        params: &[&(dyn ToSql + Sync)],
+    ) -> impl Future<Output = Result<Vec<Row>, PgError>>;
+
+    #[track_caller]
+    fn do_execute(
+        &self,
+        stmt: &str,
+        params: &[&(dyn ToSql + Sync)],
+    ) -> impl Future<Output = Result<u64, PgError>>;
+
+    #[track_caller]
+    fn do_query_opt(
+        &self,
+        stmt: &str,
+        params: &[&(dyn ToSql + Sync)],
+    ) -> impl Future<Output = Result<Option<Row>, PgError>>;
+}
+
+impl DbClient for Connection {
+    async fn do_query_one(
+        &self,
+        stmt: &str,
+        params: &[&(dyn ToSql + Sync)],
+    ) -> Result<Row, PgError> {
+        let stmt = self.prepare_cached(stmt).await?;
+        self.query_one(&stmt, params).await
+    }
+
+    async fn do_query(
+        &self,
+        stmt: &str,
+        params: &[&(dyn ToSql + Sync)],
+    ) -> Result<Vec<Row>, PgError> {
+        let stmt = self.prepare_cached(stmt).await?;
+        self.query(&stmt, params).await
+    }
+
+    async fn do_execute(&self, stmt: &str, params: &[&(dyn ToSql + Sync)]) -> Result<u64, PgError> {
+        let stmt = self.prepare_cached(stmt).await?;
+        self.execute(&stmt, params).await
+    }
+
+    async fn do_query_opt(
+        &self,
+        stmt: &str,
+        params: &[&(dyn ToSql + Sync)],
+    ) -> Result<Option<Row>, PgError> {
+        let stmt = self.prepare_cached(stmt).await?;
+        self.query_opt(&stmt, params).await
+    }
+}
+
+impl<'a> DbClient for Transaction<'a> {
+    async fn do_query_one(
+        &self,
+        stmt: &str,
+        params: &[&(dyn ToSql + Sync)],
+    ) -> Result<Row, PgError> {
+        let stmt = self.prepare_cached(stmt).await?;
+        self.query_one(&stmt, params).await
+    }
+
+    async fn do_query(
+        &self,
+        stmt: &str,
+        params: &[&(dyn ToSql + Sync)],
+    ) -> Result<Vec<Row>, PgError> {
+        let stmt = self.prepare_cached(stmt).await?;
+        self.query(&stmt, params).await
+    }
+
+    async fn do_execute(&self, stmt: &str, params: &[&(dyn ToSql + Sync)]) -> Result<u64, PgError> {
+        let stmt = self.prepare_cached(stmt).await?;
+        self.execute(&stmt, params).await
+    }
+
+    async fn do_query_opt(
+        &self,
+        stmt: &str,
+        params: &[&(dyn ToSql + Sync)],
+    ) -> Result<Option<Row>, PgError> {
+        let stmt = self.prepare_cached(stmt).await?;
+        self.query_opt(&stmt, params).await
+    }
 }
 
 mod conn_impl;
