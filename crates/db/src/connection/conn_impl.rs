@@ -370,9 +370,9 @@ impl UserConnection {
                         parent_flow
                     ) SELECT
                         guide,
-                        CONCAT('[CLONED] ', name) AS name,
+                        name,
                         mosaic,
-                        CONCAT('[CLONED] ', description) AS description,
+                        description,
                         tags,
                         custom_networks,
                         current_network,
