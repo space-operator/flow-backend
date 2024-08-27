@@ -118,7 +118,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &input.proposal,
         &input.token_owner_record,
         &input.governance_authority.pubkey(),
-        input.reply_to.clone(),
+        input.reply_to,
         &input.chat_message.pubkey(),
         &input.fee_payer.pubkey(),
         input.voter_weight_record,

@@ -38,6 +38,19 @@ impl AdminConn {
         Self { conn }
     }
 
+    pub async fn get_user_id_by_pubkey(&self, pk_bs58: &str) -> crate::Result<Option<UserId>> {
+        self.conn
+            .do_query_opt(
+                "SELECT user_id FROM users_public WHERE pub_key = $1",
+                &[&pk_bs58],
+            )
+            .await
+            .map_err(Error::exec("query users_public"))?
+            .map(|row| row.try_get(0))
+            .transpose()
+            .map_err(Error::data("users_public.user_id"))
+    }
+
     pub async fn get_flow_run_info(&self, run_id: FlowRunId) -> crate::Result<FlowRunInfo> {
         let user_id: UserId = self
             .conn

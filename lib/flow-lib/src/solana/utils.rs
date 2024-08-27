@@ -128,7 +128,7 @@ pub async fn get_and_parse_transaction(
 ) -> Result<TransactionWithMeta, anyhow::Error> {
     let result = rpc
         .get_transaction(
-            &signature,
+            signature,
             solana_transaction_status::UiTransactionEncoding::Base64,
         )
         .await?;

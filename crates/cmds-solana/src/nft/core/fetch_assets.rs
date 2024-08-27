@@ -54,7 +54,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
                     )),
                     RpcFilterType::Memcmp(Memcmp::new(
                         34,
-                        MemcmpEncodedBytes::Bytes(vec![2 as u8]),
+                        MemcmpEncodedBytes::Bytes(vec![2_u8]),
                     )),
                     RpcFilterType::Memcmp(Memcmp::new(
                         35,

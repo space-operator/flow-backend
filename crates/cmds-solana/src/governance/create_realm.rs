@@ -192,7 +192,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         input.council_token_config_args,
         input.name,
         input.min_weight,
-        input.max_weight_source.into(),
+        input.max_weight_source,
     );
 
     let instructions = Instructions {

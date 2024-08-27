@@ -40,31 +40,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let plugin: Plugin = match input.plugin {
-        Plugin::Royalties(royalties) => Plugin::Royalties(royalties),
-        Plugin::FreezeDelegate(freeze_delegate) => Plugin::FreezeDelegate(freeze_delegate),
-        Plugin::BurnDelegate(burn_delegate) => Plugin::BurnDelegate(burn_delegate),
-        Plugin::TransferDelegate(transfer_delegate) => Plugin::TransferDelegate(transfer_delegate),
-        Plugin::UpdateDelegate(update_delegate) => Plugin::UpdateDelegate(update_delegate),
-        Plugin::PermanentFreezeDelegate(permanent_freeze_delegate) => {
-            Plugin::PermanentFreezeDelegate(permanent_freeze_delegate)
-        }
-        Plugin::Attributes(attributes) => Plugin::Attributes(attributes),
-        Plugin::PermanentTransferDelegate(permanent_transfer_delegate) => {
-            Plugin::PermanentTransferDelegate(permanent_transfer_delegate)
-        }
-        Plugin::PermanentBurnDelegate(permanent_burn_delegate) => {
-            Plugin::PermanentBurnDelegate(permanent_burn_delegate)
-        }
-        Plugin::Edition(edition) => Plugin::Edition(edition),
-        Plugin::MasterEdition(master_edition) => Plugin::MasterEdition(master_edition),
-        Plugin::AddBlocker(add_blocker) => Plugin::AddBlocker(add_blocker),
-        Plugin::ImmutableMetadata(immutable_metadata) => {
-            Plugin::ImmutableMetadata(immutable_metadata)
-        }
-        Plugin::VerifiedCreators(verified_creators) => Plugin::VerifiedCreators(verified_creators),
-        Plugin::Autograph(autograph) => Plugin::Autograph(autograph),
-    };
+    let plugin: Plugin = input.plugin;
 
     let mut builder = UpdatePluginV1Builder::new();
 

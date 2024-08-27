@@ -72,13 +72,13 @@ pub fn sign_off_proposal(
 
     let data = GovernanceInstruction::SignOffProposal;
 
-    let instruction = Instruction {
+    
+
+    Instruction {
         program_id: *program_id,
         accounts,
         data: borsh::to_vec(&data).unwrap(),
-    };
-
-    instruction
+    }
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {

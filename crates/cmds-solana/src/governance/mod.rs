@@ -660,12 +660,14 @@ pub struct GoverningTokenConfigArgs {
 /// 1) Who retains the authority over deposited tokens
 /// 2) Which token instructions Deposit, Withdraw and Revoke (burn) are allowed
 #[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize, Deserialize, Serialize)]
+#[derive(Default)]
 pub enum GoverningTokenType {
     /// Liquid token is a token which is fully liquid and the token owner
     /// retains full authority over it.
     /// Deposit - Yes
     /// Withdraw - Yes  
     /// Revoke - No, Realm authority cannot revoke liquid tokens
+    #[default]
     Liquid,
 
     /// Membership token is a token controlled by Realm authority
@@ -699,11 +701,6 @@ pub enum GoverningTokenType {
     Dormant,
 }
 
-impl Default for GoverningTokenType {
-    fn default() -> Self {
-        GoverningTokenType::Liquid
-    }
-}
 
 /// The source of max vote weight used for voting
 /// Values below 100% mint supply can be used when the governing token is fully

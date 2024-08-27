@@ -5,7 +5,7 @@ use db::{
     pool::{DbPool, RealDbPool},
 };
 use flow::BoxedError;
-use flow_lib::{FlowRunId, UserId};
+use flow_lib::{solana::Pubkey, FlowRunId, UserId};
 use rand::distributions::{Alphanumeric, DistString};
 use reqwest::header::{self, HeaderName, HeaderValue};
 use reqwest::{StatusCode, Url};
@@ -14,7 +14,6 @@ use serde_json::value::RawValue;
 use std::{panic::Location, sync::Arc};
 use thiserror::Error as ThisError;
 use tokio::sync::Semaphore;
-use uuid::Uuid;
 
 pub const FLOW_RUN_TOKEN_PREFIX: &str = "fr-";
 pub const SIGNING_TIMEOUT_SECS: i64 = 60;
@@ -214,7 +213,7 @@ impl CreateUser {
 
 #[derive(Deserialize)]
 struct CreateUserResponse {
-    id: Uuid,
+    id: UserId,
 }
 
 impl SupabaseAuth {
@@ -240,6 +239,23 @@ impl SupabaseAuth {
             limit: Arc::new(Semaphore::new(1)),
         })
     }
+    pub async fn get_or_create_user_by_pubkey(
+        &self,
+        pubkey: &[u8; 32],
+    ) -> Result<UserId, LoginError> {
+        let conn = self.pool.get_admin_conn().await?;
+        let pk_bs58 = bs58::encode(pubkey).into_string();
+        let maybe_user = conn.get_user_id_by_pubkey(&pk_bs58).await?;
+        if let Some(user_id) = maybe_user {
+            return Ok(user_id);
+        }
+        if self.open_whitelists {
+            conn.insert_whitelist(&pk_bs58).await?;
+        }
+        drop(conn);
+        let user_id = self.create_user(pubkey).await?.1;
+        Ok(user_id)
+    }
 
     pub async fn login(&self, payload: &Payload) -> Result<(Box<RawValue>, bool), LoginError> {
         let pk = bs58::encode(&payload.pubkey).into_string();
@@ -250,7 +266,10 @@ impl SupabaseAuth {
 
             let (cred, new_user) = match self.get_or_reset_password(&pk).await? {
                 Some(pw) => (pw, false),
-                None => (self.create_user(&payload.pubkey).await?.0, true),
+                None => {
+                    let user_id = self.create_user(&payload.pubkey).await?.1;
+                    (login, true)
+                }
             };
             std::mem::drop(limit);
             (cred, new_user)

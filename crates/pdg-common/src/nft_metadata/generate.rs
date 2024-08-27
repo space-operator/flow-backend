@@ -383,22 +383,19 @@ impl RenderParams {
     }
 
     pub fn generate_underwater<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
-        match self.fx2 {
-            Fx2::Underwater => {
-                let jellyfish = FxJellyfish::choose(rng);
-                self.fx_jellifish = jellyfish;
+        if self.fx2 == Fx2::Underwater {
+            let jellyfish = FxJellyfish::choose(rng);
+            self.fx_jellifish = jellyfish;
 
-                self.underwater_fog_amount = rng.gen::<f64>() * 30.0;
-                self.background_underwater_color_hue = 38.8;
+            self.underwater_fog_amount = rng.gen::<f64>() * 30.0;
+            self.background_underwater_color_hue = 38.8;
 
-                let env_light = if self.fx0 == Fx0::Hologram {
-                    EnvLight::UnderwaterHologram
-                } else {
-                    EnvLight::Underwater
-                };
-                self.env_light = env_light;
-            }
-            _ => {}
+            let env_light = if self.fx0 == Fx0::Hologram {
+                EnvLight::UnderwaterHologram
+            } else {
+                EnvLight::Underwater
+            };
+            self.env_light = env_light;
         }
         self
     }
@@ -430,31 +427,22 @@ impl RenderParams {
     }
 
     pub fn generate_body_material_variation<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
-        match self.fx0 {
-            Fx0::No => {
-                self.body_material_variation = Some(BodyMaterialVariations::choose(rng));
-            }
-            _ => {}
+        if self.fx0 == Fx0::No {
+            self.body_material_variation = Some(BodyMaterialVariations::choose(rng));
         }
         self
     }
 
     pub fn generate_marble_variation<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
-        match self.fx0 {
-            Fx0::Marble => {
-                self.marble_variation = Some(MarbleVariation::choose(rng));
-            }
-            _ => {}
+        if self.fx0 == Fx0::Marble {
+            self.marble_variation = Some(MarbleVariation::choose(rng));
         }
         self
     }
 
     pub fn generate_wood_variation<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
-        match self.fx0 {
-            Fx0::Wood => {
-                self.wood_variation = Some(WoodVariation::choose(rng));
-            }
-            _ => {}
+        if self.fx0 == Fx0::Wood {
+            self.wood_variation = Some(WoodVariation::choose(rng));
         }
         self
     }
