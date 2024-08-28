@@ -3,12 +3,15 @@ use bincode::{Decode, Encode};
 use db::pool::{DbPool, RealDbPool};
 use flow::BoxedError;
 use flow_lib::{FlowRunId, UserId};
+use hashbrown::HashMap;
 use reqwest::header::{self, HeaderName, HeaderValue};
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use std::panic::Location;
+use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
+use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 pub const FLOW_RUN_TOKEN_PREFIX: &str = "fr-";
 pub const SIGNING_TIMEOUT_SECS: i64 = 60;
@@ -130,6 +133,7 @@ pub struct SupabaseAuth {
     create_user_url: Url,
     admin_token: HeaderValue,
     open_whitelists: bool,
+    limits: Arc<Mutex<HashMap<[u8; 32], Arc<Semaphore>>>>,
 }
 
 #[derive(ThisError, Debug)]
@@ -230,10 +234,43 @@ impl SupabaseAuth {
             admin_token,
             pool,
             open_whitelists: config.open_whitelists,
+            limits: Default::default(),
         })
     }
 
+    async fn get_semaphore_permit(&self, pubkey: &[u8; 32]) -> OwnedSemaphorePermit {
+        let semaphore = self
+            .limits
+            .lock()
+            .unwrap()
+            .entry(*pubkey)
+            .or_insert_with(|| Arc::new(Semaphore::new(1)))
+            .clone();
+
+        semaphore.acquire_owned().await.unwrap()
+    }
+
+    fn cleanup_semaphore(&self, pubkey: &[u8; 32]) {
+        let mut limits = self.limits.lock().unwrap();
+        if let Some(semaphore) = limits.get(pubkey) {
+            if Arc::strong_count(semaphore) == 1 {
+                limits.remove(pubkey).unwrap();
+            }
+        }
+    }
+
     pub async fn get_or_create_user(
+        &self,
+        pubkey: &[u8; 32],
+    ) -> Result<(UserId, bool), LoginError> {
+        let permit = self.get_semaphore_permit(pubkey).await;
+        let result = self.get_or_create_user_impl(pubkey).await;
+        drop(permit);
+        self.cleanup_semaphore(pubkey);
+        result
+    }
+
+    pub async fn get_or_create_user_impl(
         &self,
         pubkey: &[u8; 32],
     ) -> Result<(UserId, bool), LoginError> {
@@ -268,6 +305,14 @@ impl SupabaseAuth {
     }
 
     pub async fn login(&self, payload: &Payload) -> Result<(Box<RawValue>, bool), LoginError> {
+        let permit = self.get_semaphore_permit(&payload.pubkey).await;
+        let result = self.login_impl(payload).await;
+        drop(permit);
+        self.cleanup_semaphore(&payload.pubkey);
+        result
+    }
+
+    async fn login_impl(&self, payload: &Payload) -> Result<(Box<RawValue>, bool), LoginError> {
         let pk = bs58::encode(&payload.pubkey).into_string();
         tracing::info!("login {}", pk);
 
