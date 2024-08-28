@@ -243,12 +243,28 @@ impl SupabaseAuth {
         if let Some(user_id) = maybe_user {
             return Ok((user_id, false));
         }
+
+        tracing::info!("creating user {}", pk_bs58);
         if self.open_whitelists {
             conn.insert_whitelist(&pk_bs58).await?;
         }
         drop(conn);
-        let user_id = self.create_user(pubkey).await?.1;
-        Ok((user_id, true))
+
+        let resp = self
+            .client
+            .post(self.create_user_url.clone())
+            .header(HeaderName::from_static("apikey"), &self.anon_key)
+            .header(header::AUTHORIZATION, &self.admin_token)
+            .json(&CreateUser::new(pubkey))
+            .send()
+            .await
+            .map_err(|_| login_error())?;
+        if resp.status() != StatusCode::OK {
+            return Err(supabase_error(resp).await);
+        }
+        let CreateUserResponse { id } = resp.json().await.map_err(|_| login_error())?;
+
+        Ok((id, true))
     }
 
     pub async fn login(&self, payload: &Payload) -> Result<(Box<RawValue>, bool), LoginError> {
@@ -284,38 +300,6 @@ impl SupabaseAuth {
         let body: Box<RawValue> = resp.json().await.map_err(|_| login_error())?;
 
         Ok((body, new_user))
-    }
-
-    async fn create_user(&self, pk: &[u8; 32]) -> Result<(CreateUser, UserId), LoginError> {
-        let body = CreateUser::new(pk);
-        tracing::info!("creating user {}", body.user_metadata.pub_key);
-
-        {
-            let conn = self
-                .pool
-                .get_admin_conn()
-                .await
-                .map_err(|_| login_error())?;
-            if self.open_whitelists {
-                conn.insert_whitelist(&body.user_metadata.pub_key).await?;
-            }
-        }
-
-        let resp = self
-            .client
-            .post(self.create_user_url.clone())
-            .header(HeaderName::from_static("apikey"), &self.anon_key)
-            .header(header::AUTHORIZATION, &self.admin_token)
-            .json(&body)
-            .send()
-            .await
-            .map_err(|_| login_error())?;
-        if resp.status() != StatusCode::OK {
-            return Err(supabase_error(resp).await);
-        }
-        let CreateUserResponse { id } = resp.json().await.map_err(|_| login_error())?;
-
-        Ok((body, id))
     }
 }
 
