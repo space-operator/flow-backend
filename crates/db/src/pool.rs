@@ -186,7 +186,9 @@ impl RealDbPool {
     }
 
     pub async fn get_admin_conn(&self) -> crate::Result<AdminConn> {
-        self.get_conn().await.map(AdminConn::new)
+        self.get_conn()
+            .await
+            .map(|conn| AdminConn::new(conn, self.local.clone()))
     }
 
     pub fn get_local(&self) -> &LocalStorage {

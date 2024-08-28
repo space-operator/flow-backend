@@ -5,7 +5,7 @@ use crate::{
 };
 use actix::{Actor, ActorFutureExt, Addr, AsyncContext, ResponseFuture, WrapFuture};
 use chrono::{Duration, Utc};
-use db::{connection::Password, local_storage::Jwt, pool::RealDbPool, LocalStorage};
+use db::{local_storage::Jwt, pool::RealDbPool, LocalStorage};
 use flow_lib::{config::Endpoints, context::get_jwt, UserId};
 use futures_channel::oneshot;
 use futures_util::{future::BoxFuture, FutureExt};
@@ -29,18 +29,15 @@ pub struct LoginWithAdminCred {
 
 impl LoginWithAdminCred {
     pub async fn claim(self) -> Result<Jwt, get_jwt::Error> {
-        let Password {
-            email, password, ..
-        } = self
+        let r = self
             .db
             .get_admin_conn()
             .await
             .map_err(get_jwt::Error::other)?
-            .get_or_reset_password(&self.user_id)
+            .get_login_credential(self.user_id)
             .await
-            .map_err(get_jwt::Error::other)?
-            .ok_or(get_jwt::Error::UserNotFound)?;
-        let password = password.expect("bug in get_or_reset_password");
+            .map_err(get_jwt::Error::other)?;
+
         let resp = self
             .client
             .post(format!(
@@ -51,13 +48,18 @@ impl LoginWithAdminCred {
                 HeaderName::from_static("apikey"),
                 &self.endpoints.supabase_anon_key,
             )
-            .json(&PasswordLogin { email, password })
+            .json(&PasswordLogin {
+                email: r.email,
+                password: r.password,
+            })
             .send()
             .await
             .map_err(get_jwt::Error::other)?;
+
         if resp.status() != StatusCode::OK {
             return Err(supabase_error(resp).await);
         }
+
         Ok(Jwt::from(
             resp.json::<TokenResponse>()
                 .await

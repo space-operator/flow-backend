@@ -1,30 +1,28 @@
-use crate::{Error, FlowRunLogsRow};
+use crate::{Error, FlowRunLogsRow, LocalStorage};
 use anyhow::anyhow;
 use bytes::Bytes;
 use chrono::Utc;
 use deadpool_postgres::{Object as Connection, Transaction};
 use flow_lib::{FlowRunId, UserId};
 use futures_util::SinkExt;
-use rand::distributions::{Alphanumeric, DistString};
 use std::borrow::Borrow;
 use tokio_postgres::{
     binary_copy::BinaryCopyInWriter,
     types::{Json, Type},
 };
-use uuid::Uuid;
 use value::Value;
 
 use super::{csv_export, DbClient, ExportedUserData};
 
 pub struct AdminConn {
-    pub conn: Connection,
+    pub(crate) conn: Connection,
+    pub(crate) local: LocalStorage,
 }
 
 #[derive(Debug)]
-pub struct Password {
-    pub user_id: Uuid,
+pub struct LoginCredential {
     pub email: String,
-    pub password: Option<String>,
+    pub password: String,
 }
 
 #[derive(Debug)]
@@ -34,8 +32,8 @@ pub struct FlowRunInfo {
 }
 
 impl AdminConn {
-    pub fn new(conn: Connection) -> AdminConn {
-        Self { conn }
+    pub fn new(conn: Connection, local: LocalStorage) -> AdminConn {
+        Self { conn, local }
     }
 
     pub async fn get_user_id_by_pubkey(&self, pk_bs58: &str) -> crate::Result<Option<UserId>> {
@@ -49,6 +47,24 @@ impl AdminConn {
             .map(|row| row.try_get(0))
             .transpose()
             .map_err(Error::data("users_public.user_id"))
+    }
+
+    pub async fn get_login_credential(&self, user_id: UserId) -> crate::Result<LoginCredential> {
+        let pw = self.local.get_or_generate_password(&user_id)?;
+        let email = self
+            .conn
+            .do_query_one(
+                "UPDATE auth.users SET encrypted_password = $1 WHERE id = $2 RETURNING email",
+                &[&pw.encrypted_password, &user_id],
+            )
+            .await
+            .map_err(Error::exec("update users"))?
+            .try_get::<_, String>(0)
+            .map_err(Error::data("users.email"))?;
+        Ok(LoginCredential {
+            email,
+            password: pw.password,
+        })
     }
 
     pub async fn get_flow_run_info(&self, run_id: FlowRunId) -> crate::Result<FlowRunInfo> {
@@ -190,121 +206,6 @@ impl AdminConn {
             )));
         }
         Ok(inserted)
-    }
-
-    pub async fn get_or_reset_password(
-        &mut self,
-        user_id: &UserId,
-    ) -> crate::Result<Option<Password>> {
-        tracing::debug!("get_or_reset_password {}", user_id);
-        let tx = self
-            .conn
-            .transaction()
-            .await
-            .map_err(Error::exec("start"))?;
-
-        tracing::debug!("select password {}", user_id);
-        let stmt = tx
-            .prepare_cached(
-                "SELECT t1.email, t2.password
-                FROM auth.users AS t1
-                LEFT JOIN auth.passwords AS t2 ON t1.id = t2.user_id
-                WHERE t1.id = $1",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        let password = tx
-            .query_opt(&stmt, &[user_id])
-            .await
-            .map_err(Error::exec("get_password"))?
-            .map(|r| {
-                Ok::<_, crate::Error>(Password {
-                    user_id: *user_id,
-                    email: r.try_get(0).map_err(Error::data("email"))?,
-                    password: r.try_get(1).map_err(Error::data("password"))?,
-                })
-            })
-            .transpose()?;
-        if let Some(mut password) = password {
-            if password.password.is_none() {
-                let pw = Alphanumeric.sample_string(&mut rand::thread_rng(), 24);
-                let hash = bcrypt::hash(&pw, 10).map_err(|_| Error::Bcrypt)?;
-
-                tracing::debug!("update password {}", user_id);
-                let stmt = tx
-                    .prepare_cached("UPDATE auth.users SET encrypted_password = $1 WHERE id = $2")
-                    .await
-                    .map_err(Error::exec("prepare"))?;
-                tx.execute(&stmt, &[&hash, &password.user_id])
-                    .await
-                    .map_err(Error::exec("reset_pw_hash"))?;
-
-                tracing::debug!("insert password {}", user_id);
-                let stmt = tx
-                    .prepare_cached(
-                        "INSERT INTO auth.passwords (user_id, password) VALUES ($1, $2)
-                    ON CONFLICT (user_id) DO UPDATE SET password = $2",
-                    )
-                    .await
-                    .map_err(Error::exec("prepare"))?;
-                tx.execute(&stmt, &[&password.user_id, &pw])
-                    .await
-                    .map_err(Error::exec("reset_pw_pass"))?;
-
-                tracing::debug!("commit {}", user_id);
-                tx.commit().await.map_err(Error::exec("reset_pw_commit"))?;
-                password.password = Some(pw);
-                Ok(Some(password))
-            } else {
-                tracing::debug!("commit {}", user_id);
-                tx.commit().await.map_err(Error::exec("reset_pw_commit"))?;
-                Ok(Some(password))
-            }
-        } else {
-            Ok(None)
-        }
-    }
-
-    pub async fn get_password(&self, pk_bs58: &str) -> crate::Result<Option<Password>> {
-        tracing::debug!("get_password {}", pk_bs58);
-        let stmt = self
-            .conn
-            .prepare_cached(
-                "SELECT t2.id, t2.email, t3.password
-                FROM users_public AS t1
-                INNER JOIN auth.users AS t2 ON t1.user_id = t2.id
-                LEFT JOIN auth.passwords AS t3 ON t1.user_id = t3.user_id
-                WHERE t1.pub_key = $1",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_opt(&stmt, &[&pk_bs58])
-            .await
-            .map_err(Error::exec("get_password"))?
-            .map(|r| {
-                Ok(Password {
-                    user_id: r.try_get(0).map_err(Error::data("user_id"))?,
-                    email: r.try_get(1).map_err(Error::data("email"))?,
-                    password: r.try_get(2).map_err(Error::data("password"))?,
-                })
-            })
-            .transpose()
-    }
-
-    pub async fn reset_password(&mut self, user_id: &UserId, pw: &str) -> crate::Result<()> {
-        tracing::debug!("reset_password {}", user_id);
-        let tx = self
-            .conn
-            .transaction()
-            .await
-            .map_err(Error::exec("reset_pw_start"))?;
-
-        reset_password(&tx, user_id, pw).await?;
-
-        tx.commit().await.map_err(Error::exec("reset_pw_commit"))?;
-
-        Ok(())
     }
 
     pub async fn create_store(&mut self, user_id: &UserId, store_name: &str) -> crate::Result<()> {
@@ -564,10 +465,6 @@ impl AdminConn {
         copy_in(&tx, "nodes", data.nodes).await?;
         update_id_sequence(&tx, "nodes", "id", "nodes_id_seq").await?;
 
-        let user_id = data.user_id;
-        let pw = rand_password();
-        reset_password(&tx, &user_id, &pw).await?;
-
         tx.execute("SELECT auth.enable_users_triggers()", &[])
             .await
             .map_err(Error::exec("enable trigger"))?;
@@ -626,35 +523,6 @@ async fn copy_in(tx: &Transaction<'_>, table: &str, data: String) -> crate::Resu
     sink.finish().await.map_err(Error::data("finish copy_in"))?;
 
     Ok(())
-}
-
-async fn reset_password(tx: &Transaction<'_>, user_id: &UserId, pw: &str) -> crate::Result<()> {
-    let hash = bcrypt::hash(pw, 10).map_err(|_| Error::Bcrypt)?;
-
-    let stmt = tx
-        .prepare_cached("UPDATE auth.users SET encrypted_password = $1 WHERE id = $2")
-        .await
-        .map_err(Error::exec("prepare"))?;
-    tx.execute(&stmt, &[&hash, user_id])
-        .await
-        .map_err(Error::exec("reset_pw_hash"))?;
-
-    let stmt = tx
-        .prepare_cached(
-            "INSERT INTO auth.passwords (user_id, password) VALUES ($1, $2)
-                ON CONFLICT (user_id) DO UPDATE SET password = $2",
-        )
-        .await
-        .map_err(Error::exec("prepare"))?;
-    tx.execute(&stmt, &[user_id, &pw])
-        .await
-        .map_err(Error::exec("reset_pw_pass"))?;
-
-    Ok(())
-}
-
-fn rand_password() -> String {
-    Alphanumeric.sample_string(&mut rand::thread_rng(), 24)
 }
 
 #[cfg(test)]

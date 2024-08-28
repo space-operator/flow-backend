@@ -1,19 +1,14 @@
 use crate::SupabaseConfig;
 use bincode::{Decode, Encode};
-use db::{
-    connection::Password,
-    pool::{DbPool, RealDbPool},
-};
+use db::pool::{DbPool, RealDbPool};
 use flow::BoxedError;
-use flow_lib::{solana::Pubkey, FlowRunId, UserId};
-use rand::distributions::{Alphanumeric, DistString};
+use flow_lib::{FlowRunId, UserId};
 use reqwest::header::{self, HeaderName, HeaderValue};
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
-use std::{panic::Location, sync::Arc};
+use std::panic::Location;
 use thiserror::Error as ThisError;
-use tokio::sync::Semaphore;
 
 pub const FLOW_RUN_TOKEN_PREFIX: &str = "fr-";
 pub const SIGNING_TIMEOUT_SECS: i64 = 60;
@@ -126,10 +121,6 @@ impl SignatureAuth {
     }
 }
 
-fn rand_password() -> String {
-    Alphanumeric.sample_string(&mut rand::thread_rng(), 24)
-}
-
 #[derive(Clone)]
 pub struct SupabaseAuth {
     client: reqwest::Client,
@@ -139,7 +130,6 @@ pub struct SupabaseAuth {
     create_user_url: Url,
     admin_token: HeaderValue,
     open_whitelists: bool,
-    limit: Arc<Semaphore>,
 }
 
 #[derive(ThisError, Debug)]
@@ -199,10 +189,14 @@ struct UserMetadata {
     pub_key: String,
 }
 
+pub fn get_email(pubkey: &[u8; 32]) -> String {
+    hex::encode(pubkey) + "@spaceoperator.com"
+}
+
 impl CreateUser {
     fn new(pk: &[u8; 32]) -> Self {
         let pub_key = bs58::encode(pk).into_string();
-        let email = hex::encode(pk) + "@spaceoperator.com";
+        let email = get_email(pk);
         Self {
             email,
             email_confirm: true,
@@ -236,43 +230,42 @@ impl SupabaseAuth {
             admin_token,
             pool,
             open_whitelists: config.open_whitelists,
-            limit: Arc::new(Semaphore::new(1)),
         })
     }
-    pub async fn get_or_create_user_by_pubkey(
+
+    pub async fn get_or_create_user(
         &self,
         pubkey: &[u8; 32],
-    ) -> Result<UserId, LoginError> {
+    ) -> Result<(UserId, bool), LoginError> {
         let conn = self.pool.get_admin_conn().await?;
         let pk_bs58 = bs58::encode(pubkey).into_string();
         let maybe_user = conn.get_user_id_by_pubkey(&pk_bs58).await?;
         if let Some(user_id) = maybe_user {
-            return Ok(user_id);
+            return Ok((user_id, false));
         }
         if self.open_whitelists {
             conn.insert_whitelist(&pk_bs58).await?;
         }
         drop(conn);
         let user_id = self.create_user(pubkey).await?.1;
-        Ok(user_id)
+        Ok((user_id, true))
     }
 
     pub async fn login(&self, payload: &Payload) -> Result<(Box<RawValue>, bool), LoginError> {
         let pk = bs58::encode(&payload.pubkey).into_string();
-
         tracing::info!("login {}", pk);
-        let (cred, new_user) = {
-            let limit = self.limit.acquire().await.unwrap();
 
-            let (cred, new_user) = match self.get_or_reset_password(&pk).await? {
-                Some(pw) => (pw, false),
-                None => {
-                    let user_id = self.create_user(&payload.pubkey).await?.1;
-                    (login, true)
-                }
-            };
-            std::mem::drop(limit);
-            (cred, new_user)
+        let (user_id, new_user) = self.get_or_create_user(&payload.pubkey).await?;
+        let r = self
+            .pool
+            .get_admin_conn()
+            .await?
+            .get_login_credential(user_id)
+            .await?;
+
+        let body = PasswordLogin {
+            email: r.email,
+            password: r.password,
         };
 
         tracing::debug!("calling supabase login");
@@ -280,7 +273,7 @@ impl SupabaseAuth {
             .client
             .post(self.login_url.clone())
             .header(HeaderName::from_static("apikey"), &self.anon_key)
-            .json(&cred)
+            .json(&body)
             .send()
             .await
             .map_err(|_| login_error())?;
@@ -293,48 +286,21 @@ impl SupabaseAuth {
         Ok((body, new_user))
     }
 
-    pub async fn get_or_reset_password(
-        &self,
-        pk: &str,
-    ) -> Result<Option<PasswordLogin>, LoginError> {
-        tracing::debug!("flow_server::get_or_reset_password {}", pk);
-        let mut conn = self
-            .pool
-            .get_admin_conn()
-            .await
-            .map_err(|_| login_error())?;
-        match conn.get_password(pk).await? {
-            Some(Password {
-                user_id,
-                email,
-                password,
-            }) => {
-                let password = match password {
-                    Some(pw) => pw,
-                    None => {
-                        tracing::info!("resetting password of {}", user_id);
-                        let pw = rand_password();
-                        conn.reset_password(&user_id, &pw).await?;
-                        pw
-                    }
-                };
-                Ok(Some(PasswordLogin { email, password }))
-            }
-            None => Ok(None),
-        }
-    }
-
-    pub async fn create_user(&self, pk: &[u8; 32]) -> Result<(PasswordLogin, UserId), LoginError> {
+    async fn create_user(&self, pk: &[u8; 32]) -> Result<(CreateUser, UserId), LoginError> {
         let body = CreateUser::new(pk);
         tracing::info!("creating user {}", body.user_metadata.pub_key);
-        let mut conn = self
-            .pool
-            .get_admin_conn()
-            .await
-            .map_err(|_| login_error())?;
-        if self.open_whitelists {
-            conn.insert_whitelist(&body.user_metadata.pub_key).await?;
+
+        {
+            let conn = self
+                .pool
+                .get_admin_conn()
+                .await
+                .map_err(|_| login_error())?;
+            if self.open_whitelists {
+                conn.insert_whitelist(&body.user_metadata.pub_key).await?;
+            }
         }
+
         let resp = self
             .client
             .post(self.create_user_url.clone())
@@ -349,16 +315,7 @@ impl SupabaseAuth {
         }
         let CreateUserResponse { id } = resp.json().await.map_err(|_| login_error())?;
 
-        let pw = rand_password();
-        conn.reset_password(&id, &pw).await?;
-
-        Ok((
-            PasswordLogin {
-                email: body.email,
-                password: pw,
-            },
-            id,
-        ))
+        Ok((body, id))
     }
 }
 
