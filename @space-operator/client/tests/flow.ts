@@ -18,13 +18,15 @@ function keypair_from_env() {
 }
 
 const keypair = keypair_from_env() ?? web3.Keypair.generate();
-
+console.log("using", keypair.publicKey.toBase58());
 const connection = new web3.Connection("https://api.devnet.solana.com");
 if ((await connection.getBalance(keypair.publicKey)) == 0) {
+  console.log("request airdrop");
   await connection.requestAirdrop(keypair.publicKey, web3.LAMPORTS_PER_SOL);
   while ((await connection.getBalance(keypair.publicKey)) == 0) {}
 }
 
+console.log("start flow");
 const result = await c.startFlowUnverified(2154, keypair.publicKey, {
   inputs: new Value({
     sender: keypair.publicKey,
@@ -32,12 +34,14 @@ const result = await c.startFlowUnverified(2154, keypair.publicKey, {
   fees: [["HuktZqYAXSeMz5hMtdEnvsJAXtapg24zXU2tkDnGgaSZ", 1000]],
 });
 
+console.log("get signature request");
 const req = await c.getSignatureRequest(result.flow_run_id, result.token);
 
 const tx = req.buildTransaction();
 
 tx.sign(keypair);
 
+console.log("submit signature");
 const sigResult = await c.submitSignature({
   id: req.id,
   signature: bs58.encodeBase58(tx.signature!),
@@ -45,6 +49,7 @@ const sigResult = await c.submitSignature({
 
 console.log(sigResult);
 
+console.log("get flow output");
 const output = await c.getFlowOutput(result.flow_run_id, result.token);
 
 console.log(output);
