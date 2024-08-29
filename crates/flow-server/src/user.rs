@@ -257,6 +257,7 @@ impl SupabaseAuth {
                 limits.remove(pubkey).unwrap();
             }
         }
+        tracing::debug!("semaphore counts: {}", limits.len());
     }
 
     pub async fn get_or_create_user(
@@ -316,7 +317,7 @@ impl SupabaseAuth {
         let pk = bs58::encode(&payload.pubkey).into_string();
         tracing::info!("login {}", pk);
 
-        let (user_id, new_user) = self.get_or_create_user(&payload.pubkey).await?;
+        let (user_id, new_user) = self.get_or_create_user_impl(&payload.pubkey).await?;
         let r = self
             .pool
             .get_admin_conn()

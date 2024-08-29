@@ -3,7 +3,14 @@ use chrono::{DateTime, Utc};
 use flow_lib::UserId;
 use kv::{Bucket, Store};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::{path::Path, time::Duration};
+
+pub trait CacheBucket {
+    type Object;
+    fn name() -> &'static str;
+    fn cache_time() -> Duration;
+    fn can_read(obj: Self::Object, user_id: &UserId) -> bool;
+}
 
 #[derive(Clone)]
 pub struct LocalStorage {

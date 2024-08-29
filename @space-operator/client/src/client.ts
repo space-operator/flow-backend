@@ -1,4 +1,4 @@
-import { bs58, web3, Value, type IValue } from "./deps.ts";
+import { bs58, web3, Value, type IValue, Buffer, base64 } from "./deps.ts";
 import {
   type ErrorBody,
   type ISignatureRequest,
@@ -16,18 +16,36 @@ import {
   type FlowId,
   type FlowRunId,
   SignatureRequest,
+  type InitAuthOutput,
+  type ConfirmAuthOutput,
 } from "./mod.ts";
+
+export type TokenProvider = string | (() => Promise<string>);
+
+async function getToken(token?: TokenProvider): Promise<string> {
+  switch (typeof token) {
+    case "undefined":
+      throw new Error("no authentication token");
+    case "string":
+      return token;
+    case "function":
+      return await token();
+    default:
+      throw new Error("invalid token type");
+  }
+}
 
 export interface ClientOptions {
   host?: string;
-  token?: string | (() => Promise<string>);
+  // Authorization token
+  token?: TokenProvider;
+  // Supabase Anon key
+  anonKey?: TokenProvider;
 }
 
 const HOST = "https://dev-api.spaceoperator.com";
 
 function noop() {}
-
-export type TokenProvider = string | (() => Promise<string>);
 
 async function parseResponse<T>(resp: Response): Promise<T> {
   if (resp.status !== 200) {
@@ -48,28 +66,17 @@ async function parseResponse<T>(resp: Response): Promise<T> {
 export class Client {
   host: string;
   token?: TokenProvider;
+  anonKey?: TokenProvider;
   private logger: Function = noop;
 
-  constructor(options: ClientOptions) {
+  constructor(options: ClientOptions = {}) {
     this.host = options.host ?? HOST;
     this.token = options.token;
+    this.anonKey = options.anonKey;
   }
 
   setToken(token: string | (() => Promise<string>)) {
     this.token = token;
-  }
-
-  async getToken(): Promise<string> {
-    switch (typeof this.token) {
-      case "undefined":
-        throw new Error("no authentication token");
-      case "string":
-        return this.token;
-      case "function":
-        return await this.token();
-      default:
-        throw new Error("invalid token type");
-    }
   }
 
   public setLogger(logger: Function) {
@@ -84,7 +91,7 @@ export class Client {
     switch (typeof auth) {
       case "boolean":
         if (auth === true) {
-          req.headers.set("authorization", await this.getToken());
+          req.headers.set("authorization", await getToken(this.token));
         }
         break;
       case "string":
@@ -104,7 +111,8 @@ export class Client {
   async #sendJSONPost<T>(
     url: string,
     body: any,
-    auth: boolean | TokenProvider = true
+    auth: boolean | TokenProvider = true,
+    anonKey: boolean = false
   ): Promise<T> {
     const req = new Request(url, {
       method: "POST",
@@ -116,7 +124,7 @@ export class Client {
     switch (typeof auth) {
       case "boolean":
         if (auth === true) {
-          req.headers.set("authorization", await this.getToken());
+          req.headers.set("authorization", await getToken(this.token));
         }
         break;
       case "string":
@@ -128,9 +136,52 @@ export class Client {
       default:
         throw new TypeError("unexpected type");
     }
+    if (anonKey === true) {
+      req.headers.set("apikey", await getToken(this.anonKey));
+    }
 
     const resp = await fetch(req);
     return await parseResponse(resp);
+  }
+
+  async initAuth(pubkey: string | web3.PublicKey): Promise<string> {
+    let pubkeyBs58;
+    if (typeof pubkey === "string") {
+      pubkeyBs58 = pubkey;
+    } else {
+      pubkeyBs58 = pubkey.toBase58();
+    }
+    return (
+      (await this.#sendJSONPost(
+        `${this.host}/auth/init`,
+        {
+          pubkey: pubkeyBs58,
+        },
+        false,
+        true
+      )) as InitAuthOutput
+    ).msg;
+  }
+
+  async confirmAuth(
+    msg: string,
+    signature: ArrayBuffer | Uint8Array | string
+  ): Promise<ConfirmAuthOutput> {
+    let sig;
+    if (typeof signature === "string") {
+      sig = signature;
+    } else {
+      sig = bs58.encodeBase58(signature);
+    }
+    const token = `${msg}.${sig}`;
+    return await this.#sendJSONPost(
+      `${this.host}/auth/confirm`,
+      {
+        token,
+      },
+      false,
+      true
+    );
   }
 
   async startFlow(
@@ -168,7 +219,7 @@ export class Client {
   ): Promise<GetFlowOutputOutput> {
     const value: IValue = await this.#sendJSONGet(
       `${this.host}/flow/output/${runId}`,
-      token ?? (await this.getToken())
+      token ?? true
     );
     return Value.fromJSON(value);
   }
@@ -179,7 +230,7 @@ export class Client {
   ): Promise<SignatureRequest> {
     const value: ISignatureRequest = await this.#sendJSONGet(
       `${this.host}/flow/signature_request/${runId}`,
-      token ?? (await this.getToken())
+      token ?? true
     );
     return new SignatureRequest(value);
   }

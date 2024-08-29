@@ -1,5 +1,14 @@
-import type { Value, IValue } from "../deps.ts";
+import type { Value, IValue, SupabaseSession } from "../deps.ts";
 import type { FlowRunId, NodeId } from "./common.ts";
+
+export interface InitAuthOutput {
+  msg: string;
+}
+
+export interface ConfirmAuthOutput {
+  session: SupabaseSession;
+  new_user: boolean;
+}
 
 export type GetFlowOutputOutput = Value;
 
