@@ -199,6 +199,7 @@ impl actix::Handler<StopFlow> for FlowRunWorker {
 }
 
 impl FlowRunWorker {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         run_id: FlowRunId,
         user_id: UserId,

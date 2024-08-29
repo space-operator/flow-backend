@@ -6,12 +6,8 @@ use tracing::info;
 use crate::prelude::*;
 
 use super::{
-    GovernanceInstruction,
-    GoverningTokenConfigAccountArgs,
-    GoverningTokenConfigArgs,
-    MintMaxVoterWeightSource,
-    RealmConfigArgs,
-    SPL_GOVERNANCE_ID,
+    GovernanceInstruction, GoverningTokenConfigAccountArgs, GoverningTokenConfigArgs,
+    MintMaxVoterWeightSource, RealmConfigArgs, SPL_GOVERNANCE_ID,
 };
 
 // TEST program id

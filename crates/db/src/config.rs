@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::fmt::Display;
 
 #[derive(Deserialize, Clone)]
 pub struct DbConfig {
@@ -18,12 +19,12 @@ pub struct SslConfig {
     pub cert: Option<std::path::PathBuf>,
 }
 
-impl ToString for DbConfig {
-    fn to_string(&self) -> String {
-        format!(
+impl Display for DbConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!(
             "host={} port={} user={} password={} dbname={}",
             self.host, self.port, self.user, self.password, self.dbname,
-        )
+        ))
     }
 }
 

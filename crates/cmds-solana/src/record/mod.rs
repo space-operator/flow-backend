@@ -10,8 +10,7 @@ pub mod initialize_record_with_seed;
 pub mod read_record;
 pub mod write_to_record;
 
-
-// TODO need to find correct mainnet 
+// TODO need to find correct mainnet
 pub const RECORD_MAINNET: Pubkey = pubkey!("recr1L3PCGKLbckBqMNcJhuuyU1zgo8nBhfLVsJNwr5");
 // recr1L3PCGKLbckBqMNcJhuuyU1zgo8nBhfLVsJNwr5
 pub const RECORD_DEVNET: Pubkey = pubkey!("6bCYkQ6pfLJMPivh17TV1Bqm3Q7GfkhU56iLtUiPXpK9");

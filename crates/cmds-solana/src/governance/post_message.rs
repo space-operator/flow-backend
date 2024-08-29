@@ -5,8 +5,8 @@ use solana_sdk::{instruction::AccountMeta, system_program};
 use crate::prelude::*;
 
 use super::{
-    with_realm_config_accounts, GovernanceChatInstruction, MessageBody,
-    SPL_GOVERNANCE_CHAT_ID, SPL_GOVERNANCE_ID,
+    with_realm_config_accounts, GovernanceChatInstruction, MessageBody, SPL_GOVERNANCE_CHAT_ID,
+    SPL_GOVERNANCE_ID,
 };
 
 const NAME: &str = "governance_post_message";

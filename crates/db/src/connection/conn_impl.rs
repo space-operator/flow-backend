@@ -20,10 +20,8 @@ impl UserConnectionTrait for UserConnection {
             if let Some(cached) = cached {
                 if cached.expired() {
                     cache.get_flow_info.remove(&flow_id);
-                } else {
-                    if cached.value.user_id == self.user_id || cached.value.is_public {
-                        return Ok(cached.value.clone());
-                    }
+                } else if cached.value.user_id == self.user_id || cached.value.is_public {
+                    return Ok(cached.value.clone());
                 }
             }
         }
@@ -326,7 +324,7 @@ impl UserConnection {
         let check_flow = r#"SELECT id FROM flows WHERE id = $1 AND (user_id = $2 OR "isPublic")"#;
         while let Some(id) = queue.pop() {
             if tx
-                .do_query_opt(&check_flow, &[&id, &self.user_id])
+                .do_query_opt(check_flow, &[&id, &self.user_id])
                 .await
                 .map_err(Error::exec("check flow"))?
                 .is_some()
@@ -340,7 +338,7 @@ impl UserConnection {
             }
 
             let rows = tx
-                .do_query(&get_interflows, &[&id])
+                .do_query(get_interflows, &[&id])
                 .await
                 .map_err(Error::exec("get interflows"))?;
             for row in rows {

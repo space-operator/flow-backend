@@ -214,9 +214,9 @@ impl serde::Serializer for SerializeSeqNoBytes {
         Err(Error::ExpectedArray)
     }
 
-    fn serialize_some<T: ?Sized>(self, _value: &T) -> Result<Self::Ok, Self::Error>
+    fn serialize_some<T>(self, _value: &T) -> Result<Self::Ok, Self::Error>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         Err(Error::ExpectedArray)
     }
@@ -238,18 +238,18 @@ impl serde::Serializer for SerializeSeqNoBytes {
         Err(Error::ExpectedArray)
     }
 
-    fn serialize_newtype_struct<T: ?Sized>(
+    fn serialize_newtype_struct<T>(
         self,
         _name: &'static str,
         _value: &T,
     ) -> Result<Self::Ok, Self::Error>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         Err(Error::ExpectedArray)
     }
 
-    fn serialize_newtype_variant<T: ?Sized>(
+    fn serialize_newtype_variant<T>(
         self,
         _name: &'static str,
         _variant_index: u32,
@@ -257,7 +257,7 @@ impl serde::Serializer for SerializeSeqNoBytes {
         _value: &T,
     ) -> Result<Self::Ok, Self::Error>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         Err(Error::ExpectedArray)
     }

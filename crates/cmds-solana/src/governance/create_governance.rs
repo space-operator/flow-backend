@@ -41,7 +41,6 @@ pub struct Input {
     pub submit: bool,
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]

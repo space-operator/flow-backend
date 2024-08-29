@@ -11,6 +11,9 @@ pub struct AddressBook {
     addrs: HashMap<AnyID, Box<dyn Any>>,
 }
 
+#[derive(Debug)]
+pub struct AlreadyStarted;
+
 impl AddressBook {
     pub fn new() -> Self {
         Self {
@@ -66,7 +69,7 @@ impl AddressBook {
         id: A::ID,
         make_actor: F,
         rt: ArbiterHandle,
-    ) -> Result<actix::Addr<A>, ()>
+    ) -> Result<actix::Addr<A>, AlreadyStarted>
     where
         A: Actor<Context = actix::Context<A>>,
         A: ManagableActor + Send,
@@ -77,7 +80,7 @@ impl AddressBook {
             slot.insert(Box::new(addr.downgrade()));
             Ok(addr)
         } else {
-            Err(())
+            Err(AlreadyStarted)
         }
     }
 

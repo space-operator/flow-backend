@@ -100,7 +100,7 @@ impl LocalStorage {
         if let Some(p) = self.get_password(user_id)? {
             Ok(p)
         } else {
-            self.set_text_password(&user_id, rand_password())
+            self.set_text_password(user_id, rand_password())
         }
     }
 }
