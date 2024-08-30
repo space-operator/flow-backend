@@ -1,20 +1,17 @@
 use crate::SupabaseConfig;
 use bincode::{Decode, Encode};
-use db::{
-    connection::Password,
-    pool::{DbPool, RealDbPool},
-};
+use db::pool::{DbPool, RealDbPool};
 use flow::BoxedError;
 use flow_lib::{FlowRunId, UserId};
-use rand::distributions::{Alphanumeric, DistString};
+use hashbrown::HashMap;
 use reqwest::header::{self, HeaderName, HeaderValue};
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
-use std::{panic::Location, sync::Arc};
+use std::panic::Location;
+use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
-use tokio::sync::Semaphore;
-use uuid::Uuid;
+use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 pub const FLOW_RUN_TOKEN_PREFIX: &str = "fr-";
 pub const SIGNING_TIMEOUT_SECS: i64 = 60;
@@ -127,10 +124,6 @@ impl SignatureAuth {
     }
 }
 
-fn rand_password() -> String {
-    Alphanumeric.sample_string(&mut rand::thread_rng(), 24)
-}
-
 #[derive(Clone)]
 pub struct SupabaseAuth {
     client: reqwest::Client,
@@ -140,7 +133,7 @@ pub struct SupabaseAuth {
     create_user_url: Url,
     admin_token: HeaderValue,
     open_whitelists: bool,
-    limit: Arc<Semaphore>,
+    limits: Arc<Mutex<HashMap<[u8; 32], Arc<Semaphore>>>>,
 }
 
 #[derive(ThisError, Debug)]
@@ -200,10 +193,14 @@ struct UserMetadata {
     pub_key: String,
 }
 
+pub fn get_email(pubkey: &[u8; 32]) -> String {
+    hex::encode(pubkey) + "@spaceoperator.com"
+}
+
 impl CreateUser {
     fn new(pk: &[u8; 32]) -> Self {
         let pub_key = bs58::encode(pk).into_string();
-        let email = hex::encode(pk) + "@spaceoperator.com";
+        let email = get_email(pk);
         Self {
             email,
             email_confirm: true,
@@ -214,7 +211,7 @@ impl CreateUser {
 
 #[derive(Deserialize)]
 struct CreateUserResponse {
-    id: Uuid,
+    id: UserId,
 }
 
 impl SupabaseAuth {
@@ -237,23 +234,100 @@ impl SupabaseAuth {
             admin_token,
             pool,
             open_whitelists: config.open_whitelists,
-            limit: Arc::new(Semaphore::new(1)),
+            limits: Default::default(),
         })
     }
 
+    async fn get_semaphore_permit(&self, pubkey: &[u8; 32]) -> OwnedSemaphorePermit {
+        let semaphore = self
+            .limits
+            .lock()
+            .unwrap()
+            .entry(*pubkey)
+            .or_insert_with(|| Arc::new(Semaphore::new(1)))
+            .clone();
+
+        semaphore.acquire_owned().await.unwrap()
+    }
+
+    fn cleanup_semaphore(&self, pubkey: &[u8; 32]) {
+        let mut limits = self.limits.lock().unwrap();
+        if let Some(semaphore) = limits.get(pubkey) {
+            if Arc::strong_count(semaphore) == 1 {
+                limits.remove(pubkey).unwrap();
+            }
+        }
+        tracing::debug!("semaphore counts: {}", limits.len());
+    }
+
+    pub async fn get_or_create_user(
+        &self,
+        pubkey: &[u8; 32],
+    ) -> Result<(UserId, bool), LoginError> {
+        let permit = self.get_semaphore_permit(pubkey).await;
+        let result = self.get_or_create_user_impl(pubkey).await;
+        drop(permit);
+        self.cleanup_semaphore(pubkey);
+        result
+    }
+
+    pub async fn get_or_create_user_impl(
+        &self,
+        pubkey: &[u8; 32],
+    ) -> Result<(UserId, bool), LoginError> {
+        let conn = self.pool.get_admin_conn().await?;
+        let pk_bs58 = bs58::encode(pubkey).into_string();
+        let maybe_user = conn.get_user_id_by_pubkey(&pk_bs58).await?;
+        if let Some(user_id) = maybe_user {
+            return Ok((user_id, false));
+        }
+
+        tracing::info!("creating user {}", pk_bs58);
+        if self.open_whitelists {
+            conn.insert_whitelist(&pk_bs58).await?;
+        }
+        drop(conn);
+
+        let resp = self
+            .client
+            .post(self.create_user_url.clone())
+            .header(HeaderName::from_static("apikey"), &self.anon_key)
+            .header(header::AUTHORIZATION, &self.admin_token)
+            .json(&CreateUser::new(pubkey))
+            .send()
+            .await
+            .map_err(|_| login_error())?;
+        if resp.status() != StatusCode::OK {
+            return Err(supabase_error(resp).await);
+        }
+        let CreateUserResponse { id } = resp.json().await.map_err(|_| login_error())?;
+
+        Ok((id, true))
+    }
+
     pub async fn login(&self, payload: &Payload) -> Result<(Box<RawValue>, bool), LoginError> {
+        let permit = self.get_semaphore_permit(&payload.pubkey).await;
+        let result = self.login_impl(payload).await;
+        drop(permit);
+        self.cleanup_semaphore(&payload.pubkey);
+        result
+    }
+
+    async fn login_impl(&self, payload: &Payload) -> Result<(Box<RawValue>, bool), LoginError> {
         let pk = bs58::encode(&payload.pubkey).into_string();
-
         tracing::info!("login {}", pk);
-        let (cred, new_user) = {
-            let limit = self.limit.acquire().await.unwrap();
 
-            let (cred, new_user) = match self.get_or_reset_password(&pk).await? {
-                Some(pw) => (pw, false),
-                None => (self.create_user(&payload.pubkey).await?.0, true),
-            };
-            std::mem::drop(limit);
-            (cred, new_user)
+        let (user_id, new_user) = self.get_or_create_user_impl(&payload.pubkey).await?;
+        let r = self
+            .pool
+            .get_admin_conn()
+            .await?
+            .get_login_credential(user_id)
+            .await?;
+
+        let body = PasswordLogin {
+            email: r.email,
+            password: r.password,
         };
 
         tracing::debug!("calling supabase login");
@@ -261,7 +335,7 @@ impl SupabaseAuth {
             .client
             .post(self.login_url.clone())
             .header(HeaderName::from_static("apikey"), &self.anon_key)
-            .json(&cred)
+            .json(&body)
             .send()
             .await
             .map_err(|_| login_error())?;
@@ -272,74 +346,6 @@ impl SupabaseAuth {
         let body: Box<RawValue> = resp.json().await.map_err(|_| login_error())?;
 
         Ok((body, new_user))
-    }
-
-    pub async fn get_or_reset_password(
-        &self,
-        pk: &str,
-    ) -> Result<Option<PasswordLogin>, LoginError> {
-        tracing::debug!("flow_server::get_or_reset_password {}", pk);
-        let mut conn = self
-            .pool
-            .get_admin_conn()
-            .await
-            .map_err(|_| login_error())?;
-        match conn.get_password(pk).await? {
-            Some(Password {
-                user_id,
-                email,
-                password,
-            }) => {
-                let password = match password {
-                    Some(pw) => pw,
-                    None => {
-                        tracing::info!("resetting password of {}", user_id);
-                        let pw = rand_password();
-                        conn.reset_password(&user_id, &pw).await?;
-                        pw
-                    }
-                };
-                Ok(Some(PasswordLogin { email, password }))
-            }
-            None => Ok(None),
-        }
-    }
-
-    pub async fn create_user(&self, pk: &[u8; 32]) -> Result<(PasswordLogin, UserId), LoginError> {
-        let body = CreateUser::new(pk);
-        tracing::info!("creating user {}", body.user_metadata.pub_key);
-        let mut conn = self
-            .pool
-            .get_admin_conn()
-            .await
-            .map_err(|_| login_error())?;
-        if self.open_whitelists {
-            conn.insert_whitelist(&body.user_metadata.pub_key).await?;
-        }
-        let resp = self
-            .client
-            .post(self.create_user_url.clone())
-            .header(HeaderName::from_static("apikey"), &self.anon_key)
-            .header(header::AUTHORIZATION, &self.admin_token)
-            .json(&body)
-            .send()
-            .await
-            .map_err(|_| login_error())?;
-        if resp.status() != StatusCode::OK {
-            return Err(supabase_error(resp).await);
-        }
-        let CreateUserResponse { id } = resp.json().await.map_err(|_| login_error())?;
-
-        let pw = rand_password();
-        conn.reset_password(&id, &pw).await?;
-
-        Ok((
-            PasswordLogin {
-                email: body.email,
-                password: pw,
-            },
-            id,
-        ))
     }
 }
 

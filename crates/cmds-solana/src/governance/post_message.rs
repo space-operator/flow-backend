@@ -5,8 +5,8 @@ use solana_sdk::{instruction::AccountMeta, system_program};
 use crate::prelude::*;
 
 use super::{
-    with_realm_config_accounts, GovernanceChatInstruction, MessageBody,
-    SPL_GOVERNANCE_CHAT_ID, SPL_GOVERNANCE_ID,
+    with_realm_config_accounts, GovernanceChatInstruction, MessageBody, SPL_GOVERNANCE_CHAT_ID,
+    SPL_GOVERNANCE_ID,
 };
 
 const NAME: &str = "governance_post_message";
@@ -118,7 +118,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &input.proposal,
         &input.token_owner_record,
         &input.governance_authority.pubkey(),
-        input.reply_to.clone(),
+        input.reply_to,
         &input.chat_message.pubkey(),
         &input.fee_payer.pubkey(),
         input.voter_weight_record,

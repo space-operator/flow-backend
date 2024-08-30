@@ -20,10 +20,8 @@ impl UserConnectionTrait for UserConnection {
             if let Some(cached) = cached {
                 if cached.expired() {
                     cache.get_flow_info.remove(&flow_id);
-                } else {
-                    if cached.value.user_id == self.user_id || cached.value.is_public {
-                        return Ok(cached.value.clone());
-                    }
+                } else if cached.value.user_id == self.user_id || cached.value.is_public {
+                    return Ok(cached.value.clone());
                 }
             }
         }
@@ -73,19 +71,6 @@ impl UserConnectionTrait for UserConnection {
         self.push_flow_error(id, error).await
     }
 
-    async fn push_flow_log(
-        &self,
-        id: &FlowRunId,
-        index: &i32,
-        time: &DateTime<Utc>,
-        level: &str,
-        module: &Option<String>,
-        content: &str,
-    ) -> crate::Result<()> {
-        self.push_flow_log(id, index, time, level, module, content)
-            .await
-    }
-
     async fn set_run_result(
         &self,
         id: &FlowRunId,
@@ -125,21 +110,6 @@ impl UserConnectionTrait for UserConnection {
         error: &str,
     ) -> crate::Result<()> {
         self.push_node_error(id, node_id, times, error).await
-    }
-
-    async fn push_node_log(
-        &self,
-        id: &FlowRunId,
-        index: &i32,
-        node_id: &NodeId,
-        times: &i32,
-        time: &DateTime<Utc>,
-        level: &str,
-        module: &Option<String>,
-        content: &str,
-    ) -> crate::Result<()> {
-        self.push_node_log(id, index, node_id, times, time, level, module, content)
-            .await
     }
 
     async fn set_node_finish(
@@ -202,27 +172,21 @@ impl UserConnection {
             return Ok(());
         }
 
-        let stmt = self
-            .conn
-            .prepare_cached("SELECT 1 FROM flow_run WHERE id = $1 AND user_id = $2")
-            .await
-            .map_err(Error::exec("prepare"))?;
         self.conn
-            .query_one(&stmt, &[&id, &self.user_id])
+            .do_query_one(
+                "SELECT 1 FROM flow_run WHERE id = $1 AND user_id = $2",
+                &[&id, &self.user_id],
+            )
             .await
             .map_err(Error::exec("check conn permission"))?;
 
-        let stmt = self
-            .conn
-            .prepare_cached(
+        self.conn
+            .do_execute(
                 "INSERT INTO flow_run_shared (flow_run_id, user_id)
                 VALUES ($1, $2)
                 ON CONFLICT (flow_run_id, user_id) DO NOTHING",
+                &[&id, &user],
             )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .execute(&stmt, &[&id, &user])
             .await
             .map_err(Error::exec("insert flow_run_shared"))?;
 
@@ -230,16 +194,12 @@ impl UserConnection {
     }
 
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
-        let stmt = self
-            .conn
-            .prepare_cached(
+        self.conn
+            .do_query_opt(
                 r#"SELECT user_id, start_shared, start_unverified, "isPublic" FROM flows
                 WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
+                &[&flow_id, &self.user_id],
             )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_opt(&stmt, &[&flow_id, &self.user_id])
             .await
             .map_err(Error::exec("get_flow_info"))?
             .ok_or_else(|| Error::not_found("flow", flow_id))?
@@ -247,13 +207,11 @@ impl UserConnection {
     }
 
     pub async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
-        let stmt = self
-            .conn
-            .prepare_cached("SELECT public_key, keypair, id FROM wallets WHERE user_id = $1")
-            .await
-            .map_err(Error::exec("prepare get_wallets"))?;
         self.conn
-            .query(&stmt, &[&self.user_id])
+            .do_query(
+                "SELECT public_key, keypair, id FROM wallets WHERE user_id = $1",
+                &[&self.user_id],
+            )
             .await
             .map_err(Error::exec("get wallets"))?
             .into_iter()
@@ -291,15 +249,12 @@ impl UserConnection {
             .map_err(Error::exec("start"))?;
 
         let flow_owner = {
-            let stmt = tx
-                .prepare_cached(
+            let owner: UserId = tx
+                .do_query_one(
                     r#"SELECT user_id FROM flows
                     WHERE id = $1 AND (user_id = $2 OR "isPublic")"#,
+                    &[&flow_id, &self.user_id],
                 )
-                .await
-                .map_err(Error::exec("prepare"))?;
-            let owner: UserId = tx
-                .query_one(&stmt, &[&flow_id, &self.user_id])
                 .await
                 .map_err(Error::exec("get flow's owner"))?
                 .try_get(0)
@@ -307,12 +262,9 @@ impl UserConnection {
             owner
         };
 
-        let get_wallets = tx
-            .prepare_cached("SELECT id, public_key FROM wallets WHERE user_id = $1")
-            .await
-            .map_err(Error::exec("prepare"))?;
+        let get_wallets = "SELECT id, public_key FROM wallets WHERE user_id = $1";
         let owner_wallets = tx
-            .query(&get_wallets, &[&flow_owner])
+            .query(get_wallets, &[&flow_owner])
             .await
             .map_err(Error::exec("get_wallets"))?
             .into_iter()
@@ -328,7 +280,7 @@ impl UserConnection {
         let user_wallet = if is_same_user {
             owner_wallets.clone()
         } else {
-            tx.query(&get_wallets, &[&self.user_id])
+            tx.do_query(get_wallets, &[&self.user_id])
                 .await
                 .map_err(Error::exec("get_wallets"))?
                 .into_iter()
@@ -360,9 +312,7 @@ impl UserConnection {
 
         let mut ids = HashSet::<FlowId>::new();
         let mut queue = vec![flow_id];
-        let get_interflows = tx
-            .prepare_cached(
-                r#"WITH nodes AS
+        let get_interflows = r#"WITH nodes AS
                 (
                     SELECT unnest(nodes) AS node
                     FROM flows WHERE id = $1
@@ -370,19 +320,11 @@ impl UserConnection {
                 SELECT CAST(node #>> '{data,targets_form,form_data,id}' AS INT) AS id
                 FROM nodes WHERE
                     node #>> '{data,node_id}' IN ('interflow', 'interflow_instructions')
-                    AND node->>'type' = 'native'"#,
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        let check_flow = tx
-            .prepare_cached(
-                r#"SELECT id FROM flows WHERE id = $1 AND (user_id = $2 OR "isPublic")"#,
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
+                    AND node->>'type' = 'native'"#;
+        let check_flow = r#"SELECT id FROM flows WHERE id = $1 AND (user_id = $2 OR "isPublic")"#;
         while let Some(id) = queue.pop() {
             if tx
-                .query_opt(&check_flow, &[&id, &self.user_id])
+                .do_query_opt(check_flow, &[&id, &self.user_id])
                 .await
                 .map_err(Error::exec("check flow"))?
                 .is_some()
@@ -396,7 +338,7 @@ impl UserConnection {
             }
 
             let rows = tx
-                .query(&get_interflows, &[&id])
+                .do_query(get_interflows, &[&id])
                 .await
                 .map_err(Error::exec("get interflows"))?;
             for row in rows {
@@ -410,46 +352,41 @@ impl UserConnection {
         }
         let ids: Vec<i32> = ids.into_iter().collect();
 
-        let stmt = tx
-            .prepare(
-                r#"INSERT INTO flows (
-                    guide,
-                    name,
-                    mosaic,
-                    description,
-                    tags,
-                    custom_networks,
-                    current_network,
-                    instructions_bundling,
-                    environment,
-                    nodes,
-                    edges,
-                    user_id,
-                    parent_flow
-                ) SELECT
-                    guide,
-                    name,
-                    mosaic,
-                    description,
-                    tags,
-                    custom_networks,
-                    current_network,
-                    instructions_bundling,
-                    environment,
-                    nodes,
-                    edges,
-                    $2 AS user_id,
-                    id as parent_flow
-                    FROM flows WHERE id = $1
-                RETURNING id"#,
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
+        let copy_flow = r#"INSERT INTO flows (
+                        guide,
+                        name,
+                        mosaic,
+                        description,
+                        tags,
+                        custom_networks,
+                        current_network,
+                        instructions_bundling,
+                        environment,
+                        nodes,
+                        edges,
+                        user_id,
+                        parent_flow
+                    ) SELECT
+                        guide,
+                        name,
+                        mosaic,
+                        description,
+                        tags,
+                        custom_networks,
+                        current_network,
+                        instructions_bundling,
+                        environment,
+                        nodes,
+                        edges,
+                        $2 AS user_id,
+                        id as parent_flow
+                        FROM flows WHERE id = $1
+                    RETURNING id"#;
         let mut flow_id_map = HashMap::new();
         let mut new_ids = Vec::new();
         for id in &ids {
             let new_id: i32 = tx
-                .query_one(&stmt, &[id, &self.user_id])
+                .do_query_one(copy_flow, &[id, &self.user_id])
                 .await
                 .map_err(Error::exec("copy flow"))?
                 .try_get(0)
@@ -457,8 +394,7 @@ impl UserConnection {
             flow_id_map.insert(*id, new_id);
             new_ids.push(new_id);
         }
-        let stmt = tx
-            .prepare(
+        let update_flow =
                 "UPDATE flows SET nodes = q.nodes FROM (
                     SELECT
                         f.id,
@@ -495,13 +431,13 @@ impl UserConnection {
                     WHERE f.id = ANY($1::INT[])
                     GROUP BY f.id
                 ) AS q
-                WHERE flows.id = q.id",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        tx.execute(&stmt, &[&new_ids, &Json(&flow_id_map), &Json(&wallet_map)])
-            .await
-            .map_err(Error::exec("update interflow IDs"))?;
+                WHERE flows.id = q.id";
+        tx.do_execute(
+            update_flow,
+            &[&new_ids, &Json(&flow_id_map), &Json(&wallet_map)],
+        )
+        .await
+        .map_err(Error::exec("update interflow IDs"))?;
         tx.commit()
             .await
             .map_err(Error::exec("commit clone_flow"))?;
@@ -514,9 +450,9 @@ impl UserConnection {
         config: &ClientConfig,
         inputs: &ValueSet,
     ) -> crate::Result<FlowRunId> {
-        let stmt = self
+        let r = self
             .conn
-            .prepare_cached(
+            .do_query_one(
                 "INSERT INTO flow_run (
                     id,
                     user_id,
@@ -540,13 +476,6 @@ impl UserConnection {
                     jsonb_build_object('SOL', $6::JSONB),
                     $7, $8, $9, $10, $11, $12, $13)
                 RETURNING id",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        let r = self
-            .conn
-            .query_one(
-                &stmt,
                 &[
                     &self.user_id,
                     &config.id,
@@ -634,9 +563,9 @@ impl UserConnection {
     }
 
     pub async fn get_flow_config(&self, id: FlowId) -> crate::Result<client::ClientConfig> {
-        let stmt = self
+        let row = self
             .conn
-            .prepare_cached(
+            .do_query_opt(
                 "SELECT nodes,
                         edges,
                         environment,
@@ -645,12 +574,8 @@ impl UserConnection {
                         instructions_bundling
                 FROM flows
                 WHERE id = $1 AND user_id = $2",
+                &[&id, &self.user_id],
             )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        let row = self
-            .conn
-            .query_opt(&stmt, &[&id, &self.user_id])
             .await
             .map_err(Error::exec("get_flow_config"))?
             .ok_or_else(|| Error::not_found("flow", id))?;
@@ -717,17 +642,13 @@ impl UserConnection {
             .supabase_id
             .ok_or_else(|| Error::not_found("json", "supabase_id"))?;
 
-        let stmt = self
-            .conn
-            .prepare_cached(
-                r#"SELECT storage_path FROM nodes
-                WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
         let path: String = self
             .conn
-            .query_opt(&stmt, &[&id, &self.user_id])
+            .do_query_opt(
+                r#"SELECT storage_path FROM nodes
+                WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
+                &[&id, &self.user_id],
+            )
             .await
             .map_err(Error::exec("get storage_path"))?
             .ok_or_else(|| Error::not_found("node", id))?
@@ -743,61 +664,27 @@ impl UserConnection {
 
     pub async fn set_start_time(&self, id: &FlowRunId, time: &DateTime<Utc>) -> crate::Result<()> {
         let time = time.naive_utc();
-        let stmt = self
-            .conn
-            .prepare_cached("UPDATE flow_run SET start_time = $1 WHERE id = $2 RETURNING id")
-            .await
-            .map_err(Error::exec("prepare"))?;
         self.conn
-            .query_one(&stmt, &[&time, id])
+            .do_query_one(
+                "UPDATE flow_run SET start_time = $1 WHERE id = $2 RETURNING id",
+                &[&time, id],
+            )
             .await
             .map_err(Error::exec("set start time"))?;
         Ok(())
     }
 
     pub async fn push_flow_error(&self, id: &FlowRunId, error: &str) -> crate::Result<()> {
-        let stmt = self
-            .conn
-            .prepare_cached(
+        self.conn
+            .do_query_one(
                 "UPDATE flow_run
                 SET errors = array_append(errors, $2)
                 WHERE id = $1
                 RETURNING id",
+                &[id, &error],
             )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_one(&stmt, &[id, &error])
             .await
             .map_err(Error::exec("push flow errors"))?;
-        Ok(())
-    }
-
-    pub async fn push_flow_log(
-        &self,
-        id: &FlowRunId,
-        index: &i32,
-        time: &DateTime<Utc>,
-        level: &str,
-        module: &Option<String>,
-        content: &str,
-    ) -> crate::Result<()> {
-        let time = time.naive_utc();
-        let stmt = self.conn
-        .prepare_cached(
-            "INSERT INTO flow_run_logs (flow_run_id, log_index, user_id, time, log_level, content, module)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING flow_run_id",
-        )
-        .await
-        .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_one(
-                &stmt,
-                &[id, index, &self.user_id, &time, &level, &content, module],
-            )
-            .await
-            .map_err(Error::exec("push flow log"))?;
         Ok(())
     }
 
@@ -809,20 +696,16 @@ impl UserConnection {
         output: &Value,
     ) -> crate::Result<()> {
         let time = time.naive_utc();
-        let stmt = self
-            .conn
-            .prepare_cached(
+        self.conn
+            .do_query_one(
                 "UPDATE flow_run
                 SET end_time = $2,
                     not_run = $3,
                     output = $4
                 WHERE id = $1 AND end_time IS NULL
                 RETURNING id",
+                &[id, &time, &not_run, &Json(output)],
             )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_one(&stmt, &[id, &time, &not_run, &Json(output)])
             .await
             .map_err(Error::exec("set run result"))?;
         Ok(())
@@ -837,18 +720,12 @@ impl UserConnection {
         input: &Value,
     ) -> crate::Result<()> {
         let time = time.naive_utc();
-        let stmt = self
-            .conn
-            .prepare_cached(
-                "INSERT INTO node_run (flow_run_id, node_id, times, user_id, start_time, input)
+        self.conn
+            .do_query_one(
+                "INSERT INTO node_run
+                (flow_run_id, node_id, times, user_id, start_time, input)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING flow_run_id",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_one(
-                &stmt,
                 &[id, node_id, times, &self.user_id, &time, &Json(input)],
             )
             .await
@@ -864,10 +741,8 @@ impl UserConnection {
         output: &Value,
     ) -> crate::Result<()> {
         const MAP: &str = value::keys::MAP;
-        let stmt = self
-            .conn
-            .prepare_cached(&format!(
-                r#"UPDATE node_run
+        let stmt = format!(
+            r#"UPDATE node_run
                 SET output = COALESCE(
                     jsonb_set(
                         output,
@@ -877,12 +752,10 @@ impl UserConnection {
                     $4::JSONB
                 )
                 WHERE flow_run_id = $1 AND node_id = $2 AND times = $3
-                RETURNING flow_run_id"#,
-            ))
-            .await
-            .map_err(Error::exec("prepare"))?;
+                RETURNING flow_run_id"#
+        );
         self.conn
-            .query_one(&stmt, &[id, node_id, times, &Json(output)])
+            .do_query_one(&stmt, &[id, node_id, times, &Json(output)])
             .await
             .map_err(Error::exec("set node finish"))?;
         Ok(())
@@ -895,70 +768,16 @@ impl UserConnection {
         times: &i32,
         error: &str,
     ) -> crate::Result<()> {
-        let stmt = self
-            .conn
-            .prepare_cached(
+        self.conn
+            .do_query_one(
                 "UPDATE node_run
                 SET errors = array_append(errors, $4)
                 WHERE flow_run_id = $1 AND node_id = $2 AND times = $3
                 RETURNING flow_run_id",
+                &[id, node_id, times, &error],
             )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_one(&stmt, &[id, node_id, times, &error])
             .await
             .map_err(Error::exec("push node error"))?;
-        Ok(())
-    }
-
-    pub async fn push_node_log(
-        &self,
-        id: &FlowRunId,
-        index: &i32,
-        node_id: &NodeId,
-        times: &i32,
-        time: &DateTime<Utc>,
-        level: &str,
-        module: &Option<String>,
-        content: &str,
-    ) -> crate::Result<()> {
-        let time = time.naive_utc();
-        let stmt = self
-            .conn
-            .prepare_cached(
-                "INSERT INTO flow_run_logs (
-                    flow_run_id,
-                    log_index,
-                    user_id,
-                    node_id,
-                    times,
-                    time,
-                    log_level,
-                    content,
-                    module)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                RETURNING flow_run_id",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_one(
-                &stmt,
-                &[
-                    id,
-                    index,
-                    &self.user_id,
-                    node_id,
-                    times,
-                    &time,
-                    &level,
-                    &content,
-                    &module,
-                ],
-            )
-            .await
-            .map_err(Error::exec("push node log"))?;
         Ok(())
     }
 
@@ -970,19 +789,15 @@ impl UserConnection {
         time: &DateTime<Utc>,
     ) -> crate::Result<()> {
         let time = time.naive_utc();
-        let stmt = self
-            .conn
-            .prepare_cached(
+        self.conn
+            .do_query_one(
                 "UPDATE node_run
                 SET end_time = $4
                 WHERE flow_run_id = $1 AND node_id = $2 AND times = $3
                       AND end_time IS NULL
                 RETURNING flow_run_id",
+                &[id, node_id, times, &time],
             )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_one(&stmt, &[id, node_id, times, &time])
             .await
             .map_err(Error::exec("set node finish"))?;
         Ok(())
@@ -998,9 +813,9 @@ impl UserConnection {
         let pubkey = bs58::encode(pubkey).into_string();
         let message = base64::encode(message);
         let signatures = signatures.map(|arr| arr.iter().map(Json).collect::<Vec<_>>());
-        let stmt = self
+        let id = self
             .conn
-            .prepare_cached(
+            .do_query_one(
                 "INSERT INTO signature_requests (
                     user_id,
                     msg,
@@ -1008,13 +823,6 @@ impl UserConnection {
                     flow_run_id,
                     signatures
                 ) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        let id = self
-            .conn
-            .query_one(
-                &stmt,
                 &[&self.user_id, &message, &pubkey, &flow_run_id, &signatures],
             )
             .await
@@ -1033,19 +841,15 @@ impl UserConnection {
     ) -> crate::Result<()> {
         let new_msg_base64 = new_message.map(base64::encode);
         let signature = bs58::encode(signature).into_string();
-        let stmt = self
-            .conn
-            .prepare_cached(
+        self.conn
+            .do_query_one(
                 "UPDATE signature_requests
                 SET signature = $1,
                     new_msg = $4
                 WHERE user_id = $2 AND id = $3 AND signature IS NULL
                 RETURNING id",
+                &[&signature, &self.user_id, id, &new_msg_base64],
             )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_one(&stmt, &[&signature, &self.user_id, id, &new_msg_base64])
             .await
             .map_err(Error::exec("save_signature"))?;
 
@@ -1053,17 +857,13 @@ impl UserConnection {
     }
 
     pub async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>> {
-        let stmt = self
-            .conn
-            .prepare_cached(
-                "SELECT value FROM kvstore
-                WHERE user_id = $1 AND store_name = $2 AND key = $3",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
         let opt = self
             .conn
-            .query_opt(&stmt, &[&self.user_id, &store, &key])
+            .do_query_opt(
+                "SELECT value FROM kvstore
+                WHERE user_id = $1 AND store_name = $2 AND key = $3",
+                &[&self.user_id, &store, &key],
+            )
             .await
             .map_err(Error::exec("read item kvstore"))?;
         match opt {
@@ -1083,12 +883,11 @@ impl UserConnection {
             .await
             .map_err(Error::exec("start"))?;
 
-        let stmt = tx
-            .prepare_cached("SELECT pub_key FROM users_public WHERE user_id = $1")
-            .await
-            .map_err(Error::exec("prepare"))?;
         let pubkey = tx
-            .query_one(&stmt, &[&self.user_id])
+            .do_query_one(
+                "SELECT pub_key FROM users_public WHERE user_id = $1",
+                &[&self.user_id],
+            )
             .await
             .map_err(Error::exec("get pub_key"))?
             .try_get::<_, String>(0)

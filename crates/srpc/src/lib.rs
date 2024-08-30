@@ -44,7 +44,7 @@ impl<S, T> RegisterJsonService<S, T> {
             name,
             id,
             service,
-            _phantom: <_>::default(),
+            _phantom: PhantomData,
         }
     }
 }
@@ -69,18 +69,10 @@ impl actix::Message for RemoveService {
     type Result = bool;
 }
 
+#[derive(Default)]
 struct Service {
     svc: Option<JsonService>,
     queue: VecDeque<(Request, oneshot::Sender<Response>)>,
-}
-
-impl Default for Service {
-    fn default() -> Self {
-        Self {
-            svc: None,
-            queue: <_>::default(),
-        }
-    }
 }
 
 pub struct Server {

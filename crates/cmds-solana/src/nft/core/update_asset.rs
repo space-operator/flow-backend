@@ -53,13 +53,13 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     };
 
     let builder = if let Some(new_name) = input.new_name {
-        builder.new_name(new_name.into())
+        builder.new_name(new_name)
     } else {
         builder
     };
 
     let builder = if let Some(new_uri) = input.new_uri {
-        builder.new_uri(new_uri.into())
+        builder.new_uri(new_uri)
     } else {
         builder
     };

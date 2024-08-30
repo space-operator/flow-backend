@@ -1,30 +1,28 @@
-use crate::{Error, FlowRunLogsRow};
+use crate::{Error, FlowRunLogsRow, LocalStorage};
 use anyhow::anyhow;
 use bytes::Bytes;
 use chrono::Utc;
 use deadpool_postgres::{Object as Connection, Transaction};
 use flow_lib::{FlowRunId, UserId};
 use futures_util::SinkExt;
-use rand::distributions::{Alphanumeric, DistString};
 use std::borrow::Borrow;
 use tokio_postgres::{
     binary_copy::BinaryCopyInWriter,
     types::{Json, Type},
 };
-use uuid::Uuid;
 use value::Value;
 
-use super::{csv_export, ExportedUserData};
+use super::{csv_export, DbClient, ExportedUserData};
 
 pub struct AdminConn {
-    pub conn: Connection,
+    pub(crate) conn: Connection,
+    pub(crate) local: LocalStorage,
 }
 
 #[derive(Debug)]
-pub struct Password {
-    pub user_id: Uuid,
+pub struct LoginCredential {
     pub email: String,
-    pub password: Option<String>,
+    pub password: String,
 }
 
 #[derive(Debug)]
@@ -34,32 +32,56 @@ pub struct FlowRunInfo {
 }
 
 impl AdminConn {
-    pub fn new(conn: Connection) -> AdminConn {
-        Self { conn }
+    pub fn new(conn: Connection, local: LocalStorage) -> AdminConn {
+        Self { conn, local }
+    }
+
+    pub async fn get_user_id_by_pubkey(&self, pk_bs58: &str) -> crate::Result<Option<UserId>> {
+        self.conn
+            .do_query_opt(
+                "SELECT user_id FROM users_public WHERE pub_key = $1",
+                &[&pk_bs58],
+            )
+            .await
+            .map_err(Error::exec("query users_public"))?
+            .map(|row| row.try_get(0))
+            .transpose()
+            .map_err(Error::data("users_public.user_id"))
+    }
+
+    pub async fn get_login_credential(&self, user_id: UserId) -> crate::Result<LoginCredential> {
+        let pw = self.local.get_or_generate_password(&user_id)?;
+        let email = self
+            .conn
+            .do_query_one(
+                "UPDATE auth.users SET encrypted_password = $1 WHERE id = $2 RETURNING email",
+                &[&pw.encrypted_password, &user_id],
+            )
+            .await
+            .map_err(Error::exec("update users"))?
+            .try_get::<_, String>(0)
+            .map_err(Error::data("users.email"))?;
+        Ok(LoginCredential {
+            email,
+            password: pw.password,
+        })
     }
 
     pub async fn get_flow_run_info(&self, run_id: FlowRunId) -> crate::Result<FlowRunInfo> {
-        let stmt = self
-            .conn
-            .prepare_cached("SELECT user_id FROM flow_run WHERE id = $1")
-            .await
-            .map_err(Error::exec("prepare"))?;
         let user_id: UserId = self
             .conn
-            .query_one(&stmt, &[&run_id])
+            .do_query_one("SELECT user_id FROM flow_run WHERE id = $1", &[&run_id])
             .await
             .map_err(Error::exec("query flow_run table"))?
             .try_get(0)
             .map_err(Error::data("flow_run.user_id"))?;
 
-        let stmt = self
-            .conn
-            .prepare_cached("SELECT user_id FROM flow_run_shared WHERE flow_run_id = $1")
-            .await
-            .map_err(Error::exec("prepare"))?;
         let shared_with = self
             .conn
-            .query(&stmt, &[&run_id])
+            .do_query(
+                "SELECT user_id FROM flow_run_shared WHERE flow_run_id = $1",
+                &[&run_id],
+            )
             .await
             .map_err(Error::exec("query flow_run_shared"))?
             .into_iter()
@@ -73,14 +95,9 @@ impl AdminConn {
     }
 
     pub async fn get_flow_run_output(&self, run_id: FlowRunId) -> crate::Result<Value> {
-        let stmt = self
-            .conn
-            .prepare_cached("SELECT output FROM flow_run WHERE id = $1")
-            .await
-            .map_err(Error::exec("prepare"))?;
         let output = self
             .conn
-            .query_one(&stmt, &[&run_id])
+            .do_query_one("SELECT output FROM flow_run WHERE id = $1", &[&run_id])
             .await
             .map_err(Error::exec("query flow_run"))?
             .try_get::<_, Json<Value>>(0)
@@ -90,17 +107,11 @@ impl AdminConn {
     }
 
     pub async fn insert_whitelist(&self, pk_bs58: &str) -> crate::Result<()> {
-        let stmt = self
-            .conn
-            .prepare_cached(
-                "INSERT INTO pubkey_whitelists (pubkey, info) VALUES ($1, $2)
-                ON CONFLICT (pubkey) DO NOTHING",
-            )
-            .await
-            .map_err(Error::exec("prepare insert_whitelist"))?;
         let info = format!("inserted at {}", Utc::now());
+        let stmt = "INSERT INTO pubkey_whitelists (pubkey, info) VALUES ($1, $2)
+                    ON CONFLICT (pubkey) DO NOTHING";
         self.conn
-            .execute(&stmt, &[&pk_bs58, &info])
+            .do_execute(stmt, &[&pk_bs58, &info])
             .await
             .map_err(Error::exec("insert_whitelist"))?;
         Ok(())
@@ -197,121 +208,6 @@ impl AdminConn {
         Ok(inserted)
     }
 
-    pub async fn get_or_reset_password(
-        &mut self,
-        user_id: &UserId,
-    ) -> crate::Result<Option<Password>> {
-        tracing::debug!("get_or_reset_password {}", user_id);
-        let tx = self
-            .conn
-            .transaction()
-            .await
-            .map_err(Error::exec("start"))?;
-
-        tracing::debug!("select password {}", user_id);
-        let stmt = tx
-            .prepare_cached(
-                "SELECT t1.email, t2.password
-                FROM auth.users AS t1
-                LEFT JOIN auth.passwords AS t2 ON t1.id = t2.user_id
-                WHERE t1.id = $1",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        let password = tx
-            .query_opt(&stmt, &[user_id])
-            .await
-            .map_err(Error::exec("get_password"))?
-            .map(|r| {
-                Ok::<_, crate::Error>(Password {
-                    user_id: *user_id,
-                    email: r.try_get(0).map_err(Error::data("email"))?,
-                    password: r.try_get(1).map_err(Error::data("password"))?,
-                })
-            })
-            .transpose()?;
-        if let Some(mut password) = password {
-            if password.password.is_none() {
-                let pw = Alphanumeric.sample_string(&mut rand::thread_rng(), 24);
-                let hash = bcrypt::hash(&pw, 10).map_err(|_| Error::Bcrypt)?;
-
-                tracing::debug!("update password {}", user_id);
-                let stmt = tx
-                    .prepare_cached("UPDATE auth.users SET encrypted_password = $1 WHERE id = $2")
-                    .await
-                    .map_err(Error::exec("prepare"))?;
-                tx.execute(&stmt, &[&hash, &password.user_id])
-                    .await
-                    .map_err(Error::exec("reset_pw_hash"))?;
-
-                tracing::debug!("insert password {}", user_id);
-                let stmt = tx
-                    .prepare_cached(
-                        "INSERT INTO auth.passwords (user_id, password) VALUES ($1, $2)
-                    ON CONFLICT (user_id) DO UPDATE SET password = $2",
-                    )
-                    .await
-                    .map_err(Error::exec("prepare"))?;
-                tx.execute(&stmt, &[&password.user_id, &pw])
-                    .await
-                    .map_err(Error::exec("reset_pw_pass"))?;
-
-                tracing::debug!("commit {}", user_id);
-                tx.commit().await.map_err(Error::exec("reset_pw_commit"))?;
-                password.password = Some(pw);
-                Ok(Some(password))
-            } else {
-                tracing::debug!("commit {}", user_id);
-                tx.commit().await.map_err(Error::exec("reset_pw_commit"))?;
-                Ok(Some(password))
-            }
-        } else {
-            Ok(None)
-        }
-    }
-
-    pub async fn get_password(&self, pk_bs58: &str) -> crate::Result<Option<Password>> {
-        tracing::debug!("get_password {}", pk_bs58);
-        let stmt = self
-            .conn
-            .prepare_cached(
-                "SELECT t2.id, t2.email, t3.password
-                FROM users_public AS t1
-                INNER JOIN auth.users AS t2 ON t1.user_id = t2.id
-                LEFT JOIN auth.passwords AS t3 ON t1.user_id = t3.user_id
-                WHERE t1.pub_key = $1",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        self.conn
-            .query_opt(&stmt, &[&pk_bs58])
-            .await
-            .map_err(Error::exec("get_password"))?
-            .map(|r| {
-                Ok(Password {
-                    user_id: r.try_get(0).map_err(Error::data("user_id"))?,
-                    email: r.try_get(1).map_err(Error::data("email"))?,
-                    password: r.try_get(2).map_err(Error::data("password"))?,
-                })
-            })
-            .transpose()
-    }
-
-    pub async fn reset_password(&mut self, user_id: &UserId, pw: &str) -> crate::Result<()> {
-        tracing::debug!("reset_password {}", user_id);
-        let tx = self
-            .conn
-            .transaction()
-            .await
-            .map_err(Error::exec("reset_pw_start"))?;
-
-        reset_password(&tx, user_id, pw).await?;
-
-        tx.commit().await.map_err(Error::exec("reset_pw_commit"))?;
-
-        Ok(())
-    }
-
     pub async fn create_store(&mut self, user_id: &UserId, store_name: &str) -> crate::Result<()> {
         let tx = self
             .conn
@@ -319,21 +215,12 @@ impl AdminConn {
             .await
             .map_err(Error::exec("begin create_store"))?;
 
-        let stmt = tx
-            .prepare_cached(
-                "INSERT INTO
-                kvstore_metadata (user_id, store_name)
-                VALUES ($1, $2)",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        tx.execute(&stmt, &[user_id, &store_name])
+        let stmt = "INSERT INTO kvstore_metadata (user_id, store_name) VALUES ($1, $2)";
+        tx.do_execute(stmt, &[user_id, &store_name])
             .await
             .map_err(Error::exec("insert kvstore_metadata"))?;
 
-        let stmt = tx
-            .prepare_cached(
-                "INSERT INTO user_quotas
+        let stmt = "INSERT INTO user_quotas
                 (user_id, kvstore_count, kvstore_size)
                 VALUES ($1, 1, $2)
                 ON CONFLICT (user_id) DO UPDATE
@@ -341,11 +228,8 @@ impl AdminConn {
                     kvstore_size = user_quotas.kvstore_size + $2
                 WHERE user_quotas.kvstore_count + 1 <= user_quotas.kvstore_count_limit
                     AND user_quotas.kvstore_size + $2 <= user_quotas.kvstore_size_limit
-                RETURNING 0",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        tx.query_one(&stmt, &[user_id, &(store_name.len() as i64)])
+                RETURNING 0";
+        tx.do_query_one(stmt, &[user_id, &(store_name.len() as i64)])
             .await
             .map_err(Error::exec("update user_quotas"))?;
 
@@ -367,16 +251,11 @@ impl AdminConn {
             .await
             .map_err(Error::exec("begin delete_store"))?;
 
-        let stmt = tx
-            .prepare_cached(
-                "DELETE FROM kvstore_metadata
-                WHERE user_id = $1 AND store_name = $2
-                RETURNING stats_size",
-            )
-            .await
-            .map_err(Error::exec("prepare"))?;
+        let stmt = "DELETE FROM kvstore_metadata
+                    WHERE user_id = $1 AND store_name = $2
+                    RETURNING stats_size";
         let res = tx
-            .query_opt(&stmt, &[user_id, &store_name])
+            .do_query_opt(stmt, &[user_id, &store_name])
             .await
             .map_err(Error::exec("delete_store"))?;
         let deleted = res.is_some();
@@ -385,17 +264,12 @@ impl AdminConn {
                 .try_get(0)
                 .map_err(Error::data("kvstore_metadata.stats_size"))?;
             let size = size + store_name.len() as i64;
-            let stmt = tx
-                .prepare_cached(
-                    "UPDATE user_quotas
-                    SET kvstore_size = kvstore_size - $2,
-                        kvstore_count = kvstore_count - 1
-                    WHERE user_id = $1
-                    RETURNING 0",
-                )
-                .await
-                .map_err(Error::exec("prepare"))?;
-            tx.query_one(&stmt, &[user_id, &size])
+            let stmt = "UPDATE user_quotas
+                        SET kvstore_size = kvstore_size - $2,
+                            kvstore_count = kvstore_count - 1
+                        WHERE user_id = $1
+                        RETURNING 0";
+            tx.do_query_one(stmt, &[user_id, &size])
                 .await
                 .map_err(Error::exec("update user_quotas"))?;
         }
@@ -421,17 +295,12 @@ impl AdminConn {
             .await
             .map_err(Error::exec("insert_item start"))?;
 
-        let stmt = tx
-            .prepare_cached(
-                "SELECT LENGTH(value::TEXT) + LENGTH(key), value FROM kvstore
-                WHERE user_id = $1
-                    AND store_name = $2
-                    AND key = $3",
-            )
-            .await
-            .map_err(Error::exec("prepare get existing value"))?;
+        let stmt = "SELECT LENGTH(value::TEXT) + LENGTH(key), value FROM kvstore
+                    WHERE user_id = $1
+                        AND store_name = $2
+                        AND key = $3";
         let (old_size, old_value) = tx
-            .query_opt(&stmt, &[user_id, &store_name, &key])
+            .do_query_opt(stmt, &[user_id, &store_name, &key])
             .await
             .map_err(Error::exec("get existing value"))?
             .map(|row| {
@@ -445,18 +314,13 @@ impl AdminConn {
             .map_err(Error::data("parse value"))?
             .unwrap_or((0, None));
 
-        let stmt = tx
-            .prepare_cached(
-                "INSERT INTO kvstore (user_id, store_name, key, value)
-                VALUES ($1, $2, $3, $4)
-                ON CONFLICT (user_id, store_name, key)
-                DO UPDATE SET value = $4
-                RETURNING LENGTH(value::text) + LENGTH(key)",
-            )
-            .await
-            .map_err(Error::exec("prepare update kvstore"))?;
+        let stmt = "INSERT INTO kvstore (user_id, store_name, key, value)
+                    VALUES ($1, $2, $3, $4)
+                    ON CONFLICT (user_id, store_name, key)
+                    DO UPDATE SET value = $4
+                    RETURNING LENGTH(value::text) + LENGTH(key)";
         let new_size: i32 = tx
-            .query_one(&stmt, &[user_id, &store_name, &key, &Json(&json)])
+            .do_query_one(stmt, &[user_id, &store_name, &key, &Json(&json)])
             .await
             .map_err(Error::exec("update kvstore"))?
             .try_get::<_, i32>(0)
@@ -464,32 +328,22 @@ impl AdminConn {
 
         let changed = (new_size - old_size) as i64;
 
-        let stmt = tx
-            .prepare_cached(
-                "UPDATE user_quotas
-                SET kvstore_size = kvstore_size + $2
-                WHERE
-                    user_id = $1
-                    AND kvstore_size + $2 < kvstore_size_limit
-                RETURNING 0",
-            )
-            .await
-            .map_err(Error::exec("prepare update user_quotas"))?;
-        tx.query_one(&stmt, &[user_id, &changed])
+        let stmt = "UPDATE user_quotas
+                    SET kvstore_size = kvstore_size + $2
+                    WHERE
+                        user_id = $1
+                        AND kvstore_size + $2 < kvstore_size_limit
+                    RETURNING 0";
+        tx.do_query_one(stmt, &[user_id, &changed])
             .await
             .map_err(Error::exec("update user_quotas"))?;
 
-        let stmt = tx
-            .prepare_cached(
-                "UPDATE kvstore_metadata
-                SET stats_size = stats_size + $3
-                WHERE
-                    user_id = $1 AND store_name = $2
-                RETURNING 0",
-            )
-            .await
-            .map_err(Error::exec("prepare update kvstore_metadata"))?;
-        tx.query_one(&stmt, &[user_id, &store_name, &changed])
+        let stmt = "UPDATE kvstore_metadata
+                    SET stats_size = stats_size + $3
+                    WHERE
+                        user_id = $1 AND store_name = $2
+                    RETURNING 0";
+        tx.do_query_one(stmt, &[user_id, &store_name, &changed])
             .await
             .map_err(Error::exec("update kvstore_metadata"))?;
 
@@ -511,18 +365,13 @@ impl AdminConn {
             .await
             .map_err(Error::exec("remove_item start"))?;
 
-        let stmt = tx
-            .prepare_cached(
-                "DELETE FROM kvstore
+        let stmt = "DELETE FROM kvstore
                 WHERE user_id = $1
                     AND store_name = $2
                     AND key = $3
-                RETURNING LENGTH(value::TEXT) + LENGTH(key), value",
-            )
-            .await
-            .map_err(Error::exec("prepare get existing value"))?;
+                RETURNING LENGTH(value::TEXT) + LENGTH(key), value";
         let (old_size, old_value) = tx
-            .query_one(&stmt, &[user_id, &store_name, &key])
+            .do_query_one(stmt, &[user_id, &store_name, &key])
             .await
             .and_then(|row| {
                 Ok((
@@ -534,31 +383,21 @@ impl AdminConn {
 
         let old_size = old_size as i64;
 
-        let stmt = tx
-            .prepare_cached(
-                "UPDATE user_quotas
+        let stmt = "UPDATE user_quotas
                 SET kvstore_size = kvstore_size - $2
                 WHERE
                     user_id = $1
-                RETURNING 0",
-            )
-            .await
-            .map_err(Error::exec("prepare update user_quotas"))?;
-        tx.query_one(&stmt, &[user_id, &old_size])
+                RETURNING 0";
+        tx.do_query_one(stmt, &[user_id, &old_size])
             .await
             .map_err(Error::exec("update user_quotas"))?;
 
-        let stmt = tx
-            .prepare_cached(
-                "UPDATE kvstore_metadata
+        let stmt = "UPDATE kvstore_metadata
                 SET stats_size = stats_size - $3
                 WHERE
                     user_id = $1 AND store_name = $2
-                RETURNING 0",
-            )
-            .await
-            .map_err(Error::exec("prepare update kvstore_metadata"))?;
-        tx.query_one(&stmt, &[user_id, &store_name, &old_size])
+                RETURNING 0";
+        tx.do_query_one(stmt, &[user_id, &store_name, &old_size])
             .await
             .map_err(Error::exec("update kvstore_metadata"))?;
 
@@ -626,10 +465,6 @@ impl AdminConn {
         copy_in(&tx, "nodes", data.nodes).await?;
         update_id_sequence(&tx, "nodes", "id", "nodes_id_seq").await?;
 
-        let user_id = data.user_id;
-        let pw = rand_password();
-        reset_password(&tx, &user_id, &pw).await?;
-
         tx.execute("SELECT auth.enable_users_triggers()", &[])
             .await
             .map_err(Error::exec("enable trigger"))?;
@@ -688,35 +523,6 @@ async fn copy_in(tx: &Transaction<'_>, table: &str, data: String) -> crate::Resu
     sink.finish().await.map_err(Error::data("finish copy_in"))?;
 
     Ok(())
-}
-
-async fn reset_password(tx: &Transaction<'_>, user_id: &UserId, pw: &str) -> crate::Result<()> {
-    let hash = bcrypt::hash(pw, 10).map_err(|_| Error::Bcrypt)?;
-
-    let stmt = tx
-        .prepare_cached("UPDATE auth.users SET encrypted_password = $1 WHERE id = $2")
-        .await
-        .map_err(Error::exec("prepare"))?;
-    tx.execute(&stmt, &[&hash, user_id])
-        .await
-        .map_err(Error::exec("reset_pw_hash"))?;
-
-    let stmt = tx
-        .prepare_cached(
-            "INSERT INTO auth.passwords (user_id, password) VALUES ($1, $2)
-                ON CONFLICT (user_id) DO UPDATE SET password = $2",
-        )
-        .await
-        .map_err(Error::exec("prepare"))?;
-    tx.execute(&stmt, &[user_id, &pw])
-        .await
-        .map_err(Error::exec("reset_pw_pass"))?;
-
-    Ok(())
-}
-
-fn rand_password() -> String {
-    Alphanumeric.sample_string(&mut rand::thread_rng(), 24)
 }
 
 #[cfg(test)]

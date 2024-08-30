@@ -263,6 +263,7 @@ fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) 
 }
 
 impl FlowRegistry {
+    #[allow(clippy::too_many_arguments)]
     pub async fn new(
         flow_owner: User,
         started_by: User,
@@ -319,6 +320,7 @@ impl FlowRegistry {
             .map_err(|_| run_rhai::Error::msg("rhai worker stopped"))?
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn from_actix(
         flow_owner: User,
         started_by: User,

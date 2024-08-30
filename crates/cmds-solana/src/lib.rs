@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use flow_lib::solana::Pubkey;
 use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{commitment_config::CommitmentConfig, program_pack::Pack};

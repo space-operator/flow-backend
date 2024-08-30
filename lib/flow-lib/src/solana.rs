@@ -713,7 +713,7 @@ impl Instructions {
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<(Transaction, usize, Option<String>), Error> {
-        let inserted = self.insert_priority_fee(rpc, &config).await?;
+        let inserted = self.insert_priority_fee(rpc, config).await?;
         let memo = if let Some(action_identity) = action_identity {
             if !self
                 .instructions
@@ -829,7 +829,7 @@ impl Instructions {
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<(Transaction, usize), Error> {
-        let (mut message, inserted) = self.build_message(rpc, &config).await?;
+        let (mut message, inserted) = self.build_message(rpc, config).await?;
         let mut data: Bytes = message.serialize().into();
         let fee_payer_signature = {
             let keypair = self
@@ -949,7 +949,7 @@ impl Instructions {
         config: &ExecutionConfig,
     ) -> Result<Signature, Error> {
         let (tx, inserted) = self
-            .build_and_sign_tx(rpc, signer, flow_run_id, &config)
+            .build_and_sign_tx(rpc, signer, flow_run_id, config)
             .await?;
 
         // SDK's error message of verify_precompiles is not infomative,

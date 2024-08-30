@@ -1113,12 +1113,7 @@ impl RenderParams {
 
     pub fn correction(&mut self) {
         fn correct_percent_value(v: &mut f64) {
-            if *v < 0.0 {
-                *v = 0.0;
-            }
-            if *v > 100.0 {
-                *v = 100.0;
-            }
+            *v = (*v).clamp(0.0, 100.0);
         }
         correct_percent_value(&mut self.butterfly_amount);
         correct_percent_value(&mut self.disintegration_amount);

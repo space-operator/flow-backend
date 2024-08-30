@@ -34,7 +34,7 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 hashbrown = { version = "0.14", features = ["serde"] }
 futures-util = "0.3"
-kv = { version = "=0.24", features = ["json-value"] }
+kv = { version = "=0.24", features = ["json-value", "bincode-value"] }
 async-trait = "0.1"
 tower = "0.4"
 either = "1.9"

@@ -52,10 +52,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
                         0,
                         MemcmpEncodedBytes::Bytes(vec![Key::AssetV1 as u8]),
                     )),
-                    RpcFilterType::Memcmp(Memcmp::new(
-                        34,
-                        MemcmpEncodedBytes::Bytes(vec![2 as u8]),
-                    )),
+                    RpcFilterType::Memcmp(Memcmp::new(34, MemcmpEncodedBytes::Bytes(vec![2_u8]))),
                     RpcFilterType::Memcmp(Memcmp::new(
                         35,
                         MemcmpEncodedBytes::Base58(collection.to_string()),

@@ -18,7 +18,7 @@ use std::{
 use tokio::sync::broadcast;
 use tracing::{level_filters::LevelFilter, Span};
 use tracing_subscriber::EnvFilter;
-use utils::address_book::{AddressBook, ManagableActor};
+use utils::address_book::{AddressBook, AlreadyStarted, ManagableActor};
 
 pub mod flow_run_worker;
 pub mod messages;
@@ -265,14 +265,14 @@ impl<F> actix::Message for StartFlowRunWorker<F>
 where
     F: FnOnce(&mut Context<FlowRunWorker>) -> FlowRunWorker + Send + 'static,
 {
-    type Result = Result<actix::Addr<FlowRunWorker>, ()>;
+    type Result = Result<actix::Addr<FlowRunWorker>, AlreadyStarted>;
 }
 
 impl<F> actix::Handler<StartFlowRunWorker<F>> for DBWorker
 where
     F: FnOnce(&mut Context<FlowRunWorker>) -> FlowRunWorker + Send + 'static,
 {
-    type Result = Result<actix::Addr<FlowRunWorker>, ()>;
+    type Result = Result<actix::Addr<FlowRunWorker>, AlreadyStarted>;
 
     fn handle(&mut self, msg: StartFlowRunWorker<F>, _: &mut Self::Context) -> Self::Result {
         self.actors

@@ -43,23 +43,6 @@ pub fn service(
         .route(web::post().to(start_flow_unverified))
 }
 
-pub async fn find_or_create_user(
-    pubkey: &[u8; 32],
-    sup: &SupabaseAuth,
-    db: &RealDbPool,
-) -> Result<UserId, Error> {
-    let conn = db.get_admin_conn().await?;
-    let user_id = conn
-        .get_password(&bs58::encode(&pubkey).into_string())
-        .await?
-        .map(|pw| pw.user_id);
-    let user_id = match user_id {
-        Some(user_id) => user_id,
-        None => sup.create_user(pubkey).await?.1,
-    };
-    Ok(user_id)
-}
-
 async fn start_flow_unverified(
     flow_id: web::Path<FlowId>,
     params: Option<web::Json<Params>>,
@@ -83,7 +66,7 @@ async fn start_flow_unverified(
         return Err(Error::custom(StatusCode::FORBIDDEN, "not allowed"));
     }
 
-    let user_id = find_or_create_user(&user.pubkey, &sup, &db).await?;
+    let user_id = sup.get_or_create_user(&user.pubkey).await?.0;
 
     let starter = db_worker.send(GetUserWorker { user_id }).await?;
     let owner = db_worker

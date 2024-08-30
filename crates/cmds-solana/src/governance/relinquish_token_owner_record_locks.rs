@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use solana_sdk:: instruction::AccountMeta;
+use solana_sdk::instruction::AccountMeta;
 use tracing::info;
 
 use crate::prelude::*;
@@ -100,10 +100,10 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         ],
         None => vec![input.fee_payer.clone_keypair()],
     };
-    
+
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: signers.into(),
+        signers,
         instructions: [ix].into(),
     };
 

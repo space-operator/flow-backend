@@ -24,6 +24,8 @@ export type {
   ValuesConfig,
   StopFlowParams,
   StopFlowOutput,
+  InitAuthOutput,
+  ConfirmAuthOutput,
 } from "./types/rest.ts";
 export {
   type WsResponse,
