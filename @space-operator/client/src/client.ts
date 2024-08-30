@@ -1,4 +1,4 @@
-import { bs58, web3, Value, type IValue, Buffer, base64 } from "./deps.ts";
+import { bs58, web3, Value, type IValue } from "./deps.ts";
 import {
   type ErrorBody,
   type ISignatureRequest,
@@ -144,7 +144,7 @@ export class Client {
     return await parseResponse(resp);
   }
 
-  async initAuth(pubkey: string | web3.PublicKey): Promise<string> {
+  async initAuth(pubkey: web3.PublicKey | string): Promise<string> {
     let pubkeyBs58;
     if (typeof pubkey === "string") {
       pubkeyBs58 = pubkey;

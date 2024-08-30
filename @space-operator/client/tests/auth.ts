@@ -1,6 +1,14 @@
 import * as client from "../src/mod.ts";
 import { web3, bs58 } from "../src/deps.ts";
 import * as dotenv from "jsr:@std/dotenv";
+import * as nacl from "npm:tweetnacl";
+
+function ed25519SignText(keypair: web3.Keypair, message: string): Uint8Array {
+  return nacl.default.sign.detached(
+    new TextEncoder().encode(message),
+    keypair.secretKey
+  );
+}
 
 dotenv.loadSync({
   export: true,
@@ -24,7 +32,7 @@ const run = async (
   keypair: web3.Keypair
 ): Promise<client.ConfirmAuthOutput> => {
   const msg = await c.initAuth(keypair.publicKey);
-  const sig = client.ed25519SignText(keypair, msg);
+  const sig = ed25519SignText(keypair, msg);
   return await c.confirmAuth(msg, sig);
 };
 

@@ -1,5 +1,3 @@
-import { Buffer, naclSign, web3 } from "./deps.ts";
-
 export { Value, type IValue } from "./deps.ts";
 export { Client, type ClientOptions } from "./client.ts";
 export { WsClient, type WcClientOptions } from "./ws.ts";
@@ -53,10 +51,3 @@ export {
   type ISignatureRequest,
   SignatureRequest,
 } from "./types/ws.ts";
-
-export function ed25519SignText(
-  keypair: web3.Keypair,
-  message: string
-): Uint8Array {
-  return naclSign(new TextEncoder().encode(message), keypair.secretKey);
-}
