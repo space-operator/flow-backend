@@ -2,14 +2,18 @@ use crate::Error;
 use chrono::{DateTime, Utc};
 use flow_lib::UserId;
 use kv::{Bucket, Store};
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{path::Path, time::Duration};
 
 pub trait CacheBucket {
-    type Object;
+    type Key;
+    type EncodedKey: for<'a> kv::Key<'a>;
+
+    type Object: Serialize + DeserializeOwned;
     fn name() -> &'static str;
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey;
     fn cache_time() -> Duration;
-    fn can_read(obj: Self::Object, user_id: &UserId) -> bool;
+    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool;
 }
 
 #[derive(Clone)]
@@ -35,11 +39,61 @@ fn user_key(key: &UserId) -> &[u8] {
     key.as_bytes()
 }
 
+#[derive(Serialize, Deserialize)]
+struct CacheValue<V> {
+    expires_at: i64,
+    value: V,
+}
+
 impl LocalStorage {
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         tracing::info!("openning sled storage: {}", path.as_ref().display());
         let db = Store::new(kv::Config::new(path)).map_err(Error::local("open"))?;
         Ok(Self { db })
+    }
+
+    pub fn set_cache<C>(&self, key: &C::Key, value: C::Object) -> crate::Result<()>
+    where
+        C: CacheBucket,
+    {
+        self.db
+            .bucket::<C::EncodedKey, kv::Bincode<CacheValue<C::Object>>>(Some(C::name()))
+            .map_err(Error::local("open cache bucket"))?
+            .set(
+                &C::encode_key(key),
+                &kv::Bincode(CacheValue {
+                    expires_at: Utc::now().timestamp() + C::cache_time().as_secs() as i64,
+                    value,
+                }),
+            )
+            .map_err(Error::local("set_cache"))?;
+        Ok(())
+    }
+
+    pub fn get_cache<C>(&self, user_id: &UserId, key: &C::Key) -> crate::Result<Option<C::Object>>
+    where
+        C: CacheBucket,
+    {
+        self.db
+            .bucket::<_, kv::Bincode<CacheValue<C::Object>>>(Some(C::name()))
+            .map_err(Error::local("open cache bucket"))?
+            .transaction::<_, kv::Error, _>(|tx| {
+                let now = Utc::now().timestamp();
+                let key = C::encode_key(key);
+                if let Some(obj) = tx.get(&key)? {
+                    if obj.0.expires_at > now {
+                        tx.remove(&key)?;
+                        Ok(None)
+                    } else if C::can_read(&obj.0.value, user_id) {
+                        Ok(Some(obj.0.value))
+                    } else {
+                        Ok(None)
+                    }
+                } else {
+                    Ok(None)
+                }
+            })
+            .map_err(Error::local("get_cache"))
     }
 
     fn jwt_bucket(&self) -> crate::Result<Bucket<'_, &[u8], kv::Json<Jwt>>> {

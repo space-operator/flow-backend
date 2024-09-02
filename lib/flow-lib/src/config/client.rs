@@ -18,6 +18,7 @@ fn default_interflow_instruction_info() -> Result<InstructionInfo, String> {
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ClientConfig {
+    pub user_id: UserId,
     pub id: FlowId,
     pub nodes: Vec<Node>,
     pub edges: Vec<Edge>,

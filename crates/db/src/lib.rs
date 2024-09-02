@@ -1,45 +1,6 @@
 use chrono::{DateTime, Utc};
-use connection::FlowInfo;
-use flow_lib::{FlowId, FlowRunId, NodeId, UserId};
-use hashbrown::HashMap;
+use flow_lib::{FlowRunId, NodeId, UserId};
 use serde::{Deserialize, Serialize};
-use std::{
-    sync::{Arc, Mutex},
-    time::{Duration, Instant},
-};
-
-#[derive(Default)]
-pub struct Cache {
-    pub get_flow_info: HashMap<FlowId, CacheValue<FlowInfo>>,
-}
-
-impl Cache {
-    pub fn cleanup(&mut self) {
-        self.get_flow_info.retain(|_, v| !v.expired());
-    }
-}
-
-pub type CacheContainer = Arc<Mutex<Cache>>;
-
-#[derive(Clone)]
-pub struct CacheValue<T> {
-    pub expire_at: Instant,
-    pub value: T,
-}
-
-impl<T> CacheValue<T> {
-    pub fn new(value: T, duration: Duration) -> Self {
-        Self {
-            expire_at: Instant::now() + duration,
-            value,
-        }
-    }
-
-    pub fn expired(&self) -> bool {
-        let now = Instant::now();
-        now >= self.expire_at
-    }
-}
 
 pub mod apikey;
 pub mod config;
@@ -84,7 +45,7 @@ pub struct FlowRunLogsRow {
     pub module: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Wallet {
     pub id: i64,
     #[serde(with = "utils::serde_bs58")]

@@ -320,10 +320,4 @@ impl FlowConfig {
             instructions_bundling: config.instructions_bundling,
         }
     }
-
-    pub fn parse_json(config: JsonValue) -> Result<Self, serde_json::Error> {
-        let config: client::ClientConfig = serde_json::from_value(config)?;
-
-        Ok(Self::new(config))
-    }
 }
