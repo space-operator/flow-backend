@@ -53,7 +53,7 @@ pub struct Wallet {
     #[serde(
         default,
         with = "utils::serde_bs58::opt",
-        skip_serializing_if = "Option::is_none"
+        // skip_serializing_if = "Option::is_none"
     )]
     pub keypair: Option<[u8; 64]>,
 }

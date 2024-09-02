@@ -56,17 +56,19 @@ impl LocalStorage {
     where
         C: CacheBucket,
     {
+        let bucket = C::name();
+        tracing::debug!("set_cache {}", bucket);
         self.db
-            .bucket::<C::EncodedKey, kv::Bincode<CacheValue<C::Object>>>(Some(C::name()))
+            .bucket::<C::EncodedKey, kv::Json<CacheValue<C::Object>>>(Some(bucket))
             .map_err(Error::local("open cache bucket"))?
             .set(
                 &C::encode_key(key),
-                &kv::Bincode(CacheValue {
+                &kv::Json(CacheValue {
                     expires_at: Utc::now().timestamp() + C::cache_time().as_secs() as i64,
                     value,
                 }),
             )
-            .map_err(Error::local("set_cache"))?;
+            .map_err(Error::local(bucket))?;
         Ok(())
     }
 
@@ -74,8 +76,10 @@ impl LocalStorage {
     where
         C: CacheBucket,
     {
+        let bucket = C::name();
+        tracing::trace!("get_cache {}", bucket);
         self.db
-            .bucket::<_, kv::Bincode<CacheValue<C::Object>>>(Some(C::name()))
+            .bucket::<_, kv::Json<CacheValue<C::Object>>>(Some(bucket))
             .map_err(Error::local("open cache bucket"))?
             .transaction::<_, kv::Error, _>(|tx| {
                 let now = Utc::now().timestamp();
@@ -85,6 +89,7 @@ impl LocalStorage {
                         tx.remove(&key)?;
                         Ok(None)
                     } else if C::can_read(&obj.0.value, user_id) {
+                        tracing::debug!("cache hit {}", bucket);
                         Ok(Some(obj.0.value))
                     } else {
                         Ok(None)
@@ -93,7 +98,7 @@ impl LocalStorage {
                     Ok(None)
                 }
             })
-            .map_err(Error::local("get_cache"))
+            .map_err(Error::local(bucket))
     }
 
     fn jwt_bucket(&self) -> crate::Result<Bucket<'_, &[u8], kv::Json<Jwt>>> {
@@ -141,6 +146,7 @@ impl LocalStorage {
     }
 
     pub fn get_or_generate_password(&self, user_id: &UserId) -> crate::Result<Password> {
+        tracing::debug!("get password {}", user_id);
         self.password_bucket()?
             .transaction::<_, kv::Error, _>(|tx| {
                 if let Some(p) = tx.get(&user_key(user_id))? {

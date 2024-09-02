@@ -26,30 +26,42 @@ if ((await connection.getBalance(keypair.publicKey)) == 0) {
   while ((await connection.getBalance(keypair.publicKey)) == 0) {}
 }
 
-console.log("start flow");
-const result = await c.startFlowUnverified(2154, keypair.publicKey, {
-  inputs: new Value({
-    sender: keypair.publicKey,
-  }).M!,
-  fees: [["HuktZqYAXSeMz5hMtdEnvsJAXtapg24zXU2tkDnGgaSZ", 1000]],
-});
+const run = async () => {
+  const result = await c.startFlowUnverified(2154, keypair.publicKey, {
+    inputs: new Value({
+      sender: keypair.publicKey,
+    }).M!,
+    fees: [["HuktZqYAXSeMz5hMtdEnvsJAXtapg24zXU2tkDnGgaSZ", 1000]],
+  });
 
-console.log("get signature request");
-const req = await c.getSignatureRequest(result.flow_run_id, result.token);
+  const req = await c.getSignatureRequest(result.flow_run_id, result.token);
 
-const tx = req.buildTransaction();
+  const tx = req.buildTransaction();
 
-tx.sign(keypair);
+  tx.sign(keypair);
 
-console.log("submit signature");
-const sigResult = await c.submitSignature({
-  id: req.id,
-  signature: bs58.encodeBase58(tx.signature!),
-});
+  const sigResult = await c.submitSignature({
+    id: req.id,
+    signature: bs58.encodeBase58(tx.signature!),
+  });
 
-console.log(sigResult);
+  console.log(sigResult);
 
-console.log("get flow output");
-const output = await c.getFlowOutput(result.flow_run_id, result.token);
+  const output = await c.getFlowOutput(result.flow_run_id, result.token);
+  return output;
+};
 
-console.log(output);
+const res = await Promise.all([
+  run(),
+  run(),
+  run(),
+  run(),
+  run(),
+  run(),
+  run(),
+  run(),
+  run(),
+  run(),
+]);
+
+console.log(res);
