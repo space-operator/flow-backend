@@ -37,12 +37,22 @@ where
 }
 
 pub mod opt {
+    struct Bs58<'a>(&'a [u8]);
+    impl<'a> serde::Serialize for Bs58<'a> {
+        fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            s.serialize_str(&bs58::encode(self.0).into_string())
+        }
+    }
+
     pub fn serialize<const N: usize, S>(sig: &Option<[u8; N]>, s: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
         match sig {
-            Some(sig) => super::serialize(sig, s),
+            Some(sig) => s.serialize_some(&Bs58(sig.as_slice())),
             None => s.serialize_none(),
         }
     }

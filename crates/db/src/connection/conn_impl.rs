@@ -1,3 +1,4 @@
+use crate::local_storage::CacheBucket;
 use bytes::{Bytes, BytesMut};
 use deadpool_postgres::Transaction;
 use flow_lib::config::client::NodeDataSkipWasm;
@@ -6,6 +7,78 @@ use utils::bs58_decode;
 
 use super::*;
 
+struct FlowInfoCache;
+
+impl CacheBucket for FlowInfoCache {
+    type Key = FlowId;
+    type EncodedKey = kv::Integer;
+    type Object = FlowInfo;
+
+    fn name() -> &'static str {
+        "FlowInfoCache"
+    }
+
+    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+        obj.is_public || obj.user_id == *user_id
+    }
+
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+        kv::Integer::from(*key)
+    }
+
+    fn cache_time() -> Duration {
+        Duration::from_secs(10)
+    }
+}
+
+struct WalletCache;
+
+impl CacheBucket for WalletCache {
+    type Key = UserId;
+    type EncodedKey = kv::Raw;
+    type Object = Vec<Wallet>;
+
+    fn name() -> &'static str {
+        "WalletCache"
+    }
+
+    fn can_read(_: &Self::Object, _: &UserId) -> bool {
+        true
+    }
+
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+        key.as_bytes().into()
+    }
+
+    fn cache_time() -> Duration {
+        Duration::from_secs(10)
+    }
+}
+
+struct FlowConfigCache;
+
+impl CacheBucket for FlowConfigCache {
+    type Key = FlowId;
+    type EncodedKey = kv::Integer;
+    type Object = ClientConfig;
+
+    fn name() -> &'static str {
+        "FlowConfigCache"
+    }
+
+    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+        obj.user_id == *user_id
+    }
+
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+        kv::Integer::from(*key)
+    }
+
+    fn cache_time() -> Duration {
+        Duration::from_secs(10)
+    }
+}
+
 #[async_trait]
 impl UserConnectionTrait for UserConnection {
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
@@ -13,31 +86,41 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
-        const DURATION: Duration = Duration::from_secs(8);
+        if let Some(cached) = self
+            .local
+            .get_cache::<FlowInfoCache>(&self.user_id, &flow_id)
         {
-            let mut cache = self.cache.lock().unwrap();
-            let cached = cache.get_flow_info.get(&flow_id);
-            if let Some(cached) = cached {
-                if cached.expired() {
-                    cache.get_flow_info.remove(&flow_id);
-                } else if cached.value.user_id == self.user_id || cached.value.is_public {
-                    return Ok(cached.value.clone());
-                }
-            }
+            return Ok(cached);
         }
         let result = self.get_flow_info(flow_id).await;
         if let Ok(result) = &result {
-            self.cache
-                .lock()
-                .unwrap()
-                .get_flow_info
-                .insert(flow_id, CacheValue::new(result.clone(), DURATION));
+            if let Err(error) = self
+                .local
+                .set_cache::<FlowInfoCache>(&flow_id, result.clone())
+            {
+                tracing::error!("set_cache error: {}", error);
+            }
         }
         result
     }
 
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
-        self.get_wallets().await
+        if let Some(cached) = self
+            .local
+            .get_cache::<WalletCache>(&self.user_id, &self.user_id)
+        {
+            return Ok(cached);
+        }
+        let result = self.get_wallets().await;
+        if let Ok(result) = &result {
+            if let Err(error) = self
+                .local
+                .set_cache::<WalletCache>(&self.user_id, result.clone())
+            {
+                tracing::error!("set_cache error: {}", error);
+            }
+        }
+        result
     }
 
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>> {
@@ -60,7 +143,16 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_flow_config(&self, id: FlowId) -> crate::Result<client::ClientConfig> {
-        self.get_flow_config(id).await
+        if let Some(cached) = self.local.get_cache::<FlowConfigCache>(&self.user_id, &id) {
+            return Ok(cached);
+        }
+        let result = self.get_flow_config(id).await;
+        if let Ok(result) = &result {
+            if let Err(error) = self.local.set_cache::<FlowConfigCache>(&id, result.clone()) {
+                tracing::error!("set_cache error: {}", error);
+            }
+        }
+        result
     }
 
     async fn set_start_time(&self, id: &FlowRunId, time: &DateTime<Utc>) -> crate::Result<()> {
@@ -156,17 +248,17 @@ impl UserConnection {
         conn: Connection,
         wasm_storage: WasmStorage,
         user_id: Uuid,
-        cache: Arc<Mutex<Cache>>,
+        local: LocalStorage,
     ) -> Self {
         Self {
             conn,
             user_id,
             wasm_storage,
-            cache,
+            local,
         }
     }
 
-    pub async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
+    async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
         // Same user, not doing anything
         if user == self.user_id {
             return Ok(());
@@ -206,7 +298,7 @@ impl UserConnection {
             .try_into()
     }
 
-    pub async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
+    async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
         self.conn
             .do_query(
                 "SELECT public_key, keypair, id FROM wallets WHERE user_id = $1",
@@ -241,7 +333,7 @@ impl UserConnection {
             .collect()
     }
 
-    pub async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>> {
+    async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>> {
         let tx = self
             .conn
             .transaction()
@@ -445,7 +537,7 @@ impl UserConnection {
         Ok(flow_id_map)
     }
 
-    pub async fn new_flow_run(
+    async fn new_flow_run(
         &self,
         config: &ClientConfig,
         inputs: &ValueSet,
@@ -506,7 +598,7 @@ impl UserConnection {
         Ok(r.get(0))
     }
 
-    pub async fn get_previous_values(
+    async fn get_previous_values(
         &self,
         nodes: &HashMap<NodeId, FlowRunId>,
     ) -> crate::Result<HashMap<NodeId, Vec<Value>>> {
@@ -562,7 +654,7 @@ impl UserConnection {
             .collect::<Result<HashMap<NodeId, Vec<Value>>, Error>>()
     }
 
-    pub async fn get_flow_config(&self, id: FlowId) -> crate::Result<client::ClientConfig> {
+    async fn get_flow_config(&self, id: FlowId) -> crate::Result<client::ClientConfig> {
         let row = self
             .conn
             .do_query_opt(
@@ -607,6 +699,7 @@ impl UserConnection {
             .0;
 
         let config = serde_json::json!({
+            "user_id": self.user_id,
             "id": id,
             "nodes": nodes,
             "edges": edges,
@@ -662,7 +755,7 @@ impl UserConnection {
         Ok(())
     }
 
-    pub async fn set_start_time(&self, id: &FlowRunId, time: &DateTime<Utc>) -> crate::Result<()> {
+    async fn set_start_time(&self, id: &FlowRunId, time: &DateTime<Utc>) -> crate::Result<()> {
         let time = time.naive_utc();
         self.conn
             .do_query_one(
@@ -674,7 +767,7 @@ impl UserConnection {
         Ok(())
     }
 
-    pub async fn push_flow_error(&self, id: &FlowRunId, error: &str) -> crate::Result<()> {
+    async fn push_flow_error(&self, id: &FlowRunId, error: &str) -> crate::Result<()> {
         self.conn
             .do_query_one(
                 "UPDATE flow_run
@@ -688,7 +781,7 @@ impl UserConnection {
         Ok(())
     }
 
-    pub async fn set_run_result(
+    async fn set_run_result(
         &self,
         id: &FlowRunId,
         time: &DateTime<Utc>,
@@ -711,7 +804,7 @@ impl UserConnection {
         Ok(())
     }
 
-    pub async fn new_node_run(
+    async fn new_node_run(
         &self,
         id: &FlowRunId,
         node_id: &NodeId,
@@ -733,7 +826,7 @@ impl UserConnection {
         Ok(())
     }
 
-    pub async fn save_node_output(
+    async fn save_node_output(
         &self,
         id: &FlowRunId,
         node_id: &NodeId,
@@ -761,7 +854,7 @@ impl UserConnection {
         Ok(())
     }
 
-    pub async fn push_node_error(
+    async fn push_node_error(
         &self,
         id: &FlowRunId,
         node_id: &NodeId,
@@ -781,7 +874,7 @@ impl UserConnection {
         Ok(())
     }
 
-    pub async fn set_node_finish(
+    async fn set_node_finish(
         &self,
         id: &FlowRunId,
         node_id: &NodeId,
@@ -803,7 +896,7 @@ impl UserConnection {
         Ok(())
     }
 
-    pub async fn new_signature_request(
+    async fn new_signature_request(
         &self,
         pubkey: &[u8; 32],
         message: &[u8],
@@ -833,7 +926,7 @@ impl UserConnection {
         Ok(id)
     }
 
-    pub async fn save_signature(
+    async fn save_signature(
         &self,
         id: &i64,
         signature: &[u8; 64],
@@ -856,7 +949,7 @@ impl UserConnection {
         Ok(())
     }
 
-    pub async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>> {
+    async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>> {
         let opt = self
             .conn
             .do_query_opt(
@@ -876,7 +969,7 @@ impl UserConnection {
         }
     }
 
-    pub async fn export_user_data(&mut self) -> crate::Result<ExportedUserData> {
+    async fn export_user_data(&mut self) -> crate::Result<ExportedUserData> {
         let tx = self
             .conn
             .transaction()

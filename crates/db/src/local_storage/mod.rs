@@ -2,14 +2,18 @@ use crate::Error;
 use chrono::{DateTime, Utc};
 use flow_lib::UserId;
 use kv::{Bucket, Store};
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{path::Path, time::Duration};
 
 pub trait CacheBucket {
-    type Object;
+    type Key;
+    type EncodedKey: for<'a> kv::Key<'a>;
+
+    type Object: Serialize + DeserializeOwned;
     fn name() -> &'static str;
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey;
     fn cache_time() -> Duration;
-    fn can_read(obj: Self::Object, user_id: &UserId) -> bool;
+    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool;
 }
 
 #[derive(Clone)]
@@ -35,11 +39,76 @@ fn user_key(key: &UserId) -> &[u8] {
     key.as_bytes()
 }
 
+#[derive(Serialize, Deserialize)]
+struct CacheValue<V> {
+    expires_at: i64,
+    value: V,
+}
+
 impl LocalStorage {
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         tracing::info!("openning sled storage: {}", path.as_ref().display());
         let db = Store::new(kv::Config::new(path)).map_err(Error::local("open"))?;
         Ok(Self { db })
+    }
+
+    pub fn set_cache<C>(&self, key: &C::Key, value: C::Object) -> crate::Result<()>
+    where
+        C: CacheBucket,
+    {
+        let bucket = C::name();
+        tracing::debug!("set_cache {}", bucket);
+        self.db
+            .bucket::<C::EncodedKey, kv::Json<CacheValue<C::Object>>>(Some(bucket))
+            .map_err(Error::local("open cache bucket"))?
+            .set(
+                &C::encode_key(key),
+                &kv::Json(CacheValue {
+                    expires_at: Utc::now().timestamp() + C::cache_time().as_secs() as i64,
+                    value,
+                }),
+            )
+            .map_err(Error::local(bucket))?;
+        Ok(())
+    }
+
+    pub fn get_cache<C>(&self, user_id: &UserId, key: &C::Key) -> Option<C::Object>
+    where
+        C: CacheBucket,
+    {
+        let bucket = C::name();
+        tracing::trace!("get_cache {}", bucket);
+        let result = self
+            .db
+            .bucket::<_, kv::Json<CacheValue<C::Object>>>(Some(bucket))
+            .inspect_err(|error| {
+                tracing::error!("get_cache error: {}", error);
+            })
+            .ok()?
+            .transaction::<_, kv::Error, _>(|tx| {
+                let now = Utc::now().timestamp();
+                let key = C::encode_key(key);
+                if let Some(obj) = tx.get(&key)? {
+                    if obj.0.expires_at > now {
+                        tx.remove(&key)?;
+                        Ok(None)
+                    } else if C::can_read(&obj.0.value, user_id) {
+                        tracing::debug!("cache hit {}", bucket);
+                        Ok(Some(obj.0.value))
+                    } else {
+                        Ok(None)
+                    }
+                } else {
+                    Ok(None)
+                }
+            });
+        match result {
+            Ok(result) => result,
+            Err(error) => {
+                tracing::error!("get_cache error: {}", error);
+                None
+            }
+        }
     }
 
     fn jwt_bucket(&self) -> crate::Result<Bucket<'_, &[u8], kv::Json<Jwt>>> {
@@ -79,14 +148,6 @@ impl LocalStorage {
             .map_err(Error::local("open Passwords"))
     }
 
-    fn get_password(&self, user_id: &UserId) -> crate::Result<Option<Password>> {
-        Ok(self
-            .password_bucket()?
-            .get(&user_key(user_id))
-            .map_err(Error::local("get Passwords"))?
-            .map(|p| p.0))
-    }
-
     pub fn set_password(&self, user_id: &UserId, password: Password) -> crate::Result<()> {
         self.password_bucket()?
             .set(&user_key(user_id), &kv::Bincode(password))
@@ -94,21 +155,23 @@ impl LocalStorage {
         Ok(())
     }
 
-    fn set_text_password(&self, user_id: &UserId, pw: String) -> crate::Result<Password> {
-        let password = Password {
-            encrypted_password: bcrypt::hash(&pw, 10).map_err(|_| Error::Bcrypt)?,
-            password: pw,
-        };
-        self.set_password(user_id, password.clone())?;
-        Ok(password)
-    }
-
     pub fn get_or_generate_password(&self, user_id: &UserId) -> crate::Result<Password> {
-        if let Some(p) = self.get_password(user_id)? {
-            Ok(p)
-        } else {
-            self.set_text_password(user_id, rand_password())
-        }
+        tracing::debug!("get password {}", user_id);
+        self.password_bucket()?
+            .transaction::<_, kv::Error, _>(|tx| {
+                if let Some(p) = tx.get(&user_key(user_id))? {
+                    Ok(p.0)
+                } else {
+                    let password = rand_password();
+                    let password = Password {
+                        encrypted_password: bcrypt::hash(&password, 10).unwrap(),
+                        password,
+                    };
+                    tx.set(&user_key(user_id), &kv::Bincode(password.clone()))?;
+                    Ok(password)
+                }
+            })
+            .map_err(Error::local("get or generate password"))
     }
 }
 

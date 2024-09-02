@@ -1,4 +1,4 @@
-use crate::{Cache, CacheContainer, CacheValue, Error, Wallet, WasmStorage};
+use crate::{Error, LocalStorage, Wallet, WasmStorage};
 use async_trait::async_trait;
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
@@ -11,12 +11,7 @@ use flow_lib::{
 use hashbrown::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use std::{
-    any::Any,
-    future::Future,
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use std::{any::Any, future::Future, time::Duration};
 use tokio_postgres::{
     types::{Json, ToSql},
     Error as PgError, Row,
@@ -32,7 +27,7 @@ pub use admin::*;
 pub mod proxied_user_conn;
 
 pub struct UserConnection {
-    pub cache: CacheContainer,
+    pub local: LocalStorage,
     pub wasm_storage: WasmStorage,
     pub conn: Connection,
     pub user_id: Uuid,
