@@ -1,5 +1,5 @@
 use crate::{
-    connection::{AdminConn, UserConnection},
+    connection::{AdminConn, DbClient, UserConnection},
     Error,
 };
 use chrono::NaiveDateTime;
@@ -58,13 +58,80 @@ impl APIKey {
 #[error("name-conflict")]
 pub struct NameConflict;
 
+fn convert_error(error: Error) -> Error<NameConflict> {
+    match error {
+        Error::Timeout => Error::Timeout,
+        Error::NotSupported => Error::NotSupported,
+        Error::LogicError(_) => unreachable!("get_conn should not return this variant"),
+        Error::CreatePool(e) => Error::CreatePool(e),
+        Error::GetDbConnection(e) => Error::GetDbConnection(e),
+        Error::InitDb(e) => Error::InitDb(e),
+        Error::Execute {
+            error,
+            context,
+            location,
+        } => Error::Execute {
+            error,
+            context,
+            location,
+        },
+        Error::Data {
+            error,
+            context,
+            location,
+        } => Error::Data {
+            error,
+            context,
+            location,
+        },
+        Error::Json {
+            error,
+            context,
+            location,
+        } => Error::Json {
+            error,
+            context,
+            location,
+        },
+        Error::ResourceNotFound { kind, id, location } => {
+            Error::ResourceNotFound { kind, id, location }
+        }
+        Error::Io(e) => Error::Io(e),
+        Error::NoCert => Error::NoCert,
+        Error::AddCert(e) => Error::AddCert(e),
+        Error::Deserialize(e) => Error::Deserialize(e),
+        Error::Storage(e) => Error::Storage(e),
+        Error::Bcrypt => Error::Bcrypt,
+        Error::Base58 => Error::Base58,
+        Error::LocalStorage {
+            error,
+            context,
+            location,
+        } => Error::LocalStorage {
+            error,
+            context,
+            location,
+        },
+        Error::ProxyError(e) => Error::ProxyError(e),
+        Error::Parsing {
+            error,
+            context,
+            location,
+        } => Error::Parsing {
+            error,
+            context,
+            location,
+        },
+    }
+}
+
 impl UserConnection {
     pub async fn create_apikey(&self, name: &str) -> Result<(APIKey, String), Error<NameConflict>> {
         let mut rng = rand::thread_rng();
         let info = KeyInfo::new(name, self.user_id);
 
-        let stmt = self
-            .conn
+        let conn = self.pool.get_conn().await.map_err(convert_error)?;
+        let stmt = conn
             .prepare_cached(
                 "INSERT INTO apikeys (
                 key_hash,
@@ -79,8 +146,7 @@ impl UserConnection {
 
         let (key, full_key) = loop {
             let (key, full_key) = APIKey::generate(&mut rng, info.clone());
-            let result = self
-                .conn
+            let result = conn
                 .execute(
                     &stmt,
                     &[
@@ -117,14 +183,12 @@ impl UserConnection {
     }
 
     pub async fn delete_apikey(&self, key_hash: &str) -> crate::Result<()> {
-        let stmt = self
-            .conn
-            .prepare_cached("DELETE FROM apikeys WHERE key_hash = $1 AND user_id = $2")
-            .await
-            .map_err(Error::exec("prepare"))?;
-        let affected = self
-            .conn
-            .execute(&stmt, &[&key_hash, &self.user_id])
+        let conn = self.pool.get_conn().await?;
+        let affected = conn
+            .do_execute(
+                "DELETE FROM apikeys WHERE key_hash = $1 AND user_id = $2",
+                &[&key_hash, &self.user_id],
+            )
             .await
             .map_err(Error::exec("delete_apikey"))?;
         if affected != 1 {

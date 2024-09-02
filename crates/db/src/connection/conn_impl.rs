@@ -245,13 +245,13 @@ impl UserConnectionTrait for UserConnection {
 
 impl UserConnection {
     pub fn new(
-        conn: Connection,
+        pool: RealDbPool,
         wasm_storage: WasmStorage,
         user_id: Uuid,
         local: LocalStorage,
     ) -> Self {
         Self {
-            conn,
+            pool,
             user_id,
             wasm_storage,
             local,
@@ -264,81 +264,76 @@ impl UserConnection {
             return Ok(());
         }
 
-        self.conn
-            .do_query_one(
-                "SELECT 1 FROM flow_run WHERE id = $1 AND user_id = $2",
-                &[&id, &self.user_id],
-            )
-            .await
-            .map_err(Error::exec("check conn permission"))?;
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_one(
+            "SELECT 1 FROM flow_run WHERE id = $1 AND user_id = $2",
+            &[&id, &self.user_id],
+        )
+        .await
+        .map_err(Error::exec("check conn permission"))?;
 
-        self.conn
-            .do_execute(
-                "INSERT INTO flow_run_shared (flow_run_id, user_id)
+        conn.do_execute(
+            "INSERT INTO flow_run_shared (flow_run_id, user_id)
                 VALUES ($1, $2)
                 ON CONFLICT (flow_run_id, user_id) DO NOTHING",
-                &[&id, &user],
-            )
-            .await
-            .map_err(Error::exec("insert flow_run_shared"))?;
+            &[&id, &user],
+        )
+        .await
+        .map_err(Error::exec("insert flow_run_shared"))?;
 
         Ok(())
     }
 
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
-        self.conn
-            .do_query_opt(
-                r#"SELECT user_id, start_shared, start_unverified, "isPublic" FROM flows
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_opt(
+            r#"SELECT user_id, start_shared, start_unverified, "isPublic" FROM flows
                 WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
-                &[&flow_id, &self.user_id],
-            )
-            .await
-            .map_err(Error::exec("get_flow_info"))?
-            .ok_or_else(|| Error::not_found("flow", flow_id))?
-            .try_into()
+            &[&flow_id, &self.user_id],
+        )
+        .await
+        .map_err(Error::exec("get_flow_info"))?
+        .ok_or_else(|| Error::not_found("flow", flow_id))?
+        .try_into()
     }
 
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
-        self.conn
-            .do_query(
-                "SELECT public_key, keypair, id FROM wallets WHERE user_id = $1",
-                &[&self.user_id],
-            )
-            .await
-            .map_err(Error::exec("get wallets"))?
-            .into_iter()
-            .map(|r| {
-                let pubkey_str = r
-                    .try_get::<_, String>(0)
-                    .map_err(Error::data("wallets.public_key"))?;
-                let pubkey =
-                    bs58_decode(&pubkey_str).map_err(Error::parsing("wallets.public_key"))?;
+        let conn = self.pool.get_conn().await?;
+        conn.do_query(
+            "SELECT public_key, keypair, id FROM wallets WHERE user_id = $1",
+            &[&self.user_id],
+        )
+        .await
+        .map_err(Error::exec("get wallets"))?
+        .into_iter()
+        .map(|r| {
+            let pubkey_str = r
+                .try_get::<_, String>(0)
+                .map_err(Error::data("wallets.public_key"))?;
+            let pubkey = bs58_decode(&pubkey_str).map_err(Error::parsing("wallets.public_key"))?;
 
-                let keypair_str = r
-                    .try_get::<_, Option<String>>(1)
-                    .map_err(Error::data("wallets.keypair"))?;
-                let keypair = keypair_str
-                    .map(|s| utils::bs58_decode(&s))
-                    .transpose()
-                    .map_err(Error::parsing("wallets.keypair"))?;
+            let keypair_str = r
+                .try_get::<_, Option<String>>(1)
+                .map_err(Error::data("wallets.keypair"))?;
+            let keypair = keypair_str
+                .map(|s| utils::bs58_decode(&s))
+                .transpose()
+                .map_err(Error::parsing("wallets.keypair"))?;
 
-                let id = r.try_get(2).map_err(Error::data("wallets.id"))?;
+            let id = r.try_get(2).map_err(Error::data("wallets.id"))?;
 
-                Ok(Wallet {
-                    id,
-                    pubkey,
-                    keypair,
-                })
+            Ok(Wallet {
+                id,
+                pubkey,
+                keypair,
             })
-            .collect()
+        })
+        .collect()
     }
 
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>> {
-        let tx = self
-            .conn
-            .transaction()
-            .await
-            .map_err(Error::exec("start"))?;
+        let mut conn = self.pool.get_conn().await?;
+        let tx = conn.transaction().await.map_err(Error::exec("start"))?;
 
         let flow_owner = {
             let owner: UserId = tx
@@ -542,8 +537,8 @@ impl UserConnection {
         config: &ClientConfig,
         inputs: &ValueSet,
     ) -> crate::Result<FlowRunId> {
-        let r = self
-            .conn
+        let conn = self.pool.get_conn().await?;
+        let r = conn
             .do_query_one(
                 "INSERT INTO flow_run (
                     id,
@@ -635,8 +630,8 @@ impl UserConnection {
             GROUP BY node_id",
             FormatArg(nodes)
         );
-        self.conn
-            .query(&stmt, &[&self.user_id])
+        let conn = self.pool.get_conn().await?;
+        conn.query(&stmt, &[&self.user_id])
             .await
             .map_err(Error::exec("select node_run"))?
             .into_iter()
@@ -655,8 +650,8 @@ impl UserConnection {
     }
 
     async fn get_flow_config(&self, id: FlowId) -> crate::Result<client::ClientConfig> {
-        let row = self
-            .conn
+        let conn = self.pool.get_conn().await?;
+        let row = conn
             .do_query_opt(
                 "SELECT nodes,
                         edges,
@@ -716,7 +711,10 @@ impl UserConnection {
 
         for node in &mut config.nodes {
             if node.data.r#type == CommandType::Wasm {
-                if let Err(error) = self.fetch_wasm_bytes(&mut node.data.targets_form).await {
+                if let Err(error) = self
+                    .fetch_wasm_bytes(&mut node.data.targets_form, &conn)
+                    .await
+                {
                     tracing::warn!("{}", error);
                 }
             }
@@ -725,7 +723,11 @@ impl UserConnection {
         Ok(config)
     }
 
-    async fn fetch_wasm_bytes(&self, data: &mut client::TargetsForm) -> crate::Result<()> {
+    async fn fetch_wasm_bytes(
+        &self,
+        data: &mut client::TargetsForm,
+        conn: &Connection,
+    ) -> crate::Result<()> {
         if data.wasm_bytes.is_some() {
             return Ok(());
         }
@@ -735,8 +737,7 @@ impl UserConnection {
             .supabase_id
             .ok_or_else(|| Error::not_found("json", "supabase_id"))?;
 
-        let path: String = self
-            .conn
+        let path: String = conn
             .do_query_opt(
                 r#"SELECT storage_path FROM nodes
                 WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
@@ -757,27 +758,27 @@ impl UserConnection {
 
     async fn set_start_time(&self, id: &FlowRunId, time: &DateTime<Utc>) -> crate::Result<()> {
         let time = time.naive_utc();
-        self.conn
-            .do_query_one(
-                "UPDATE flow_run SET start_time = $1 WHERE id = $2 RETURNING id",
-                &[&time, id],
-            )
-            .await
-            .map_err(Error::exec("set start time"))?;
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_one(
+            "UPDATE flow_run SET start_time = $1 WHERE id = $2 RETURNING id",
+            &[&time, id],
+        )
+        .await
+        .map_err(Error::exec("set start time"))?;
         Ok(())
     }
 
     async fn push_flow_error(&self, id: &FlowRunId, error: &str) -> crate::Result<()> {
-        self.conn
-            .do_query_one(
-                "UPDATE flow_run
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_one(
+            "UPDATE flow_run
                 SET errors = array_append(errors, $2)
                 WHERE id = $1
                 RETURNING id",
-                &[id, &error],
-            )
-            .await
-            .map_err(Error::exec("push flow errors"))?;
+            &[id, &error],
+        )
+        .await
+        .map_err(Error::exec("push flow errors"))?;
         Ok(())
     }
 
@@ -789,18 +790,18 @@ impl UserConnection {
         output: &Value,
     ) -> crate::Result<()> {
         let time = time.naive_utc();
-        self.conn
-            .do_query_one(
-                "UPDATE flow_run
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_one(
+            "UPDATE flow_run
                 SET end_time = $2,
                     not_run = $3,
                     output = $4
                 WHERE id = $1 AND end_time IS NULL
                 RETURNING id",
-                &[id, &time, &not_run, &Json(output)],
-            )
-            .await
-            .map_err(Error::exec("set run result"))?;
+            &[id, &time, &not_run, &Json(output)],
+        )
+        .await
+        .map_err(Error::exec("set run result"))?;
         Ok(())
     }
 
@@ -813,16 +814,16 @@ impl UserConnection {
         input: &Value,
     ) -> crate::Result<()> {
         let time = time.naive_utc();
-        self.conn
-            .do_query_one(
-                "INSERT INTO node_run
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_one(
+            "INSERT INTO node_run
                 (flow_run_id, node_id, times, user_id, start_time, input)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING flow_run_id",
-                &[id, node_id, times, &self.user_id, &time, &Json(input)],
-            )
-            .await
-            .map_err(Error::exec("new node run"))?;
+            &[id, node_id, times, &self.user_id, &time, &Json(input)],
+        )
+        .await
+        .map_err(Error::exec("new node run"))?;
         Ok(())
     }
 
@@ -847,8 +848,8 @@ impl UserConnection {
                 WHERE flow_run_id = $1 AND node_id = $2 AND times = $3
                 RETURNING flow_run_id"#
         );
-        self.conn
-            .do_query_one(&stmt, &[id, node_id, times, &Json(output)])
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_one(&stmt, &[id, node_id, times, &Json(output)])
             .await
             .map_err(Error::exec("set node finish"))?;
         Ok(())
@@ -861,16 +862,16 @@ impl UserConnection {
         times: &i32,
         error: &str,
     ) -> crate::Result<()> {
-        self.conn
-            .do_query_one(
-                "UPDATE node_run
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_one(
+            "UPDATE node_run
                 SET errors = array_append(errors, $4)
                 WHERE flow_run_id = $1 AND node_id = $2 AND times = $3
                 RETURNING flow_run_id",
-                &[id, node_id, times, &error],
-            )
-            .await
-            .map_err(Error::exec("push node error"))?;
+            &[id, node_id, times, &error],
+        )
+        .await
+        .map_err(Error::exec("push node error"))?;
         Ok(())
     }
 
@@ -882,17 +883,17 @@ impl UserConnection {
         time: &DateTime<Utc>,
     ) -> crate::Result<()> {
         let time = time.naive_utc();
-        self.conn
-            .do_query_one(
-                "UPDATE node_run
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_one(
+            "UPDATE node_run
                 SET end_time = $4
                 WHERE flow_run_id = $1 AND node_id = $2 AND times = $3
                       AND end_time IS NULL
                 RETURNING flow_run_id",
-                &[id, node_id, times, &time],
-            )
-            .await
-            .map_err(Error::exec("set node finish"))?;
+            &[id, node_id, times, &time],
+        )
+        .await
+        .map_err(Error::exec("set node finish"))?;
         Ok(())
     }
 
@@ -906,8 +907,8 @@ impl UserConnection {
         let pubkey = bs58::encode(pubkey).into_string();
         let message = base64::encode(message);
         let signatures = signatures.map(|arr| arr.iter().map(Json).collect::<Vec<_>>());
-        let id = self
-            .conn
+        let conn = self.pool.get_conn().await?;
+        let id = conn
             .do_query_one(
                 "INSERT INTO signature_requests (
                     user_id,
@@ -934,24 +935,24 @@ impl UserConnection {
     ) -> crate::Result<()> {
         let new_msg_base64 = new_message.map(base64::encode);
         let signature = bs58::encode(signature).into_string();
-        self.conn
-            .do_query_one(
-                "UPDATE signature_requests
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_one(
+            "UPDATE signature_requests
                 SET signature = $1,
                     new_msg = $4
                 WHERE user_id = $2 AND id = $3 AND signature IS NULL
                 RETURNING id",
-                &[&signature, &self.user_id, id, &new_msg_base64],
-            )
-            .await
-            .map_err(Error::exec("save_signature"))?;
+            &[&signature, &self.user_id, id, &new_msg_base64],
+        )
+        .await
+        .map_err(Error::exec("save_signature"))?;
 
         Ok(())
     }
 
     async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>> {
-        let opt = self
-            .conn
+        let conn = self.pool.get_conn().await?;
+        let opt = conn
             .do_query_opt(
                 "SELECT value FROM kvstore
                 WHERE user_id = $1 AND store_name = $2 AND key = $3",
@@ -970,11 +971,8 @@ impl UserConnection {
     }
 
     async fn export_user_data(&mut self) -> crate::Result<ExportedUserData> {
-        let tx = self
-            .conn
-            .transaction()
-            .await
-            .map_err(Error::exec("start"))?;
+        let mut conn = self.pool.get_conn().await?;
+        let tx = conn.transaction().await.map_err(Error::exec("start"))?;
 
         let pubkey = tx
             .do_query_one(

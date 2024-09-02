@@ -170,9 +170,12 @@ impl RealDbPool {
     }
 
     pub async fn get_user_conn(&self, user_id: UserId) -> crate::Result<UserConnection> {
-        self.get_conn().await.map(move |conn| {
-            UserConnection::new(conn, self.wasm.clone(), user_id, self.local.clone())
-        })
+        Ok(UserConnection::new(
+            self.clone(),
+            self.wasm.clone(),
+            user_id,
+            self.local.clone(),
+        ))
     }
 
     pub async fn get_admin_conn(&self) -> crate::Result<AdminConn> {

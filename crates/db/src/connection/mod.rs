@@ -1,4 +1,4 @@
-use crate::{Error, LocalStorage, Wallet, WasmStorage};
+use crate::{pool::RealDbPool, Error, LocalStorage, Wallet, WasmStorage};
 use async_trait::async_trait;
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
@@ -29,7 +29,7 @@ pub mod proxied_user_conn;
 pub struct UserConnection {
     pub local: LocalStorage,
     pub wasm_storage: WasmStorage,
-    pub conn: Connection,
+    pub pool: RealDbPool,
     pub user_id: Uuid,
 }
 
