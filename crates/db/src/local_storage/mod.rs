@@ -79,14 +79,6 @@ impl LocalStorage {
             .map_err(Error::local("open Passwords"))
     }
 
-    fn get_password(&self, user_id: &UserId) -> crate::Result<Option<Password>> {
-        Ok(self
-            .password_bucket()?
-            .get(&user_key(user_id))
-            .map_err(Error::local("get Passwords"))?
-            .map(|p| p.0))
-    }
-
     pub fn set_password(&self, user_id: &UserId, password: Password) -> crate::Result<()> {
         self.password_bucket()?
             .set(&user_key(user_id), &kv::Bincode(password))
@@ -94,21 +86,22 @@ impl LocalStorage {
         Ok(())
     }
 
-    fn set_text_password(&self, user_id: &UserId, pw: String) -> crate::Result<Password> {
-        let password = Password {
-            encrypted_password: bcrypt::hash(&pw, 10).map_err(|_| Error::Bcrypt)?,
-            password: pw,
-        };
-        self.set_password(user_id, password.clone())?;
-        Ok(password)
-    }
-
     pub fn get_or_generate_password(&self, user_id: &UserId) -> crate::Result<Password> {
-        if let Some(p) = self.get_password(user_id)? {
-            Ok(p)
-        } else {
-            self.set_text_password(user_id, rand_password())
-        }
+        self.password_bucket()?
+            .transaction::<_, kv::Error, _>(|tx| {
+                if let Some(p) = tx.get(&user_key(user_id))? {
+                    Ok(p.0)
+                } else {
+                    let password = rand_password();
+                    let password = Password {
+                        encrypted_password: bcrypt::hash(&password, 10).unwrap(),
+                        password,
+                    };
+                    tx.set(&user_key(user_id), &kv::Bincode(password.clone()))?;
+                    Ok(password)
+                }
+            })
+            .map_err(Error::local("get or generate password"))
     }
 }
 
