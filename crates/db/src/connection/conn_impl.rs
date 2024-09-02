@@ -88,14 +88,18 @@ impl UserConnectionTrait for UserConnection {
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
         if let Some(cached) = self
             .local
-            .get_cache::<FlowInfoCache>(&self.user_id, &flow_id)?
+            .get_cache::<FlowInfoCache>(&self.user_id, &flow_id)
         {
             return Ok(cached);
         }
         let result = self.get_flow_info(flow_id).await;
         if let Ok(result) = &result {
-            self.local
-                .set_cache::<FlowInfoCache>(&flow_id, result.clone())?;
+            if let Err(error) = self
+                .local
+                .set_cache::<FlowInfoCache>(&flow_id, result.clone())
+            {
+                tracing::error!("set_cache error: {}", error);
+            }
         }
         result
     }
@@ -103,14 +107,18 @@ impl UserConnectionTrait for UserConnection {
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
         if let Some(cached) = self
             .local
-            .get_cache::<WalletCache>(&self.user_id, &self.user_id)?
+            .get_cache::<WalletCache>(&self.user_id, &self.user_id)
         {
             return Ok(cached);
         }
         let result = self.get_wallets().await;
         if let Ok(result) = &result {
-            self.local
-                .set_cache::<WalletCache>(&self.user_id, result.clone())?;
+            if let Err(error) = self
+                .local
+                .set_cache::<WalletCache>(&self.user_id, result.clone())
+            {
+                tracing::error!("set_cache error: {}", error);
+            }
         }
         result
     }
@@ -135,16 +143,14 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_flow_config(&self, id: FlowId) -> crate::Result<client::ClientConfig> {
-        if let Some(cached) = self
-            .local
-            .get_cache::<FlowConfigCache>(&self.user_id, &id)?
-        {
+        if let Some(cached) = self.local.get_cache::<FlowConfigCache>(&self.user_id, &id) {
             return Ok(cached);
         }
         let result = self.get_flow_config(id).await;
         if let Ok(result) = &result {
-            self.local
-                .set_cache::<FlowConfigCache>(&id, result.clone())?;
+            if let Err(error) = self.local.set_cache::<FlowConfigCache>(&id, result.clone()) {
+                tracing::error!("set_cache error: {}", error);
+            }
         }
         result
     }

@@ -72,15 +72,19 @@ impl LocalStorage {
         Ok(())
     }
 
-    pub fn get_cache<C>(&self, user_id: &UserId, key: &C::Key) -> crate::Result<Option<C::Object>>
+    pub fn get_cache<C>(&self, user_id: &UserId, key: &C::Key) -> Option<C::Object>
     where
         C: CacheBucket,
     {
         let bucket = C::name();
         tracing::trace!("get_cache {}", bucket);
-        self.db
+        let result = self
+            .db
             .bucket::<_, kv::Json<CacheValue<C::Object>>>(Some(bucket))
-            .map_err(Error::local("open cache bucket"))?
+            .inspect_err(|error| {
+                tracing::error!("get_cache error: {}", error);
+            })
+            .ok()?
             .transaction::<_, kv::Error, _>(|tx| {
                 let now = Utc::now().timestamp();
                 let key = C::encode_key(key);
@@ -97,8 +101,14 @@ impl LocalStorage {
                 } else {
                     Ok(None)
                 }
-            })
-            .map_err(Error::local(bucket))
+            });
+        match result {
+            Ok(result) => result,
+            Err(error) => {
+                tracing::error!("get_cache error: {}", error);
+                None
+            }
+        }
     }
 
     fn jwt_bucket(&self) -> crate::Result<Bucket<'_, &[u8], kv::Json<Jwt>>> {
