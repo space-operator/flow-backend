@@ -71,6 +71,12 @@ async fn main() {
 
     let mut actors = AddressBook::new();
 
+    let pool_size = if let Either::Left(cfg) = &config.db {
+        cfg.max_pool_size
+    } else {
+        None
+    };
+
     let db = match match &config.db {
         Either::Left(cfg) => RealDbPool::new(cfg, wasm_storage.clone(), local)
             .await
@@ -151,7 +157,7 @@ async fn main() {
         std::env::set_var("HELIUS_API_KEY", key);
     }
 
-    HttpServer::new(move || {
+    let mut server = HttpServer::new(move || {
         let auth = supabase_auth.as_ref().map(|supabase_auth| {
             web::scope("/auth")
                 .app_data(web::Data::new(sig_auth))
@@ -240,11 +246,11 @@ async fn main() {
             .service(kvstore)
             .service(healthcheck)
     })
-    .bind((host, port))
-    .unwrap()
-    .run()
-    .await
-    .unwrap();
+    .shutdown_timeout(shutdown_timeout_secs as u64);
+    if let Some(pool_size) = pool_size {
+        server = server.workers((pool_size / 2).min(4));
+    }
+    server.bind((host, port)).unwrap().run().await.unwrap();
 
     root.send(SystemShutdown {
         timeout: Duration::from_secs(shutdown_timeout_secs as u64),
