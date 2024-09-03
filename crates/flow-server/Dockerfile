@@ -22,7 +22,7 @@ COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
 RUN cargo build --release --bin flow-server --quiet
 
-FROM denoland/deno as deno
+FROM denoland/deno:debian as deno
 
 # Step 4:
 # Create a tiny output image.
