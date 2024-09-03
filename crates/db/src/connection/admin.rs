@@ -1,11 +1,11 @@
-use crate::{Error, FlowRunLogsRow, LocalStorage};
+use crate::{local_storage::CacheBucket, pool::RealDbPool, Error, FlowRunLogsRow, LocalStorage};
 use anyhow::anyhow;
 use bytes::Bytes;
 use chrono::Utc;
-use deadpool_postgres::{Object as Connection, Transaction};
+use deadpool_postgres::Transaction;
 use flow_lib::{FlowRunId, UserId};
 use futures_util::SinkExt;
-use std::borrow::Borrow;
+use std::{borrow::Borrow, time::Duration};
 use tokio_postgres::{
     binary_copy::BinaryCopyInWriter,
     types::{Json, Type},
@@ -15,7 +15,7 @@ use value::Value;
 use super::{csv_export, DbClient, ExportedUserData};
 
 pub struct AdminConn {
-    pub(crate) conn: Connection,
+    pub(crate) pool: RealDbPool,
     pub(crate) local: LocalStorage,
 }
 
@@ -31,28 +31,61 @@ pub struct FlowRunInfo {
     pub shared_with: Vec<UserId>,
 }
 
+struct UserIdCache;
+
+impl CacheBucket for UserIdCache {
+    type Key = str;
+    type EncodedKey = kv::Raw;
+    type Object = UserId;
+    fn name() -> &'static str {
+        "UserIdCache"
+    }
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+        key.into()
+    }
+    fn cache_time() -> std::time::Duration {
+        Duration::from_secs(120)
+    }
+    fn can_read(_obj: &Self::Object, _user_id: &UserId) -> bool {
+        true
+    }
+}
+
 impl AdminConn {
-    pub fn new(conn: Connection, local: LocalStorage) -> AdminConn {
-        Self { conn, local }
+    pub fn new(pool: RealDbPool, local: LocalStorage) -> AdminConn {
+        Self { pool, local }
     }
 
     pub async fn get_user_id_by_pubkey(&self, pk_bs58: &str) -> crate::Result<Option<UserId>> {
-        self.conn
-            .do_query_opt(
-                "SELECT user_id FROM users_public WHERE pub_key = $1",
-                &[&pk_bs58],
-            )
-            .await
-            .map_err(Error::exec("query users_public"))?
-            .map(|row| row.try_get(0))
-            .transpose()
-            .map_err(Error::data("users_public.user_id"))
+        if let Some(cached) = self.local.get_cache::<UserIdCache>(&UserId::nil(), pk_bs58) {
+            return Ok(Some(cached));
+        }
+        let result = self.get_user_id_by_pubkey_impl(pk_bs58).await;
+        if let Ok(Some(id)) = &result {
+            if let Err(error) = self.local.set_cache::<UserIdCache>(pk_bs58, *id) {
+                tracing::error!("set_cache error: {}", error);
+            }
+        }
+        result
+    }
+
+    async fn get_user_id_by_pubkey_impl(&self, pk_bs58: &str) -> crate::Result<Option<UserId>> {
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_opt(
+            "SELECT user_id FROM users_public WHERE pub_key = $1",
+            &[&pk_bs58],
+        )
+        .await
+        .map_err(Error::exec("query users_public"))?
+        .map(|row| row.try_get(0))
+        .transpose()
+        .map_err(Error::data("users_public.user_id"))
     }
 
     pub async fn get_login_credential(&self, user_id: UserId) -> crate::Result<LoginCredential> {
         let pw = self.local.get_or_generate_password(&user_id)?;
-        let email = self
-            .conn
+        let conn = self.pool.get_conn().await?;
+        let email = conn
             .do_query_one(
                 "UPDATE auth.users SET encrypted_password = $1 WHERE id = $2 RETURNING email",
                 &[&pw.encrypted_password, &user_id],
@@ -68,16 +101,15 @@ impl AdminConn {
     }
 
     pub async fn get_flow_run_info(&self, run_id: FlowRunId) -> crate::Result<FlowRunInfo> {
-        let user_id: UserId = self
-            .conn
+        let conn = self.pool.get_conn().await?;
+        let user_id: UserId = conn
             .do_query_one("SELECT user_id FROM flow_run WHERE id = $1", &[&run_id])
             .await
             .map_err(Error::exec("query flow_run table"))?
             .try_get(0)
             .map_err(Error::data("flow_run.user_id"))?;
 
-        let shared_with = self
-            .conn
+        let shared_with = conn
             .do_query(
                 "SELECT user_id FROM flow_run_shared WHERE flow_run_id = $1",
                 &[&run_id],
@@ -95,8 +127,8 @@ impl AdminConn {
     }
 
     pub async fn get_flow_run_output(&self, run_id: FlowRunId) -> crate::Result<Value> {
-        let output = self
-            .conn
+        let conn = self.pool.get_conn().await?;
+        let output = conn
             .do_query_one("SELECT output FROM flow_run WHERE id = $1", &[&run_id])
             .await
             .map_err(Error::exec("query flow_run"))?
@@ -110,25 +142,25 @@ impl AdminConn {
         let info = format!("inserted at {}", Utc::now());
         let stmt = "INSERT INTO pubkey_whitelists (pubkey, info) VALUES ($1, $2)
                     ON CONFLICT (pubkey) DO NOTHING";
-        self.conn
-            .do_execute(stmt, &[&pk_bs58, &info])
+        let conn = self.pool.get_conn().await?;
+        conn.do_execute(stmt, &[&pk_bs58, &info])
             .await
             .map_err(Error::exec("insert_whitelist"))?;
         Ok(())
     }
 
     pub async fn get_natives_commands(self) -> crate::Result<Vec<String>> {
-        self.conn
-            .query(
-                r#"SELECT data->>'node_id' FROM nodes WHERE type = 'native' AND "isPublic""#,
-                &[],
-            )
-            .await
-            .map_err(Error::exec("get_natives_commands"))?
-            .into_iter()
-            .map(|r| r.try_get::<_, String>(0))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(Error::data("nodes.data->>'node_id'"))
+        let conn = self.pool.get_conn().await?;
+        conn.query(
+            r#"SELECT data->>'node_id' FROM nodes WHERE type = 'native' AND "isPublic""#,
+            &[],
+        )
+        .await
+        .map_err(Error::exec("get_natives_commands"))?
+        .into_iter()
+        .map(|r| r.try_get::<_, String>(0))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(Error::data("nodes.data->>'node_id'"))
     }
 
     pub async fn copy_in_flow_run_logs<I>(&self, rows: I) -> crate::Result<u64>
@@ -136,8 +168,8 @@ impl AdminConn {
         I: IntoIterator,
         I::Item: Borrow<FlowRunLogsRow>,
     {
-        let stmt = self
-            .conn
+        let conn = self.pool.get_conn().await?;
+        let stmt = conn
             .prepare_cached(
                 "COPY flow_run_logs (
                     user_id,
@@ -153,8 +185,7 @@ impl AdminConn {
             )
             .await
             .map_err(Error::exec("prepare copy_in_flow_run_logs"))?;
-        let sink = self
-            .conn
+        let sink = conn
             .copy_in::<_, Bytes>(&stmt)
             .await
             .map_err(Error::exec("start copy_in_flow_run_logs"))?;
@@ -209,8 +240,8 @@ impl AdminConn {
     }
 
     pub async fn create_store(&mut self, user_id: &UserId, store_name: &str) -> crate::Result<()> {
-        let tx = self
-            .conn
+        let mut conn = self.pool.get_conn().await?;
+        let tx = conn
             .transaction()
             .await
             .map_err(Error::exec("begin create_store"))?;
@@ -245,8 +276,8 @@ impl AdminConn {
         user_id: &UserId,
         store_name: &str,
     ) -> crate::Result<bool> {
-        let tx = self
-            .conn
+        let mut conn = self.pool.get_conn().await?;
+        let tx = conn
             .transaction()
             .await
             .map_err(Error::exec("begin delete_store"))?;
@@ -289,8 +320,8 @@ impl AdminConn {
         value: &Value,
     ) -> crate::Result<Option<Value>> {
         let json = serde_json::value::to_raw_value(value).map_err(Error::json("json serialize"))?;
-        let tx = self
-            .conn
+        let mut conn = self.pool.get_conn().await?;
+        let tx = conn
             .transaction()
             .await
             .map_err(Error::exec("insert_item start"))?;
@@ -359,8 +390,8 @@ impl AdminConn {
         store_name: &str,
         key: &str,
     ) -> crate::Result<Value> {
-        let tx = self
-            .conn
+        let mut conn = self.pool.get_conn().await?;
+        let tx = conn
             .transaction()
             .await
             .map_err(Error::exec("remove_item start"))?;
@@ -408,11 +439,8 @@ impl AdminConn {
     }
 
     pub async fn import_data(&mut self, data: ExportedUserData) -> crate::Result<()> {
-        let tx = self
-            .conn
-            .transaction()
-            .await
-            .map_err(Error::exec("start"))?;
+        let mut conn = self.pool.get_conn().await?;
+        let tx = conn.transaction().await.map_err(Error::exec("start"))?;
 
         tx.execute("SELECT auth.disable_users_triggers()", &[])
             .await

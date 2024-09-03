@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{path::Path, time::Duration};
 
 pub trait CacheBucket {
-    type Key;
+    type Key: ?Sized;
     type EncodedKey: for<'a> kv::Key<'a>;
 
     type Object: Serialize + DeserializeOwned;
