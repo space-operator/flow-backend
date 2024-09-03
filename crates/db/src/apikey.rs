@@ -207,21 +207,17 @@ impl AdminConn {
     pub async fn get_user_from_apikey(self, key: &str) -> crate::Result<User> {
         let key_hash =
             base64::encode_config(blake3::hash(key.as_bytes()).as_bytes(), base64::URL_SAFE);
-        let stmt = self
-            .conn
-            .prepare_cached(
+        let conn = self.pool.get_conn().await?;
+        let row = conn
+            .do_query_one(
                 "SELECT
                     users_public.user_id,
                     users_public.pub_key
                 FROM apikeys LEFT JOIN users_public
                 ON apikeys.user_id = users_public.user_id
                 WHERE apikeys.key_hash = $1",
+                &[&key_hash],
             )
-            .await
-            .map_err(Error::exec("prepare"))?;
-        let row = self
-            .conn
-            .query_one(&stmt, &[&key_hash])
             .await
             .map_err(Error::exec("get_apikey"))?;
         let user_id: UserId = row.try_get(0).map_err(Error::data("user_id"))?;
@@ -241,14 +237,12 @@ impl AdminConn {
     pub async fn get_user_id_from_apikey(self, key: &str) -> crate::Result<UserId> {
         let key_hash =
             base64::encode_config(blake3::hash(key.as_bytes()).as_bytes(), base64::URL_SAFE);
-        let stmt = self
-            .conn
-            .prepare_cached("SELECT user_id FROM apikeys WHERE key_hash = $1")
-            .await
-            .map_err(Error::exec("prepare"))?;
-        let row = self
-            .conn
-            .query_one(&stmt, &[&key_hash])
+        let conn = self.pool.get_conn().await?;
+        let row = conn
+            .do_query_one(
+                "SELECT user_id FROM apikeys WHERE key_hash = $1",
+                &[&key_hash],
+            )
             .await
             .map_err(Error::exec("get_apikey"))?;
         let user_id = row.try_get(0).map_err(Error::data("user_id"))?;
