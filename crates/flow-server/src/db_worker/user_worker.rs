@@ -90,7 +90,7 @@ impl Actor for UserWorker {
     type Context = actix::Context<Self>;
 
     fn started(&mut self, _: &mut Self::Context) {
-        tracing::info!("started UserWorker {}", self.user_id);
+        tracing::debug!("started UserWorker {}", self.user_id);
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> actix::Running {
@@ -103,7 +103,7 @@ impl Actor for UserWorker {
     }
 
     fn stopped(&mut self, _: &mut Self::Context) {
-        tracing::info!("stopped UserWorker {}", self.user_id);
+        tracing::debug!("stopped UserWorker {}", self.user_id);
     }
 }
 

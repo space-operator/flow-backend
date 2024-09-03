@@ -99,7 +99,7 @@ impl Actor for DBWorker {
     }
 
     fn stopped(&mut self, _: &mut Self::Context) {
-        tracing::warn!("stopped DBWorker");
+        tracing::info!("stopped DBWorker");
     }
 }
 
