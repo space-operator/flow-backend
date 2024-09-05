@@ -3,6 +3,7 @@ use flow_lib::solana::Keypair;
 use serde::{Deserialize, Serialize};
 use serde_with::{base64::Base64, serde_as};
 use std::fmt::Display;
+use zeroize::Zeroize;
 
 #[serde_as]
 #[derive(Deserialize)]
@@ -33,10 +34,7 @@ impl EncryptionKey {
         encrypted: &Encrypted,
     ) -> Result<Vec<u8>, chacha20poly1305::Error> {
         let cipher = ChaCha20Poly1305::new_from_slice(&self.0).expect("we use correct length");
-        cipher.decrypt(
-            chacha20poly1305::Nonce::from_slice(&encrypted.nonce),
-            encrypted.ciphertext.as_ref(),
-        )
+        cipher.decrypt((&encrypted.nonce).into(), encrypted.ciphertext.as_ref())
     }
 
     pub(crate) fn encrypt_keypair(&self, keypair: &Keypair) -> Encrypted {
@@ -47,8 +45,15 @@ impl EncryptionKey {
         &self,
         encrypted: &Encrypted,
     ) -> Result<Keypair, chacha20poly1305::Error> {
-        let secret = self.decrypt(encrypted)?;
-        Keypair::from_bytes(&secret).map_err(|_| chacha20poly1305::Error)
+        let mut secret = self.decrypt(encrypted)?;
+        let signing_key = ed25519_dalek::SigningKey::from_bytes(
+            &secret
+                .as_slice()
+                .try_into()
+                .map_err(|_| chacha20poly1305::Error)?,
+        );
+        secret.zeroize();
+        Keypair::from_bytes(&signing_key.to_keypair_bytes()).map_err(|_| chacha20poly1305::Error)
     }
 }
 
@@ -99,4 +104,20 @@ impl Default for DbConfig {
 pub struct ProxiedDbConfig {
     pub upstream_url: String,
     pub api_keys: Vec<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encryption() {
+        let mut rng = rand::thread_rng();
+        let key = EncryptionKey(ChaCha20Poly1305::generate_key(&mut rng).into());
+        let keypair =
+            Keypair::from_bytes(&ed25519_dalek::SigningKey::generate(&mut rng).to_keypair_bytes())
+                .unwrap();
+        let decrypted = key.decrypt_keypair(&key.encrypt_keypair(&keypair)).unwrap();
+        assert_eq!(keypair, decrypted);
+    }
 }
