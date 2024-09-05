@@ -13,8 +13,10 @@ pub(crate) struct EncryptionKey(#[serde_as(as = "Base64")] [u8; 32]);
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Encrypted {
     #[serde_as(as = "Base64")]
+    #[serde(rename = "n")]
     pub nonce: [u8; 12],
     #[serde_as(as = "Base64")]
+    #[serde(rename = "c")]
     pub ciphertext: Vec<u8>,
 }
 
