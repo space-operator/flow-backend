@@ -248,7 +248,7 @@ async fn main() {
     })
     .shutdown_timeout(shutdown_timeout_secs as u64);
     if let Some(pool_size) = pool_size {
-        server = server.workers((pool_size / 2).min(4));
+        server = server.workers((pool_size / 2).max(4));
     }
     server.bind((host, port)).unwrap().run().await.unwrap();
 
