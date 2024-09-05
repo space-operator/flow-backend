@@ -16,7 +16,7 @@ use flow_server::{
     ws, Config,
 };
 use futures_util::{future::ok, TryFutureExt};
-use std::{borrow::Cow, collections::BTreeSet, convert::Infallible, time::Duration};
+use std::{borrow::Cow, collections::BTreeSet, convert::Infallible, sync::Arc, time::Duration};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Layer};
 use utils::address_book::AddressBook;
 
@@ -130,9 +130,8 @@ async fn main() {
         }
     }
 
-    let db_worker = DBWorker::create(|ctx| {
-        DBWorker::new(db.clone(), config.clone(), actors, tracing_data, ctx)
-    });
+    let db_worker =
+        DBWorker::create(|ctx| DBWorker::new(db.clone(), &config, actors, tracing_data, ctx));
 
     let sig_auth = config.signature_auth();
     let supabase_auth = match SupabaseAuth::new(&config.supabase, db.clone()) {
@@ -157,6 +156,7 @@ async fn main() {
         std::env::set_var("HELIUS_API_KEY", key);
     }
 
+    let config = Arc::new(config);
     let mut server = HttpServer::new(move || {
         let auth = supabase_auth.as_ref().map(|supabase_auth| {
             web::scope("/auth")

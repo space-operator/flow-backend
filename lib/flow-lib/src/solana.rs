@@ -22,7 +22,7 @@ use solana_sdk::{
     message::Message,
     sanitize::Sanitize,
     signature::Presigner,
-    signer::{keypair::Keypair, Signer},
+    signer::Signer,
     transaction::Transaction,
 };
 use spo_helius::{
@@ -44,6 +44,7 @@ pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
 pub use solana_sdk::pubkey::Pubkey;
 pub use solana_sdk::signature::Signature;
+pub use solana_sdk::signer::keypair::Keypair;
 
 pub mod utils;
 pub use utils::*;

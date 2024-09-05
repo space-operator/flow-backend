@@ -60,7 +60,7 @@ pub struct DBWorker {
 impl DBWorker {
     pub fn new(
         db: DbPool,
-        config: Config,
+        config: &Config,
         actors: AddressBook,
         tracing_data: flow_logs::Map,
         ctx: &mut actix::Context<Self>,
