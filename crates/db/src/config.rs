@@ -6,11 +6,17 @@ use std::fmt::Display;
 use zeroize::Zeroize;
 
 #[serde_as]
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub(crate) struct EncryptionKey(#[serde_as(as = "Base64")] [u8; 32]);
 
+impl Drop for EncryptionKey {
+    fn drop(&mut self) {
+        self.0.zeroize();
+    }
+}
+
 #[serde_as]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Encrypted {
     #[serde_as(as = "Base64")]
     #[serde(rename = "n")]

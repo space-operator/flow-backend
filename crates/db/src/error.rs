@@ -4,6 +4,8 @@ use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
 pub enum Error<E = anyhow::Error> {
+    #[error("no encryption key")]
+    NoEncryptionKey,
     #[error("not supported")]
     NotSupported,
     #[error("time-out")]
@@ -80,6 +82,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 impl<E: Into<anyhow::Error>> Error<E> {
     pub fn erase_type(self) -> Error {
         match self {
+            Error::NoEncryptionKey => Error::NoEncryptionKey,
             Error::Timeout => Error::Timeout,
             Error::NotSupported => Error::NotSupported,
             Error::LogicError(e) => Error::LogicError(anyhow::anyhow!(e)),

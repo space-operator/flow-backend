@@ -3,9 +3,13 @@ use anyhow::anyhow;
 use bytes::Bytes;
 use chrono::Utc;
 use deadpool_postgres::Transaction;
-use flow_lib::{FlowRunId, UserId};
+use flow_lib::{
+    solana::{Keypair, KeypairExt},
+    FlowRunId, UserId,
+};
 use futures_util::SinkExt;
 use std::{borrow::Borrow, time::Duration};
+use tokio::task::spawn_blocking;
 use tokio_postgres::{
     binary_copy::BinaryCopyInWriter,
     types::{Json, Type},
@@ -43,7 +47,7 @@ impl CacheBucket for UserIdCache {
     fn encode_key(key: &Self::Key) -> Self::EncodedKey {
         key.into()
     }
-    fn cache_time() -> std::time::Duration {
+    fn cache_time() -> Duration {
         Duration::from_secs(120)
     }
     fn can_read(_obj: &Self::Object, _user_id: &UserId) -> bool {
@@ -54,6 +58,50 @@ impl CacheBucket for UserIdCache {
 impl AdminConn {
     pub fn new(pool: RealDbPool, local: LocalStorage) -> AdminConn {
         Self { pool, local }
+    }
+
+    pub async fn encrypt_all_wallets(&self) -> crate::Result<()> {
+        let mut conn = self.pool.get_conn().await?;
+        let tx = conn.transaction().await.map_err(Error::exec("begin"))?;
+        let wallets = tx.do_query(
+            "SELECT id, encrypted_keypair FROM wallets WHERE encrypted_keypair['raw'] IS NOT NULL",
+            &[],
+        )
+        .await
+        .map_err(Error::exec("select wallets"))?.into_iter().map(|row| {
+            let id: i64 = row.try_get(0).map_err(Error::data("wallets.id"))?;
+            let keypair: &str = row.try_get(1).map_err(Error::data("wallets.keypair"))?;
+            let keypair = Keypair::from_str(keypair).map_err(Error::LogicError)?;
+            Ok::<_, crate::Error>((id, keypair))
+        }).collect::<Result<Vec<_>, _>>()?;
+        if wallets.is_empty() {
+            return Ok(());
+        }
+        tracing::info!("encrypting {} wallets", wallets.len());
+        let ids = wallets.iter().map(|(id, _)| *id).collect::<Vec<_>>();
+        let encrypted = spawn_blocking({
+            let key = self.pool.encryption_key()?.clone();
+            move || {
+                wallets
+                    .iter()
+                    .map(|(_, keypair)| Ok::<_, crate::Error>(Json(key.encrypt_keypair(keypair))))
+                    .collect::<Result<Vec<_>, _>>()
+            }
+        })
+        .await
+        .map_err(|_| Error::LogicError(anyhow!("thread failed")))??;
+
+        tx.do_execute(
+            "UPDATE wallets
+            SET encrypted_keypair = args.encrypted_keypair
+            FROM (SELECT unnest($1) AS id, unnest($2) AS encrypted_keypair) AS args
+            WHERE wallets.id = args.id",
+            &[&ids, &encrypted],
+        )
+        .await
+        .map_err(Error::exec("update wallets"))?;
+        tx.commit().await.map_err(Error::exec("commit"))?;
+        Ok(())
     }
 
     pub async fn get_user_id_by_pubkey(&self, pk_bs58: &str) -> crate::Result<Option<UserId>> {

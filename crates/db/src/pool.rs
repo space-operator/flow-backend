@@ -1,5 +1,5 @@
 use crate::{
-    config::{DbConfig, ProxiedDbConfig},
+    config::{DbConfig, EncryptionKey, ProxiedDbConfig},
     connection::{
         proxied_user_conn::{self, ProxiedUserConn},
         AdminConn, UserConnection, UserConnectionTrait,
@@ -41,6 +41,7 @@ impl DbPool {
 
 #[derive(Clone)]
 pub struct RealDbPool {
+    encryption_key: Option<EncryptionKey>,
     pg: Pool,
     wasm: WasmStorage,
     local: LocalStorage,
@@ -103,6 +104,7 @@ impl RealDbPool {
             ..Config::default()
         };
         tracing::info!("SSL enabled: {}", cfg.ssl.enabled);
+        let encryption_key = cfg.encryption_key.clone();
 
         let builder = if cfg.ssl.enabled {
             let mut roots = rustls::RootCertStore::empty();
@@ -157,7 +159,18 @@ impl RealDbPool {
             });
         };
 
-        Ok(Self { pg, wasm, local })
+        Ok(Self {
+            pg,
+            wasm,
+            local,
+            encryption_key,
+        })
+    }
+
+    pub fn encryption_key(&self) -> crate::Result<&EncryptionKey> {
+        self.encryption_key
+            .as_ref()
+            .ok_or(crate::Error::NoEncryptionKey)
     }
 
     pub async fn get_conn(&self) -> crate::Result<Connection> {

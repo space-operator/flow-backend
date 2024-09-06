@@ -61,6 +61,7 @@ pub struct NameConflict;
 fn convert_error(error: Error) -> Error<NameConflict> {
     match error {
         Error::Timeout => Error::Timeout,
+        Error::NoEncryptionKey => Error::NoEncryptionKey,
         Error::NotSupported => Error::NotSupported,
         Error::LogicError(_) => unreachable!("get_conn should not return this variant"),
         Error::CreatePool(e) => Error::CreatePool(e),

@@ -137,13 +137,23 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Erro
     Ok(r)
 }
 
-pub trait KeypairExt {
+pub trait KeypairExt: Sized {
+    fn from_str(s: &str) -> Result<Self, anyhow::Error>;
     fn new_adapter_wallet(pk: Pubkey) -> Self;
     fn clone_keypair(&self) -> Self;
     fn is_adapter_wallet(&self) -> bool;
 }
 
 impl KeypairExt for Keypair {
+    fn from_str(s: &str) -> Result<Self, anyhow::Error> {
+        let mut buf = [0u8; 64];
+        anyhow::ensure!(
+            bs58::decode(s).into(&mut buf)? == buf.len(),
+            "invalid length"
+        );
+        ed25519_dalek::SigningKey::from_keypair_bytes(&buf)?;
+        Ok(Keypair::from_bytes(&buf).unwrap())
+    }
     fn new_adapter_wallet(pubkey: Pubkey) -> Self {
         let mut buf = [0u8; 64];
         buf[32..].copy_from_slice(&pubkey.to_bytes());

@@ -3154,6 +3154,7 @@ dependencies = [
  "bs58 0.4.0",
  "bytes",
  "chrono",
+ "ed25519-dalek 2.1.1",
  "flow-value",
  "futures",
  "inventory",
