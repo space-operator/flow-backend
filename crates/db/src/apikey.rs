@@ -60,6 +60,8 @@ pub struct NameConflict;
 
 fn convert_error(error: Error) -> Error<NameConflict> {
     match error {
+        Error::SpawnError(e) => Error::SpawnError(e),
+        Error::EncryptionError => Error::EncryptionError,
         Error::Timeout => Error::Timeout,
         Error::NoEncryptionKey => Error::NoEncryptionKey,
         Error::NotSupported => Error::NotSupported,

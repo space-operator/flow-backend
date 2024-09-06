@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use config::Encrypted;
 use flow_lib::{FlowRunId, NodeId, UserId};
 use serde::{Deserialize, Serialize};
 
@@ -56,4 +57,12 @@ pub struct Wallet {
         // skip_serializing_if = "Option::is_none"
     )]
     pub keypair: Option<[u8; 64]>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct EncryptedWallet {
+    pub id: i64,
+    #[serde(with = "utils::serde_bs58")]
+    pub pubkey: [u8; 32],
+    pub encrypted_keypair: Option<Encrypted>,
 }

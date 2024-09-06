@@ -4,6 +4,10 @@ use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
 pub enum Error<E = anyhow::Error> {
+    #[error("spawn error: {}", .0)]
+    SpawnError(tokio::task::JoinError),
+    #[error("encryption error")]
+    EncryptionError,
     #[error("no encryption key")]
     NoEncryptionKey,
     #[error("not supported")]
@@ -79,9 +83,23 @@ pub enum Error<E = anyhow::Error> {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+impl<E> From<tokio::task::JoinError> for Error<E> {
+    fn from(error: tokio::task::JoinError) -> Self {
+        Self::SpawnError(error)
+    }
+}
+
+impl<E> From<chacha20poly1305::Error> for Error<E> {
+    fn from(_: chacha20poly1305::Error) -> Self {
+        Self::EncryptionError
+    }
+}
+
 impl<E: Into<anyhow::Error>> Error<E> {
     pub fn erase_type(self) -> Error {
         match self {
+            Error::SpawnError(e) => Error::SpawnError(e),
+            Error::EncryptionError => Error::EncryptionError,
             Error::NoEncryptionKey => Error::NoEncryptionKey,
             Error::Timeout => Error::Timeout,
             Error::NotSupported => Error::NotSupported,

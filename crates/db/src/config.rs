@@ -16,7 +16,7 @@ impl Drop for EncryptionKey {
 }
 
 #[serde_as]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct Encrypted {
     #[serde_as(as = "Base64")]
     #[serde(rename = "n")]

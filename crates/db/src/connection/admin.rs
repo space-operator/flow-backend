@@ -89,8 +89,7 @@ impl AdminConn {
                     .collect::<Result<Vec<_>, _>>()
             }
         })
-        .await
-        .map_err(|_| Error::LogicError(anyhow!("thread failed")))??;
+        .await??;
 
         tx.do_execute(
             "UPDATE wallets

@@ -1,8 +1,9 @@
-use crate::local_storage::CacheBucket;
+use crate::{config::Encrypted, local_storage::CacheBucket, EncryptedWallet};
 use bytes::{Bytes, BytesMut};
 use deadpool_postgres::Transaction;
 use flow_lib::config::client::NodeDataSkipWasm;
 use futures_util::StreamExt;
+use tokio::task::spawn_blocking;
 use utils::bs58_decode;
 
 use super::*;
@@ -31,15 +32,15 @@ impl CacheBucket for FlowInfoCache {
     }
 }
 
-struct WalletCache;
+struct EncryptedWalletCache;
 
-impl CacheBucket for WalletCache {
+impl CacheBucket for EncryptedWalletCache {
     type Key = UserId;
     type EncodedKey = kv::Raw;
-    type Object = Vec<Wallet>;
+    type Object = Vec<EncryptedWallet>;
 
     fn name() -> &'static str {
-        "WalletCache"
+        "EncryptedWalletCache"
     }
 
     fn can_read(_: &Self::Object, _: &UserId) -> bool {
@@ -105,22 +106,28 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
-        if let Some(cached) = self
-            .local
-            .get_cache::<WalletCache>(&self.user_id, &self.user_id)
-        {
-            return Ok(cached);
-        }
-        let result = self.get_wallets().await;
-        if let Ok(result) = &result {
-            if let Err(error) = self
-                .local
-                .set_cache::<WalletCache>(&self.user_id, result.clone())
-            {
-                tracing::error!("set_cache error: {}", error);
+        let key = self.pool.encryption_key()?;
+        let encrypted = self.get_encrypted_wallets().await?;
+        Ok(spawn_blocking({
+            let key = key.clone();
+            move || {
+                encrypted
+                    .into_iter()
+                    .map(|e| {
+                        Ok(Wallet {
+                            id: e.id,
+                            pubkey: e.pubkey,
+                            keypair: e
+                                .encrypted_keypair
+                                .map(|e| key.decrypt_keypair(&e))
+                                .transpose()?
+                                .map(|k| k.to_bytes()),
+                        })
+                    })
+                    .collect::<crate::Result<Vec<_>>>()
             }
-        }
-        result
+        })
+        .await??)
     }
 
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>> {
@@ -258,6 +265,25 @@ impl UserConnection {
         }
     }
 
+    async fn get_encrypted_wallets(&self) -> crate::Result<Vec<EncryptedWallet>> {
+        if let Some(cached) = self
+            .local
+            .get_cache::<EncryptedWalletCache>(&self.user_id, &self.user_id)
+        {
+            return Ok(cached);
+        }
+        let result = self.get_encrypted_wallets_query().await;
+        if let Ok(result) = &result {
+            if let Err(error) = self
+                .local
+                .set_cache::<EncryptedWalletCache>(&self.user_id, result.clone())
+            {
+                tracing::error!("set_cache error: {}", error);
+            }
+        }
+        result
+    }
+
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
         // Same user, not doing anything
         if user == self.user_id {
@@ -297,10 +323,10 @@ impl UserConnection {
         .try_into()
     }
 
-    async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
+    async fn get_encrypted_wallets_query(&self) -> crate::Result<Vec<EncryptedWallet>> {
         let conn = self.pool.get_conn().await?;
         conn.do_query(
-            "SELECT public_key, keypair, id FROM wallets WHERE user_id = $1",
+            "SELECT public_key, encrypted_keypair, id FROM wallets WHERE user_id = $1",
             &[&self.user_id],
         )
         .await
@@ -312,20 +338,17 @@ impl UserConnection {
                 .map_err(Error::data("wallets.public_key"))?;
             let pubkey = bs58_decode(&pubkey_str).map_err(Error::parsing("wallets.public_key"))?;
 
-            let keypair_str = r
-                .try_get::<_, Option<String>>(1)
-                .map_err(Error::data("wallets.keypair"))?;
-            let keypair = keypair_str
-                .map(|s| utils::bs58_decode(&s))
-                .transpose()
-                .map_err(Error::parsing("wallets.keypair"))?;
+            let encrypted_keypair = r
+                .try_get::<_, Option<Json<Encrypted>>>(1)
+                .map_err(Error::data("wallets.encrypted_keypair"))?
+                .map(|json| json.0);
 
             let id = r.try_get(2).map_err(Error::data("wallets.id"))?;
 
-            Ok(Wallet {
+            Ok(EncryptedWallet {
                 id,
                 pubkey,
-                keypair,
+                encrypted_keypair,
             })
         })
         .collect()
