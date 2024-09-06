@@ -167,7 +167,7 @@ impl RealDbPool {
         })
     }
 
-    pub fn encryption_key(&self) -> crate::Result<&EncryptionKey> {
+    pub(crate) fn encryption_key(&self) -> crate::Result<&EncryptionKey> {
         self.encryption_key
             .as_ref()
             .ok_or(crate::Error::NoEncryptionKey)

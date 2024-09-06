@@ -61,10 +61,11 @@ impl AdminConn {
     }
 
     pub async fn encrypt_all_wallets(&self) -> crate::Result<()> {
+        let key = self.pool.encryption_key()?;
         let mut conn = self.pool.get_conn().await?;
         let tx = conn.transaction().await.map_err(Error::exec("begin"))?;
         let wallets = tx.do_query(
-            "SELECT id, encrypted_keypair FROM wallets WHERE encrypted_keypair['raw'] IS NOT NULL",
+            "SELECT id, encrypted_keypair->>'raw' FROM wallets WHERE encrypted_keypair['raw'] IS NOT NULL",
             &[],
         )
         .await
@@ -80,7 +81,7 @@ impl AdminConn {
         tracing::info!("encrypting {} wallets", wallets.len());
         let ids = wallets.iter().map(|(id, _)| *id).collect::<Vec<_>>();
         let encrypted = spawn_blocking({
-            let key = self.pool.encryption_key()?.clone();
+            let key = key.clone();
             move || {
                 wallets
                     .iter()
@@ -94,7 +95,7 @@ impl AdminConn {
         tx.do_execute(
             "UPDATE wallets
             SET encrypted_keypair = args.encrypted_keypair
-            FROM (SELECT unnest($1) AS id, unnest($2) AS encrypted_keypair) AS args
+            FROM (SELECT unnest($1::bigint[]) AS id, unnest($2::jsonb[]) AS encrypted_keypair) AS args
             WHERE wallets.id = args.id",
             &[&ids, &encrypted],
         )

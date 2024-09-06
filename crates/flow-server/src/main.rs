@@ -103,6 +103,16 @@ async fn main() {
     };
 
     if let DbPool::Real(db) = &db {
+        if let Err(error) = db
+            .get_admin_conn()
+            .and_then(|conn| async move { conn.encrypt_all_wallets().await })
+            .await
+        {
+            tracing::error!("{}", error);
+        }
+    }
+
+    if let DbPool::Real(db) = &db {
         let res = db
             .get_admin_conn()
             .and_then(move |conn| async move {
