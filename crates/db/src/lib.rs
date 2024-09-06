@@ -60,9 +60,9 @@ pub struct Wallet {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct EncryptedWallet {
-    pub id: i64,
+pub(crate) struct EncryptedWallet {
+    pub(crate) id: i64,
     #[serde(with = "utils::serde_bs58")]
-    pub pubkey: [u8; 32],
-    pub encrypted_keypair: Option<Encrypted>,
+    pub(crate) pubkey: [u8; 32],
+    pub(crate) encrypted_keypair: Option<Encrypted>,
 }
