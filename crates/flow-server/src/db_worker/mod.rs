@@ -60,7 +60,7 @@ pub struct DBWorker {
 impl DBWorker {
     pub fn new(
         db: DbPool,
-        config: Config,
+        config: &Config,
         actors: AddressBook,
         tracing_data: flow_logs::Map,
         ctx: &mut actix::Context<Self>,
@@ -99,7 +99,7 @@ impl Actor for DBWorker {
     }
 
     fn stopped(&mut self, _: &mut Self::Context) {
-        tracing::warn!("stopped DBWorker");
+        tracing::info!("stopped DBWorker");
     }
 }
 

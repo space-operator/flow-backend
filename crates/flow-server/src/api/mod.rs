@@ -2,6 +2,8 @@ pub mod claim_token;
 pub mod confirm_auth;
 pub mod init_auth;
 
+pub mod upsert_wallet;
+
 pub mod get_flow_output;
 pub mod get_signature_request;
 

@@ -1,5 +1,5 @@
 use crate::{
-    config::{DbConfig, ProxiedDbConfig},
+    config::{DbConfig, Encrypted, EncryptionKey, ProxiedDbConfig},
     connection::{
         proxied_user_conn::{self, ProxiedUserConn},
         AdminConn, UserConnection, UserConnectionTrait,
@@ -7,7 +7,7 @@ use crate::{
     Error, LocalStorage, WasmStorage,
 };
 use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, PoolConfig, SslMode};
-use flow_lib::{context::get_jwt, UserId};
+use flow_lib::{context::get_jwt, solana::Keypair, UserId};
 use futures_util::FutureExt;
 use hashbrown::HashMap;
 use std::time::Duration;
@@ -41,6 +41,7 @@ impl DbPool {
 
 #[derive(Clone)]
 pub struct RealDbPool {
+    encryption_key: Option<EncryptionKey>,
     pg: Pool,
     wasm: WasmStorage,
     local: LocalStorage,
@@ -103,6 +104,7 @@ impl RealDbPool {
             ..Config::default()
         };
         tracing::info!("SSL enabled: {}", cfg.ssl.enabled);
+        let encryption_key = cfg.encryption_key.clone();
 
         let builder = if cfg.ssl.enabled {
             let mut roots = rustls::RootCertStore::empty();
@@ -157,7 +159,22 @@ impl RealDbPool {
             });
         };
 
-        Ok(Self { pg, wasm, local })
+        Ok(Self {
+            pg,
+            wasm,
+            local,
+            encryption_key,
+        })
+    }
+
+    pub(crate) fn encryption_key(&self) -> crate::Result<&EncryptionKey> {
+        self.encryption_key
+            .as_ref()
+            .ok_or(crate::Error::NoEncryptionKey)
+    }
+
+    pub fn encrypt_keypair(&self, keypair: &Keypair) -> crate::Result<Encrypted> {
+        Ok(self.encryption_key()?.encrypt_keypair(keypair))
     }
 
     pub async fn get_conn(&self) -> crate::Result<Connection> {

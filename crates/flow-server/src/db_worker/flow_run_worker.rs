@@ -43,11 +43,11 @@ impl Actor for FlowRunWorker {
     type Context = actix::Context<Self>;
 
     fn started(&mut self, _: &mut Self::Context) {
-        tracing::info!("started FlowRunWorker {}", self.run_id);
+        tracing::debug!("started FlowRunWorker {}", self.run_id);
     }
 
     fn stopped(&mut self, _: &mut Self::Context) {
-        tracing::info!("stopped FlowRunWorker {}", self.run_id);
+        tracing::debug!("stopped FlowRunWorker {}", self.run_id);
         self.stop_signal
             .stop(0, Some("stopping FlowRunWorker".to_owned()));
     }

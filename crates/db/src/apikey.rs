@@ -60,7 +60,10 @@ pub struct NameConflict;
 
 fn convert_error(error: Error) -> Error<NameConflict> {
     match error {
+        Error::SpawnError(e) => Error::SpawnError(e),
+        Error::EncryptionError => Error::EncryptionError,
         Error::Timeout => Error::Timeout,
+        Error::NoEncryptionKey => Error::NoEncryptionKey,
         Error::NotSupported => Error::NotSupported,
         Error::LogicError(_) => unreachable!("get_conn should not return this variant"),
         Error::CreatePool(e) => Error::CreatePool(e),

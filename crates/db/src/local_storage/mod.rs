@@ -89,7 +89,7 @@ impl LocalStorage {
                 let now = Utc::now().timestamp();
                 let key = C::encode_key(key);
                 if let Some(obj) = tx.get(&key)? {
-                    if obj.0.expires_at > now {
+                    if obj.0.expires_at <= now {
                         tx.remove(&key)?;
                         Ok(None)
                     } else if C::can_read(&obj.0.value, user_id) {

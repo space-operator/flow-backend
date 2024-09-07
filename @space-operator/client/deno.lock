@@ -12,6 +12,7 @@
       "npm:@solana/web3.js@^1.91.4": "npm:@solana/web3.js@1.94.0",
       "npm:@supabase/auth-js@2.64.4": "npm:@supabase/auth-js@2.64.4",
       "npm:@types/node": "npm:@types/node@18.16.19",
+      "npm:tweetnacl": "npm:tweetnacl@1.0.3",
       "npm:tweetnacl@1.0.3": "npm:tweetnacl@1.0.3"
     },
     "jsr": {

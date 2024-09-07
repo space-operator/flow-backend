@@ -291,6 +291,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "aead"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d122413f284cf2d62fb1b7db97e02edb8cda96d769b16e443a4f6195e35662b0"
+dependencies = [
+ "crypto-common",
+ "generic-array",
+]
+
+[[package]]
 name = "aes"
 version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -307,7 +317,7 @@ name = "aes-gcm-siv"
 version = "0.10.3"
 source = "git+https://github.com/RustCrypto/AEADs?rev=555ae1d82d000f01899498f969e6dc1d0a4fe467#555ae1d82d000f01899498f969e6dc1d0a4fe467"
 dependencies = [
- "aead",
+ "aead 0.4.3",
  "aes",
  "cipher 0.3.0",
  "ctr",
@@ -1693,6 +1703,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
+name = "chacha20"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3613f74bd2eac03dad61bd53dbe620703d4371614fe0bc3b9f04dd36fe4e818"
+dependencies = [
+ "cfg-if",
+ "cipher 0.4.4",
+ "cpufeatures",
+]
+
+[[package]]
+name = "chacha20poly1305"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10cd79432192d1c0f4e1a0fef9527696cc039165d729fb41b3f4f4f354c2dc35"
+dependencies = [
+ "aead 0.5.2",
+ "chacha20",
+ "cipher 0.4.4",
+ "poly1305",
+ "zeroize",
+]
+
+[[package]]
 name = "chrono"
 version = "0.4.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1751,6 +1785,7 @@ checksum = "773f3b9af64447d2ce9850330c473515014aa235e6a783b02db81ff39e4a3dad"
 dependencies = [
  "crypto-common",
  "inout",
+ "zeroize",
 ]
 
 [[package]]
@@ -1825,7 +1860,7 @@ dependencies = [
  "chrono",
  "flow-lib",
  "serde",
- "serde_with 3.7.0",
+ "serde_with 3.9.0",
 ]
 
 [[package]]
@@ -1911,7 +1946,7 @@ dependencies = [
  "rust_decimal_macros",
  "serde",
  "serde_json",
- "serde_with 3.7.0",
+ "serde_with 3.9.0",
  "serde_wormhole 0.1.0 (git+https://github.com/space-operator/wormhole?rev=b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1)",
  "solana-account-decoder",
  "solana-client",
@@ -1980,7 +2015,7 @@ dependencies = [
  "async-trait",
  "flow-lib",
  "serde",
- "serde_with 3.7.0",
+ "serde_with 3.9.0",
  "srpc",
  "tokio",
  "tower",
@@ -2358,6 +2393,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1bfb12502f3fc46cca1bb51ac28df9d618d813cdc3d2f25b9fe775a34af26bb3"
 dependencies = [
  "generic-array",
+ "rand_core 0.6.4",
  "typenum",
 ]
 
@@ -2529,9 +2565,11 @@ dependencies = [
  "blake3",
  "bs58 0.4.0",
  "bytes",
+ "chacha20poly1305",
  "chrono",
  "csv",
  "deadpool-postgres",
+ "ed25519-dalek 2.1.1",
  "either",
  "flow",
  "flow-lib",
@@ -2547,6 +2585,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
+ "serde_with 3.9.0",
  "tempfile",
  "thiserror",
  "tokio",
@@ -2560,6 +2599,7 @@ dependencies = [
  "url",
  "utils",
  "uuid 1.8.0",
+ "zeroize",
 ]
 
 [[package]]
@@ -2856,6 +2896,7 @@ checksum = "4a3daa8e81a3963a60642bcc1f90a670680bd4a77535faa384e9d1c79d620871"
 dependencies = [
  "curve25519-dalek 4.1.2",
  "ed25519 2.2.3",
+ "rand_core 0.6.4",
  "serde",
  "sha2 0.10.8",
  "subtle",
@@ -3113,6 +3154,7 @@ dependencies = [
  "bs58 0.4.0",
  "bytes",
  "chrono",
+ "ed25519-dalek 2.1.1",
  "flow-value",
  "futures",
  "inventory",
@@ -3123,7 +3165,7 @@ dependencies = [
  "rmp-serde",
  "serde",
  "serde_json",
- "serde_with 3.7.0",
+ "serde_with 3.9.0",
  "solana-client",
  "solana-sdk",
  "solana-transaction-status",
@@ -3175,7 +3217,7 @@ dependencies = [
  "rhai-script",
  "serde",
  "serde_json",
- "serde_with 3.7.0",
+ "serde_with 3.9.0",
  "sha2 0.10.8",
  "solana-sdk",
  "space-wasm",
@@ -4418,7 +4460,7 @@ dependencies = [
  "rmp-serde",
  "serde",
  "serde_json",
- "serde_with 3.7.0",
+ "serde_with 3.9.0",
  "solana-program",
  "thiserror",
 ]
@@ -5116,6 +5158,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "poly1305"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8159bd90725d2df49889a078b54f4f79e87f1f8a8444194cdca81d38f5393abf"
+dependencies = [
+ "cpufeatures",
+ "opaque-debug",
+ "universal-hash 0.5.1",
+]
+
+[[package]]
 name = "polyval"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5124,7 +5177,7 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "opaque-debug",
- "universal-hash",
+ "universal-hash 0.4.0",
 ]
 
 [[package]]
@@ -6351,11 +6404,11 @@ dependencies = [
 
 [[package]]
 name = "serde_with"
-version = "3.7.0"
+version = "3.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee80b0e361bbf88fd2f6e242ccd19cfda072cb0faa6ae694ecee08199938569a"
+checksum = "69cecfa94848272156ea67b2b1a53f20fc7bc638c4a46d2f8abde08f05f4b857"
 dependencies = [
- "base64 0.21.7",
+ "base64 0.22.1",
  "chrono",
  "hex",
  "indexmap 1.9.3",
@@ -6363,7 +6416,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "serde_with_macros 3.7.0",
+ "serde_with_macros 3.9.0",
  "time 0.3.36",
 ]
 
@@ -6381,9 +6434,9 @@ dependencies = [
 
 [[package]]
 name = "serde_with_macros"
-version = "3.7.0"
+version = "3.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6561dc161a9224638a31d876ccdfefbc1df91d3f3a8342eddb35f055d48c7655"
+checksum = "a8fee4991ef4f274617a51ad4af30519438dacb2f56ac773b08a1922ff743350"
 dependencies = [
  "darling 0.20.8",
  "proc-macro2 1.0.86",
@@ -7764,7 +7817,7 @@ dependencies = [
  "num-traits",
  "num_enum 0.7.2",
  "serde",
- "serde_with 3.7.0",
+ "serde_with 3.9.0",
  "solana-program",
  "solana-zk-token-sdk",
  "spl-memo 4.0.0",
@@ -7844,7 +7897,7 @@ dependencies = [
  "reqwest 0.12.1",
  "serde",
  "serde_json",
- "serde_with 3.7.0",
+ "serde_with 3.9.0",
  "tracing",
 ]
 
@@ -8774,6 +8827,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8326b2c654932e3e4f9196e69d08fdf7cfd718e1dc6f66b347e6024a0c961402"
 dependencies = [
  "generic-array",
+ "subtle",
+]
+
+[[package]]
+name = "universal-hash"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc1de2c688dc15305988b563c3854064043356019f97a4b46276fe734c4f07ea"
+dependencies = [
+ "crypto-common",
  "subtle",
 ]
 
@@ -9781,9 +9844,9 @@ dependencies = [
 
 [[package]]
 name = "zeroize"
-version = "1.7.0"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "525b4ec142c6b68a2d10f01f7bbf6755599ca3f81ea53b8431b7dd348f5fdb2d"
+checksum = "ced3678a2879b30306d323f4542626697a464a97c0a07c9aebf7ebca65cd4dde"
 dependencies = [
  "zeroize_derive",
 ]

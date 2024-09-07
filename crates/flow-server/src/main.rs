@@ -16,7 +16,7 @@ use flow_server::{
     ws, Config,
 };
 use futures_util::{future::ok, TryFutureExt};
-use std::{borrow::Cow, collections::BTreeSet, convert::Infallible, time::Duration};
+use std::{borrow::Cow, collections::BTreeSet, convert::Infallible, sync::Arc, time::Duration};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Layer};
 use utils::address_book::AddressBook;
 
@@ -103,6 +103,16 @@ async fn main() {
     };
 
     if let DbPool::Real(db) = &db {
+        if let Err(error) = db
+            .get_admin_conn()
+            .and_then(|conn| async move { conn.encrypt_all_wallets().await })
+            .await
+        {
+            tracing::error!("{}", error);
+        }
+    }
+
+    if let DbPool::Real(db) = &db {
         let res = db
             .get_admin_conn()
             .and_then(move |conn| async move {
@@ -130,9 +140,8 @@ async fn main() {
         }
     }
 
-    let db_worker = DBWorker::create(|ctx| {
-        DBWorker::new(db.clone(), config.clone(), actors, tracing_data, ctx)
-    });
+    let db_worker =
+        DBWorker::create(|ctx| DBWorker::new(db.clone(), &config, actors, tracing_data, ctx));
 
     let sig_auth = config.signature_auth();
     let supabase_auth = match SupabaseAuth::new(&config.supabase, db.clone()) {
@@ -157,7 +166,14 @@ async fn main() {
         std::env::set_var("HELIUS_API_KEY", key);
     }
 
+    let config = Arc::new(config);
     let mut server = HttpServer::new(move || {
+        let wallets = supabase_auth.as_ref().map(|supabase_auth| {
+            web::scope("/wallets")
+                .app_data(web::Data::new(supabase_auth.clone()))
+                .service(api::upsert_wallet::service(&config, db.clone()))
+        });
+
         let auth = supabase_auth.as_ref().map(|supabase_auth| {
             web::scope("/auth")
                 .app_data(web::Data::new(sig_auth))
@@ -219,6 +235,10 @@ async fn main() {
             DbPool::Real(db) => app.app_data(web::Data::new(db.clone())),
             DbPool::Proxied(db) => app.app_data(web::Data::new(db.clone())),
         };
+
+        if let Some(wallets) = wallets {
+            app = app.service(wallets);
+        }
 
         if let Some(auth) = auth {
             app = app.service(auth);

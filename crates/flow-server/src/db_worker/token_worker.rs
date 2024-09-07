@@ -156,7 +156,7 @@ impl Actor for TokenWorker {
     type Context = actix::Context<Self>;
 
     fn started(&mut self, _: &mut Self::Context) {
-        tracing::info!("started TokenWorker {}", self.user_id);
+        tracing::debug!("started TokenWorker {}", self.user_id);
         let token = self
             .local_db
             .get_jwt(&self.user_id)
@@ -175,7 +175,7 @@ impl Actor for TokenWorker {
     }
 
     fn stopped(&mut self, _: &mut Self::Context) {
-        tracing::info!("stopped TokenWorker {}", self.user_id);
+        tracing::debug!("stopped TokenWorker {}", self.user_id);
     }
 }
 

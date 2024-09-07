@@ -139,7 +139,7 @@ fn default_db_config() -> Either<DbConfig, ProxiedDbConfig> {
     })
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize)]
 pub struct Config {
     #[serde(default = "Config::default_host")]
     pub host: String,
