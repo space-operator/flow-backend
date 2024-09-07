@@ -116,7 +116,6 @@ async fn main() {
         let res = db
             .get_admin_conn()
             .and_then(move |conn| async move {
-                conn.encrypt_all_wallets().await?;
                 let names = conn.get_natives_commands().await?;
                 let mut missing = BTreeSet::new();
                 for name in names {

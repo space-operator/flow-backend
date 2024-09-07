@@ -64,17 +64,24 @@ impl AdminConn {
         let key = self.pool.encryption_key()?;
         let mut conn = self.pool.get_conn().await?;
         let tx = conn.transaction().await.map_err(Error::exec("begin"))?;
-        let wallets = tx.do_query(
-            "SELECT id, encrypted_keypair->>'raw' FROM wallets WHERE encrypted_keypair['raw'] IS NOT NULL",
-            &[],
-        )
-        .await
-        .map_err(Error::exec("select wallets"))?.into_iter().map(|row| {
-            let id: i64 = row.try_get(0).map_err(Error::data("wallets.id"))?;
-            let keypair: &str = row.try_get(1).map_err(Error::data("wallets.keypair"))?;
-            let keypair = Keypair::from_str(keypair).map_err(Error::LogicError)?;
-            Ok::<_, crate::Error>((id, keypair))
-        }).collect::<Result<Vec<_>, _>>()?;
+        let wallets = tx
+            .do_query(
+                "SELECT id, COALESCE(encrypted_keypair->>'raw', keypair) FROM wallets
+                WHERE
+                    encrypted_keypair['c'] IS NULL
+                    AND (encrypted_keypair['raw'] IS NOT NULL OR keypair IS NOT NULL)",
+                &[],
+            )
+            .await
+            .map_err(Error::exec("select wallets"))?
+            .into_iter()
+            .map(|row| {
+                let id: i64 = row.try_get(0).map_err(Error::data("wallets.id"))?;
+                let keypair: &str = row.try_get(1).map_err(Error::data("wallets.keypair"))?;
+                let keypair = Keypair::from_str(keypair).map_err(Error::LogicError)?;
+                Ok::<_, crate::Error>((id, keypair))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
         if wallets.is_empty() {
             return Ok(());
         }
