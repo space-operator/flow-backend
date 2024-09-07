@@ -169,6 +169,12 @@ async fn main() {
 
     let config = Arc::new(config);
     let mut server = HttpServer::new(move || {
+        let wallets = supabase_auth.as_ref().map(|supabase_auth| {
+            web::scope("/wallets")
+                .app_data(web::Data::new(supabase_auth.clone()))
+                .service(api::upsert_wallet::service(&config, db.clone()))
+        });
+
         let auth = supabase_auth.as_ref().map(|supabase_auth| {
             web::scope("/auth")
                 .app_data(web::Data::new(sig_auth))
@@ -230,6 +236,10 @@ async fn main() {
             DbPool::Real(db) => app.app_data(web::Data::new(db.clone())),
             DbPool::Proxied(db) => app.app_data(web::Data::new(db.clone())),
         };
+
+        if let Some(wallets) = wallets {
+            app = app.service(wallets);
+        }
 
         if let Some(auth) = auth {
             app = app.service(auth);

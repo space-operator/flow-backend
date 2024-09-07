@@ -2,6 +2,7 @@ use crate::SupabaseConfig;
 use bincode::{Decode, Encode};
 use db::pool::{DbPool, RealDbPool};
 use flow::BoxedError;
+use flow_lib::solana::{Keypair, KeypairExt};
 use flow_lib::{FlowRunId, UserId};
 use hashbrown::HashMap;
 use reqwest::header::{self, HeaderName, HeaderValue};
@@ -131,6 +132,7 @@ pub struct SupabaseAuth {
     anon_key: String,
     login_url: Url,
     create_user_url: Url,
+    upsert_wallet_url: Url,
     admin_token: HeaderValue,
     open_whitelists: bool,
     limits: Arc<Mutex<HashMap<[u8; 32], Arc<Semaphore>>>>,
@@ -214,6 +216,13 @@ struct CreateUserResponse {
     id: UserId,
 }
 
+#[derive(Deserialize)]
+pub struct UpsertWalletBody {
+    pub keypair: Option<String>,
+    #[serde(flatten)]
+    pub others: serde_json::Map<String, serde_json::Value>,
+}
+
 impl SupabaseAuth {
     pub fn new(config: &SupabaseConfig, pool: DbPool) -> Result<Self, BoxedError> {
         let pool = match pool {
@@ -224,6 +233,7 @@ impl SupabaseAuth {
         let service_key = config.service_key.as_ref().ok_or("need service_key")?;
         let login_url = base_url.join("token?grant_type=password")?;
         let create_user_url = base_url.join("admin/users")?;
+        let upsert_wallet_url = config.endpoint.url.join("rest/v1/wallets")?;
         let admin_token = HeaderValue::from_str(&format!("Bearer {}", service_key))?;
 
         Ok(Self {
@@ -231,11 +241,46 @@ impl SupabaseAuth {
             anon_key: config.anon_key.clone(),
             login_url,
             create_user_url,
+            upsert_wallet_url,
             admin_token,
             pool,
             open_whitelists: config.open_whitelists,
             limits: Default::default(),
         })
+    }
+
+    pub async fn upsert_wallet(
+        &self,
+        user_jwt: &str,
+        body: UpsertWalletBody,
+    ) -> Result<(StatusCode, Box<RawValue>), anyhow::Error> {
+        let encrypted_keypair = body
+            .keypair
+            .map(|s| {
+                let keypair = Keypair::from_str(&s)?;
+                Ok::<_, anyhow::Error>(self.pool.encrypt_keypair(&keypair)?)
+            })
+            .transpose()?;
+        let mut body = body.others;
+        body.insert(
+            "encrypted_keypair".to_owned(),
+            serde_json::to_value(&encrypted_keypair)?,
+        );
+
+        let resp = self
+            .client
+            .post(self.upsert_wallet_url.clone())
+            .header("apikey", &self.anon_key)
+            .header("Prefer", "resolution=merge-duplicates")
+            .header("Prefer", "return=representation")
+            .header(header::AUTHORIZATION, format!("Bearer {}", user_jwt))
+            .json(&body)
+            .send()
+            .await?;
+
+        let status = resp.status();
+        let json = resp.json().await?;
+        Ok((status, json))
     }
 
     async fn get_semaphore_permit(&self, pubkey: &[u8; 32]) -> OwnedSemaphorePermit {

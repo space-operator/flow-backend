@@ -1,5 +1,5 @@
 use crate::{
-    config::{DbConfig, EncryptionKey, ProxiedDbConfig},
+    config::{DbConfig, Encrypted, EncryptionKey, ProxiedDbConfig},
     connection::{
         proxied_user_conn::{self, ProxiedUserConn},
         AdminConn, UserConnection, UserConnectionTrait,
@@ -7,7 +7,7 @@ use crate::{
     Error, LocalStorage, WasmStorage,
 };
 use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, PoolConfig, SslMode};
-use flow_lib::{context::get_jwt, UserId};
+use flow_lib::{context::get_jwt, solana::Keypair, UserId};
 use futures_util::FutureExt;
 use hashbrown::HashMap;
 use std::time::Duration;
@@ -171,6 +171,10 @@ impl RealDbPool {
         self.encryption_key
             .as_ref()
             .ok_or(crate::Error::NoEncryptionKey)
+    }
+
+    pub fn encrypt_keypair(&self, keypair: &Keypair) -> crate::Result<Encrypted> {
+        Ok(self.encryption_key()?.encrypt_keypair(keypair))
     }
 
     pub async fn get_conn(&self) -> crate::Result<Connection> {

@@ -17,7 +17,7 @@ impl Drop for EncryptionKey {
 
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub(crate) struct Encrypted {
+pub struct Encrypted {
     #[serde_as(as = "Base64")]
     #[serde(rename = "n")]
     pub nonce: [u8; 12],

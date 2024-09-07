@@ -48,10 +48,11 @@ const HOST = "https://dev-api.spaceoperator.com";
 function noop() {}
 
 async function parseResponse<T>(resp: Response): Promise<T> {
-  if (resp.status !== 200) {
+  if (resp.status !== 200 && resp.status !== 201) {
     let error;
     if (resp.headers.get("content-type") === "application/json") {
-      error = ((await resp.json()) as ErrorBody).error;
+      const body = await resp.json();
+      error = (body as ErrorBody).error ?? JSON.stringify(body);
     } else {
       error = await resp.text();
     }
@@ -73,6 +74,10 @@ export class Client {
     this.host = options.host ?? HOST;
     this.token = options.token;
     this.anonKey = options.anonKey;
+  }
+
+  async upsertWallet(body: any): Promise<any> {
+    return await this.#sendJSONPost(`${this.host}/wallets/upsert`, body);
   }
 
   setToken(token: string | (() => Promise<string>)) {
