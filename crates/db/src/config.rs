@@ -32,7 +32,7 @@ impl EncryptionKey {
         let nonce = ChaCha20Poly1305::generate_nonce(&mut rand::thread_rng());
         let ciphertext = cipher.encrypt(&nonce, plaintext).unwrap();
         Encrypted {
-            nonce: nonce.try_into().unwrap(),
+            nonce: nonce.into(),
             ciphertext,
         }
     }
