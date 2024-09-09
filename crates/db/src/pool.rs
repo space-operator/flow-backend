@@ -10,7 +10,7 @@ use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, PoolConfi
 use flow_lib::{context::get_jwt, solana::Keypair, UserId};
 use futures_util::FutureExt;
 use hashbrown::HashMap;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 pub use deadpool_postgres::Object as Connection;
 
@@ -141,7 +141,15 @@ impl RealDbPool {
             .expect("shouldn't fail");
 
         // Test to see if we can connect
-        let _conn = pg.get().await.map_err(Error::GetDbConnection)?;
+        let conn = pg.get().await.map_err(Error::GetDbConnection)?;
+        match ping(&conn).await {
+            Ok((mean, std)) => {
+                tracing::info!("connection ping: {:.2}±{:.2}ms", mean, std);
+            }
+            Err(error) => {
+                tracing::error!("{}", error);
+            }
+        }
 
         {
             let pg = pg.clone();
@@ -202,6 +210,30 @@ impl RealDbPool {
     pub fn get_local(&self) -> &LocalStorage {
         &self.local
     }
+}
+
+async fn ping(conn: &Connection) -> crate::Result<(f64, f64)> {
+    let stmt = conn
+        .prepare_cached("SELECT gen_random_uuid()")
+        .await
+        .map_err(Error::exec("prepare"))?;
+
+    let mut time = Vec::new();
+
+    for _ in 0..10 {
+        let now = Instant::now();
+        conn.query_one(&stmt, &[])
+            .await
+            .map_err(Error::exec("select"))?;
+        let elapsed = now.elapsed();
+        time.push(elapsed.as_secs_f64() * 1000.0);
+    }
+
+    let mean = time.iter().sum::<f64>() / time.len() as f64;
+    let std =
+        (time.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / time.len() as f64).sqrt();
+
+    Ok((mean, std))
 }
 
 #[derive(Clone)]
