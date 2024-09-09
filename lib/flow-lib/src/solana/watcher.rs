@@ -154,6 +154,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    #[ignore]
     async fn test_watch() {
         const REF: &str = "solana-action:7wf7HHVG2AG4JEUq6FkZfdzoRmR7nrPtTPSEGhXMUtDG:Gs3vmNfDWen3eX5W4sWkkrxtHRSWYjNEvufyTdXqdrMu:2JQc7ebKw6gcZnMfXSnFAZHbAxPqW37b3sQabjVP6BqGJLi1BbpgGNzhmB8rmLEn5zE2TdGsVRgRv2KzrSMqKtbX";
         let rpc = RpcClient::new(SolanaNet::Devnet.url().to_owned());

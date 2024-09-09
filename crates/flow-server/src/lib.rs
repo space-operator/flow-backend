@@ -1,4 +1,5 @@
 use actix_web::http::header::{HeaderName, HeaderValue, AUTHORIZATION};
+use anyhow::{anyhow, Context};
 use db::{
     config::{DbConfig, ProxiedDbConfig},
     pool::DbPool,
@@ -10,6 +11,7 @@ use middleware::{
     req_fn::{self, Function, ReqFn},
 };
 use serde::Deserialize;
+use solana_client::nonblocking::rpc_client::RpcClient;
 use std::{path::PathBuf, rc::Rc};
 use url::Url;
 use user::SignatureAuth;
@@ -235,6 +237,33 @@ impl Config {
     }
 
     pub async fn healthcheck(&self) -> Result<(), anyhow::Error> {
+        if let Some(key) = &self.helius_api_key {
+            let client = RpcClient::new(format!("https://mainnet.helius-rpc.com/?api-key={}", key));
+            client
+                .get_version()
+                .await
+                .context("Helius mainnet failed")?;
+            let client = RpcClient::new(format!("https://devnet.helius-rpc.com/?api-key={}", key));
+            client.get_version().await.context("Helius devnet failed")?;
+        }
+        if let Some(url) = self.solana.as_ref().and_then(|s| s.mainnet_url.as_ref()) {
+            let client = RpcClient::new(url.to_string());
+            client
+                .get_version()
+                .await
+                .context("Solana mainnet failed")?;
+        }
+        if let Some(url) = self.solana.as_ref().and_then(|s| s.devnet_url.as_ref()) {
+            let client = RpcClient::new(url.to_string());
+            client.get_version().await.context("Solana devnet failed")?;
+        }
+        if let Some(url) = self.solana.as_ref().and_then(|s| s.testnet_url.as_ref()) {
+            let client = RpcClient::new(url.to_string());
+            client
+                .get_version()
+                .await
+                .context("Solana testnet failed")?;
+        }
         Ok(())
     }
 
