@@ -1,5 +1,5 @@
 use actix_web::http::header::{HeaderName, HeaderValue, AUTHORIZATION};
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use db::{
     config::{DbConfig, ProxiedDbConfig},
     pool::DbPool,
