@@ -1955,7 +1955,7 @@
     "custom_networks": [],
     "current_network": {
       "id": "01000000-0000-8000-8000-000000000000",
-      "url": "https://norrie-yvr0sx-fast-devnet.helius-rpc.com",
+      "url": "https://api.devnet.solana.com",
       "type": "default",
       "wallet": "Solana",
       "cluster": "devnet"

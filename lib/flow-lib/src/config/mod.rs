@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use std::{collections::HashMap, num::NonZeroU64, str::FromStr};
+use std::{collections::HashMap, num::NonZeroU64, str::FromStr, sync::LazyLock};
 use thiserror::Error as ThisError;
 use uuid::Uuid;
 
@@ -158,7 +158,7 @@ impl Default for ContextConfig {
                 gzip: true,
             },
             solana_client: SolanaClientConfig {
-                url: "https://norrie-yvr0sx-fast-devnet.helius-rpc.com".to_owned(),
+                url: SolanaNet::Devnet.url(),
                 cluster: SolanaNet::Devnet,
             },
             environment: <_>::default(),
@@ -227,12 +227,29 @@ impl FromStr for SolanaNet {
 }
 
 impl SolanaNet {
-    pub fn url(&self) -> &'static str {
+    pub fn url(&self) -> String {
         match self {
-            // SolanaNet::Devnet => "https://norrie-yvr0sx-fast-devnet.helius-rpc.com",
-            SolanaNet::Devnet => "https://api.devnet.solana.com",
-            SolanaNet::Testnet => "https://api.testnet.solana.com",
-            SolanaNet::Mainnet => "https://api.mainnet-beta.solana.com",
+            SolanaNet::Devnet => {
+                static URL: LazyLock<String> = LazyLock::new(|| {
+                    std::env::var("SOLANA_DEVNET_URL")
+                        .unwrap_or_else(|_| "https://api.devnet.solana.com".to_owned())
+                });
+                URL.clone()
+            }
+            SolanaNet::Testnet => {
+                static URL: LazyLock<String> = LazyLock::new(|| {
+                    std::env::var("SOLANA_TESTNET_URL")
+                        .unwrap_or_else(|_| "https://api.testnet.solana.com".to_owned())
+                });
+                URL.clone()
+            }
+            SolanaNet::Mainnet => {
+                static URL: LazyLock<String> = LazyLock::new(|| {
+                    std::env::var("SOLANA_MAINNET_URL")
+                        .unwrap_or_else(|_| "https://api.mainnet-beta.solana.com".to_owned())
+                });
+                URL.clone()
+            }
         }
     }
 

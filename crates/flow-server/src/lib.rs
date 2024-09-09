@@ -1,4 +1,5 @@
 use actix_web::http::header::{HeaderName, HeaderValue, AUTHORIZATION};
+use anyhow::Context;
 use db::{
     config::{DbConfig, ProxiedDbConfig},
     pool::DbPool,
@@ -10,6 +11,7 @@ use middleware::{
     req_fn::{self, Function, ReqFn},
 };
 use serde::Deserialize;
+use solana_client::nonblocking::rpc_client::RpcClient;
 use std::{path::PathBuf, rc::Rc};
 use url::Url;
 use user::SignatureAuth;
@@ -155,9 +157,17 @@ pub struct Config {
     #[serde(default = "Config::default_shutdown_timeout_secs")]
     pub shutdown_timeout_secs: u16,
     pub helius_api_key: Option<String>,
+    pub solana: Option<SolanaConfig>,
 
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
+}
+
+#[derive(Deserialize, Default)]
+pub struct SolanaConfig {
+    pub mainnet_url: Option<Url>,
+    pub devnet_url: Option<Url>,
+    pub testnet_url: Option<Url>,
 }
 
 impl Default for Config {
@@ -171,6 +181,7 @@ impl Default for Config {
             local_storage: Self::default_local_storage(),
             shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
             blake3_key: rand::random(),
+            solana: None,
             helius_api_key: None,
         }
     }
@@ -222,6 +233,58 @@ impl Config {
                 tracing::info!("No config specified, using default");
                 Config::default()
             }
+        }
+    }
+
+    pub async fn healthcheck(&self) -> Result<(), Vec<anyhow::Error>> {
+        let mut errors = Vec::new();
+        if let Some(key) = &self.helius_api_key {
+            let client = RpcClient::new(format!("https://mainnet.helius-rpc.com/?api-key={}", key));
+            client
+                .get_version()
+                .await
+                .context("Helius mainnet failed")
+                .map_err(|error| errors.push(error))
+                .ok();
+            let client = RpcClient::new(format!("https://devnet.helius-rpc.com/?api-key={}", key));
+            client
+                .get_version()
+                .await
+                .context("Helius devnet failed")
+                .map_err(|error| errors.push(error))
+                .ok();
+        }
+        if let Some(url) = self.solana.as_ref().and_then(|s| s.mainnet_url.as_ref()) {
+            let client = RpcClient::new(url.to_string());
+            client
+                .get_version()
+                .await
+                .context("Solana mainnet failed")
+                .map_err(|error| errors.push(error))
+                .ok();
+        }
+        if let Some(url) = self.solana.as_ref().and_then(|s| s.devnet_url.as_ref()) {
+            let client = RpcClient::new(url.to_string());
+            client
+                .get_version()
+                .await
+                .context("Solana devnet failed")
+                .map_err(|error| errors.push(error))
+                .ok();
+        }
+        if let Some(url) = self.solana.as_ref().and_then(|s| s.testnet_url.as_ref()) {
+            let client = RpcClient::new(url.to_string());
+            client
+                .get_version()
+                .await
+                .context("Solana testnet failed")
+                .map_err(|error| errors.push(error))
+                .ok();
+        }
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
         }
     }
 
@@ -378,6 +441,8 @@ mod tests {
                 <_>::default(),
             )
             .await;
+        dbg!(&res.output);
+        dbg!(&res.node_errors);
         assert_eq!(
             res.output["key"],
             Value::new_keypair_bs58("3LUpzbebV5SCftt8CPmicbKxNtQhtJegEz4n8s6LBf3b1s4yfjLapgJhbMERhP73xLmWEP2XJ2Rz7Y3TFiYgTpXv").unwrap(),

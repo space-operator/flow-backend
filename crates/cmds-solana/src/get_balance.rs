@@ -32,12 +32,13 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    #[ignore]
     async fn test_valid() {
         let cmd = build().unwrap();
+        let ctx = Context::default();
+        dbg!(ctx.solana_client.url());
         let output = cmd
             .run(
-                Context::default(),
+                ctx,
                 value::map! { "pubkey" => Pubkey::new_from_array([1;32]) },
             )
             .await
