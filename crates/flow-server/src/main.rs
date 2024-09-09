@@ -162,8 +162,18 @@ async fn main() {
     let shutdown_timeout_secs = config.shutdown_timeout_secs;
 
     if let Some(key) = &config.helius_api_key {
-        tracing::info!("setting HELIUS_API_KEY env");
         std::env::set_var("HELIUS_API_KEY", key);
+    }
+    if let Some(solana) = &config.solana {
+        if let Some(url) = &solana.devnet_url {
+            std::env::set_var("SOLANA_DEVNET_URL", url.to_string());
+        }
+        if let Some(url) = &solana.testnet_url {
+            std::env::set_var("SOLANA_TESTNET_URL", url.to_string());
+        }
+        if let Some(url) = &solana.mainnet_url {
+            std::env::set_var("SOLANA_MAINNET_URL", url.to_string());
+        }
     }
 
     let config = Arc::new(config);
