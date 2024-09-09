@@ -234,6 +234,10 @@ impl Config {
         }
     }
 
+    pub async fn healthcheck(&self) -> Result<(), anyhow::Error> {
+        Ok(())
+    }
+
     pub fn endpoints(&self) -> Endpoints {
         Endpoints {
             flow_server: match &self.db {
