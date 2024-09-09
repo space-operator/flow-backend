@@ -420,6 +420,8 @@ mod tests {
                 <_>::default(),
             )
             .await;
+        dbg!(&res.output);
+        dbg!(&res.node_errors);
         assert_eq!(
             res.output["key"],
             Value::new_keypair_bs58("3LUpzbebV5SCftt8CPmicbKxNtQhtJegEz4n8s6LBf3b1s4yfjLapgJhbMERhP73xLmWEP2XJ2Rz7Y3TFiYgTpXv").unwrap(),
