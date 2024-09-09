@@ -204,11 +204,10 @@ pub enum GovernanceInstruction {
     ///   4. `[]` System program
     ///
     ///   Either:
-    ///      - 5. `[]` TokenOwnerRecord account of the Proposal owner
-    ///        6. `[signer]` Governance Authority (Token Owner or Governance
-    ///           Delegate)
+    ///   - 5. `[]` TokenOwnerRecord account of the Proposal owner
+    ///     6. `[signer]` Governance Authority (Token Owner or Governance Delegate)
     ///
-    ///      - 5. `[]` RequiredSignatory account associated with the governance.
+    ///   - 5. `[]` RequiredSignatory account associated with the governance.
     AddSignatory {
         #[allow(dead_code)]
         /// Signatory to add to the Proposal
