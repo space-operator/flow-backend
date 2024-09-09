@@ -39,6 +39,12 @@ async fn main() {
 
     let config = Config::get_config();
 
+    if let Err(errors) = config.healthcheck().await {
+        for error in errors {
+            tracing::error!("{}", error);
+        }
+    }
+
     let fac = flow::context::CommandFactory::new();
     let natives = fac.natives.keys().collect::<Vec<_>>();
     tracing::info!("native commands: {:?}", natives);

@@ -236,35 +236,56 @@ impl Config {
         }
     }
 
-    pub async fn healthcheck(&self) -> Result<(), anyhow::Error> {
+    pub async fn healthcheck(&self) -> Result<(), Vec<anyhow::Error>> {
+        let mut errors = Vec::new();
         if let Some(key) = &self.helius_api_key {
             let client = RpcClient::new(format!("https://mainnet.helius-rpc.com/?api-key={}", key));
             client
                 .get_version()
                 .await
-                .context("Helius mainnet failed")?;
+                .context("Helius mainnet failed")
+                .map_err(|error| errors.push(error))
+                .ok();
             let client = RpcClient::new(format!("https://devnet.helius-rpc.com/?api-key={}", key));
-            client.get_version().await.context("Helius devnet failed")?;
+            client
+                .get_version()
+                .await
+                .context("Helius devnet failed")
+                .map_err(|error| errors.push(error))
+                .ok();
         }
         if let Some(url) = self.solana.as_ref().and_then(|s| s.mainnet_url.as_ref()) {
             let client = RpcClient::new(url.to_string());
             client
                 .get_version()
                 .await
-                .context("Solana mainnet failed")?;
+                .context("Solana mainnet failed")
+                .map_err(|error| errors.push(error))
+                .ok();
         }
         if let Some(url) = self.solana.as_ref().and_then(|s| s.devnet_url.as_ref()) {
             let client = RpcClient::new(url.to_string());
-            client.get_version().await.context("Solana devnet failed")?;
+            client
+                .get_version()
+                .await
+                .context("Solana devnet failed")
+                .map_err(|error| errors.push(error))
+                .ok();
         }
         if let Some(url) = self.solana.as_ref().and_then(|s| s.testnet_url.as_ref()) {
             let client = RpcClient::new(url.to_string());
             client
                 .get_version()
                 .await
-                .context("Solana testnet failed")?;
+                .context("Solana testnet failed")
+                .map_err(|error| errors.push(error))
+                .ok();
         }
-        Ok(())
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
     }
 
     pub fn endpoints(&self) -> Endpoints {
