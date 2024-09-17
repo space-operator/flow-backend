@@ -15,7 +15,8 @@ dotenv.loadSync({
 });
 
 const c = new client.Client({
-  host: "http://localhost:8080",
+  // host: "http://localhost:8080",
+  host: "https://dev-backend.spaceoperator.com",
   anonKey: Deno.env.get("ANON_KEY"),
 });
 
