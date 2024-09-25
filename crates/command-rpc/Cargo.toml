@@ -9,9 +9,14 @@ edition = "2021"
 actix = "0.13.3"
 async-trait = "0.1.79"
 flow-lib.workspace = true
+futures = "0.3.30"
+inventory = "0.3.15"
 serde.workspace = true
 serde_with = "3.7.0"
 srpc.workspace = true
+thiserror = "1.0.63"
+tokio = { version = "1", features = ["net"] }
+tokio-tungstenite = { version = "0.24.0", features = ["__rustls-tls"] }
 tower = "0.4.13"
 tracing = "0.1.40"
 url = { version = "2.5.0", features = ["serde"] }
