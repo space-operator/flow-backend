@@ -19,3 +19,12 @@ thiserror = "1.0.58"
 tower = { version = "0.4.13", features = ["filter", "util"] }
 tracing = "0.1.40"
 url = { version = "2.5.0", features = ["serde"] }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["async", "async_tokio"] }
+tokio = "1"
+reqwest = { version = "0.12", default-features = false }
+
+[[bench]]
+name = "srpc_http"
+harness = false
