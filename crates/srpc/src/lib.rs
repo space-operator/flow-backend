@@ -1,11 +1,20 @@
+//! RPC for Tower services.
+//!
+//! Each service is uniquely identified by Name and ID, allowing multiple services of the same class to exists.
+
 use actix::{Actor, ActorFutureExt, AsyncContext, Context, ResponseFuture, WrapFuture};
-use actix_web::{dev::ServerHandle, web, App, HttpServer};
+use actix_web::{
+    dev::ServerHandle, error::InternalError, http::StatusCode, web, App, HttpRequest, HttpResponse,
+    HttpServer,
+};
+use actix_web_actors::ws::{self, WebsocketContext};
 use futures_channel::oneshot;
 use futures_util::TryFutureExt;
 use hashbrown::HashMap;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use std::{collections::VecDeque, marker::PhantomData};
+use smallvec::SmallVec;
+use std::{collections::VecDeque, fmt::Display, marker::PhantomData};
 use thiserror::Error as ThisError;
 use tower::{util::BoxService, BoxError, Service as _, ServiceBuilder, ServiceExt};
 use url::Url;
@@ -53,7 +62,6 @@ pub struct RegisterServiceResult {
     pub old_service: Option<JsonService>,
     pub name: String,
     pub id: String,
-    pub base_url: Url,
 }
 
 impl<S, T> actix::Message for RegisterJsonService<S, T> {
@@ -75,12 +83,31 @@ struct Service {
     queue: VecDeque<(Request, oneshot::Sender<Response>)>,
 }
 
+enum Transport {
+    Http { handle: ServerHandle, port: u16 },
+}
+
+impl Transport {
+    fn start_http(addr: actix::Addr<Server>) -> Result<Self, Error> {
+        let server = HttpServer::new(move || {
+            App::new().configure(|s| configure_server(s, addr.downgrade()))
+        })
+        .workers(1)
+        .bind("127.0.0.1:0")
+        .map_err(Error::Bind)?;
+        let port = server.addrs()[0].port();
+        let server = server.run();
+        let handle = server.handle();
+        actix::spawn(server);
+        Ok(Self::Http { handle, port })
+    }
+}
+
 pub struct Server {
     /// svc_name => (svc_id => S)
     services: HashMap<String, HashMap<String, Service>>,
     dead_services: HashMap<String, HashMap<String, Service>>,
-    port: u16,
-    server_handle: ServerHandle,
+    transport: SmallVec<[Transport; 1]>,
 }
 
 #[derive(ThisError, Debug)]
@@ -97,7 +124,26 @@ impl Actor for Server {
     type Context = Context<Self>;
 
     fn stopped(&mut self, _: &mut Self::Context) {
-        actix::spawn(self.server_handle.stop(true));
+        for t in &self.transport {
+            match t {
+                Transport::Http { handle, .. } => {
+                    actix::spawn(handle.stop(true));
+                }
+            }
+        }
+    }
+}
+
+pub struct GetBaseUrl;
+
+impl actix::Message for GetBaseUrl {
+    type Result = Option<Url>;
+}
+
+impl actix::Handler<GetBaseUrl> for Server {
+    type Result = actix::Response<<GetBaseUrl as actix::Message>::Result>;
+    fn handle(&mut self, _: GetBaseUrl, _: &mut Self::Context) -> Self::Result {
+        actix::Response::reply(self.base_url())
     }
 }
 
@@ -105,33 +151,24 @@ impl Server {
     pub fn start_http_server() -> Result<actix::Addr<Self>, Error> {
         let ctx = Context::<Self>::new();
         let addr = ctx.address();
-        let server = HttpServer::new(move || {
-            App::new()
-                // .wrap(actix_web::middleware::Logger::new(r#""%r" %s %b %Dms"#))
-                .configure(|s| configure_server(s, addr.downgrade()))
-        })
-        .workers(1)
-        .bind("127.0.0.1:0")
-        .map_err(Error::Bind)?;
-        let port = server.addrs()[0].port();
-        let server = server.run();
-        let server_handle = server.handle();
-        actix::spawn(server);
         Ok(ctx.run(Self {
             services: <_>::default(),
             dead_services: <_>::default(),
-            server_handle,
-            port,
+            transport: [Transport::start_http(addr.clone())?].into(),
         }))
     }
 
-    pub fn base_url(&self) -> Url {
-        Url::parse(&format!("http://127.0.0.1:{}", self.port)).unwrap()
+    pub fn base_url(&self) -> Option<Url> {
+        self.transport.iter().find_map(|t| match t {
+            Transport::Http { port, .. } => {
+                Some(Url::parse(&format!("http://127.0.0.1:{}", port)).unwrap())
+            }
+        })
     }
 
     fn after_ready(
         &mut self,
-        result: Result<BoxService<JsonValue, JsonValue, JsonValue>, JsonValue>,
+        result: Result<JsonService, JsonValue>,
         req: Request,
         responder: oneshot::Sender<Response>,
         ctx: &mut actix::Context<Self>,
@@ -228,7 +265,7 @@ impl Server {
         name: String,
         id: String,
         s: S,
-    ) -> Option<BoxService<JsonValue, JsonValue, JsonValue>>
+    ) -> Option<JsonService>
     where
         S: tower::Service<T> + Send + 'static,
         T: DeserializeOwned,
@@ -301,7 +338,6 @@ where
             old_service,
             name: msg.name,
             id: msg.id,
-            base_url: self.base_url(),
         })
     }
 }
@@ -358,44 +394,178 @@ impl actix::Handler<RemoveService> for Server {
         )
     }
 }
+struct WsActor {
+    server: actix::Addr<Server>,
+}
 
-pub fn configure_server(s: &mut web::ServiceConfig, addr: actix::WeakAddr<Server>) {
-    async fn call(
-        body: web::Json<Request>,
-        addr: web::Data<actix::WeakAddr<Server>>,
-    ) -> web::Json<Response> {
-        let req = body.into_inner();
-        let envelope = req.envelope.clone();
+impl actix::Actor for WsActor {
+    type Context = WebsocketContext<Self>;
+}
 
-        let addr = match addr.upgrade() {
-            Some(addr) => addr,
-            None => {
-                return web::Json(Response {
-                    envelope,
-                    success: false,
-                    data: "Server stopped".into(),
-                })
-            }
-        };
+impl Response {
+    fn error<E: Display>(envelope: String) -> impl FnOnce(E) -> Self {
+        |error: E| Self {
+            envelope,
+            success: false,
+            data: JsonValue::String(error.to_string()),
+        }
+    }
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_else(|error| {
+            serde_json::to_string(&Self::error(self.envelope.clone())(error)).unwrap()
+        })
+    }
+}
 
-        let result = addr.send(req).await;
-
-        web::Json(match result {
-            Ok(result) => match result {
-                Ok(resp) => resp,
-                Err(error) => Response {
-                    envelope,
-                    success: false,
-                    data: JsonValue::String(error.to_string()),
-                },
+impl actix::StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
+    fn handle(&mut self, item: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
+        match item {
+            Ok(ws::Message::Text(text)) => match serde_json::from_str::<Request>(&text) {
+                Ok(req) => {
+                    let envelope = req.envelope.clone();
+                    let resp = self.server.send(req).into_actor(&*self);
+                    let resp = resp.map(move |result, _, ctx| {
+                        let response = match result {
+                            Ok(Ok(resp)) => resp,
+                            Err(error) => Response::error(envelope.clone())(error),
+                            Ok(Err(error)) => Response::error(envelope.clone())(error),
+                        };
+                        ctx.text(response.to_json());
+                    });
+                    ctx.spawn(resp);
+                }
+                Err(error) => ctx.text(Response::error(String::new())(error).to_json()),
             },
+            Ok(ws::Message::Ping(msg)) => {
+                ctx.pong(&msg);
+            }
+            _ => {}
+        }
+    }
+}
+
+async fn call(
+    body: web::Json<Request>,
+    addr: web::Data<actix::WeakAddr<Server>>,
+) -> web::Json<Response> {
+    let req = body.into_inner();
+    let envelope = req.envelope.clone();
+
+    let addr = match addr.upgrade() {
+        Some(addr) => addr,
+        None => {
+            return web::Json(Response {
+                envelope,
+                success: false,
+                data: "Server stopped".into(),
+            })
+        }
+    };
+
+    let result = addr.send(req).await;
+
+    web::Json(match result {
+        Ok(result) => match result {
+            Ok(resp) => resp,
             Err(error) => Response {
                 envelope,
                 success: false,
                 data: JsonValue::String(error.to_string()),
             },
-        })
-    }
+        },
+        Err(error) => Response {
+            envelope,
+            success: false,
+            data: JsonValue::String(error.to_string()),
+        },
+    })
+}
+
+async fn handle_ws(
+    req: HttpRequest,
+    stream: web::Payload,
+    addr: web::Data<actix::WeakAddr<Server>>,
+) -> Result<HttpResponse, actix_web::Error> {
+    let server = addr
+        .upgrade()
+        .ok_or_else(|| InternalError::new("server stopped", StatusCode::INTERNAL_SERVER_ERROR))?;
+    actix_web_actors::ws::start(WsActor { server }, &req, stream)
+}
+
+pub fn configure_server(s: &mut web::ServiceConfig, addr: actix::WeakAddr<Server>) {
     s.app_data(web::Data::new(addr))
-        .route("/call", web::post().to(call));
+        .route("/call", web::post().to(call))
+        .route("/ws", web::get().to(handle_ws));
+}
+
+#[cfg(test)]
+mod tests {
+    use std::convert::Infallible;
+    use tungstenite::Message;
+
+    use super::*;
+
+    fn spawn_service() -> String {
+        let (url_tx, url_rx) = tokio::sync::oneshot::channel();
+        std::thread::spawn(|| {
+            actix::run(async move {
+                let addr = Server::start_http_server().unwrap();
+                addr.send(RegisterJsonService::new(
+                    "add".to_owned(),
+                    "".to_owned(),
+                    tower::service_fn(
+                        |(a, b): (i64, i64)| async move { Ok::<_, Infallible>(a + b) },
+                    ),
+                ))
+                .await
+                .unwrap();
+                let url = addr
+                    .send(GetBaseUrl)
+                    .await
+                    .unwrap()
+                    .unwrap()
+                    .join("/call")
+                    .unwrap()
+                    .to_string();
+                url_tx.send(url).unwrap();
+                std::future::pending::<()>().await;
+            })
+            .unwrap();
+        });
+        url_rx.blocking_recv().unwrap()
+    }
+
+    #[test]
+    fn test_http() {
+        let url = spawn_service();
+        let client = reqwest::blocking::Client::new();
+        let body = r#"{"envelope":"","svc_name":"add","svc_id":"","input":[1, 2]}"#;
+        let body = client
+            .post(&url)
+            .header("content-type", "application/json")
+            .body(body)
+            .send()
+            .unwrap()
+            .text()
+            .unwrap();
+        assert_eq!(body, r#"{"envelope":"","success":true,"data":3}"#);
+    }
+
+    #[test]
+    fn test_ws() {
+        let url = spawn_service();
+        let url = url
+            .strip_prefix("http")
+            .unwrap()
+            .strip_suffix("call")
+            .unwrap();
+        let url = format!("ws{}ws", url);
+        let body = r#"{"envelope":"","svc_name":"add","svc_id":"","input":[1, 2]}"#;
+        let (mut conn, _) = tungstenite::connect(&url).unwrap();
+        conn.send(Message::Text(body.to_owned())).unwrap();
+        let Ok(Message::Text(body)) = conn.read() else {
+            panic!();
+        };
+        assert_eq!(body, r#"{"envelope":"","success":true,"data":3}"#);
+    }
 }

@@ -8,6 +8,7 @@ use flow_lib::{
     ContextConfig, FlowRunId, NodeId, User,
 };
 use serde_with::{serde_as, DisplayFromStr};
+use srpc::GetBaseUrl;
 use std::{collections::HashMap, convert::Infallible};
 use tower::util::ServiceExt;
 use tracing::Instrument;
@@ -70,11 +71,15 @@ impl Drop for ServiceProxy {
 }
 
 impl ServiceProxy {
-    fn new(result: srpc::RegisterServiceResult, server: &actix::Addr<srpc::Server>) -> Self {
+    fn new(
+        result: srpc::RegisterServiceResult,
+        base_url: Url,
+        server: &actix::Addr<srpc::Server>,
+    ) -> Self {
         Self {
             name: result.name,
             id: result.id,
-            base_url: result.base_url,
+            base_url,
             drop: result.old_service.is_none().then(|| server.clone()),
         }
     }
@@ -119,6 +124,10 @@ impl ContextProxy {
         let server = extensions
             .get::<actix::Addr<srpc::Server>>()
             .ok_or_else(|| CommandError::msg("srpc::Server not available"))?;
+        let our_base_url = server
+            .send(GetBaseUrl)
+            .await?
+            .ok_or_else(|| CommandError::msg("srpc::Server is not listening on any interfaces"))?;
         let flow_run_id = command
             .as_ref()
             .map(|c| c.flow_run_id)
@@ -133,7 +142,9 @@ impl ContextProxy {
             .await?;
 
         let command = match command {
-            Some(command) => Some(CommandContextData::new(command, server).await?),
+            Some(command) => {
+                Some(CommandContextData::new(command, our_base_url.clone(), server).await?)
+            }
             None => None,
         };
 
@@ -144,7 +155,7 @@ impl ContextProxy {
             environment,
             endpoints,
             command,
-            signer: ServiceProxy::new(signer, server),
+            signer: ServiceProxy::new(signer, our_base_url, server),
         })
     }
 }
@@ -157,6 +168,7 @@ impl CommandContextData {
             node_id,
             times,
         }: CommandContext,
+        base_url: Url,
         server: &actix::Addr<srpc::Server>,
     ) -> Result<Self, CommandError> {
         let span = tracing::Span::current();
@@ -181,8 +193,8 @@ impl CommandContextData {
             flow_run_id,
             node_id,
             times,
-            svc: ServiceProxy::new(svc, server),
-            log: ServiceProxy::new(log, server),
+            svc: ServiceProxy::new(svc, base_url.clone(), server),
+            log: ServiceProxy::new(log, base_url, server),
         })
     }
 }
