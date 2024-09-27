@@ -497,3 +497,79 @@ pub fn configure_server(s: &mut web::ServiceConfig, addr: actix::WeakAddr<Server
         .route("/call", web::post().to(call))
         .route("/ws", web::get().to(handle_ws));
 }
+
+#[cfg(test)]
+mod tests {
+    use std::convert::Infallible;
+
+    use futures_util::{SinkExt, StreamExt};
+    use tokio_tungstenite::tungstenite::Message;
+
+    use super::*;
+
+    async fn spawn_service() -> String {
+        let (url_tx, url_rx) = tokio::sync::oneshot::channel();
+        std::thread::spawn(|| {
+            actix::run(async move {
+                let addr = Server::start_http_server().unwrap();
+                addr.send(RegisterJsonService::new(
+                    "add".to_owned(),
+                    "".to_owned(),
+                    tower::service_fn(
+                        |(a, b): (i64, i64)| async move { Ok::<_, Infallible>(a + b) },
+                    ),
+                ))
+                .await
+                .unwrap();
+                let url = addr
+                    .send(GetBaseUrl)
+                    .await
+                    .unwrap()
+                    .unwrap()
+                    .join("/call")
+                    .unwrap()
+                    .to_string();
+                url_tx.send(url).unwrap();
+                std::future::pending::<()>().await;
+            })
+            .unwrap();
+        });
+        url_rx.await.unwrap()
+    }
+
+    #[tokio::test]
+    async fn test_http() {
+        let url = spawn_service().await;
+        let client = reqwest::Client::new();
+        let body = r#"{"envelope":"","svc_name":"add","svc_id":"","input":[1, 2]}"#;
+        let body = client
+            .post(&url)
+            .header("content-type", "application/json")
+            .body(body)
+            .send()
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap();
+        assert_eq!(body, r#"{"envelope":"","success":true,"data":3}"#);
+    }
+
+    #[tokio::test]
+    async fn test_ws() {
+        let url = spawn_service().await;
+        let url = url
+            .strip_prefix("http")
+            .unwrap()
+            .strip_suffix("call")
+            .unwrap();
+        let url = format!("ws{}ws", url);
+        let body = r#"{"envelope":"","svc_name":"add","svc_id":"","input":[1, 2]}"#;
+        let (mut conn, _) = tokio_tungstenite::connect_async(&url).await.unwrap();
+        conn.send(Message::Text(body.to_owned())).await.unwrap();
+        let Some(Ok(Message::Text(body))) = conn.next().await else {
+            panic!();
+        };
+        assert_eq!(body, r#"{"envelope":"","success":true,"data":3}"#);
+    }
+}

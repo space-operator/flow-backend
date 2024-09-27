@@ -22,8 +22,9 @@ url = { version = "2.5.0", features = ["serde"] }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["async", "async_tokio"] }
-tokio = "1"
+tokio = { version = "1", features = ["macros"] }
 reqwest = { version = "0.12", default-features = false }
+tokio-tungstenite = "0.24.0"
 
 [[bench]]
 name = "srpc_http"
