@@ -501,13 +501,11 @@ pub fn configure_server(s: &mut web::ServiceConfig, addr: actix::WeakAddr<Server
 #[cfg(test)]
 mod tests {
     use std::convert::Infallible;
-
-    use futures_util::{SinkExt, StreamExt};
-    use tokio_tungstenite::tungstenite::Message;
+    use tungstenite::Message;
 
     use super::*;
 
-    async fn spawn_service() -> String {
+    fn spawn_service() -> String {
         let (url_tx, url_rx) = tokio::sync::oneshot::channel();
         std::thread::spawn(|| {
             actix::run(async move {
@@ -534,30 +532,28 @@ mod tests {
             })
             .unwrap();
         });
-        url_rx.await.unwrap()
+        url_rx.blocking_recv().unwrap()
     }
 
-    #[tokio::test]
-    async fn test_http() {
-        let url = spawn_service().await;
-        let client = reqwest::Client::new();
+    #[test]
+    fn test_http() {
+        let url = spawn_service();
+        let client = reqwest::blocking::Client::new();
         let body = r#"{"envelope":"","svc_name":"add","svc_id":"","input":[1, 2]}"#;
         let body = client
             .post(&url)
             .header("content-type", "application/json")
             .body(body)
             .send()
-            .await
             .unwrap()
             .text()
-            .await
             .unwrap();
         assert_eq!(body, r#"{"envelope":"","success":true,"data":3}"#);
     }
 
-    #[tokio::test]
-    async fn test_ws() {
-        let url = spawn_service().await;
+    #[test]
+    fn test_ws() {
+        let url = spawn_service();
         let url = url
             .strip_prefix("http")
             .unwrap()
@@ -565,9 +561,9 @@ mod tests {
             .unwrap();
         let url = format!("ws{}ws", url);
         let body = r#"{"envelope":"","svc_name":"add","svc_id":"","input":[1, 2]}"#;
-        let (mut conn, _) = tokio_tungstenite::connect_async(&url).await.unwrap();
-        conn.send(Message::Text(body.to_owned())).await.unwrap();
-        let Some(Ok(Message::Text(body))) = conn.next().await else {
+        let (mut conn, _) = tungstenite::connect(&url).unwrap();
+        conn.send(Message::Text(body.to_owned())).unwrap();
+        let Ok(Message::Text(body)) = conn.read() else {
             panic!();
         };
         assert_eq!(body, r#"{"envelope":"","success":true,"data":3}"#);

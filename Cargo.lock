@@ -2350,7 +2350,6 @@ dependencies = [
  "ciborium",
  "clap 4.5.3",
  "criterion-plot",
- "futures",
  "is-terminal",
  "itertools",
  "num-traits",
@@ -2363,7 +2362,6 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "tinytemplate",
- "tokio",
  "walkdir",
 ]
 
@@ -5834,6 +5832,7 @@ dependencies = [
  "base64 0.21.7",
  "bytes",
  "encoding_rs",
+ "futures-channel",
  "futures-core",
  "futures-util",
  "h2 0.4.3",
@@ -7977,6 +7976,7 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
+ "tungstenite 0.24.0",
  "url",
 ]
 
