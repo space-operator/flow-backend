@@ -1,1 +1,1 @@
-UPDATE TABLE wallets DROP COLUMN keypair;
+ALTER TABLE wallets DROP COLUMN keypair;
