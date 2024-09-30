@@ -415,14 +415,17 @@ impl UserConnection {
             let mut res = HashMap::with_capacity(owner_wallets.len());
             for wallet in &owner_wallets {
                 let (id, owner_pk) = wallet;
-                let new_id = is_same_user
+                let value = is_same_user
                     .then_some(wallet)
-                    .or_else(|| user_wallet.iter().find(|(_, pk)| pk == owner_pk))
-                    .unwrap_or_else(|| &user_wallet[0]);
-                res.insert(id, new_id);
+                    .or_else(|| user_wallet.iter().find(|(_, pk)| pk == owner_pk));
+                if let Some(value) = value {
+                    res.insert(id, value);
+                }
             }
             res
         };
+        let default_wallet_id = user_wallet[0].0;
+        let default_wallet_pubkey = user_wallet[0].1.as_str();
 
         let mut ids = HashSet::<FlowId>::new();
         let mut queue = vec![flow_id];
@@ -530,10 +533,10 @@ impl UserConnection {
                                         jsonb_set(
                                             node,
                                             '{data,targets_form,form_data,public_key}',
-                                            $3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->1
+                                            COALESCE($3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->1, $5::JSONB)
                                         ),
                                         '{data,targets_form,form_data,wallet_id}',
-                                        $3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->0
+                                        COALESCE($3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->0, $4::JSONB)
                                     )
 
                                 ELSE node
@@ -548,7 +551,13 @@ impl UserConnection {
                 WHERE flows.id = q.id";
         tx.do_execute(
             update_flow,
-            &[&new_ids, &Json(&flow_id_map), &Json(&wallet_map)],
+            &[
+                &new_ids,
+                &Json(&flow_id_map),
+                &Json(&wallet_map),
+                &Json(default_wallet_id),
+                &Json(default_wallet_pubkey),
+            ],
         )
         .await
         .map_err(Error::exec("update interflow IDs"))?;
