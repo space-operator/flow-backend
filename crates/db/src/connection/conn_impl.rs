@@ -1,11 +1,7 @@
 use crate::{config::Encrypted, local_storage::CacheBucket, EncryptedWallet};
-use anyhow::anyhow;
 use bytes::{Bytes, BytesMut};
 use deadpool_postgres::Transaction;
-use flow_lib::{
-    config::client::NodeDataSkipWasm,
-    solana::{Keypair, KeypairExt},
-};
+use flow_lib::config::client::NodeDataSkipWasm;
 use futures_util::StreamExt;
 use tokio::task::spawn_blocking;
 use utils::bs58_decode;
@@ -329,9 +325,9 @@ impl UserConnection {
 
     async fn get_encrypted_wallets_query(&self) -> crate::Result<Vec<EncryptedWallet>> {
         let conn = self.pool.get_conn().await?;
-        let rows = conn
+        let result = conn
             .do_query(
-                "SELECT public_key, encrypted_keypair, id, keypair FROM wallets WHERE user_id = $1",
+                "SELECT public_key, encrypted_keypair, id FROM wallets WHERE user_id = $1",
                 &[&self.user_id],
             )
             .await
@@ -351,48 +347,13 @@ impl UserConnection {
 
                 let id = r.try_get(2).map_err(Error::data("wallets.id"))?;
 
-                let keypair = r.try_get(3).map_err(Error::data("wallets.keypair"))?;
-
-                Ok((
-                    EncryptedWallet {
-                        id,
-                        pubkey,
-                        encrypted_keypair,
-                    },
-                    keypair,
-                ))
+                Ok(EncryptedWallet {
+                    id,
+                    pubkey,
+                    encrypted_keypair,
+                })
             })
-            .collect::<crate::Result<Vec<(EncryptedWallet, Option<String>)>>>()?;
-
-        let mut update_id = Vec::new();
-        let mut update_data = Vec::new();
-        let mut result = Vec::new();
-        for (mut row, keypair) in rows.into_iter() {
-            if row.encrypted_keypair.is_none() && keypair.is_some() {
-                let keypair = Keypair::from_str(&keypair.unwrap())
-                    .map_err(|_| Error::LogicError(anyhow!("invalid wallets.keypair")))?;
-                let encrypted = self.pool.encrypt_keypair(&keypair)?;
-                row.encrypted_keypair = Some(encrypted.clone());
-                update_id.push(row.id);
-                update_data.push(Json(encrypted));
-            }
-            result.push(row);
-        }
-
-        if !update_id.is_empty() {
-            conn.do_execute(
-                "UPDATE wallets
-                SET encrypted_keypair = args.encrypted_keypair
-                FROM (SELECT
-                    unnest($1::bigint[]) AS id,
-                    unnest($2::jsonb[]) AS encrypted_keypair)
-                    AS args
-                WHERE wallets.id = args.id",
-                &[&update_id, &update_data],
-            )
-            .await
-            .map_err(Error::exec("update wallets"))?;
-        }
+            .collect::<crate::Result<Vec<EncryptedWallet>>>()?;
 
         Ok(result)
     }
@@ -454,14 +415,17 @@ impl UserConnection {
             let mut res = HashMap::with_capacity(owner_wallets.len());
             for wallet in &owner_wallets {
                 let (id, owner_pk) = wallet;
-                let new_id = is_same_user
+                let value = is_same_user
                     .then_some(wallet)
-                    .or_else(|| user_wallet.iter().find(|(_, pk)| pk == owner_pk))
-                    .unwrap_or_else(|| &user_wallet[0]);
-                res.insert(id, new_id);
+                    .or_else(|| user_wallet.iter().find(|(_, pk)| pk == owner_pk));
+                if let Some(value) = value {
+                    res.insert(id, value);
+                }
             }
             res
         };
+        let default_wallet_id = user_wallet[0].0;
+        let default_wallet_pubkey = user_wallet[0].1.as_str();
 
         let mut ids = HashSet::<FlowId>::new();
         let mut queue = vec![flow_id];
@@ -569,10 +533,10 @@ impl UserConnection {
                                         jsonb_set(
                                             node,
                                             '{data,targets_form,form_data,public_key}',
-                                            $3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->1
+                                            COALESCE($3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->1, $5::JSONB)
                                         ),
                                         '{data,targets_form,form_data,wallet_id}',
-                                        $3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->0
+                                        COALESCE($3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->0, $4::JSONB)
                                     )
 
                                 ELSE node
@@ -587,7 +551,13 @@ impl UserConnection {
                 WHERE flows.id = q.id";
         tx.do_execute(
             update_flow,
-            &[&new_ids, &Json(&flow_id_map), &Json(&wallet_map)],
+            &[
+                &new_ids,
+                &Json(&flow_id_map),
+                &Json(&wallet_map),
+                &Json(default_wallet_id),
+                &Json(default_wallet_pubkey),
+            ],
         )
         .await
         .map_err(Error::exec("update interflow IDs"))?;
