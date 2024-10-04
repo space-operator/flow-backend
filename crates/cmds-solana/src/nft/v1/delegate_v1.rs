@@ -7,7 +7,7 @@ use mpl_token_metadata::{
         DelegateAuthorityItemV1InstructionArgs, DelegateCollectionItemV1InstructionArgs,
         DelegateCollectionV1InstructionArgs, DelegateDataItemV1InstructionArgs,
         DelegateDataV1InstructionArgs, DelegateLockedTransferV1InstructionArgs,
-        DelegateProgrammableConfigItemV1InstructionArgs,
+        DelegatePrintDelegateV1InstructionArgs, DelegateProgrammableConfigItemV1InstructionArgs,
         DelegateProgrammableConfigV1InstructionArgs, DelegateSaleV1InstructionArgs,
         DelegateStakingV1InstructionArgs, DelegateStandardV1InstructionArgs,
         DelegateTransferV1InstructionArgs, DelegateUtilityV1InstructionArgs,
@@ -449,9 +449,16 @@ impl DelegateV1 {
             ),
             mpl_token_metadata::types::DelegateArgs::PrintDelegateV1 {
                 authorization_data: _,
-            } => {
-                todo!()
-            }
+            } => (
+                DelegatePrintDelegateV1InstructionArgs {
+                    authorization_data: None,
+                }
+                .try_to_vec()
+                .unwrap(),
+                DelegatePrintDelegateV1InstructionData::new()
+                    .try_to_vec()
+                    .unwrap(),
+            ),
         };
 
         data.append(&mut args);
@@ -655,6 +662,21 @@ impl DelegateUtilityV1InstructionData {
         Self {
             discriminator: 44,
             delegate_utility_v1_discriminator: 4,
+        }
+    }
+}
+
+#[derive(BorshDeserialize, BorshSerialize)]
+struct DelegatePrintDelegateV1InstructionData {
+    discriminator: u8,
+    delegate_print_delegate_v1_discriminator: u8,
+}
+
+impl DelegatePrintDelegateV1InstructionData {
+    fn new() -> Self {
+        Self {
+            discriminator: 44,
+            delegate_print_delegate_v1_discriminator: 13,
         }
     }
 }

@@ -3,7 +3,6 @@ use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_core_candy_guard::instruction::MintV1;
 use solana_program::{instruction::Instruction, system_program, sysvar};
-use solana_sdk::{compute_budget::ComputeBudgetInstruction, pubkey::Pubkey};
 
 // Command Name
 const NAME: &str = "mint_candy_machine_core";
@@ -99,11 +98,12 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         signers: [
             input.payer.clone_keypair(),
             input.minter.clone_keypair(),
+            // TODO handle uninitialized mint_account
             // input.mint_account.clone_keypair(),
         ]
         .into(),
         instructions: [
-            ComputeBudgetInstruction::set_compute_unit_limit(1_000_000u32),
+            // ComputeBudgetInstruction::set_compute_unit_limit(1_000_000u32),
             Instruction {
                 program_id: CANDY_GUARD_PROGRAM_ID,
                 accounts,

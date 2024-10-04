@@ -165,7 +165,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         ]
         .into(),
         instructions: [
-            ComputeBudgetInstruction::set_compute_unit_limit(1_000_000u32),
             Instruction {
                 program_id: mpl_candy_guard::id(),
                 accounts,
