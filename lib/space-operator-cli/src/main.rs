@@ -181,9 +181,16 @@ impl ApiClient {
     pub async fn save_application_data(&self) -> Result<(), Report<Error>> {
         let dirs = project_dirs()?;
         let data = toml::to_string_pretty(&self.config).change_context(Error::SerializeData)?;
-        tokio::fs::write(dirs.data_dir().join("data.toml"), data)
+        let base = dirs.data_dir();
+        tokio::fs::create_dir_all(base)
             .await
-            .change_context(Error::WriteData)?;
+            .change_context(Error::WriteData)
+            .attach_printable_lazy(|| format!("failed to create directories {}", base.display()))?;
+        let path = base.join("data.toml");
+        tokio::fs::write(&path, data)
+            .await
+            .change_context(Error::WriteData)
+            .attach_printable_lazy(|| format!("failed to write {}", path.display()))?;
         Ok(())
     }
 
@@ -231,6 +238,7 @@ async fn run() -> Result<(), Report<Error>> {
             let client = ApiClient::new(flow_server, key).await?;
             let username = client.get_username().await?.unwrap_or_default();
             println!("Logged in as {:?}", username);
+            client.save_application_data().await?;
         }
         None => {
             Args::command().print_help().ok();
@@ -241,6 +249,8 @@ async fn run() -> Result<(), Report<Error>> {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
+    Report::set_color_mode(error_stack::fmt::ColorMode::Color);
+    Report::install_debug_hook::<std::panic::Location>(|_, _| {});
     if let Err(error) = run().await {
         eprintln!("Error: {:?}", error);
     }
