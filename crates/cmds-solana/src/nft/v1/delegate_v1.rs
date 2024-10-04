@@ -447,11 +447,11 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            // mpl_token_metadata::types::DelegateArgs::PrintDelegateV1 {
-            //     authorization_data: _,
-            // } => {
-            //     todo!()
-            // }
+            mpl_token_metadata::types::DelegateArgs::PrintDelegateV1 {
+                authorization_data: _,
+            } => {
+                todo!()
+            }
         };
 
         data.append(&mut args);
