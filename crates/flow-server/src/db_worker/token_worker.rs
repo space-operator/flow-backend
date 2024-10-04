@@ -88,6 +88,7 @@ impl ClaimWithApiKey {
             access_token,
             refresh_token,
             expires_at,
+            ..
         } = self
             .client
             .post(format!("{}/auth/claim_token", self.upstream_url))

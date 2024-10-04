@@ -6,6 +6,7 @@ use flow_lib::config::Endpoints;
 
 #[derive(Serialize, Deserialize)]
 pub struct Output {
+    pub user_id: UserId,
     pub access_token: String,
     pub refresh_token: String,
     #[serde(with = "chrono::serde::ts_seconds")]
@@ -41,6 +42,7 @@ async fn claim_token(
             refresh_token,
             expires_at,
         }) => Ok(web::Json(Output {
+            user_id: user.user_id,
             access_token,
             refresh_token,
             expires_at,
