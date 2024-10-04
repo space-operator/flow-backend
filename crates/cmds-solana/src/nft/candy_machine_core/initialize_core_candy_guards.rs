@@ -41,7 +41,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let candy_guard_program = mpl_candy_guard::id();
+    let candy_guard_program = mpl_core_candy_guard::ID;
 
     let base_pubkey = input.base.pubkey();
 
@@ -53,7 +53,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         candy_guard,
         base: input.base.pubkey(),
         payer: input.payer.pubkey(),
-        system_program: system_program::id(),
+        system_program: system_program::ID,
     }
     .to_account_metas(None);
 
@@ -71,7 +71,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         fee_payer: input.payer.pubkey(),
         signers: [input.payer.clone_keypair(), input.base.clone_keypair()].into(),
         instructions: [Instruction {
-            program_id: mpl_candy_guard::id(),
+            program_id: candy_guard_program,
             accounts,
             data,
         }]

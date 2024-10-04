@@ -48,6 +48,7 @@ pub struct Output {
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let candy_machine_program = mpl_core_candy_machine_core::id();
+    let mpl_core_program = mpl_core::ID;
     let candy_pubkey = input.candy_machine.pubkey();
 
     // Authority PDA
@@ -65,7 +66,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         collection_update_authority: input.collection_update_authority.pubkey(),
         system_program: system_program::ID,
         sysvar_instructions: solana_program::sysvar::instructions::id(),
-        mpl_core_program: candy_machine_program,
+        mpl_core_program,
     }
     .to_account_metas(None);
 

@@ -97,16 +97,8 @@
       "passthrough": true
     },
     {
-      "name": "mint_authority",
-      "type_bounds": ["keypair"],
-      "required": true,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": true
-    },
-    {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -122,7 +114,7 @@
     },
     {
       "name": "collection_update_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": ["pubkey"],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -144,31 +136,6 @@
       "tooltip": "",
       "passthrough": true
     },
-    {
-      "name": "rule_set",
-      "type_bounds": ["pubkey"],
-      "required": false,
-      "defaultValue": "eBJLFYPxJmMGKuFwpDWkzxZeUrad92kZRC5BJLpzyT9",
-      "tooltip": "Default is Metaplex Rule Set",
-      "passthrough": false
-    },
-    {
-      "name": "authorization_rules_program",
-      "type_bounds": ["pubkey"],
-      "required": false,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "authorization_rules",
-      "type_bounds": ["pubkey"],
-      "required": false,
-      "defaultValue": "",
-      "tooltip": "",
-      "passthrough": false
-    },
-
     {
       "name": "submit",
       "type_bounds": ["bool"],

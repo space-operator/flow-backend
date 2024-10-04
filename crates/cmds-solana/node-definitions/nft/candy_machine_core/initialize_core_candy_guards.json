@@ -3,7 +3,7 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "initialize_candy_guard_core",
+    "node_id": "initialize_core_candy_guards",
     "version": "0.1",
     "display_name": "Initialize Candy Guard Core",
     "description": "",

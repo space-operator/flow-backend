@@ -3,7 +3,7 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "wrap_candy_machine_core",
+    "node_id": "wrap_core",
     "version": "0.1",
     "display_name": "Wrap Candy Machine Core",
     "description": "",

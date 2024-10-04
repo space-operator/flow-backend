@@ -6,7 +6,7 @@ use solana_program::{instruction::Instruction, system_program, sysvar};
 use solana_sdk::{compute_budget::ComputeBudgetInstruction, pubkey::Pubkey};
 
 // Command Name
-const NAME: &str = "mint_core";
+const NAME: &str = "mint_candy_machine_core";
 
 const DEFINITION: &str = flow_lib::node_definition!("nft/candy_machine_core/mint_core.json");
 
@@ -33,10 +33,8 @@ pub struct Input {
     pub minter: Keypair,
     #[serde(default, with = "value::pubkey::opt")]
     pub owner: Option<Pubkey>,
-    #[serde(with = "value::pubkey")]
-    pub mint_account: Pubkey,
     #[serde(with = "value::keypair")]
-    pub mint_authority: Keypair,
+    pub mint_account: Keypair,
     #[serde(with = "value::pubkey")]
     pub collection_mint: Pubkey,
     #[serde(with = "value::pubkey")]
@@ -74,14 +72,14 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         candy_machine_authority_pda,
         payer: input.payer.pubkey(),
         minter: input.minter.pubkey(),
-        sysvar_instructions: sysvar::instructions::id(),
-        recent_slothashes: sysvar::slot_hashes::id(),
         owner: input.owner,
-        asset: input.mint_account,
+        asset: input.mint_account.pubkey(),
         collection: input.collection_mint,
         mpl_core_program: MPL_CORE_PROGRAM_ID,
         candy_machine_program: CANDY_MACHINE_PROGRAM_ID,
-        system_program: system_program::id(),
+        system_program: system_program::ID,
+        sysvar_instructions: sysvar::instructions::ID,
+        recent_slothashes: sysvar::slot_hashes::ID,
     }
     .to_account_metas(None);
 
@@ -101,7 +99,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         signers: [
             input.payer.clone_keypair(),
             input.minter.clone_keypair(),
-            input.mint_authority.clone_keypair(),
+            // input.mint_account.clone_keypair(),
         ]
         .into(),
         instructions: [
