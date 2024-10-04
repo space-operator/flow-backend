@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 pub mod add_config_lines_core;
 pub mod initialize_core_candy_guards;
 pub mod initialize_core_candy_machine;
+pub mod update_core_candy_machine;
+pub mod update_core_candy_guards;
 pub mod mint_core;
 pub mod wrap_core;
 
