@@ -1,0 +1,24 @@
+[package]
+name = "space-operator-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+path = "src/main.rs"
+name = "spo"
+
+[dependencies]
+chrono = { version = "0.4.38", features = ["serde"] }
+clap = { version = "=4.5.18", features = ["derive"] }
+directories = "5.0.1"
+error-stack = "0.5.0"
+futures = "0.3.30"
+postgrest = { git = "https://github.com/space-operator/postgrest-rs", branch = "dev" }
+reqwest = "0.12.8"
+serde = { workspace = true, features = ["derive"] }
+serde_json = { version = "1.0.128", features = ["preserve_order"] }
+thiserror = "1.0.64"
+tokio = { version = "1.40.0", features = ["macros"] }
+toml = { version = "0.8.19", features = ["preserve_order"] }
+url = { version = "2.5.2", features = ["serde"] }
+uuid = { version = "1.10.0", features = ["serde"] }

@@ -271,6 +271,7 @@ async fn main() {
             .service(websocket)
             .service(kvstore)
             .service(healthcheck)
+            .service(api::get_info::service(&config))
     })
     .shutdown_timeout(shutdown_timeout_secs as u64);
     if let Some(pool_size) = pool_size {
