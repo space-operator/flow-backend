@@ -10,7 +10,7 @@ use mpl_token_metadata::{
         DelegateProgrammableConfigItemV1InstructionArgs,
         DelegateProgrammableConfigV1InstructionArgs, DelegateSaleV1InstructionArgs,
         DelegateStakingV1InstructionArgs, DelegateStandardV1InstructionArgs,
-        DelegateTransferV1InstructionArgs, DelegateUtilityV1InstructionArgs, InstructionAccount,
+        DelegateTransferV1InstructionArgs, DelegateUtilityV1InstructionArgs,
     },
     types::{MetadataDelegateRole, TokenDelegateRole},
 };
@@ -203,7 +203,7 @@ impl DelegateV1 {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: mpl_token_metadata::types::DelegateArgs,
-        remaining_accounts: &[InstructionAccount],
+        remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
         if let Some(delegate_record) = self.delegate_record {
@@ -308,7 +308,7 @@ impl DelegateV1 {
         }
         remaining_accounts
             .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+            .for_each(|remaining_account| accounts.push(remaining_account.clone()));
 
         let (mut args, mut data) = match args {
             mpl_token_metadata::types::DelegateArgs::AuthorityItemV1 { authorization_data } => (
@@ -447,6 +447,11 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
+            // mpl_token_metadata::types::DelegateArgs::PrintDelegateV1 {
+            //     authorization_data: _,
+            // } => {
+            //     todo!()
+            // }
         };
 
         data.append(&mut args);

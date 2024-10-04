@@ -54,8 +54,11 @@ spl-associated-token-account = { version = "=2.2.0", features = [
 spl-account-compression = "=0.3.0"
 spl-noop = "=0.2.0"
 mpl-token-auth-rules = "=1.4.3"
-mpl-token-metadata = "=3.1.0"
+mpl-token-metadata = "=3.2.3"
 mpl-candy-machine-core = { version = "=2.0.1", features = ["no-entrypoint"] }
+mpl-core-candy-machine-core = { version = "=0.2.1", features = [
+    "no-entrypoint",
+] }
 mpl-candy-guard = { version = "=2.0.0", features = ["no-entrypoint"] }
 mpl-bubblegum = { version = "=1.4.0" }
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [

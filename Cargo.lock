@@ -1959,9 +1959,10 @@ dependencies = [
  "mpl-bubblegum",
  "mpl-candy-guard",
  "mpl-candy-machine-core",
- "mpl-core",
+ "mpl-core 0.7.2",
+ "mpl-core-candy-machine-core",
  "mpl-token-auth-rules",
- "mpl-token-metadata 3.1.0",
+ "mpl-token-metadata 3.2.3",
  "once_cell",
  "primitive-types 0.9.1",
  "pyth-sdk-solana",
@@ -4484,6 +4485,20 @@ dependencies = [
 
 [[package]]
 name = "mpl-core"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de7477a52a59fe4db051c6a83077319288e8bfbd1aaf8511d4f733e3a77b6d24"
+dependencies = [
+ "base64 0.22.1",
+ "borsh 0.10.3",
+ "num-derive 0.3.3",
+ "num-traits",
+ "solana-program",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-core"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1d4f516cd9daae872182a50850ab6d5588667e71152d49b0729a32830036b83"
@@ -4499,6 +4514,22 @@ dependencies = [
  "serde_with 3.9.0",
  "solana-program",
  "thiserror",
+]
+
+[[package]]
+name = "mpl-core-candy-machine-core"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62a42bd1df60a6b03189957c81614d1f0e607e09210a9d223a908ddbd98c08b1"
+dependencies = [
+ "anchor-lang 0.28.0",
+ "arrayref",
+ "mpl-core 0.4.4",
+ "mpl-token-metadata 3.2.3",
+ "mpl-utils",
+ "solana-program",
+ "spl-associated-token-account 2.2.0",
+ "spl-token 4.0.0",
 ]
 
 [[package]]
@@ -4542,9 +4573,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "3.1.0"
+version = "3.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "177204bbe7486b22ac35af2c91a82630f830a6ddd3392651aefde1ef346aba3d"
+checksum = "ba8ee05284d79b367ae8966d558e1a305a781fc80c9df51f37775169117ba64f"
 dependencies = [
  "borsh 0.10.3",
  "num-derive 0.3.3",
