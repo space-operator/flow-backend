@@ -8,9 +8,14 @@ use reqwest::{
     StatusCode,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::io::{stdin, BufReader};
+use std::{
+    io::{stdin, BufReader},
+    path::{Path, PathBuf},
+};
 use thiserror::Error as ThisError;
 use url::Url;
+
+pub mod schema;
 
 pub mod claim_token {
     use chrono::{DateTime, Utc};
@@ -40,6 +45,37 @@ pub mod get_info {
     }
 }
 
+async fn refresh(
+    http: &reqwest::Client,
+    info: &get_info::Output,
+    refresh_token: &str,
+) -> Result<(), Report<Error>> {
+    #[derive(Serialize)]
+    struct Body<'a> {
+        refresh_token: &'a str,
+    }
+
+    #[derive(Deserialize)]
+    struct Resp {
+        access_token: String,
+        expires_in: u32,
+        refresh_token: String,
+    }
+
+    let resp = http
+        .post(
+            info.supabase_url
+                .join("/auth/v1/token?grant_type=refresh_token")
+                .change_context(Error::Url)?,
+        )
+        .header(HeaderName::from_static("apikey"), &info.anon_key)
+        .json(&Body { refresh_token })
+        .send()
+        .await;
+
+    Ok(())
+}
+
 #[derive(Parser, Debug)]
 #[command(name = "spo")]
 struct Args {
@@ -54,6 +90,25 @@ struct Args {
 enum Commands {
     /// Login to Space Operator using API key
     Login {},
+    /// Manage your nodes
+    Nodes {
+        #[command(subcommand)]
+        command: NodesCommands,
+    },
+}
+#[derive(Subcommand, Debug)]
+enum NodesCommands {
+    /// Upload nodes
+    Upload {
+        /// Path to JSON node definition file
+        path: PathBuf,
+        /// Only print diff, don't do anything
+        #[arg(long)]
+        dry_run: bool,
+        /// Don't ask for confirmation
+        #[arg(long)]
+        no_confirm: bool,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -88,8 +143,20 @@ pub enum Error {
     Dir,
     #[error("failed to serialize application data")]
     SerializeData,
-    #[error("failed to write application data")]
-    WriteData,
+    #[error("failed to parse application data")]
+    ParseData,
+    #[error("failed to write application data {}", .0.display())]
+    WriteData(PathBuf),
+    #[error("failed to read application data {}", .0.display())]
+    ReadData(PathBuf),
+    #[error("failed to read file {}", .0.display())]
+    ReadFile(PathBuf),
+    #[error("failed to parse node definition")]
+    ParseNodeDefinition,
+    #[error("{}", .0)]
+    Unimplemented(&'static str),
+    #[error("you are not logged in")]
+    NotLogin,
 }
 
 #[derive(Deserialize)]
@@ -154,7 +221,27 @@ async fn get_info(
     read_json_response(resp).await
 }
 
+async fn read_file<P: AsRef<Path>>(path: P) -> Result<String, Report<Error>> {
+    tokio::fs::read_to_string(path.as_ref())
+        .await
+        .change_context_lazy(|| Error::ReadFile(path.as_ref().to_owned()))
+}
+
 impl ApiClient {
+    pub async fn load() -> Result<Self, Report<Error>> {
+        let path = Self::data_file_full_path()?;
+        let text = tokio::fs::read_to_string(&path)
+            .await
+            .change_context_lazy(|| Error::ReadData(path.clone()))?;
+        let config: Config = toml::from_str(&text).change_context(Error::ParseData)?;
+        let http = reqwest::Client::new();
+        Ok(Self {
+            pg: Postgrest::new_with_client(config.info.supabase_url.clone(), http.clone()),
+            http,
+            config,
+        })
+    }
+
     pub async fn new(flow_server: Url, apikey: String) -> Result<Self, Report<Error>> {
         let http = reqwest::Client::new();
         let token = claim_token(&http, &flow_server, &apikey).await?;
@@ -178,19 +265,45 @@ impl ApiClient {
         })
     }
 
+    async fn get_access_token(&mut self) -> Result<String, Report<Error>> {
+        let now = chrono::Utc::now();
+        if now >= self.config.jwt.expires_at + chrono::Duration::minutes(1) {}
+        Ok(self.config.jwt.access_token.clone())
+    }
+
+    pub async fn get_my_native_node(&self, node_id: &str) -> Result<(), Report<Error>> {
+        self.pg
+            .from("nodes")
+            .eq("user_id", self.config.jwt.user_id.to_string())
+            .select("*");
+        Ok(())
+    }
+
+    pub fn data_dir() -> Result<PathBuf, Report<Error>> {
+        Ok(project_dirs()?.data_dir().to_owned())
+    }
+
+    pub const fn data_file_name() -> &'static str {
+        "data.toml"
+    }
+
+    pub fn data_file_full_path() -> Result<PathBuf, Report<Error>> {
+        Ok(Self::data_dir()?.join(Self::data_file_name()).to_owned())
+    }
+
     pub async fn save_application_data(&self) -> Result<(), Report<Error>> {
-        let dirs = project_dirs()?;
-        let data = toml::to_string_pretty(&self.config).change_context(Error::SerializeData)?;
-        let base = dirs.data_dir();
-        tokio::fs::create_dir_all(base)
+        let base = Self::data_dir()?;
+
+        tokio::fs::create_dir_all(&base)
             .await
-            .change_context(Error::WriteData)
-            .attach_printable_lazy(|| format!("failed to create directories {}", base.display()))?;
-        let path = base.join("data.toml");
+            .change_context_lazy(|| Error::WriteData(base.clone()))?;
+
+        let path = base.join(Self::data_file_name());
+
+        let data = toml::to_string_pretty(&self.config).change_context(Error::SerializeData)?;
         tokio::fs::write(&path, data)
             .await
-            .change_context(Error::WriteData)
-            .attach_printable_lazy(|| format!("failed to write {}", path.display()))?;
+            .change_context_lazy(|| Error::WriteData(path.clone()))?;
         Ok(())
     }
 
@@ -240,6 +353,25 @@ async fn run() -> Result<(), Report<Error>> {
             println!("Logged in as {:?}", username);
             client.save_application_data().await?;
         }
+        Some(Commands::Nodes { command }) => match command {
+            NodesCommands::Upload {
+                path,
+                dry_run,
+                no_confirm,
+            } => {
+                let client = ApiClient::load().await.change_context(Error::NotLogin)?;
+                let text = read_file(path).await?;
+                let def = serde_json::from_str::<schema::CommandDefinition>(&text)
+                    .change_context(Error::ParseNodeDefinition)?;
+                if def.r#type != "native" {
+                    return Err(Error::Unimplemented(
+                        "we only support uploading native nodes at the moment",
+                    )
+                    .into());
+                }
+                client.get_my_native_node(&def.data.node_id).await?;
+            }
+        },
         None => {
             Args::command().print_help().ok();
         }
