@@ -78,7 +78,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         update_authority: (input.update_authority.pubkey(), true),
         system_program: system_program::id(),
         sysvar_instructions: sysvar::instructions::id(),
-        spl_token_program: spl_token::id(),
+        spl_token_program: Some(spl_token::id()),
     };
 
     // Creators

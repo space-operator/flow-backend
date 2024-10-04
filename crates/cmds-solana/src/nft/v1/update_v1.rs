@@ -9,7 +9,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
     accounts::{MasterEdition, Metadata},
     instructions::{
-        InstructionAccount, UpdateAsAuthorityItemDelegateV2InstructionArgs,
+        UpdateAsAuthorityItemDelegateV2InstructionArgs,
         UpdateAsCollectionDelegateV2InstructionArgs,
         UpdateAsCollectionItemDelegateV2InstructionArgs, UpdateAsDataDelegateV2InstructionArgs,
         UpdateAsDataItemDelegateV2InstructionArgs,
@@ -160,7 +160,7 @@ impl UpdateAsDelegateV1 {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: mpl_token_metadata::types::UpdateArgs,
-        remaining_accounts: &[InstructionAccount],
+        remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -240,7 +240,7 @@ impl UpdateAsDelegateV1 {
         }
         remaining_accounts
             .iter()
-            .for_each(|remaining_account| accounts.push(remaining_account.to_account_meta()));
+            .for_each(|remaining_account| accounts.push(remaining_account.clone()));
 
         let (mut args, mut data) = match args {
             mpl_token_metadata::types::UpdateArgs::AsAuthorityItemDelegateV2 {
