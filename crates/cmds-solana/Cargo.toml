@@ -65,7 +65,7 @@ mpl-core-candy-machine-core = { version = "=0.2.1", features = [
     "no-entrypoint",
 ] }
 mpl-core-candy-guard = { version = "=0.2.1", features = ["no-entrypoint"] }
-mpl-core = { version = "=0.7.2", features = ["serde"] }
+mpl-core = { version = "=0.8.0", features = ["serde"] }
 mpl-bubblegum = { version = "=1.4.0" }
 
 # bundlr
