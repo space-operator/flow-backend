@@ -47,29 +47,36 @@ solana-program = "=1.16.27"
 solana-account-decoder = "=1.16.27"
 solana-transaction-status = '=1.16.27'
 spl-token = { version = "=4.0.0", features = ["no-entrypoint"] }
+spl-token-2022 = { version = "0.9.0", features = ["serde-traits"] }
 spl-memo = { version = "=4.0.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "=2.2.0", features = [
     "no-entrypoint",
 ] }
-spl-account-compression = "=0.3.0"
+spl-account-compression = "=0.4.1"
 spl-noop = "=0.2.0"
-mpl-token-auth-rules = "=1.4.3"
-mpl-token-metadata = "=3.1.0"
+
+# metaplex
+mpl-token-auth-rules = "=1.5.1"
+mpl-token-metadata = "=4.1.2"
 mpl-candy-machine-core = { version = "=2.0.1", features = ["no-entrypoint"] }
-mpl-candy-guard = { version = "=2.0.0", features = ["no-entrypoint"] }
+mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
+# core, core candy machine and candy guard
+mpl-core-candy-machine-core = { version = "=0.2.1", features = [
+    "no-entrypoint",
+] }
+mpl-core-candy-guard = { version = "=0.2.1", features = ["no-entrypoint"] }
+mpl-core = { version = "=0.8.0", features = ["serde"] }
 mpl-bubblegum = { version = "=1.4.0" }
+
+# bundlr
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
     "solana",
 ] }
+pyth-sdk-solana = "=0.10.0"
+
+# anchor
 anchor-lang = "=0.28.0"
 anchor-spl = "=0.28.0"
-# clockwork-client = "=2.0.1"
-# clockwork-utils = "=2.0.1"
-# clockwork-thread-program = "=2.0.1"
-# clockwork-sdk = "=2.0.1"
-spl-token-2022 = { version = "0.9.0", features = ["serde-traits"] }
-pyth-sdk-solana = "=0.10.0"
-mpl-core = { version = "0.7.2", features = ["serde"] }
 
 [dependencies.anchor-lang-26]
 package = "anchor-lang"
@@ -78,6 +85,11 @@ version = "=0.26.0"
 [dependencies.anchor-spl-26]
 package = "anchor-spl"
 version = "=0.26.0"
+
+# clockwork-client = "=2.0.1"
+# clockwork-utils = "=2.0.1"
+# clockwork-thread-program = "=2.0.1"
+# clockwork-sdk = "=2.0.1"
 
 # [dependencies.clockwork-thread-program]
 # git = "https://github.com/space-operator/clockwork.git"

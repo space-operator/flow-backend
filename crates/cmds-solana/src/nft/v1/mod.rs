@@ -45,7 +45,7 @@ impl From<Payload> for mpl_token_metadata::types::Payload {
 pub enum PayloadType {
     Pubkey(Pubkey),
     Seeds(SeedsVec),
-    MerkleProof(LeafInfo),
+    MerkleProof(ProofInfo),
     Number(u64),
 }
 
@@ -54,7 +54,7 @@ impl From<PayloadType> for mpl_token_metadata::types::PayloadType {
         match payload_type {
             PayloadType::Pubkey(pubkey) => Self::Pubkey(pubkey),
             PayloadType::Seeds(seeds_vec) => Self::Seeds(seeds_vec.into()),
-            PayloadType::MerkleProof(leaf_info) => Self::MerkleProof(leaf_info.into()),
+            PayloadType::MerkleProof(proof_info) => Self::MerkleProof(proof_info.into()),
             PayloadType::Number(number) => Self::Number(number),
         }
     }
@@ -74,16 +74,14 @@ impl From<SeedsVec> for mpl_token_metadata::types::SeedsVec {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
-pub struct LeafInfo {
-    pub leaf: [u8; 32],
+pub struct ProofInfo {
     pub proof: Vec<[u8; 32]>,
 }
 
-impl From<LeafInfo> for mpl_token_metadata::types::LeafInfo {
-    fn from(leaf_info: LeafInfo) -> Self {
+impl From<ProofInfo> for mpl_token_metadata::types::ProofInfo {
+    fn from(proof_info: ProofInfo) -> Self {
         Self {
-            leaf: leaf_info.leaf,
-            proof: leaf_info.proof,
+            proof: proof_info.proof,
         }
     }
 }
