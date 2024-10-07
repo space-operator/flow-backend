@@ -72,7 +72,9 @@ mpl-bubblegum = { version = "=1.4.0" }
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
     "solana",
 ] }
-pyth-sdk-solana = "=0.10.0"
+
+# branch: vendor
+pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "84cc6fe07acbb8a81b216228be244bf039621560" }
 
 # anchor
 anchor-lang = "=0.28.0"
