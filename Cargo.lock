@@ -5304,7 +5304,7 @@ dependencies = [
  "num-traits",
  "pyth-sdk",
  "serde",
- "solana-program 2.0.13",
+ "solana-program 1.16.27",
  "thiserror",
 ]
 
