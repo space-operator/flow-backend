@@ -1,0 +1,31 @@
+name: Rust deps
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+
+jobs:
+  rust-deps:
+    if: ${{ ! contains(github.event.pull_request.labels.*.name, 'no-test') }}
+    name: Rust deps
+    runs-on: self-hosted
+    steps:
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: default
+          override: true
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+      - uses: Swatinem/rust-cache@v2
+      - name: Install wasm32-wasi
+        run: rustup target add wasm32-wasi
+      - name: Build
+        run: cargo check --tests
+      - name: New Cargo.lock
+        run: ./scripts/resolve_deps_conflict.bash
+      - name: Re-build
+        run: cargo check --tests
