@@ -22,7 +22,7 @@ reqwest = { version = "0.12", features = [
 ] }
 tokio = { version = "1", features = ["time", "macros"] }
 mime_guess = "2"
-borsh = "0.9.3"
+borsh = "0.10.4"
 bytes = "1"
 ed25519-dalek = "1"
 futures = "0.3"
@@ -58,7 +58,7 @@ spl-noop = "=0.2.0"
 # metaplex
 mpl-token-auth-rules = "=1.5.1"
 mpl-token-metadata = "=4.1.2"
-mpl-candy-machine-core = { version = "=2.0.1", features = ["no-entrypoint"] }
+mpl-candy-machine-core = { version = "=3.0.1", features = ["no-entrypoint"] }
 mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
 # core, core candy machine and candy guard
 mpl-core-candy-machine-core = { version = "=0.2.1", features = [
@@ -72,19 +72,13 @@ mpl-bubblegum = { version = "=1.4.0" }
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
     "solana",
 ] }
-pyth-sdk-solana = "=0.10.0"
+
+# branch: vendor
+pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "84cc6fe07acbb8a81b216228be244bf039621560" }
 
 # anchor
 anchor-lang = "=0.28.0"
 anchor-spl = "=0.28.0"
-
-[dependencies.anchor-lang-26]
-package = "anchor-lang"
-version = "=0.26.0"
-
-[dependencies.anchor-spl-26]
-package = "anchor-spl"
-version = "=0.26.0"
 
 # clockwork-client = "=2.0.1"
 # clockwork-utils = "=2.0.1"
