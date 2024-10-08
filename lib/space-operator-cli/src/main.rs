@@ -1,5 +1,5 @@
 use chrono::Utc;
-use clap::{error, CommandFactory, Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
 use futures::{io::AllowStdIo, AsyncBufReadExt};
@@ -316,6 +316,52 @@ impl ApiClient {
         Ok(self.config.jwt.access_token.clone())
     }
 
+    pub async fn update_node(
+        &mut self,
+        id: CommandId,
+        def: &CommandDefinition,
+    ) -> Result<CommandId, Report<Error>> {
+        #[derive(Serialize)]
+        struct UpdateNode<'a> {
+            #[serde(flatten)]
+            def: &'a CommandDefinition,
+            unique_node_id: String,
+            name: &'a str,
+        }
+
+        let body = serde_json::to_string_pretty(&UpdateNode {
+            def,
+            unique_node_id: format!(
+                "{}.{}.{}",
+                self.config.jwt.user_id, def.data.node_id, def.data.version
+            ),
+            name: &def.data.node_id,
+        })
+        .change_context(Error::Json)?;
+        println!("{}", body);
+
+        let resp = self
+            .pg
+            .from("nodes")
+            .auth(self.get_access_token().await?)
+            .eq("id", id.to_string())
+            .update(body)
+            .select("id")
+            .single()
+            .execute()
+            .await
+            .change_context(Error::Postgrest)?;
+
+        #[derive(Deserialize)]
+        struct Resp {
+            id: CommandId,
+        }
+
+        let resp = read_json_response::<Resp, PostgrestErrorBody>(resp).await?;
+
+        Ok(resp.id)
+    }
+
     pub async fn insert_node(
         &mut self,
         def: &CommandDefinition,
@@ -473,6 +519,70 @@ async fn ask() -> bool {
     answer.trim().to_lowercase() == "y"
 }
 
+struct Line(Option<usize>);
+
+impl std::fmt::Display for Line {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self.0 {
+            None => write!(f, "    "),
+            Some(idx) => write!(f, "{:<4}", idx + 1),
+        }
+    }
+}
+
+fn print_diff<T: Serialize>(local: &T, db: &T) -> bool {
+    use console::{style, Style};
+    use similar::{ChangeTag, TextDiff};
+
+    let local_json = serde_json::to_string_pretty(local).unwrap();
+    let db_json = serde_json::to_string_pretty(db).unwrap();
+
+    let diff = TextDiff::from_lines(db_json.as_str(), local_json.as_str());
+
+    if diff
+        .iter_all_changes()
+        .filter(|c| c.tag() != ChangeTag::Equal)
+        .count()
+        == 0
+    {
+        println!("No differences");
+        return false;
+    }
+
+    for (idx, group) in diff.grouped_ops(3).iter().enumerate() {
+        if idx > 0 {
+            println!("{:-^1$}", "-", 80);
+        }
+        for op in group {
+            for change in diff.iter_inline_changes(op) {
+                let (sign, s) = match change.tag() {
+                    ChangeTag::Delete => ("-", Style::new().red()),
+                    ChangeTag::Insert => ("+", Style::new().green()),
+                    ChangeTag::Equal => (" ", Style::new().dim()),
+                };
+                print!(
+                    "{}{} |{}",
+                    style(Line(change.old_index())).dim(),
+                    style(Line(change.new_index())).dim(),
+                    s.apply_to(sign).bold(),
+                );
+                for (emphasized, value) in change.iter_strings_lossy() {
+                    if emphasized {
+                        print!("{}", s.apply_to(value).underlined().on_black());
+                    } else {
+                        print!("{}", s.apply_to(value));
+                    }
+                }
+                if change.missing_newline() {
+                    println!();
+                }
+            }
+        }
+    }
+
+    true
+}
+
 async fn upload_node(path: &PathBuf, dry_run: bool, no_confirm: bool) -> Result<(), Report<Error>> {
     let mut client = ApiClient::load().await.change_context(Error::NotLogin)?;
     let text = read_file(path).await?;
@@ -483,9 +593,22 @@ async fn upload_node(path: &PathBuf, dry_run: bool, no_confirm: bool) -> Result<
             Error::Unimplemented("we only support uploading native nodes at the moment").into(),
         );
     }
+    println!("Command: {}", def.data.node_id);
     match client.get_my_native_node(&def.data.node_id).await? {
         Some((id, db)) => {
-            dbg!(id);
+            if print_diff(&def, &db) {
+                if dry_run {
+                    return Ok(());
+                }
+                if !no_confirm {
+                    let yes = ask().await;
+                    if !yes {
+                        return Ok(());
+                    }
+                }
+                client.update_node(id, &def).await?;
+                println!("Updated node, id={}", id);
+            }
         }
         None => {
             println!("Command is not in database");
@@ -499,7 +622,7 @@ async fn upload_node(path: &PathBuf, dry_run: bool, no_confirm: bool) -> Result<
                 }
             }
             let id = client.insert_node(&def).await?;
-            println!("Inserted new node {}", id);
+            println!("Inserted new node, id={}", id);
         }
     }
 

@@ -10,6 +10,7 @@ name = "spo"
 [dependencies]
 chrono = { version = "0.4.38", features = ["serde"] }
 clap = { version = "=4.5.18", features = ["derive"] }
+console = "0.15.8"
 directories = "5.0.1"
 error-stack = "0.5.0"
 futures = "0.3.30"
@@ -17,6 +18,7 @@ postgrest = { git = "https://github.com/space-operator/postgrest-rs", rev = "e2a
 reqwest = "0.12.8"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { version = "1.0.128", features = ["preserve_order"] }
+similar = { version = "2.6.0", features = ["inline"] }
 thiserror = "1.0.64"
 tokio = { version = "1.40.0", features = ["macros"] }
 toml = { version = "0.8.19", features = ["preserve_order"] }
