@@ -338,7 +338,6 @@ impl ApiClient {
             name: &def.data.node_id,
         })
         .change_context(Error::Json)?;
-        println!("{}", body);
 
         let resp = self
             .pg
