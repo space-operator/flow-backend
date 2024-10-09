@@ -1,3 +1,5 @@
+#![allow(clippy::print_stdout, clippy::print_stderr)]
+
 use chrono::Utc;
 use clap::{CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
@@ -205,7 +207,7 @@ async fn read_json_response<T: DeserializeOwned, E: Display + DeserializeOwned>(
             Ok(body) => Ok(body),
             Err(error) => {
                 let text = String::from_utf8_lossy(&bytes).into_owned();
-                Err(Report::new(error).change_context(Error::UnknownResponse(code, text).into()))
+                Err(Report::new(error).change_context(Error::UnknownResponse(code, text)))
             }
         }
     } else {

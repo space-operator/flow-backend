@@ -480,10 +480,7 @@ impl RenderParams {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::{HashMap, HashSet},
-        vec,
-    };
+    use std::collections::{HashMap, HashSet};
 
     use serde_json::json;
     use strum::IntoEnumIterator;
