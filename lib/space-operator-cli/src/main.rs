@@ -1,7 +1,7 @@
 #![allow(clippy::print_stdout, clippy::print_stderr)]
 
 use chrono::Utc;
-use clap::{CommandFactory, Parser, Subcommand};
+use clap::{ColorChoice, CommandFactory, Parser, Subcommand, ValueEnum};
 use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
 use futures::{io::AllowStdIo, AsyncBufReadExt};
@@ -91,8 +91,16 @@ async fn refresh(
     })
 }
 
+fn get_color() -> ColorChoice {
+    std::env::var("COLOR")
+        .ok()
+        .and_then(|var| ColorChoice::from_str(&var, true).ok())
+        .unwrap_or_default()
+}
+
 #[derive(Parser, Debug)]
 #[command(name = "spo")]
+#[command(color = get_color())]
 struct Args {
     /// URL of flow-server to use (default: https://dev-api.spaceoperator.com)
     #[arg(long)]
@@ -105,14 +113,15 @@ struct Args {
 enum Commands {
     /// Login to Space Operator using API key
     Login {},
-    /// Manage your nodes
-    Nodes {
+    /// Manage your nodes (alias: "n")
+    #[command(alias = "n")]
+    Node {
         #[command(subcommand)]
-        command: NodesCommands,
+        command: NodeCommands,
     },
 }
 #[derive(Subcommand, Debug)]
-enum NodesCommands {
+enum NodeCommands {
     /// Upload nodes
     Upload {
         /// Path to JSON node definition file
@@ -649,8 +658,8 @@ async fn run() -> Result<(), Report<Error>> {
             println!("Logged in as {:?}", username);
             client.save_application_data().await?;
         }
-        Some(Commands::Nodes { command }) => match command {
-            NodesCommands::Upload {
+        Some(Commands::Node { command }) => match command {
+            NodeCommands::Upload {
                 path,
                 dry_run,
                 no_confirm,
@@ -659,7 +668,7 @@ async fn run() -> Result<(), Report<Error>> {
             }
         },
         None => {
-            Args::command().print_help().ok();
+            Args::command().print_long_help().ok();
         }
     }
     Ok(())
