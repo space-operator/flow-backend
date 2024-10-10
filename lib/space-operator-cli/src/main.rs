@@ -1,5 +1,6 @@
 #![allow(clippy::print_stdout, clippy::print_stderr)]
 
+use cargo_metadata::{Metadata, Package};
 use chrono::Utc;
 use clap::{ColorChoice, CommandFactory, Parser, Subcommand, ValueEnum};
 use directories::ProjectDirs;
@@ -113,7 +114,7 @@ struct Args {
 enum Commands {
     /// Login to Space Operator using API key
     Login {},
-    /// Manage your nodes (alias: "n")
+    /// Manage your nodes (alias: n)
     #[command(alias = "n")]
     Node {
         #[command(subcommand)]
@@ -122,6 +123,15 @@ enum Commands {
 }
 #[derive(Subcommand, Debug)]
 enum NodeCommands {
+    /// Generate a new node
+    New {
+        /// Allow dirty git repository
+        #[arg(long)]
+        allow_dirty: bool,
+        /// Specify which Rust package to add the new node to
+        #[arg(long, short)]
+        package: Option<String>,
+    },
     /// Upload nodes
     Upload {
         /// Path to JSON node definition file
@@ -179,6 +189,16 @@ pub enum Error {
     Json,
     #[error("token refresh error")]
     TokenRefresh,
+    #[error("git error: {}", .0)]
+    Gix(&'static str),
+    #[error("IO error: {}", .0)]
+    Io(&'static str),
+    #[error("cargo metadata error")]
+    Metadata,
+    #[error("package not found: {}", .0)]
+    PackageNotFound(String),
+    #[error("package is not a library: {}", .0)]
+    NotLib(String),
 }
 
 #[derive(Deserialize, ThisError, Debug)]
@@ -593,6 +613,79 @@ fn print_diff<T: Serialize>(local: &T, db: &T) -> bool {
     true
 }
 
+fn is_dirty() -> Result<bool, Report<Error>> {
+    gix::ThreadSafeRepository::discover(".").change_context(Error::Gix("open repository"))?;
+    Ok(true)
+}
+
+fn cargo_metadata() -> Result<Metadata, Report<Error>> {
+    cargo_metadata::MetadataCommand::new()
+        .no_deps()
+        .exec()
+        .change_context(Error::Metadata)
+}
+
+fn find_target_crate_by_name<'a>(
+    meta: &'a Metadata,
+    name: &str,
+) -> Result<&'a Package, Report<Error>> {
+    let members = meta.workspace_packages();
+    Ok(members
+        .into_iter()
+        .find(|p| p.name == name)
+        .ok_or_else(|| Error::PackageNotFound(name.to_owned()))?)
+}
+
+fn find_target_crate<'a>(meta: &'a Metadata) -> Result<Option<&'a Package>, Report<Error>> {
+    let members = meta.workspace_packages();
+    let pwd = std::env::current_dir().change_context(Error::Io("get current dir"))?;
+    let member = members.into_iter().find(|p| {
+        p.targets.iter().any(|t| t.is_lib())
+            && p.manifest_path
+                .parent()
+                .map(|root| pwd.starts_with(root))
+                .unwrap_or(false)
+    });
+    Ok(member)
+}
+
+async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Report<Error>> {
+    if is_dirty()
+        .inspect_err(|error| {
+            eprintln!("error: {:?}", error);
+        })
+        .unwrap_or(false)
+    {
+        if !allow_dirty {
+            eprintln!("dirty git repository");
+            eprintln!("use --allow-dirty to continue");
+            return Ok(());
+        }
+    }
+    let meta = cargo_metadata()?;
+    let member = if let Some(name) = package.as_deref() {
+        find_target_crate_by_name(&meta, name)?
+    } else if let Some(member) = find_target_crate(&meta)? {
+        member
+    } else {
+        eprintln!("could not determine which package to update");
+        eprintln!("use `-p` option to specify a package");
+        let list = meta
+            .workspace_packages()
+            .iter()
+            .filter(|p| p.targets.iter().any(|t| t.is_lib()))
+            .map(|p| format!("\n    {}", p.name))
+            .collect::<String>();
+        eprintln!("available packages: {}", list);
+        return Ok(());
+    };
+    if !member.targets.iter().any(|p| p.is_lib()) {
+        return Err(Report::new(Error::NotLib(member.name.clone())));
+    }
+    println!("using package: {}", member.name);
+    Ok(())
+}
+
 async fn upload_node(path: &PathBuf, dry_run: bool, no_confirm: bool) -> Result<(), Report<Error>> {
     let mut client = ApiClient::load().await.change_context(Error::NotLogin)?;
     let text = read_file(path).await?;
@@ -659,6 +752,12 @@ async fn run() -> Result<(), Report<Error>> {
             client.save_application_data().await?;
         }
         Some(Commands::Node { command }) => match command {
+            NodeCommands::New {
+                allow_dirty,
+                package,
+            } => {
+                new_node(*allow_dirty, package).await?;
+            }
             NodeCommands::Upload {
                 path,
                 dry_run,
