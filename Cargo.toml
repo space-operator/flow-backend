@@ -1,6 +1,6 @@
 [workspace]
 members = ["lib/*", "crates/*"]
-exclude = ["crates/space-wasm/tests"]
+exclude = ["crates/space-wasm/tests", "lib/space-operator-cli"]
 resolver = "2"
 
 [patch.crates-io]
