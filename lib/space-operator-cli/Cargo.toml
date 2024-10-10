@@ -18,7 +18,7 @@ console = "0.15.8"
 directories = "5.0.1"
 error-stack = "0.5.0"
 futures = "0.3.30"
-postgrest = { git = "https://github.com/space-operator/postgrest-rs", rev = "e2a2e607be3b5e4802fdac4a7ef1920f8e571805" }
+postgrest = { workspace = true }
 reqwest = "0.12.8"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = { version = "1.0.128", features = ["preserve_order"] }

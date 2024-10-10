@@ -1885,11 +1885,11 @@ dependencies = [
  "hyper 0.14.30",
  "mime_guess",
  "once_cell",
- "postgrest",
  "reqwest 0.12.8",
  "rust_decimal",
  "serde",
  "serde_json",
+ "spo-postgrest",
  "thiserror",
  "tokio",
  "tracing",
@@ -5237,16 +5237,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "postgrest"
-version = "1.6.0"
-source = "git+https://github.com/space-operator/postgrest-rs?rev=e2a2e607be3b5e4802fdac4a7ef1920f8e571805#e2a2e607be3b5e4802fdac4a7ef1920f8e571805"
-dependencies = [
- "bytes",
- "reqwest 0.12.8",
- "serde",
-]
-
-[[package]]
 name = "powerfmt"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7681,11 +7671,11 @@ dependencies = [
  "directories",
  "error-stack",
  "futures",
- "postgrest",
  "reqwest 0.12.8",
  "serde",
  "serde_json",
  "similar",
+ "spo-postgrest",
  "thiserror",
  "tokio",
  "toml 0.8.19",
@@ -8042,6 +8032,16 @@ dependencies = [
  "serde_json",
  "serde_with 3.11.0",
  "tracing",
+]
+
+[[package]]
+name = "spo-postgrest"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffe2f6cfdcd676f2b74c661287ff37df9e947f14259f2eed9519fc43fd4faa8c"
+dependencies = [
+ "reqwest 0.12.8",
+ "serde",
 ]
 
 [[package]]
