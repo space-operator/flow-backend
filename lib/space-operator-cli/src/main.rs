@@ -614,8 +614,12 @@ fn print_diff<T: Serialize>(local: &T, db: &T) -> bool {
 }
 
 fn is_dirty() -> Result<bool, Report<Error>> {
-    gix::ThreadSafeRepository::discover(".").change_context(Error::Gix("open repository"))?;
-    Ok(true)
+    let repo =
+        gix::ThreadSafeRepository::discover(".").change_context(Error::Gix("open repository"))?;
+    Ok(repo
+        .to_thread_local()
+        .is_dirty()
+        .change_context(Error::Gix("get status"))?)
 }
 
 fn cargo_metadata() -> Result<Metadata, Report<Error>> {
