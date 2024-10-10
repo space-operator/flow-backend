@@ -6,7 +6,7 @@
 [crates-badge]: https://img.shields.io/crates/v/space-operator-cli.svg
 [crates-url]: https://crates.io/crates/space-operator-cli
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[mit-url]: LICENSE
+[mit-url]: ../LICENSE
 
 CLI for [Space Operator](https://spaceoperator.com).
 
