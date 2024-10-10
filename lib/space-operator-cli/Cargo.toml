@@ -19,12 +19,12 @@ directories = "5.0.1"
 error-stack = "0.5.0"
 futures = "0.3.30"
 postgrest = { workspace = true }
-reqwest = "0.12.8"
+reqwest = { version = "0.12.8", features = ["json"] }
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = { version = "1.0.128", features = ["preserve_order"] }
 similar = { version = "2.6.0", features = ["inline"] }
 thiserror = "1.0.64"
-tokio = { version = "1.40.0", features = ["macros"] }
+tokio = { version = "1.40.0", features = ["macros", "fs"] }
 toml = { version = "0.8.19", features = ["preserve_order"] }
 url = { version = "2.5.2", features = ["serde"] }
 uuid = { version = "1.10.0", features = ["serde"] }
