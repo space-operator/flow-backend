@@ -2,6 +2,10 @@
 name = "space-operator-cli"
 version = "0.1.0"
 edition = "2021"
+description = "CLI for Space Operator"
+license = "AGPL-3.0-only"
+repository = "https://github.com/space-operator/flow-backend"
+homepage = "https://spaceoperator.com"
 
 [[bin]]
 path = "src/main.rs"
