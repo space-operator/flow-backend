@@ -543,8 +543,8 @@ fn project_dirs() -> Result<ProjectDirs, Report<Error>> {
     Ok(ProjectDirs::from("com", "spaceoperator", "spo").ok_or(Error::Dir)?)
 }
 
-async fn ask() -> bool {
-    print!("Upload? (y/n) ");
+async fn ask(q: &str) -> bool {
+    print!("{} (y/n): ", q);
     std::io::stdout().flush().ok();
 
     let mut stdin = AllowStdIo::new(BufReader::new(stdin()));
@@ -821,6 +821,30 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
         });
     }
 
+    let ins = ask("will this node emit Solana instructions?").await;
+    if ins {
+        if !outputs.iter().any(|o| o.name == "signature") {
+            println!("adding `signature` output");
+            outputs.push(schema::Source {
+                name: "signature".to_owned(),
+                r#type: "signature".to_owned(),
+                default_value: serde_json::Value::Null,
+                tooltip: String::new(),
+                optional: true,
+            });
+        }
+        if !outputs.iter().any(|o| o.name == "submit") {
+            println!("adding `submit` output");
+            outputs.push(schema::Source {
+                name: "submit".to_owned(),
+                r#type: "bool".to_owned(),
+                default_value: serde_json::Value::Bool(true),
+                tooltip: String::new(),
+                optional: true,
+            });
+        }
+    }
+
     dbg!(node_id);
     dbg!(display_name);
     dbg!(description);
@@ -920,7 +944,7 @@ async fn upload_node(path: &PathBuf, dry_run: bool, no_confirm: bool) -> Result<
             Error::Unimplemented("we only support uploading native nodes at the moment").into(),
         );
     }
-    println!("Command: {}", def.data.node_id);
+    println!("node: {}", def.data.node_id);
     match client.get_my_native_node(&def.data.node_id).await? {
         Some((id, db)) => {
             if print_diff(&def, &db) {
@@ -928,28 +952,28 @@ async fn upload_node(path: &PathBuf, dry_run: bool, no_confirm: bool) -> Result<
                     return Ok(());
                 }
                 if !no_confirm {
-                    let yes = ask().await;
+                    let yes = ask("update node?").await;
                     if !yes {
                         return Ok(());
                     }
                 }
                 client.update_node(id, &def).await?;
-                println!("Updated node, id={}", id);
+                println!("updated node, id={}", id);
             }
         }
         None => {
-            println!("Command is not in database");
+            println!("command is not in database");
             if dry_run {
                 return Ok(());
             }
             if !no_confirm {
-                let yes = ask().await;
+                let yes = ask("upload?").await;
                 if !yes {
                     return Ok(());
                 }
             }
             let id = client.insert_node(&def).await?;
-            println!("Inserted new node, id={}", id);
+            println!("inserted new node, id={}", id);
         }
     }
 
