@@ -858,12 +858,59 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
         None
     };
 
-    dbg!(node_id);
-    dbg!(display_name);
-    dbg!(description);
-    dbg!(inputs);
-    dbg!(outputs);
-    dbg!(info);
+    let def = schema::CommandDefinition {
+        r#type: "native".to_owned(),
+        data: schema::Data {
+            node_definition_version: Some("0.1".to_owned()),
+            unique_id: Some(String::new()),
+            node_id,
+            version: "0.1".to_owned(),
+            display_name,
+            description,
+            tags: Some(Vec::new()),
+            related_to: Some(
+                [schema::RelatedTo {
+                    id: String::new(),
+                    r#type: String::new(),
+                    relationship: String::new(),
+                }]
+                .into(),
+            ),
+            resources: Some(schema::Resources {
+                source_code_url: String::new(),
+                documentation_url: String::new(),
+            }),
+            usage: Some(schema::Usage {
+                license: "Apache-2.0".to_owned(),
+                license_url: String::new(),
+                pricing: schema::Pricing {
+                    currency: "USDC".to_owned(),
+                    purchase_price: 0,
+                    price_per_run: 0,
+                    custom: Some(schema::CustomPricing {
+                        unit: "monthly".to_owned(),
+                        value: "0".to_owned(),
+                    }),
+                },
+            }),
+            authors: Some(
+                [schema::Author {
+                    name: "Space Operator".to_owned(),
+                    contact: String::new(),
+                }]
+                .into(),
+            ),
+            instruction_info: info,
+            options: None,
+            design: None,
+        },
+        sources: outputs,
+        targets: inputs,
+        ui_schema: serde_json::Value::Object(<_>::default()),
+        json_schema: serde_json::Value::Object(<_>::default()),
+    };
+
+    dbg!(def);
     Ok(())
 }
 
