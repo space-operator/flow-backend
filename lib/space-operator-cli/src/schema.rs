@@ -63,6 +63,7 @@ pub struct Data {
     pub authors: Option<Vec<Author>>,
     pub design: Option<Design>,
     pub options: Option<serde_json::Value>,
+    pub instruction_info: Option<InstructionInfo>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

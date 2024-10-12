@@ -822,7 +822,7 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
     }
 
     let ins = ask("will this node emit Solana instructions?").await;
-    if ins {
+    let info = if ins {
         if !outputs.iter().any(|o| o.name == "signature") {
             println!("adding `signature` output");
             outputs.push(schema::Source {
@@ -853,13 +853,17 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
             "using instruction info: {:?}",
             serde_json::to_string_pretty(&info).unwrap()
         );
-    }
+        Some(info)
+    } else {
+        None
+    };
 
     dbg!(node_id);
     dbg!(display_name);
     dbg!(description);
     dbg!(inputs);
     dbg!(outputs);
+    dbg!(info);
     Ok(())
 }
 
