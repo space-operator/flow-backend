@@ -1,6 +1,13 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct InstructionInfo {
+    pub before: Vec<String>,
+    pub signature: String,
+    pub after: Vec<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, strum::EnumString, strum::EnumIter, strum::IntoStaticStr)]
 #[strum(serialize_all = "snake_case")]
 pub enum ValueType {

@@ -843,6 +843,16 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
                 optional: true,
             });
         }
+
+        let info = schema::InstructionInfo {
+            before: outputs.iter().map(|o| o.name.clone()).collect(),
+            signature: "signature".to_owned(),
+            after: Vec::new(),
+        };
+        println!(
+            "using instruction info: {:?}",
+            serde_json::to_string_pretty(&info).unwrap()
+        );
     }
 
     dbg!(node_id);
