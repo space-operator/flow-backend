@@ -658,41 +658,7 @@ fn find_target_crate<'a>(meta: &'a Metadata) -> Result<Option<&'a Package>, Repo
     Ok(member)
 }
 
-async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Report<Error>> {
-    if is_dirty()
-        .inspect_err(|error| {
-            eprintln!("error: {:?}", error);
-        })
-        .unwrap_or(false)
-    {
-        if !allow_dirty {
-            eprintln!("dirty git repository");
-            eprintln!("use --allow-dirty to continue");
-            return Ok(());
-        }
-    }
-    let meta = cargo_metadata()?;
-    let member = if let Some(name) = package.as_deref() {
-        find_target_crate_by_name(&meta, name)?
-    } else if let Some(member) = find_target_crate(&meta)? {
-        member
-    } else {
-        eprintln!("could not determine which package to update");
-        eprintln!("use `-p` option to specify a package");
-        let list = meta
-            .workspace_packages()
-            .iter()
-            .filter(|p| p.targets.iter().any(|t| t.is_lib()))
-            .map(|p| format!("\n    {}", p.name))
-            .collect::<String>();
-        eprintln!("available packages: {}", list);
-        return Ok(());
-    };
-    if !member.targets.iter().any(|p| p.is_lib()) {
-        return Err(Report::new(Error::NotLib(member.name.clone())));
-    }
-    println!("using package: {}", member.name);
-
+async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
     let mut stdin = stdin();
 
     let identifier_regex = Regex::new(r#"^[[:alpha:]][[:word:]]*$"#).unwrap();
@@ -910,7 +876,48 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
         json_schema: serde_json::Value::Object(<_>::default()),
     };
 
+    Ok(def)
+}
+
+async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Report<Error>> {
+    if is_dirty()
+        .inspect_err(|error| {
+            eprintln!("error: {:?}", error);
+        })
+        .unwrap_or(false)
+    {
+        if !allow_dirty {
+            eprintln!("dirty git repository");
+            eprintln!("use --allow-dirty to continue");
+            return Ok(());
+        }
+    }
+    let meta = cargo_metadata()?;
+    let member = if let Some(name) = package.as_deref() {
+        find_target_crate_by_name(&meta, name)?
+    } else if let Some(member) = find_target_crate(&meta)? {
+        member
+    } else {
+        eprintln!("could not determine which package to update");
+        eprintln!("use `-p` option to specify a package");
+        let list = meta
+            .workspace_packages()
+            .iter()
+            .filter(|p| p.targets.iter().any(|t| t.is_lib()))
+            .map(|p| format!("\n    {}", p.name))
+            .collect::<String>();
+        eprintln!("available packages: {}", list);
+        return Ok(());
+    };
+    if !member.targets.iter().any(|p| p.is_lib()) {
+        return Err(Report::new(Error::NotLib(member.name.clone())));
+    }
+    println!("using package: {}", member.name);
+
+    let def = prompt_node_definition().await?;
+
     dbg!(def);
+
     Ok(())
 }
 
