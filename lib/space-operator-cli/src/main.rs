@@ -7,6 +7,7 @@ use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
 use futures::{io::AllowStdIo, AsyncBufReadExt};
 use postgrest::Postgrest;
+use regex::Regex;
 use reqwest::{
     header::{HeaderName, HeaderValue, AUTHORIZATION},
     StatusCode,
@@ -14,10 +15,12 @@ use reqwest::{
 use schema::{CommandDefinition, CommandId};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
+    borrow::Cow,
     fmt::Display,
-    io::{stdin, BufReader, Write},
+    io::{BufReader, Stdin, Write},
     path::{Path, PathBuf},
 };
+use strum::IntoEnumIterator;
 use thiserror::Error as ThisError;
 use url::Url;
 use uuid::Uuid;
@@ -199,6 +202,8 @@ pub enum Error {
     PackageNotFound(String),
     #[error("package is not a library: {}", .0)]
     NotLib(String),
+    #[error("invalid value")]
+    InvalidValue,
 }
 
 #[derive(Deserialize, ThisError, Debug)]
@@ -687,7 +692,222 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
         return Err(Report::new(Error::NotLib(member.name.clone())));
     }
     println!("using package: {}", member.name);
+
+    let mut stdin = stdin();
+
+    let identifier_regex = Regex::new(r#"^[[:alpha:]][[:word:]]*$"#).unwrap();
+    let identifier_hint =
+        "value can only contains characters [a-zA-Z0-9_] and must start with [a-zA-Z]";
+
+    let node_id = Prompt::builder()
+        .question("node id: ")
+        .check_regex(&identifier_regex)
+        .regex_hint(identifier_hint)
+        .build()
+        .prompt(&mut stdin)
+        .await?;
+
+    let display_name = Prompt::builder()
+        .question("display name: ")
+        .check_regex(&Regex::new(r#"\S+"#).unwrap())
+        .regex_hint("value cannot be empty")
+        .build()
+        .prompt(&mut stdin)
+        .await?;
+
+    let description = Prompt::builder()
+        .question("description: ")
+        .build()
+        .prompt(&mut stdin)
+        .await?;
+
+    let name_regex = Regex::new(r#"^[[:alpha:]][[:word:]]*$"#).unwrap();
+    let name_hint = "value can only contains characters [a-zA-Z0-9_] and must start with [a-zA-Z]";
+
+    let mut inputs = Vec::<schema::Target>::new();
+    loop {
+        println!("adding node inputs (enter empty name to finish)");
+
+        let name = Prompt::builder()
+            .question("name: ")
+            .check_regex(&name_regex)
+            .allow_empty(true)
+            .regex_hint(name_hint)
+            .build()
+            .prompt(&mut stdin)
+            .await?;
+        if name.is_empty() {
+            break;
+        }
+
+        let types = schema::ValueType::iter()
+            .map(|t| t.into())
+            .collect::<Vec<&'static str>>();
+        let type_bound_str = Prompt::builder()
+            .question("input type: ")
+            .check_list(&types)
+            .build()
+            .prompt(&mut stdin)
+            .await?;
+        let _: schema::ValueType = type_bound_str.parse().unwrap();
+
+        let optional = Prompt::builder()
+            .question("optional (true/false): ")
+            .check_list(&["true", "false"])
+            .build()
+            .prompt(&mut stdin)
+            .await?;
+        let optional: bool = optional.parse().unwrap();
+
+        let passthrough = Prompt::builder()
+            .question("passthrough (true/false): ")
+            .check_list(&["true", "false"])
+            .build()
+            .prompt(&mut stdin)
+            .await?;
+        let passthrough: bool = passthrough.parse().unwrap();
+
+        inputs.push(schema::Target {
+            name,
+            type_bounds: [type_bound_str].into(),
+            required: !optional,
+            default_value: serde_json::Value::Null,
+            passthrough,
+            tooltip: String::new(),
+        });
+    }
+
+    let mut outputs = Vec::<schema::Source>::new();
+    loop {
+        println!("adding node outputs (enter empty name to finish)");
+
+        let name = Prompt::builder()
+            .question("name: ")
+            .check_regex(&name_regex)
+            .allow_empty(true)
+            .regex_hint(name_hint)
+            .build()
+            .prompt(&mut stdin)
+            .await?;
+        if name.is_empty() {
+            break;
+        }
+
+        let types = schema::ValueType::iter()
+            .map(|t| t.into())
+            .collect::<Vec<&'static str>>();
+        let type_bound_str = Prompt::builder()
+            .question("output type: ")
+            .check_list(&types)
+            .build()
+            .prompt(&mut stdin)
+            .await?;
+        let _: schema::ValueType = type_bound_str.parse().unwrap();
+
+        let optional = Prompt::builder()
+            .question("optional (true/false): ")
+            .check_list(&["true", "false"])
+            .build()
+            .prompt(&mut stdin)
+            .await?;
+        let optional: bool = optional.parse().unwrap();
+
+        outputs.push(schema::Source {
+            name,
+            r#type: type_bound_str,
+            tooltip: String::new(),
+            optional,
+            default_value: serde_json::Value::Null,
+        });
+    }
+
+    dbg!(node_id);
+    dbg!(display_name);
+    dbg!(description);
+    dbg!(inputs);
+    dbg!(outputs);
     Ok(())
+}
+
+#[derive(bon::Builder)]
+struct Prompt<'a> {
+    #[builder(into)]
+    question: Cow<'a, str>,
+    #[builder(default)]
+    allow_empty: bool,
+    check_regex: Option<&'a Regex>,
+    #[builder(into)]
+    regex_hint: Option<Cow<'a, str>>,
+    check_list: Option<&'a [&'a str]>,
+}
+
+impl<'a> Prompt<'a> {
+    pub async fn prompt<S: futures::AsyncBufRead + Unpin>(
+        &self,
+        stdin: &mut S,
+    ) -> Result<String, Report<Error>> {
+        let mut tries = 5;
+        loop {
+            match self.prompt_inner(stdin).await {
+                Ok(result) => break Ok(result),
+                Err(error) => {
+                    tries -= 1;
+                    if tries == 0 {
+                        break Err(error);
+                    } else {
+                        eprintln!("error: {:?}", error);
+                    }
+                }
+            }
+        }
+    }
+
+    async fn prompt_inner<S: futures::AsyncBufRead + Unpin>(
+        &self,
+        stdin: &mut S,
+    ) -> Result<String, Report<Error>> {
+        let result = {
+            loop {
+                if self.check_list.is_some() {
+                    print!("(?) ");
+                }
+                print!("{}", self.question);
+                std::io::stdout().flush().ok();
+                let mut result = String::new();
+                stdin.read_line(&mut result).await.ok();
+                let result = result.trim();
+                if let Some(list) = self.check_list {
+                    if result == "?" {
+                        let availables = format!("possible values: {}", list.join(", "));
+                        println!("{}", availables);
+                        continue;
+                    }
+                }
+                break result.to_owned();
+            }
+        };
+
+        if self.allow_empty && result.is_empty() {
+            return Ok(result.to_owned());
+        }
+        if let Some(re) = &self.check_regex {
+            if !re.is_match(&result) {
+                let mut report = Report::new(Error::InvalidValue);
+                if let Some(hint) = &self.regex_hint {
+                    report = report.attach_printable(hint.clone().into_owned());
+                }
+                return Err(report);
+            }
+        }
+        if let Some(list) = self.check_list {
+            if !list.contains(&result.as_str()) {
+                let availables = format!("possible values: {}", list.join(", "));
+                let report = Report::new(Error::InvalidValue).attach_printable(availables);
+                return Err(report);
+            }
+        }
+        Ok(result.to_owned())
+    }
 }
 
 async fn upload_node(path: &PathBuf, dry_run: bool, no_confirm: bool) -> Result<(), Report<Error>> {
@@ -736,6 +956,12 @@ async fn upload_node(path: &PathBuf, dry_run: bool, no_confirm: bool) -> Result<
     Ok(())
 }
 
+type AsyncStdin = AllowStdIo<BufReader<Stdin>>;
+
+fn stdin() -> AsyncStdin {
+    AllowStdIo::new(BufReader::new(std::io::stdin()))
+}
+
 async fn run() -> Result<(), Report<Error>> {
     let args = Args::parse();
     let flow_server = args
@@ -746,7 +972,7 @@ async fn run() -> Result<(), Report<Error>> {
             println!("Go to https://spaceoperator.com/dashboard/profile/apikey go generate a key");
             println!("Please paste your API key below");
             let mut key = String::new();
-            let mut stdin = AllowStdIo::new(BufReader::new(stdin()));
+            let mut stdin = stdin();
             stdin.read_line(&mut key).await.ok();
             let key = key.trim().to_owned();
 

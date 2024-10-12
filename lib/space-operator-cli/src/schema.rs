@@ -1,6 +1,43 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
+#[derive(Debug, Clone, PartialEq, Eq, strum::EnumString, strum::EnumIter, strum::IntoStaticStr)]
+#[strum(serialize_all = "snake_case")]
+pub enum ValueType {
+    Bool,
+    U8,
+    U16,
+    U32,
+    U64,
+    U128,
+    I8,
+    I16,
+    I32,
+    I64,
+    I128,
+    F32,
+    F64,
+    #[strum(serialize = "number")]
+    #[strum(serialize = "decimal")]
+    Decimal,
+    Pubkey,
+    // Wormhole address
+    Address,
+    Keypair,
+    Signature,
+    String,
+    Bytes,
+    #[strum(serialize = "array")]
+    #[strum(serialize = "list")]
+    Array,
+    #[strum(serialize = "object")]
+    #[strum(serialize = "map")]
+    Map,
+    Json,
+    Free,
+    Other,
+}
+
 // ID in database
 pub type CommandId = i64;
 
@@ -79,6 +116,8 @@ pub struct Source {
     #[serde(rename = "defaultValue")]
     pub default_value: JsonValue,
     pub tooltip: String,
+    #[serde(default)]
+    pub optional: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
