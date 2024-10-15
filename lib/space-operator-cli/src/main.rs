@@ -795,8 +795,8 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
                 optional: true,
             });
         }
-        if !outputs.iter().any(|o| o.name == "submit") {
-            println!("adding `submit` output");
+        if !inputs.iter().any(|o| o.name == "submit") {
+            println!("adding `submit` input");
             outputs.push(schema::Source {
                 name: "submit".to_owned(),
                 r#type: "bool".to_owned(),
@@ -812,7 +812,7 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
             after: Vec::new(),
         };
         println!(
-            "using instruction info: {:?}",
+            "using instruction info: {}",
             serde_json::to_string_pretty(&info).unwrap()
         );
         Some(info)
@@ -898,7 +898,7 @@ async fn write_node_definition(
     def: &CommandDefinition,
     package: &Package,
     modules: &[&str],
-) -> Result<(), Report<Error>> {
+) -> Result<Option<PathBuf>, Report<Error>> {
     let root = package
         .manifest_path
         .parent()
@@ -908,12 +908,19 @@ async fn write_node_definition(
     let mut path = root.join("node-definitions");
     modules.iter().for_each(|m| path.push(m));
     path.push(&format!("{}.json", def.data.node_id));
+    let path = relative_to_pwd(path);
 
-    println!(
-        "writing node definition to {}",
-        relative_to_pwd(path).display()
-    );
-    Ok(())
+    println!("writing node definition to {}", path.display());
+    if path.is_file() {
+        if !ask("file already exists, overwrite?").await {
+            return Ok(None);
+        }
+    }
+    let content = serde_json::to_string_pretty(def).change_context(Error::Json)?;
+    tokio::fs::write(&path, content)
+        .await
+        .change_context(Error::Io("write file"))?;
+    Ok(Some(path))
 }
 
 async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Report<Error>> {
