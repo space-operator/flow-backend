@@ -797,12 +797,12 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
         }
         if !inputs.iter().any(|o| o.name == "submit") {
             println!("adding `submit` input");
-            outputs.push(schema::Source {
+            inputs.push(schema::Target {
                 name: "submit".to_owned(),
-                r#type: "bool".to_owned(),
+                type_bounds: ["bool".to_owned()].into(),
                 default_value: serde_json::Value::Bool(true),
                 tooltip: String::new(),
-                optional: true,
+                required: false,
             });
         }
 
