@@ -1,4 +1,5 @@
 //! Note: only add fields that are needed in backend.
+use crate::command::InstructionInfo;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -20,6 +21,7 @@ pub struct Permissions {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Data {
     pub node_id: String,
+    pub instruction_info: Option<InstructionInfo>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
