@@ -803,6 +803,7 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
                 default_value: serde_json::Value::Bool(true),
                 tooltip: String::new(),
                 required: false,
+                passthrough: false,
             });
         }
 
