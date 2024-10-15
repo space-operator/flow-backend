@@ -910,7 +910,9 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
     }
     println!("using package: {}", member.name);
 
-    let rust_module_regex = Regex::new(r#"^\w+(::\w+)*$"#).unwrap();
+    let rust_module_regex =
+        Regex::new(r#"^(\p{XID_Start}|_)\p{XID_Continue}*(::(\p{XID_Start}|_)\p{XID_Continue}*)*$"#)
+            .unwrap();
     let rust_module_hint = "enter valid Rust module path to save the node (empty to save at root)";
     let module = Prompt::builder()
         .question("module path: ")
