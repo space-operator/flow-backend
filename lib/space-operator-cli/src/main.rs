@@ -910,7 +910,7 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
     }
     println!("using package: {}", member.name);
 
-    let rust_module_regex = Regex::new(r#"^\w+(::\w+)*$"#).unwrap();
+    let rust_module_regex = Regex::new(r#"^(::)?\w+(::\w+)*$"#).unwrap();
     let rust_module_hint = "enter valid Rust module path to save the node (empty to save at root)";
     let module = Prompt::builder()
         .question("module path: ")
@@ -965,7 +965,7 @@ impl<'a> Prompt<'a> {
     ) -> Result<String, Report<Error>> {
         let result = {
             loop {
-                if self.check_list.is_some() {
+                if self.check_list.is_some() || self.regex_hint.is_some() {
                     print!("(?) ");
                 }
                 print!("{}", self.question);
@@ -973,6 +973,12 @@ impl<'a> Prompt<'a> {
                 let mut result = String::new();
                 stdin.read_line(&mut result).await.ok();
                 let result = result.trim();
+                if let Some(hint) = &self.regex_hint {
+                    if result == "?" {
+                        println!("{}", hint);
+                        continue;
+                    }
+                }
                 if let Some(list) = self.check_list {
                     if result == "?" {
                         let availables = format!("possible values: {}", list.join(", "));
