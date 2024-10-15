@@ -875,6 +875,47 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
     Ok(def)
 }
 
+fn relative_to_pwd<P: AsRef<Path>>(path: P) -> PathBuf {
+    let path = path.as_ref();
+    let mut pwd = std::env::current_dir().unwrap_or_default();
+    let mut result = PathBuf::new();
+    loop {
+        match path.strip_prefix(&pwd) {
+            Ok(suffix) => {
+                result.push(suffix);
+                break;
+            }
+            Err(_) => {
+                pwd.pop();
+                result.push("..");
+            }
+        }
+    }
+    result
+}
+
+async fn write_node_definition(
+    def: &CommandDefinition,
+    package: &Package,
+    modules: &[&str],
+) -> Result<(), Report<Error>> {
+    let root = package
+        .manifest_path
+        .parent()
+        .ok_or_else(|| Report::new(Error::Io("find package path")))?
+        .as_std_path();
+
+    let mut path = root.join("node-definitions");
+    modules.iter().for_each(|m| path.push(m));
+    path.push(&format!("{}.json", def.data.node_id));
+
+    println!(
+        "writing node definition to {}",
+        relative_to_pwd(path).display()
+    );
+    Ok(())
+}
+
 async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Report<Error>> {
     if is_dirty()
         .inspect_err(|error| {
@@ -910,11 +951,12 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
     }
     println!("using package: {}", member.name);
 
-    let rust_module_regex =
-        Regex::new(r#"^(\p{XID_Start}|_)\p{XID_Continue}*(::(\p{XID_Start}|_)\p{XID_Continue}*)*$"#)
-            .unwrap();
+    let rust_module_regex = Regex::new(
+        r#"^(\p{XID_Start}|_)\p{XID_Continue}*(::(\p{XID_Start}|_)\p{XID_Continue}*)*$"#,
+    )
+    .unwrap();
     let rust_module_hint = "enter valid Rust module path to save the node (empty to save at root)";
-    let module = Prompt::builder()
+    let module_path = Prompt::builder()
         .question("module path: ")
         .check_regex(&rust_module_regex)
         .regex_hint(rust_module_hint)
@@ -922,8 +964,11 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
         .build()
         .prompt(&mut stdin())
         .await?;
+    let modules = module_path.split("::").collect::<Vec<_>>();
 
     let def = prompt_node_definition().await?;
+
+    write_node_definition(&def, member, &modules).await?;
 
     Ok(())
 }
