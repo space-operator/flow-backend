@@ -1,12 +1,13 @@
 #![allow(clippy::print_stdout, clippy::print_stderr)]
 
-use cargo_metadata::{Metadata, Package};
+use cargo_metadata::{Metadata, Package, Target};
 use chrono::Utc;
 use clap::{ColorChoice, CommandFactory, Parser, Subcommand, ValueEnum};
 use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
 use futures::{io::AllowStdIo, AsyncBufReadExt};
 use postgrest::Postgrest;
+use quote::quote;
 use regex::Regex;
 use reqwest::{
     header::{HeaderName, HeaderValue, AUTHORIZATION},
@@ -907,7 +908,7 @@ async fn write_node_definition(
         .as_std_path();
 
     let mut path = root.join("node-definitions");
-    modules.iter().for_each(|m| path.push(m));
+    path.extend(modules);
     path.push(&format!("{}.json", def.data.node_id));
     let path = relative_to_pwd(path);
 
@@ -922,6 +923,132 @@ async fn write_node_definition(
         .await
         .change_context(Error::Io("write file"))?;
     Ok(Some(path))
+}
+
+fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
+    let node_id = &def.data.node_id;
+    let node_definition_path = modules.join("/") + node_id + ".json";
+    let code = quote! {
+        use flow_lib::command::prelude::*;
+
+        const NAME: &str = #node_id;
+
+        flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
+
+        fn build() -> BuildResult {
+            const DEFINITION: &str = flow_lib::node_definition!(#node_definition_path);
+            static CACHE: BuilderCache = BuilderCache::new(|| {
+                CmdBuilder::new(DEFINITION)?.check_name(NAME)
+            });
+            Ok(CACHE.clone()?.build(run))
+        }
+
+        async fn run(mut ctx: Context, input: ValueSet) -> Result<ValueSet, CommandError> {
+            Err(CommandError::msg("unimplemented"))
+        }
+
+        #[cfg(test)]
+        mod tests {
+            use super::*;
+
+            #[test]
+            fn test_build() {
+                build().unwrap();
+            }
+
+            #[tokio::test]
+            async fn test_run() {
+                let ctx = Context::default();
+
+                build().unwrap().run(ctx, ValueSet::new()).await.unwrap_err();
+            }
+        }
+    };
+
+    let file = syn::parse2::<syn::File>(code).unwrap();
+    let pretty = prettyplease::unparse(&file);
+    pretty
+}
+
+fn find_parent_module<P: AsRef<Path>>(path: P) -> Result<PathBuf, Report<Error>> {
+    let path = path.as_ref();
+    let parent = path.parent().ok_or_else(|| Error::Io("get parent path"))?;
+
+    let mod_rs = parent.join("mod.rs");
+    if mod_rs.is_file() {
+        return Ok(mod_rs);
+    }
+
+    let mut mod_rs = parent.to_owned();
+    mod_rs.set_extension("rs");
+    if mod_rs.is_file() {
+        return Ok(mod_rs);
+    }
+
+    let lib_rs = parent.join("lib.rs");
+    if lib_rs.is_file() {
+        return Ok(lib_rs);
+    }
+
+    Err(Report::new(Error::Io("find parent module")))
+}
+
+async fn write_code(
+    def: &CommandDefinition,
+    target: &Target,
+    modules: &[&str],
+) -> Result<(), Report<Error>> {
+    let root = target
+        .src_path
+        .parent()
+        .ok_or_else(|| Report::new(Error::Io("find package source path")))?
+        .as_std_path();
+
+    let mut path = root.to_path_buf();
+    path.extend(modules);
+    path.push(format!("{}.rs", def.data.node_id));
+    let path = relative_to_pwd(path);
+
+    println!("writing code to {}", path.display());
+    if path.is_file() {
+        if !ask("file already exists, overwrite?").await {
+            return Ok(());
+        }
+    }
+
+    let code = code_template(def, modules);
+    tokio::fs::write(&path, code)
+        .await
+        .change_context(Error::Io("write file"))?;
+
+    let parent_module_path = find_parent_module(path)?;
+
+    let mut parent_module = tokio::fs::read_to_string(&parent_module_path)
+        .await
+        .change_context(Error::Io("read file"))?;
+
+    let parsed_parent_module =
+        syn::parse_file(&parent_module).change_context(Error::Io("invalid rust code"))?;
+    let has_module = parsed_parent_module.items.iter().any(|item| {
+        if let syn::Item::Mod(m) = item {
+            return m.ident.to_string() == def.data.node_id;
+        } else {
+            false
+        }
+    });
+
+    if !has_module {
+        std::fmt::write(
+            &mut parent_module,
+            format_args!("\npub mod {};\n", def.data.node_id),
+        )
+        .unwrap();
+        println!("updating module {}", parent_module_path.display());
+        tokio::fs::write(&parent_module_path, parent_module)
+            .await
+            .change_context(Error::Io("write file"))?;
+    }
+    Ok(())
 }
 
 async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Report<Error>> {
@@ -954,9 +1081,11 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
         eprintln!("available packages: {}", list);
         return Ok(());
     };
-    if !member.targets.iter().any(|p| p.is_lib()) {
-        return Err(Report::new(Error::NotLib(member.name.clone())));
-    }
+    let lib_target = member
+        .targets
+        .iter()
+        .find(|p| p.is_lib())
+        .ok_or_else(|| Error::NotLib(member.name.clone()))?;
     println!("using package: {}", member.name);
 
     let rust_module_regex = Regex::new(
@@ -977,6 +1106,8 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
     let def = prompt_node_definition().await?;
 
     write_node_definition(&def, member, &modules).await?;
+
+    write_code(&def, lib_target, &modules).await?;
 
     Ok(())
 }

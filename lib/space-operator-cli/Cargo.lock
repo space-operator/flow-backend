@@ -1845,6 +1845,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc9c68a3f6da06753e9335d63e27f6b9754dd1920d941135b7ea8224f141adb2"
 
 [[package]]
+name = "prettyplease"
+version = "0.2.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "479cf940fbbb3426c32c5d5176f62ad57549a0bb84773423ba8be9d089f5faba"
+dependencies = [
+ "proc-macro2",
+ "syn",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.87"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2226,6 +2236,8 @@ dependencies = [
  "error-stack",
  "futures",
  "gix",
+ "prettyplease",
+ "quote",
  "regex",
  "reqwest",
  "serde",
@@ -2233,6 +2245,7 @@ dependencies = [
  "similar",
  "spo-postgrest",
  "strum",
+ "syn",
  "thiserror",
  "tokio",
  "toml",
