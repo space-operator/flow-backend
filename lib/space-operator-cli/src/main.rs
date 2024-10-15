@@ -661,14 +661,13 @@ fn find_target_crate<'a>(meta: &'a Metadata) -> Result<Option<&'a Package>, Repo
 async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
     let mut stdin = stdin();
 
-    let identifier_regex = Regex::new(r#"^[[:alpha:]][[:word:]]*$"#).unwrap();
-    let identifier_hint =
-        "value can only contains characters [a-zA-Z0-9_] and must start with [a-zA-Z]";
+    let name_regex = Regex::new(r#"^[[:alpha:]][[:word:]]*$"#).unwrap();
+    let name_hint = "value can only contains characters [a-zA-Z0-9_] and must start with [a-zA-Z]";
 
     let node_id = Prompt::builder()
         .question("node id: ")
-        .check_regex(&identifier_regex)
-        .regex_hint(identifier_hint)
+        .check_regex(&name_regex)
+        .regex_hint(name_hint)
         .build()
         .prompt(&mut stdin)
         .await?;
@@ -686,9 +685,6 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
         .build()
         .prompt(&mut stdin)
         .await?;
-
-    let name_regex = Regex::new(r#"^[[:alpha:]][[:word:]]*$"#).unwrap();
-    let name_hint = "value can only contains characters [a-zA-Z0-9_] and must start with [a-zA-Z]";
 
     let mut inputs = Vec::<schema::Target>::new();
     loop {
@@ -914,9 +910,18 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
     }
     println!("using package: {}", member.name);
 
-    let def = prompt_node_definition().await?;
+    let rust_module_regex = Regex::new(r#"^\w+(::\w+)*$"#).unwrap();
+    let rust_module_hint = "enter valid Rust module path to save the node (empty to save at root)";
+    let module = Prompt::builder()
+        .question("module path: ")
+        .check_regex(&rust_module_regex)
+        .regex_hint(rust_module_hint)
+        .allow_empty(true)
+        .build()
+        .prompt(&mut stdin())
+        .await?;
 
-    dbg!(def);
+    let def = prompt_node_definition().await?;
 
     Ok(())
 }
