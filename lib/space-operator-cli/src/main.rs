@@ -1092,7 +1092,7 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
         let serde_decor = rust_type_serde_decor(&t.type_bounds, !t.required, &t.default_value);
         quote! {
             #serde_decor
-            #name: #ty,
+            #name: #ty
         }
     });
     let input_struct = quote! {
@@ -1107,7 +1107,7 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
         let serde_decor = rust_type_serde_decor(&[t.r#type.clone()], t.optional, &t.default_value);
         quote! {
             #serde_decor
-            #name: #ty,
+            #name: #ty
         }
     });
     let output_struct = quote! {
@@ -1157,9 +1157,9 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
         }
     };
 
-    let file = syn::parse2::<syn::File>(code).unwrap();
-    let pretty = prettyplease::unparse(&file);
-    pretty
+    syn::parse2::<syn::File>(code.clone())
+        .map(|file| prettyplease::unparse(&file))
+        .unwrap_or_else(|_| code.to_string())
 }
 
 fn find_parent_module<P: AsRef<Path>>(path: P) -> Result<PathBuf, Report<Error>> {
