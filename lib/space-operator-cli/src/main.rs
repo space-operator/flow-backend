@@ -1208,6 +1208,9 @@ async fn write_code(
 
     let mut path = root.to_path_buf();
     path.extend(modules);
+    tokio::fs::create_dir_all(&path)
+        .await
+        .change_context(Error::Io("create dir"))?;
     path.push(format!("{}.rs", def.data.node_id));
     let path = relative_to_pwd(path);
 
