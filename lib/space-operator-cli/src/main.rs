@@ -713,7 +713,7 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
             .build()
             .prompt(&mut stdin)
             .await?;
-        let _: schema::ValueType = type_bound_str.parse().unwrap();
+        let type_bound: schema::ValueType = type_bound_str.parse().unwrap();
 
         let optional = Prompt::builder()
             .question("optional (true/false): ")
@@ -722,6 +722,23 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
             .prompt(&mut stdin)
             .await?;
         let optional: bool = optional.parse().unwrap();
+
+        let default_value = if optional && type_bound == ValueType::Bool {
+            let default = Prompt::builder()
+                .question("default value (empty/true/false): ")
+                .check_list(&["true", "false"])
+                .allow_empty(true)
+                .build()
+                .prompt(&mut stdin)
+                .await?;
+            default
+                .parse::<bool>()
+                .ok()
+                .map(serde_json::Value::Bool)
+                .unwrap_or(serde_json::Value::Null)
+        } else {
+            serde_json::Value::Null
+        };
 
         let passthrough = Prompt::builder()
             .question("passthrough (true/false): ")
@@ -735,7 +752,7 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
             name,
             type_bounds: [type_bound_str].into(),
             required: !optional,
-            default_value: serde_json::Value::Null,
+            default_value,
             passthrough,
             tooltip: String::new(),
         });
@@ -959,14 +976,111 @@ fn value_type_to_rust_type(ty: schema::ValueType) -> TokenStream {
 fn rust_type(
     bounds: &[String],
     optional: bool,
-    default_value: serde_json::Value,
+    default_value: &serde_json::Value,
 ) -> proc_macro2::TokenStream {
     let ty = bounds
         .get(0)
         .and_then(|ty| ty.parse::<ValueType>().ok())
         .unwrap_or(schema::ValueType::Free);
+    let use_option =
+        optional && !(ty == ValueType::Bool && matches!(default_value, serde_json::Value::Bool(_)));
     let ty = value_type_to_rust_type(ty);
+    let ty = if use_option {
+        quote! { Option<#ty> }
+    } else {
+        ty
+    };
     ty
+}
+
+fn rust_type_serde_decor(
+    bounds: &[String],
+    optional: bool,
+    default_value: &serde_json::Value,
+) -> proc_macro2::TokenStream {
+    let ty = bounds
+        .get(0)
+        .and_then(|ty| ty.parse::<ValueType>().ok())
+        .unwrap_or(schema::ValueType::Free);
+    match ty {
+        ValueType::Bool => {
+            if optional && default_value.as_bool().is_some() {
+                let default = default_value.as_bool().unwrap();
+                let path = if default {
+                    "value::default::bool_true"
+                } else {
+                    "value::default::bool_false"
+                };
+                return quote! { #[serde(default = #path)]};
+            }
+        }
+        ValueType::U8 => {}
+        ValueType::U16 => {}
+        ValueType::U32 => {}
+        ValueType::U64 => {}
+        ValueType::U128 => {}
+        ValueType::I8 => {}
+        ValueType::I16 => {}
+        ValueType::I32 => {}
+        ValueType::I64 => {}
+        ValueType::I128 => {}
+        ValueType::F32 => {}
+        ValueType::F64 => {}
+        ValueType::Decimal => {
+            return if optional {
+                quote! {
+                    #[serde(default, with = "value::decimal::opt")]
+                }
+            } else {
+                quote! {
+                    #[serde(with = "value::decimal")]
+                }
+            };
+        }
+        ValueType::Pubkey => {
+            return if optional {
+                quote! {
+                    #[serde(default, with = "value::pubkey::opt")]
+                }
+            } else {
+                quote! {
+                    #[serde(with = "value::pubkey")]
+                }
+            };
+        }
+        ValueType::Address => {}
+        ValueType::Keypair => {
+            return if optional {
+                quote! {
+                    #[serde(default, with = "value::keypair::opt")]
+                }
+            } else {
+                quote! {
+                    #[serde(with = "value::keypair")]
+                }
+            };
+        }
+        ValueType::Signature => {
+            return if optional {
+                quote! {
+                    #[serde(default, with = "value::signature::opt")]
+                }
+            } else {
+                quote! {
+                    #[serde(with = "value::signature")]
+                }
+            };
+        }
+        ValueType::String => {}
+        ValueType::Bytes => {}
+        ValueType::Array => {}
+        ValueType::Map => {}
+        ValueType::Json => {}
+        ValueType::Free => {}
+        ValueType::Other => {}
+    }
+
+    quote! {}
 }
 
 fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
@@ -974,9 +1088,11 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
     let node_definition_path = modules.join("/") + node_id + ".json";
     let inputs = def.targets.iter().map(|t| {
         let name = format_ident!("{}", t.name);
-        let ty = rust_type(&t.type_bounds);
+        let ty = rust_type(&t.type_bounds, !t.required, &t.default_value);
+        let serde_decor = rust_type_serde_decor(&t.type_bounds, !t.required, &t.default_value);
         quote! {
-            #name: Value,
+            #serde_decor
+            #name: #ty,
         }
     });
     let input_struct = quote! {
@@ -987,8 +1103,11 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
     };
     let outputs = def.sources.iter().map(|t| {
         let name = format_ident!("{}", t.name);
+        let ty = rust_type(&[t.r#type.clone()], t.optional, &t.default_value);
+        let serde_decor = rust_type_serde_decor(&[t.r#type.clone()], t.optional, &t.default_value);
         quote! {
-            #name: Value,
+            #serde_decor
+            #name: #ty,
         }
     });
     let output_struct = quote! {
