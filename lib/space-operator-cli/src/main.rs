@@ -1321,10 +1321,14 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
 
     let def = prompt_node_definition().await?;
 
-    write_node_definition(&def, member, &modules).await?;
+    if let Some(nd) = write_node_definition(&def, member, &modules).await? {
+        write_code(&def, lib_target, &modules).await?;
 
-    write_code(&def, lib_target, &modules).await?;
-
+        let upload = ask("upload node").await;
+        if upload {
+            upload_node(&nd, false, false).await?;
+        }
+    }
     Ok(())
 }
 
@@ -1415,7 +1419,7 @@ impl<'a> Prompt<'a> {
     }
 }
 
-async fn upload_node(path: &PathBuf, dry_run: bool, no_confirm: bool) -> Result<(), Report<Error>> {
+async fn upload_node(path: &Path, dry_run: bool, no_confirm: bool) -> Result<(), Report<Error>> {
     let mut client = ApiClient::load().await.change_context(Error::NotLogin)?;
     let text = read_file(path).await?;
     let def = serde_json::from_str::<schema::CommandDefinition>(&text)
