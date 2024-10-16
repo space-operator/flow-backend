@@ -25,6 +25,7 @@ futures = "0.3.30"
 gix = { version = "0.66.0", default-features = false, features = ["status"] }
 postgrest = { package = "spo-postgrest", version = "1.6.0" }
 prettyplease = "0.2.22"
+proc-macro2 = "1.0.87"
 quote = { version = "1.0.37" }
 regex = "1.11.0"
 reqwest = { version = "0.12.8", features = ["json"] }

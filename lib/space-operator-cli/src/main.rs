@@ -7,13 +7,14 @@ use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
 use futures::{io::AllowStdIo, AsyncBufReadExt};
 use postgrest::Postgrest;
-use quote::quote;
+use proc_macro2::TokenStream;
+use quote::{format_ident, quote};
 use regex::Regex;
 use reqwest::{
     header::{HeaderName, HeaderValue, AUTHORIZATION},
     StatusCode,
 };
-use schema::{CommandDefinition, CommandId};
+use schema::{CommandDefinition, CommandId, ValueType};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
     borrow::Cow,
@@ -925,9 +926,77 @@ async fn write_node_definition(
     Ok(Some(path))
 }
 
+fn value_type_to_rust_type(ty: schema::ValueType) -> TokenStream {
+    match ty {
+        schema::ValueType::Bool => quote! { bool },
+        schema::ValueType::U8 => quote! { u8 },
+        schema::ValueType::U16 => quote! { u16 },
+        schema::ValueType::U32 => quote! { u32 },
+        schema::ValueType::U64 => quote! { u64},
+        schema::ValueType::U128 => quote! { u128 },
+        schema::ValueType::I8 => quote! { i8 },
+        schema::ValueType::I16 => quote! { i16},
+        schema::ValueType::I32 => quote! { i32 },
+        schema::ValueType::I64 => quote! { i64 },
+        schema::ValueType::I128 => quote! { i128},
+        schema::ValueType::F32 => quote! { f32 },
+        schema::ValueType::F64 => quote! { f64 },
+        schema::ValueType::Decimal => quote! { Decimal },
+        schema::ValueType::Pubkey => quote! { Pubkey },
+        schema::ValueType::Address => quote! { String },
+        schema::ValueType::Keypair => quote! { Keypair },
+        schema::ValueType::Signature => quote! { Signature },
+        schema::ValueType::String => quote! { String },
+        schema::ValueType::Bytes => quote! { Bytes },
+        schema::ValueType::Array => quote! { Vec<Value> },
+        schema::ValueType::Map => quote! { ValueSet },
+        schema::ValueType::Json => quote! { JsonValue },
+        schema::ValueType::Free => quote! { Value },
+        schema::ValueType::Other => quote! { Value },
+    }
+}
+
+fn rust_type(
+    bounds: &[String],
+    optional: bool,
+    default_value: serde_json::Value,
+) -> proc_macro2::TokenStream {
+    let ty = bounds
+        .get(0)
+        .and_then(|ty| ty.parse::<ValueType>().ok())
+        .unwrap_or(schema::ValueType::Free);
+    let ty = value_type_to_rust_type(ty);
+    ty
+}
+
 fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
     let node_id = &def.data.node_id;
     let node_definition_path = modules.join("/") + node_id + ".json";
+    let inputs = def.targets.iter().map(|t| {
+        let name = format_ident!("{}", t.name);
+        let ty = rust_type(&t.type_bounds);
+        quote! {
+            #name: Value,
+        }
+    });
+    let input_struct = quote! {
+        #[derive(Deserialize, Serialize, Debug)]
+        struct Input {
+            #(#inputs),*
+        }
+    };
+    let outputs = def.sources.iter().map(|t| {
+        let name = format_ident!("{}", t.name);
+        quote! {
+            #name: Value,
+        }
+    });
+    let output_struct = quote! {
+        #[derive(Deserialize, Serialize, Debug)]
+        struct Output {
+            #(#outputs),*
+        }
+    };
     let code = quote! {
         use flow_lib::command::prelude::*;
 
@@ -943,7 +1012,11 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
             Ok(CACHE.clone()?.build(run))
         }
 
-        async fn run(mut ctx: Context, input: ValueSet) -> Result<ValueSet, CommandError> {
+        #input_struct
+
+        #output_struct
+
+        async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             Err(CommandError::msg("unimplemented"))
         }
 
