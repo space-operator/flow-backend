@@ -1195,6 +1195,40 @@ fn find_parent_module<P: AsRef<Path>>(path: P) -> Result<PathBuf, Report<Error>>
     Err(Report::new(Error::Io("find parent module")))
 }
 
+async fn update_parent_module(
+    def: &CommandDefinition,
+    module_path: &Path,
+) -> Result<(), Report<Error>> {
+    let parent_module_path = find_parent_module(module_path)?;
+
+    let mut parent_module = tokio::fs::read_to_string(&parent_module_path)
+        .await
+        .change_context(Error::Io("read file"))?;
+
+    let parsed_parent_module =
+        syn::parse_file(&parent_module).change_context(Error::Io("invalid rust code"))?;
+    let has_module = parsed_parent_module.items.iter().any(|item| {
+        if let syn::Item::Mod(m) = item {
+            return m.ident.to_string() == def.data.node_id;
+        } else {
+            false
+        }
+    });
+
+    if !has_module {
+        std::fmt::write(
+            &mut parent_module,
+            format_args!("\npub mod {};\n", def.data.node_id),
+        )
+        .unwrap();
+        println!("updating module {}", parent_module_path.display());
+        tokio::fs::write(&parent_module_path, parent_module)
+            .await
+            .change_context(Error::Io("write file"))?;
+    }
+    Ok(())
+}
+
 async fn write_code(
     def: &CommandDefinition,
     target: &Target,
@@ -1226,33 +1260,10 @@ async fn write_code(
         .await
         .change_context(Error::Io("write file"))?;
 
-    let parent_module_path = find_parent_module(path)?;
-
-    let mut parent_module = tokio::fs::read_to_string(&parent_module_path)
-        .await
-        .change_context(Error::Io("read file"))?;
-
-    let parsed_parent_module =
-        syn::parse_file(&parent_module).change_context(Error::Io("invalid rust code"))?;
-    let has_module = parsed_parent_module.items.iter().any(|item| {
-        if let syn::Item::Mod(m) = item {
-            return m.ident.to_string() == def.data.node_id;
-        } else {
-            false
-        }
-    });
-
-    if !has_module {
-        std::fmt::write(
-            &mut parent_module,
-            format_args!("\npub mod {};\n", def.data.node_id),
-        )
-        .unwrap();
-        println!("updating module {}", parent_module_path.display());
-        tokio::fs::write(&parent_module_path, parent_module)
-            .await
-            .change_context(Error::Io("write file"))?;
+    if let Err(error) = update_parent_module(def, &path).await {
+        eprintln!("failed to update parent module: {:?}", error);
     }
+
     Ok(())
 }
 
