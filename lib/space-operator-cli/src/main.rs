@@ -827,7 +827,11 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
         }
 
         let info = schema::InstructionInfo {
-            before: outputs.iter().map(|o| o.name.clone()).collect(),
+            before: outputs
+                .iter()
+                .map(|o| o.name.clone())
+                .filter(|name| name != "signature")
+                .collect(),
             signature: "signature".to_owned(),
             after: Vec::new(),
         };
@@ -1159,7 +1163,10 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
 
     syn::parse2::<syn::File>(code.clone())
         .map(|file| prettyplease::unparse(&file))
-        .unwrap_or_else(|_| code.to_string())
+        .unwrap_or_else(|error| {
+            eprintln!("invalid code: {}", error);
+            code.to_string()
+        })
 }
 
 fn find_parent_module<P: AsRef<Path>>(path: P) -> Result<PathBuf, Report<Error>> {
