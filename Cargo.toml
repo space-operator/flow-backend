@@ -1,6 +1,6 @@
 [workspace]
 members = ["lib/*", "crates/*"]
-exclude = ["crates/space-wasm/tests"]
+exclude = ["crates/space-wasm/tests", "lib/space-operator-cli"]
 resolver = "2"
 
 [patch.crates-io]
@@ -44,3 +44,4 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 anyhow = "1"
 bs58 = "0.4"
+postgrest = { package = "spo-postgrest", version = "1.6.0" }

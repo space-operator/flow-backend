@@ -11,14 +11,12 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
-
 pub enum RestResult<T> {
     Error(ErrorBody),
     Success(T),
 }
 
 #[derive(Debug)]
-
 pub struct True;
 
 impl Serialize for True {

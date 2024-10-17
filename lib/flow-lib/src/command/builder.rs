@@ -226,7 +226,7 @@ impl CmdBuilder {
                     optional: x.optional,
                 })
                 .collect(),
-            instruction_info: None,
+            instruction_info: self.def.data.instruction_info,
             permissions: self.def.permissions,
         };
 
