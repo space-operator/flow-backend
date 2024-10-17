@@ -43,6 +43,25 @@ pub mod claim_token {
         #[serde(with = "chrono::serde::ts_seconds")]
         pub expires_at: DateTime<Utc>,
     }
+
+    pub async fn claim_token(
+        http: &reqwest::Client,
+        flow_server: &Url,
+        apikey: &str,
+    ) -> Result<Output, Report<Error>> {
+        let apikey = HeaderValue::from_str(apikey).change_context(Error::InvalidApiKey)?;
+        let resp = http
+            .post(
+                flow_server
+                    .join("/auth/claim_token")
+                    .change_context(Error::Url)?,
+            )
+            .header(HeaderName::from_static("x-api-key"), apikey)
+            .send()
+            .await
+            .change_context(Error::Http)?;
+        read_json_response::<_, FlowServerErrorBody>(resp).await
+    }
 }
 
 pub mod get_info {
@@ -54,6 +73,20 @@ pub mod get_info {
     pub struct Output {
         pub supabase_url: Url,
         pub anon_key: String,
+    }
+
+    pub async fn get_info(
+        http: &reqwest::Client,
+        flow_server: &Url,
+        access_token: &str,
+    ) -> Result<get_info::Output, Report<Error>> {
+        let resp = http
+            .get(flow_server.join("/info").change_context(Error::Url)?)
+            .header(AUTHORIZATION, format!("Bearer {}", access_token))
+            .send()
+            .await
+            .change_context(Error::Http)?;
+        read_json_response::<_, FlowServerErrorBody>(resp).await
     }
 }
 
@@ -257,39 +290,6 @@ async fn read_json_response<T: DeserializeOwned, E: Display + DeserializeOwned>(
     }
 }
 
-async fn claim_token(
-    http: &reqwest::Client,
-    flow_server: &Url,
-    apikey: &str,
-) -> Result<claim_token::Output, Report<Error>> {
-    let apikey = HeaderValue::from_str(apikey).change_context(Error::InvalidApiKey)?;
-    let resp = http
-        .post(
-            flow_server
-                .join("/auth/claim_token")
-                .change_context(Error::Url)?,
-        )
-        .header(HeaderName::from_static("x-api-key"), apikey)
-        .send()
-        .await
-        .change_context(Error::Http)?;
-    read_json_response::<_, FlowServerErrorBody>(resp).await
-}
-
-async fn get_info(
-    http: &reqwest::Client,
-    flow_server: &Url,
-    access_token: &str,
-) -> Result<get_info::Output, Report<Error>> {
-    let resp = http
-        .get(flow_server.join("/info").change_context(Error::Url)?)
-        .header(AUTHORIZATION, format!("Bearer {}", access_token))
-        .send()
-        .await
-        .change_context(Error::Http)?;
-    read_json_response::<_, FlowServerErrorBody>(resp).await
-}
-
 async fn read_file<P: AsRef<Path>>(path: P) -> Result<String, Report<Error>> {
     tokio::fs::read_to_string(path.as_ref())
         .await
@@ -328,8 +328,8 @@ impl ApiClient {
 
     pub async fn new(flow_server: Url, apikey: String) -> Result<Self, Report<Error>> {
         let http = reqwest::Client::new();
-        let token = claim_token(&http, &flow_server, &apikey).await?;
-        let info = get_info(&http, &flow_server, &token.access_token).await?;
+        let token = claim_token::claim_token(&http, &flow_server, &apikey).await?;
+        let info = get_info::get_info(&http, &flow_server, &token.access_token).await?;
         let config = Config {
             flow_server,
             info,
