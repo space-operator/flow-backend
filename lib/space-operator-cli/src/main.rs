@@ -1493,6 +1493,12 @@ fn stdin() -> AsyncStdin {
     AllowStdIo::new(BufReader::new(std::io::stdin()))
 }
 
+async fn generate_input_struct(path: impl AsRef<Path>) -> Result<(), Report<Error>> {
+    let nd = read_file(path).await?;
+    let nd = serde_json::from_str::<CommandDefinition>(&nd).change_context(Error::Json)?;
+    Ok(())
+}
+
 async fn run() -> Result<(), Report<Error>> {
     let args = Args::parse();
     let flow_server = args
@@ -1528,7 +1534,7 @@ async fn run() -> Result<(), Report<Error>> {
             }
         },
         Some(Commands::Generate { command }) => match command {
-            GenerateCommands::Input { path } => todo!(),
+            GenerateCommands::Input { path } => generate_input_struct(path).await?,
             GenerateCommands::Output { path } => todo!(),
         },
         None => {
