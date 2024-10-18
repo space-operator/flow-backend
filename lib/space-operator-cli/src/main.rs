@@ -17,7 +17,7 @@ use reqwest::{
 use schema::{CommandDefinition, CommandId, ValueType};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
-    borrow::Cow,
+    borrow::{Borrow, Cow},
     fmt::Display,
     io::{BufReader, Stdin, Write},
     path::{Path, PathBuf},
@@ -152,13 +152,14 @@ struct Args {
 enum Commands {
     /// Login to Space Operator using API key
     Login {},
-    /// Manage your nodes (alias: n)
-    #[command(alias = "n")]
+    /// Manage your nodes
+    #[command(visible_alias = "n")]
     Node {
         #[command(subcommand)]
         command: NodeCommands,
     },
     /// Generate various things
+    #[command(visible_alias = "g")]
     Generate {
         #[command(subcommand)]
         command: GenerateCommands,
@@ -168,10 +169,12 @@ enum Commands {
 #[derive(Subcommand, Debug)]
 enum GenerateCommands {
     /// Generate input struct
+    #[command(visible_alias = "i")]
     Input {
         /// Path to node definition file
         path: PathBuf,
     },
+    #[command(visible_alias = "o")]
     /// Generate output struct
     Output {
         /// Path to node definition file
@@ -182,6 +185,7 @@ enum GenerateCommands {
 #[derive(Subcommand, Debug)]
 enum NodeCommands {
     /// Generate a new node
+    #[command(visible_alias = "n")]
     New {
         /// Allow dirty git repository
         #[arg(long)]
@@ -191,6 +195,7 @@ enum NodeCommands {
         package: Option<String>,
     },
     /// Upload nodes
+    #[command(visible_alias = "n")]
     Upload {
         /// Path to JSON node definition file
         path: PathBuf,
@@ -1116,10 +1121,11 @@ fn rust_type_serde_decor(
     quote! {}
 }
 
-fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
-    let node_id = &def.data.node_id;
-    let node_definition_path = modules.join("/") + node_id + ".json";
-    let inputs = def.targets.iter().map(|t| {
+fn make_input_struct(
+    targets: impl IntoIterator<Item = impl Borrow<schema::Target>>,
+) -> TokenStream {
+    let inputs = targets.into_iter().map(|t| {
+        let t = t.borrow();
         let name = format_ident!("{}", t.name);
         let ty = rust_type(&t.type_bounds, !t.required, &t.default_value);
         let serde_decor = rust_type_serde_decor(&t.type_bounds, !t.required, &t.default_value);
@@ -1128,13 +1134,19 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
             #name: #ty
         }
     });
-    let input_struct = quote! {
+    quote! {
         #[derive(Deserialize, Serialize, Debug)]
         struct Input {
             #(#inputs),*
         }
-    };
-    let outputs = def.sources.iter().map(|t| {
+    }
+}
+
+fn make_output_struct(
+    sources: impl IntoIterator<Item = impl Borrow<schema::Source>>,
+) -> TokenStream {
+    let outputs = sources.into_iter().map(|t| {
+        let t = t.borrow();
         let name = format_ident!("{}", t.name);
         let ty = rust_type(&[t.r#type.clone()], t.optional, &t.default_value);
         let serde_decor = rust_type_serde_decor(&[t.r#type.clone()], t.optional, &t.default_value);
@@ -1143,12 +1155,28 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
             #name: #ty
         }
     });
-    let output_struct = quote! {
+    quote! {
         #[derive(Deserialize, Serialize, Debug)]
         struct Output {
             #(#outputs),*
         }
-    };
+    }
+}
+
+fn fmt_code(code: TokenStream) -> String {
+    syn::parse2::<syn::File>(code.clone())
+        .map(|file| prettyplease::unparse(&file))
+        .unwrap_or_else(|error| {
+            eprintln!("invalid code: {}", error);
+            code.to_string()
+        })
+}
+
+fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
+    let node_id = &def.data.node_id;
+    let node_definition_path = modules.join("/") + node_id + ".json";
+    let input_struct = make_input_struct(&def.targets);
+    let output_struct = make_output_struct(&def.sources);
     let code = quote! {
         use flow_lib::command::prelude::*;
 
@@ -1190,12 +1218,7 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
         }
     };
 
-    syn::parse2::<syn::File>(code.clone())
-        .map(|file| prettyplease::unparse(&file))
-        .unwrap_or_else(|error| {
-            eprintln!("invalid code: {}", error);
-            code.to_string()
-        })
+    fmt_code(code)
 }
 
 fn find_parent_module<P: AsRef<Path>>(path: P) -> Result<PathBuf, Report<Error>> {
@@ -1495,7 +1518,23 @@ fn stdin() -> AsyncStdin {
 
 async fn generate_input_struct(path: impl AsRef<Path>) -> Result<(), Report<Error>> {
     let nd = read_file(path).await?;
-    let nd = serde_json::from_str::<CommandDefinition>(&nd).change_context(Error::Json)?;
+    let nd = serde_json::from_str::<CommandDefinition>(&nd)
+        .change_context(Error::Json)
+        .attach_printable("not a valid node definition file")?;
+    let input_struct = make_input_struct(&nd.targets);
+    let code = fmt_code(input_struct);
+    println!("{}", code);
+    Ok(())
+}
+
+async fn generate_output_struct(path: impl AsRef<Path>) -> Result<(), Report<Error>> {
+    let nd = read_file(path).await?;
+    let nd = serde_json::from_str::<CommandDefinition>(&nd)
+        .change_context(Error::Json)
+        .attach_printable("not a valid node definition file")?;
+    let output_struct = make_output_struct(&nd.sources);
+    let code = fmt_code(output_struct);
+    println!("{}", code);
     Ok(())
 }
 
@@ -1535,7 +1574,7 @@ async fn run() -> Result<(), Report<Error>> {
         },
         Some(Commands::Generate { command }) => match command {
             GenerateCommands::Input { path } => generate_input_struct(path).await?,
-            GenerateCommands::Output { path } => todo!(),
+            GenerateCommands::Output { path } => generate_output_struct(path).await?,
         },
         None => {
             Args::command().print_long_help().ok();
@@ -1546,9 +1585,20 @@ async fn run() -> Result<(), Report<Error>> {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    Report::set_color_mode(error_stack::fmt::ColorMode::Color);
+    let color_mode = match get_color() {
+        ColorChoice::Auto => {
+            if console::colors_enabled_stderr() {
+                error_stack::fmt::ColorMode::Color
+            } else {
+                error_stack::fmt::ColorMode::None
+            }
+        }
+        ColorChoice::Always => error_stack::fmt::ColorMode::Color,
+        ColorChoice::Never => error_stack::fmt::ColorMode::None,
+    };
+    Report::set_color_mode(color_mode);
     Report::install_debug_hook::<std::panic::Location>(|_, _| {});
     if let Err(error) = run().await {
-        eprintln!("Error: {:#?}", error);
+        eprintln!("error: {:#?}", error);
     }
 }
