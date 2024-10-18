@@ -158,7 +158,27 @@ enum Commands {
         #[command(subcommand)]
         command: NodeCommands,
     },
+    /// Generate various things
+    Generate {
+        #[command(subcommand)]
+        command: GenerateCommands,
+    },
 }
+
+#[derive(Subcommand, Debug)]
+enum GenerateCommands {
+    /// Generate input struct
+    Input {
+        /// Path to node definition file
+        path: PathBuf,
+    },
+    /// Generate output struct
+    Output {
+        /// Path to node definition file
+        path: PathBuf,
+    },
+}
+
 #[derive(Subcommand, Debug)]
 enum NodeCommands {
     /// Generate a new node
@@ -217,6 +237,8 @@ pub enum Error {
     ReadData(PathBuf),
     #[error("failed to read file {}", .0.display())]
     ReadFile(PathBuf),
+    #[error("failed to write file {}", .0.display())]
+    WriteFile(PathBuf),
     #[error("failed to parse node definition")]
     ParseNodeDefinition,
     #[error("{}", .0)]
@@ -290,10 +312,16 @@ async fn read_json_response<T: DeserializeOwned, E: Display + DeserializeOwned>(
     }
 }
 
-async fn read_file<P: AsRef<Path>>(path: P) -> Result<String, Report<Error>> {
+async fn read_file(path: impl AsRef<Path>) -> Result<String, Report<Error>> {
     tokio::fs::read_to_string(path.as_ref())
         .await
         .change_context_lazy(|| Error::ReadFile(path.as_ref().to_owned()))
+}
+
+async fn write_file(path: impl AsRef<Path>, data: impl AsRef<[u8]>) -> Result<(), Report<Error>> {
+    tokio::fs::write(path.as_ref(), data)
+        .await
+        .change_context_lazy(|| Error::WriteFile(path.as_ref().to_owned()))
 }
 
 pub struct ApiClient {
@@ -944,9 +972,7 @@ async fn write_node_definition(
         }
     }
     let content = serde_json::to_string_pretty(def).change_context(Error::Json)?;
-    tokio::fs::write(&path, content)
-        .await
-        .change_context(Error::Io("write file"))?;
+    write_file(&path, content).await?;
     Ok(Some(path))
 }
 
@@ -1201,9 +1227,7 @@ async fn update_parent_module(
 ) -> Result<(), Report<Error>> {
     let parent_module_path = find_parent_module(module_path)?;
 
-    let mut parent_module = tokio::fs::read_to_string(&parent_module_path)
-        .await
-        .change_context(Error::Io("read file"))?;
+    let mut parent_module = read_file(&parent_module_path).await?;
 
     let parsed_parent_module =
         syn::parse_file(&parent_module).change_context(Error::Io("invalid rust code"))?;
@@ -1222,9 +1246,7 @@ async fn update_parent_module(
         )
         .unwrap();
         println!("updating module {}", parent_module_path.display());
-        tokio::fs::write(&parent_module_path, parent_module)
-            .await
-            .change_context(Error::Io("write file"))?;
+        write_file(&parent_module_path, parent_module).await?;
     }
     Ok(())
 }
@@ -1504,6 +1526,10 @@ async fn run() -> Result<(), Report<Error>> {
             } => {
                 upload_node(path, *dry_run, *no_confirm).await?;
             }
+        },
+        Some(Commands::Generate { command }) => match command {
+            GenerateCommands::Input { path } => todo!(),
+            GenerateCommands::Output { path } => todo!(),
         },
         None => {
             Args::command().print_long_help().ok();
