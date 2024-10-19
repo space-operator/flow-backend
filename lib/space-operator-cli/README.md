@@ -19,3 +19,5 @@ cargo install space-operator-cli --force
 ```
 
 Binary name: `spo`
+
+[Command-Line Help](HELP.md)
