@@ -5,7 +5,7 @@ use chrono::Utc;
 use clap::{ColorChoice, CommandFactory, Parser, Subcommand, ValueEnum};
 use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
-use futures::{io::AllowStdIo, AsyncBufReadExt};
+use futures::{io::AllowStdIo, AsyncBufReadExt, AsyncReadExt};
 use postgrest::Postgrest;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -174,11 +174,17 @@ enum GenerateCommands {
         /// Path to node definition file
         path: PathBuf,
     },
-    #[command(visible_alias = "o")]
     /// Generate output struct
+    #[command(visible_alias = "o")]
     Output {
         /// Path to node definition file
         path: PathBuf,
+    },
+    /// Generate configuration file for flow-server
+    #[command(visible_alias = "c")]
+    Config {
+        /// Path to save configuration file (default: config.toml)
+        path: Option<PathBuf>,
     },
 }
 
@@ -318,15 +324,36 @@ async fn read_json_response<T: DeserializeOwned, E: Display + DeserializeOwned>(
 }
 
 async fn read_file(path: impl AsRef<Path>) -> Result<String, Report<Error>> {
-    tokio::fs::read_to_string(path.as_ref())
-        .await
-        .change_context_lazy(|| Error::ReadFile(path.as_ref().to_owned()))
+    let path = path.as_ref();
+    if path == Path::new("-") {
+        let mut stdin = stdin();
+        let mut result = String::new();
+        stdin
+            .read_to_string(&mut result)
+            .await
+            .change_context(Error::Io("read stdin"))?;
+        Ok(result)
+    } else {
+        tokio::fs::read_to_string(path)
+            .await
+            .change_context_lazy(|| Error::ReadFile(path.to_owned()))
+    }
 }
 
 async fn write_file(path: impl AsRef<Path>, data: impl AsRef<[u8]>) -> Result<(), Report<Error>> {
-    tokio::fs::write(path.as_ref(), data)
-        .await
-        .change_context_lazy(|| Error::WriteFile(path.as_ref().to_owned()))
+    let path = path.as_ref();
+    if path == Path::new("-") {
+        let mut stdout = std::io::stdout();
+        stdout
+            .write_all(data.as_ref())
+            .change_context(Error::Io("write stdout"))?;
+        stdout.flush().change_context(Error::Io("write stdout"))?;
+    } else {
+        tokio::fs::write(path, data)
+            .await
+            .change_context_lazy(|| Error::WriteFile(path.to_owned()))?;
+    }
+    Ok(())
 }
 
 pub struct ApiClient {
@@ -1538,6 +1565,46 @@ async fn generate_output_struct(path: impl AsRef<Path>) -> Result<(), Report<Err
     Ok(())
 }
 
+fn strip_slash(mut s: String) -> String {
+    if s.ends_with("/") {
+        s.pop();
+    }
+    s
+}
+
+async fn generate_flow_server_config(path: impl AsRef<Path>) -> Result<(), Report<Error>> {
+    let client = ApiClient::load().await.change_context(Error::NotLogin)?;
+
+    let apikey = client.config.apikey;
+    let anon_key = client.config.info.anon_key;
+    let endpoint = strip_slash(client.config.info.supabase_url.to_string());
+    let upstream_url = strip_slash(client.config.flow_server.to_string());
+
+    #[rustfmt::skip]
+    let config = toml::toml! {
+host = "0.0.0.0"
+port = 8080
+
+local_storage = "_data/guest_local_storage"
+
+cors_origins = [ "*" ]
+
+[supabase]
+anon_key = anon_key
+endpoint = endpoint
+
+[db]
+upstream_url = upstream_url
+api_keys = [ apikey ]
+    };
+
+    let text = toml::to_string_pretty(&config).change_context(Error::SerializeData)?;
+
+    write_file(path, text).await?;
+
+    Ok(())
+}
+
 async fn run() -> Result<(), Report<Error>> {
     let args = Args::parse();
     let flow_server = args
@@ -1575,6 +1642,10 @@ async fn run() -> Result<(), Report<Error>> {
         Some(Commands::Generate { command }) => match command {
             GenerateCommands::Input { path } => generate_input_struct(path).await?,
             GenerateCommands::Output { path } => generate_output_struct(path).await?,
+            GenerateCommands::Config { path } => match path {
+                Some(path) => generate_flow_server_config(path).await?,
+                None => generate_flow_server_config("config.toml").await?,
+            },
         },
         None => {
             Args::command().print_long_help().ok();
