@@ -438,21 +438,22 @@ impl ApiClient {
         &mut self,
         id: CommandId,
         def: &CommandDefinition,
-    ) -> Result<CommandId, Report<Error>> {
+    ) -> Result<(CommandId, String), Report<Error>> {
         #[derive(Serialize)]
         struct UpdateNode<'a> {
             #[serde(flatten)]
             def: &'a CommandDefinition,
-            unique_node_id: String,
+            unique_node_id: &'a str,
             name: &'a str,
         }
 
+        let unique_node_id = format!(
+            "{}.{}.{}",
+            self.config.jwt.user_id, def.data.node_id, def.data.version
+        );
         let body = serde_json::to_string_pretty(&UpdateNode {
             def,
-            unique_node_id: format!(
-                "{}.{}.{}",
-                self.config.jwt.user_id, def.data.node_id, def.data.version
-            ),
+            unique_node_id: &unique_node_id,
             name: &def.data.node_id,
         })
         .change_context(Error::Json)?;
@@ -476,30 +477,31 @@ impl ApiClient {
 
         let resp = read_json_response::<Resp, PostgrestErrorBody>(resp).await?;
 
-        Ok(resp.id)
+        Ok((resp.id, unique_node_id))
     }
 
     pub async fn insert_node(
         &mut self,
         def: &CommandDefinition,
-    ) -> Result<CommandId, Report<Error>> {
+    ) -> Result<(CommandId, String), Report<Error>> {
         #[derive(Serialize)]
         struct InsertNode<'a> {
             #[serde(flatten)]
             def: &'a CommandDefinition,
             #[serde(rename = "isPublic")]
             is_public: bool,
-            unique_node_id: String,
+            unique_node_id: &'a str,
             name: &'a str,
         }
 
+        let unique_node_id = format!(
+            "{}.{}.{}",
+            self.config.jwt.user_id, def.data.node_id, def.data.version
+        );
         let body = serde_json::to_string(&InsertNode {
             def,
             is_public: false,
-            unique_node_id: format!(
-                "{}.{}.{}",
-                self.config.jwt.user_id, def.data.node_id, def.data.version
-            ),
+            unique_node_id: &unique_node_id,
             name: &def.data.node_id,
         })
         .change_context(Error::Json)?;
@@ -522,7 +524,7 @@ impl ApiClient {
 
         let resp = read_json_response::<Resp, PostgrestErrorBody>(resp).await?;
 
-        Ok(resp.id)
+        Ok((resp.id, unique_node_id))
     }
 
     pub async fn get_my_native_node(
@@ -1556,8 +1558,10 @@ async fn upload_node(path: &Path, dry_run: bool, no_confirm: bool) -> Result<(),
                         return Ok(());
                     }
                 }
-                client.update_node(id, &def).await?;
+                let (_, url_path) = client.update_node(id, &def).await?;
                 println!("updated node, id={}", id);
+                let url = format!("https://spaceoperator.com/dashboard/nodes/{}", url_path);
+                println!("view your node:\n{}", url);
             }
         }
         None => {
@@ -1571,8 +1575,10 @@ async fn upload_node(path: &Path, dry_run: bool, no_confirm: bool) -> Result<(),
                     return Ok(());
                 }
             }
-            let id = client.insert_node(&def).await?;
+            let (id, url_path) = client.insert_node(&def).await?;
             println!("inserted new node, id={}", id);
+            let url = format!("https://spaceoperator.com/dashboard/nodes/{}", url_path);
+            println!("view your node:\n{}", url);
         }
     }
 
