@@ -24,8 +24,10 @@ use std::{
 };
 use strum::IntoEnumIterator;
 use thiserror::Error as ThisError;
+use tokio::task::spawn_blocking;
 use url::Url;
 use uuid::Uuid;
+use xshell::{cmd, Shell};
 
 pub mod schema;
 
@@ -152,6 +154,12 @@ struct Args {
 enum Commands {
     /// Login to Space Operator using API key
     Login {},
+    /// Start flow-server
+    #[command(visible_alias = "s")]
+    Start {
+        /// Path to configuration file
+        config: Option<PathBuf>,
+    },
     /// Manage your nodes
     #[command(visible_alias = "n")]
     Node {
@@ -201,7 +209,7 @@ enum NodeCommands {
         package: Option<String>,
     },
     /// Upload nodes
-    #[command(visible_alias = "n")]
+    #[command(visible_alias = "u")]
     Upload {
         /// Path to JSON node definition file
         path: PathBuf,
@@ -232,6 +240,12 @@ pub enum Error {
     InvalidApiKey,
     #[error("HTTP error")]
     Http,
+    #[error("no shell available")]
+    Shell,
+    #[error("an error occurred")]
+    Subprocess,
+    #[error("thread join error")]
+    Thread,
     #[error("URL error")]
     Url,
     #[error("DB error")]
@@ -264,7 +278,7 @@ pub enum Error {
     Gix(&'static str),
     #[error("IO error: {}", .0)]
     Io(&'static str),
-    #[error("cargo metadata error")]
+    #[error("failed to get cargo metadata")]
     Metadata,
     #[error("package not found: {}", .0)]
     PackageNotFound(String),
@@ -340,7 +354,7 @@ async fn read_file(path: impl AsRef<Path>) -> Result<String, Report<Error>> {
     }
 }
 
-async fn write_file(path: impl AsRef<Path>, data: impl AsRef<[u8]>) -> Result<(), Report<Error>> {
+async fn write_file(path: impl AsRef<Path>, data: impl AsRef<[u8]>) -> Result<bool, Report<Error>> {
     let path = path.as_ref();
     if path == Path::new("-") {
         let mut stdout = std::io::stdout();
@@ -348,12 +362,13 @@ async fn write_file(path: impl AsRef<Path>, data: impl AsRef<[u8]>) -> Result<()
             .write_all(data.as_ref())
             .change_context(Error::Io("write stdout"))?;
         stdout.flush().change_context(Error::Io("write stdout"))?;
+        Ok(false)
     } else {
         tokio::fs::write(path, data)
             .await
             .change_context_lazy(|| Error::WriteFile(path.to_owned()))?;
+        Ok(true)
     }
-    Ok(())
 }
 
 pub struct ApiClient {
@@ -1342,7 +1357,7 @@ async fn write_code(
 async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Report<Error>> {
     if is_dirty()
         .inspect_err(|error| {
-            eprintln!("error: {:?}", error);
+            eprintln!("{:?}", error);
         })
         .unwrap_or(false)
     {
@@ -1600,7 +1615,48 @@ api_keys = [ apikey ]
 
     let text = toml::to_string_pretty(&config).change_context(Error::SerializeData)?;
 
-    write_file(path, text).await?;
+    let path = path.as_ref();
+    if write_file(path, text).await? {
+        println!("generated {}", path.display());
+    }
+
+    Ok(())
+}
+
+async fn start_flow_server(config: &Option<PathBuf>) -> Result<(), Report<Error>> {
+    let meta =
+        cargo_metadata().attach_printable("make sure you are inside flow-backend repository")?;
+    find_target_crate_by_name(&meta, "flow-server")
+        .attach_printable("make sure you are inside flow-backend repository")?;
+
+    let config_path = match config {
+        Some(config) => config.clone(),
+        None => {
+            let path = meta.workspace_root.join("config.toml");
+            let path = relative_to_pwd(path);
+            if !path.is_file() {
+                generate_flow_server_config(&path).await?;
+            }
+            path
+        }
+    };
+
+    spawn_blocking(move || -> Result<(), Report<Error>> {
+        let sh = Shell::new().change_context(Error::Shell)?;
+        cmd!(sh, "cargo build --bin flow-server")
+            .run()
+            .change_context(Error::Subprocess)?;
+        let flow_server = relative_to_pwd(meta.target_directory.join("debug/flow-server"));
+        let rust_log = std::env::var("RUST_LOG")
+            .unwrap_or_else(|_| "info,actix_web=debug,flow_server=debug".to_owned());
+        cmd!(sh, "{flow_server} {config_path}")
+            .env("RUST_LOG", rust_log)
+            .run()
+            .change_context(Error::Subprocess)?;
+        Ok(())
+    })
+    .await
+    .change_context(Error::Thread)??;
 
     Ok(())
 }
@@ -1624,6 +1680,7 @@ async fn run() -> Result<(), Report<Error>> {
             println!("Logged in as {:?}", username);
             client.save_application_data().await?;
         }
+        Some(Commands::Start { config }) => start_flow_server(config).await?,
         Some(Commands::Node { command }) => match command {
             NodeCommands::New {
                 allow_dirty,
@@ -1670,6 +1727,6 @@ async fn main() {
     Report::set_color_mode(color_mode);
     Report::install_debug_hook::<std::panic::Location>(|_, _| {});
     if let Err(error) = run().await {
-        eprintln!("error: {:#?}", error);
+        eprintln!("{:#?}", error);
     }
 }
