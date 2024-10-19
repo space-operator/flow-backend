@@ -1488,7 +1488,7 @@ impl<'a> Prompt<'a> {
                 if self.check_list.is_some() || self.regex_hint.is_some() {
                     print!("(?) ");
                 }
-                print!("{}", self.question);
+                print!("{}", style(&self.question).bright());
                 std::io::stdout().flush().ok();
                 let mut result = String::new();
                 stdin.read_line(&mut result).await.ok();
