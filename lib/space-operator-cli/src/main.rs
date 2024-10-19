@@ -746,6 +746,7 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
     let name_regex = Regex::new(r#"^[[:alpha:]][[:word:]]*$"#).unwrap();
     let name_hint = "value can only contains characters [a-zA-Z0-9_] and must start with [a-zA-Z]";
 
+    println!("enter ? for help");
     let node_id = Prompt::builder()
         .question("node id: ")
         .check_regex(&name_regex)
