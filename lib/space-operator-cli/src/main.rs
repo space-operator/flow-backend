@@ -1751,7 +1751,6 @@ async fn run() -> Result<(), Report<Error>> {
     let flow_server = args
         .url
         .unwrap_or_else(|| Url::parse("https://dev-api.spaceoperator.com").unwrap());
-    check_latest_version().await?;
     match &args.command {
         Some(Commands::Login {}) => {
             check_latest_version().await?;
