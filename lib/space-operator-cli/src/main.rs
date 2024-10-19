@@ -626,7 +626,7 @@ fn project_dirs() -> Result<ProjectDirs, Report<Error>> {
 }
 
 async fn ask(q: &str) -> bool {
-    print!("{} (y/n): ", q);
+    print!("{} (y/n): ", style(q).bold());
     std::io::stdout().flush().ok();
 
     let mut stdin = AllowStdIo::new(BufReader::new(stdin()));
@@ -840,7 +840,7 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
 
     let mut outputs = Vec::<schema::Source>::new();
     loop {
-        println!("adding node outputs (enter empty name to finish)");
+        println!("\nadding node outputs (enter empty name to finish)");
 
         let name = Prompt::builder()
             .question("name: ")
@@ -922,7 +922,7 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
             after: Vec::new(),
         };
         println!(
-            "using instruction info: {}",
+            "adding instruction info: {}",
             serde_json::to_string_pretty(&info).unwrap()
         );
         Some(info)
@@ -1472,7 +1472,7 @@ impl<'a> Prompt<'a> {
                     if tries == 0 {
                         break Err(error);
                     } else {
-                        eprintln!("error: {:?}", error);
+                        eprintln!("{:?}", error);
                     }
                 }
             }
@@ -1486,7 +1486,7 @@ impl<'a> Prompt<'a> {
         let result = {
             loop {
                 if self.check_list.is_some() || self.regex_hint.is_some() {
-                    print!("(?) ");
+                    print!("{} ", style("?").dim());
                 }
                 print!("{}", style(&self.question).bold());
                 std::io::stdout().flush().ok();
