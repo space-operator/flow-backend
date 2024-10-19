@@ -976,6 +976,9 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
 
 fn relative_to_pwd<P: AsRef<Path>>(path: P) -> PathBuf {
     let path = path.as_ref();
+    if path.is_relative() {
+        return path.to_owned();
+    }
     let mut pwd = std::env::current_dir().unwrap_or_default();
     let mut result = PathBuf::new();
     loop {
@@ -1617,10 +1620,20 @@ api_keys = [ apikey ]
 
     let path = path.as_ref();
     if write_file(path, text).await? {
-        println!("generated {}", path.display());
+        println!("generated {}", relative_to_pwd(path).display());
     }
 
     Ok(())
+}
+
+fn make_absolute(path: impl AsRef<Path>) -> Result<PathBuf, Report<Error>> {
+    let path = path.as_ref();
+    if path.is_relative() {
+        let pwd = std::env::current_dir().change_context(Error::Io("pwd"))?;
+        Ok(pwd.join(path))
+    } else {
+        Ok(path.to_owned())
+    }
 }
 
 async fn start_flow_server(config: &Option<PathBuf>) -> Result<(), Report<Error>> {
@@ -1630,16 +1643,21 @@ async fn start_flow_server(config: &Option<PathBuf>) -> Result<(), Report<Error>
         .attach_printable("make sure you are inside flow-backend repository")?;
 
     let config_path = match config {
-        Some(config) => config.clone(),
+        Some(config) => make_absolute(config)?,
         None => {
             let path = meta.workspace_root.join("config.toml");
-            let path = relative_to_pwd(path);
             if !path.is_file() {
                 generate_flow_server_config(&path).await?;
             }
-            path
+            path.into_std_path_buf()
         }
     };
+
+    if matches!(std::env::current_dir(), Ok(dir) if dir != meta.workspace_root) {
+        println!("$ cd {}", relative_to_pwd(&meta.workspace_root).display());
+        std::env::set_current_dir(&meta.workspace_root).change_context(Error::Io("chdir"))?;
+    }
+    let config_path = relative_to_pwd(config_path);
 
     spawn_blocking(move || -> Result<(), Report<Error>> {
         let sh = Shell::new().change_context(Error::Shell)?;
