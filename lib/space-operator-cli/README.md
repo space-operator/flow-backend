@@ -84,7 +84,153 @@ $ target/debug/flow-server config.toml
 2024-10-19T14:19:37.759314Z  INFO flow_server::db_worker: started DBWorker
 ```
 
+## Generate a new native node
 
+Make sure you are inside [flow-backend](https://github.com/space-operator/flow-backend) repository.
+
+Generate with `spo node new`:
+```
+$ spo node new
+could not determine which package to update
+use `-p` option to specify a package
+available packages:
+    client
+    flow-lib
+    spo-helius
+    flow-value
+    space-lib
+    cmds-deno
+    command-rpc
+    srpc
+    cmds-pdg
+    pdg-common
+    cmds-solana
+    cmds-std
+    db
+    flow
+    rhai-script
+    space-wasm
+    utils
+    flow-server
+```
+
+Because our workspace have several packages, you must specify one of them to use
+(our CLI can automatically choose one if you are inside one of them).
+
+```
+$ spo node new -p cmds-solana
+```
+
+Fill the prompts for node definition, for example:
+
+```
+$ spo node new -p cmds-solana
+using package: cmds-solana
+enter ? for help
+? module path: ?
+enter valid Rust module path to save the node (empty to save at root)
+? module path:
+? node id: transfer
+? display name: Transfer
+description:
+
+adding node inputs (enter empty name to finish)
+? name: fee_payer
+? input type: keypair
+? optional (true/false): false
+? passthrough (true/false): true
+
+adding node inputs (enter empty name to finish)
+? name: amount
+? input type: decimal
+? optional (true/false): false
+? passthrough (true/false): false
+
+adding node inputs (enter empty name to finish)
+? name:
+
+adding node outputs (enter empty name to finish)
+? name: balance
+? output type: decimal
+? optional (true/false): true
+
+adding node outputs (enter empty name to finish)
+? name:
+will this node emit Solana instructions? (y/n): y
+adding `signature` output
+adding `submit` input
+adding instruction info: {
+  "before": [
+    "balance",
+    "fee_payer"
+  ],
+  "signature": "signature",
+  "after": []
+}
+writing node definition to crates/cmds-solana/node-definitions/transfer.json
+writing code to crates/cmds-solana/src/transfer.rs
+updating module crates/cmds-solana/src/lib.rs
+upload node (y/n): y
+node: transfer
+command is not in database
+upload? (y/n): y
+inserted new node, id=1256
+view your node:
+https://spaceoperator.com/dashboard/nodes/c334e245-75b4-49fd-93c0-c4b25ab74f70.transfer.0.1
+```
+
+Generated Rust code:
+```rust
+use flow_lib::command::prelude::*;
+const NAME: &str = "transfer";
+flow_lib::submit!(CommandDescription::new(NAME, | _ | build()));
+fn build() -> BuildResult {
+    const DEFINITION: &str = flow_lib::node_definition!("/transfer.json");
+    static CACHE: BuilderCache = BuilderCache::new(|| {
+        CmdBuilder::new(DEFINITION)?.check_name(NAME)
+    });
+    Ok(CACHE.clone()?.build(run))
+}
+#[derive(Deserialize, Serialize, Debug)]
+struct Input {
+    #[serde(with = "value::keypair")]
+    fee_payer: Keypair,
+    #[serde(with = "value::decimal")]
+    amount: Decimal,
+    #[serde(default = "value::default::bool_true")]
+    submit: bool,
+}
+#[derive(Deserialize, Serialize, Debug)]
+struct Output {
+    #[serde(default, with = "value::decimal::opt")]
+    balance: Option<Decimal>,
+    #[serde(default, with = "value::signature::opt")]
+    signature: Option<Signature>,
+}
+async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+    tracing::info!("input: {:?}", input);
+    let signature = ctx
+        .execute(Instructions::default(), value::map! {})
+        .await?
+        .signature;
+    Err(CommandError::msg("unimplemented"))
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_build() {
+        build().unwrap();
+    }
+    #[tokio::test]
+    async fn test_run() {
+        let ctx = Context::default();
+        build().unwrap().run(ctx, ValueSet::new()).await.unwrap_err();
+    }
+}
+```
+
+Then, you can use `spo start` to run a local flow-server and test your node in flow editor.
 
 # Command-Line Help for `spo`
 
