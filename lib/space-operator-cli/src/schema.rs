@@ -42,7 +42,6 @@ pub enum ValueType {
     Map,
     Json,
     Free,
-    Other,
 }
 
 // ID in database

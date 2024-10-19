@@ -1247,7 +1247,10 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
         #output_struct
 
         async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+            tracing::info!("input: {:?}", input);
+
             Err(CommandError::msg("unimplemented"))
+            // Ok(Output { })
         }
 
         #[cfg(test)]
