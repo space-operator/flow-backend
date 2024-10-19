@@ -1224,7 +1224,7 @@ fn fmt_code(code: TokenStream) -> String {
 
 fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
     let node_id = &def.data.node_id;
-    let node_definition_path = modules.join("/") + node_id + ".json";
+    let node_definition_path = modules.join("/") + "/" + node_id + ".json";
     let input_struct = make_input_struct(&def.targets);
     let output_struct = make_output_struct(&def.sources);
     let code = quote! {
