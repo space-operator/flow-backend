@@ -495,7 +495,7 @@ impl ApiClient {
 
         let body = serde_json::to_string(&InsertNode {
             def,
-            is_public: true,
+            is_public: false,
             unique_node_id: format!(
                 "{}.{}.{}",
                 self.config.jwt.user_id, def.data.node_id, def.data.version
@@ -770,7 +770,7 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
 
     let mut inputs = Vec::<schema::Target>::new();
     loop {
-        println!("adding node inputs (enter empty name to finish)");
+        println!("\nadding node inputs (enter empty name to finish)");
 
         let name = Prompt::builder()
             .question("name: ")
