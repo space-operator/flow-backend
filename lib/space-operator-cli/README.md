@@ -22,6 +22,17 @@ Binary name: `spo`
 
 ## Basic Usage
 
+### Login
+
+Run `spo login`:
+
+```bash
+$ spo login
+Go to https://spaceoperator.com/dashboard/profile/apikey go generate a key
+Please paste your API key below
+```
+
+Enter your API key to login.
 
 # Command-Line Help for `spo`
 
