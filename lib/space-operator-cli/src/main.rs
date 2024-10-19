@@ -1745,11 +1745,10 @@ async fn run() -> Result<(), Report<Error>> {
     let flow_server = args
         .url
         .unwrap_or_else(|| Url::parse("https://dev-api.spaceoperator.com").unwrap());
-    if args.command.is_some() {
-        check_latest_version().await?;
-    }
+    check_latest_version().await?;
     match &args.command {
         Some(Commands::Login {}) => {
+            check_latest_version().await?;
             println!("Go to https://spaceoperator.com/dashboard/profile/apikey go generate a key");
             println!("Please paste your API key below");
             let mut key = String::new();
@@ -1762,12 +1761,16 @@ async fn run() -> Result<(), Report<Error>> {
             println!("Logged in as {:?}", username);
             client.save_application_data().await?;
         }
-        Some(Commands::Start { config }) => start_flow_server(config).await?,
+        Some(Commands::Start { config }) => {
+            check_latest_version().await?;
+            start_flow_server(config).await?;
+        }
         Some(Commands::Node { command }) => match command {
             NodeCommands::New {
                 allow_dirty,
                 package,
             } => {
+                check_latest_version().await?;
                 new_node(*allow_dirty, package).await?;
             }
             NodeCommands::Upload {
@@ -1775,6 +1778,7 @@ async fn run() -> Result<(), Report<Error>> {
                 dry_run,
                 no_confirm,
             } => {
+                check_latest_version().await?;
                 upload_node(path, *dry_run, *no_confirm).await?;
             }
         },
