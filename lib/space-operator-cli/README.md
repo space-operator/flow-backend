@@ -234,7 +234,7 @@ Then, you can use `spo start` to run a local flow-server and test your node in f
 
 ## Generate input and output struct
 
-If you update the node definition manually, you can use `spo generate input` and
+If you updated the node definition manually, you can use `spo generate input` and
 `spo generate output` to generate new type definitions.
 
 For example
