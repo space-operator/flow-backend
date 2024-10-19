@@ -29,6 +29,7 @@ pub mod prelude {
         },
         config::{client::NodeData, node::Permissions},
         context::Context,
+        solana::Instructions,
         CmdInputDescription as Input, CmdOutputDescription as Output, FlowId, Name, ValueSet,
         ValueType,
     };
