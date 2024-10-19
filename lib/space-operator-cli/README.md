@@ -267,6 +267,11 @@ struct Input {
 }
 ```
 
+## Upload node
+
+Use `spo node upload` to upload new node definition or update existing one.
+We only support `native` node at the moment.
+
 # Command-Line Help for `spo`
 
 This document contains the help content for the `spo` command-line program.
