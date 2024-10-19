@@ -6,7 +6,7 @@ description = "CLI for Space Operator"
 license = "AGPL-3.0-only"
 repository = "https://github.com/space-operator/flow-backend"
 homepage = "https://spaceoperator.com"
-readme = "HELP.md"
+readme = "README.md"
 
 [workspace]
 
