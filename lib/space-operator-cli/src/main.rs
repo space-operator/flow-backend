@@ -15,12 +15,15 @@ use reqwest::{
     StatusCode,
 };
 use schema::{CommandDefinition, CommandId, ValueType};
+use semver::Version;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
     borrow::{Borrow, Cow},
+    cmp::Ordering,
     fmt::Display,
     io::{BufReader, Stdin, Write},
     path::{Path, PathBuf},
+    sync::LazyLock,
 };
 use strum::IntoEnumIterator;
 use thiserror::Error as ThisError;
@@ -28,6 +31,8 @@ use tokio::task::spawn_blocking;
 use url::Url;
 use uuid::Uuid;
 use xshell::{cmd, Shell};
+
+static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| reqwest::Client::new());
 
 pub mod schema;
 
@@ -240,6 +245,8 @@ pub enum Error {
     InvalidApiKey,
     #[error("HTTP error")]
     Http,
+    #[error("invalid semver string")]
+    Version,
     #[error("no shell available")]
     Shell,
     #[error("an error occurred")]
@@ -372,24 +379,22 @@ async fn write_file(path: impl AsRef<Path>, data: impl AsRef<[u8]>) -> Result<bo
 }
 
 pub struct ApiClient {
-    http: reqwest::Client,
     pg: postgrest::Postgrest,
     config: Config,
 }
 
 impl ApiClient {
     pub fn from_config(config: Config) -> Result<Self, Report<Error>> {
-        let http = reqwest::Client::new();
         let pg = Postgrest::new_with_client(
             config
                 .info
                 .supabase_url
                 .join("/rest/v1")
                 .change_context(Error::Url)?,
-            http.clone(),
+            CLIENT.clone(),
         )
         .insert_header(HeaderName::from_static("apikey"), &config.info.anon_key);
-        Ok(Self { pg, http, config })
+        Ok(Self { pg, config })
     }
 
     pub async fn load() -> Result<Self, Report<Error>> {
@@ -402,9 +407,8 @@ impl ApiClient {
     }
 
     pub async fn new(flow_server: Url, apikey: String) -> Result<Self, Report<Error>> {
-        let http = reqwest::Client::new();
-        let token = claim_token::claim_token(&http, &flow_server, &apikey).await?;
-        let info = get_info::get_info(&http, &flow_server, &token.access_token).await?;
+        let token = claim_token::claim_token(&CLIENT, &flow_server, &apikey).await?;
+        let info = get_info::get_info(&CLIENT, &flow_server, &token.access_token).await?;
         let config = Config {
             flow_server,
             info,
@@ -418,7 +422,7 @@ impl ApiClient {
         let now = chrono::Utc::now();
         if now >= self.config.jwt.expires_at + chrono::Duration::minutes(1) {
             self.config.jwt = refresh(
-                &self.http,
+                &CLIENT,
                 &self.config.info,
                 &self.config.jwt.refresh_token,
                 &self.config.jwt.user_id,
@@ -1679,11 +1683,50 @@ async fn start_flow_server(config: &Option<PathBuf>) -> Result<(), Report<Error>
     Ok(())
 }
 
+async fn get_latest_version() -> Result<Version, Report<Error>> {
+    let versions = CLIENT
+        .get("https://index.crates.io/sp/ac/space-operator-cli")
+        .send()
+        .await
+        .change_context(Error::Http)?
+        .text()
+        .await
+        .change_context(Error::Http)?;
+    let latest = versions.lines().last().unwrap_or_default();
+    #[derive(Deserialize)]
+    struct Meta {
+        vers: String,
+    }
+    let latest = serde_json::from_str::<Meta>(latest).change_context(Error::Json)?;
+    Version::parse(&latest.vers).change_context(Error::Version)
+}
+
+async fn check_latest_version() -> Result<(), Report<Error>> {
+    let name = env!("CARGO_PKG_NAME");
+    assert!(name == "space-operator-cli");
+    let version = Version::parse(env!("CARGO_PKG_VERSION")).change_context(Error::Version)?;
+    match get_latest_version().await {
+        Ok(latest) => {
+            if version.cmp_precedence(&latest) == Ordering::Less {
+                println!("new version available {}, please update!", latest);
+            }
+        }
+        Err(error) => {
+            eprintln!("{:?}", error);
+        }
+    }
+
+    Ok(())
+}
+
 async fn run() -> Result<(), Report<Error>> {
     let args = Args::parse();
     let flow_server = args
         .url
         .unwrap_or_else(|| Url::parse("https://dev-api.spaceoperator.com").unwrap());
+    if args.command.is_some() {
+        check_latest_version().await?;
+    }
     match &args.command {
         Some(Commands::Login {}) => {
             println!("Go to https://spaceoperator.com/dashboard/profile/apikey go generate a key");
