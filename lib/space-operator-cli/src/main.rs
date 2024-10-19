@@ -746,7 +746,6 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
     let name_regex = Regex::new(r#"^[[:alpha:]][[:word:]]*$"#).unwrap();
     let name_hint = "value can only contains characters [a-zA-Z0-9_] and must start with [a-zA-Z]";
 
-    println!("enter ? for help");
     let node_id = Prompt::builder()
         .question("node id: ")
         .check_regex(&name_regex)
@@ -1416,6 +1415,8 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
         .find(|p| p.is_lib())
         .ok_or_else(|| Error::NotLib(member.name.clone()))?;
     println!("using package: {}", member.name);
+
+    println!("enter ? for help");
 
     let rust_module_regex = Regex::new(
         r#"^(\p{XID_Start}|_)\p{XID_Continue}*(::(\p{XID_Start}|_)\p{XID_Continue}*)*$"#,
