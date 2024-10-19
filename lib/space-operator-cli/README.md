@@ -40,13 +40,15 @@ Clone [flow-backend](https://github.com/space-operator/flow-backend) repository:
 git clone https://github.com/space-operator/flow-backend
 ```
 
-`cd` into `flow-backend` and run `spo start`, this will create a configuration file for
-flow-server then compile and run it (first compilation will take several minutes).
+`cd` into `flow-backend` and run `spo start`:
 
 ```bash
 cd flow-backend
 spo start
 ```
+
+This will create a configuration file for flow-server then compile and run it
+(first compilation will take several minutes).
 
 Example output:
 ```
