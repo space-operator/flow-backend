@@ -10,6 +10,15 @@
 
 CLI for [Space Operator](https://spaceoperator.com).
 
+Table of contents:
+- [Install](#install)
+- [Login](#login)
+- [Run flow-server](#run-flow-server)
+- [Generate a new native node](#generate-a-new-native-node)
+- [Generate input and output struct](#generate-input-and-output-struct)
+- [Upload node](#upload-node)
+- [Command-Line Help for spo](#command-line-help-for-spo)
+
 ## Install
 
 Install using `cargo install`:
