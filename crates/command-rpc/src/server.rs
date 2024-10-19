@@ -27,12 +27,11 @@ pub enum Error {
 pub type WsStream =
     tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
+#[allow(dead_code)]
 pub struct CommandHost {
     natives: BTreeMap<Cow<'static, str>, CommandDescription>,
     stream: WsStream,
 }
-
-async fn send() {}
 
 impl CommandHost {
     pub async fn connect(url: &str) -> Result<Self, Error> {

@@ -29,14 +29,17 @@ pub mod prelude {
         },
         config::{client::NodeData, node::Permissions},
         context::Context,
+        solana::Instructions,
         CmdInputDescription as Input, CmdOutputDescription as Output, FlowId, Name, ValueSet,
         ValueType,
     };
     pub use async_trait::async_trait;
+    pub use bytes::Bytes;
     pub use serde::{Deserialize, Serialize};
     pub use serde_json::Value as JsonValue;
+    pub use solana_sdk::{pubkey::Pubkey, signature::Signature, signer::keypair::Keypair};
     pub use thiserror::Error as ThisError;
-    pub use value::{self, Value};
+    pub use value::{self, Decimal, Value};
 }
 
 /// Error type of commmands.
