@@ -232,6 +232,41 @@ mod tests {
 
 Then, you can use `spo start` to run a local flow-server and test your node in flow editor.
 
+## Generate input and output struct
+
+If you update the node definition manually, you can use `spo generate input` and
+`spo generate output` to generate new type definitions.
+
+For example
+
+```shell
+spo generate input crates/cmds-solana/node-definitions/nft/v1/mint_v1.json
+```
+
+```rust
+#[derive(Deserialize, Serialize, Debug)]
+struct Input {
+    #[serde(with = "value::keypair")]
+    fee_payer: Keypair,
+    #[serde(default, with = "value::keypair::opt")]
+    authority: Option<Keypair>,
+    #[serde(with = "value::pubkey")]
+    mint_account: Pubkey,
+    #[serde(with = "value::pubkey")]
+    token_owner: Pubkey,
+    amount: Option<u64>,
+    #[serde(default, with = "value::pubkey::opt")]
+    delegate_record: Option<Pubkey>,
+    #[serde(default, with = "value::pubkey::opt")]
+    authorization_rules_program: Option<Pubkey>,
+    #[serde(default, with = "value::pubkey::opt")]
+    authorization_rules: Option<Pubkey>,
+    authorization_data: Option<JsonValue>,
+    #[serde(default = "value::default::bool_true")]
+    submit: bool,
+}
+```
+
 # Command-Line Help for `spo`
 
 This document contains the help content for the `spo` command-line program.
