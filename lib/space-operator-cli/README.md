@@ -20,9 +20,7 @@ cargo install space-operator-cli --force
 
 Binary name: `spo`
 
-## Basic Usage
-
-### Login
+## Login
 
 Run `spo login`:
 
