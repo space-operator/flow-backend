@@ -911,6 +911,12 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
                 .iter()
                 .map(|o| o.name.clone())
                 .filter(|name| name != "signature")
+                .chain(
+                    inputs
+                        .iter()
+                        .filter(|i| i.passthrough)
+                        .map(|i| i.name.clone()),
+                )
                 .collect(),
             signature: "signature".to_owned(),
             after: Vec::new(),
@@ -1057,7 +1063,6 @@ fn value_type_to_rust_type(ty: schema::ValueType) -> TokenStream {
         schema::ValueType::Map => quote! { ValueSet },
         schema::ValueType::Json => quote! { JsonValue },
         schema::ValueType::Free => quote! { Value },
-        schema::ValueType::Other => quote! { Value },
     }
 }
 
@@ -1165,7 +1170,6 @@ fn rust_type_serde_decor(
         ValueType::Map => {}
         ValueType::Json => {}
         ValueType::Free => {}
-        ValueType::Other => {}
     }
 
     quote! {}
@@ -1227,6 +1231,14 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
     let node_definition_path = modules.join("/") + "/" + node_id + ".json";
     let input_struct = make_input_struct(&def.targets);
     let output_struct = make_output_struct(&def.sources);
+    let execute = if def.data.instruction_info.is_some() {
+        quote! {
+            // call ctx.execute to emit Solana instructions
+            let signature = ctx.execute(Instructions::default(), value::map! {}).await?.signature;
+        }
+    } else {
+        quote! {}
+    };
     let code = quote! {
         use flow_lib::command::prelude::*;
 
@@ -1248,6 +1260,8 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
 
         async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             tracing::info!("input: {:?}", input);
+
+            #execute
 
             Err(CommandError::msg("unimplemented"))
             // Ok(Output { })
