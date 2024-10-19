@@ -1821,3 +1821,14 @@ async fn main() {
         eprintln!("{:#?}", error);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap_markdown::help_markdown;
+
+    #[test]
+    fn print_markdown_help() {
+        println!("{}", help_markdown::<Args>());
+    }
+}

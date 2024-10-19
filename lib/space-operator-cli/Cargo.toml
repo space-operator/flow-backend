@@ -1,11 +1,12 @@
 [package]
 name = "space-operator-cli"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "CLI for Space Operator"
 license = "AGPL-3.0-only"
 repository = "https://github.com/space-operator/flow-backend"
 homepage = "https://spaceoperator.com"
+readme = "HELP.md"
 
 [workspace]
 
@@ -41,3 +42,6 @@ toml = { version = "0.8.19", features = ["preserve_order"] }
 url = { version = "2.5.2", features = ["serde"] }
 uuid = { version = "1.10.0", features = ["serde"] }
 xshell = "0.2.6"
+
+[dev-dependencies]
+clap-markdown = "0.1.4"
