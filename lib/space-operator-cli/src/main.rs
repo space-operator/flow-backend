@@ -3,6 +3,7 @@
 use cargo_metadata::{Metadata, Package, Target};
 use chrono::Utc;
 use clap::{ColorChoice, CommandFactory, Parser, Subcommand, ValueEnum};
+use console::style;
 use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
 use futures::{io::AllowStdIo, AsyncBufReadExt, AsyncReadExt};
@@ -1708,7 +1709,8 @@ async fn check_latest_version() -> Result<(), Report<Error>> {
     match get_latest_version().await {
         Ok(latest) => {
             if version.cmp_precedence(&latest) == Ordering::Less {
-                println!("new version available {}, please update!", latest);
+                let string = format!("new version available: {}, please update!", latest);
+                eprintln!("{}", style(&string).yellow());
             }
         }
         Err(error) => {
