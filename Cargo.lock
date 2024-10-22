@@ -1231,7 +1231,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "115e54d64eb62cdebad391c19efc9dce4981c690c85a33a12199d99bb9546fee"
 dependencies = [
  "borsh-derive 0.10.4",
- "hashbrown 0.12.3",
+ "hashbrown 0.13.2",
 ]
 
 [[package]]
@@ -1665,18 +1665,18 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.19"
+version = "4.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7be5744db7978a28d9df86a214130d106a89ce49644cbc4e3f0c22c3fba30615"
+checksum = "b0956a43b323ac1afaffc053ed5c4b7c1f1800bacd1683c353aabbb752515dd3"
 dependencies = [
  "clap_builder",
 ]
 
 [[package]]
 name = "clap_builder"
-version = "4.5.19"
+version = "4.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5fbc17d3ef8278f55b282b2a2e75ae6f6c7d4bb70ed3d0382375104bfafdb4b"
+checksum = "4d72166dd41634086d5803a47eb71ae740e61d84709c36f3c34110173db3961b"
 dependencies = [
  "anstyle",
  "clap_lex 0.7.2",
@@ -1827,11 +1827,11 @@ dependencies = [
  "hyper 0.14.30",
  "mime_guess",
  "once_cell",
- "postgrest",
  "reqwest 0.12.8",
  "rust_decimal",
  "serde",
  "serde_json",
+ "spo-postgrest",
  "thiserror",
  "tokio",
  "tracing",
@@ -2167,7 +2167,7 @@ dependencies = [
  "anes",
  "cast",
  "ciborium",
- "clap 4.5.19",
+ "clap 4.5.18",
  "criterion-plot",
  "is-terminal",
  "itertools",
@@ -4278,7 +4278,7 @@ dependencies = [
  "solana-program 1.16.27",
  "spl-associated-token-account 2.2.0",
  "spl-token 4.0.0",
- "spl-token-2022 0.6.1",
+ "spl-token-2022 0.9.0",
 ]
 
 [[package]]
@@ -4355,7 +4355,7 @@ dependencies = [
  "solana-program 1.16.27",
  "spl-associated-token-account 2.2.0",
  "spl-token 4.0.0",
- "spl-token-2022 0.6.1",
+ "spl-token-2022 0.9.0",
 ]
 
 [[package]]
@@ -4680,7 +4680,7 @@ version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af1844ef2428cc3e1cb900be36181049ef3d3193c63e43026cfe202983b27a56"
 dependencies = [
- "proc-macro-crate 1.3.1",
+ "proc-macro-crate 3.2.0",
  "proc-macro2 1.0.86",
  "quote 1.0.37",
  "syn 2.0.79",
@@ -5111,16 +5111,6 @@ dependencies = [
  "serde",
  "serde_json",
  "uuid 1.10.0",
-]
-
-[[package]]
-name = "postgrest"
-version = "1.6.0"
-source = "git+https://github.com/space-operator/postgrest-rs?branch=dev#e2a2e607be3b5e4802fdac4a7ef1920f8e571805"
-dependencies = [
- "bytes",
- "reqwest 0.12.8",
- "serde",
 ]
 
 [[package]]
@@ -7871,6 +7861,16 @@ dependencies = [
  "serde_json",
  "serde_with 3.11.0",
  "tracing",
+]
+
+[[package]]
+name = "spo-postgrest"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffe2f6cfdcd676f2b74c661287ff37df9e947f14259f2eed9519fc43fd4faa8c"
+dependencies = [
+ "reqwest 0.12.8",
+ "serde",
 ]
 
 [[package]]
