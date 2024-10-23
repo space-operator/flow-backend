@@ -27,6 +27,8 @@ mod ser;
 pub mod crud;
 pub mod macros;
 
+pub mod with;
+
 // custom serialize and deserialize modules
 pub mod decimal;
 #[cfg(feature = "solana")]
