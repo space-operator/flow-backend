@@ -389,7 +389,7 @@ impl<'de> Deserialize<'de> for InsertionBehavior {
 }
 
 const fn default_simulation_level() -> CommitmentLevel {
-    CommitmentLevel::Confirmed
+    CommitmentLevel::Finalized
 }
 
 const fn default_tx_level() -> CommitmentLevel {

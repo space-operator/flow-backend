@@ -14,23 +14,25 @@ fn build() -> BuildResult {
     Ok(CACHE.clone()?.build(run))
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[serde_as]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Input {
-    #[serde(default, with = "value::keypair::opt")]
+    #[serde_as(as = "Option<AsKeypair>")]
     pub fee_payer: Option<Keypair>,
-    #[serde(with = "value::keypair")]
+    #[serde_as(as = "AsKeypair")]
     pub sender: Keypair,
-    #[serde(with = "value::pubkey")]
+    #[serde_as(as = "AsPubkey")]
     pub recipient: Pubkey,
-    #[serde(with = "value::decimal")]
+    #[serde_as(as = "AsDecimal")]
     pub amount: Decimal,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[serde_as]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Output {
-    #[serde(default, with = "value::signature::opt")]
+    #[serde_as(as = "Option<AsSignature>")]
     pub signature: Option<Signature>,
 }
 

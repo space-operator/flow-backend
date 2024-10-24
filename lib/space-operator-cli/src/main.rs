@@ -1051,7 +1051,7 @@ fn value_type_to_rust_type(ty: schema::ValueType) -> TokenStream {
         schema::ValueType::I16 => quote! { i16},
         schema::ValueType::I32 => quote! { i32 },
         schema::ValueType::I64 => quote! { i64 },
-        schema::ValueType::I128 => quote! { i128},
+        schema::ValueType::I128 => quote! { i128 },
         schema::ValueType::F32 => quote! { f32 },
         schema::ValueType::F64 => quote! { f64 },
         schema::ValueType::Decimal => quote! { Decimal },
@@ -1124,22 +1124,22 @@ fn rust_type_serde_decor(
         ValueType::Decimal => {
             return if optional {
                 quote! {
-                    #[serde(default, with = "value::decimal::opt")]
+                    #[serde_as(as = "Option<AsDecimal>")]
                 }
             } else {
                 quote! {
-                    #[serde(with = "value::decimal")]
+                    #[serde_as(as = "AsDecimal")]
                 }
             };
         }
         ValueType::Pubkey => {
             return if optional {
                 quote! {
-                    #[serde(default, with = "value::pubkey::opt")]
+                    #[serde_as(as = "Option<AsPubkey>")]
                 }
             } else {
                 quote! {
-                    #[serde(with = "value::pubkey")]
+                    #[serde_as(as = "AsPubkey")]
                 }
             };
         }
@@ -1147,22 +1147,22 @@ fn rust_type_serde_decor(
         ValueType::Keypair => {
             return if optional {
                 quote! {
-                    #[serde(default, with = "value::keypair::opt")]
+                    #[serde_as(as = "Option<AsKeypair>")]
                 }
             } else {
                 quote! {
-                    #[serde(with = "value::keypair")]
+                    #[serde_as(as = "AsKeypair")]
                 }
             };
         }
         ValueType::Signature => {
             return if optional {
                 quote! {
-                    #[serde(default, with = "value::signature::opt")]
+                    #[serde_as(as = "Option<AsSignature>")]
                 }
             } else {
                 quote! {
-                    #[serde(with = "value::signature")]
+                    #[serde_as(as = "AsSignature")]
                 }
             };
         }
@@ -1191,8 +1191,9 @@ fn make_input_struct(
         }
     });
     quote! {
+        #[serde_as]
         #[derive(Deserialize, Serialize, Debug)]
-        struct Input {
+        pub struct Input {
             #(#inputs),*
         }
     }
@@ -1208,12 +1209,13 @@ fn make_output_struct(
         let serde_decor = rust_type_serde_decor(&[t.r#type.clone()], t.optional, &t.default_value);
         quote! {
             #serde_decor
-            #name: #ty
+            pub #name: #ty
         }
     });
     quote! {
+        #[serde_as]
         #[derive(Deserialize, Serialize, Debug)]
-        struct Output {
+        pub struct Output {
             #(#outputs),*
         }
     }
