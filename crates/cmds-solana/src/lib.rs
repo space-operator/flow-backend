@@ -40,26 +40,14 @@ pub mod prelude {
     pub use crate::utils::{execute, submit_transaction, try_sign_wallet};
     pub use async_trait::async_trait;
     pub use flow_lib::{
-        command::{
-            builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
-            CommandDescription, CommandError, CommandTrait, InstructionInfo,
-        },
-        context::Context,
+        command::prelude::*,
         solana::{Instructions, KeypairExt},
-        CmdInputDescription as CmdInput, CmdOutputDescription as CmdOutput, Name, SolanaNet,
-        ValueSet, ValueType,
+        CmdInputDescription as CmdInput, CmdOutputDescription as CmdOutput, SolanaNet,
     };
-    pub use rust_decimal::Decimal;
-    pub use serde::{Deserialize, Serialize};
     pub use solana_client::nonblocking::rpc_client::RpcClient;
-    pub use solana_sdk::{
-        instruction::Instruction,
-        pubkey::Pubkey,
-        signature::{Keypair, Signature},
-        signer::Signer,
-    };
+    pub use solana_sdk::{instruction::Instruction, signer::Signer};
     pub use std::sync::Arc;
-    pub use value::{HashMap, Value};
+    pub use value::HashMap;
 }
 
 // make a nodes out of this
