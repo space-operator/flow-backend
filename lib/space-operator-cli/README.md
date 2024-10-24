@@ -200,21 +200,23 @@ fn build() -> BuildResult {
     });
     Ok(CACHE.clone()?.build(run))
 }
+#[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
-struct Input {
-    #[serde(with = "value::keypair")]
-    fee_payer: Keypair,
-    #[serde(with = "value::decimal")]
-    amount: Decimal,
+pub struct Input {
+    #[serde_as(as = "AsKeypair")]
+    pub fee_payer: Keypair,
+    #[serde_as(as = "AsDecimal")]
+    pub amount: Decimal,
     #[serde(default = "value::default::bool_true")]
-    submit: bool,
+    pub submit: bool,
 }
+#[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
-struct Output {
-    #[serde(default, with = "value::decimal::opt")]
-    balance: Option<Decimal>,
-    #[serde(default, with = "value::signature::opt")]
-    signature: Option<Signature>,
+pub struct Output {
+    #[serde_as(as = "AsDecimal")]
+    pub balance: Option<Decimal>,
+    #[serde_as(as = "Option<Signature>")]
+    pub signature: Option<Signature>,
 }
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     tracing::info!("input: {:?}", input);
@@ -253,22 +255,23 @@ spo generate input crates/cmds-solana/node-definitions/nft/v1/mint_v1.json
 ```
 
 ```rust
+#[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 struct Input {
-    #[serde(with = "value::keypair")]
+    #[serde_as(as = "AsKeypair")]
     fee_payer: Keypair,
-    #[serde(default, with = "value::keypair::opt")]
+    #[serde_as(as = "Option<AsKeypair>")]
     authority: Option<Keypair>,
-    #[serde(with = "value::pubkey")]
+    #[serde_as(as = "AsPubkey")]
     mint_account: Pubkey,
-    #[serde(with = "value::pubkey")]
+    #[serde_as(as = "AsPubkey")]
     token_owner: Pubkey,
     amount: Option<u64>,
-    #[serde(default, with = "value::pubkey::opt")]
+    #[serde_as(as = "Option<AsPubkey>")]
     delegate_record: Option<Pubkey>,
-    #[serde(default, with = "value::pubkey::opt")]
+    #[serde_as(as = "Option<AsPubkey>")]
     authorization_rules_program: Option<Pubkey>,
-    #[serde(default, with = "value::pubkey::opt")]
+    #[serde_as(as = "Option<AsPubkey>")]
     authorization_rules: Option<Pubkey>,
     authorization_data: Option<JsonValue>,
     #[serde(default = "value::default::bool_true")]
