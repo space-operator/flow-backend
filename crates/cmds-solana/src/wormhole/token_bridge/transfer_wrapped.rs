@@ -126,26 +126,25 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         data: (TokenBridgeInstructions::TransferWrapped, wrapped_data).try_to_vec()?,
     };
 
+    let instructions = [
+        spl_token::instruction::approve(
+            &spl_token::id(),
+            &from_ata,
+            &authority_signer,
+            &input.from_owner.pubkey(),
+            &[],
+            input.amount,
+        )?,
+        ix,
+    ]
+    .into();
+
+    let message_pubkey = input.message.pubkey();
+
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [
-            input.payer.clone_keypair(),
-            input.from_owner.clone_keypair(),
-            input.message.clone_keypair(),
-        ]
-        .into(),
-        instructions: [
-            spl_token::instruction::approve(
-                &spl_token::id(),
-                &from_ata,
-                &authority_signer,
-                &input.from_owner.pubkey(),
-                &[],
-                input.amount,
-            )?,
-            ix,
-        ]
-        .into(),
+        signers: [input.payer, input.from_owner, input.message].into(),
+        instructions,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
@@ -161,7 +160,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .await?
         .signature;
 
-    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
+    let sequence = get_sequence_number_from_message(&ctx, message_pubkey).await?;
 
     Ok(Output {
         signature,
