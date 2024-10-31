@@ -21,7 +21,9 @@ impl bundlr_sdk::Signer for BundlrSigner {
     const PUB_LENGTH: u16 = Ed25519Signer::PUB_LENGTH;
 
     fn sign(&self, msg: bytes::Bytes) -> Result<bytes::Bytes, BundlrError> {
-        let sig = if self.keypair.is_adapter_wallet() {
+        let sig = if let Some(keypair) = self.keypair.keypair() {
+            keypair.sign_message(&msg)
+        } else {
             let rt = self
                 .ctx
                 .get::<tokio::runtime::Handle>()
@@ -39,8 +41,6 @@ impl bundlr_sdk::Signer for BundlrSigner {
             })
             .map_err(|e| BundlrError::SigningError(e.to_string()))?
             .map_err(|e| BundlrError::SigningError(e.to_string()))?
-        } else {
-            self.keypair.sign_message(&msg)
         };
         Ok(<[u8; 64]>::from(sig).to_vec().into())
     }
@@ -134,7 +134,7 @@ impl CommandTrait for ArweaveNftUpload {
         let mut uploader = Uploader::new(
             ctx.solana_client.clone(),
             ctx.cfg.solana_client.cluster,
-            fee_payer.clone_keypair(),
+            fee_payer,
         )?;
 
         if fund_bundlr {
@@ -377,7 +377,7 @@ impl Uploader {
             self.node_url.clone(),
             "solana".to_string(),
             "sol".to_string(),
-            BundlrSigner::new(self.fee_payer.clone_keypair(), ctx),
+            BundlrSigner::new(self.fee_payer, ctx),
         );
 
         let (bundlr, tx) = tokio::task::spawn_blocking(move || {

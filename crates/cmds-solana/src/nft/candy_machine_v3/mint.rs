@@ -33,14 +33,11 @@ pub struct Input {
     pub candy_machine: Pubkey,
     #[serde(with = "value::pubkey")]
     pub authority: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub minter: Keypair,
+    pub payer: Wallet,
+    pub minter: Wallet,
     #[serde(with = "value::pubkey")]
     pub mint_account: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub mint_authority: Keypair,
+    pub mint_authority: Wallet,
     #[serde(with = "value::pubkey")]
     pub collection_mint: Pubkey,
     #[serde(with = "value::pubkey")]
@@ -159,9 +156,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [
-            input.payer.clone_keypair(),
-            input.minter.clone_keypair(),
-            input.mint_authority.clone_keypair(),
+            input.payer,
+            input.minter,
+            input.mint_authority,
         ]
         .into(),
         instructions: [
