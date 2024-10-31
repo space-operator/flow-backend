@@ -20,15 +20,12 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    fee_payer: Keypair,
+    fee_payer: Wallet,
     decimals: u8,
-    #[serde(with = "value::keypair")]
-    mint_authority: Keypair,
+    mint_authority: Wallet,
     #[serde(default, with = "value::pubkey::opt")]
     freeze_authority: Option<Pubkey>,
-    #[serde(with = "value::keypair")]
-    mint_account: Keypair,
+    mint_account: Wallet,
     #[serde(default)]
     memo: String,
     #[serde(default = "value::default::bool_true")]
@@ -47,33 +44,29 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .get_minimum_balance_for_rent_exemption(Mint::LEN)
         .await?;
 
+    let instructions = [
+        system_instruction::create_account(
+            &input.fee_payer.pubkey(),
+            &input.mint_account.pubkey(),
+            lamports,
+            Mint::LEN as u64,
+            &spl_token::id(),
+        ),
+        spl_token::instruction::initialize_mint2(
+            &spl_token::id(),
+            &input.mint_account.pubkey(),
+            &input.mint_authority.pubkey(),
+            input.freeze_authority.as_ref(),
+            input.decimals,
+        )?,
+        spl_memo::build_memo(input.memo.as_bytes(), &[&input.fee_payer.pubkey()]),
+    ]
+    .into();
+
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer.clone_keypair(),
-            input.mint_authority.clone_keypair(),
-            input.mint_account.clone_keypair(),
-        ]
-        .into(),
-
-        instructions: [
-            system_instruction::create_account(
-                &input.fee_payer.pubkey(),
-                &input.mint_account.pubkey(),
-                lamports,
-                Mint::LEN as u64,
-                &spl_token::id(),
-            ),
-            spl_token::instruction::initialize_mint2(
-                &spl_token::id(),
-                &input.mint_account.pubkey(),
-                &input.mint_authority.pubkey(),
-                input.freeze_authority.as_ref(),
-                input.decimals,
-            )?,
-            spl_memo::build_memo(input.memo.as_bytes(), &[&input.fee_payer.pubkey()]),
-        ]
-        .into(),
+        signers: [input.fee_payer, input.mint_authority, input.mint_account].into(),
+        instructions,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

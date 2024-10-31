@@ -29,13 +29,7 @@ pub mod mint_v1;
 pub mod transfer;
 pub mod update;
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-pub enum KeypairOrPubkey {
-    Keypair(Wallet),
-    #[serde(with = "value::pubkey")]
-    Pubkey(Pubkey),
-}
+pub use super::KeypairOrPubkey;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenProgramVersion {

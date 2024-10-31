@@ -56,7 +56,7 @@ pub mod watcher;
 pub use watcher::*;
 
 #[serde_as]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
 pub enum Wallet {
     Keypair(#[serde_as(as = "AsKeypair")] Keypair),

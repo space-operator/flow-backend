@@ -1,15 +1,17 @@
 #![allow(clippy::too_many_arguments)]
 
-use flow_lib::solana::Pubkey;
+use flow_lib::solana::{Pubkey, Wallet};
 use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{commitment_config::CommitmentConfig, program_pack::Pack};
+use tracing::info;
+
+pub mod error;
 
 pub mod associated_token_account;
 // pub mod clockwork;
 pub mod compression;
 pub mod create_mint_account;
 pub mod create_token_account;
-pub mod error;
 pub mod find_pda;
 pub mod generate_keypair;
 pub mod get_balance;
@@ -34,7 +36,14 @@ pub mod spl_token_2022;
 pub mod streamflow;
 
 pub use error::{Error, Result};
-use tracing::info;
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[serde(untagged)]
+pub enum KeypairOrPubkey {
+    Keypair(Wallet),
+    #[serde(with = "value::pubkey")]
+    Pubkey(Pubkey),
+}
 
 pub mod prelude {
     pub use crate::utils::{execute, submit_transaction, try_sign_wallet};

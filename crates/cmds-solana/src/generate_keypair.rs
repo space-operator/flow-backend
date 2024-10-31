@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::KeypairOrPubkey;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use solana_sdk::signature::{keypair_from_seed, Keypair};
 use solana_sdk::signer::Signer;
@@ -20,15 +21,6 @@ fn random_seed() -> String {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-pub enum KeypairOrPubkey {
-    #[serde(with = "value::keypair")]
-    Keypair(Keypair),
-    #[serde(with = "value::pubkey")]
-    Pubkey(Pubkey),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
     #[serde(default)]
     private_key: Option<KeypairOrPubkey>,
@@ -42,8 +34,7 @@ pub struct Input {
 pub struct Output {
     #[serde(with = "value::pubkey")]
     pub pubkey: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub keypair: Keypair,
+    pub keypair: Wallet,
 }
 
 fn generate_keypair(passphrase: &str, seed: &str) -> crate::Result<Keypair> {
@@ -75,14 +66,12 @@ async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
         .private_key
         .map(|either| match either {
             KeypairOrPubkey::Keypair(keypair) => Ok(keypair),
-            KeypairOrPubkey::Pubkey(pubkey) => {
-                let mut buf = [0u8; 64];
-                buf[32..].copy_from_slice(&pubkey.to_bytes());
-                Keypair::from_bytes(&buf).map_err(CommandError::from)
-            }
+            KeypairOrPubkey::Pubkey(public_key) => Ok(Wallet::Adapter { public_key }),
         })
         .unwrap_or_else(|| {
-            generate_keypair(&input.passphrase, &input.seed).map_err(CommandError::from)
+            generate_keypair(&input.passphrase, &input.seed)
+                .map_err(CommandError::from)
+                .map(Into::into)
         })?;
     Ok(Output {
         pubkey: keypair.pubkey(),
@@ -135,7 +124,10 @@ mod tests {
             .await
             .unwrap();
         let output = value::from_map::<Output>(output).unwrap();
-        assert_eq!(output.keypair.to_base58_string(), "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu");
+        assert_eq!(
+            output.keypair.keypair().unwrap().to_base58_string(),
+            private_key
+        );
         assert_eq!(
             output.pubkey.to_string(),
             "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9"
@@ -157,14 +149,8 @@ mod tests {
             output.pubkey.to_string(),
             "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9"
         );
-        let bytes = output.keypair.to_bytes();
-        assert_eq!(&bytes[..32], &[0u8; 32]);
-        assert_eq!(&bytes[32..], &output.pubkey.to_bytes());
-
-        assert_eq!(
-            output.keypair.to_base58_string(),
-            "11111111111111111111111111111111GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
-        );
+        assert!(output.keypair.is_adapter_wallet());
+        assert_eq!(output.keypair.pubkey(), output.pubkey);
     }
 
     #[tokio::test]
@@ -190,11 +176,11 @@ mod tests {
             "ESxeViFP4r7THzVx9hJDkhj4HrNGSjJSFRPbGaAb97hN"
         );
         assert_eq!(
-            output.keypair.to_base58_string(),
+            output.keypair.keypair().unwrap().to_base58_string(),
             "3LUpzbebV5SCftt8CPmicbKxNtQhtJegEz4n8s6LBf3b1s4yfjLapgJhbMERhP73xLmWEP2XJ2Rz7Y3TFiYgTpXv"
         );
         assert_eq!(output.pubkey, keypair.pubkey());
-        assert_eq!(output.keypair, keypair);
+        assert_eq!(output.keypair, Wallet::Keypair(keypair));
     }
 
     #[tokio::test]
