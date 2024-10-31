@@ -1056,7 +1056,7 @@ impl FlowGraph {
                             .clone()
                             .map(|x| x.to_keypair())
                         {
-                            ins.set_feepayer(signer.clone_keypair());
+                            ins.set_feepayer(signer.clone_keypair().into());
                         }
                         let mut resp = vec![Responder {
                             sender: w.resp,
@@ -1611,7 +1611,7 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
         let overwrite_feepayer = self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair());
         let task = async move {
             if let Some(signer) = overwrite_feepayer {
-                req.instructions.set_feepayer(signer);
+                req.instructions.set_feepayer(signer.clone_keypair().into());
             }
             let res = svc.ready().await?.call(req).await;
             let output = match &res {

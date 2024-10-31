@@ -38,7 +38,10 @@ use std::{
     time::Duration,
 };
 use tower::ServiceExt;
-use value::{ConstBytes, Value};
+use value::{
+    with::{AsKeypair, AsPubkey},
+    Value,
+};
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
@@ -51,6 +54,43 @@ pub use utils::*;
 
 pub mod watcher;
 pub use watcher::*;
+
+#[serde_as]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum Wallet {
+    Keypair(#[serde_as(as = "AsKeypair")] Keypair),
+    Adapter {
+        #[serde_as(as = "AsPubkey")]
+        public_key: Pubkey,
+    },
+}
+
+impl From<Keypair> for Wallet {
+    fn from(value: Keypair) -> Self {
+        Self::Keypair(value)
+    }
+}
+
+impl Wallet {
+    pub fn is_adapter_wallet(&self) -> bool {
+        matches!(self, Wallet::Adapter { .. })
+    }
+
+    pub fn pubkey(&self) -> Pubkey {
+        match self {
+            Wallet::Keypair(keypair) => keypair.pubkey(),
+            Wallet::Adapter { public_key, .. } => public_key.clone(),
+        }
+    }
+
+    pub fn keypair(&self) -> Option<&Keypair> {
+        match self {
+            Wallet::Keypair(keypair) => Some(keypair),
+            Wallet::Adapter { .. } => None,
+        }
+    }
+}
 
 /// `l` is old, `r` is new
 pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Error> {
@@ -169,22 +209,6 @@ impl KeypairExt for Keypair {
     }
 }
 
-fn keypair_to_bytes(k: &Keypair) -> ConstBytes<64> {
-    ConstBytes(k.to_bytes())
-}
-fn keypair_from_bytes(b: ConstBytes<64>) -> Result<Keypair, anyhow::Error> {
-    Ok(Keypair::from_bytes(&b.0)?)
-}
-serde_conv!(AsKeypair, Keypair, keypair_to_bytes, keypair_from_bytes);
-
-fn pubkey_to_bytes(k: &Pubkey) -> ConstBytes<32> {
-    ConstBytes(k.to_bytes())
-}
-fn pubkey_from_bytes(b: ConstBytes<32>) -> Result<Pubkey, Infallible> {
-    Ok(Pubkey::new_from_array(b.0))
-}
-serde_conv!(AsPubkey, Pubkey, pubkey_to_bytes, pubkey_from_bytes);
-
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug, Default)]
 struct AsAccountMetaImpl {
@@ -245,8 +269,7 @@ serde_conv!(AsInstruction, Instruction, instruction_ser, instruction_de);
 pub struct Instructions {
     #[serde_as(as = "AsPubkey")]
     pub fee_payer: Pubkey,
-    #[serde_as(as = "Vec<AsKeypair>")]
-    pub signers: Vec<Keypair>,
+    pub signers: Vec<Wallet>,
     #[serde_as(as = "Vec<AsInstruction>")]
     pub instructions: Vec<Instruction>,
 }
@@ -579,7 +602,7 @@ async fn action_identity_memo(
 }
 
 impl Instructions {
-    fn push_signer(&mut self, new: Keypair) {
+    fn push_signer(&mut self, new: Wallet) {
         let old = self.signers.iter_mut().find(|k| k.pubkey() == new.pubkey());
         if let Some(old) = old {
             if old.is_adapter_wallet() {
@@ -591,7 +614,7 @@ impl Instructions {
         }
     }
 
-    pub fn set_feepayer(&mut self, signer: Keypair) {
+    pub fn set_feepayer(&mut self, signer: Wallet) {
         self.fee_payer = signer.pubkey();
         self.push_signer(signer);
     }
@@ -818,8 +841,8 @@ impl Instructions {
                 signers.push(p);
             }
 
-            for k in &self.signers {
-                if !k.is_adapter_wallet() && k.pubkey() != action_signer {
+            for k in self.signers.iter().filter_map(|w| w.keypair()) {
+                if k.pubkey() != action_signer {
                     signers.push(k);
                 }
             }
@@ -850,7 +873,9 @@ impl Instructions {
                 .ok_or_else(|| Error::other("fee payer is not in signers"))?;
 
             tracing::info!("{} signing", keypair.pubkey());
-            if keypair.is_adapter_wallet() {
+            if let Some(keypair) = keypair.keypair() {
+                keypair.sign_message(&data)
+            } else {
                 let fut = signer.call_ref(signer::SignatureRequest {
                     id: None,
                     time: Utc::now(),
@@ -871,8 +896,6 @@ impl Instructions {
                     data = new;
                 }
                 resp.signature
-            } else {
-                keypair.sign_message(&data)
             }
         };
 
@@ -936,8 +959,8 @@ impl Instructions {
                 signers.push(p);
             }
 
-            for k in &self.signers {
-                if !k.is_adapter_wallet() && k.pubkey() != self.fee_payer {
+            for k in self.signers.iter().filter_map(|w| w.keypair()) {
+                if k.pubkey() != self.fee_payer {
                     signers.push(k);
                 }
             }
@@ -1066,6 +1089,16 @@ mod tests {
     use solana_sdk::{pubkey, system_instruction::transfer};
 
     #[test]
+    fn test_wallet_serde() {
+        let keypair = Keypair::new();
+        let input = Value::String(keypair.to_base58_string());
+        let Wallet::Keypair(result) = value::from_value(input).unwrap() else {
+            panic!()
+        };
+        assert_eq!(result.to_base58_string(), keypair.to_base58_string());
+    }
+
+    #[test]
     fn test_compare_msg_logic() {
         const OLD: &str = "AwEJE/I9QMIByO+GhMkfll9MXSsAYs1ITPmKAfxGS/USlNwuw0EUt8a41tLSp95YmtHPKWDGGcApBC0AEmN1Sd+5kfDOAq0G+/qWg2KKmXfDQF1HIuw9Op9LiSZK5iA7jcVQ9wceNyYLLzZIZ+cVomhs1zT04hQeIKdXkiMyUpH9KA95JukMx1A93RFsivUbXmW+wwO52yE0+21NxUpXL/eMTCpS1wQ6IUwmvO0o13hn6qE0Pi73WxtEGjlbBilP+HVyqFkAIKLtjJBJ25Jae9iO3Xe17TFanfbTgtEbgKAJ5nWVuJt84ctKVWEXbuPgqHbe6H8fchmNtE0iKLjuVOE0AJ3GIRyraKaGg0wqZXXkbS0qr6CQYxZVv7PeO7zsL/swgPucBbMHhqVF+Mv8NimuycfvB72jxeN3uhwn+c715MdKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADBkZv5SEXMv/srbpyw5vnvIzlu8X3EmssQ5s6QAAAAAan1RcYe9FmNdrUBFX9wsDBJMaPIVZ1pdu6y18IAAAABt324ddloZPZy+FGzut5rBy0he1fWzeROoz1hX7/AKkLcGWx49F8RTidUn9rBMPNWLhscxqg/bVJttG8A/gpRlM2SFRbPsgTT3LuOBLPsJzpVN5CeDaecGGyxbawEE6Kcy72NeMo2v4ccHESWqcHq3GioOBRqLHY25fQEpaeCVSLCKI3/q1QflOctOQHXPk3VuQhThJQPfn/dD3sEZbonYyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZdtEfrjiMo8c/EYJzRiXnOLehdv4i42eBpdbr4NYTAzkICwAJA+gDAAAAAAAACwAFAkANAwAOCQMFAQIAAgoMDdoBKgAYAAAAU3BhY2UgT3BlcmF0b3IgQ2hhbWVsZW9uBAAAAFNQT0NTAAAAaHR0cHM6Ly9hc3NldHMuc3BhY2VvcGVyYXRvci5jb20vbWV0YWRhdGEvMzU4NjY4MzItN2M4My00OWM2LWJmZjctY2FhMDBiNmE2NDE1Lmpzb276AAEBAAAAzgKtBvv6loNiipl3w0BdRyLsPTqfS4kmSuYgO43FUPcAZAABBAEAiwiiN/6tUH5TnLTkB1z5N1bkIU4SUD35/3Q97BGW6J0AAAABAAEBZAAAAAAAAAAOCAIOAxEJDwoMAjQBDggCDgMODg4KDAI0AA4OBxADBQQBCAIACgwNDg4DLAMADg8IAAMFBAECDgAKDA0SDg4LKwABAAAAAAAAAAAKAgAGDAIAAAAAu+6gAAAAAA==";
         const NEW: &str = "AwEJE/I9QMIByO+GhMkfll9MXSsAYs1ITPmKAfxGS/USlNwuw0EUt8a41tLSp95YmtHPKWDGGcApBC0AEmN1Sd+5kfDOAq0G+/qWg2KKmXfDQF1HIuw9Op9LiSZK5iA7jcVQ9ybpDMdQPd0RbIr1G15lvsMDudshNPttTcVKVy/3jEwqUtcEOiFMJrztKNd4Z+qhND4u91sbRBo5WwYpT/h1cqhZACCi7YyQSduSWnvYjt13te0xWp3204LRG4CgCeZ1lbibfOHLSlVhF27j4Kh23uh/H3IZjbRNIii47lThNACdxiEcq2imhoNMKmV15G0tKq+gkGMWVb+z3ju87C/7MID7nAWzB4alRfjL/DYprsnH7we9o8Xjd7ocJ/nO9eTHSgceNyYLLzZIZ+cVomhs1zT04hQeIKdXkiMyUpH9KA95AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABTNkhUWz7IE09y7jgSz7Cc6VTeQng2nnBhssW2sBBOinMu9jXjKNr+HHBxElqnB6txoqDgUaix2NuX0BKWnglUiwiiN/6tUH5TnLTkB1z5N1bkIU4SUD35/3Q97BGW6J2MlyWPTiSJ8bs9ECkUjg2DC1oTmdr/EIQEjnvY2+n4WQMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAAC3BlsePRfEU4nVJ/awTDzVi4bHMaoP21SbbRvAP4KUYGp9UXGHvRZjXa1ARV/cLAwSTGjyFWdaXbustfCAAAAAbd9uHXZaGT2cvhRs7reawctIXtX1s3kTqM9YV+/wCpdtEfrjiMo8c/EYJzRiXnOLehdv4i42eBpdbr4NYTAzkIDwAJA+gDAAAAAAAADwAFAkANAwAQCQkEAQIAAgoREtoBKgAYAAAAU3BhY2UgT3BlcmF0b3IgQ2hhbWVsZW9uBAAAAFNQT0NTAAAAaHR0cHM6Ly9hc3NldHMuc3BhY2VvcGVyYXRvci5jb20vbWV0YWRhdGEvMzU4NjY4MzItN2M4My00OWM2LWJmZjctY2FhMDBiNmE2NDE1Lmpzb276AAEBAAAAzgKtBvv6loNiipl3w0BdRyLsPTqfS4kmSuYgO43FUPcAZAABBAEAiwiiN/6tUH5TnLTkB1z5N1bkIU4SUD35/3Q97BGW6J0AAAABAAEBZAAAAAAAAAAQCAIQCQ0ICwoRAjQBEAgCEAkQEBAKEQI0ABAOBgwJBAMBBwIAChESEBADLAMAEA8HAAkEAwECEAAKERIOEBALKwABAAAAAAAAAAAKAgAFDAIAAAAAu+6gAAAAAA==";
@@ -1129,7 +1162,7 @@ mod tests {
         let rpc = RpcClient::new(SolanaNet::Devnet.url().to_owned());
         let mut ins = Instructions {
             fee_payer: from.pubkey(),
-            signers: [from.clone_keypair()].into(),
+            signers: [from.clone_keypair().into()].into(),
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
         };
         let (_msg, inserted) = ins.build_message(&rpc, &<_>::default()).await.unwrap();
@@ -1137,7 +1170,7 @@ mod tests {
 
         let mut ins = Instructions {
             fee_payer: from.pubkey(),
-            signers: [from.clone_keypair()].into(),
+            signers: [from.clone_keypair().into()].into(),
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
         };
         let (_msg, inserted) = ins

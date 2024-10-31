@@ -41,7 +41,7 @@ pub mod prelude {
     pub use async_trait::async_trait;
     pub use flow_lib::{
         command::prelude::*,
-        solana::{Instructions, KeypairExt},
+        solana::{Instructions, KeypairExt, Wallet},
         CmdInputDescription as CmdInput, CmdOutputDescription as CmdOutput, SolanaNet,
     };
     pub use solana_client::nonblocking::rpc_client::RpcClient;

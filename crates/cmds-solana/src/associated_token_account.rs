@@ -19,9 +19,10 @@ flow_lib::submit!(CommandDescription::new(
     |_| { build() }
 ));
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::pubkey")]
+    #[serde_as(as = "AsPubkey")]
     owner: Pubkey,
     #[serde(with = "value::keypair")]
     fee_payer: Keypair,
