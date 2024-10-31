@@ -2,7 +2,6 @@ use crate::prelude::*;
 use crate::KeypairOrPubkey;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use solana_sdk::signature::{keypair_from_seed, Keypair};
-use solana_sdk::signer::Signer;
 
 const GENERATE_KEYPAIR: &str = "generate_keypair";
 

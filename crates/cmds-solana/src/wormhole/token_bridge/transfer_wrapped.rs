@@ -26,17 +26,14 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
+    pub payer: Wallet,
     pub mint: Pubkey,
     pub amount: u64,
     pub fee: u64,
     pub target_address: String,
     pub target_chain: u16,
-    #[serde(with = "value::keypair")]
-    pub message: Keypair,
-    #[serde(with = "value::keypair")]
-    pub from_owner: Keypair,
+    pub message: Wallet,
+    pub from_owner: Wallet,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }

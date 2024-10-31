@@ -26,14 +26,11 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    fee_payer: Keypair,
-    #[serde(with = "value::keypair")]
-    sender: Keypair,
+    fee_payer: Wallet,
+    sender: Wallet,
     #[serde(with = "value::pubkey")]
     recipient: Pubkey,
-    #[serde(with = "value::keypair")]
-    metadata: Keypair,
+    metadata: Wallet,
     #[serde(with = "value::pubkey")]
     mint_account: Pubkey,
     data: CreateDataInput,
@@ -137,14 +134,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         data,
     );
 
+    let metadata_pubkey = input.metadata.pubkey();
+
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer.clone_keypair(),
-            input.sender.clone_keypair(),
-            input.metadata.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.fee_payer, input.sender, input.metadata].into(),
         instructions: vec![instruction],
     };
 
@@ -157,7 +151,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
                 "escrow_tokens" => escrow_tokens,
                 "sender_tokens" => sender_tokens,
                 "recipient_tokens" => recipient_tokens,
-                "metadata" => input.metadata.pubkey(),
+                "metadata" => metadata_pubkey,
             },
         )
         .await?

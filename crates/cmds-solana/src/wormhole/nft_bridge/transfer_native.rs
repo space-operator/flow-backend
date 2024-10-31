@@ -126,22 +126,24 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let message_pubkey = input.message.pubkey();
 
+    let instructions = [
+        spl_token::instruction::approve(
+            &spl_token::id(),
+            &input.from,
+            &authority_signer,
+            &input.payer.pubkey(),
+            &[],
+            1,
+        )
+        .unwrap(),
+        ix,
+    ]
+    .into();
+
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [input.payer, input.message].into(),
-        instructions: [
-            spl_token::instruction::approve(
-                &spl_token::id(),
-                &input.from,
-                &authority_signer,
-                &input.payer.pubkey(),
-                &[],
-                1,
-            )
-            .unwrap(),
-            ix,
-        ]
-        .into(),
+        instructions,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

@@ -1,9 +1,5 @@
 use crate::prelude::*;
 use bytes::Bytes;
-use futures::{
-    stream::{FuturesUnordered, TryStreamExt},
-    TryFutureExt,
-};
 use rust_decimal::{
     prelude::{MathematicalOps, ToPrimitive},
     Decimal,
@@ -11,8 +7,8 @@ use rust_decimal::{
 use solana_program::{
     hash::Hash, instruction::Instruction, message::Message, native_token::LAMPORTS_PER_SOL,
 };
-use solana_sdk::{signature::Presigner, signer::keypair, transaction::Transaction};
-use std::{collections::BTreeSet, time::Duration};
+use solana_sdk::{signature::Presigner, transaction::Transaction};
+use std::time::Duration;
 use value::Error as ValueError;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(60 * 5);
