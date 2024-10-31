@@ -22,8 +22,7 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub governance: Pubkey,
     #[serde(with = "value::pubkey")]
@@ -34,13 +33,10 @@ pub struct Input {
     pub instruction_program_id: Pubkey,
     pub instruction_accounts: Vec<AccountMeta>,
     // TODO workaround for testing
-    pub additional_signers: Option<Vec<String>>,
-    #[serde(with = "value::keypair::opt")]
-    pub signer_1: Option<Keypair>,
-    #[serde(with = "value::keypair::opt")]
-    pub signer_2: Option<Keypair>,
-    #[serde(with = "value::keypair::opt")]
-    pub signer_3: Option<Keypair>,
+    pub additional_signers: Option<Vec<Wallet>>,
+    pub signer_1: Option<Wallet>,
+    pub signer_2: Option<Wallet>,
+    pub signer_3: Option<Wallet>,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -89,28 +85,16 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &input.instruction_accounts,
     );
 
-    let mut signers: Vec<Keypair> = [input.fee_payer.clone_keypair()].into();
-
-    match input.additional_signers {
-        None => {
-            if let Some(signer) = input.signer_1 {
-                signers.push(signer.clone_keypair());
-            }
-            if let Some(signer) = input.signer_2 {
-                signers.push(signer.clone_keypair());
-            }
-            if let Some(signer) = input.signer_3 {
-                signers.push(signer.clone_keypair());
-            }
-        }
-        Some(ref additional_signers) => {
-            let additional_signers: Vec<Keypair> = additional_signers
-                .iter()
-                .map(|s| Keypair::from_base58_string(s).clone_keypair())
-                .collect();
-            signers.extend(additional_signers);
-        }
-    }
+    // NOTE: this part used either additional_signers or signer_{1,2,3},
+    // I changed it to use both
+    let signers = input
+        .additional_signers
+        .iter()
+        .flatten()
+        .chain(input.signer_1)
+        .chain(input.signer_2)
+        .chain(input.signer_3)
+        .collect();
 
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),

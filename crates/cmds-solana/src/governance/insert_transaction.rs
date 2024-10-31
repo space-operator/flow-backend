@@ -22,16 +22,16 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub governance: Pubkey,
     #[serde(with = "value::pubkey")]
     pub proposal: Pubkey,
     #[serde(with = "value::pubkey")]
     pub token_owner_record: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub governance_authority: Keypair,
+    
+    pub governance_authority: Wallet,
     pub option_index: u8,
     pub index: u16,
     pub instructions: Vec<Instruction>,
@@ -115,8 +115,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
         signers: [
-            input.fee_payer.clone_keypair(),
-            input.governance_authority.clone_keypair(),
+            input.fee_payer,
+            input.governance_authority,
         ]
         .into(),
         instructions: [ix].into(),

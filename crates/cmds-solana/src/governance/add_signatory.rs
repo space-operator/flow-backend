@@ -1,4 +1,4 @@
-use std::str::FromStrWallet;
+use std::str::FromStr;
 
 use solana_sdk::{instruction::AccountMeta, system_program};
 use tracing::info;
@@ -108,13 +108,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &input.signatory,
     );
 
-    let signers = std::iter::once(input.fee_payer)
-        .chain(input.governance_authority)
-        .collect();
-
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers,
+        signers: std::iter::once(input.fee_payer)
+            .chain(input.governance_authority)
+            .collect(),
         instructions: [ix].into(),
     };
 

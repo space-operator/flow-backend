@@ -22,16 +22,16 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub realm: Pubkey,
     #[serde(with = "value::pubkey")]
     pub governing_token_owner: Pubkey,
     #[serde(with = "value::pubkey")]
     pub governing_token_mint: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub revoke_authority: Keypair,
+    
+    pub revoke_authority: Wallet,
     pub amount: u64,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
@@ -109,8 +109,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
         signers: [
-            input.fee_payer.clone_keypair(),
-            input.revoke_authority.clone_keypair(),
+            input.fee_payer,
+            input.revoke_authority,
         ]
         .into(),
         instructions: [ix].into(),
