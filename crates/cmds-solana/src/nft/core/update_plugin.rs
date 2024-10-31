@@ -20,12 +20,10 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub asset: Pubkey,
-    #[serde(with = "value::keypair::opt")]
-    pub update_authority: Option<Keypair>,
+    pub update_authority: Option<Wallet>,
     #[serde(default, with = "value::pubkey::opt")]
     pub collection: Option<Pubkey>,
     pub plugin: Plugin,
@@ -58,15 +56,12 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = builder.instruction();
 
-    let mut signers = vec![input.fee_payer.clone_keypair()];
-
-    if let Some(authority) = input.update_authority.as_ref() {
-        signers.push(authority.clone_keypair());
-    }
-
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers,
+        signers: [input.fee_payer]
+            .into_iter()
+            .chain(input.update_authority)
+            .collect(),
         instructions: [ins].into(),
     };
 

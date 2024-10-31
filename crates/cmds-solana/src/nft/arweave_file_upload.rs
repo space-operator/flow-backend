@@ -6,8 +6,7 @@ pub struct ArweaveFileUpload;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     pub file_path: String,
     #[serde(default = "value::default::bool_true")]
     pub fund_bundlr: bool,
@@ -77,7 +76,7 @@ impl CommandTrait for ArweaveFileUpload {
         let mut uploader = Uploader::new(
             ctx.solana_client.clone(),
             ctx.cfg.solana_client.cluster,
-            fee_payer.clone_keypair(),
+            fee_payer,
         )?;
 
         if fund_bundlr {

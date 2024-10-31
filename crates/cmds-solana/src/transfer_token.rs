@@ -158,8 +158,7 @@ async fn command_transfer_token(
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub mint_account: Pubkey,
     #[serde(default)]
@@ -171,8 +170,7 @@ pub struct Input {
     pub recipient: Pubkey,
     #[serde(default, with = "value::pubkey::opt")]
     pub sender_token_account: Option<Pubkey>,
-    #[serde(with = "value::keypair")]
-    pub sender_owner: Keypair,
+    pub sender_owner: Wallet,
     #[serde(default = "value::default::bool_true")]
     pub allow_unfunded: bool,
     #[serde(default = "value::default::bool_true")]
@@ -203,19 +201,13 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     )
     .await?;
 
-    let instructions = if input.submit {
-        Instructions {
-            fee_payer: input.fee_payer.pubkey(),
-            signers: [
-                input.fee_payer.clone_keypair(),
-                input.sender_owner.clone_keypair(),
-            ]
-            .into(),
-            instructions,
-        }
-    } else {
-        <_>::default()
+    let ins = Instructions {
+        fee_payer: input.fee_payer.pubkey(),
+        signers: [input.fee_payer, input.sender_owner].into(),
+        instructions,
     };
+
+    let instructions = input.submit.then_some(ins).unwrap_or_default();
 
     let signature = ctx
         .execute(
