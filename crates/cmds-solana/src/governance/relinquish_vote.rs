@@ -34,7 +34,6 @@ pub struct Input {
     pub token_owner_record: Pubkey,
     #[serde(with = "value::pubkey")]
     pub vote_governing_token_mint: Pubkey,
-    #[serde(default, with = "value::keypair::opt")]
     pub governance_authority: Option<Wallet>,
     #[serde(default, with = "value::pubkey::opt")]
     pub beneficiary: Option<Pubkey>,
