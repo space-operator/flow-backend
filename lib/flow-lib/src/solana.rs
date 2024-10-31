@@ -435,7 +435,7 @@ const fn default_wait_level() -> CommitmentLevel {
 }
 
 #[serde_as]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(untagged)]
 pub enum KeypairOrPubkey {
     Keypair(Wallet),
@@ -1185,5 +1185,64 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(inserted, 1);
+    }
+
+    #[test]
+    fn test_keypair_or_pubkey_keypair() {
+        let keypair = Keypair::new();
+        let x = KeypairOrPubkey::Keypair(Wallet::Keypair(keypair.clone_keypair()));
+        let value = value::to_value(&x).unwrap();
+        assert_eq!(value, Value::B64(keypair.to_bytes()));
+        assert_eq!(value::from_value::<KeypairOrPubkey>(value).unwrap(), x);
+    }
+
+    #[test]
+    fn test_keypair_or_pubkey_adapter() {
+        let pubkey = Pubkey::new_unique();
+        let x = KeypairOrPubkey::Keypair(Wallet::Adapter {
+            public_key: pubkey.clone(),
+        });
+        let value = value::to_value(&x).unwrap();
+        assert_eq!(
+            value,
+            Value::Map(value::map! {
+                "public_key" => pubkey,
+            })
+        );
+        assert_eq!(value::from_value::<KeypairOrPubkey>(value).unwrap(), x);
+    }
+
+    #[test]
+    fn test_keypair_or_pubkey_pubkey() {
+        let pubkey = Pubkey::new_unique();
+        let x = KeypairOrPubkey::Pubkey(pubkey.clone());
+        let value = value::to_value(&x).unwrap();
+        assert_eq!(value, Value::B32(pubkey.to_bytes()));
+        assert_eq!(value::from_value::<KeypairOrPubkey>(value).unwrap(), x);
+    }
+
+    #[test]
+    fn test_wallet_keypair() {
+        let keypair = Keypair::new();
+        let x = Wallet::Keypair(keypair.clone_keypair());
+        let value = value::to_value(&x).unwrap();
+        assert_eq!(value, Value::B64(keypair.to_bytes()));
+        assert_eq!(value::from_value::<Wallet>(value).unwrap(), x);
+    }
+
+    #[test]
+    fn test_wallet_adapter() {
+        let pubkey = Pubkey::new_unique();
+        let x = Wallet::Adapter {
+            public_key: pubkey.clone(),
+        };
+        let value = value::to_value(&x).unwrap();
+        assert_eq!(
+            value,
+            Value::Map(value::map! {
+                "public_key" => pubkey,
+            })
+        );
+        assert_eq!(value::from_value::<Wallet>(value).unwrap(), x);
     }
 }
