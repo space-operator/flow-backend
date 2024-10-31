@@ -330,7 +330,7 @@ impl Uploader {
         let (mut tx, recent_blockhash) =
             execute(&self.client, &self.fee_payer.pubkey(), &[instruction]).await?;
 
-        try_sign_wallet(signer, &mut tx, &[&self.fee_payer], recent_blockhash).await?;
+        try_sign_wallet(signer, &mut tx, &self.fee_payer, recent_blockhash).await?;
 
         let signature = submit_transaction(&self.client, tx).await?;
 
@@ -377,7 +377,7 @@ impl Uploader {
             self.node_url.clone(),
             "solana".to_string(),
             "sol".to_string(),
-            BundlrSigner::new(self.fee_payer, ctx),
+            BundlrSigner::new(self.fee_payer.clone(), ctx),
         );
 
         let (bundlr, tx) = tokio::task::spawn_blocking(move || {
