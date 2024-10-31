@@ -22,13 +22,12 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    
     pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub governance: Pubkey,
     #[serde(with = "value::pubkey")]
     pub proposal_owner_record: Pubkey,
-    
+
     pub governance_authority: Wallet,
     #[serde(default, with = "value::pubkey::opt")]
     pub voter_weight_record: Option<Pubkey>,
@@ -143,11 +142,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer,
-            input.governance_authority,
-        ]
-        .into(),
+        signers: [input.fee_payer, input.governance_authority].into(),
         instructions: [ix].into(),
     };
 

@@ -25,7 +25,6 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    
     pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub realm: Pubkey,
@@ -35,9 +34,9 @@ pub struct Input {
     pub proposal: Pubkey,
     #[serde(with = "value::pubkey")]
     pub token_owner_record: Pubkey,
-    
+
     pub governance_authority: Wallet,
-    
+
     pub chat_message: Wallet,
     pub body: MessageBody,
     #[serde(default, with = "value::pubkey::opt")]

@@ -23,15 +23,14 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    
     pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub realm: Pubkey,
     #[serde(with = "value::pubkey")]
     pub governing_token_source: Pubkey,
-    
+
     pub governing_token_owner: Wallet,
-    
+
     pub governing_token_source_authority: Wallet,
     pub amount: u64,
     #[serde(with = "value::pubkey")]

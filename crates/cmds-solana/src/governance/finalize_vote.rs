@@ -22,7 +22,6 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    
     pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub realm: Pubkey,
