@@ -155,12 +155,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [
-            input.payer,
-            input.minter,
-            input.mint_authority,
-        ]
-        .into(),
+        signers: [input.payer, input.minter, input.mint_authority].into(),
         instructions: [
             ComputeBudgetInstruction::set_compute_unit_limit(1_000_000u32),
             Instruction {
