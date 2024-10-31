@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use super::{
     types::asset::{Asset, AssetProof},
-    GetAssetResponse,
+    GetAssetResponse, KeypairOrPubkey,
 };
 
 // Command Name
@@ -23,14 +23,6 @@ fn build() -> BuildResult {
 }
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-pub enum KeypairOrPubkey {
-    Keypair(Wallet),
-    #[serde(with = "value::pubkey")]
-    Pubkey(Pubkey),
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {

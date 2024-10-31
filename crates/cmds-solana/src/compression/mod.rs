@@ -28,6 +28,14 @@ pub mod transfer;
 pub mod types;
 pub mod update;
 
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum KeypairOrPubkey {
+    Keypair(Wallet),
+    #[serde(with = "value::pubkey")]
+    Pubkey(Pubkey),
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenProgramVersion {
     Original,

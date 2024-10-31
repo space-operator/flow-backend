@@ -1,14 +1,12 @@
-use std::str::FromStr;
-
+use super::{
+    types::asset::{Asset, AssetProof},
+    GetAssetResponse, KeypairOrPubkey,
+};
 use crate::prelude::*;
 use mpl_bubblegum::instructions::TransferBuilder;
 use solana_program::instruction::AccountMeta;
 use solana_sdk::pubkey::Pubkey;
-
-use super::{
-    types::asset::{Asset, AssetProof},
-    GetAssetResponse,
-};
+use std::str::FromStr;
 
 // Command Name
 const NAME: &str = "transfer_cNFT";
@@ -27,18 +25,8 @@ fn build() -> BuildResult {
 flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-pub enum KeypairOrPubkey {
-    #[serde(with = "value::keypair")]
-    Keypair(Keypair),
-    #[serde(with = "value::pubkey")]
-    Pubkey(Pubkey),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
+    pub payer: Wallet,
     // #[serde(with = "value::pubkey")]
     // pub asset_id: Pubkey,
     #[serde(default)]
@@ -49,8 +37,7 @@ pub struct Input {
     pub das_get_asset_proof: Option<GetAssetResponse<AssetProof>>,
     pub das_get_asset: Option<GetAssetResponse<Asset>>,
     //
-    #[serde(default, with = "value::keypair::opt")]
-    pub leaf_delegate: Option<Keypair>,
+    pub leaf_delegate: Option<Wallet>,
     #[serde(default, with = "value::pubkey::opt")]
     pub tree_config: Option<Pubkey>,
     #[serde(default, with = "value::pubkey::opt")]
@@ -143,9 +130,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let delegate_is_signing = input.leaf_delegate.is_some();
 
     let signer = match delegate_is_signing {
-        true => input.leaf_delegate.as_ref().unwrap().clone_keypair(),
+        true => input.leaf_delegate.as_ref().unwrap().clone(),
         false => match input.leaf_owner.as_ref().unwrap() {
-            KeypairOrPubkey::Keypair(k) => k.clone_keypair(),
+            KeypairOrPubkey::Keypair(k) => k.clone(),
             KeypairOrPubkey::Pubkey(_) => {
                 return Err(CommandError::msg("leaf delegate keypair required"));
             }
@@ -226,7 +213,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [input.payer.clone_keypair(), signer].into(),
+        signers: [input.payer, signer].into(),
         instructions: [mint_ix].into(),
     };
 
