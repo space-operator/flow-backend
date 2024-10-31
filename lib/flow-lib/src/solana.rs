@@ -434,29 +434,19 @@ const fn default_wait_level() -> CommitmentLevel {
     CommitmentLevel::Confirmed
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[serde_as]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum KeypairOrPubkey {
-    #[serde(with = "value::keypair")]
-    Keypair(Keypair),
-    #[serde(with = "value::pubkey")]
-    Pubkey(Pubkey),
-}
-
-impl Clone for KeypairOrPubkey {
-    fn clone(&self) -> Self {
-        match self {
-            KeypairOrPubkey::Keypair(k) => KeypairOrPubkey::Keypair(k.clone_keypair()),
-            KeypairOrPubkey::Pubkey(p) => KeypairOrPubkey::Pubkey(*p),
-        }
-    }
+    Keypair(Wallet),
+    Pubkey(#[serde_as(as = "AsPubkey")] Pubkey),
 }
 
 impl KeypairOrPubkey {
-    pub fn to_keypair(self) -> Keypair {
+    pub fn to_keypair(self) -> Wallet {
         match self {
             KeypairOrPubkey::Keypair(k) => k,
-            KeypairOrPubkey::Pubkey(p) => Keypair::new_adapter_wallet(p),
+            KeypairOrPubkey::Pubkey(public_key) => Wallet::Adapter { public_key },
         }
     }
 }
