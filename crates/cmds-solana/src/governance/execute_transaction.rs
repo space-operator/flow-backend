@@ -89,7 +89,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     // I changed it to use both
     let signers = input
         .additional_signers
-        .iter()
+        .into_iter()
         .flatten()
         .chain(input.signer_1)
         .chain(input.signer_2)
