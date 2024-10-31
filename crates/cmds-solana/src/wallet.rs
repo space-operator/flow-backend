@@ -118,6 +118,6 @@ mod tests {
             },
             instruction_info: None,
         };
-        assert_eq!(Wallet::new(&nd).form.unwrap().pubkey, PUBKEY);
+        assert_eq!(WalletCmd::new(&nd).form.unwrap().pubkey, PUBKEY);
     }
 }

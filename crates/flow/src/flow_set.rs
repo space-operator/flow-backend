@@ -3,7 +3,6 @@ use flow_lib::{
     FlowId,
 };
 use hashbrown::HashMap;
-use serde_json::Value as JsonValue;
 
 /// Who can start flows
 pub enum StartPermission {
