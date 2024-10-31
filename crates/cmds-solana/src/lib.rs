@@ -1,6 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
-use flow_lib::solana::{Pubkey, Wallet};
+use flow_lib::solana::Pubkey;
 use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{commitment_config::CommitmentConfig, program_pack::Pack};
 use tracing::info;
@@ -37,13 +37,7 @@ pub mod streamflow;
 
 pub use error::{Error, Result};
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-#[serde(untagged)]
-pub enum KeypairOrPubkey {
-    Keypair(Wallet),
-    #[serde(with = "value::pubkey")]
-    Pubkey(Pubkey),
-}
+pub use flow_lib::solana::KeypairOrPubkey;
 
 pub mod prelude {
     pub use crate::utils::{execute, submit_transaction, try_sign_wallet};
