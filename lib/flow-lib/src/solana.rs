@@ -72,6 +72,17 @@ impl From<Keypair> for Wallet {
     }
 }
 
+impl Clone for Wallet {
+    fn clone(&self) -> Self {
+        match self {
+            Wallet::Keypair(keypair) => Wallet::Keypair(keypair.clone_keypair()),
+            Wallet::Adapter { public_key } => Wallet::Adapter {
+                public_key: public_key.clone(),
+            },
+        }
+    }
+}
+
 impl Wallet {
     pub fn is_adapter_wallet(&self) -> bool {
         matches!(self, Wallet::Adapter { .. })
