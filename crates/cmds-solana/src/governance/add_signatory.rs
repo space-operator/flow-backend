@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::str::FromStrWallet;
 
 use solana_sdk::{instruction::AccountMeta, system_program};
 use tracing::info;
@@ -23,16 +23,14 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub governance: Pubkey,
     #[serde(with = "value::pubkey")]
     pub proposal: Pubkey,
     #[serde(with = "value::pubkey")]
     pub signatory: Pubkey,
-    #[serde(default, with = "value::keypair::opt")]
-    pub governance_authority: Option<Keypair>,
+    pub governance_authority: Option<Wallet>,
     pub add_signatory_authority: AddSignatoryAuthority,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
@@ -110,15 +108,10 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &input.signatory,
     );
 
-    let signers = match input.governance_authority {
-        Some(governance_authority) => {
-            vec![
-                input.fee_payer.clone_keypair(),
-                governance_authority.clone_keypair(),
-            ]
-        }
-        None => vec![input.fee_payer.clone_keypair()],
-    };
+    let signers = std::iter::once(input.fee_payer)
+        .chain(input.governance_authority)
+        .collect();
+
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
         signers,
