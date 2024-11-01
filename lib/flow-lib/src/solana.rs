@@ -202,6 +202,7 @@ impl KeypairExt for Keypair {
         ed25519_dalek::SigningKey::from_keypair_bytes(&buf)?;
         Ok(Keypair::from_bytes(&buf).unwrap())
     }
+
     fn new_adapter_wallet(pubkey: Pubkey) -> Self {
         let mut buf = [0u8; 64];
         buf[32..].copy_from_slice(&pubkey.to_bytes());
