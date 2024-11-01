@@ -198,10 +198,7 @@ pub trait KeypairExt: Sized {
 impl KeypairExt for Keypair {
     fn from_str(s: &str) -> Result<Self, anyhow::Error> {
         let mut buf = [0u8; 64];
-        anyhow::ensure!(
-            bs58::decode(s).into(&mut buf)? == buf.len(),
-            "invalid length"
-        );
+        five8::decode_64(s, &mut buf)?;
         ed25519_dalek::SigningKey::from_keypair_bytes(&buf)?;
         Ok(Keypair::from_bytes(&buf).unwrap())
     }

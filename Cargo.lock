@@ -3011,6 +3011,7 @@ dependencies = [
  "bytes",
  "chrono",
  "ed25519-dalek 2.1.1",
+ "five8",
  "flow-value",
  "futures",
  "inventory",
