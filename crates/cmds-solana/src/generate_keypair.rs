@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::KeypairOrPubkey;
+use crate::WalletOrPubkey;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use solana_sdk::signature::{keypair_from_seed, Keypair};
 
@@ -22,7 +22,7 @@ fn random_seed() -> String {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
     #[serde(default)]
-    private_key: Option<KeypairOrPubkey>,
+    private_key: Option<WalletOrPubkey>,
     #[serde(default = "random_seed")]
     seed: String,
     #[serde(default)]
@@ -64,8 +64,8 @@ async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
     let keypair = input
         .private_key
         .map(|either| match either {
-            KeypairOrPubkey::Keypair(keypair) => Ok(keypair),
-            KeypairOrPubkey::Pubkey(public_key) => Ok(Wallet::Adapter { public_key }),
+            WalletOrPubkey::Keypair(keypair) => Ok(keypair),
+            WalletOrPubkey::Pubkey(public_key) => Ok(Wallet::Adapter { public_key }),
         })
         .unwrap_or_else(|| {
             generate_keypair(&input.passphrase, &input.seed)

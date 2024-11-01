@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use super::{
     types::asset::{Asset, AssetProof},
-    GetAssetResponse, KeypairOrPubkey,
+    GetAssetResponse, WalletOrPubkey,
 };
 
 // Command Name
@@ -28,7 +28,7 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 pub struct Input {
     pub payer: Wallet,
     #[serde(default)]
-    pub leaf_owner: Option<KeypairOrPubkey>,
+    pub leaf_owner: Option<WalletOrPubkey>,
     //
     pub das_get_asset_proof: Option<GetAssetResponse<AssetProof>>,
     pub das_get_asset: Option<GetAssetResponse<Asset>>,
@@ -142,16 +142,16 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         input.leaf_delegate.as_ref().unwrap().clone()
     } else {
         match input.leaf_owner.as_ref().unwrap() {
-            KeypairOrPubkey::Keypair(k) => k.clone(),
-            KeypairOrPubkey::Pubkey(_) => {
+            WalletOrPubkey::Keypair(k) => k.clone(),
+            WalletOrPubkey::Pubkey(_) => {
                 return Err(CommandError::msg("leaf delegate keypair required"));
             }
         }
     };
 
     let leaf_owner = match input.leaf_owner {
-        Some(KeypairOrPubkey::Keypair(k)) => k.pubkey(),
-        Some(KeypairOrPubkey::Pubkey(p)) => p,
+        Some(WalletOrPubkey::Keypair(k)) => k.pubkey(),
+        Some(WalletOrPubkey::Pubkey(p)) => p,
         None => return Err(CommandError::msg("leaf_owner is required".to_string())),
     };
 

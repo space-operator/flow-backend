@@ -1,6 +1,6 @@
 use super::{
     types::asset::{Asset, AssetProof},
-    GetAssetResponse, KeypairOrPubkey,
+    GetAssetResponse, WalletOrPubkey,
 };
 use crate::prelude::*;
 use mpl_bubblegum::instructions::TransferBuilder;
@@ -30,7 +30,7 @@ pub struct Input {
     // #[serde(with = "value::pubkey")]
     // pub asset_id: Pubkey,
     #[serde(default)]
-    pub leaf_owner: Option<KeypairOrPubkey>,
+    pub leaf_owner: Option<WalletOrPubkey>,
     #[serde(with = "value::pubkey")]
     pub new_leaf_owner: Pubkey,
     //
@@ -132,16 +132,16 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let signer = match delegate_is_signing {
         true => input.leaf_delegate.as_ref().unwrap().clone(),
         false => match input.leaf_owner.as_ref().unwrap() {
-            KeypairOrPubkey::Keypair(k) => k.clone(),
-            KeypairOrPubkey::Pubkey(_) => {
+            WalletOrPubkey::Keypair(k) => k.clone(),
+            WalletOrPubkey::Pubkey(_) => {
                 return Err(CommandError::msg("leaf delegate keypair required"));
             }
         },
     };
 
     let leaf_owner = match input.leaf_owner {
-        Some(KeypairOrPubkey::Keypair(k)) => k.pubkey(),
-        Some(KeypairOrPubkey::Pubkey(p)) => p,
+        Some(WalletOrPubkey::Keypair(k)) => k.pubkey(),
+        Some(WalletOrPubkey::Pubkey(p)) => p,
         None => return Err(CommandError::msg("leaf_owner is required".to_string())),
     };
 

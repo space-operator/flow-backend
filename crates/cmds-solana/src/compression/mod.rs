@@ -29,7 +29,7 @@ pub mod mint_v1;
 pub mod transfer;
 pub mod update;
 
-pub use super::KeypairOrPubkey;
+pub use super::WalletOrPubkey;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenProgramVersion {

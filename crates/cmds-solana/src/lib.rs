@@ -37,7 +37,7 @@ pub mod streamflow;
 
 pub use error::{Error, Result};
 
-pub use flow_lib::solana::KeypairOrPubkey;
+pub use flow_lib::solana::WalletOrPubkey;
 
 pub mod prelude {
     pub use crate::utils::{execute, submit_transaction, try_sign_wallet};
