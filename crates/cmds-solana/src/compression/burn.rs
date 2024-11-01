@@ -142,7 +142,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         input.leaf_delegate.as_ref().unwrap().clone()
     } else {
         match input.leaf_owner.as_ref().unwrap() {
-            WalletOrPubkey::Keypair(k) => k.clone(),
+            WalletOrPubkey::Wallet(k) => k.clone(),
             WalletOrPubkey::Pubkey(_) => {
                 return Err(CommandError::msg("leaf delegate keypair required"));
             }
@@ -150,7 +150,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     };
 
     let leaf_owner = match input.leaf_owner {
-        Some(WalletOrPubkey::Keypair(k)) => k.pubkey(),
+        Some(WalletOrPubkey::Wallet(k)) => k.pubkey(),
         Some(WalletOrPubkey::Pubkey(p)) => p,
         None => return Err(CommandError::msg("leaf_owner is required".to_string())),
     };

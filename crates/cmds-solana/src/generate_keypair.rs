@@ -64,7 +64,7 @@ async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
     let keypair = input
         .private_key
         .map(|either| match either {
-            WalletOrPubkey::Keypair(keypair) => Ok(keypair),
+            WalletOrPubkey::Wallet(keypair) => Ok(keypair),
             WalletOrPubkey::Pubkey(public_key) => Ok(Wallet::Adapter { public_key }),
         })
         .unwrap_or_else(|| {

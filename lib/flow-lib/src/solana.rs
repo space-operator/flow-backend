@@ -435,16 +435,16 @@ const fn default_wait_level() -> CommitmentLevel {
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(untagged)]
-pub enum KeypairOrPubkey {
-    Keypair(Wallet),
+pub enum WalletOrPubkey {
+    Wallet(Wallet),
     Pubkey(#[serde_as(as = "AsPubkey")] Pubkey),
 }
 
-impl KeypairOrPubkey {
+impl WalletOrPubkey {
     pub fn to_keypair(self) -> Wallet {
         match self {
-            KeypairOrPubkey::Keypair(k) => k,
-            KeypairOrPubkey::Pubkey(public_key) => Wallet::Adapter { public_key },
+            WalletOrPubkey::Wallet(k) => k,
+            WalletOrPubkey::Pubkey(public_key) => Wallet::Adapter { public_key },
         }
     }
 }
@@ -453,7 +453,7 @@ impl KeypairOrPubkey {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub struct ExecutionConfig {
-    pub overwrite_feepayer: Option<KeypairOrPubkey>,
+    pub overwrite_feepayer: Option<WalletOrPubkey>,
 
     #[serde(default)]
     pub compute_budget: InsertionBehavior,
@@ -1126,7 +1126,7 @@ mod tests {
                 "HJbqSuV94woJfyxFNnJyfQdACvvJYaNWsW1x6wmJ8kiq",
             )],
             ExecutionConfig {
-                overwrite_feepayer: Some(KeypairOrPubkey::Pubkey(pubkey!(
+                overwrite_feepayer: Some(WalletOrPubkey::Pubkey(pubkey!(
                     "HJbqSuV94woJfyxFNnJyfQdACvvJYaNWsW1x6wmJ8kiq"
                 ))),
                 ..<_>::default()
@@ -1188,16 +1188,16 @@ mod tests {
     #[test]
     fn test_keypair_or_pubkey_keypair() {
         let keypair = Keypair::new();
-        let x = KeypairOrPubkey::Keypair(Wallet::Keypair(keypair.clone_keypair()));
+        let x = WalletOrPubkey::Wallet(Wallet::Keypair(keypair.clone_keypair()));
         let value = value::to_value(&x).unwrap();
         assert_eq!(value, Value::B64(keypair.to_bytes()));
-        assert_eq!(value::from_value::<KeypairOrPubkey>(value).unwrap(), x);
+        assert_eq!(value::from_value::<WalletOrPubkey>(value).unwrap(), x);
     }
 
     #[test]
     fn test_keypair_or_pubkey_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = KeypairOrPubkey::Keypair(Wallet::Adapter {
+        let x = WalletOrPubkey::Wallet(Wallet::Adapter {
             public_key: pubkey.clone(),
         });
         let value = value::to_value(&x).unwrap();
@@ -1207,16 +1207,16 @@ mod tests {
                 "public_key" => pubkey,
             })
         );
-        assert_eq!(value::from_value::<KeypairOrPubkey>(value).unwrap(), x);
+        assert_eq!(value::from_value::<WalletOrPubkey>(value).unwrap(), x);
     }
 
     #[test]
     fn test_keypair_or_pubkey_pubkey() {
         let pubkey = Pubkey::new_unique();
-        let x = KeypairOrPubkey::Pubkey(pubkey.clone());
+        let x = WalletOrPubkey::Pubkey(pubkey.clone());
         let value = value::to_value(&x).unwrap();
         assert_eq!(value, Value::B32(pubkey.to_bytes()));
-        assert_eq!(value::from_value::<KeypairOrPubkey>(value).unwrap(), x);
+        assert_eq!(value::from_value::<WalletOrPubkey>(value).unwrap(), x);
     }
 
     #[test]
