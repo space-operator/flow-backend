@@ -41,17 +41,15 @@ bytemuck = { version = "1.16.1" }
 bytemuck_derive = { version = "1.7.0" }
 
 # solana libs
-solana-sdk = "=1.16.27"
-solana-client = "=1.16.27"
-solana-program = "=1.16.27"
-solana-account-decoder = "=1.16.27"
-solana-transaction-status = '=1.16.27'
+solana-sdk = "=1.18.26"
+solana-client = "=1.18.26"
+solana-program = "=1.18.26"
+solana-account-decoder = "=1.18.26"
+solana-transaction-status = '=1.18.26'
 spl-token = { version = "=4.0.0", features = ["no-entrypoint"] }
 spl-token-2022 = { version = "=0.9.0", features = ["serde-traits"] }
 spl-memo = { version = "=4.0.0", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "=2.2.0", features = [
-    "no-entrypoint",
-] }
+spl-associated-token-account = { version = "=2.3.0", features = ["no-entrypoint"] }
 spl-account-compression = "=0.4.1"
 spl-noop = "=0.2.0"
 
@@ -59,7 +57,7 @@ spl-noop = "=0.2.0"
 mpl-token-auth-rules = "=1.5.1"
 mpl-token-metadata = "=4.1.2"
 mpl-candy-machine-core = { version = "=3.0.1", features = ["no-entrypoint"] }
-mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
+# mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
 # core, core candy machine and candy guard
 mpl-core-candy-machine-core = { version = "=0.2.1", features = [
     "no-entrypoint",

@@ -31,9 +31,9 @@ borsh = "0.10"
 # solana libs
 solana-sdk = { version = "1", default-features = false }
 solana-client = "1"
+solana-transaction-status = "1"
 rmp-serde = "1.1.2"
 spl-memo = { version = "=4.0.0", features = ["no-entrypoint"] }
-solana-transaction-status = "=1.16.27"
 base64 = "0.21"
 bs58.workspace = true
 nom = "7.1.3"
