@@ -3,7 +3,7 @@ use crate::{
     FlowRunId, SolanaNet,
 };
 use anyhow::{anyhow, bail, ensure};
-use borsh::BorshDeserialize;
+use borsh1::BorshDeserialize;
 use bytes::Bytes;
 use chrono::Utc;
 use futures::TryStreamExt;

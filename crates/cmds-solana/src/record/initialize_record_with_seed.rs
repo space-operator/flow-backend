@@ -1,5 +1,5 @@
-use anchor_spl::token_2022::spl_token_2022::pod::pod_get_packed_len;
 use solana_sdk::{instruction::AccountMeta, rent::Rent, system_instruction};
+use spl_pod::bytemuck::pod_get_packed_len;
 
 use crate::prelude::*;
 
