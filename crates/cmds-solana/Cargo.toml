@@ -79,6 +79,7 @@ pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev =
 # anchor
 anchor-lang = "=0.28.0"
 anchor-spl = "=0.28.0"
+mpl-hybrid = "0.1.0"
 
 # clockwork-client = "=2.0.1"
 # clockwork-utils = "=2.0.1"
