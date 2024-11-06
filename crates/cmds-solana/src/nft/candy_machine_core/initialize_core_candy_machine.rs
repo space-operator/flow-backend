@@ -52,7 +52,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let seeds = &["candy_machine".as_ref(), candy_pubkey.as_ref()];
     let authority_pda = Pubkey::find_program_address(seeds, &candy_machine_program).0;
 
-    let candy_machine_data = CandyMachineData::from(input.candy_machine_data);
+    let candy_machine_data: CandyMachineData = input.candy_machine_data.into();
 
     let accounts = mpl_core_candy_machine_core::accounts::Initialize {
         candy_machine: candy_pubkey,

@@ -22,6 +22,15 @@ opt-level = 1
 debug = 0
 lto = "thin"
 
+[profile.dev.build-override]
+opt-level = 2
+codegen-units = 256
+debug = false
+
+[profile.release.build-override]
+opt-level = 2
+codegen-units = 256
+
 [workspace.dependencies]
 # crates/
 flow = { path = "crates/flow", version = "0.0.0" }
