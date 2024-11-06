@@ -10,7 +10,7 @@ spo-helius.workspace = true
 anyhow = "1.0"
 inventory = "0.3"
 async-trait = "0.1"
-bytes = "1.2.1"
+bytes = { version = "1.8.0", features = ["serde"] }
 thiserror = "1.0.31"
 uuid = { version = "1.0.0", features = ["v4", "serde"] }
 serde = { version = "1.0.137", features = ["derive"] }

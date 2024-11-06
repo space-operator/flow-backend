@@ -82,7 +82,7 @@
     },
     {
       "name": "amount",
-      "type_bounds": ["f64"],
+      "type_bounds": ["decimal"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",

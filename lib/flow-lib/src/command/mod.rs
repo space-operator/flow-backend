@@ -24,19 +24,27 @@ pub mod builder;
 pub mod prelude {
     pub use crate::{
         command::{
-            builder::{BuildResult, BuilderCache, CmdBuilder},
+            builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
             CommandDescription, CommandError, CommandTrait,
         },
         config::{client::NodeData, node::Permissions},
         context::Context,
+        solana::Instructions,
         CmdInputDescription as Input, CmdOutputDescription as Output, FlowId, Name, ValueSet,
         ValueType,
     };
     pub use async_trait::async_trait;
+    pub use bytes::Bytes;
     pub use serde::{Deserialize, Serialize};
     pub use serde_json::Value as JsonValue;
+    pub use serde_with::serde_as;
+    pub use solana_sdk::{pubkey::Pubkey, signature::Signature, signer::keypair::Keypair};
     pub use thiserror::Error as ThisError;
-    pub use value::{self, Value};
+    pub use value::{
+        self,
+        with::{AsDecimal, AsKeypair, AsPubkey, AsSignature},
+        Decimal, Value,
+    };
 }
 
 /// Error type of commmands.

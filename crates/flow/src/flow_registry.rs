@@ -434,7 +434,7 @@ impl FlowRegistry {
         async move {
             this.flows.iter().for_each(|(id, flow)| {
                 if let Err(error) = &flow.interflow_instruction_info {
-                    tracing::info!("flow {} no instruction_info: {}", id, error);
+                    tracing::debug!("flow {} no instruction_info: {}", id, error);
                 }
             });
 

@@ -2,6 +2,6 @@ target
 .vscode
 _data
 guest_local_storage
-crates/flow-server/local_storage/*
+local_storage
 config.toml
 .env

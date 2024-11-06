@@ -124,8 +124,9 @@ impl<'de> serde::Deserializer<'de> for Value {
             #[cfg(feature = "solana")]
             crate::keypair::TOKEN | crate::signature::TOKEN => match self {
                 Value::B64(b) => visitor.visit_bytes(&b),
-                Value::Bytes(b) if b.len() == 64 => visitor.visit_bytes(&b),
+                Value::Bytes(b) => visitor.visit_bytes(&b),
                 Value::String(s) => visitor.visit_str(&s),
+                Value::Array(a) => visit_array(a, visitor),
                 _ => Err(serde::de::Error::invalid_type(
                     self.unexpected(),
                     &"bytes or base58 string",
@@ -134,10 +135,10 @@ impl<'de> serde::Deserializer<'de> for Value {
             #[cfg(feature = "solana")]
             crate::pubkey::TOKEN => match self {
                 Value::B32(b) => visitor.visit_bytes(&b),
-                Value::B64(b) => visitor.visit_bytes(&b[32..]),
-                Value::Bytes(b) if b.len() == 32 => visitor.visit_bytes(&b),
-                Value::Bytes(b) if b.len() == 64 => visitor.visit_bytes(&b[32..]),
+                Value::B64(b) => visitor.visit_bytes(&b),
+                Value::Bytes(b) => visitor.visit_bytes(&b),
                 Value::String(s) => visitor.visit_str(&s),
+                Value::Array(a) => visit_array(a, visitor),
                 _ => Err(serde::de::Error::invalid_type(
                     self.unexpected(),
                     &"bytes or base58 string",
