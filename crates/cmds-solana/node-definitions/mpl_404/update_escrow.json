@@ -113,6 +113,70 @@
       "passthrough": false
     },
     {
+      "name": "name",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "uri",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "max",
+      "type_bounds": ["u64"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "min",
+      "type_bounds": ["u64"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "amount",
+      "type_bounds": ["decimal"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "fee_amount",
+      "type_bounds": ["decimal"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "sol_fee_amount",
+      "type_bounds": ["decimal"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "path",
+      "type_bounds": ["u16"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
       "name": "submit",
       "type_bounds": ["bool"],
       "required": false,

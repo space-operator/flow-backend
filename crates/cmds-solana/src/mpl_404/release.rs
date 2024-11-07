@@ -34,8 +34,6 @@ pub struct Input {
     #[serde_as(as = "AsPubkey")]
     fee_project_account: Pubkey,
     #[serde_as(as = "Option<AsPubkey>")]
-    fee_token_account: Option<Pubkey>,
-    #[serde_as(as = "Option<AsPubkey>")]
     fee_sol_account: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
@@ -58,6 +56,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let escrow_token_account =
         spl_associated_token_account::get_associated_token_address(&input.escrow, &input.token);
 
+    let fee_token_account = spl_associated_token_account::get_associated_token_address(
+        &input.fee_project_account,
+        &input.token,
+    );
+
     let mut release_ix = builder
         .owner(input.owner.pubkey())
         .authority(input.authority.pubkey())
@@ -67,17 +70,15 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .token(input.token)
         .user_token_account(user_token_account)
         .escrow_token_account(escrow_token_account)
+        .fee_token_account(fee_token_account)
         .fee_project_account(input.fee_project_account);
 
-    if let Some(fee_token_account) = input.fee_token_account {
-        release_ix = release_ix.fee_token_account(fee_token_account);
-    }
     if let Some(fee_sol_account) = input.fee_sol_account {
         release_ix = release_ix.fee_sol_account(fee_sol_account);
     }
 
     let ix = Instructions {
-        fee_payer: input.owner.pubkey(),
+        fee_payer: input.fee_payer.pubkey(),
         signers: [
             input.fee_payer.clone_keypair(),
             input.owner.clone_keypair(),

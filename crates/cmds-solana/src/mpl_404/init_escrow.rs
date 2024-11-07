@@ -40,7 +40,10 @@ pub struct Input {
     fee_amount: Decimal,
     #[serde_as(as = "AsDecimal")]
     sol_fee_amount: Decimal,
-    path: String,
+    // CURRENT PATH OPTIONS:
+    // 0-- NFT METADATA IS UPDATED ON SWAP
+    // 1-- NFT METADATA IS NOT UPDATED ON SWAP
+    path: u16,
 
     #[serde(default = "value::default::bool_true")]
     submit: bool,
@@ -80,6 +83,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             input.fee_token_decimals,
         )?)
         .sol_fee_amount(ui_amount_to_amount(input.sol_fee_amount, sol_fee_decimals)?)
+        .path(input.path)
         .instruction();
 
     let ix = Instructions {

@@ -170,7 +170,7 @@
     },
     {
       "name": "path",
-      "type_bounds": ["string"],
+      "type_bounds": ["u16"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",

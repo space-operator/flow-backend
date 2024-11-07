@@ -30,6 +30,20 @@ pub struct Input {
     token: Pubkey,
     #[serde_as(as = "AsPubkey")]
     fee_location: Pubkey,
+    name: String,
+    uri: String,
+    max: u64,
+    min: u64,
+    #[serde_as(as = "AsDecimal")]
+    amount: Decimal,
+    #[serde_as(as = "AsDecimal")]
+    fee_amount: Decimal,
+    #[serde_as(as = "AsDecimal")]
+    sol_fee_amount: Decimal,
+    // CURRENT PATH OPTIONS:
+    // 0-- NFT METADATA IS UPDATED ON SWAP
+    // 1-- NFT METADATA IS NOT UPDATED ON SWAP
+    path: u16,
 
     #[serde(default = "value::default::bool_true")]
     submit: bool,
@@ -45,12 +59,25 @@ pub struct Output {
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     tracing::info!("input: {:?}", input);
 
+    let sol_fee_decimals = 9;
+
     let update_escrow_ix = UpdateEscrowV1Builder::new()
         .escrow(input.escrow)
         .authority(input.authority.pubkey())
         .collection(input.collection)
         .token(input.token)
         .fee_location(input.fee_location)
+        .name(input.name)
+        .uri(input.uri)
+        .max(input.max)
+        .min(input.min)
+        .amount(ui_amount_to_amount(input.amount, input.fee_token_decimals)?)
+        .fee_amount(ui_amount_to_amount(
+            input.fee_amount,
+            input.fee_token_decimals,
+        )?)
+        .sol_fee_amount(ui_amount_to_amount(input.sol_fee_amount, sol_fee_decimals)?)
+        .path(input.path)
         .instruction();
 
     let ix = Instructions {

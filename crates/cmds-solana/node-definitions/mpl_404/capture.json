@@ -121,14 +121,6 @@
       "passthrough": false
     },
     {
-      "name": "fee_token_account",
-      "type_bounds": ["pubkey"],
-      "required": false,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
       "name": "fee_sol_account",
       "type_bounds": ["pubkey"],
       "required": false,
