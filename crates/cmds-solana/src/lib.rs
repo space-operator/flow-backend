@@ -34,6 +34,7 @@ pub mod record;
 pub mod spl;
 pub mod spl_token_2022;
 pub mod streamflow;
+pub mod jupiter;
 
 pub use error::{Error, Result};
 
