@@ -1805,6 +1805,7 @@ dependencies = [
  "futures",
  "hex",
  "inventory",
+ "jupiter-swap-api-client",
  "mime_guess",
  "mpl-bubblegum",
  "mpl-candy-guard",
@@ -4163,6 +4164,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "jupiter-swap-api-client"
+version = "0.1.0"
+source = "git+https://github.com/jup-ag/jupiter-swap-api-client.git#e3c162b921f46eacc867ca9c55e7d610eefabe25"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "reqwest 0.11.27",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "serde_qs",
+ "solana-account-decoder",
+ "solana-sdk",
+]
+
+[[package]]
 name = "kaigan"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6513,6 +6530,17 @@ dependencies = [
  "memchr",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serde_qs"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd34f36fe4c5ba9654417139a9b3a20d2e1de6012ee678ad14d240c22c78d8d6"
+dependencies = [
+ "percent-encoding",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]
