@@ -16,12 +16,10 @@ fn build() -> BuildResult {
 
 #[derive(Deserialize, Debug)]
 struct Input {
-    #[serde(with = "value::keypair")]
-    fee_payer: Keypair,
+    fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     mint_account: Pubkey,
-    #[serde(with = "value::keypair")]
-    update_authority: Keypair,
+    update_authority: Wallet,
     #[serde(default, with = "value::pubkey::opt")]
     new_update_authority: Option<Pubkey>,
     data: Option<super::NftDataV2>,
@@ -48,8 +46,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output1, CommandError> {
             Instructions {
                 fee_payer: input.fee_payer.pubkey(),
                 signers: [
-                    input.fee_payer.clone_keypair(),
-                    input.update_authority.clone_keypair(),
+                    input.fee_payer,
+                    input.update_authority,
                 ]
                 .into(),
 

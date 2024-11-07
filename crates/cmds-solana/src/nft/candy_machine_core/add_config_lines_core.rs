@@ -27,10 +27,8 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 pub struct Input {
     #[serde(with = "value::pubkey")]
     pub candy_machine: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub authority: Keypair,
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
+    pub authority: Wallet,
+    pub payer: Wallet,
     pub index: u32,
     pub config_lines: Vec<ConfigLine>,
     #[serde(default = "value::default::bool_true")]
@@ -58,7 +56,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [input.payer.clone_keypair(), input.authority.clone_keypair()].into(),
+        signers: [input.payer, input.authority].into(),
         instructions: [Instruction {
             program_id: mpl_core_candy_machine_core::id(),
             accounts,

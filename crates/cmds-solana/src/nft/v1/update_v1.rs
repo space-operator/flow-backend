@@ -40,14 +40,11 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
-    #[serde(default, with = "value::keypair::opt")]
-    pub delegate: Option<Keypair>,
+    pub fee_payer: Wallet,
+    pub delegate: Option<Wallet>,
     #[serde(default, with = "value::pubkey::opt")]
     pub delegate_record: Option<Pubkey>,
-    #[serde(default, with = "value::keypair::opt")]
-    update_authority: Option<Keypair>,
+    update_authority: Option<Wallet>,
     #[serde(with = "value::pubkey")]
     pub mint_account: Pubkey,
     pub update_args: UpdateArgs,
@@ -98,13 +95,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let create_ix = delegate_v1.instruction(input.update_args.into());
 
+    let authority_or_delegate_pubkey = authority_or_delegate.pubkey();
+
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer.clone_keypair(),
-            authority_or_delegate.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.fee_payer, authority_or_delegate].into(),
         instructions: [create_ix].into(),
     };
 
@@ -114,7 +109,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .execute(
             ins,
             value::map! {
-                "authority or delegate" => authority_or_delegate.pubkey(),
+                "authority or delegate" => authority_or_delegate_pubkey,
             },
         )
         .await?

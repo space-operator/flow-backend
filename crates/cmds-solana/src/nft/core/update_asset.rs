@@ -20,10 +20,8 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub asset: Keypair,
+    pub fee_payer: Wallet,
+    pub asset: Wallet,
     #[serde(default, with = "value::pubkey::opt")]
     pub collection: Option<Pubkey>,
     pub new_name: Option<String>,
@@ -72,11 +70,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = builder.instruction();
 
-    let signers = vec![input.fee_payer.clone_keypair()];
-
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers,
+        signers: [input.fee_payer].into(),
         instructions: [ins].into(),
     };
 

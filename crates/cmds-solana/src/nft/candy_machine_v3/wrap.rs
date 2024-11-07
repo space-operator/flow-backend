@@ -23,14 +23,11 @@ flow_lib::submit!(CommandDescription::new(WRAP, |_| { build() }));
 pub struct Input {
     #[serde(with = "value::pubkey")]
     pub candy_machine: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub candy_machine_authority: Keypair,
+    pub candy_machine_authority: Wallet,
     #[serde(with = "value::pubkey")]
     pub candy_guard: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub candy_guard_authority: Keypair,
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
+    pub candy_guard_authority: Wallet,
+    pub payer: Wallet,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }
@@ -56,9 +53,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [
-            input.payer.clone_keypair(),
-            input.candy_guard_authority.clone_keypair(),
-            input.candy_machine_authority.clone_keypair(),
+            input.payer,
+            input.candy_guard_authority,
+            input.candy_machine_authority,
         ]
         .into(),
         instructions: [Instruction {

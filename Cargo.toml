@@ -8,6 +8,11 @@ rhai = { git = "https://github.com/space-operator/rhai", rev = "b39d2bfb" }
 # fix zeroize and subtle dep conflict
 aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs", rev = "555ae1d82d000f01899498f969e6dc1d0a4fe467" }
 curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", rev = "8274d5cbb6fc3f38cdc742b4798173895cd2a290" }
+# branch: update-deps
+mpl-candy-machine-core = { git = "https://github.com/space-operator/mpl-candy-machine", rev = "6096215a779702fb7954103e0d3199d89e120e6f" }
+mpl-candy-guard = { git = "https://github.com/space-operator/mpl-candy-machine", rev = "6096215a779702fb7954103e0d3199d89e120e6f" }
+mpl-core-candy-machine-core = { git = "https://github.com/space-operator/mpl-core-candy-machine", rev = "e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226" }
+mpl-core-candy-guard = { git = "https://github.com/space-operator/mpl-core-candy-machine", rev = "e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226" }
 
 [profile.dev]
 debug = 0
@@ -16,6 +21,15 @@ opt-level = 1
 [profile.release]
 debug = 0
 lto = "thin"
+
+[profile.dev.build-override]
+opt-level = 2
+codegen-units = 256
+debug = false
+
+[profile.release.build-override]
+opt-level = 2
+codegen-units = 256
 
 [workspace.dependencies]
 # crates/

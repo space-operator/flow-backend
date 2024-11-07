@@ -25,10 +25,8 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub message: Keypair,
+    pub payer: Wallet,
+    pub message: Wallet,
     #[serde(with = "value::pubkey")]
     pub mint: Pubkey,
     #[serde(default = "value::default::bool_true")]
@@ -108,9 +106,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             .try_to_vec()?,
     };
 
+    let message_pubkey = input.message.pubkey();
+
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [input.payer.clone_keypair(), input.message.clone_keypair()].into(),
+        signers: [input.payer, input.message].into(),
         instructions: [ix].into(),
     };
 
@@ -129,7 +129,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .await?
         .signature;
 
-    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
+    let sequence = get_sequence_number_from_message(&ctx, message_pubkey).await?;
     Ok(Output {
         signature,
         sequence,
