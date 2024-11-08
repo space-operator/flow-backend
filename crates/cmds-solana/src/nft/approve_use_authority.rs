@@ -46,10 +46,8 @@ impl ApproveUseAuthority {
 pub struct Input {
     #[serde(with = "value::pubkey")]
     pub use_authority: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub owner: Keypair,
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub owner: Wallet,
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub token_account: Pubkey,
     #[serde(with = "value::pubkey")]

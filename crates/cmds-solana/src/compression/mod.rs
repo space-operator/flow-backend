@@ -19,13 +19,17 @@ use spl_account_compression::{
 };
 use std::str::FromStr;
 use tracing::info;
+
+pub mod types;
+
 pub mod burn;
 pub mod create_tree;
 pub mod mint_to_collection_v1;
 pub mod mint_v1;
 pub mod transfer;
-pub mod types;
 pub mod update;
+
+pub use super::WalletOrPubkey;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenProgramVersion {

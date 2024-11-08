@@ -29,16 +29,13 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
+    pub payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub mint: Pubkey,
     pub target_address: String,
     pub target_chain: u16,
-    #[serde(with = "value::keypair")]
-    pub message: Keypair,
-    #[serde(with = "value::keypair")]
-    pub from_owner: Keypair,
+    pub message: Wallet,
+    pub from_owner: Wallet,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }
@@ -136,14 +133,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         1,
     )?;
 
+    let message_pubkey = input.message.pubkey();
+
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [
-            input.payer.clone_keypair(),
-            input.from_owner.clone_keypair(),
-            input.message.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.payer, input.from_owner, input.message].into(),
         instructions: [approve_ix, ix].into(),
     };
 
@@ -160,7 +154,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .await?
         .signature;
 
-    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
+    let sequence = get_sequence_number_from_message(&ctx, message_pubkey).await?;
 
     Ok(Output {
         signature,

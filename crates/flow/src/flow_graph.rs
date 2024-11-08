@@ -13,7 +13,7 @@ use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
     context::{execute, get_jwt, CommandContext, Context},
-    solana::{find_failed_instruction, ExecutionConfig, Instructions, KeypairExt, Pubkey},
+    solana::{find_failed_instruction, ExecutionConfig, Instructions, Pubkey, Wallet},
     utils::{Extensions, TowerClient},
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
 };
@@ -32,7 +32,7 @@ use petgraph::{
     visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
     Directed, Direction,
 };
-use solana_sdk::{signature::Keypair, system_instruction::transfer_many};
+use solana_sdk::system_instruction::transfer_many;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
@@ -1056,7 +1056,7 @@ impl FlowGraph {
                             .clone()
                             .map(|x| x.to_keypair())
                         {
-                            ins.set_feepayer(signer.clone_keypair());
+                            ins.set_feepayer(signer);
                         }
                         let mut resp = vec![Responder {
                             sender: w.resp,
@@ -1583,7 +1583,7 @@ struct ExecuteNoBundling {
     tx: mpsc::UnboundedSender<PartialOutput>,
     stop_shared: StopSignal,
     simple_svc: execute::Svc,
-    overwrite_feepayer: Option<Keypair>,
+    overwrite_feepayer: Option<Wallet>,
 }
 
 impl tower::Service<execute::Request> for ExecuteNoBundling {
@@ -1608,7 +1608,7 @@ impl tower::Service<execute::Request> for ExecuteNoBundling {
         let node_id = self.node_id;
         let times = self.times;
         let output = req.output.clone();
-        let overwrite_feepayer = self.overwrite_feepayer.as_ref().map(|k| k.clone_keypair());
+        let overwrite_feepayer = self.overwrite_feepayer.clone();
         let task = async move {
             if let Some(signer) = overwrite_feepayer {
                 req.instructions.set_feepayer(signer);

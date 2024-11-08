@@ -24,14 +24,13 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub realm: Pubkey,
     #[serde(with = "value::pubkey")]
     pub token_owner_record: Pubkey,
-    #[serde(with = "value::keypair::opt")]
-    pub token_owner_record_lock_authority: Option<Keypair>,
+
+    pub token_owner_record_lock_authority: Option<Wallet>,
     pub lock_ids: Option<Vec<u8>>,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
@@ -93,17 +92,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         input.lock_ids,
     );
 
-    let signers = match input.token_owner_record_lock_authority {
-        Some(token_owner_record_lock_authority) => vec![
-            input.fee_payer.clone_keypair(),
-            token_owner_record_lock_authority.clone_keypair(),
-        ],
-        None => vec![input.fee_payer.clone_keypair()],
-    };
-
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers,
+        signers: std::iter::once(input.fee_payer)
+            .chain(input.token_owner_record_lock_authority)
+            .collect(),
         instructions: [ix].into(),
     };
 

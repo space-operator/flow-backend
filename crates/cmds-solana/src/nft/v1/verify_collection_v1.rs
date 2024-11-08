@@ -22,10 +22,8 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 pub struct Input {
     #[serde(with = "value::pubkey")]
     pub mint_account: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub collection_authority: Keypair,
+    pub fee_payer: Wallet,
+    pub collection_authority: Wallet,
     #[serde(with = "value::pubkey")]
     pub collection_mint_account: Pubkey,
     #[serde(default, with = "value::pubkey::opt")]
@@ -61,11 +59,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer.clone_keypair(),
-            input.collection_authority.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.fee_payer, input.collection_authority].into(),
         instructions: [ins].into(),
     };
 

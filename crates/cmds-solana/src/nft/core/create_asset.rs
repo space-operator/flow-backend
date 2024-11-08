@@ -24,17 +24,13 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub asset: Keypair,
-    #[serde(with = "value::keypair::opt")]
-    pub authority: Option<Keypair>,
+    pub fee_payer: Wallet,
+    pub asset: Wallet,
+    pub authority: Option<Wallet>,
     pub name: String,
     pub uri: String,
     pub plugins: Vec<PluginAuthorityPair>,
-    #[serde(with = "value::keypair::opt")]
-    pub verified_creator: Option<Keypair>,
+    pub verified_creator: Option<Wallet>,
     #[serde(default, with = "value::pubkey::opt")]
     pub collection: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
@@ -131,19 +127,13 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = builder.instruction();
 
-    let mut signers = vec![input.fee_payer.clone_keypair(), input.asset.clone_keypair()];
-
-    if let Some(authority) = input.authority.as_ref() {
-        signers.push(authority.clone_keypair());
-    }
-
-    if let Some(verified_creator) = input.verified_creator {
-        signers.push(verified_creator.clone_keypair());
-    }
-
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers,
+        signers: [input.fee_payer, input.asset]
+            .into_iter()
+            .chain(input.authority)
+            .chain(input.verified_creator)
+            .collect(),
         instructions: [ins].into(),
     };
 

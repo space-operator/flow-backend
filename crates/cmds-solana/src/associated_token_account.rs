@@ -19,21 +19,22 @@ flow_lib::submit!(CommandDescription::new(
     |_| { build() }
 ));
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::pubkey")]
+    #[serde_as(as = "AsPubkey")]
     owner: Pubkey,
-    #[serde(with = "value::keypair")]
-    fee_payer: Keypair,
-    #[serde(with = "value::pubkey")]
+    fee_payer: Wallet,
+    #[serde_as(as = "AsPubkey")]
     mint_account: Pubkey,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
-    #[serde(default, with = "value::signature::opt")]
+    #[serde_as(as = "Option<AsSignature>")]
     signature: Option<Signature>,
 }
 
@@ -50,7 +51,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let instructions = if input.submit {
         Instructions {
             fee_payer: input.fee_payer.pubkey(),
-            signers: [input.fee_payer.clone_keypair()].into(),
+            signers: [input.fee_payer].into(),
             instructions: [instruction].into(),
         }
     } else {

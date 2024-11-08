@@ -26,15 +26,11 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub collection: Keypair,
-    #[serde(default, with = "value::keypair::opt")]
-    pub update_authority: Option<Keypair>,
+    pub fee_payer: Wallet,
+    pub collection: Wallet,
+    pub update_authority: Option<Wallet>,
     // TODO: should be an array of keypairs
-    #[serde(default, with = "value::keypair::opt")]
-    pub verified_creator: Option<Keypair>,
+    pub verified_creator: Option<Wallet>,
     pub name: String,
     pub uri: String,
     pub plugins: Vec<PluginAuthorityPair>,
@@ -127,6 +123,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         builder
     };
 
+    // TODO: check this: update_authority is not in signer list
     let builder = if let Some(update_authority) = input.update_authority {
         builder.update_authority(Some(update_authority.pubkey()))
     } else {
@@ -135,19 +132,14 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = builder.instruction();
 
-    let mut signers = vec![
-        input.fee_payer.clone_keypair(),
-        input.collection.clone_keypair(),
-    ];
-    //
-    // fee payer is creator of collection
-    if let Some(verified_creator) = input.verified_creator {
-        signers.push(verified_creator.clone_keypair());
-    }
+    let collection_pubkey = input.collection.pubkey();
 
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers,
+        signers: [input.fee_payer, input.collection]
+            .into_iter()
+            .chain(input.verified_creator)
+            .collect(),
         instructions: [ins].into(),
     };
 
@@ -157,7 +149,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .execute(
             ins,
             value::map! {
-                "collection" => input.collection.pubkey(),
+                "collection" => collection_pubkey,
             },
         )
         .await?
