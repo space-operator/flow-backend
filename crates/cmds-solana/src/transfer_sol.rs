@@ -17,10 +17,8 @@ fn build() -> BuildResult {
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Input {
-    #[serde_as(as = "Option<AsKeypair>")]
-    pub fee_payer: Option<Keypair>,
-    #[serde_as(as = "AsKeypair")]
-    pub sender: Keypair,
+    pub fee_payer: Option<Wallet>,
+    pub sender: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub recipient: Pubkey,
     #[serde_as(as = "AsDecimal")]
@@ -42,18 +40,17 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let instruction =
         solana_sdk::system_instruction::transfer(&input.sender.pubkey(), &input.recipient, amount);
 
-    let mut signers = vec![input.sender.clone_keypair()];
-    if let Some(fee_payer) = input.fee_payer.as_ref() {
-        if fee_payer.pubkey() != input.sender.pubkey() {
-            signers.push(fee_payer.clone_keypair());
+    let sender_pubkey = input.sender.pubkey();
+    let mut signers = vec![input.sender];
+    if let Some(fee_payer) = input.fee_payer {
+        if fee_payer.pubkey() != sender_pubkey {
+            signers.insert(0, fee_payer);
         }
     }
+    let fee_payer = signers[0].pubkey();
     let instructions = if input.submit {
         Instructions {
-            fee_payer: input
-                .fee_payer
-                .map(|k| k.pubkey())
-                .unwrap_or_else(|| input.sender.pubkey()),
+            fee_payer,
             signers,
             instructions: [instruction].into(),
         }
@@ -81,7 +78,7 @@ mod tests {
         tracing_subscriber::fmt::try_init().ok();
         let ctx = Context::default();
 
-        let sender = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ");
+        let sender: Wallet = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").into();
         let recipient = solana_sdk::pubkey!("GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9");
 
         let balance = ctx

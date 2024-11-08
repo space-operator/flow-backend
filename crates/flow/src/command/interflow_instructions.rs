@@ -101,7 +101,11 @@ impl CommandTrait for Interflow {
             return Err(build_error(&result));
         }
         let ins = result.instructions.unwrap();
-        let signers = ins.signers.into_iter().map(Value::from).collect::<Vec<_>>();
+        let signers = ins
+            .signers
+            .into_iter()
+            .map(|w| value::to_value(&w))
+            .collect::<Result<Vec<_>, _>>()?;
         let instructions = ins
             .instructions
             .into_iter()

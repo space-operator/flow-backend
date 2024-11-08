@@ -23,12 +23,10 @@ flow_lib::submit!(CommandDescription::new(SOLANA_CREATE_TOKEN_ACCOUNT, |_| {
 pub struct Input {
     #[serde(with = "value::pubkey")]
     owner: Pubkey,
-    #[serde(with = "value::keypair")]
-    fee_payer: Keypair,
+    fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     mint_account: Pubkey,
-    #[serde(with = "value::keypair")]
-    token_account: Keypair,
+    token_account: Wallet,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }
@@ -83,11 +81,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let instructions = if input.submit {
         Instructions {
             fee_payer: input.fee_payer.pubkey(),
-            signers: [
-                input.fee_payer.clone_keypair(),
-                input.token_account.clone_keypair(),
-            ]
-            .into(),
+            signers: [input.fee_payer, input.token_account].into(),
 
             instructions,
         }

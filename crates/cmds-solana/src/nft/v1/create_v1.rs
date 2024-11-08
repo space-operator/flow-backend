@@ -28,12 +28,9 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
-    #[serde(with = "value::keypair")]
-    update_authority: Keypair,
-    #[serde(with = "value::keypair")]
-    pub mint_account: Keypair,
+    pub fee_payer: Wallet,
+    update_authority: Wallet,
+    pub mint_account: Wallet,
     #[serde(with = "value::pubkey")]
     pub mint_authority: Pubkey,
     pub data: NftDataV2,
@@ -148,14 +145,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let create_ix = create_ix.instruction(args);
 
+    let mint_account_pubkey = input.mint_account.pubkey();
+
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer.clone_keypair(),
-            input.update_authority.clone_keypair(),
-            input.mint_account.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.fee_payer, input.update_authority, input.mint_account].into(),
         instructions: [create_ix].into(),
     };
 
@@ -167,7 +161,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             value::map! {
                 "metadata_account" => metadata_account,
                 "master_edition_account" => master_edition_account,
-                "mint_account" => input.mint_account.pubkey(),
+                "mint_account" => mint_account_pubkey,
                 // "token"=> token_account,
             },
         )

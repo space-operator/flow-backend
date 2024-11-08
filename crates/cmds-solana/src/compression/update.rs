@@ -1,14 +1,11 @@
-use std::str::FromStr;
-
-use crate::prelude::*;
-use mpl_bubblegum::instructions::UpdateMetadataBuilder;
-use solana_program::instruction::AccountMeta;
-use solana_sdk::pubkey::Pubkey;
-
 use super::{
     types::asset::{Asset, AssetProof},
     GetAssetResponse, MetadataBubblegum,
 };
+use crate::prelude::*;
+use mpl_bubblegum::instructions::UpdateMetadataBuilder;
+use solana_program::instruction::AccountMeta;
+use std::str::FromStr;
 
 // Command Name
 const NAME: &str = "update_cNFT";
@@ -27,20 +24,9 @@ fn build() -> BuildResult {
 flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-pub enum KeypairOrPubkey {
-    #[serde(with = "value::keypair")]
-    Keypair(Keypair),
-    #[serde(with = "value::pubkey")]
-    Pubkey(Pubkey),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub authority: Keypair,
+    pub payer: Wallet,
+    pub authority: Wallet,
     #[serde(default)]
     pub leaf_owner: Pubkey,
     //

@@ -1,0 +1,242 @@
+{
+  "type": "native",
+  "data": {
+    "node_definition_version": "0.1",
+    "unique_id": "",
+    "node_id": "release_v1",
+    "version": "0.1",
+    "display_name": "Release V1",
+    "description": "Swapping to fungibles",
+    "tags": [],
+    "related_to": [
+      {
+        "id": "",
+        "type": "",
+        "relationship": ""
+      }
+    ],
+    "resources": {
+      "source_code_url": "",
+      "documentation_url": ""
+    },
+    "usage": {
+      "license": "Apache-2.0",
+      "license_url": "",
+      "pricing": {
+        "currency": "USDC",
+        "purchase_price": 0,
+        "price_per_run": 0,
+        "custom": {
+          "unit": "monthly",
+          "value": "0"
+        }
+      }
+    },
+    "authors": [
+      {
+        "name": "Space Operator",
+        "contact": ""
+      }
+    ],
+    "design": null,
+    "options": null,
+    "instruction_info": {
+      "before": [],
+      "signature": "signature",
+      "after": []
+    }
+  },
+  "sources": [
+    {
+      "name": "signature",
+      "type": "signature",
+      "defaultValue": null,
+      "tooltip": "",
+      "optional": true
+    }
+  ],
+  "targets": [
+    {
+      "name": "payer",
+      "type_bounds": [
+        "keypair"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "owner",
+      "type_bounds": [
+        "keypair"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "authority",
+      "type_bounds": [
+        "keypair"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "escrow",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "asset",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "collection",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "user_token_account",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "escrow_token_account",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "token",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "fee_token_account",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "fee_sol_account",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": false,
+      "defaultValue": "GjF4LqmEhV33riVyAwHwiEeAHx4XXFn2yMY3fmMigoP3",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "fee_project_account",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "recent_blockhashes",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": false,
+      "defaultValue": "SysvarS1otHashes111111111111111111111111111",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "mpl_core",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": false,
+      "defaultValue": "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "system_program",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": false,
+      "defaultValue": "11111111111111111111111111111111",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "token_program",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": false,
+      "defaultValue": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "associated_token_program",
+      "type_bounds": [
+        "pubkey"
+      ],
+      "required": false,
+      "defaultValue": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "submit",
+      "type_bounds": [
+        "bool"
+      ],
+      "required": false,
+      "defaultValue": true,
+      "tooltip": "",
+      "passthrough": false
+    }
+  ],
+  "targets_form.ui_schema": {},
+  "targets_form.json_schema": {}
+}

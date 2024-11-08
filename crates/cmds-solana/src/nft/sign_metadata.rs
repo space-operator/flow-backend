@@ -22,12 +22,10 @@ impl SignMetadata {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    fee_payer: Keypair,
+    fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     mint_account: Pubkey,
-    #[serde(with = "value::keypair")]
-    creator: Keypair,
+    creator: Wallet,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }

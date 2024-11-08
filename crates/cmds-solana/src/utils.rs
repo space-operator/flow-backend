@@ -1,9 +1,5 @@
 use crate::prelude::*;
 use bytes::Bytes;
-use futures::{
-    stream::{FuturesUnordered, TryStreamExt},
-    TryFutureExt,
-};
 use rust_decimal::{
     prelude::{MathematicalOps, ToPrimitive},
     Decimal,
@@ -12,7 +8,7 @@ use solana_program::{
     hash::Hash, instruction::Instruction, message::Message, native_token::LAMPORTS_PER_SOL,
 };
 use solana_sdk::{signature::Presigner, transaction::Transaction};
-use std::{collections::BTreeSet, time::Duration};
+use std::time::Duration;
 use value::Error as ValueError;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(60 * 5);
@@ -64,43 +60,22 @@ pub fn tx_to_string(tx: &Transaction) -> Result<String, bincode::Error> {
 pub async fn try_sign_wallet(
     ctx: &Context,
     tx: &mut Transaction,
-    keypairs: &[&Keypair],
+    wallet: &Wallet,
     recent_blockhash: Hash,
 ) -> Result<(), crate::Error> {
-    let msg: Bytes = tx.message_data().into();
-
-    let futs = keypairs
-        .iter()
-        .filter(|&k| k.is_adapter_wallet())
-        .map(|k| k.pubkey())
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .map(|pk| {
-            ctx.request_signature(pk, msg.clone(), SIGNATURE_TIMEOUT)
-                .map_ok(move |sig| (pk, sig))
-        })
-        .collect::<FuturesUnordered<_>>();
-
-    let presigners = tokio::time::timeout(SIGNATURE_TIMEOUT, futs.try_collect::<Vec<_>>())
+    if let Some(keypair) = wallet.keypair() {
+        tx.try_sign(&[keypair], recent_blockhash)?;
+    } else {
+        let msg: Bytes = tx.message_data().into();
+        let sig = tokio::time::timeout(
+            SIGNATURE_TIMEOUT,
+            ctx.request_signature(wallet.pubkey(), msg.clone(), SIGNATURE_TIMEOUT),
+        )
         .await
-        .map_err(|_| crate::Error::SignatureTimeout)??
-        .into_iter()
-        .map(|(pk, res)| Presigner::new(&pk, &res.signature))
-        .collect::<Vec<Presigner>>();
-
-    let mut signers = Vec::<&dyn Signer>::with_capacity(keypairs.len());
-
-    for p in &presigners {
-        signers.push(p);
+        .map_err(|_| crate::Error::SignatureTimeout)??;
+        let presigner = Presigner::new(&wallet.pubkey(), &sig.signature);
+        tx.try_sign(&[&presigner], recent_blockhash)?;
     }
-
-    for k in keypairs {
-        if !k.is_adapter_wallet() {
-            signers.push(*k);
-        }
-    }
-
-    tx.try_sign(&signers, recent_blockhash)?;
 
     Ok(())
 }
