@@ -89,16 +89,9 @@ pub trait CommandTrait: Send + Sync + 'static {
 
                     let value = match i.type_bounds.first() {
                         Some(ValueType::Pubkey) => {
+                            // keypair could be automatically converted into pubkey
+                            // we don't want to passthrough the keypair here, only pubkey
                             value::pubkey::deserialize(value.clone()).map(Into::into)
-                        }
-                        Some(ValueType::Keypair) => {
-                            value::keypair::deserialize(value.clone()).map(Into::into)
-                        }
-                        Some(ValueType::Signature) => {
-                            value::signature::deserialize(value.clone()).map(Into::into)
-                        }
-                        Some(ValueType::Decimal) => {
-                            value::decimal::deserialize(value.clone()).map(Into::into)
                         }
                         _ => Ok(value.clone()),
                     }

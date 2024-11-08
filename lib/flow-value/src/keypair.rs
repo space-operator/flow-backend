@@ -1,94 +1,40 @@
+use crate::with::AsKeypair;
 use solana_sdk::signer::keypair::Keypair;
 
-pub(crate) const TOKEN: &str = "$$k";
+type Target = Keypair;
 
-pub type Target = Keypair;
+type As = AsKeypair;
 
 pub mod opt {
+    use serde_with::{DeserializeAs, SerializeAs};
+
     pub fn serialize<S>(sig: &Option<super::Target>, s: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
-        match sig {
-            Some(sig) => super::serialize(sig, s),
-            None => s.serialize_none(),
-        }
+        Option::<super::As>::serialize_as(sig, s)
     }
 
     pub fn deserialize<'de, D>(d: D) -> Result<Option<super::Target>, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        d.deserialize_option(crate::OptionVisitor(super::Visitor))
+        Option::<super::As>::deserialize_as(d)
     }
 }
 
-pub fn serialize<S>(k: &Target, s: S) -> Result<S::Ok, S::Error>
+pub fn serialize<S>(p: &Target, s: S) -> Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
 {
-    s.serialize_newtype_struct(TOKEN, &crate::Bytes(&k.to_bytes()))
-}
-
-struct Visitor;
-
-impl<'de> serde::de::Visitor<'de> for Visitor {
-    type Value = Keypair;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("keypair")
-    }
-
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Keypair::from_bytes(v).map_err(|_| serde::de::Error::invalid_length(v.len(), &"64"))
-    }
-
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        let mut buf = [0u8; 64];
-        let size = bs58::decode(v).into(&mut buf).map_err(|_| {
-            serde::de::Error::invalid_value(
-                serde::de::Unexpected::Str(v),
-                &"keypair encoded in bs58",
-            )
-        })?;
-        self.visit_bytes(&buf[..size])
-    }
-
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-    where
-        A: serde::de::SeqAccess<'de>,
-    {
-        let mut buf = [0u8; 64];
-        let mut iter_mut = buf.iter_mut();
-        loop {
-            match (seq.next_element()?, iter_mut.next()) {
-                (Some(value), Some(ptr)) => *ptr = value,
-                (None, None) => break,
-                _ => return Err(serde::de::Error::custom("expected array of 64 elements")),
-            }
-        }
-        Keypair::from_bytes(&buf).map_err(|_| serde::de::Error::custom("invalid keypair"))
-    }
-
-    fn visit_newtype_struct<D>(self, d: D) -> Result<Self::Value, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        d.deserialize_any(self)
-    }
+    As::serialize(p, s)
 }
 
 pub fn deserialize<'de, D>(d: D) -> Result<Target, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    d.deserialize_newtype_struct(TOKEN, Visitor)
+    As::deserialize(d)
 }
 
 #[cfg(test)]

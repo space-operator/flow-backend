@@ -122,7 +122,7 @@ impl<'de> serde::Deserializer<'de> for Value {
                 )),
             },
             #[cfg(feature = "solana")]
-            crate::keypair::TOKEN | crate::signature::TOKEN => match self {
+            crate::with::keypair::TOKEN | crate::with::signature::TOKEN => match self {
                 Value::B64(b) => visitor.visit_bytes(&b),
                 Value::Bytes(b) => visitor.visit_bytes(&b),
                 Value::String(s) => visitor.visit_str(&s),
@@ -133,15 +133,16 @@ impl<'de> serde::Deserializer<'de> for Value {
                 )),
             },
             #[cfg(feature = "solana")]
-            crate::pubkey::TOKEN => match self {
+            crate::with::pubkey::TOKEN => match self {
                 Value::B32(b) => visitor.visit_bytes(&b),
                 Value::B64(b) => visitor.visit_bytes(&b),
                 Value::Bytes(b) => visitor.visit_bytes(&b),
                 Value::String(s) => visitor.visit_str(&s),
                 Value::Array(a) => visit_array(a, visitor),
+                Value::Map(m) => visit_map(m, visitor),
                 _ => Err(serde::de::Error::invalid_type(
                     self.unexpected(),
-                    &"bytes or base58 string",
+                    &"public key",
                 )),
             },
             _ => visitor.visit_newtype_struct(self),
