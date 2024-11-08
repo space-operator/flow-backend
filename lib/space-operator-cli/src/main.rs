@@ -1057,7 +1057,7 @@ fn value_type_to_rust_type(ty: schema::ValueType) -> TokenStream {
         schema::ValueType::Decimal => quote! { Decimal },
         schema::ValueType::Pubkey => quote! { Pubkey },
         schema::ValueType::Address => quote! { String },
-        schema::ValueType::Keypair => quote! { Keypair },
+        schema::ValueType::Keypair => quote! { Wallet },
         schema::ValueType::Signature => quote! { Signature },
         schema::ValueType::String => quote! { String },
         schema::ValueType::Bytes => quote! { Bytes },
@@ -1144,17 +1144,7 @@ fn rust_type_serde_decor(
             };
         }
         ValueType::Address => {}
-        ValueType::Keypair => {
-            return if optional {
-                quote! {
-                    #[serde_as(as = "Option<AsKeypair>")]
-                }
-            } else {
-                quote! {
-                    #[serde_as(as = "AsKeypair")]
-                }
-            };
-        }
+        ValueType::Keypair => {}
         ValueType::Signature => {
             return if optional {
                 quote! {
