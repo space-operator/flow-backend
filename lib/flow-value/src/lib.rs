@@ -32,6 +32,7 @@ pub mod with;
 // custom serialize and deserialize modules
 pub mod decimal;
 #[cfg(feature = "solana")]
+#[deprecated]
 pub mod keypair;
 #[cfg(feature = "solana")]
 pub mod pubkey;

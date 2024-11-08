@@ -1,6 +1,9 @@
 //! [serde_with](https://docs.rs/serde_with/latest/serde_with/) helpers.
 
-use serde::{de, Deserialize, Serialize};
+use serde::{
+    de::{self, MapAccess},
+    Deserialize, Serialize,
+};
 use serde_with::serde_conv;
 use std::{borrow::Cow, convert::Infallible};
 use std::{mem::MaybeUninit, ops::ControlFlow};
@@ -41,6 +44,8 @@ where
 
 #[cfg(feature = "solana")]
 pub(crate) mod pubkey {
+    use std::marker::PhantomData;
+
     use super::*;
     use five8::BASE58_ENCODED_32_MAX_LEN;
     use solana_sdk::pubkey::Pubkey;
@@ -63,18 +68,24 @@ pub(crate) mod pubkey {
         where
             D: serde::Deserializer<'de>,
         {
-            d.deserialize_newtype_struct(TOKEN, Visitor)
+            d.deserialize_newtype_struct(TOKEN, Visitor { map: true })
                 .map(|pk| CustomPubkey(Cow::Owned(pk)))
         }
     }
 
-    struct Visitor;
+    struct Visitor {
+        map: bool,
+    }
 
     impl<'de> serde::de::Visitor<'de> for Visitor {
         type Value = Pubkey;
 
         fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("pubkey, keypair, or bs58 string")
+            if self.map {
+                formatter.write_str("pubkey, keypair, base58 string, or adapter wallet")
+            } else {
+                formatter.write_str("pubkey, keypair, or base58 string")
+            }
         }
 
         fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
@@ -172,6 +183,81 @@ pub(crate) mod pubkey {
         {
             d.deserialize_any(self)
         }
+
+        fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+        where
+            A: MapAccess<'de>,
+        {
+            if self.map {
+                map.next_key::<Const<public_key>>()?;
+                let value = map.next_value::<CustomPubkeyNoMap>()?;
+                Ok(value.0)
+            } else {
+                Err(de::Error::invalid_type(de::Unexpected::Map, &self))
+            }
+        }
+    }
+
+    struct CustomPubkeyNoMap(Pubkey);
+
+    impl<'de> Deserialize<'de> for CustomPubkeyNoMap {
+        fn deserialize<D>(d: D) -> Result<Self, D::Error>
+        where
+            D: de::Deserializer<'de>,
+        {
+            d.deserialize_any(Visitor { map: false })
+                .map(CustomPubkeyNoMap)
+        }
+    }
+
+    #[allow(non_camel_case_types)]
+    struct public_key;
+
+    impl Key for public_key {
+        const KEY: &'static str = "public_key";
+        fn new() -> Self {
+            Self
+        }
+    }
+
+    trait Key {
+        const KEY: &'static str;
+        fn new() -> Self;
+    }
+
+    struct Const<K>(K);
+
+    impl<'de, K> Deserialize<'de> for Const<K>
+    where
+        K: Key,
+    {
+        fn deserialize<D>(d: D) -> Result<Self, D::Error>
+        where
+            D: de::Deserializer<'de>,
+        {
+            d.deserialize_str(StrVisitor::<K>(PhantomData))
+        }
+    }
+
+    struct StrVisitor<K: Key>(PhantomData<fn() -> K>);
+
+    impl<'de, K: Key> de::Visitor<'de> for StrVisitor<K> {
+        type Value = Const<K>;
+
+        fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            f.write_str(K::KEY)
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            if v == K::KEY {
+                Ok(Const(K::new()))
+            } else {
+                Err(de::Error::invalid_value(de::Unexpected::Str(v), &K::KEY))
+            }
+        }
     }
 
     fn to_custom_pubkey<'a>(pk: &'a Pubkey) -> CustomPubkey<'a> {
@@ -194,6 +280,10 @@ pub(crate) mod pubkey {
             let key = Pubkey::new_unique();
             let value = AsPubkey::serialize_as(&key, crate::ser::Serializer).unwrap();
             assert!(matches!(value, Value::B32(_)));
+            let de_key = AsPubkey::deserialize_as(value).unwrap();
+            assert_eq!(key, de_key);
+
+            let value = Value::Map(crate::map! { "public_key" => key });
             let de_key = AsPubkey::deserialize_as(value).unwrap();
             assert_eq!(key, de_key);
 
