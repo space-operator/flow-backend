@@ -20,6 +20,7 @@ pub const fn streamflow_program_id(net: SolanaNet) -> Pubkey {
     }
 }
 
+// TODO: declare static Pubkeys instead of strings
 /// Streamflow Treasury address, by default receives 0.25% of tokens deposited
 pub const STRM_TREASURY: &str = "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw";
 /// Streamflow Withdrawor address, this account will process withdrawals

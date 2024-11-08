@@ -1,12 +1,11 @@
-use std::str::FromStr;
-
 use crate::prelude::*;
 use mpl_bubblegum::instructions::BurnBuilder;
 use solana_sdk::pubkey::Pubkey;
+use std::str::FromStr;
 
 use super::{
     types::asset::{Asset, AssetProof},
-    GetAssetResponse,
+    GetAssetResponse, WalletOrPubkey,
 };
 
 // Command Name
@@ -26,26 +25,15 @@ fn build() -> BuildResult {
 flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-pub enum KeypairOrPubkey {
-    #[serde(with = "value::keypair")]
-    Keypair(Keypair),
-    #[serde(with = "value::pubkey")]
-    Pubkey(Pubkey),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
+    pub payer: Wallet,
     #[serde(default)]
-    pub leaf_owner: Option<KeypairOrPubkey>,
+    pub leaf_owner: Option<WalletOrPubkey>,
     //
     pub das_get_asset_proof: Option<GetAssetResponse<AssetProof>>,
     pub das_get_asset: Option<GetAssetResponse<Asset>>,
     //
-    #[serde(default, with = "value::keypair::opt")]
-    pub leaf_delegate: Option<Keypair>,
+    pub leaf_delegate: Option<Wallet>,
     #[serde(default, with = "value::pubkey::opt")]
     pub collection_mint: Option<Pubkey>,
     //
@@ -150,29 +138,31 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     // who is signing?
     let delegate_is_signing = input.leaf_delegate.is_some();
 
-    let signer = match delegate_is_signing {
-        true => input.leaf_delegate.as_ref().unwrap().clone_keypair(),
-        false => match input.leaf_owner.as_ref().unwrap() {
-            KeypairOrPubkey::Keypair(k) => k.clone_keypair(),
-            KeypairOrPubkey::Pubkey(_) => {
+    let signer = if delegate_is_signing {
+        input.leaf_delegate.as_ref().unwrap().clone()
+    } else {
+        match input.leaf_owner.as_ref().unwrap() {
+            WalletOrPubkey::Wallet(k) => k.clone(),
+            WalletOrPubkey::Pubkey(_) => {
                 return Err(CommandError::msg("leaf delegate keypair required"));
             }
-        },
+        }
     };
 
     let leaf_owner = match input.leaf_owner {
-        Some(KeypairOrPubkey::Keypair(k)) => k.pubkey(),
-        Some(KeypairOrPubkey::Pubkey(p)) => p,
+        Some(WalletOrPubkey::Wallet(k)) => k.pubkey(),
+        Some(WalletOrPubkey::Pubkey(p)) => p,
         None => return Err(CommandError::msg("leaf_owner is required".to_string())),
     };
 
     // if delegate is signing, leaf delegate otherwise leaf owner
-    let leaf_delegate = match delegate_is_signing {
-        true => match input.leaf_delegate {
+    let leaf_delegate = if delegate_is_signing {
+        match input.leaf_delegate {
             Some(keypair) => keypair.pubkey(),
             None => return Err(CommandError::msg("leaf delegate keypair required")),
-        },
-        false => leaf_owner,
+        }
+    } else {
+        leaf_owner
     };
 
     let ix = BurnBuilder::new()

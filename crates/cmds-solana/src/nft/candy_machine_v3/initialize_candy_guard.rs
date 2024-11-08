@@ -25,12 +25,10 @@ flow_lib::submit!(CommandDescription::new(INITIALIZE_CANDY_GUARD, |_| {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub base: Keypair,
+    pub base: Wallet,
     #[serde(with = "value::pubkey")]
     pub authority: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
+    pub payer: Wallet,
     pub candy_guards: super::CandyGuardData,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
@@ -71,7 +69,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [input.payer.clone_keypair(), input.base.clone_keypair()].into(),
+        signers: [input.payer, input.base].into(),
         instructions: [Instruction {
             program_id: mpl_candy_guard::id(),
             accounts,

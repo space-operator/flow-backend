@@ -18,10 +18,8 @@ fn build() -> BuildResult {
 pub struct Input {
     #[serde(with = "value::pubkey")]
     pub new_collection_authority: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub update_authority: Keypair,
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub update_authority: Wallet,
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub mint_account: Pubkey,
     #[serde(default = "value::default::bool_true")]

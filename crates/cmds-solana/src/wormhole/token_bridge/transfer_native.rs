@@ -28,10 +28,8 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub message: Keypair,
+    pub payer: Wallet,
+    pub message: Wallet,
     #[serde(with = "value::pubkey")]
     pub from: Pubkey,
     #[serde(with = "value::pubkey")]
@@ -120,22 +118,26 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         data: (TokenBridgeInstructions::TransferNative, wrapped_data).try_to_vec()?,
     };
 
+    let instructions = [
+        spl_token::instruction::approve(
+            &spl_token::id(),
+            &input.from,
+            &authority_signer,
+            &input.payer.pubkey(),
+            &[],
+            input.amount,
+        )
+        .unwrap(),
+        ix,
+    ]
+    .into();
+
+    let message_pubkey = input.message.pubkey();
+
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [input.payer.clone_keypair(), input.message.clone_keypair()].into(),
-        instructions: [
-            spl_token::instruction::approve(
-                &spl_token::id(),
-                &input.from,
-                &authority_signer,
-                &input.payer.pubkey(),
-                &[],
-                input.amount,
-            )
-            .unwrap(),
-            ix,
-        ]
-        .into(),
+        signers: [input.payer, input.message].into(),
+        instructions,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
@@ -154,7 +156,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         )
         .await?
         .signature;
-    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
+    let sequence = get_sequence_number_from_message(&ctx, message_pubkey).await?;
 
     Ok(Output {
         signature,

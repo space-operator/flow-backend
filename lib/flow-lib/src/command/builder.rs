@@ -71,14 +71,14 @@ use crate::{
     Context, Name,
 };
 use serde::{de::DeserializeOwned, Serialize};
-use std::future::Future;
+use std::{future::Future, sync::LazyLock};
 use thiserror::Error as ThisError;
 
 /// `fn build() -> BuildResult`.
 pub type BuildResult = Result<Box<dyn CommandTrait>, CommandError>;
 
 /// Use this to cache computation such as parsing JSON node-definition.
-pub type BuilderCache = once_cell::sync::Lazy<Result<CmdBuilder, BuilderError>>;
+pub type BuilderCache = LazyLock<Result<CmdBuilder, BuilderError>>;
 
 /// Create a command from node-definition file and an `async fn run()` function.
 #[derive(Clone)]

@@ -24,10 +24,8 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub signature_set: Keypair,
+    pub payer: Wallet,
+    pub signature_set: Wallet,
     pub guardian_set_index: u32,
     pub signatures: Vec<wormhole_sdk::vaa::Signature>,
     pub vaa_body: bytes::Bytes,
@@ -131,11 +129,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [
-            input.payer.clone_keypair(),
-            input.signature_set.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.payer, input.signature_set].into(),
         instructions: verify_txs.concat(),
     };
 

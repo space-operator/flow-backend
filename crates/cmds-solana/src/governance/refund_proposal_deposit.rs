@@ -23,8 +23,7 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub proposal: Pubkey,
     #[serde(with = "value::pubkey")]
@@ -78,7 +77,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer.clone_keypair()].into(),
+        signers: [input.fee_payer].into(),
         instructions: [ix].into(),
     };
 
