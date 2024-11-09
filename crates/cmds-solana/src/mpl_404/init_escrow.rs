@@ -20,8 +20,6 @@ pub struct Input {
     fee_payer: Keypair,
     fee_token_decimals: u8,
 
-    #[serde_as(as = "AsPubkey")]
-    escrow: Pubkey,
     #[serde_as(as = "AsKeypair")]
     authority: Keypair,
     #[serde_as(as = "AsPubkey")]
@@ -59,6 +57,11 @@ pub struct Output {
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     tracing::info!("input: {:?}", input);
 
+    let (escrow, _bump) = solana_sdk::pubkey::Pubkey::find_program_address(
+        &[b"escrow", input.collection.as_ref()],
+        &mpl_hybrid::ID,
+    );
+
     let fee_ata = spl_associated_token_account::get_associated_token_address(
         &input.fee_location,
         &input.token,
@@ -67,7 +70,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let sol_fee_decimals = 9;
 
     let init_escrow_ix = InitEscrowV1Builder::new()
-        .escrow(input.escrow)
+        .escrow(escrow)
         .authority(input.authority.pubkey())
         .collection(input.collection)
         .token(input.token)
@@ -101,4 +104,150 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let signature = ctx.execute(ix, value::map! {}).await?.signature;
 
     Ok(Output { signature })
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::utils::ui_amount_to_amount;
+    use mpl_core::instructions::CreateCollectionV2Builder;
+    use solana_sdk::native_token::LAMPORTS_PER_SOL;
+
+    use super::*;
+
+    async fn create_mock_collection(
+        ctx: &Context,
+        collection: &Keypair,
+        payer: &Keypair,
+        name: String,
+        uri: String,
+    ) {
+        let ix = CreateCollectionV2Builder::new()
+            .collection(collection.pubkey())
+            .payer(payer.pubkey())
+            .update_authority(Some(payer.pubkey()))
+            .name(name)
+            .uri(uri)
+            .instruction();
+
+        let (mut create_collection_tx, recent_blockhash) =
+            execute(&ctx.solana_client, &payer.pubkey(), &[ix])
+                .await
+                .unwrap();
+
+        try_sign_wallet(
+            &ctx,
+            &mut create_collection_tx,
+            &[&payer, &collection],
+            recent_blockhash,
+        )
+        .await
+        .unwrap();
+
+        let create_collection_signature =
+            submit_transaction(&ctx.solana_client, create_collection_tx)
+                .await
+                .unwrap();
+
+        dbg!(create_collection_signature);
+    }
+
+    #[test]
+    fn test_build() {
+        build().unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_run() {
+        let ctx = Context::default();
+
+        // setup fee_payer
+        let fee_payer = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ");
+        let balance = ctx
+            .solana_client
+            .get_balance(&fee_payer.pubkey())
+            .await
+            .unwrap() as f64
+            / LAMPORTS_PER_SOL as f64;
+
+        if balance < 0.1 {
+            let _ = ctx
+                .solana_client
+                .request_airdrop(&fee_payer.pubkey(), LAMPORTS_PER_SOL)
+                .await;
+        }
+
+        let token = solana_sdk::pubkey!("AdaQ1MKbeKDyXCSnuCtqs5MW9FaY1UMGtpCGbZnpbTbj");
+        let sol_amount_to_create_token_account = rust_decimal_macros::dec!(0.03);
+        let sol_decimals = 9;
+
+        let collection = Keypair::new();
+        create_mock_collection(
+            &ctx,
+            &collection,
+            &fee_payer,
+            String::from("Mock Collection"),
+            String::from("https://example.com"),
+        )
+        .await;
+
+        // setup SUT
+        let fee_token_decimals = 9_u8;
+        let authority = fee_payer.clone_keypair();
+        let fee_wallet = Keypair::new().pubkey();
+        let name = String::from("Escrow Name");
+        let uri = String::from("https://base.spaceoperator.com/storage/v1/object/public/blings_gg_nft/asset_metadata.json");
+        let max = 999_u64;
+        let min = 0_u64;
+        let path = 1;
+
+        // fund authority and fee_wallet for creating token account
+        let (mut transfer_tx, recent_blockhash) = execute(
+            &ctx.solana_client,
+            &fee_payer.pubkey(),
+            &[
+                solana_sdk::system_instruction::transfer(
+                    &fee_payer.pubkey(),
+                    &authority.pubkey(),
+                    ui_amount_to_amount(sol_amount_to_create_token_account, sol_decimals).unwrap(),
+                ),
+            ],
+        )
+        .await
+        .unwrap();
+
+        try_sign_wallet(&ctx, &mut transfer_tx, &[&fee_payer], recent_blockhash)
+            .await
+            .unwrap();
+
+        let transfer_signature = submit_transaction(&ctx.solana_client, transfer_tx)
+            .await
+            .unwrap();
+
+        dbg!(transfer_signature);
+
+        // init escrow
+        let output = run(
+            ctx,
+            super::Input {
+                fee_payer,
+                fee_token_decimals,
+                authority,
+                collection: collection.pubkey(),
+                token,
+                fee_location: fee_wallet,
+                name,
+                uri,
+                max,
+                min,
+                amount: rust_decimal_macros::dec!(0.1),
+                fee_amount: rust_decimal_macros::dec!(0.1),
+                sol_fee_amount: rust_decimal_macros::dec!(0.1),
+                path,
+                submit: true,
+            },
+        )
+        .await
+        .unwrap();
+        dbg!(output.signature.unwrap());
+    }
 }
