@@ -108,7 +108,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::ui_amount_to_amount;
     use mpl_core::instructions::CreateCollectionV2Builder;
     use solana_sdk::native_token::LAMPORTS_PER_SOL;
 
