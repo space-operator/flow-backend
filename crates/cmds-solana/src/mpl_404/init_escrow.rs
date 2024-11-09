@@ -135,9 +135,9 @@ mod tests {
                 .unwrap();
 
         try_sign_wallet(
-            &ctx,
+            ctx,
             &mut create_collection_tx,
-            &[&payer, &collection],
+            &[payer, collection],
             recent_blockhash,
         )
         .await
@@ -177,9 +177,6 @@ mod tests {
         }
 
         let token = solana_sdk::pubkey!("AdaQ1MKbeKDyXCSnuCtqs5MW9FaY1UMGtpCGbZnpbTbj");
-        let sol_amount_to_create_token_account = rust_decimal_macros::dec!(0.03);
-        let sol_decimals = 9;
-
         let collection = Keypair::new();
         create_mock_collection(
             &ctx,
@@ -199,31 +196,6 @@ mod tests {
         let max = 999_u64;
         let min = 0_u64;
         let path = 1;
-
-        // fund authority and fee_wallet for creating token account
-        let (mut transfer_tx, recent_blockhash) = execute(
-            &ctx.solana_client,
-            &fee_payer.pubkey(),
-            &[
-                solana_sdk::system_instruction::transfer(
-                    &fee_payer.pubkey(),
-                    &authority.pubkey(),
-                    ui_amount_to_amount(sol_amount_to_create_token_account, sol_decimals).unwrap(),
-                ),
-            ],
-        )
-        .await
-        .unwrap();
-
-        try_sign_wallet(&ctx, &mut transfer_tx, &[&fee_payer], recent_blockhash)
-            .await
-            .unwrap();
-
-        let transfer_signature = submit_transaction(&ctx.solana_client, transfer_tx)
-            .await
-            .unwrap();
-
-        dbg!(transfer_signature);
 
         // init escrow
         let output = run(
