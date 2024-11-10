@@ -329,7 +329,7 @@ mod tests {
         )
         .await;
 
-        let outupt = run(
+        let output = run(
             ctx,
             super::Input {
                 fee_payer: fee_payer.clone_keypair(),
@@ -347,6 +347,6 @@ mod tests {
         .await
         .unwrap();
 
-        dbg!(outupt.signature.unwrap());
+        dbg!(output.signature.unwrap());
     }
 }

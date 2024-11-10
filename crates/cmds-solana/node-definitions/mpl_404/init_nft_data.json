@@ -73,14 +73,6 @@
       "passthrough": false
     },
     {
-      "name": "nft_data",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
       "name": "authority",
       "type_bounds": ["keypair"],
       "required": true,
