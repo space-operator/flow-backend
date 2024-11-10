@@ -24,8 +24,6 @@ pub struct Input {
     #[serde_as(as = "AsKeypair")]
     authority: Keypair,
     #[serde_as(as = "AsPubkey")]
-    escrow: Pubkey,
-    #[serde_as(as = "AsPubkey")]
     asset: Pubkey,
     #[serde_as(as = "AsPubkey")]
     collection: Pubkey,
@@ -49,12 +47,17 @@ pub struct Output {
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let mut builder = ReleaseV1Builder::new();
 
+    let (escrow, _bump) = solana_sdk::pubkey::Pubkey::find_program_address(
+        &[b"escrow", input.collection.as_ref()],
+        &mpl_hybrid::ID,
+    );
+
     let user_token_account = spl_associated_token_account::get_associated_token_address(
         &input.owner.pubkey(),
         &input.token,
     );
     let escrow_token_account =
-        spl_associated_token_account::get_associated_token_address(&input.escrow, &input.token);
+        spl_associated_token_account::get_associated_token_address(&escrow, &input.token);
 
     let fee_token_account = spl_associated_token_account::get_associated_token_address(
         &input.fee_project_account,
@@ -64,7 +67,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let mut release_ix = builder
         .owner(input.owner.pubkey())
         .authority(input.authority.pubkey(), true)
-        .escrow(input.escrow)
+        .escrow(escrow)
         .asset(input.asset)
         .collection(input.collection)
         .token(input.token)
@@ -366,7 +369,7 @@ mod tests {
         let min = 0_u64;
         let path = 1;
 
-        let (escrow, asset) = setup(
+        let (_escrow, asset) = setup(
             &ctx,
             &fee_payer,
             &collection,
@@ -386,7 +389,6 @@ mod tests {
                 fee_payer: fee_payer.clone_keypair(),
                 owner: fee_payer.clone_keypair(),
                 authority: fee_payer.clone_keypair(),
-                escrow,
                 asset,
                 collection: collection.pubkey(),
                 token,
