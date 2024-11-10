@@ -63,7 +63,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let mut release_ix = builder
         .owner(input.owner.pubkey())
-        .authority(input.authority.pubkey())
+        .authority(input.authority.pubkey(), true)
         .escrow(input.escrow)
         .asset(input.asset)
         .collection(input.collection)
@@ -251,7 +251,7 @@ mod tests {
 
         let ix = CaptureV1Builder::new()
             .owner(payer.pubkey())
-            .authority(payer.pubkey())
+            .authority(payer.pubkey(), true)
             .escrow(*escrow)
             .asset(*asset)
             .collection(collection.pubkey())

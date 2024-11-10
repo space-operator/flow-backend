@@ -64,7 +64,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let mut capture_v1_builder = CaptureV1Builder::new();
     let mut capture_ix = capture_v1_builder
         .owner(input.owner.pubkey())
-        .authority(input.authority.pubkey())
+        .authority(input.authority.pubkey(), true)
         .escrow(input.escrow)
         .asset(input.asset)
         .collection(input.collection)
