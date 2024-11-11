@@ -103,7 +103,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let mut instructions = Vec::new();
     // instructions.extend(swap_instructions.compute_budget_instructions);
-    // instructions.extend(swap_instructions.setup_instructions);
+    instructions.extend(swap_instructions.setup_instructions);
     instructions.push(swap_instructions.swap_instruction);
     // instructions.extend(swap_instructions.cleanup_instruction);
 
