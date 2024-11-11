@@ -53,7 +53,6 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     info!("Using max auto slippage: {}", MAX_AUTO_SLIPPAGE_BPS);
     info!("Using dexes: {}", DEXES);
 
-
     let jupiter_swap_api_client = JupiterSwapApiClient::new(API_BASE_URL.into());
 
     let mut quote_request = QuoteRequest {
@@ -63,6 +62,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         dexes: Some(DEXES.into()),
         swap_mode: Some(SwapMode::ExactIn),
         as_legacy_transaction: Some(true),
+        restrict_intermediate_tokens: Some(true),
+        // only_direct_routes: Some(true),
         ..QuoteRequest::default()
     };
 
@@ -91,6 +92,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
                     compute_unit_price_micro_lamports: Some(ComputeUnitPriceMicroLamports::Auto),
                     dynamic_compute_unit_limit: true,
                     as_legacy_transaction: true,
+                    use_shared_accounts: true,
                     ..Default::default()
                 },
             })
@@ -100,10 +102,10 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     info!("swap_instructions: {swap_instructions:?}");
 
     let mut instructions = Vec::new();
-    instructions.extend(swap_instructions.compute_budget_instructions);
-    instructions.extend(swap_instructions.setup_instructions);
+    // instructions.extend(swap_instructions.compute_budget_instructions);
+    // instructions.extend(swap_instructions.setup_instructions);
     instructions.push(swap_instructions.swap_instruction);
-    instructions.extend(swap_instructions.cleanup_instruction);
+    // instructions.extend(swap_instructions.cleanup_instruction);
 
     let ins = Instructions {
         fee_payer: input.fee_payer.pubkey(),
@@ -143,4 +145,17 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 //         };
 //         build().unwrap().run(ctx, input).await.unwrap();
 //     }
+
+// #[test]
+// fn test_base64_decode() {
+//     let base64_str = "AQALGBkDEyVwHzVDiUOUxcGExcXKZZDyXRbt28+XpQBbpElaDgRKZH3R9xSERJ3WqurSlGA/bPQtOB0BqT6Jy6sKbJQQL8MhtzVyNwTTRcIEgSRctdCUhihwfFsqsFqnVwuegC9AcoTLPf2P06zMP6TlpArAEmFWOgt2JOyZrRRrFxRuVKJMFsG3ZY84R6OmOYDLWVFJyrLHjMlASSyEqUCgN7teu/B1KY1rHqjAfyDQA4RQ314Cd6sLsfznEsAbm7Eg8qIdmklnVTL3GrXKI61rcFwE4jsO/6OYROzRbst6fL4CsUt7cYFk34PLGbd9g1wstE9d4kXgAKnwKlDnKM53dDy16+kBCjw6zyWmncodNsdnIA0t2Bghwu8Hbthjg9BCWb147LXiSdQboCwNNzSwAt7ChKByDU4TTkQFXtHpo8p6496l3tIKIz6gt/KurQX9t33ssgsFcgohw2Jdh3k7SljnbLorLZ2ovMn87AV5qWf4sgVkYtGjLWzeY90y/fNh6+rYkFPvGkDQXa5j8bN5jWCQEzEFFVdRaQLh/XC+skAFAwZGb+UhFzL/7K26csOb57yM5bvF9xJrLEObOkAAAAAEedVb8jHAbu50xW7OaBUH/bGy3qP0jlECsc2iVrwTjwVKU1D4XciC1hSlVnJ4iilt3x6rq9CmBniISTL07vagBpuIV/6rgYT7aH9jRhjANdrEOdwa6ztVmKDwAAAAAAEG3fbh12Whk9nL4UbO63msHLSF7V9bN5E6jPWFfv8AqU9LbA5BCP0qaiR46uCsxZ2yG7Tt9RHBYs9gLR4MCQH7hcSznTxVnguaIJxiZkAnurDmn3MWR0PC2GLghp2KJqGl1cqeBM9dtZC3FLov4yyxWRM/wcGStyJX/QfTnLBAHrQ/+if11/ZKdMCbHylYed5LCas238ndUUsyGqezjOXowjkmLIsm7an7+wTPuDHYXXk/MpA3dy+Cpgqowz8g5xLjRKUuABk5m+8C92Lh7YzAX4z9p72lV5a5uYQar+AGP7s4NL8Zq0BTMCnYuaviMo6ppVUawJB+I6R1qddVS9TfBA0BFgkDZAAAAAAAAAANAAUCfUsAAA4cERIAAwYLChAXDg4VDhQSEwUGCwQMAhEHCAEJDiTBIJszQdacgQcBAAAAGmQAAQDKmjsAAAAAiIR6JgAAAAAeAAAPAMABc29sYW5hLWFjdGlvbjpFNUFkdWRYR1Q3WmV4Y0hydFFxY3I5MW1QeGpURVExVGlKYWpTNTVxcTN3RjpCdFpUZnRCMzhFcXJBRXJYVHVudERBemtkMTJRV29VY2N3YmZOb2s5SmRrajo1a2NTbURFY1RSazlNNkxGRFREOUNVeXc5VkRFd0cxWlNYV1FHS2tIdFltY3RpbjliUkprelFzZkpBOXhFd1NQcXVxaHpXdDFNbzVDZjF2SnFzRVJtZXBw";
+
+//     let decoded = base64::decode(base64_str).expect("Failed to decode base64");
+//     let transaction_size = decoded.len();
+
+//     println!("Transaction size: {} bytes", transaction_size);
+//     assert!(
+//         transaction_size <= 1232,
+//         "Transaction exceeds Solana's size limit"
+//     );
 // }
