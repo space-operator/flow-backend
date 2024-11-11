@@ -6,3 +6,6 @@ pub mod update_escrow;
 pub mod update_new_data;
 pub mod init_recipe;
 pub mod update_recipe;
+pub mod init_escrow_v2;
+pub mod migrate_nft_v1;
+pub mod migrate_tokens_v1;
