@@ -67,6 +67,8 @@ mpl-core-candy-machine-core = { version = "=0.2.1", features = [
 mpl-core-candy-guard = { version = "=0.2.1", features = ["no-entrypoint"] }
 mpl-core = { version = "=0.8.0", features = ["serde"] }
 mpl-bubblegum = { version = "=1.4.0" }
+# mpl-404
+mpl-hybrid = { git = "https://github.com/metaplex-foundation/mpl-hybrid" }
 
 # bundlr
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
