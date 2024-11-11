@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use solana_sdk::{instruction::AccountMeta, system_program};
+use tracing::info;
 
 use crate::prelude::*;
 
@@ -28,9 +29,7 @@ pub struct Input {
     pub realm: Pubkey,
     #[serde(with = "value::pubkey")]
     pub governing_token_source: Pubkey,
-
     pub governing_token_owner: Wallet,
-
     pub governing_token_source_authority: Wallet,
     pub amount: u64,
     #[serde(with = "value::pubkey")]
@@ -102,11 +101,17 @@ pub fn deposit_governing_tokens(
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
+    let governing_token_source = spl_associated_token_account::get_associated_token_address(
+        &input.governing_token_owner.pubkey(),
+        &input.governing_token_mint,
+    );
+    info!("governing_token_source: {governing_token_source}");
+
     let (ix, realm_config_address, governing_token_holding_address, token_owner_record_address) =
         deposit_governing_tokens(
             &program_id,
             &input.realm,
-            &input.governing_token_source,
+            &governing_token_source,
             &input.governing_token_owner.pubkey(),
             &input.governing_token_source_authority.pubkey(),
             &input.fee_payer.pubkey(),
