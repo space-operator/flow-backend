@@ -141,7 +141,9 @@ pub mod signer {
     use chrono::{DateTime, Utc};
     use serde::{Deserialize, Serialize};
     use serde_with::{base64::Base64, serde_as, DisplayFromStr, DurationSecondsWithFrac};
-    use solana_sdk::{pubkey::Pubkey, signature::Signature};
+    use solana_sdk::{
+        pubkey::Pubkey, signature::Signature, signer::presigner::Presigner as SdkPresigner,
+    };
     use std::time::Duration;
     use thiserror::Error as ThisError;
 
@@ -170,6 +172,12 @@ pub mod signer {
         pub pubkey: Pubkey,
         #[serde_as(as = "DisplayFromStr")]
         pub signature: Signature,
+    }
+
+    impl From<Presigner> for SdkPresigner {
+        fn from(value: Presigner) -> Self {
+            SdkPresigner::new(&value.pubkey, &value.signature)
+        }
     }
 
     #[serde_as]
@@ -217,7 +225,7 @@ pub mod execute {
     use serde::{Deserialize, Serialize};
     use serde_with::{base64::Base64, serde_as, DisplayFromStr};
     use solana_client::client_error::ClientError;
-    use solana_sdk::{signature::Signature, signer::SignerError};
+    use solana_sdk::{message::CompileError, signature::Signature, signer::SignerError};
     use std::sync::Arc;
     use thiserror::Error as ThisError;
 
@@ -282,6 +290,8 @@ pub mod execute {
         #[error(transparent)]
         Signer(#[from] Arc<SignerError>),
         #[error(transparent)]
+        CompileError(#[from] Arc<CompileError>),
+        #[error(transparent)]
         Worker(Arc<BoxError>),
         #[error(transparent)]
         MailBox(#[from] actix::MailboxError),
@@ -315,6 +325,12 @@ pub mod execute {
     impl From<SignerError> for Error {
         fn from(value: SignerError) -> Self {
             Error::Signer(Arc::new(value))
+        }
+    }
+
+    impl From<CompileError> for Error {
+        fn from(value: CompileError) -> Self {
+            Error::CompileError(Arc::new(value))
         }
     }
 

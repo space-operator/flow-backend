@@ -18,7 +18,7 @@ use solana_sdk::{
     feature_set::FeatureSet,
     precompiles::verify_if_precompile,
     signature::Signature,
-    transaction::Transaction,
+    transaction::{Transaction, VersionedTransaction},
 };
 use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
 
@@ -40,15 +40,16 @@ pub fn find_failed_instruction(err: &ClientError) -> Option<usize> {
     }
 }
 
-pub fn list_signatures(tx: &Transaction) -> Option<Vec<Presigner>> {
+pub fn list_signatures(tx: &VersionedTransaction) -> Option<Vec<Presigner>> {
     let placeholder = Transaction::get_invalid_signature();
+    let accounts = tx.message.static_account_keys();
     let vec = tx
         .signatures
         .iter()
         .enumerate()
         .filter(|(_, &sig)| sig != placeholder)
         .map(|(index, sig)| Presigner {
-            pubkey: tx.message.account_keys[index],
+            pubkey: accounts[index],
             signature: *sig,
         })
         .collect::<Vec<_>>();

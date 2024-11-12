@@ -1465,7 +1465,7 @@ impl FlowGraph {
                     .await
                 {
                     Ok(tx) => {
-                        let tx_bytes = bincode::serialize(&tx).unwrap();
+                        let tx_bytes = tx.0.serialize();
                         let tx_base64 = BASE64_STANDARD.encode(&tx_bytes);
                         s.result
                             .output
