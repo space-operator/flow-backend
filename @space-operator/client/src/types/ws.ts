@@ -175,32 +175,6 @@ export class SignatureRequest implements ISignatureRequest {
     }
 
     return web3.Transaction.populate(solMsg, sigs);
-
-    // TODO: not sure if we still need this
-    // https://github.com/anza-xyz/wallet-adapter/issues/806
-    // https://github.com/solana-labs/solana/issues/21722
-
-    // const newTx = new Transaction();
-    // newTx.feePayer = tx.feePayer;
-    // newTx.recentBlockhash = tx.recentBlockhash;
-    // newTx.nonceInfo = tx.nonceInfo;
-
-    // solMsg.compiledInstructions.forEach((cIns) => {
-    //   const init: TransactionInstructionCtorFields = {
-    //     programId: solMsg.accountKeys[cIns.programIdIndex],
-
-    //     keys: cIns.accountKeyIndexes.map((i) => {
-    //       const x: AccountMeta = {
-    //         pubkey: solMsg.accountKeys[i],
-    //         isSigner: solMsg.isAccountSigner(i),
-    //         isWritable: solMsg.isAccountWritable(i),
-    //       };
-    //       return x;
-    //     }),
-    //     data: Buffer.from(cIns.data),
-    //   };
-    //   newTx.add(new TransactionInstruction(init));
-    // });
   }
 }
 
