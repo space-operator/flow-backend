@@ -1015,6 +1015,7 @@ impl Instructions {
             .build_and_sign_tx(rpc, signer, flow_run_id, config)
             .await?;
 
+        let tx = tx.finalize()?;
         let signature = rpc
             .send_transaction_with_config(
                 &tx,
@@ -1030,7 +1031,7 @@ impl Instructions {
         confirm_transaction(
             rpc,
             &signature,
-            tx.get_recent_blockhash(),
+            tx.message.recent_blockhash(),
             commitment(config.wait_commitment_level),
         )
         .await
