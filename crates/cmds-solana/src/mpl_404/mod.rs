@@ -13,3 +13,4 @@ pub mod init_escrow_v2;
 pub mod migrate_nft_v1;
 pub mod migrate_tokens_v1;
 pub mod capture_v2;
+pub mod release_v2;

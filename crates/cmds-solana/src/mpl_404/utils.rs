@@ -1,6 +1,9 @@
+use mpl_hybrid::instructions::CaptureV2Builder;
 use solana_sdk::{commitment_config::CommitmentConfig, system_program};
 
 use crate::{prelude::*, utils::ui_amount_to_amount};
+
+use super::constants::{FEE_WALLET, SLOT_HASHES};
 
 pub struct InitEscrowV2Accounts {
     pub payer: Keypair,
@@ -51,6 +54,15 @@ pub struct CreateAssetV1Accounts {
 pub struct CreateAssetV1Args {
     pub name: String,
     pub uri: String,
+}
+
+pub struct CaptureV2Accounts {
+    pub owner: Keypair,
+    pub authority: Keypair,
+    pub asset: Pubkey,
+    pub collection: Pubkey,
+    pub token: Pubkey,
+    pub fee_project_account: Pubkey,
 }
 
 pub async fn init_escrow_v2(
@@ -195,6 +207,58 @@ pub async fn create_asset_v1(
             .await
         }
     }
+}
+
+pub async fn capture_v2(ctx: &Context, accounts: CaptureV2Accounts) -> crate::Result<Signature> {
+    let (recipe, _bump) = solana_sdk::pubkey::Pubkey::find_program_address(
+        &[b"recipe", accounts.collection.as_ref()],
+        &mpl_hybrid::ID,
+    );
+
+    let (escrow, _bump) = solana_sdk::pubkey::Pubkey::find_program_address(
+        &[b"escrow", accounts.authority.pubkey().as_ref()],
+        &mpl_hybrid::ID,
+    );
+
+    // must already be initialized
+    let user_token_account = spl_associated_token_account::get_associated_token_address(
+        &accounts.owner.pubkey(),
+        &accounts.token,
+    );
+
+    let escrow_token_account =
+        spl_associated_token_account::get_associated_token_address(&escrow, &accounts.token);
+
+    let fee_token_account = spl_associated_token_account::get_associated_token_address(
+        &accounts.fee_project_account,
+        &accounts.token,
+    );
+
+    let capture_v2_ix = CaptureV2Builder::new()
+        .owner(accounts.owner.pubkey())
+        .authority(accounts.authority.pubkey())
+        .recipe(recipe)
+        .escrow(escrow)
+        .asset(accounts.asset)
+        .collection(accounts.collection)
+        .token(accounts.token)
+        .user_token_account(user_token_account)
+        .escrow_token_account(escrow_token_account)
+        .fee_token_account(fee_token_account)
+        .fee_project_account(accounts.fee_project_account)
+        .fee_sol_account(FEE_WALLET)
+        .recent_blockhashes(SLOT_HASHES)
+        .mpl_core(mpl_core::ID)
+        .associated_token_program(spl_associated_token_account::ID)
+        .instruction();
+
+    submit(
+        ctx,
+        &[capture_v2_ix],
+        &accounts.owner,
+        &[&accounts.owner, &accounts.authority],
+    )
+    .await
 }
 
 pub async fn transfer_sol(
