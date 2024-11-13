@@ -1,4 +1,4 @@
-import { bs58, web3, Value, type IValue } from "./deps.ts";
+import { bs58, web3, Value, type IValue, Buffer } from "./deps.ts";
 import {
   type ErrorBody,
   type ISignatureRequest,
@@ -260,7 +260,9 @@ export class Client {
   async signAndSubmitSignature(
     req: SignatureRequest,
     publicKey: web3.PublicKey,
-    signTransaction: (tx: web3.Transaction) => Promise<web3.Transaction>
+    signTransaction: (
+      tx: web3.VersionedTransaction
+    ) => Promise<web3.VersionedTransaction>
   ) {
     const requestedPublicKey = new web3.PublicKey(req.pubkey);
     if (!publicKey.equals(requestedPublicKey)) {
@@ -270,17 +272,22 @@ export class Client {
         }}\nwallet: ${publicKey.toBase58()}`
       );
     }
+
     const tx = req.buildTransaction();
+    const signerPosition = tx.message.staticAccountKeys.findIndex((pk) =>
+      pk.equals(requestedPublicKey)
+    );
+    if (signerPosition === -1) {
+      throw new Error("pubkey is not in signers list");
+    }
     this.logger("tx", tx);
-    const signedTx: web3.Transaction = await signTransaction(tx);
+    const signedTx: web3.VersionedTransaction = await signTransaction(tx);
     this.logger("signedTx", signedTx);
-    const signature = signedTx.signatures.find(({ publicKey }) =>
-      publicKey.equals(requestedPublicKey)
-    )?.signature;
+    const signature = signedTx.signatures[signerPosition];
     if (signature == null) throw new Error("signature is null");
 
-    const before = tx.serializeMessage();
-    const after = signedTx.serializeMessage();
+    const before = Buffer.from(tx.message.serialize());
+    const after = Buffer.from(signedTx.message.serialize());
     const new_msg = before.equals(after) ? undefined : after.toString("base64");
     await this.submitSignature({
       id: req.id,

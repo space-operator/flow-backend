@@ -1,5 +1,5 @@
-import { FlowRunId, NodeId } from "./common.ts";
-import { Value, Buffer, bs58, web3 } from "../deps.ts";
+import type { FlowRunId, NodeId } from "./common.ts";
+import { type Value, Buffer, bs58, web3 } from "../deps.ts";
 
 export interface WsResponse<T> {
   id: number;
@@ -154,27 +154,27 @@ export class SignatureRequest implements ISignatureRequest {
     this.signatures = x.signatures;
   }
 
-  buildTransaction(): web3.Transaction {
+  buildTransaction(): web3.VersionedTransaction {
     const buffer = Buffer.from(this.message, "base64");
-    const solMsg = web3.Message.from(buffer);
+    const solMsg = web3.VersionedMessage.deserialize(buffer);
 
     let sigs = undefined;
     if (this.signatures) {
       sigs = [];
       const defaultSignature = bs58.encodeBase58(new Uint8Array(64));
       for (let i = 0; i < solMsg.header.numRequiredSignatures; i++) {
-        const pubkey = solMsg.accountKeys[i].toBase58();
+        const pubkey = solMsg.staticAccountKeys[i].toBase58();
         let signature = this.signatures.find(
           (x) => x.pubkey === pubkey
         )?.signature;
         if (signature === undefined) {
           signature = defaultSignature;
         }
-        sigs.push(signature);
+        sigs.push(bs58.decodeBase58(signature));
       }
     }
 
-    return web3.Transaction.populate(solMsg, sigs);
+    return new web3.VersionedTransaction(solMsg, sigs);
   }
 }
 
