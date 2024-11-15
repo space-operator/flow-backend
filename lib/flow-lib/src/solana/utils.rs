@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use super::Error;
 use crate::context::signer::Presigner;
 use anyhow::{anyhow, bail};
@@ -14,13 +16,30 @@ use solana_client::{
     rpc_response::RpcSimulateTransactionResult,
 };
 use solana_sdk::{
+    address_lookup_table::{state::AddressLookupTable, AddressLookupTableAccount},
     clock::{Slot, UnixTimestamp},
     feature_set::FeatureSet,
     precompiles::verify_if_precompile,
+    pubkey::Pubkey,
     signature::Signature,
     transaction::{Transaction, VersionedTransaction},
 };
 use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
+
+pub async fn fetch_address_lookup_table(
+    rpc: &RpcClient,
+    pubkey: &Pubkey,
+) -> Result<AddressLookupTableAccount, Error> {
+    let raw_account = rpc
+        .get_account(pubkey)
+        .await
+        .map_err(|error| Error::solana(error, 0))?;
+    let table = AddressLookupTable::deserialize(&raw_account.data)?;
+    Ok(AddressLookupTableAccount {
+        key: *pubkey,
+        addresses: table.addresses.to_vec(),
+    })
+}
 
 pub fn find_failed_instruction(err: &ClientError) -> Option<usize> {
     if let ClientErrorKind::RpcError(RpcError::RpcResponseError { message, .. }) = &err.kind {

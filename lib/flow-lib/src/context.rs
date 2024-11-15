@@ -226,7 +226,8 @@ pub mod execute {
     use serde_with::{base64::Base64, serde_as, DisplayFromStr};
     use solana_client::client_error::ClientError;
     use solana_sdk::{
-        message::CompileError, sanitize::SanitizeError, signature::Signature, signer::SignerError,
+        instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
+        signature::Signature, signer::SignerError,
     };
     use std::sync::Arc;
     use thiserror::Error as ThisError;
@@ -294,6 +295,8 @@ pub mod execute {
         #[error(transparent)]
         CompileError(#[from] Arc<CompileError>),
         #[error(transparent)]
+        InstructionError(#[from] Arc<InstructionError>),
+        #[error(transparent)]
         SanitizeError(#[from] Arc<SanitizeError>),
         #[error(transparent)]
         Worker(Arc<BoxError>),
@@ -335,6 +338,12 @@ pub mod execute {
     impl From<CompileError> for Error {
         fn from(value: CompileError) -> Self {
             Error::CompileError(Arc::new(value))
+        }
+    }
+
+    impl From<InstructionError> for Error {
+        fn from(value: InstructionError) -> Self {
+            Error::InstructionError(Arc::new(value))
         }
     }
 

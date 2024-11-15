@@ -665,17 +665,9 @@ impl Instructions {
         rpc: &RpcClient,
         config: &ExecutionConfig,
     ) -> Result<usize, Error> {
-        let message = v0::Message::try_compile(
-            &self.fee_payer,
-            &self.instructions,
-            &[],
-            rpc.get_latest_blockhash_with_commitment(commitment(
-                config.simulation_commitment_level,
-            ))
-            .await
-            .map_err(|error| Error::solana(error, 0))?
-            .0,
-        )?;
+        let message = self
+            .build_message(rpc, config, config.simulation_commitment_level)
+            .await?;
         let count = self.instructions.len();
 
         let mut inserted = 0;
@@ -748,37 +740,28 @@ impl Instructions {
     }
 
     async fn build_message(
-        &mut self,
+        &self,
         rpc: &RpcClient,
         config: &ExecutionConfig,
         commitment_level: CommitmentLevel,
-    ) -> Result<(v0::Message, usize), Error> {
-        let inserted = self.insert_priority_fee(rpc, config).await?;
-
-        let lookup = AddressLookupTableAccount {
-            key: pubkey!("AKmoW2urAH2PVf4NAzikm8AXTd1MP7s53knyWxLpEq8U"),
-            addresses: [
-                pubkey!("11111111111111111111111111111111"),
-                pubkey!("ComputeBudget111111111111111111111111111111"),
-                pubkey!("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo"),
-                pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
-                pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
-                pubkey!("JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"),
-            ]
-            .into(),
+    ) -> Result<v0::Message, Error> {
+        let lookups = if let Some(pubkey) = config.lookup_table.as_ref() {
+            [fetch_address_lookup_table(rpc, pubkey).await?].to_vec()
+        } else {
+            Vec::new()
         };
 
         let message = v0::Message::try_compile(
             &self.fee_payer,
             &self.instructions,
-            &[lookup],
+            &lookups,
             rpc.get_latest_blockhash_with_commitment(commitment(commitment_level))
                 .await
-                .map_err(|error| Error::solana(error, inserted))?
+                .map_err(|error| Error::solana(error, 0))? // TODO: better handling of "inserted"
                 .0,
         )?;
 
-        Ok((message, inserted))
+        Ok(message)
     }
 
     pub async fn build_for_solana_action(
@@ -827,15 +810,10 @@ impl Instructions {
             None
         };
 
-        let message = VersionedMessage::V0(v0::Message::try_compile(
-            &self.fee_payer,
-            &self.instructions,
-            &[],
-            rpc.get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
-                .await
-                .map_err(|error| Error::solana(error, inserted))?
-                .0,
-        )?);
+        let message = VersionedMessage::V0(
+            self.build_message(rpc, config, config.tx_commitment_level)
+                .await?,
+        );
 
         // Sign all signatures except for action_signer
         let wallets = self
@@ -905,7 +883,8 @@ impl Instructions {
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<(VersionedTransaction, usize), Error> {
-        let (mut message, inserted) = self
+        let inserted = self.insert_priority_fee(rpc, config).await?;
+        let mut message = self
             .build_message(rpc, config, config.tx_commitment_level)
             .await?;
         let mut data: Bytes = message.serialize().into();
