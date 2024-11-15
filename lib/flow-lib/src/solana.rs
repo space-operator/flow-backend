@@ -10,15 +10,14 @@ use futures::TryStreamExt;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv, DisplayFromStr};
-use solana_client::{
-    nonblocking::rpc_client::RpcClient, rpc_client::SerializableTransaction,
-    rpc_config::RpcSendTransactionConfig,
-};
+use solana_client::{nonblocking::rpc_client::RpcClient, rpc_config::RpcSendTransactionConfig};
 use solana_sdk::{
+    address_lookup_table::AddressLookupTableAccount,
     commitment_config::{CommitmentConfig, CommitmentLevel},
     compute_budget::{self, ComputeBudgetInstruction},
     instruction::{AccountMeta, Instruction},
     message::{v0, VersionedMessage},
+    pubkey,
     signature::Presigner as SdkPresigner,
     signer::{Signer, SignerError},
     signers::Signers,
@@ -29,7 +28,7 @@ use spo_helius::{
 };
 use std::{
     borrow::Cow,
-    collections::{BTreeMap, BTreeSet, HashMap},
+    collections::{BTreeSet, HashMap},
     convert::Infallible,
     fmt::Display,
     num::ParseIntError,
@@ -420,6 +419,8 @@ impl WalletOrPubkey {
 pub struct ExecutionConfig {
     pub overwrite_feepayer: Option<WalletOrPubkey>,
 
+    pub lookup_table: Option<Pubkey>,
+
     #[serde(default)]
     pub compute_budget: InsertionBehavior,
     #[serde_as(as = "Option<DisplayFromStr>")]
@@ -467,6 +468,7 @@ impl Default for ExecutionConfig {
     fn default() -> Self {
         Self {
             overwrite_feepayer: None,
+            lookup_table: None,
             compute_budget: InsertionBehavior::default(),
             fallback_compute_budget: None,
             priority_fee: InsertionBehavior::default(),
@@ -603,14 +605,6 @@ async fn action_identity_memo(
         "solana-action:{}:{}:{}",
         identity, reference, signature
     ))
-
-    // Ok(Instruction {
-    //     program_id: spl_memo::v1::ID,
-    //     accounts: Vec::new(),
-    //     data: memo.as_bytes().to_owned(),
-    // })
-    // memo v3 fails
-    // Ok(spl_memo::build_memo(memo.as_bytes(), signers))
 }
 
 impl Instructions {
@@ -757,14 +751,28 @@ impl Instructions {
         &mut self,
         rpc: &RpcClient,
         config: &ExecutionConfig,
+        commitment_level: CommitmentLevel,
     ) -> Result<(v0::Message, usize), Error> {
         let inserted = self.insert_priority_fee(rpc, config).await?;
+
+        let lookup = AddressLookupTableAccount {
+            key: pubkey!("AKmoW2urAH2PVf4NAzikm8AXTd1MP7s53knyWxLpEq8U"),
+            addresses: [
+                pubkey!("11111111111111111111111111111111"),
+                pubkey!("ComputeBudget111111111111111111111111111111"),
+                pubkey!("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo"),
+                pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+                pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+                pubkey!("JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"),
+            ]
+            .into(),
+        };
 
         let message = v0::Message::try_compile(
             &self.fee_payer,
             &self.instructions,
-            &[],
-            rpc.get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
+            &[lookup],
+            rpc.get_latest_blockhash_with_commitment(commitment(commitment_level))
                 .await
                 .map_err(|error| Error::solana(error, inserted))?
                 .0,
@@ -809,6 +817,7 @@ impl Instructions {
             .await
             .map_err(Error::other)?;
             self.instructions.push(Instruction {
+                // memo v2 fail
                 program_id: spl_memo::v1::ID,
                 accounts: Vec::new(),
                 data: memo.as_bytes().to_owned(),
@@ -895,8 +904,10 @@ impl Instructions {
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
-    ) -> Result<(PartialVersionedTransaction, usize), Error> {
-        let (mut message, inserted) = self.build_message(rpc, config).await?;
+    ) -> Result<(VersionedTransaction, usize), Error> {
+        let (mut message, inserted) = self
+            .build_message(rpc, config, config.tx_commitment_level)
+            .await?;
         let mut data: Bytes = message.serialize().into();
         let fee_payer_signature = {
             let keypair = self
@@ -998,7 +1009,7 @@ impl Instructions {
                 }
             }
 
-            PartialVersionedTransaction::try_sign(VersionedMessage::V0(message), &signers)?
+            VersionedTransaction::try_new(VersionedMessage::V0(message), &signers)?
         };
 
         Ok((tx, inserted))
@@ -1015,7 +1026,6 @@ impl Instructions {
             .build_and_sign_tx(rpc, signer, flow_run_id, config)
             .await?;
 
-        let tx = tx.finalize()?;
         let signature = rpc
             .send_transaction_with_config(
                 &tx,
@@ -1194,7 +1204,10 @@ mod tests {
             signers: [from.clone_keypair().into()].into(),
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
         };
-        let (_msg, inserted) = ins.build_message(&rpc, &<_>::default()).await.unwrap();
+        let (_msg, inserted) = ins
+            .build_message(&rpc, &<_>::default(), CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
         assert_eq!(inserted, 2);
 
         let mut ins = Instructions {
@@ -1202,17 +1215,19 @@ mod tests {
             signers: [from.clone_keypair().into()].into(),
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
         };
-        let (_msg, inserted) = ins
+        let (msg, inserted) = ins
             .build_message(
                 &rpc,
                 &ExecutionConfig {
                     priority_fee: InsertionBehavior::No,
                     ..<_>::default()
                 },
+                CommitmentLevel::Confirmed,
             )
             .await
             .unwrap();
         assert_eq!(inserted, 1);
+        dbg!(msg);
     }
 
     #[test]

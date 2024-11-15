@@ -28,13 +28,13 @@ pub mod wormhole;
 // pub mod xnft;
 pub mod das;
 pub mod governance;
+pub mod jupiter;
 pub mod memo;
 pub mod pyth_price;
 pub mod record;
 pub mod spl;
 pub mod spl_token_2022;
 pub mod streamflow;
-pub mod jupiter;
 
 pub use error::{Error, Result};
 
@@ -85,10 +85,11 @@ pub async fn get_decimals(client: &RpcClient, mint_account: Pubkey) -> crate::Re
 #[cfg(test)]
 pub mod tests {
     use crate::prelude::*;
+    use cmds_std as _;
 
     #[test]
     fn test_name_unique() {
-        let mut m = std::collections::HashSet::new();
+        let mut m = ::std::collections::HashSet::new();
         let mut dup = false;
         for CommandDescription { name, .. } in inventory::iter::<CommandDescription>() {
             if !m.insert(name) {
@@ -97,5 +98,12 @@ pub mod tests {
             }
         }
         assert!(!dup);
+    }
+
+    #[test]
+    fn test_commands() {
+        let c = flow::context::CommandFactory::new();
+        let keys = c.natives.keys().collect::<Vec<_>>();
+        dbg!(keys);
     }
 }
