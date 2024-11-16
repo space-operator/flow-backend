@@ -5,12 +5,12 @@ use flow_lib::solana::SIGNATURE_TIMEOUT;
 use std::collections::HashSet;
 
 pub struct BundlrSigner {
-    keypair: Keypair,
+    keypair: Wallet,
     ctx: Context,
 }
 
 impl BundlrSigner {
-    pub fn new(keypair: Keypair, ctx: Context) -> Self {
+    pub fn new(keypair: Wallet, ctx: Context) -> Self {
         Self { keypair, ctx }
     }
 }
@@ -21,7 +21,9 @@ impl bundlr_sdk::Signer for BundlrSigner {
     const PUB_LENGTH: u16 = Ed25519Signer::PUB_LENGTH;
 
     fn sign(&self, msg: bytes::Bytes) -> Result<bytes::Bytes, BundlrError> {
-        let sig = if self.keypair.is_adapter_wallet() {
+        let sig = if let Some(keypair) = self.keypair.keypair() {
+            keypair.sign_message(&msg)
+        } else {
             let rt = self
                 .ctx
                 .get::<tokio::runtime::Handle>()
@@ -39,8 +41,6 @@ impl bundlr_sdk::Signer for BundlrSigner {
             })
             .map_err(|e| BundlrError::SigningError(e.to_string()))?
             .map_err(|e| BundlrError::SigningError(e.to_string()))?
-        } else {
-            self.keypair.sign_message(&msg)
         };
         Ok(<[u8; 64]>::from(sig).to_vec().into())
     }
@@ -55,8 +55,7 @@ pub struct ArweaveNftUpload;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     pub metadata: NftMetadata,
     #[serde(default = "value::default::bool_true")]
     pub fund_bundlr: bool,
@@ -135,7 +134,7 @@ impl CommandTrait for ArweaveNftUpload {
         let mut uploader = Uploader::new(
             ctx.solana_client.clone(),
             ctx.cfg.solana_client.cluster,
-            fee_payer.clone_keypair(),
+            fee_payer,
         )?;
 
         if fund_bundlr {
@@ -174,7 +173,7 @@ flow_lib::submit!(CommandDescription::new(ARWEAVE_NFT_UPLOAD, |_| Ok(
 pub(crate) struct Uploader {
     cache: HashMap<String, String>,
     content_cache: HashMap<String, bytes::Bytes>,
-    fee_payer: Keypair,
+    fee_payer: Wallet,
     node_url: String,
     client: Arc<RpcClient>,
 }
@@ -183,7 +182,7 @@ impl Uploader {
     pub fn new(
         client: Arc<RpcClient>,
         cluster: SolanaNet,
-        fee_payer: Keypair,
+        fee_payer: Wallet,
     ) -> crate::Result<Uploader> {
         // Get Bundlr Network URL
         let node_url = match cluster {
@@ -331,7 +330,7 @@ impl Uploader {
         let (mut tx, recent_blockhash) =
             execute(&self.client, &self.fee_payer.pubkey(), &[instruction]).await?;
 
-        try_sign_wallet(signer, &mut tx, &[&self.fee_payer], recent_blockhash).await?;
+        try_sign_wallet(signer, &mut tx, &self.fee_payer, recent_blockhash).await?;
 
         let signature = submit_transaction(&self.client, tx).await?;
 
@@ -378,7 +377,7 @@ impl Uploader {
             self.node_url.clone(),
             "solana".to_string(),
             "sol".to_string(),
-            BundlrSigner::new(self.fee_payer.clone_keypair(), ctx),
+            BundlrSigner::new(self.fee_payer.clone(), ctx),
         );
 
         let (bundlr, tx) = tokio::task::spawn_blocking(move || {

@@ -1,9 +1,7 @@
 use crate::prelude::*;
 use solana_program::system_instruction;
 use solana_sdk::pubkey::Pubkey;
-use spl_account_compression::{
-    self, state::CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1, ConcurrentMerkleTree,
-};
+use spl_account_compression::{state::CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1, ConcurrentMerkleTree};
 use std::mem::size_of;
 
 // Command Name
@@ -24,12 +22,9 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub creator: Keypair,
-    #[serde(with = "value::keypair")]
-    pub merkle_tree: Keypair,
+    pub payer: Wallet,
+    pub creator: Wallet,
+    pub merkle_tree: Wallet,
     pub max_depth: u32,
     pub max_buffer: u32,
     pub canopy_levels: Option<u32>,
@@ -38,9 +33,10 @@ pub struct Input {
     submit: bool,
 }
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
-    #[serde(default, with = "value::signature::opt")]
+    #[serde_as(as = "Option<AsSignature>")]
     signature: Option<Signature>,
 }
 
@@ -295,12 +291,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [
-            input.payer.clone_keypair(),
-            input.creator.clone_keypair(),
-            input.merkle_tree.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.payer, input.creator, input.merkle_tree].into(),
         instructions: [create_merkle_account_ix, create_tree_config_ix].into(),
     };
 

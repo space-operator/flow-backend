@@ -3,13 +3,15 @@
 use flow_lib::solana::Pubkey;
 use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{commitment_config::CommitmentConfig, program_pack::Pack};
+use tracing::info;
+
+pub mod error;
 
 pub mod associated_token_account;
 // pub mod clockwork;
 pub mod compression;
 pub mod create_mint_account;
 pub mod create_token_account;
-pub mod error;
 pub mod find_pda;
 pub mod generate_keypair;
 pub mod get_balance;
@@ -33,16 +35,18 @@ pub mod record;
 pub mod spl;
 pub mod spl_token_2022;
 pub mod streamflow;
+pub mod jupiter;
 
 pub use error::{Error, Result};
-use tracing::info;
+
+pub use flow_lib::solana::WalletOrPubkey;
 
 pub mod prelude {
     pub use crate::utils::{execute, submit_transaction, try_sign_wallet};
     pub use async_trait::async_trait;
     pub use flow_lib::{
         command::prelude::*,
-        solana::{Instructions, KeypairExt},
+        solana::{Instructions, KeypairExt, Wallet},
         CmdInputDescription as CmdInput, CmdOutputDescription as CmdOutput, SolanaNet,
     };
     pub use solana_client::nonblocking::rpc_client::RpcClient;

@@ -203,8 +203,7 @@ fn build() -> BuildResult {
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Input {
-    #[serde_as(as = "AsKeypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     #[serde_as(as = "AsDecimal")]
     pub amount: Decimal,
     #[serde(default = "value::default::bool_true")]
@@ -258,10 +257,8 @@ spo generate input crates/cmds-solana/node-definitions/nft/v1/mint_v1.json
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 struct Input {
-    #[serde_as(as = "AsKeypair")]
-    fee_payer: Keypair,
-    #[serde_as(as = "Option<AsKeypair>")]
-    authority: Option<Keypair>,
+    fee_payer: Wallet,
+    authority: Option<Wallet>,
     #[serde_as(as = "AsPubkey")]
     mint_account: Pubkey,
     #[serde_as(as = "AsPubkey")]

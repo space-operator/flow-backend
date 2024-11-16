@@ -25,36 +25,35 @@ flow_lib::submit!(CommandDescription::new(MINT_COMPRESSED_NFT, |_| {
     build()
 }));
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
-    #[serde(with = "value::pubkey")]
+    pub payer: Wallet,
+    #[serde_as(as = "AsPubkey")]
     pub collection_mint: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub collection_authority: Keypair,
-    #[serde(with = "value::keypair")]
-    pub creator_or_delegate: Keypair,
+    pub collection_authority: Wallet,
+    pub creator_or_delegate: Wallet,
     #[serde(default = "value::default::bool_false")]
     pub is_delegate_authority: bool,
-    #[serde(with = "value::pubkey")]
+    #[serde_as(as = "AsPubkey")]
     pub tree_config: Pubkey,
-    #[serde(with = "value::pubkey")]
+    #[serde_as(as = "AsPubkey")]
     pub merkle_tree: Pubkey,
-    #[serde(with = "value::pubkey")]
+    #[serde_as(as = "AsPubkey")]
     pub leaf_owner: Pubkey,
-    #[serde(default, with = "value::pubkey::opt")]
+    #[serde_as(as = "Option<AsPubkey>")]
     pub leaf_delegate: Option<Pubkey>,
     pub metadata: MetadataBubblegum,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
-    #[serde(default, with = "value::signature::opt")]
+    #[serde_as(as = "Option<AsSignature>")]
     signature: Option<Signature>,
-    #[serde(with = "value::pubkey::opt")]
+    #[serde_as(as = "Option<AsPubkey>")]
     id: Option<Pubkey>,
     nonce: Option<u64>,
     creator_hash: Option<Bytes>,
@@ -113,9 +112,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
         signers: [
-            input.payer.clone_keypair(),
-            input.creator_or_delegate.clone_keypair(),
-            input.collection_authority.clone_keypair(),
+            input.payer,
+            input.creator_or_delegate,
+            input.collection_authority,
         ]
         .into(),
         instructions: [mint_ix].into(),

@@ -3,7 +3,7 @@ use flow_lib::config::client::NodeData;
 use thiserror::Error as ThisError;
 
 #[derive(Debug)]
-pub struct Wallet {
+pub struct WalletCmd {
     form: Result<Output, WalletError>,
 }
 
@@ -23,7 +23,7 @@ enum WalletError {
 fn adapter_wallet(pubkey: Pubkey) -> Output {
     Output {
         pubkey,
-        keypair: Keypair::new_adapter_wallet(pubkey),
+        keypair: Wallet::Adapter { public_key: pubkey },
     }
 }
 
@@ -37,7 +37,7 @@ impl FormData {
     }
 }
 
-impl Wallet {
+impl WalletCmd {
     fn new(nd: &NodeData) -> Self {
         let form = serde_json::from_value::<FormData>(nd.targets_form.form_data.clone())
             .map_err(WalletError::Form)
@@ -50,14 +50,13 @@ impl Wallet {
 pub struct Output {
     #[serde(with = "value::pubkey")]
     pub pubkey: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub keypair: Keypair,
+    pub keypair: Wallet,
 }
 
 const WALLET: &str = "wallet";
 
 #[async_trait]
-impl CommandTrait for Wallet {
+impl CommandTrait for WalletCmd {
     fn name(&self) -> Name {
         WALLET.into()
     }
@@ -91,7 +90,7 @@ impl CommandTrait for Wallet {
 }
 
 flow_lib::submit!(CommandDescription::new(WALLET, |nd| {
-    Ok(Box::new(Wallet::new(nd)))
+    Ok(Box::new(WalletCmd::new(nd)))
 }));
 
 #[cfg(test)]
@@ -119,6 +118,6 @@ mod tests {
             },
             instruction_info: None,
         };
-        assert_eq!(Wallet::new(&nd).form.unwrap().pubkey, PUBKEY);
+        assert_eq!(WalletCmd::new(&nd).form.unwrap().pubkey, PUBKEY);
     }
 }

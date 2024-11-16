@@ -91,14 +91,6 @@
       "passthrough": true
     },
     {
-      "name": "governing_token_source",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": true
-    },
-    {
       "name": "governing_token_owner",
       "type_bounds": ["keypair"],
       "required": true,

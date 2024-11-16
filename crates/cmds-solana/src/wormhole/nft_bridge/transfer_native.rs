@@ -29,17 +29,14 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
+    pub payer: Wallet,
     pub target_address: String,
     pub target_chain: u16,
-    #[serde(with = "value::keypair")]
-    pub message: Keypair,
+    pub message: Wallet,
     #[serde(with = "value::pubkey")]
     pub from: Pubkey,
     #[serde(with = "value::pubkey")]
     pub mint: Pubkey,
-
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }
@@ -127,22 +124,26 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         data: (NFTBridgeInstructions::TransferNative, data).try_to_vec()?,
     };
 
+    let message_pubkey = input.message.pubkey();
+
+    let instructions = [
+        spl_token::instruction::approve(
+            &spl_token::id(),
+            &input.from,
+            &authority_signer,
+            &input.payer.pubkey(),
+            &[],
+            1,
+        )
+        .unwrap(),
+        ix,
+    ]
+    .into();
+
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [input.payer.clone_keypair(), input.message.clone_keypair()].into(),
-        instructions: [
-            spl_token::instruction::approve(
-                &spl_token::id(),
-                &input.from,
-                &authority_signer,
-                &input.payer.pubkey(),
-                &[],
-                1,
-            )
-            .unwrap(),
-            ix,
-        ]
-        .into(),
+        signers: [input.payer, input.message].into(),
+        instructions,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
@@ -161,7 +162,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .await?
         .signature;
 
-    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
+    let sequence = get_sequence_number_from_message(&ctx, message_pubkey).await?;
 
     Ok(Output {
         signature,

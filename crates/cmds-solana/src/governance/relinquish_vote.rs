@@ -23,8 +23,7 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub realm: Pubkey,
     #[serde(with = "value::pubkey")]
@@ -35,8 +34,7 @@ pub struct Input {
     pub token_owner_record: Pubkey,
     #[serde(with = "value::pubkey")]
     pub vote_governing_token_mint: Pubkey,
-    #[serde(default, with = "value::keypair::opt")]
-    pub governance_authority: Option<Keypair>,
+    pub governance_authority: Option<Wallet>,
     #[serde(default, with = "value::pubkey::opt")]
     pub beneficiary: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
@@ -111,15 +109,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         input.beneficiary,
     );
 
-    let signers = if let Some(governance_authority) = input.governance_authority {
-        vec![input.fee_payer.clone_keypair(), governance_authority]
-    } else {
-        vec![input.fee_payer.clone_keypair()]
-    };
-
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers,
+        signers: std::iter::once(input.fee_payer)
+            .chain(input.governance_authority)
+            .collect(),
         instructions: [ix].into(),
     };
 

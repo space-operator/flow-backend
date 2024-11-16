@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use solana_sdk::{instruction::AccountMeta, system_program};
+use tracing::info;
 
 use crate::prelude::*;
 
@@ -23,16 +24,11 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub fee_payer: Keypair,
+    pub fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
     pub realm: Pubkey,
-    #[serde(with = "value::pubkey")]
-    pub governing_token_source: Pubkey,
-    #[serde(with = "value::keypair")]
-    pub governing_token_owner: Keypair,
-    #[serde(with = "value::keypair")]
-    pub governing_token_source_authority: Keypair,
+    pub governing_token_owner: Wallet,
+    pub governing_token_source_authority: Wallet,
     pub amount: u64,
     #[serde(with = "value::pubkey")]
     pub governing_token_mint: Pubkey,
@@ -103,11 +99,17 @@ pub fn deposit_governing_tokens(
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
+    let governing_token_source = spl_associated_token_account::get_associated_token_address(
+        &input.governing_token_owner.pubkey(),
+        &input.governing_token_mint,
+    );
+    info!("governing_token_source: {governing_token_source}");
+
     let (ix, realm_config_address, governing_token_holding_address, token_owner_record_address) =
         deposit_governing_tokens(
             &program_id,
             &input.realm,
-            &input.governing_token_source,
+            &governing_token_source,
             &input.governing_token_owner.pubkey(),
             &input.governing_token_source_authority.pubkey(),
             &input.fee_payer.pubkey(),
@@ -118,9 +120,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
         signers: [
-            input.fee_payer.clone_keypair(),
-            input.governing_token_owner.clone_keypair(),
-            input.governing_token_source_authority.clone_keypair(),
+            input.fee_payer,
+            input.governing_token_owner,
+            input.governing_token_source_authority,
         ]
         .into(),
         instructions: [ix].into(),

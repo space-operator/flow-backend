@@ -25,12 +25,9 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    #[serde(with = "value::keypair")]
-    pub payer: Keypair,
-    #[serde(with = "value::keypair")]
-    pub emitter: Keypair,
-    #[serde(with = "value::keypair")]
-    pub message: Keypair,
+    pub payer: Wallet,
+    pub emitter: Wallet,
+    pub message: Wallet,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }
@@ -92,26 +89,25 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let bridge_config = BridgeData::try_from_slice(bridge_config_account.data.as_slice())?;
     let fee = bridge_config.config.fee;
 
+    let message_pubkey = input.message.pubkey();
+
+    let instructions = [
+        system_instruction::transfer(&input.payer.pubkey(), &fee_collector, fee),
+        ix,
+    ]
+    .into();
+
     let ins = Instructions {
         fee_payer: input.payer.pubkey(),
-        signers: [
-            input.payer.clone_keypair(),
-            input.emitter.clone_keypair(),
-            input.message.clone_keypair(),
-        ]
-        .into(),
-        instructions: [
-            system_instruction::transfer(&input.payer.pubkey(), &fee_collector, fee),
-            ix,
-        ]
-        .into(),
+        signers: [input.payer, input.emitter, input.message].into(),
+        instructions,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();
 
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    let sequence = get_sequence_number_from_message(&ctx, input.message.pubkey()).await?;
+    let sequence = get_sequence_number_from_message(&ctx, message_pubkey).await?;
 
     Ok(Output {
         signature,
