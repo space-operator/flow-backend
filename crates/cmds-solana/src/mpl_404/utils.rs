@@ -6,13 +6,13 @@ use crate::{prelude::*, utils::ui_amount_to_amount};
 use super::constants::{FEE_WALLET, SLOT_HASHES};
 
 pub struct InitEscrowV2Accounts {
-    pub payer: Keypair,
-    pub authority: Keypair,
+    pub payer: Wallet,
+    pub authority: Wallet,
 }
 
 pub struct InitRecipeAccounts {
-    pub payer: Keypair,
-    pub authority: Keypair,
+    pub payer: Wallet,
+    pub authority: Wallet,
     pub collection: Pubkey,
     pub token: Pubkey,
     pub fee_location: Pubkey,
@@ -33,9 +33,9 @@ pub struct InitRecipeArgs {
 }
 
 pub struct CreateCollectionV2Accounts {
-    pub payer: Keypair,
+    pub payer: Wallet,
     pub update_authority: Option<Pubkey>,
-    pub collection: Keypair,
+    pub collection: Wallet,
 }
 
 pub struct CreateCollectionV2Args {
@@ -44,10 +44,10 @@ pub struct CreateCollectionV2Args {
 }
 
 pub struct CreateAssetV1Accounts {
-    pub payer: Keypair,
-    pub asset: Keypair,
+    pub payer: Wallet,
+    pub asset: Wallet,
     pub collection: Option<Pubkey>,
-    pub authority: Option<Keypair>,
+    pub authority: Option<Wallet>,
     pub owner: Option<Pubkey>,
 }
 
@@ -57,8 +57,8 @@ pub struct CreateAssetV1Args {
 }
 
 pub struct CaptureV2Accounts {
-    pub owner: Keypair,
-    pub authority: Keypair,
+    pub owner: Wallet,
+    pub authority: Wallet,
     pub asset: Pubkey,
     pub collection: Pubkey,
     pub token: Pubkey,
@@ -82,8 +82,8 @@ pub async fn init_escrow_v2(
     submit(
         ctx,
         &[init_escrow_v2_ix],
-        &accounts.payer,
-        &[&accounts.payer, &accounts.authority],
+        &accounts.payer.clone(),
+        &[accounts.payer.clone(), accounts.authority.clone()],
     )
     .await
     .map(|signature| (escrow, signature))
@@ -141,8 +141,8 @@ pub async fn init_recipe(
     submit(
         ctx,
         &[init_recipe_ix],
-        &accounts.payer,
-        &[&accounts.payer, &accounts.authority],
+        &accounts.payer.clone(),
+        &[accounts.payer, accounts.authority],
     )
     .await
 }
@@ -166,8 +166,8 @@ pub async fn create_collection_v2(
     submit(
         ctx,
         &[create_collection_v2_ix.instruction()],
-        &accounts.payer,
-        &[&accounts.payer, &accounts.collection],
+        &accounts.payer.clone(),
+        &[accounts.payer, accounts.collection],
     )
     .await
 }
@@ -192,8 +192,8 @@ pub async fn create_asset_v1(
             submit(
                 ctx,
                 &[create_asset_v1_ix.instruction()],
-                &accounts.payer,
-                &[&accounts.payer, &accounts.asset, &authority.clone_keypair()],
+                &accounts.payer.clone(),
+                &[accounts.payer, accounts.asset, authority],
             )
             .await
         }
@@ -201,8 +201,8 @@ pub async fn create_asset_v1(
             submit(
                 ctx,
                 &[create_asset_v1_ix.instruction()],
-                &accounts.payer,
-                &[&accounts.payer, &accounts.asset],
+                &accounts.payer.clone(),
+                &[accounts.payer, accounts.asset],
             )
             .await
         }
@@ -255,15 +255,15 @@ pub async fn capture_v2(ctx: &Context, accounts: CaptureV2Accounts) -> crate::Re
     submit(
         ctx,
         &[capture_v2_ix],
-        &accounts.owner,
-        &[&accounts.owner, &accounts.authority],
+        &accounts.owner.clone(),
+        &[accounts.owner, accounts.authority],
     )
     .await
 }
 
 pub async fn transfer_sol(
     ctx: &Context,
-    from_pubkey: Keypair,
+    from_pubkey: Wallet,
     to_pubkey: Pubkey,
     amount: Decimal,
 ) -> crate::Result<Signature> {
@@ -273,12 +273,12 @@ pub async fn transfer_sol(
         ui_amount_to_amount(amount, 9)?,
     );
 
-    submit(ctx, &[ix], &from_pubkey, &[&from_pubkey]).await
+    submit(ctx, &[ix], &from_pubkey.clone(), &[from_pubkey]).await
 }
 
 pub async fn init_ata_if_needed(
     ctx: &Context,
-    fee_payer: Keypair,
+    fee_payer: Wallet,
     owner: Pubkey,
     token_mint: Pubkey,
 ) -> crate::Result<Option<Signature>> {
@@ -318,7 +318,7 @@ pub async fn init_ata_if_needed(
         return Ok(None);
     }
 
-    submit(ctx, &instructions, &fee_payer, &[&fee_payer])
+    submit(ctx, &instructions, &fee_payer.clone(), &[fee_payer])
         .await
         .map(Some)
 }
@@ -326,12 +326,14 @@ pub async fn init_ata_if_needed(
 pub async fn submit(
     ctx: &Context,
     ixs: &[Instruction],
-    payer: &Keypair,
-    signers: &[&Keypair],
+    payer: &Wallet,
+    signers: &[Wallet],
 ) -> crate::Result<Signature> {
     let (mut tx, recent_blockhash) = execute(&ctx.solana_client, &payer.pubkey(), ixs).await?;
 
-    try_sign_wallet(ctx, &mut tx, signers, recent_blockhash).await?;
+    let mut all_signers = vec![payer.keypair().unwrap()];
+    all_signers.extend(signers.iter().map(|w| w.keypair().unwrap()));
+    tx.try_sign(&all_signers, recent_blockhash);
 
     submit_transaction(&ctx.solana_client, tx).await
 }

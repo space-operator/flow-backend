@@ -20,10 +20,8 @@ fn build() -> BuildResult {
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Input {
-    #[serde_as(as = "AsKeypair")]
-    owner: Keypair,
-    #[serde_as(as = "AsKeypair")]
-    authority: Keypair,
+    owner: Wallet,
+    authority: Wallet,
     #[serde_as(as = "AsPubkey")]
     asset: Pubkey,
     #[serde_as(as = "AsPubkey")]
@@ -90,7 +88,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ix = Instructions {
         fee_payer: input.owner.pubkey(),
-        signers: [input.owner.clone_keypair(), input.authority.clone_keypair()].into(),
+        signers: [input.owner, input.authority].into(),
         instructions: [release_v2_ix].into(),
     };
 
@@ -112,10 +110,10 @@ mod tests {
 
     async fn setup(
         ctx: &Context,
-        payer: Keypair,
-        authority: Keypair,
-        collection: Keypair,
-        asset: Keypair,
+        payer: Wallet,
+        authority: Wallet,
+        collection: Wallet,
+        asset: Wallet,
         token: Pubkey,
         fee_location: Pubkey,
         fee_token_decimals: u8,
@@ -123,8 +121,8 @@ mod tests {
         // transfer some sol to authority for creating token account
         let transfer_sol_signature = transfer_sol(
             ctx,
-            payer.clone_keypair(),
-            authority.clone_keypair().pubkey(),
+            payer.clone(),
+            authority.pubkey(),
             rust_decimal_macros::dec!(0.03),
         )
         .await
@@ -136,9 +134,9 @@ mod tests {
         let create_collection_v2_signature = create_collection_v2(
             ctx,
             CreateCollectionV2Accounts {
-                payer: payer.clone_keypair(),
+                payer: payer.clone(),
                 update_authority: Some(authority.pubkey()),
-                collection: collection.clone_keypair(),
+                collection: collection.clone(),
             },
             CreateCollectionV2Args {
                 name: String::from("collection name"),
@@ -154,8 +152,8 @@ mod tests {
         let (escrow, init_escrow_v2_signature) = init_escrow_v2(
             ctx,
             InitEscrowV2Accounts {
-                payer: payer.clone_keypair(),
-                authority: authority.clone_keypair(),
+                payer: payer.clone(),
+                authority: authority.clone(),
             },
         )
         .await
@@ -167,10 +165,10 @@ mod tests {
         let create_asset_v1_signature = create_asset_v1(
             ctx,
             CreateAssetV1Accounts {
-                payer: payer.clone_keypair(),
-                asset: asset.clone_keypair(),
+                payer: payer.clone(),
+                asset: asset.clone(),
                 collection: Some(collection.pubkey()),
-                authority: Some(authority.clone_keypair()),
+                authority: Some(authority.clone()),
                 owner: Some(escrow),
             },
             CreateAssetV1Args {
@@ -187,9 +185,9 @@ mod tests {
         let init_recipe_signature = init_recipe(
             ctx,
             InitRecipeAccounts {
-                payer: payer.clone_keypair(),
-                authority: authority.clone_keypair(),
-                collection: collection.clone_keypair().pubkey(),
+                payer: payer.clone(),
+                authority: authority.clone(),
+                collection: collection.pubkey(),
                 token,
                 fee_location,
             },
@@ -214,7 +212,7 @@ mod tests {
 
         // init ata if needed
         let init_ata_if_needed_signature =
-            init_ata_if_needed(ctx, payer.clone_keypair(), payer.pubkey(), token)
+            init_ata_if_needed(ctx, payer.clone(), payer.pubkey(), token)
                 .await
                 .unwrap();
 
@@ -223,10 +221,10 @@ mod tests {
         let capture_v2_signature = capture_v2(
             ctx,
             CaptureV2Accounts {
-                owner: payer.clone_keypair(),
-                authority: authority.clone_keypair(),
-                asset: asset.clone_keypair().pubkey(),
-                collection: collection.clone_keypair().pubkey(),
+                owner: payer.clone(),
+                authority: authority.clone(),
+                asset: asset.pubkey(),
+                collection: collection.pubkey(),
                 token,
                 fee_project_account: fee_location,
             },
@@ -246,22 +244,22 @@ mod tests {
     async fn test_run() {
         let ctx = Context::default();
 
-        let fee_payer = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ");
-        let authority = Keypair::new();
+        let fee_payer = Wallet::Keypair(Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ"));
+        let authority = Wallet::Keypair(Keypair::new());
         let fee_token_decimals = 9_u8;
-        let collection = Keypair::new();
-        let asset = Keypair::new();
+        let collection = Wallet::Keypair(Keypair::new());
+        let asset = Wallet::Keypair(Keypair::new());
         let token = solana_sdk::pubkey!("AdaQ1MKbeKDyXCSnuCtqs5MW9FaY1UMGtpCGbZnpbTbj");
-        let fee_location = Keypair::new().pubkey();
+        let fee_location = Wallet::Keypair(Keypair::new());
 
         setup(
             &ctx,
-            fee_payer.clone_keypair(),
-            authority.clone_keypair(),
-            collection.clone_keypair(),
-            asset.clone_keypair(),
+            fee_payer.clone(),
+            authority.clone(),
+            collection.clone(),
+            asset.clone(),
             token,
-            fee_location,
+            fee_location.pubkey(),
             fee_token_decimals,
         )
         .await;
@@ -269,12 +267,12 @@ mod tests {
         let output = run(
             ctx,
             super::Input {
-                owner: fee_payer.clone_keypair(),
-                authority: authority.clone_keypair(),
+                owner: fee_payer.clone(),
+                authority: authority.clone(),
                 asset: asset.pubkey(),
                 collection: collection.pubkey(),
                 token,
-                fee_project_account: fee_location,
+                fee_project_account: fee_location.pubkey(),
                 submit: true,
             },
         )
