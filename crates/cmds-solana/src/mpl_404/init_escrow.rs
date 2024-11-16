@@ -1,5 +1,5 @@
 use crate::{prelude::*, utils::ui_amount_to_amount};
-use flow_lib::{command::prelude::*};
+use flow_lib::command::prelude::*;
 use mpl_hybrid::instructions::InitEscrowV1Builder;
 
 const NAME: &str = "init_escrow";
