@@ -683,6 +683,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04bd077c34449319a1e4e0bc21cea572960c9ae0d0fefda0dd7c52fcc3c647a3"
 dependencies = [
  "anchor-lang 0.30.1",
+ "mpl-token-metadata 4.1.2",
  "spl-associated-token-account 3.0.4",
  "spl-pod 0.2.5",
  "spl-token",
@@ -1799,7 +1800,10 @@ dependencies = [
  "byteorder",
  "bytes",
  "chrono",
+ "cmds-std",
+ "curve-launchpad",
  "ed25519-dalek 1.0.1",
+ "flow",
  "flow-lib",
  "flow-value",
  "futures",
@@ -2319,6 +2323,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "049bb91fb4aaf0e3c7efa6cd5ef877dbbbd15b39dad06d9948de4ec8a75761ea"
 dependencies = [
  "cipher 0.3.0",
+]
+
+[[package]]
+name = "curve-launchpad"
+version = "0.1.0"
+source = "git+https://github.com/staccDOTsol/curve-launchpad?rev=ea85aa5c026d4971d171cad9fa6aba7459aa64c0#ea85aa5c026d4971d171cad9fa6aba7459aa64c0"
+dependencies = [
+ "anchor-lang 0.30.1",
+ "anchor-spl",
 ]
 
 [[package]]

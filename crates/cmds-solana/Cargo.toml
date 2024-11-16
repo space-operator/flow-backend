@@ -7,6 +7,7 @@ edition = "2021"
 value = { workspace = true }
 flow-lib = { workspace = true }
 
+
 async-trait = "0.1"
 tiny-bip39 = "0.8"
 serde = { version = "1", features = ["derive"] }
@@ -51,8 +52,10 @@ solana-transaction-status = '=1.18.26'
 spl-token = { version = "=4.0.0", features = ["no-entrypoint"] }
 spl-token-2022 = { version = "=3.0.4", features = ["serde-traits"] }
 spl-memo = { version = "=4.0.0", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "=2.3.0", features = ["no-entrypoint"] }
-spl-account-compression = "=0.4.1"
+spl-associated-token-account = { version = "=2.3.0", features = [
+    "no-entrypoint",
+] }
+spl-account-compression = { version = "=0.4.1", features = ["no-entrypoint"] }
 spl-noop = "=0.2.0"
 spl-pod = "=0.2.5"
 
@@ -62,10 +65,14 @@ mpl-token-metadata = "=4.1.2"
 mpl-candy-machine-core = { version = "=3.0.1", features = ["no-entrypoint"] }
 mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
 # core, core candy machine and candy guard
-mpl-core-candy-machine-core = { version = "=0.2.1", features = ["no-entrypoint"] }
+mpl-core-candy-machine-core = { version = "=0.2.1", features = [
+    "no-entrypoint",
+] }
 mpl-core-candy-guard = { version = "=0.2.1", features = ["no-entrypoint"] }
 mpl-core = { version = "=0.8.0", features = ["serde"] }
 mpl-bubblegum = { version = "=1.4.0" }
+
+curve-launchpad = { git = "https://github.com/staccDOTsol/curve-launchpad", rev = "ea85aa5c026d4971d171cad9fa6aba7459aa64c0" }
 
 # bundlr
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
@@ -74,7 +81,7 @@ bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
 
 # branch: vendor
 pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "84cc6fe07acbb8a81b216228be244bf039621560" }
-jupiter-swap-api-client = { git = "https://github.com/jup-ag/jupiter-swap-api-client.git", package = "jupiter-swap-api-client"}
+jupiter-swap-api-client = { git = "https://github.com/jup-ag/jupiter-swap-api-client.git", package = "jupiter-swap-api-client" }
 
 # anchor
 anchor-lang = "=0.30.1"
@@ -126,3 +133,5 @@ rev = "b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1"
 rust_decimal_macros = "1.26"
 inventory = "0.3"
 tracing-subscriber = "0.3"
+flow = { workspace = true }
+cmds-std = { workspace = true }

@@ -7,6 +7,8 @@ use tracing::info;
 
 pub mod error;
 
+pub mod _flow_run_tests;
+
 pub mod associated_token_account;
 // pub mod clockwork;
 pub mod compression;
@@ -26,15 +28,16 @@ pub mod utils;
 pub mod wallet;
 pub mod wormhole;
 // pub mod xnft;
+pub mod curve;
 pub mod das;
 pub mod governance;
+pub mod jupiter;
 pub mod memo;
 pub mod pyth_price;
 pub mod record;
 pub mod spl;
 pub mod spl_token_2022;
 pub mod streamflow;
-pub mod jupiter;
 
 pub use error::{Error, Result};
 

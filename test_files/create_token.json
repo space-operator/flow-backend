@@ -1,0 +1,1467 @@
+{
+  "flow": {
+    "id": 0,
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "name": "Create a Token",
+    "isPublic": false,
+    "description": "[CLONED] Flow Description",
+    "tags": ["token", "Solana"],
+    "created_at": "2024-11-06",
+    "parent_flow": 3354,
+    "viewport": { "x": 524, "y": 268, "zoom": 0.5 },
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "updated_at": "2024-11-06T20:08:25.207079",
+    "lastest_flow_run_id": null,
+    "custom_networks": [],
+    "current_network": {
+      "id": "01000000-0000-8000-8000-000000000000",
+      "url": "https://api.devnet.solana.com",
+      "type": "default",
+      "wallet": "Solana",
+      "cluster": "devnet"
+    },
+    "instructions_bundling": "Automatic",
+    "guide": null,
+    "environment": null,
+    "nodes": [
+      {
+        "width": 233,
+        "height": 279,
+        "id": "de529f3d-9319-4ab0-b563-0970b3e22dc0",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#fff",
+            "backgroundColorDark": "#2e003f"
+          },
+          "node_id": "create_mint_account",
+          "sources": [
+            {
+              "id": "9611fddf-efc7-47da-91ed-6bacc225b541",
+              "name": "signature",
+              "type": "signature",
+              "tooltip": "",
+              "defaultValue": null
+            }
+          ],
+          "targets": [
+            {
+              "id": "2330eb43-def3-4fb6-8dfb-cc1d79517586",
+              "name": "fee_payer",
+              "tooltip": "Who pays for account rent and transaction fees",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["keypair"],
+              "defaultValue": null
+            },
+            {
+              "id": "dea79e67-f4fc-411d-b405-1cccf120682b",
+              "name": "decimals",
+              "tooltip": "NFTs should have decimal = 0\nUS dollars have 2 decimals\nFrom Metaplex documentation:\n'If the token has a master edition it is a NonFungible. If the token has no master edition(ensuring its supply can be > 1) and decimals of 0 it is a FungibleAsset. If the token has no master edition(ensuring its supply can be > 1) and decimals of > 0 it is a Fungible. If the token is a limited edition of a MasterEditon it is a NonFungibleEdition.'",
+              "required": true,
+              "passthrough": false,
+              "type_bounds": ["u8"],
+              "defaultValue": null
+            },
+            {
+              "id": "357515d0-2026-48a1-9f7e-70d038696d2b",
+              "name": "mint_authority",
+              "tooltip": "Mint authority - who can mint more tokens",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["keypair"],
+              "defaultValue": null
+            },
+            {
+              "id": "b6b39e01-b2c0-44c1-8772-2a06d082a7c8",
+              "name": "freeze_authority",
+              "tooltip": "",
+              "required": false,
+              "passthrough": true,
+              "type_bounds": ["pubkey"],
+              "defaultValue": null
+            },
+            {
+              "id": "5fe13700-a8c0-421b-ade7-da6ab85045e0",
+              "name": "mint_account",
+              "tooltip": "",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["keypair"],
+              "defaultValue": null
+            },
+            {
+              "id": "ad2b5dcd-be41-4680-9d06-3f153280e649",
+              "name": "memo",
+              "tooltip": "Additional notes",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["string"],
+              "defaultValue": ""
+            },
+            {
+              "id": "90ce6077-e454-4415-a6d2-82b4167418cd",
+              "name": "submit",
+              "tooltip": "",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["bool"],
+              "defaultValue": true
+            }
+          ],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Create Mint Account",
+          "targets_form": {
+            "extra": { "supabase_id": 107 },
+            "form_data": {},
+            "ui_schema": {},
+            "json_schema": {}
+          },
+          "unique_node_id": "transfer_token.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": -670.090992307697, "y": -37.4533487306436 },
+        "selected": false,
+        "positionAbsolute": { "x": -670.090992307697, "y": -37.4533487306436 }
+      },
+      {
+        "width": 203,
+        "height": 163,
+        "id": "8d67124d-38c2-4804-9602-25a8ceb04d1b",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#fff",
+            "backgroundColorDark": "#000000"
+          },
+          "node_id": "generate_keypair",
+          "sources": [
+            {
+              "id": "1794ed0e-1040-4799-a3c7-75b65b23a9f9",
+              "name": "pubkey",
+              "type": "pubkey",
+              "tooltip": "",
+              "defaultValue": null
+            },
+            {
+              "id": "fa27a9dd-99d9-46ce-bce1-b736d91e4468",
+              "name": "keypair",
+              "type": "keypair",
+              "tooltip": "",
+              "defaultValue": null
+            }
+          ],
+          "targets": [
+            {
+              "id": "58190cb4-6fbd-482d-8fc2-3bd599c8c512",
+              "name": "seed",
+              "tooltip": "12 word BIP39 mnemonic seed phrase",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["string"],
+              "defaultValue": null
+            },
+            {
+              "id": "4e51a204-a6b5-4f43-ab14-dfb6ca46dc55",
+              "name": "private_key",
+              "tooltip": "Load using a base 58 string, ignores seed/passphrase",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["keypair", "pubkey"],
+              "defaultValue": null
+            },
+            {
+              "id": "d830422e-4007-4e46-a4e8-f9cf41a2feaf",
+              "name": "passphrase",
+              "tooltip": "",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["string"],
+              "defaultValue": null
+            }
+          ],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "Generate or load a keypair and it's pubkey.\n\nWill generate a random keypair every run if no inputs are provided. This is useful for testing purpose.",
+          "display_name": "Generate Keypair",
+          "targets_form": {
+            "extra": { "supabase_id": 110 },
+            "form_data": {},
+            "ui_schema": {},
+            "json_schema": {}
+          },
+          "unique_node_id": "generate_keypair.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": -1128.6580381496055, "y": 244.70916712631958 },
+        "selected": false,
+        "positionAbsolute": {
+          "x": -1128.6580381496055,
+          "y": 244.70916712631958
+        }
+      },
+      {
+        "width": 259,
+        "height": 308,
+        "id": "769f3dbd-c187-429b-a482-6fb2db97090b",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": ["NFT", "Solana"],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#fff",
+            "backgroundColorDark": "#000000"
+          },
+          "node_id": "create_metadata_account",
+          "sources": [
+            {
+              "id": "6e4e04f4-9036-4d5b-abcc-71694dc48158",
+              "name": "signature",
+              "type": "signature",
+              "tooltip": "",
+              "defaultValue": null
+            },
+            {
+              "id": "6dce87e7-e731-4193-a256-4ec57ca49782",
+              "name": "metadata_account",
+              "type": "pubkey",
+              "tooltip": "",
+              "defaultValue": null
+            }
+          ],
+          "targets": [
+            {
+              "id": "1da92384-b347-4b16-a9f1-40038eee21e5",
+              "name": "fee_payer",
+              "tooltip": "",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["keypair"],
+              "defaultValue": null
+            },
+            {
+              "id": "25436c10-40e8-4b3b-a353-3f1d046c18ee",
+              "name": "update_authority",
+              "tooltip": "Who can update the on-chain metadata",
+              "required": false,
+              "passthrough": true,
+              "type_bounds": ["keypair"],
+              "defaultValue": null
+            },
+            {
+              "id": "b71bc8ba-bcc2-4deb-a2a7-3337bf1df2f2",
+              "name": "is_mutable",
+              "tooltip": "Whether Metadata Account can be updated",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["bool"],
+              "defaultValue": null
+            },
+            {
+              "id": "d8fda072-8efb-42eb-975b-8492c4a949ba",
+              "name": "mint_account",
+              "tooltip": "Token Mint Account",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["pubkey"],
+              "defaultValue": null
+            },
+            {
+              "id": "d4493b04-f360-4e7c-8bb7-5f86f66ca048",
+              "name": "mint_authority",
+              "tooltip": "",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["pubkey"],
+              "defaultValue": null
+            },
+            {
+              "id": "8b6e6847-1de4-4dfa-9363-5625bc57163c",
+              "name": "metadata",
+              "tooltip": "",
+              "required": true,
+              "passthrough": false,
+              "type_bounds": ["json"],
+              "defaultValue": null
+            },
+            {
+              "id": "52a1a300-a9fc-4a27-8cee-1b77218f7397",
+              "name": "collection_details",
+              "tooltip": "Only applies to Collection NFTs and is automatically set. To facility migration, set the collection size manually.",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["json"],
+              "defaultValue": null
+            },
+            {
+              "id": "acb19be9-5cb7-41c2-a9b9-a737cd3569f5",
+              "name": "submit",
+              "tooltip": "",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["bool"],
+              "defaultValue": true
+            }
+          ],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Create Metadata Account",
+          "targets_form": {
+            "extra": { "supabase_id": 124 },
+            "form_data": {},
+            "ui_schema": {},
+            "json_schema": {}
+          },
+          "unique_node_id": "create_metadata_account.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": -341.00925734590885, "y": -348.5150255501109 },
+        "selected": false,
+        "positionAbsolute": {
+          "x": -341.00925734590885,
+          "y": -348.5150255501109
+        }
+      },
+      {
+        "width": 157,
+        "height": 105,
+        "id": "9495f981-c28f-4dfd-b13b-2cc9b35b3cf3",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#f2fcff",
+            "backgroundColorDark": "#0491d6"
+          },
+          "node_id": "flow_input",
+          "sources": [
+            {
+              "id": "95b54a98-1d7f-4841-ad94-8d6e9445820f",
+              "name": "",
+              "type": "free",
+              "tooltip": "",
+              "defaultValue": ""
+            }
+          ],
+          "targets": [],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Flow Input",
+          "targets_form": {
+            "extra": {
+              "type": "json",
+              "selectType": false,
+              "supabase_id": 138
+            },
+            "form_data": {
+              "label": "token_metadata",
+              "form_label": {
+                "uri": "https://arweave.net/TzpCKV81KJEvx7z5e6VAESB3MqZRmjB6mf-PFmGJ_kg",
+                "name": "mockUSDC",
+                "uses": null,
+                "symbol": "mUSDC",
+                "creators": null,
+                "collection": null,
+                "seller_fee_basis_points": 0
+              }
+            },
+            "ui_schema": { "label": { "ui:emptyValue": "" } },
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Label the input parameter",
+                  "default": ""
+                },
+                "form_label": {
+                  "type": "string",
+                  "title": "Value",
+                  "option": "json"
+                }
+              }
+            }
+          },
+          "unique_node_id": "flow_input.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": -1321.2576473911079, "y": -624.5221429542071 },
+        "selected": false,
+        "draggable": true,
+        "positionAbsolute": {
+          "x": -1321.2576473911079,
+          "y": -624.5221429542071
+        }
+      },
+      {
+        "width": 197,
+        "height": 110,
+        "id": "229d2459-cd3b-4e42-ae59-355b48845451",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#fff",
+            "backgroundColorDark": "#000000"
+          },
+          "node_id": "const",
+          "sources": [
+            {
+              "id": "56b21709-1a61-4125-933f-8d2bcbdcbbef",
+              "name": "Source",
+              "type": "bool",
+              "tooltip": "",
+              "defaultValue": ""
+            }
+          ],
+          "targets": [],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Const/BoolFalse",
+          "targets_form": {
+            "extra": { "supabase_id": 117 },
+            "form_data": { "type": "BoolTrue", "value": { "B": true } },
+            "ui_schema": {},
+            "json_schema": {}
+          },
+          "unique_node_id": "const.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "style": {},
+        "dragging": false,
+        "position": { "x": -654.4284956294923, "y": -582.1953980747094 },
+        "selected": false,
+        "positionAbsolute": { "x": -654.4284956294923, "y": -582.1953980747094 }
+      },
+      {
+        "width": 213,
+        "height": 279,
+        "id": "f5f56cbf-ef5a-4b21-b870-b0533c463ca7",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#fff",
+            "backgroundColorDark": "#2e003f"
+          },
+          "node_id": "mint_token",
+          "sources": [
+            {
+              "id": "96714659-bc5c-493d-b68c-b5226a728a9e",
+              "name": "signature",
+              "type": "signature",
+              "tooltip": "",
+              "defaultValue": null
+            }
+          ],
+          "targets": [
+            {
+              "id": "505b51d2-17aa-49da-9c05-437ca3cbe218",
+              "name": "fee_payer",
+              "tooltip": "",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["keypair"],
+              "defaultValue": null
+            },
+            {
+              "id": "3d676d82-93ed-468a-b78b-ef428b58e207",
+              "name": "mint_authority",
+              "tooltip": "",
+              "required": true,
+              "passthrough": false,
+              "type_bounds": ["keypair"],
+              "defaultValue": null
+            },
+            {
+              "id": "6ecb2b54-89a0-4414-8193-7bef2444d61b",
+              "name": "mint_account",
+              "tooltip": "",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["pubkey"],
+              "defaultValue": null
+            },
+            {
+              "id": "a6b717bf-c044-473c-82be-8b20361b92cc",
+              "name": "recipient",
+              "tooltip": "",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["pubkey"],
+              "defaultValue": null
+            },
+            {
+              "id": "9ef64da3-2396-44d9-8e12-352616d1db1e",
+              "name": "amount",
+              "tooltip": "NFTs should have amount = 1",
+              "required": true,
+              "passthrough": false,
+              "type_bounds": ["f64"],
+              "defaultValue": null
+            },
+            {
+              "id": "382eb84b-b837-4deb-bd45-11b323b9b38a",
+              "name": "decimals",
+              "tooltip": "NFTs should have decimals = 0",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["u8"],
+              "defaultValue": null
+            },
+            {
+              "id": "8f54d2c2-2cbe-4407-bde8-ac0e040bb8af",
+              "name": "submit",
+              "tooltip": "",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["bool"],
+              "defaultValue": true
+            }
+          ],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "Identifies the token, determines who can mint, and how many",
+          "display_name": "Mint Token",
+          "targets_form": {
+            "extra": { "supabase_id": 113 },
+            "form_data": {},
+            "ui_schema": {},
+            "json_schema": {}
+          },
+          "unique_node_id": "mint_token.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": 580.6676015052781, "y": -234.61029686529213 },
+        "selected": false,
+        "positionAbsolute": { "x": 580.6676015052781, "y": -234.61029686529213 }
+      },
+      {
+        "width": 266,
+        "height": 221,
+        "id": "f3e74712-afcd-4170-805b-ba490185c1e7",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#fff",
+            "backgroundColorDark": "#2e003f"
+          },
+          "node_id": "associated_token_account",
+          "sources": [
+            {
+              "id": "0ba48254-cb23-4658-a629-a31b3e003ca3",
+              "name": "associated_token_account",
+              "type": "pubkey",
+              "tooltip": "",
+              "defaultValue": null
+            },
+            {
+              "id": "7c0c2edd-e1d4-4968-a68c-5efa002badd0",
+              "name": "signature",
+              "type": "signature",
+              "tooltip": "",
+              "defaultValue": null
+            }
+          ],
+          "targets": [
+            {
+              "id": "0e2d01db-3bed-4dcb-9ae2-59bf651ecc27",
+              "name": "owner",
+              "tooltip": "",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["pubkey"],
+              "defaultValue": null
+            },
+            {
+              "id": "57b73b64-3ee2-4536-ab57-e676ba910cdb",
+              "name": "fee_payer",
+              "tooltip": "",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["keypair"],
+              "defaultValue": null
+            },
+            {
+              "id": "9d698210-f4ea-4ca9-b81e-06041202a34a",
+              "name": "mint_account",
+              "tooltip": "",
+              "required": true,
+              "passthrough": true,
+              "type_bounds": ["pubkey"],
+              "defaultValue": null
+            },
+            {
+              "id": "d521d775-ab6d-4426-97b5-9a66ebf0121d",
+              "name": "submit",
+              "tooltip": "",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["bool"],
+              "defaultValue": true
+            }
+          ],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Associated Token Account",
+          "targets_form": {
+            "extra": { "supabase_id": 386 },
+            "form_data": {},
+            "ui_schema": {},
+            "json_schema": {}
+          },
+          "unique_node_id": "associated_token_account.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": 169.55512011700057, "y": -369.08619164173683 },
+        "selected": false,
+        "positionAbsolute": {
+          "x": 169.55512011700057,
+          "y": -369.08619164173683
+        }
+      },
+      {
+        "width": 169,
+        "height": 105,
+        "id": "2772de6b-2a29-4367-bb4f-a6ee8add2e87",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#f2fcff",
+            "backgroundColorDark": "#dea10a"
+          },
+          "node_id": "flow_output",
+          "sources": [],
+          "targets": [
+            {
+              "id": "da560f49-b92a-43c9-9bdc-6d8f3cfd5ce1",
+              "name": "mint_account",
+              "tooltip": "",
+              "required": true,
+              "passthrough": false,
+              "type_bounds": ["free"],
+              "defaultValue": ""
+            }
+          ],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Flow Output",
+          "targets_form": {
+            "extra": { "type": "free", "supabase_id": 137 },
+            "form_data": { "label": "mint_account" },
+            "ui_schema": { "label": { "ui:emptyValue": "" } },
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Output Label",
+                  "default": ""
+                }
+              }
+            }
+          },
+          "unique_node_id": "flow_output.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": 1210.8174365214081, "y": -291.2929136492386 },
+        "selected": false,
+        "positionAbsolute": { "x": 1210.8174365214081, "y": -291.2929136492386 }
+      },
+      {
+        "width": 157,
+        "height": 105,
+        "id": "fee3bf36-bcca-435e-ad90-2375df4c9584",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#f2fcff",
+            "backgroundColorDark": "#0491d6"
+          },
+          "node_id": "flow_input",
+          "sources": [
+            {
+              "id": "ae98c4fb-60ec-469f-adda-31f903055359",
+              "name": "",
+              "type": "free",
+              "tooltip": "",
+              "defaultValue": ""
+            }
+          ],
+          "targets": [],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Flow Input",
+          "targets_form": {
+            "extra": {
+              "type": "number",
+              "selectType": false,
+              "supabase_id": 138
+            },
+            "form_data": { "label": "supply", "form_label": 100000 },
+            "ui_schema": { "label": { "ui:emptyValue": "" } },
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Label the input parameter",
+                  "default": ""
+                },
+                "form_label": { "type": "integer", "title": "Value" }
+              }
+            }
+          },
+          "unique_node_id": "flow_input.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": -158.70786588791498, "y": 477.74954504323136 },
+        "selected": false,
+        "draggable": true,
+        "positionAbsolute": {
+          "x": -158.70786588791498,
+          "y": 477.74954504323136
+        }
+      },
+      {
+        "width": 169,
+        "height": 105,
+        "id": "f3a53bf0-3f68-420e-8ca3-260a9fc8925d",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#f2fcff",
+            "backgroundColorDark": "#dea10a"
+          },
+          "node_id": "flow_output",
+          "sources": [],
+          "targets": [
+            {
+              "id": "e6a62f39-8cec-4c2f-833a-5f35c3b1b558",
+              "name": "signature",
+              "tooltip": "",
+              "required": true,
+              "passthrough": false,
+              "type_bounds": ["signature"],
+              "defaultValue": ""
+            }
+          ],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Flow Output",
+          "targets_form": {
+            "extra": { "type": "signature", "supabase_id": 137 },
+            "form_data": { "label": "signature" },
+            "ui_schema": { "label": { "ui:emptyValue": "" } },
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Output Label",
+                  "default": ""
+                }
+              }
+            }
+          },
+          "unique_node_id": "flow_output.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": 1211.1745974532705, "y": -118.56404426746036 },
+        "selected": false,
+        "positionAbsolute": {
+          "x": 1211.1745974532705,
+          "y": -118.56404426746036
+        }
+      },
+      {
+        "width": 157,
+        "height": 105,
+        "id": "e5f821cd-de6a-4ddd-9e48-ab8f230b7ff6",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#f2fcff",
+            "backgroundColorDark": "#0491d6"
+          },
+          "node_id": "flow_input",
+          "sources": [
+            {
+              "id": "f316ca59-cbd0-4972-95fa-56e924d433cd",
+              "name": "",
+              "type": "free",
+              "tooltip": "",
+              "defaultValue": ""
+            }
+          ],
+          "targets": [],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Flow Input",
+          "targets_form": {
+            "extra": {
+              "type": "number",
+              "selectType": false,
+              "supabase_id": 138
+            },
+            "form_data": { "label": "decimals", "form_label": 9 },
+            "ui_schema": { "label": { "ui:emptyValue": "" } },
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Label the input parameter",
+                  "default": ""
+                },
+                "form_label": { "type": "integer", "title": "Value" }
+              }
+            }
+          },
+          "unique_node_id": "flow_input.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "position": { "x": -1163.9561835697546, "y": 535.9166510771865 },
+        "selected": false,
+        "draggable": true,
+        "positionAbsolute": { "x": -1163.9561835697546, "y": 535.9166510771865 }
+      },
+      {
+        "width": 203,
+        "height": 163,
+        "id": "b1ab8ed3-21a9-401d-946a-bcfa5b6286b8",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#fff",
+            "backgroundColorDark": "#000000"
+          },
+          "node_id": "generate_keypair",
+          "sources": [
+            {
+              "id": "806603d8-7b57-49e8-a1e0-f2a3a3bb0440",
+              "name": "pubkey",
+              "type": "pubkey",
+              "tooltip": "",
+              "defaultValue": null
+            },
+            {
+              "id": "e00efd7a-cce3-4cb9-91a5-b7df1d3bb77a",
+              "name": "keypair",
+              "type": "keypair",
+              "tooltip": "",
+              "defaultValue": null
+            }
+          ],
+          "targets": [
+            {
+              "id": "ae87478a-bcc4-4c2e-b578-eec3ec128bbd",
+              "name": "seed",
+              "tooltip": "12 word BIP39 mnemonic seed phrase",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["string"],
+              "defaultValue": null
+            },
+            {
+              "id": "b27ce2f0-8ad7-4f56-9f13-79faca145477",
+              "name": "private_key",
+              "tooltip": "Load using a base 58 string, ignores seed/passphrase",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["keypair", "pubkey"],
+              "defaultValue": null
+            },
+            {
+              "id": "27263b42-4237-4651-b39d-0e6c6d6c0eb4",
+              "name": "passphrase",
+              "tooltip": "",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["string"],
+              "defaultValue": null
+            }
+          ],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "Generate or load a keypair and it's pubkey.\n\nWill generate a random keypair every run if no inputs are provided. This is useful for testing purpose.",
+          "display_name": "Generate Keypair",
+          "targets_form": {
+            "extra": { "supabase_id": 110 },
+            "form_data": {},
+            "ui_schema": {},
+            "json_schema": {}
+          },
+          "unique_node_id": "generate_keypair.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": -1134.188093583058, "y": -119.16312737209597 },
+        "selected": false,
+        "positionAbsolute": {
+          "x": -1134.188093583058,
+          "y": -119.16312737209597
+        }
+      },
+      {
+        "width": 203,
+        "height": 163,
+        "id": "6a9b1648-3e7e-4d38-8c06-716726f2c114",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#fff",
+            "backgroundColorDark": "#000000"
+          },
+          "node_id": "generate_keypair",
+          "sources": [
+            {
+              "id": "72c1a0f0-8f87-4f01-84ad-7df841d0a6e0",
+              "name": "pubkey",
+              "type": "pubkey",
+              "tooltip": "",
+              "defaultValue": null
+            },
+            {
+              "id": "d1af7d27-64d8-44eb-b609-5858b11b68e2",
+              "name": "keypair",
+              "type": "keypair",
+              "tooltip": "",
+              "defaultValue": null
+            }
+          ],
+          "targets": [
+            {
+              "id": "65224211-4b8e-427b-9100-750c4ed415e4",
+              "name": "seed",
+              "tooltip": "12 word BIP39 mnemonic seed phrase",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["string"],
+              "defaultValue": null
+            },
+            {
+              "id": "35d382d0-de66-4535-b91d-7c931849affb",
+              "name": "private_key",
+              "tooltip": "Load using a base 58 string, ignores seed/passphrase",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["keypair", "pubkey"],
+              "defaultValue": null
+            },
+            {
+              "id": "57dc43ee-bab7-4716-b936-d34d5bfdec07",
+              "name": "passphrase",
+              "tooltip": "",
+              "required": false,
+              "passthrough": false,
+              "type_bounds": ["string"],
+              "defaultValue": null
+            }
+          ],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "Generate or load a keypair and it's pubkey.\n\nWill generate a random keypair every run if no inputs are provided. This is useful for testing purpose.",
+          "display_name": "Generate Keypair",
+          "targets_form": {
+            "extra": { "supabase_id": 110 },
+            "form_data": {},
+            "ui_schema": {},
+            "json_schema": {}
+          },
+          "unique_node_id": "generate_keypair.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": -1169.683082568316, "y": 63.318347931137396 },
+        "selected": false,
+        "positionAbsolute": { "x": -1169.683082568316, "y": 63.318347931137396 }
+      },
+      {
+        "width": 157,
+        "height": 105,
+        "id": "458a7b45-e114-4d21-8a52-b7c5cedfab92",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#f2fcff",
+            "backgroundColorDark": "#0491d6"
+          },
+          "node_id": "flow_input",
+          "sources": [
+            {
+              "id": "cf4d34ba-7530-413e-9002-efea9f8b681d",
+              "name": "",
+              "type": "free",
+              "tooltip": "",
+              "defaultValue": ""
+            }
+          ],
+          "targets": [],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Flow Input",
+          "targets_form": {
+            "extra": {
+              "type": "string",
+              "selectType": false,
+              "supabase_id": 138
+            },
+            "form_data": { "label": "fee_payer", "form_label": "" },
+            "ui_schema": { "label": { "ui:emptyValue": "" } },
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Label the input parameter",
+                  "default": ""
+                },
+                "form_label": { "type": "string", "title": "Value" }
+              }
+            }
+          },
+          "unique_node_id": "flow_input.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": -1726.015951115838, "y": -367.2046678014396 },
+        "selected": false,
+        "draggable": true,
+        "positionAbsolute": { "x": -1726.015951115838, "y": -367.2046678014396 }
+      },
+      {
+        "width": 157,
+        "height": 105,
+        "id": "5c1afde0-12e0-430b-b101-b48835e4610d",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#f2fcff",
+            "backgroundColorDark": "#0491d6"
+          },
+          "node_id": "flow_input",
+          "sources": [
+            {
+              "id": "816ba059-9390-4a7e-81e4-550ce2d7112f",
+              "name": "",
+              "type": "free",
+              "tooltip": "",
+              "defaultValue": ""
+            }
+          ],
+          "targets": [],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Flow Input",
+          "targets_form": {
+            "extra": {
+              "type": "string",
+              "selectType": false,
+              "supabase_id": 138
+            },
+            "form_data": { "label": "mint_authority", "form_label": "" },
+            "ui_schema": { "label": { "ui:emptyValue": "" } },
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Label the input parameter",
+                  "default": ""
+                },
+                "form_label": { "type": "string", "title": "Value" }
+              }
+            }
+          },
+          "unique_node_id": "flow_input.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": -1628.540325168102, "y": 116.81059575511489 },
+        "selected": false,
+        "draggable": true,
+        "positionAbsolute": { "x": -1628.540325168102, "y": 116.81059575511489 }
+      },
+      {
+        "width": 169,
+        "height": 105,
+        "id": "95cf5f14-4f6d-480a-a6f5-bad9b506d5d7",
+        "data": {
+          "flow": { "minimized": true },
+          "tags": [],
+          "type": "native",
+          "design": {
+            "backgroundColor": "#f2fcff",
+            "backgroundColorDark": "#dea10a"
+          },
+          "node_id": "flow_output",
+          "sources": [],
+          "targets": [
+            {
+              "id": "64825741-9e74-49b4-aaa5-6cb88e78dee2",
+              "name": "token_account",
+              "tooltip": "",
+              "required": true,
+              "passthrough": false,
+              "type_bounds": ["free"],
+              "defaultValue": ""
+            }
+          ],
+          "version": "0.1",
+          "related_to": [{ "id": "", "type": "", "relationship": "" }],
+          "description": "",
+          "display_name": "Flow Output",
+          "targets_form": {
+            "extra": { "type": "free", "supabase_id": 137 },
+            "form_data": { "label": "associated_token_account" },
+            "ui_schema": { "label": { "ui:emptyValue": "" } },
+            "json_schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "title": "Output Label",
+                  "default": ""
+                }
+              }
+            }
+          },
+          "unique_node_id": "flow_output.0.1",
+          "node_definition_version": "0.1"
+        },
+        "type": "native",
+        "dragging": false,
+        "position": { "x": 521.0887782200066, "y": 195.22834760516866 },
+        "selected": false,
+        "positionAbsolute": { "x": 521.0887782200066, "y": 195.22834760516866 }
+      }
+    ],
+    "edges": [
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-a70534a3-64e1-4b5f-9cd3-6d16adeea90afa27a9dd-99d9-46ce-bce1-b736d91e4468-b23f9b56-1f71-4dda-bb36-e99757520b745fe13700-a8c0-421b-ade7-da6ab85045e0",
+        "source": "8d67124d-38c2-4804-9602-25a8ceb04d1b",
+        "target": "de529f3d-9319-4ab0-b563-0970b3e22dc0",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "fa27a9dd-99d9-46ce-bce1-b736d91e4468",
+        "targetHandle": "5fe13700-a8c0-421b-ade7-da6ab85045e0"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "15f56f1f-f465-4683-82c9-2c6348bb79fb",
+        "source": "9495f981-c28f-4dfd-b13b-2cc9b35b3cf3",
+        "target": "769f3dbd-c187-429b-a482-6fb2db97090b",
+        "selected": false,
+        "sourceHandle": "95b54a98-1d7f-4841-ad94-8d6e9445820f",
+        "targetHandle": "8b6e6847-1de4-4dfa-9363-5625bc57163c"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-2c5519c2-27be-4a1d-b0a3-fc512ef4bb0756b21709-1a61-4125-933f-8d2bcbdcbbef-8d934bbd-8a68-44b4-9fd3-6a9f0f8ab0aeb71bc8ba-bcc2-4deb-a2a7-3337bf1df2f2",
+        "source": "229d2459-cd3b-4e42-ae59-355b48845451",
+        "target": "769f3dbd-c187-429b-a482-6fb2db97090b",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "56b21709-1a61-4125-933f-8d2bcbdcbbef",
+        "targetHandle": "b71bc8ba-bcc2-4deb-a2a7-3337bf1df2f2"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-b23f9b56-1f71-4dda-bb36-e99757520b74passthrough-2330eb43-def3-4fb6-8dfb-cc1d79517586-8d934bbd-8a68-44b4-9fd3-6a9f0f8ab0aed4493b04-f360-4e7c-8bb7-5f86f66ca048",
+        "source": "de529f3d-9319-4ab0-b563-0970b3e22dc0",
+        "target": "769f3dbd-c187-429b-a482-6fb2db97090b",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-2330eb43-def3-4fb6-8dfb-cc1d79517586",
+        "targetHandle": "d4493b04-f360-4e7c-8bb7-5f86f66ca048"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-b23f9b56-1f71-4dda-bb36-e99757520b74passthrough-2330eb43-def3-4fb6-8dfb-cc1d79517586-8d934bbd-8a68-44b4-9fd3-6a9f0f8ab0ae25436c10-40e8-4b3b-a353-3f1d046c18ee",
+        "source": "de529f3d-9319-4ab0-b563-0970b3e22dc0",
+        "target": "769f3dbd-c187-429b-a482-6fb2db97090b",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-2330eb43-def3-4fb6-8dfb-cc1d79517586",
+        "targetHandle": "25436c10-40e8-4b3b-a353-3f1d046c18ee"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-b23f9b56-1f71-4dda-bb36-e99757520b74passthrough-2330eb43-def3-4fb6-8dfb-cc1d79517586-8d934bbd-8a68-44b4-9fd3-6a9f0f8ab0ae1da92384-b347-4b16-a9f1-40038eee21e5",
+        "source": "de529f3d-9319-4ab0-b563-0970b3e22dc0",
+        "target": "769f3dbd-c187-429b-a482-6fb2db97090b",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-2330eb43-def3-4fb6-8dfb-cc1d79517586",
+        "targetHandle": "1da92384-b347-4b16-a9f1-40038eee21e5"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-8d934bbd-8a68-44b4-9fd3-6a9f0f8ab0aepassthrough-1da92384-b347-4b16-a9f1-40038eee21e5-cba35931-cac9-4acd-8a3a-f02fc0bba2d757b73b64-3ee2-4536-ab57-e676ba910cdb",
+        "source": "769f3dbd-c187-429b-a482-6fb2db97090b",
+        "target": "f3e74712-afcd-4170-805b-ba490185c1e7",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-1da92384-b347-4b16-a9f1-40038eee21e5",
+        "targetHandle": "57b73b64-3ee2-4536-ab57-e676ba910cdb"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-8d934bbd-8a68-44b4-9fd3-6a9f0f8ab0aepassthrough-d8fda072-8efb-42eb-975b-8492c4a949ba-cba35931-cac9-4acd-8a3a-f02fc0bba2d79d698210-f4ea-4ca9-b81e-06041202a34a",
+        "source": "769f3dbd-c187-429b-a482-6fb2db97090b",
+        "target": "f3e74712-afcd-4170-805b-ba490185c1e7",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-d8fda072-8efb-42eb-975b-8492c4a949ba",
+        "targetHandle": "9d698210-f4ea-4ca9-b81e-06041202a34a"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-cba35931-cac9-4acd-8a3a-f02fc0bba2d70ba48254-cb23-4658-a629-a31b3e003ca3-2dc02de4-a81f-4716-b2a1-5fd9c3ca5a4ba6b717bf-c044-473c-82be-8b20361b92cc",
+        "source": "f3e74712-afcd-4170-805b-ba490185c1e7",
+        "target": "f5f56cbf-ef5a-4b21-b870-b0533c463ca7",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "0ba48254-cb23-4658-a629-a31b3e003ca3",
+        "targetHandle": "a6b717bf-c044-473c-82be-8b20361b92cc"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-cba35931-cac9-4acd-8a3a-f02fc0bba2d7passthrough-9d698210-f4ea-4ca9-b81e-06041202a34a-2dc02de4-a81f-4716-b2a1-5fd9c3ca5a4b6ecb2b54-89a0-4414-8193-7bef2444d61b",
+        "source": "f3e74712-afcd-4170-805b-ba490185c1e7",
+        "target": "f5f56cbf-ef5a-4b21-b870-b0533c463ca7",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-9d698210-f4ea-4ca9-b81e-06041202a34a",
+        "targetHandle": "6ecb2b54-89a0-4414-8193-7bef2444d61b"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-cba35931-cac9-4acd-8a3a-f02fc0bba2d7passthrough-57b73b64-3ee2-4536-ab57-e676ba910cdb-2dc02de4-a81f-4716-b2a1-5fd9c3ca5a4b3d676d82-93ed-468a-b78b-ef428b58e207",
+        "source": "f3e74712-afcd-4170-805b-ba490185c1e7",
+        "target": "f5f56cbf-ef5a-4b21-b870-b0533c463ca7",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-57b73b64-3ee2-4536-ab57-e676ba910cdb",
+        "targetHandle": "3d676d82-93ed-468a-b78b-ef428b58e207"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-cba35931-cac9-4acd-8a3a-f02fc0bba2d7passthrough-57b73b64-3ee2-4536-ab57-e676ba910cdb-2dc02de4-a81f-4716-b2a1-5fd9c3ca5a4b505b51d2-17aa-49da-9c05-437ca3cbe218",
+        "source": "f3e74712-afcd-4170-805b-ba490185c1e7",
+        "target": "f5f56cbf-ef5a-4b21-b870-b0533c463ca7",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-57b73b64-3ee2-4536-ab57-e676ba910cdb",
+        "targetHandle": "505b51d2-17aa-49da-9c05-437ca3cbe218"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-8d934bbd-8a68-44b4-9fd3-6a9f0f8ab0aepassthrough-1da92384-b347-4b16-a9f1-40038eee21e5-cba35931-cac9-4acd-8a3a-f02fc0bba2d70e2d01db-3bed-4dcb-9ae2-59bf651ecc27",
+        "source": "769f3dbd-c187-429b-a482-6fb2db97090b",
+        "target": "f3e74712-afcd-4170-805b-ba490185c1e7",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-1da92384-b347-4b16-a9f1-40038eee21e5",
+        "targetHandle": "0e2d01db-3bed-4dcb-9ae2-59bf651ecc27"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-b23f9b56-1f71-4dda-bb36-e99757520b74passthrough-5fe13700-a8c0-421b-ade7-da6ab85045e0-8d934bbd-8a68-44b4-9fd3-6a9f0f8ab0aed8fda072-8efb-42eb-975b-8492c4a949ba",
+        "source": "de529f3d-9319-4ab0-b563-0970b3e22dc0",
+        "target": "769f3dbd-c187-429b-a482-6fb2db97090b",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-5fe13700-a8c0-421b-ade7-da6ab85045e0",
+        "targetHandle": "d8fda072-8efb-42eb-975b-8492c4a949ba"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-2dc02de4-a81f-4716-b2a1-5fd9c3ca5a4bpassthrough-6ecb2b54-89a0-4414-8193-7bef2444d61b-0abe7fef-556b-47a6-baaf-997d79084746da560f49-b92a-43c9-9bdc-6d8f3cfd5ce1",
+        "source": "f5f56cbf-ef5a-4b21-b870-b0533c463ca7",
+        "target": "2772de6b-2a29-4367-bb4f-a6ee8add2e87",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "passthrough-6ecb2b54-89a0-4414-8193-7bef2444d61b",
+        "targetHandle": "da560f49-b92a-43c9-9bdc-6d8f3cfd5ce1"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "250176b3-4e65-4143-a1a9-752da139b0d0",
+        "source": "fee3bf36-bcca-435e-ad90-2375df4c9584",
+        "target": "f5f56cbf-ef5a-4b21-b870-b0533c463ca7",
+        "selected": false,
+        "sourceHandle": "ae98c4fb-60ec-469f-adda-31f903055359",
+        "targetHandle": "9ef64da3-2396-44d9-8e12-352616d1db1e"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "62c77435-2743-4f2a-9c7f-897c644ac838",
+        "source": "f5f56cbf-ef5a-4b21-b870-b0533c463ca7",
+        "target": "f3a53bf0-3f68-420e-8ca3-260a9fc8925d",
+        "selected": false,
+        "sourceHandle": "96714659-bc5c-493d-b68c-b5226a728a9e",
+        "targetHandle": "e6a62f39-8cec-4c2f-833a-5f35c3b1b558"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "570caeef-4e25-42a9-aadb-040115ad37eb",
+        "source": "e5f821cd-de6a-4ddd-9e48-ab8f230b7ff6",
+        "target": "de529f3d-9319-4ab0-b563-0970b3e22dc0",
+        "selected": false,
+        "sourceHandle": "f316ca59-cbd0-4972-95fa-56e924d433cd",
+        "targetHandle": "dea79e67-f4fc-411d-b405-1cccf120682b"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-83231186-43a6-4987-a8d2-0fcacc49cedff316ca59-cbd0-4972-95fa-56e924d433cd-2dc02de4-a81f-4716-b2a1-5fd9c3ca5a4b382eb84b-b837-4deb-bd45-11b323b9b38a",
+        "source": "e5f821cd-de6a-4ddd-9e48-ab8f230b7ff6",
+        "target": "f5f56cbf-ef5a-4b21-b870-b0533c463ca7",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "f316ca59-cbd0-4972-95fa-56e924d433cd",
+        "targetHandle": "382eb84b-b837-4deb-bd45-11b323b9b38a"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-428ba4a6-3e83-40d3-8726-2290b6044660e00efd7a-cce3-4cb9-91a5-b7df1d3bb77a-b23f9b56-1f71-4dda-bb36-e99757520b742330eb43-def3-4fb6-8dfb-cc1d79517586",
+        "source": "b1ab8ed3-21a9-401d-946a-bcfa5b6286b8",
+        "target": "de529f3d-9319-4ab0-b563-0970b3e22dc0",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "e00efd7a-cce3-4cb9-91a5-b7df1d3bb77a",
+        "targetHandle": "2330eb43-def3-4fb6-8dfb-cc1d79517586"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-ee23d190-5d7b-4876-b43d-76cb740b15acd1af7d27-64d8-44eb-b609-5858b11b68e2-b23f9b56-1f71-4dda-bb36-e99757520b74357515d0-2026-48a1-9f7e-70d038696d2b",
+        "source": "6a9b1648-3e7e-4d38-8c06-716726f2c114",
+        "target": "de529f3d-9319-4ab0-b563-0970b3e22dc0",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "d1af7d27-64d8-44eb-b609-5858b11b68e2",
+        "targetHandle": "357515d0-2026-48a1-9f7e-70d038696d2b"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "reactflow__edge-d1cac2a7-5e09-4514-9afd-dfdd44bad31ecf4d34ba-7530-413e-9002-efea9f8b681d-428ba4a6-3e83-40d3-8726-2290b6044660b27ce2f0-8ad7-4f56-9f13-79faca145477",
+        "source": "458a7b45-e114-4d21-8a52-b7c5cedfab92",
+        "target": "b1ab8ed3-21a9-401d-946a-bcfa5b6286b8",
+        "zIndex": 5,
+        "selected": false,
+        "sourceHandle": "cf4d34ba-7530-413e-9002-efea9f8b681d",
+        "targetHandle": "b27ce2f0-8ad7-4f56-9f13-79faca145477"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "34fb8e85-08b6-4a00-b967-748f8abbee63",
+        "source": "5c1afde0-12e0-430b-b101-b48835e4610d",
+        "target": "6a9b1648-3e7e-4d38-8c06-716726f2c114",
+        "selected": false,
+        "sourceHandle": "816ba059-9390-4a7e-81e4-550ce2d7112f",
+        "targetHandle": "35d382d0-de66-4535-b91d-7c931849affb"
+      },
+      {
+        "style": { "stroke": "#fef08a", "strokeWidth": 2 },
+        "type": "custom",
+        "id": "f9a54a75-dea9-4ebb-bab6-e88bc896158b",
+        "source": "f3e74712-afcd-4170-805b-ba490185c1e7",
+        "target": "95cf5f14-4f6d-480a-a6f5-bad9b506d5d7",
+        "selected": false,
+        "sourceHandle": "0ba48254-cb23-4658-a629-a31b3e003ca3",
+        "targetHandle": "64825741-9e74-49b4-aaa5-6cb88e78dee2"
+      }
+    ],
+    "mosaic": null,
+    "start_shared": false,
+    "start_unverified": false,
+    "gg_marketplace": null
+  },
+  "bookmarks": []
+}
