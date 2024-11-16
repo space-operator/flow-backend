@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use flow_lib::{command::prelude::*, solana::KeypairExt};
+use flow_lib::command::prelude::*;
 use mpl_hybrid::instructions::MigrateNftV1Builder;
 
 const NAME: &str = "migrate_nft_v1";
@@ -16,10 +16,8 @@ fn build() -> BuildResult {
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Input {
-    #[serde_as(as = "AsKeypair")]
-    fee_payer: Keypair,
-    #[serde_as(as = "AsKeypair")]
-    authority: Keypair,
+    fee_payer: Wallet,
+    authority: Wallet,
     #[serde_as(as = "AsPubkey")]
     asset: Pubkey,
     #[serde_as(as = "AsPubkey")]
@@ -59,11 +57,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ix = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer.clone_keypair(),
-            input.authority.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.fee_payer, input.authority].into(),
         instructions: [migrate_nft_v1_ix].into(),
     };
 
@@ -83,7 +77,7 @@ mod tests {
 
     async fn transfer_sol(
         ctx: &Context,
-        from_pubkey: &Keypair,
+        from_pubkey: Wallet,
         to_pubkey: &Pubkey,
         amount: Decimal,
     ) -> crate::Result<Signature> {
@@ -98,8 +92,8 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(ctx, &mut transfer_sol_tx, &[from_pubkey], recent_blockhash)
-            .await
+        transfer_sol_tx
+            .try_sign(&[from_pubkey.keypair().unwrap()], recent_blockhash)
             .unwrap();
 
         submit_transaction(&ctx.solana_client, transfer_sol_tx).await
@@ -107,9 +101,9 @@ mod tests {
 
     async fn create_collection(
         ctx: &Context,
-        collection: &Keypair,
-        payer: &Keypair,
-        authority: &Keypair,
+        collection: Wallet,
+        payer: Wallet,
+        authority: Wallet,
         name: String,
         uri: String,
     ) -> crate::Result<Signature> {
@@ -126,28 +120,26 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(
-            ctx,
-            &mut create_collection_tx,
-            &[payer, collection],
-            recent_blockhash,
-        )
-        .await
-        .unwrap();
+        create_collection_tx
+            .try_sign(
+                &[payer.keypair().unwrap(), authority.keypair().unwrap()],
+                recent_blockhash,
+            )
+            .unwrap();
 
         submit_transaction(&ctx.solana_client, create_collection_tx).await
     }
 
     async fn create_asset(
         ctx: &Context,
-        payer: &Keypair,
-        authority: &Keypair,
-        collection: &Keypair,
+        payer: Wallet,
+        authority: Wallet,
+        collection: Wallet,
         owner: &Pubkey,
         name: String,
         uri: String,
     ) -> crate::Result<(Pubkey, Signature)> {
-        let asset = Keypair::new();
+        let asset = Wallet::Keypair(Keypair::new());
 
         let ix = CreateV1Builder::new()
             .payer(payer.pubkey())
@@ -164,14 +156,16 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(
-            ctx,
-            &mut create_asset_tx,
-            &[&asset, payer, authority],
-            recent_blockhash,
-        )
-        .await
-        .unwrap();
+        create_asset_tx
+            .try_sign(
+                &[
+                    asset.keypair().unwrap(),
+                    payer.keypair().unwrap(),
+                    authority.keypair().unwrap(),
+                ],
+                recent_blockhash,
+            )
+            .unwrap();
 
         let result_signature = submit_transaction(&ctx.solana_client, create_asset_tx).await;
         result_signature.map(|signature| (asset.pubkey(), signature))
@@ -179,9 +173,9 @@ mod tests {
 
     async fn init_escrow_v1(
         ctx: &Context,
-        payer: &Keypair,
-        authority: &Keypair,
-        collection: &Keypair,
+        payer: Wallet,
+        authority: Wallet,
+        collection: Wallet,
         token: &Pubkey,
         fee_wallet: &Pubkey,
         escrow_name: String,
@@ -231,14 +225,12 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(
-            ctx,
-            &mut init_escrow_v1_tx,
-            &[payer, authority],
-            recent_blockhash,
-        )
-        .await
-        .unwrap();
+        init_escrow_v1_tx
+            .try_sign(
+                &[payer.keypair().unwrap(), authority.keypair().unwrap()],
+                recent_blockhash,
+            )
+            .unwrap();
 
         let result_signature = submit_transaction(&ctx.solana_client, init_escrow_v1_tx).await;
         result_signature.map(|signature| (escrow, signature))
@@ -246,8 +238,8 @@ mod tests {
 
     async fn init_escrow_v2(
         ctx: &Context,
-        fee_payer: &Keypair,
-        authority: &Keypair,
+        fee_payer: Wallet,
+        authority: Wallet,
     ) -> crate::Result<(Pubkey, Signature)> {
         let (escrow, _bump) = solana_sdk::pubkey::Pubkey::find_program_address(
             &[b"escrow", authority.pubkey().as_ref()],
@@ -264,14 +256,12 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(
-            ctx,
-            &mut init_escrow_v2_tx,
-            &[fee_payer, authority],
-            recent_blockhash,
-        )
-        .await
-        .unwrap();
+        init_escrow_v2_tx
+            .try_sign(
+                &[fee_payer.keypair().unwrap(), authority.keypair().unwrap()],
+                recent_blockhash,
+            )
+            .unwrap();
 
         let result_signature = submit_transaction(&ctx.solana_client, init_escrow_v2_tx).await;
         result_signature.map(|signature| (escrow, signature))
@@ -279,9 +269,9 @@ mod tests {
 
     async fn setup(
         ctx: &Context,
-        payer: &Keypair,
-        authority: &Keypair,
-        collection: &Keypair,
+        payer: Wallet,
+        authority: Wallet,
+        collection: Wallet,
         token: &Pubkey,
         fee_wallet: &Pubkey,
         escrow_name: String,
@@ -293,8 +283,8 @@ mod tests {
         // transfer sol to authority
         let transfer_sol_signature = transfer_sol(
             ctx,
-            &payer.clone_keypair(),
-            &authority.clone_keypair().pubkey(),
+            payer.clone(),
+            &authority.pubkey(),
             rust_decimal_macros::dec!(0.03),
         )
         .await
@@ -305,9 +295,9 @@ mod tests {
         // create collection
         let create_collection_signature = create_collection(
             ctx,
-            collection,
-            payer,
-            authority,
+            collection.clone(),
+            payer.clone(),
+            authority.clone(),
             String::from("mock_collection"),
             String::from("https://example.com"),
         )
@@ -319,9 +309,9 @@ mod tests {
         // init escrow
         let (escrow_v1, init_escrow_v1_signature) = init_escrow_v1(
             ctx,
-            &payer.clone_keypair(),
-            &authority.clone_keypair(),
-            collection,
+            payer.clone(),
+            authority.clone(),
+            collection.clone(),
             token,
             fee_wallet,
             escrow_name,
@@ -337,16 +327,18 @@ mod tests {
 
         // init_escrow_v2
         let (escrow_v2, init_escrow_v2_signature) =
-            init_escrow_v2(ctx, payer, authority).await.unwrap();
+            init_escrow_v2(ctx, payer.clone(), authority.clone())
+                .await
+                .unwrap();
 
         dbg!(init_escrow_v2_signature);
 
         // create asset
         let (asset, create_asset_signature) = create_asset(
             ctx,
-            payer,
-            authority,
-            collection,
+            payer.clone(),
+            authority.clone(),
+            collection.clone(),
             &escrow_v1,
             String::from("mock_asset_nft"),
             String::from("https://example.com/0.json"),
@@ -369,9 +361,9 @@ mod tests {
         let ctx = Context::default();
 
         // setup
-        let fee_payer = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ");
-        let authority = Keypair::new();
-        let collection = Keypair::new();
+        let fee_payer = Wallet::Keypair(Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ"));
+        let authority = Wallet::Keypair(Keypair::new());
+        let collection = Wallet::Keypair(Keypair::new());
         let token = solana_sdk::pubkey!("AdaQ1MKbeKDyXCSnuCtqs5MW9FaY1UMGtpCGbZnpbTbj");
         let fee_wallet = Keypair::new().pubkey();
         let name = String::from("Escrow Name");
@@ -382,9 +374,9 @@ mod tests {
 
         let (_escrow_v1, _escrow_v2, asset) = setup(
             &ctx,
-            &fee_payer,
-            &authority,
-            &collection,
+            fee_payer.clone(),
+            authority.clone(),
+            collection.clone(),
             &token,
             &fee_wallet,
             name,
@@ -398,8 +390,8 @@ mod tests {
         let output = run(
             ctx,
             super::Input {
-                fee_payer: fee_payer.clone_keypair(),
-                authority: authority.clone_keypair(),
+                fee_payer: fee_payer.clone(),
+                authority: authority.clone(),
                 asset,
                 collection: collection.pubkey(),
                 submit: true,

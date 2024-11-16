@@ -16,13 +16,11 @@ fn build() -> BuildResult {
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Input {
-    #[serde_as(as = "AsKeypair")]
-    fee_payer: Keypair,
+    fee_payer: Wallet,
     fee_token_decimals: u8,
 
     // accounts
-    #[serde_as(as = "AsKeypair")]
-    authority: Keypair,
+    authority: Wallet,
     #[serde_as(as = "AsPubkey")]
     collection: Pubkey,
     #[serde_as(as = "AsPubkey")]
@@ -134,7 +132,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ix = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer.clone_keypair()].into(),
+        signers: [input.fee_payer].into(),
         instructions: [update_recipe_ix.instruction()].into(),
     };
 
@@ -151,8 +149,8 @@ mod tests {
 
     async fn create_collection(
         ctx: &Context,
-        collection: &Keypair,
-        payer: &Keypair,
+        collection: &Wallet,
+        payer: &Wallet,
         name: String,
         uri: String,
     ) -> crate::Result<Signature> {
@@ -169,14 +167,12 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(
-            ctx,
-            &mut create_collection_tx,
-            &[payer, collection],
-            recent_blockhash,
-        )
-        .await
-        .unwrap();
+        create_collection_tx
+            .try_sign(
+                &[payer.keypair().unwrap(), collection.keypair().unwrap()],
+                recent_blockhash,
+            )
+            .unwrap();
 
         submit_transaction(&ctx.solana_client, create_collection_tx).await
     }
@@ -184,10 +180,10 @@ mod tests {
     async fn init_recipe(
         ctx: &Context,
         fee_token_decimals: u8,
-        collection: &Keypair,
+        collection: &Wallet,
         token: &Pubkey,
         fee_location: &Pubkey,
-        payer: &Keypair,
+        payer: &Wallet,
         name: String,
         uri: String,
         max: u64,
@@ -240,8 +236,8 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(ctx, &mut init_recipe_tx, &[payer], recent_blockhash)
-            .await
+        init_recipe_tx
+            .try_sign(&[payer.keypair().unwrap()], recent_blockhash)
             .unwrap();
 
         submit_transaction(&ctx.solana_client, init_recipe_tx).await
@@ -256,11 +252,11 @@ mod tests {
     async fn test_run() {
         let ctx = Context::default();
 
-        let fee_payer = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ");
+        let fee_payer = Wallet::Keypair(Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ"));
         let fee_token_decimals = 9_u8;
-        let collection = Keypair::new();
+        let collection = Wallet::Keypair(Keypair::new());
         let token = solana_sdk::pubkey!("AdaQ1MKbeKDyXCSnuCtqs5MW9FaY1UMGtpCGbZnpbTbj");
-        let fee_location = Keypair::new().pubkey();
+        let fee_location = Wallet::Keypair(Keypair::new());
         let name = String::from("collection name");
         let uri = String::from("https://example.com");
         let max = 1_u64;
@@ -284,7 +280,7 @@ mod tests {
             fee_token_decimals,
             &collection,
             &token,
-            &fee_location,
+            &fee_location.pubkey(),
             &fee_payer,
             name.clone(),
             uri.clone(),
@@ -305,12 +301,12 @@ mod tests {
         let output = run(
             ctx,
             super::Input {
-                fee_payer: fee_payer.clone_keypair(),
+                fee_payer: fee_payer.clone(),
                 fee_token_decimals,
-                authority: fee_payer.clone_keypair(),
+                authority: fee_payer.clone(),
                 collection: collection.pubkey(),
                 token,
-                fee_location,
+                fee_location: fee_location.pubkey(),
                 name: Some(name),
                 uri: Some(uri),
                 max: Some(1_u64),
@@ -322,9 +318,10 @@ mod tests {
                 sol_fee_amount_release: Some(sol_fee_amount_release),
                 path: Some(path),
                 submit: true,
-
             },
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         dbg!(output.signature.unwrap());
     }

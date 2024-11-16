@@ -4653,7 +4653,7 @@ dependencies = [
  "num-traits",
  "rmp-serde",
  "serde_json",
- "solana-program 1.16.27",
+ "solana-program 1.18.26",
  "thiserror",
 ]
 

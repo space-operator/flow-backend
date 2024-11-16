@@ -16,12 +16,10 @@ fn build() -> BuildResult {
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Input {
-    #[serde_as(as = "AsKeypair")]
-    fee_payer: Keypair,
+    fee_payer: Wallet,
     fee_token_decimals: u8,
 
-    #[serde_as(as = "AsKeypair")]
-    authority: Keypair,
+    authority: Wallet,
     #[serde_as(as = "AsPubkey")]
     collection: Pubkey,
     #[serde_as(as = "AsPubkey")]
@@ -112,11 +110,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ix = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer.clone_keypair(),
-            input.authority.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.fee_payer, input.authority].into(),
         instructions: [update_new_data_ix.instruction()].into(),
     };
 
@@ -136,8 +130,8 @@ mod tests {
 
     async fn create_collection(
         ctx: &Context,
-        collection: &Keypair,
-        payer: &Keypair,
+        collection: &Wallet,
+        payer: &Wallet,
         name: String,
         uri: String,
     ) -> crate::Result<Signature> {
@@ -154,27 +148,25 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(
-            ctx,
-            &mut create_collection_tx,
-            &[payer, collection],
-            recent_blockhash,
-        )
-        .await
-        .unwrap();
+        create_collection_tx
+            .try_sign(
+                &[payer.keypair().unwrap(), collection.keypair().unwrap()],
+                recent_blockhash,
+            )
+            .unwrap();
 
         submit_transaction(&ctx.solana_client, create_collection_tx).await
     }
 
     async fn create_asset(
         ctx: &Context,
-        payer: &Keypair,
-        collection: &Keypair,
+        payer: &Wallet,
+        collection: &Wallet,
         owner: &Pubkey,
         name: String,
         uri: String,
     ) -> crate::Result<(Pubkey, Signature)> {
-        let asset = Keypair::new();
+        let asset = Wallet::Keypair(Keypair::new());
 
         let ix = CreateV1Builder::new()
             .payer(payer.pubkey())
@@ -190,14 +182,12 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(
-            ctx,
-            &mut create_asset_tx,
-            &[&asset, payer],
-            recent_blockhash,
-        )
-        .await
-        .unwrap();
+        create_asset_tx
+            .try_sign(
+                &[asset.keypair().unwrap(), payer.keypair().unwrap()],
+                recent_blockhash,
+            )
+            .unwrap();
 
         let result_signature = submit_transaction(&ctx.solana_client, create_asset_tx).await;
         result_signature.map(|signature| (asset.pubkey(), signature))
@@ -205,8 +195,8 @@ mod tests {
 
     async fn init_escrow(
         ctx: &Context,
-        payer: &Keypair,
-        collection: &Keypair,
+        payer: &Wallet,
+        collection: &Wallet,
         token: &Pubkey,
         fee_wallet: &Pubkey,
         escrow_name: String,
@@ -256,8 +246,11 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(ctx, &mut init_escrow_tx, &[payer, payer], recent_blockhash)
-            .await
+        init_escrow_tx
+            .try_sign(
+                &[payer.keypair().unwrap(), payer.keypair().unwrap()],
+                recent_blockhash,
+            )
             .unwrap();
 
         let result_signature = submit_transaction(&ctx.solana_client, init_escrow_tx).await;
@@ -266,9 +259,9 @@ mod tests {
 
     async fn init_nft_data(
         ctx: &Context,
-        payer: &Keypair,
+        payer: &Wallet,
         asset: &Pubkey,
-        collection: &Keypair,
+        collection: &Wallet,
         token: &Pubkey,
         fee_wallet: &Pubkey,
         name: String,
@@ -310,22 +303,17 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(
-            ctx,
-            &mut init_nft_data_tx,
-            &[payer, payer],
-            recent_blockhash,
-        )
-        .await
-        .unwrap();
+        init_nft_data_tx
+            .try_sign(&[payer.keypair().unwrap()], recent_blockhash)
+            .unwrap();
 
         submit_transaction(&ctx.solana_client, init_nft_data_tx).await
     }
 
     async fn setup(
         ctx: &Context,
-        payer: &Keypair,
-        collection: &Keypair,
+        payer: &Wallet,
+        collection: &Wallet,
         token: &Pubkey,
         fee_wallet: &Pubkey,
         escrow_name: String,
@@ -417,11 +405,11 @@ mod tests {
     async fn test_run() {
         let ctx = Context::default();
 
-        let fee_payer = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ");
+        let fee_payer = Wallet::Keypair(Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ"));
         let fee_token_decimals = 9_u8;
-        let collection = Keypair::new();
+        let collection = Wallet::Keypair(Keypair::new());
         let token = solana_sdk::pubkey!("AdaQ1MKbeKDyXCSnuCtqs5MW9FaY1UMGtpCGbZnpbTbj");
-        let fee_wallet = Keypair::new().pubkey();
+        let fee_wallet = Wallet::Keypair(Keypair::new());
         let escrow_name = String::from("Escrow Name");
         let name = String::from("mock_nft_name");
         let uri = String::from("https://base.spaceoperator.com/storage/v1/object/public/blings_gg_nft/asset_metadata.json");
@@ -437,7 +425,7 @@ mod tests {
             &fee_payer,
             &collection,
             &token,
-            &fee_wallet,
+            &fee_wallet.pubkey(),
             escrow_name.clone(),
             name.clone(),
             uri.clone(),
@@ -454,13 +442,13 @@ mod tests {
         let output = run(
             ctx,
             super::Input {
-                fee_payer: fee_payer.clone_keypair(),
+                fee_payer: fee_payer.clone(),
                 fee_token_decimals,
-                authority: fee_payer.clone_keypair(),
+                authority: fee_payer.clone(),
                 collection: collection.pubkey(),
                 token,
                 asset,
-                fee_location: fee_wallet,
+                fee_location: fee_wallet.pubkey(),
                 name: Some(name),
                 uri: Some(uri),
                 max: Some(max),

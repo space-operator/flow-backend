@@ -1,5 +1,5 @@
 use crate::{prelude::*, utils::ui_amount_to_amount};
-use flow_lib::{command::prelude::*, solana::KeypairExt};
+use flow_lib::{command::prelude::*};
 use mpl_hybrid::instructions::InitEscrowV1Builder;
 
 const NAME: &str = "init_escrow";
@@ -16,12 +16,10 @@ fn build() -> BuildResult {
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Input {
-    #[serde_as(as = "AsKeypair")]
-    fee_payer: Keypair,
+    fee_payer: Wallet,
     fee_token_decimals: u8,
 
-    #[serde_as(as = "AsKeypair")]
-    authority: Keypair,
+    authority: Wallet,
     #[serde_as(as = "AsPubkey")]
     collection: Pubkey,
     #[serde_as(as = "AsPubkey")]
@@ -91,11 +89,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ix = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer.clone_keypair(),
-            input.authority.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.fee_payer, input.authority].into(),
         instructions: [init_escrow_ix].into(),
     };
 
@@ -115,8 +109,8 @@ mod tests {
 
     async fn create_mock_collection(
         ctx: &Context,
-        collection: &Keypair,
-        payer: &Keypair,
+        collection: Wallet,
+        payer: Wallet,
         name: String,
         uri: String,
     ) {
@@ -133,14 +127,12 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(
-            ctx,
-            &mut create_collection_tx,
-            &[payer, collection],
-            recent_blockhash,
-        )
-        .await
-        .unwrap();
+        create_collection_tx
+            .try_sign(
+                &[payer.keypair().unwrap(), collection.keypair().unwrap()],
+                recent_blockhash,
+            )
+            .unwrap();
 
         let create_collection_signature =
             submit_transaction(&ctx.solana_client, create_collection_tx)
@@ -160,7 +152,7 @@ mod tests {
         let ctx = Context::default();
 
         // setup fee_payer
-        let fee_payer = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ");
+        let fee_payer = Wallet::Keypair(Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ"));
         let balance = ctx
             .solana_client
             .get_balance(&fee_payer.pubkey())
@@ -176,11 +168,11 @@ mod tests {
         }
 
         let token = solana_sdk::pubkey!("AdaQ1MKbeKDyXCSnuCtqs5MW9FaY1UMGtpCGbZnpbTbj");
-        let collection = Keypair::new();
+        let collection = Wallet::Keypair(Keypair::new());
         create_mock_collection(
             &ctx,
-            &collection,
-            &fee_payer,
+            collection.clone(),
+            fee_payer.clone(),
             String::from("Mock Collection"),
             String::from("https://example.com"),
         )
@@ -188,8 +180,8 @@ mod tests {
 
         // setup SUT
         let fee_token_decimals = 9_u8;
-        let authority = fee_payer.clone_keypair();
-        let fee_wallet = Keypair::new().pubkey();
+        let authority = fee_payer.clone();
+        let fee_wallet = Wallet::Keypair(Keypair::new());
         let name = String::from("Escrow Name");
         let uri = String::from("https://base.spaceoperator.com/storage/v1/object/public/blings_gg_nft/asset_metadata.json");
         let max = 999_u64;
@@ -200,12 +192,12 @@ mod tests {
         let output = run(
             ctx,
             super::Input {
-                fee_payer,
+                fee_payer: fee_payer.clone(),
                 fee_token_decimals,
-                authority,
+                authority: authority.clone(),
                 collection: collection.pubkey(),
                 token,
-                fee_location: fee_wallet,
+                fee_location: fee_wallet.pubkey(),
                 name,
                 uri,
                 max,

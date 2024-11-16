@@ -16,12 +16,10 @@ fn build() -> BuildResult {
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Input {
-    #[serde_as(as = "AsKeypair")]
-    fee_payer: Keypair,
+    fee_payer: Wallet,
 
     // accounts
-    #[serde_as(as = "AsKeypair")]
-    authority: Keypair,
+    authority: Wallet,
 
     #[serde(default = "value::default::bool_true")]
     submit: bool,
@@ -51,11 +49,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ix = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer.clone_keypair(),
-            input.authority.clone_keypair(),
-        ]
-        .into(),
+        signers: [input.fee_payer, input.authority].into(),
         instructions: [init_escrow_v2_ix].into(),
     };
 
@@ -72,7 +66,7 @@ mod tests {
 
     async fn transfer_sol(
         ctx: &Context,
-        from_pubkey: &Keypair,
+        from_pubkey: &Wallet,
         to_pubkey: &Pubkey,
         amount: Decimal,
     ) -> crate::Result<Signature> {
@@ -87,8 +81,8 @@ mod tests {
                 .await
                 .unwrap();
 
-        try_sign_wallet(ctx, &mut transfer_sol_tx, &[from_pubkey], recent_blockhash)
-            .await
+        transfer_sol_tx
+            .try_sign(&[from_pubkey.keypair().unwrap()], recent_blockhash)
             .unwrap();
 
         submit_transaction(&ctx.solana_client, transfer_sol_tx).await
@@ -103,13 +97,13 @@ mod tests {
     async fn test_run() {
         let ctx = Context::default();
 
-        let fee_payer = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ");
-        let authority = Keypair::new();
+        let fee_payer = Wallet::Keypair(Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ"));
+        let authority = Wallet::Keypair(Keypair::new());
 
         let transfer_sol_signature = transfer_sol(
             &ctx,
-            &fee_payer.clone_keypair(),
-            &authority.clone_keypair().pubkey(),
+            &fee_payer,
+            &authority.pubkey(),
             rust_decimal_macros::dec!(0.03),
         )
         .await
@@ -120,8 +114,8 @@ mod tests {
         let output = run(
             ctx,
             super::Input {
-                fee_payer: fee_payer.clone_keypair(),
-                authority: authority.clone_keypair(),
+                fee_payer,
+                authority,
                 submit: true,
             },
         )
