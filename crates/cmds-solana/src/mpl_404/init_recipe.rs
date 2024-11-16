@@ -64,6 +64,8 @@ pub struct Output {
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     tracing::info!("input: {:?}", input);
 
+    let sol_token_decimals = 9;
+
     let (recipe, _bump) = solana_sdk::pubkey::Pubkey::find_program_address(
         &[b"recipe", input.collection.as_ref()],
         &mpl_hybrid::ID,
@@ -96,11 +98,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         )?)
         .sol_fee_amount_capture(ui_amount_to_amount(
             input.sol_fee_amount_capture,
-            input.fee_token_decimals,
+            sol_token_decimals,
         )?)
         .sol_fee_amount_release(ui_amount_to_amount(
             input.sol_fee_amount_release,
-            input.fee_token_decimals,
+            sol_token_decimals,
         )?)
         .path(input.path)
         .associated_token_program(spl_associated_token_account::id())
@@ -108,7 +110,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ix = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer].into(),
+        signers: [input.fee_payer, input.authority].into(),
         instructions: [init_recipe_ix].into(),
     };
 
