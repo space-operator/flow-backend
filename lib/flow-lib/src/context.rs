@@ -35,6 +35,8 @@ pub mod env {
     pub const TX_COMMITMENT_LEVEL: &str = "TX_COMMITMENT_LEVEL";
     pub const WAIT_COMMITMENT_LEVEL: &str = "WAIT_COMMITMENT_LEVEL";
     pub const EXECUTE_ON: &str = "EXECUTE_ON";
+    pub const DEVNET_LOOKUP_TABLE: &str = "DEVNET_LOOKUP_TABLE";
+    pub const MAINNET_LOOKUP_TABLE: &str = "MAINNET_LOOKUP_TABLE";
 }
 
 /// Get user's JWT, require
