@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use super::Error;
 use crate::context::signer::Presigner;
 use anyhow::{anyhow, bail};

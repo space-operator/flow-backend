@@ -85,7 +85,6 @@ pub async fn get_decimals(client: &RpcClient, mint_account: Pubkey) -> crate::Re
 #[cfg(test)]
 pub mod tests {
     use crate::prelude::*;
-    use cmds_std as _;
 
     #[test]
     fn test_name_unique() {
@@ -98,12 +97,5 @@ pub mod tests {
             }
         }
         assert!(!dup);
-    }
-
-    #[test]
-    fn test_commands() {
-        let c = flow::context::CommandFactory::new();
-        let keys = c.natives.keys().collect::<Vec<_>>();
-        dbg!(keys);
     }
 }

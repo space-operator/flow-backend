@@ -12,12 +12,10 @@ use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv, DisplayFromStr};
 use solana_client::{nonblocking::rpc_client::RpcClient, rpc_config::RpcSendTransactionConfig};
 use solana_sdk::{
-    address_lookup_table::AddressLookupTableAccount,
     commitment_config::{CommitmentConfig, CommitmentLevel},
     compute_budget::{self, ComputeBudgetInstruction},
     instruction::{AccountMeta, Instruction},
     message::{v0, VersionedMessage},
-    pubkey,
     signature::Presigner as SdkPresigner,
     signer::{Signer, SignerError},
     signers::Signers,
@@ -1104,7 +1102,7 @@ mod tests {
         SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
     use base64::prelude::*;
-    use solana_sdk::{message::v0, pubkey, system_instruction::transfer};
+    use solana_sdk::{pubkey, system_instruction::transfer};
 
     #[test]
     fn test_wallet_serde() {
@@ -1183,30 +1181,14 @@ mod tests {
             signers: [from.clone_keypair().into()].into(),
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
         };
-        let (_msg, inserted) = ins
-            .build_message(&rpc, &<_>::default(), CommitmentLevel::Confirmed)
+        let inserted = ins
+            .insert_priority_fee(&rpc, &<_>::default())
+            .await
+            .unwrap();
+        ins.build_message(&rpc, &<_>::default(), CommitmentLevel::Confirmed)
             .await
             .unwrap();
         assert_eq!(inserted, 2);
-
-        let mut ins = Instructions {
-            fee_payer: from.pubkey(),
-            signers: [from.clone_keypair().into()].into(),
-            instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
-        };
-        let (msg, inserted) = ins
-            .build_message(
-                &rpc,
-                &ExecutionConfig {
-                    priority_fee: InsertionBehavior::No,
-                    ..<_>::default()
-                },
-                CommitmentLevel::Confirmed,
-            )
-            .await
-            .unwrap();
-        assert_eq!(inserted, 1);
-        dbg!(msg);
     }
 
     #[test]
