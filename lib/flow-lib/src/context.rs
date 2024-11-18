@@ -375,6 +375,7 @@ pub mod execute {
     ) -> Svc {
         let rpc = ctx.solana_client.clone();
         let signer = ctx.signer.clone();
+        let network = ctx.cfg.solana_client.cluster;
         let handle = move |req: Request| {
             let rpc = rpc.clone();
             let signer = signer.clone();
@@ -383,7 +384,7 @@ pub mod execute {
                 Ok(Response {
                     signature: Some(
                         req.instructions
-                            .execute(&rpc, signer, flow_run_id, config)
+                            .execute(&rpc, network, signer, flow_run_id, config)
                             .await?,
                     ),
                 })

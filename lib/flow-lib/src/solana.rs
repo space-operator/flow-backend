@@ -417,7 +417,8 @@ impl WalletOrPubkey {
 pub struct ExecutionConfig {
     pub overwrite_feepayer: Option<WalletOrPubkey>,
 
-    pub lookup_table: Option<Pubkey>,
+    pub devnet_lookup_table: Option<Pubkey>,
+    pub mainnet_lookup_table: Option<Pubkey>,
 
     #[serde(default)]
     pub compute_budget: InsertionBehavior,
@@ -460,13 +461,22 @@ impl ExecutionConfig {
             .collect::<value::Map>();
         value::from_map(map)
     }
+
+    pub fn lookup_table(&self, network: SolanaNet) -> Option<Pubkey> {
+        match network {
+            SolanaNet::Devnet => self.devnet_lookup_table,
+            SolanaNet::Testnet => None,
+            SolanaNet::Mainnet => self.mainnet_lookup_table,
+        }
+    }
 }
 
 impl Default for ExecutionConfig {
     fn default() -> Self {
         Self {
             overwrite_feepayer: None,
-            lookup_table: None,
+            devnet_lookup_table: None,
+            mainnet_lookup_table: None,
             compute_budget: InsertionBehavior::default(),
             fallback_compute_budget: None,
             priority_fee: InsertionBehavior::default(),
@@ -661,10 +671,11 @@ impl Instructions {
     async fn insert_priority_fee(
         &mut self,
         rpc: &RpcClient,
+        network: SolanaNet,
         config: &ExecutionConfig,
     ) -> Result<usize, Error> {
         let message = self
-            .build_message(rpc, config, config.simulation_commitment_level)
+            .build_message(rpc, network, config, config.simulation_commitment_level)
             .await?;
         let count = self.instructions.len();
 
@@ -740,10 +751,11 @@ impl Instructions {
     async fn build_message(
         &self,
         rpc: &RpcClient,
+        network: SolanaNet,
         config: &ExecutionConfig,
         commitment_level: CommitmentLevel,
     ) -> Result<v0::Message, Error> {
-        let lookups = if let Some(pubkey) = config.lookup_table.as_ref() {
+        let lookups = if let Some(pubkey) = config.lookup_table(network).as_ref() {
             [fetch_address_lookup_table(rpc, pubkey).await?].to_vec()
         } else {
             Vec::new()
@@ -766,11 +778,12 @@ impl Instructions {
         action_signer: Pubkey,
         action_identity: Option<Pubkey>,
         rpc: &RpcClient,
+        network: SolanaNet,
         mut signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<(PartialVersionedTransaction, usize, Option<String>), Error> {
-        let inserted = self.insert_priority_fee(rpc, config).await?;
+        let inserted = self.insert_priority_fee(rpc, network, config).await?;
         let memo = if let Some(action_identity) = action_identity {
             if !self
                 .instructions
@@ -808,7 +821,7 @@ impl Instructions {
         };
 
         let message = VersionedMessage::V0(
-            self.build_message(rpc, config, config.tx_commitment_level)
+            self.build_message(rpc, network, config, config.tx_commitment_level)
                 .await?,
         );
 
@@ -876,13 +889,14 @@ impl Instructions {
     async fn build_and_sign_tx(
         mut self,
         rpc: &RpcClient,
+        network: SolanaNet,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<(VersionedTransaction, usize), Error> {
-        let inserted = self.insert_priority_fee(rpc, config).await?;
+        let inserted = self.insert_priority_fee(rpc, network, config).await?;
         let mut message = self
-            .build_message(rpc, config, config.tx_commitment_level)
+            .build_message(rpc, network, config, config.tx_commitment_level)
             .await?;
         let mut data: Bytes = message.serialize().into();
         let fee_payer_signature = {
@@ -994,12 +1008,13 @@ impl Instructions {
     async fn execute_current_machine(
         self,
         rpc: &RpcClient,
+        network: SolanaNet,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<Signature, Error> {
         let (tx, inserted) = self
-            .build_and_sign_tx(rpc, signer, flow_run_id, config)
+            .build_and_sign_tx(rpc, network, signer, flow_run_id, config)
             .await?;
 
         let signature = rpc
@@ -1029,6 +1044,7 @@ impl Instructions {
     async fn execute_solana_action(
         self,
         rpc: &RpcClient,
+        network: SolanaNet,
         mut signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
@@ -1039,6 +1055,7 @@ impl Instructions {
                 action_config.action_signer,
                 Some(action_config.action_identity),
                 rpc,
+                network,
                 signer.clone(),
                 flow_run_id,
                 config,
@@ -1076,18 +1093,26 @@ impl Instructions {
     pub async fn execute(
         self,
         rpc: &RpcClient,
+        network: SolanaNet,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: ExecutionConfig,
     ) -> Result<Signature, Error> {
         match &config.execute_on {
             ExecuteOn::CurrentMachine => {
-                self.execute_current_machine(rpc, signer, flow_run_id, &config)
+                self.execute_current_machine(rpc, network, signer, flow_run_id, &config)
                     .await
             }
             ExecuteOn::SolanaAction(action_config) => {
-                self.execute_solana_action(rpc, signer, flow_run_id, &config, action_config)
-                    .await
+                self.execute_solana_action(
+                    rpc,
+                    network,
+                    signer,
+                    flow_run_id,
+                    &config,
+                    action_config,
+                )
+                .await
             }
         }
     }
