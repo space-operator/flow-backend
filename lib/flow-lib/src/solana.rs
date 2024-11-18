@@ -749,15 +749,14 @@ impl Instructions {
             Vec::new()
         };
 
-        let message = v0::Message::try_compile(
-            &self.fee_payer,
-            &self.instructions,
-            &lookups,
-            rpc.get_latest_blockhash_with_commitment(commitment(commitment_level))
-                .await
-                .map_err(|error| Error::solana(error, 0))? // TODO: better handling of "inserted"
-                .0,
-        )?;
+        let blockhash = rpc
+            .get_latest_blockhash_with_commitment(commitment(commitment_level))
+            .await
+            .map_err(|error| Error::solana(error, 0))? // TODO: better handling of "inserted"
+            .0;
+
+        let message =
+            v0::Message::try_compile(&self.fee_payer, &self.instructions, &lookups, blockhash)?;
 
         Ok(message)
     }
