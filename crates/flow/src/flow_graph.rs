@@ -1122,11 +1122,13 @@ impl FlowGraph {
                     } else {
                         tracing::info!("executing instructions");
                         let config = self.tx_exec_config.clone();
+                        let network = self.ctx.cfg.solana_client.cluster;
                         s.stop
                             .race(
                                 std::pin::pin!(s.stop_shared.race(
                                     std::pin::pin!(ins.execute(
                                         &self.ctx.solana_client,
+                                        network,
                                         self.ctx.signer.clone(),
                                         Some(s.flow_run_id),
                                         config,
@@ -1458,6 +1460,7 @@ impl FlowGraph {
                         fee_payer,
                         self.action_identity,
                         &self.ctx.solana_client,
+                        self.ctx.cfg.solana_client.cluster,
                         self.ctx.signer.clone(),
                         Some(s.flow_run_id),
                         &self.tx_exec_config,
@@ -1465,7 +1468,7 @@ impl FlowGraph {
                     .await
                 {
                     Ok(tx) => {
-                        let tx_bytes = bincode::serialize(&tx).unwrap();
+                        let tx_bytes = tx.0.serialize();
                         let tx_base64 = BASE64_STANDARD.encode(&tx_bytes);
                         s.result
                             .output

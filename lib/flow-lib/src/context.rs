@@ -35,6 +35,8 @@ pub mod env {
     pub const TX_COMMITMENT_LEVEL: &str = "TX_COMMITMENT_LEVEL";
     pub const WAIT_COMMITMENT_LEVEL: &str = "WAIT_COMMITMENT_LEVEL";
     pub const EXECUTE_ON: &str = "EXECUTE_ON";
+    pub const DEVNET_LOOKUP_TABLE: &str = "DEVNET_LOOKUP_TABLE";
+    pub const MAINNET_LOOKUP_TABLE: &str = "MAINNET_LOOKUP_TABLE";
 }
 
 /// Get user's JWT, require
@@ -141,7 +143,9 @@ pub mod signer {
     use chrono::{DateTime, Utc};
     use serde::{Deserialize, Serialize};
     use serde_with::{base64::Base64, serde_as, DisplayFromStr, DurationSecondsWithFrac};
-    use solana_sdk::{pubkey::Pubkey, signature::Signature};
+    use solana_sdk::{
+        pubkey::Pubkey, signature::Signature, signer::presigner::Presigner as SdkPresigner,
+    };
     use std::time::Duration;
     use thiserror::Error as ThisError;
 
@@ -170,6 +174,12 @@ pub mod signer {
         pub pubkey: Pubkey,
         #[serde_as(as = "DisplayFromStr")]
         pub signature: Signature,
+    }
+
+    impl From<Presigner> for SdkPresigner {
+        fn from(value: Presigner) -> Self {
+            SdkPresigner::new(&value.pubkey, &value.signature)
+        }
     }
 
     #[serde_as]
@@ -217,7 +227,10 @@ pub mod execute {
     use serde::{Deserialize, Serialize};
     use serde_with::{base64::Base64, serde_as, DisplayFromStr};
     use solana_client::client_error::ClientError;
-    use solana_sdk::{signature::Signature, signer::SignerError};
+    use solana_sdk::{
+        instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
+        signature::Signature, signer::SignerError,
+    };
     use std::sync::Arc;
     use thiserror::Error as ThisError;
 
@@ -282,6 +295,12 @@ pub mod execute {
         #[error(transparent)]
         Signer(#[from] Arc<SignerError>),
         #[error(transparent)]
+        CompileError(#[from] Arc<CompileError>),
+        #[error(transparent)]
+        InstructionError(#[from] Arc<InstructionError>),
+        #[error(transparent)]
+        SanitizeError(#[from] Arc<SanitizeError>),
+        #[error(transparent)]
         Worker(Arc<BoxError>),
         #[error(transparent)]
         MailBox(#[from] actix::MailboxError),
@@ -318,6 +337,24 @@ pub mod execute {
         }
     }
 
+    impl From<CompileError> for Error {
+        fn from(value: CompileError) -> Self {
+            Error::CompileError(Arc::new(value))
+        }
+    }
+
+    impl From<InstructionError> for Error {
+        fn from(value: InstructionError) -> Self {
+            Error::InstructionError(Arc::new(value))
+        }
+    }
+
+    impl From<SanitizeError> for Error {
+        fn from(value: SanitizeError) -> Self {
+            Error::SanitizeError(Arc::new(value))
+        }
+    }
+
     impl Error {
         pub fn worker(e: BoxError) -> Self {
             Error::Worker(Arc::new(e))
@@ -340,6 +377,7 @@ pub mod execute {
     ) -> Svc {
         let rpc = ctx.solana_client.clone();
         let signer = ctx.signer.clone();
+        let network = ctx.cfg.solana_client.cluster;
         let handle = move |req: Request| {
             let rpc = rpc.clone();
             let signer = signer.clone();
@@ -348,7 +386,7 @@ pub mod execute {
                 Ok(Response {
                     signature: Some(
                         req.instructions
-                            .execute(&rpc, signer, flow_run_id, config)
+                            .execute(&rpc, network, signer, flow_run_id, config)
                             .await?,
                     ),
                 })

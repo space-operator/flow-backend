@@ -8,7 +8,7 @@ dotenv.loadSync({
 });
 
 const c = new client.Client({
-  // host: "http://localhost:8080",
+  host: "http://localhost:8080",
 });
 
 function keypair_from_env() {
@@ -31,46 +31,21 @@ const run = async () => {
     inputs: new Value({
       sender: keypair.publicKey,
     }).M!,
-    output_instructions: true,
+    output_instructions: false,
     fees: [["HuktZqYAXSeMz5hMtdEnvsJAXtapg24zXU2tkDnGgaSZ", 1000]],
   });
 
-  // const req = await c.getSignatureRequest(result.flow_run_id, result.token);
+  const req = await c.getSignatureRequest(result.flow_run_id, result.token);
 
-  // const tx = req.buildTransaction();
-
-  // tx.sign(keypair);
-
-  // const sigResult = await c.submitSignature({
-  //   id: req.id,
-  //   signature: bs58.encodeBase58(tx.signature!),
-  // });
-
-  // console.log(sigResult);
+  await c.signAndSubmitSignature(req, keypair.publicKey, async (tx) => {
+    tx.sign([keypair]);
+    return tx;
+  });
 
   const output = await c.getFlowOutput(result.flow_run_id, result.token);
   return output;
 };
 
-const res = await Promise.all([
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-  run(),
-]);
+const res = await Promise.all([run()]);
 
 console.log(res);

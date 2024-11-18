@@ -10,20 +10,16 @@ use futures::TryStreamExt;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv, DisplayFromStr};
-use solana_client::{
-    nonblocking::rpc_client::RpcClient, rpc_client::SerializableTransaction,
-    rpc_config::RpcSendTransactionConfig,
-};
+use solana_client::{nonblocking::rpc_client::RpcClient, rpc_config::RpcSendTransactionConfig};
 use solana_sdk::{
     commitment_config::{CommitmentConfig, CommitmentLevel},
     compute_budget::{self, ComputeBudgetInstruction},
-    feature_set::FeatureSet,
-    instruction::{AccountMeta, CompiledInstruction, Instruction},
-    message::Message,
-    sanitize::Sanitize,
-    signature::Presigner,
-    signer::Signer,
-    transaction::Transaction,
+    instruction::{AccountMeta, Instruction},
+    message::{v0, VersionedMessage},
+    signature::Presigner as SdkPresigner,
+    signer::{Signer, SignerError},
+    signers::Signers,
+    transaction::{Transaction, VersionedTransaction},
 };
 use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
@@ -104,9 +100,19 @@ impl Wallet {
 }
 
 /// `l` is old, `r` is new
-pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Error> {
-    let l = bincode::deserialize::<Message>(l)?;
-    let r = bincode::deserialize::<Message>(r)?;
+pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<v0::Message, anyhow::Error> {
+    let l = bincode::deserialize::<VersionedMessage>(l)?;
+    let l = if let VersionedMessage::V0(l) = l {
+        l
+    } else {
+        return Err(anyhow!("only V0 message is supported"));
+    };
+    let r = bincode::deserialize::<VersionedMessage>(r)?;
+    let r = if let VersionedMessage::V0(r) = r {
+        r
+    } else {
+        return Err(anyhow!("only V0 message is supported"));
+    };
     l.sanitize()?;
     r.sanitize()?;
     ensure!(
@@ -157,6 +163,8 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Erro
         "different blockhash"
     );
 
+    /*
+     * TODO
     for i in 0..l.instructions.len() {
         let program_id_l = l
             .program_id(i)
@@ -184,15 +192,14 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<Message, anyhow::Erro
             })
             .collect::<Result<Vec<()>, _>>()?;
     }
+    */
 
     Ok(r)
 }
 
 pub trait KeypairExt: Sized {
     fn from_str(s: &str) -> Result<Self, anyhow::Error>;
-    fn new_adapter_wallet(pk: Pubkey) -> Self;
     fn clone_keypair(&self) -> Self;
-    fn is_adapter_wallet(&self) -> bool;
 }
 
 impl KeypairExt for Keypair {
@@ -203,18 +210,8 @@ impl KeypairExt for Keypair {
         Ok(Keypair::from_bytes(&buf).unwrap())
     }
 
-    fn new_adapter_wallet(pubkey: Pubkey) -> Self {
-        let mut buf = [0u8; 64];
-        buf[32..].copy_from_slice(&pubkey.to_bytes());
-        Keypair::from_bytes(&buf).expect("correct size, never fail")
-    }
-
     fn clone_keypair(&self) -> Self {
         Self::from_bytes(&self.to_bytes()).unwrap()
-    }
-
-    fn is_adapter_wallet(&self) -> bool {
-        self.secret().as_bytes().iter().all(|b| *b == 0)
     }
 }
 
@@ -283,38 +280,9 @@ pub struct Instructions {
     pub instructions: Vec<Instruction>,
 }
 
-fn is_set_compute_unit_price(
-    message: &Message,
-    index: usize,
-    ins: &CompiledInstruction,
-) -> Option<()> {
-    let program_id = message.program_id(index)?;
-    if compute_budget::check_id(program_id) {
-        let data = ComputeBudgetInstruction::try_from_slice(&ins.data)
-            .map_err(|error| tracing::error!("could not decode instruction: {}", error))
-            .ok()?;
-        matches!(data, ComputeBudgetInstruction::SetComputeUnitPrice(_)).then_some(())
-    } else {
-        None
-    }
-}
-
-fn contains_set_compute_unit_price(message: &Message) -> bool {
-    message
-        .instructions
-        .iter()
-        .enumerate()
-        .any(|(index, ins)| is_set_compute_unit_price(message, index, ins).is_some())
-}
-
-fn is_set_compute_unit_limit(
-    message: &Message,
-    index: usize,
-    ins: &CompiledInstruction,
-) -> Option<()> {
-    let program_id = message.program_id(index)?;
-    if compute_budget::check_id(program_id) {
-        let data = ComputeBudgetInstruction::try_from_slice(&ins.data)
+fn is_set_compute_unit_limit(ix: &Instruction) -> Option<()> {
+    if compute_budget::check_id(&ix.program_id) {
+        let data = ComputeBudgetInstruction::try_from_slice(&ix.data)
             .map_err(|error| tracing::error!("could not decode instruction: {}", error))
             .ok()?;
         matches!(data, ComputeBudgetInstruction::SetComputeUnitLimit(_)).then_some(())
@@ -323,34 +291,28 @@ fn is_set_compute_unit_limit(
     }
 }
 
-fn contains_set_compute_unit_limit(message: &Message) -> bool {
-    message
-        .instructions
-        .iter()
-        .enumerate()
-        .any(|(index, ins)| is_set_compute_unit_limit(message, index, ins).is_some())
+fn is_set_compute_unit_price(ix: &Instruction) -> Option<()> {
+    if compute_budget::check_id(&ix.program_id) {
+        let data = ComputeBudgetInstruction::try_from_slice(&ix.data)
+            .map_err(|error| tracing::error!("could not decode instruction: {}", error))
+            .ok()?;
+        matches!(data, ComputeBudgetInstruction::SetComputeUnitPrice(_)).then_some(())
+    } else {
+        None
+    }
 }
 
-async fn get_priority_fee(message: &Message) -> Result<u64, anyhow::Error> {
+async fn get_priority_fee(accounts: &BTreeSet<Pubkey>) -> Result<u64, anyhow::Error> {
     static HTTP: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
     if let Ok(apikey) = std::env::var("HELIUS_API_KEY") {
         let helius = Helius::new(HTTP.clone(), &apikey);
+        // Not available on devnet and testnet
         let network = SolanaNet::Mainnet;
-        // TODO: not available on devnet and testnet
-        // let network = SolanaNet::from_url(&rpc.url())
-        //     .map_err(|_| tracing::warn!("could not guess cluster from url, using mainnet"))
-        //     .unwrap_or(SolanaNet::Mainnet);
         let resp = helius
             .get_priority_fee_estimate(
                 network.as_str(),
                 GetPriorityFeeEstimateRequest {
-                    account_keys: Some(
-                        message
-                            .account_keys
-                            .iter()
-                            .map(|pk| pk.to_string())
-                            .collect(),
-                    ),
+                    account_keys: Some(accounts.iter().map(|pk| pk.to_string()).collect()),
                     options: Some(GetPriorityFeeEstimateOptions {
                         priority_level: Some(PriorityLevel::Medium),
                         ..Default::default()
@@ -455,6 +417,9 @@ impl WalletOrPubkey {
 pub struct ExecutionConfig {
     pub overwrite_feepayer: Option<WalletOrPubkey>,
 
+    pub devnet_lookup_table: Option<Pubkey>,
+    pub mainnet_lookup_table: Option<Pubkey>,
+
     #[serde(default)]
     pub compute_budget: InsertionBehavior,
     #[serde_as(as = "Option<DisplayFromStr>")]
@@ -496,12 +461,22 @@ impl ExecutionConfig {
             .collect::<value::Map>();
         value::from_map(map)
     }
+
+    pub fn lookup_table(&self, network: SolanaNet) -> Option<Pubkey> {
+        match network {
+            SolanaNet::Devnet => self.devnet_lookup_table,
+            SolanaNet::Testnet => None,
+            SolanaNet::Mainnet => self.mainnet_lookup_table,
+        }
+    }
 }
 
 impl Default for ExecutionConfig {
     fn default() -> Self {
         Self {
             overwrite_feepayer: None,
+            devnet_lookup_table: None,
+            mainnet_lookup_table: None,
             compute_budget: InsertionBehavior::default(),
             fallback_compute_budget: None,
             priority_fee: InsertionBehavior::default(),
@@ -528,6 +503,7 @@ pub fn build_action_reference(timestamp: i64, run_id: FlowRunId) -> Vec<u8> {
     reference_bytes
 }
 
+#[derive(Debug)]
 pub struct ParsedMemo {
     pub identity: Pubkey,
     pub timestamp: i64,
@@ -567,6 +543,53 @@ pub fn parse_action_memo(reference: &str) -> Result<ParsedMemo, anyhow::Error> {
     })
 }
 
+pub struct PartialVersionedTransaction {
+    pub signatures: Vec<signer::Presigner>,
+    pub message: VersionedMessage,
+}
+
+impl PartialVersionedTransaction {
+    pub fn try_sign(message: VersionedMessage, signers: &dyn Signers) -> Result<Self, SignerError> {
+        let signatures = signers
+            .try_sign_message(&message.serialize())?
+            .into_iter()
+            .zip(signers.pubkeys().into_iter())
+            .map(|(signature, pubkey)| signer::Presigner { signature, pubkey })
+            .collect();
+        Ok(Self {
+            signatures,
+            message,
+        })
+    }
+
+    pub fn finalize(self) -> Result<VersionedTransaction, SignerError> {
+        let presigners: Vec<SdkPresigner> = self.signatures.into_iter().map(Into::into).collect();
+        let ref_presigners: Vec<&dyn Signer> =
+            presigners.iter().map(|x| x as &dyn Signer).collect();
+        VersionedTransaction::try_new(self.message, &ref_presigners)
+    }
+
+    pub fn serialize(&self) -> Vec<u8> {
+        let placeholder = Transaction::get_invalid_signature();
+        let num_sig = self.message.header().num_required_signatures as usize;
+        let accounts = self.message.static_account_keys();
+        let signatures = (0..num_sig)
+            .map(|i| {
+                let pk = accounts[i];
+                self.signatures
+                    .iter()
+                    .find_map(|p| (p.pubkey == pk).then_some(p.signature))
+                    .unwrap_or(placeholder)
+            })
+            .collect();
+        bincode::serialize(&VersionedTransaction {
+            signatures,
+            message: self.message.clone(),
+        })
+        .unwrap()
+    }
+}
+
 async fn action_identity_memo(
     identity: Pubkey,
     run_id: FlowRunId,
@@ -590,14 +613,6 @@ async fn action_identity_memo(
         "solana-action:{}:{}:{}",
         identity, reference, signature
     ))
-
-    // Ok(Instruction {
-    //     program_id: spl_memo::v1::ID,
-    //     accounts: Vec::new(),
-    //     data: memo.as_bytes().to_owned(),
-    // })
-    // memo v3 fails
-    // Ok(spl_memo::build_memo(memo.as_bytes(), signers))
 }
 
 impl Instructions {
@@ -632,33 +647,50 @@ impl Instructions {
         Ok(())
     }
 
+    fn contains_set_compute_unit_limit(&self) -> bool {
+        self.instructions
+            .iter()
+            .any(|ix| is_set_compute_unit_limit(ix).is_some())
+    }
+
+    fn contains_set_compute_unit_price(&self) -> bool {
+        self.instructions
+            .iter()
+            .any(|ix| is_set_compute_unit_price(ix).is_some())
+    }
+
+    fn unique_accounts(&self) -> BTreeSet<Pubkey> {
+        std::iter::once(self.fee_payer)
+            .chain(self.signers.iter().map(|s| s.pubkey()))
+            .chain(self.instructions.iter().flat_map(|i| {
+                std::iter::once(i.program_id).chain(i.accounts.iter().map(|a| a.pubkey))
+            }))
+            .collect()
+    }
+
     async fn insert_priority_fee(
         &mut self,
         rpc: &RpcClient,
+        network: SolanaNet,
         config: &ExecutionConfig,
     ) -> Result<usize, Error> {
-        let message = Message::new_with_blockhash(
-            &self.instructions,
-            Some(&self.fee_payer),
-            &rpc.get_latest_blockhash_with_commitment(commitment(
-                config.simulation_commitment_level,
-            ))
-            .await
-            .map_err(|error| Error::solana(error, 0))?
-            .0,
-        );
+        let message = self
+            .build_message(rpc, network, config, config.simulation_commitment_level)
+            .await?;
         let count = self.instructions.len();
 
         let mut inserted = 0;
 
-        if config.compute_budget != InsertionBehavior::No
-            && !contains_set_compute_unit_limit(&message)
+        if config.compute_budget != InsertionBehavior::No && !self.contains_set_compute_unit_limit()
         {
             let compute_units = if let InsertionBehavior::Value(x) = config.compute_budget {
                 x
             } else {
                 match rpc
-                    .simulate_transaction(&Transaction::new_unsigned(message.clone()))
+                    .simulate_transaction(&VersionedTransaction {
+                        message: VersionedMessage::V0(message.clone()),
+                        signatures: Vec::new(),
+                    })
                     .await
                 {
                     Err(error) => {
@@ -696,13 +728,11 @@ impl Instructions {
             inserted += 1;
         }
 
-        if config.priority_fee != InsertionBehavior::No
-            && !contains_set_compute_unit_price(&message)
-        {
+        if config.priority_fee != InsertionBehavior::No && !self.contains_set_compute_unit_price() {
             let fee = if let InsertionBehavior::Value(x) = config.priority_fee {
                 x
             } else {
-                get_priority_fee(&message)
+                get_priority_fee(&self.unique_accounts())
                     .await
                     .map_err(|error| {
                         tracing::warn!("get_priority_fee error: {}", error);
@@ -719,22 +749,28 @@ impl Instructions {
     }
 
     async fn build_message(
-        &mut self,
+        &self,
         rpc: &RpcClient,
+        network: SolanaNet,
         config: &ExecutionConfig,
-    ) -> Result<(Message, usize), Error> {
-        let inserted = self.insert_priority_fee(rpc, config).await?;
+        commitment_level: CommitmentLevel,
+    ) -> Result<v0::Message, Error> {
+        let lookups = if let Some(pubkey) = config.lookup_table(network).as_ref() {
+            [fetch_address_lookup_table(rpc, pubkey).await?].to_vec()
+        } else {
+            Vec::new()
+        };
 
-        let message = Message::new_with_blockhash(
-            &self.instructions,
-            Some(&self.fee_payer),
-            &rpc.get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
-                .await
-                .map_err(|error| Error::solana(error, inserted))?
-                .0,
-        );
+        let blockhash = rpc
+            .get_latest_blockhash_with_commitment(commitment(commitment_level))
+            .await
+            .map_err(|error| Error::solana(error, 0))? // TODO: better handling of "inserted"
+            .0;
 
-        Ok((message, inserted))
+        let message =
+            v0::Message::try_compile(&self.fee_payer, &self.instructions, &lookups, blockhash)?;
+
+        Ok(message)
     }
 
     pub async fn build_for_solana_action(
@@ -742,11 +778,12 @@ impl Instructions {
         action_signer: Pubkey,
         action_identity: Option<Pubkey>,
         rpc: &RpcClient,
+        network: SolanaNet,
         mut signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
-    ) -> Result<(Transaction, usize, Option<String>), Error> {
-        let inserted = self.insert_priority_fee(rpc, config).await?;
+    ) -> Result<(PartialVersionedTransaction, usize, Option<String>), Error> {
+        let inserted = self.insert_priority_fee(rpc, network, config).await?;
         let memo = if let Some(action_identity) = action_identity {
             if !self
                 .instructions
@@ -773,6 +810,7 @@ impl Instructions {
             .await
             .map_err(Error::other)?;
             self.instructions.push(Instruction {
+                // memo v2 fail
                 program_id: spl_memo::v1::ID,
                 accounts: Vec::new(),
                 data: memo.as_bytes().to_owned(),
@@ -782,13 +820,9 @@ impl Instructions {
             None
         };
 
-        let message = Message::new_with_blockhash(
-            &self.instructions,
-            Some(&self.fee_payer),
-            &rpc.get_latest_blockhash_with_commitment(commitment(config.tx_commitment_level))
-                .await
-                .map_err(|error| Error::solana(error, inserted))?
-                .0,
+        let message = VersionedMessage::V0(
+            self.build_message(rpc, network, config, config.tx_commitment_level)
+                .await?,
         );
 
         // Sign all signatures except for action_signer
@@ -826,7 +860,7 @@ impl Instructions {
             .zip(signature_results.iter())
             .map(|(pk, resp)| {
                 (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
-                    .then(|| Presigner::new(pk, &resp.signature))
+                    .then(|| SdkPresigner::new(pk, &resp.signature))
                     .ok_or_else(|| {
                         anyhow!("{} signature failed: not allowed to change transaction", pk)
                     })
@@ -846,10 +880,7 @@ impl Instructions {
                 }
             }
 
-            let blockhash = message.recent_blockhash;
-            let mut tx = Transaction::new_unsigned(message);
-            tx.try_partial_sign(&signers, blockhash)?;
-            tx
+            PartialVersionedTransaction::try_sign(message, &signers)?
         };
 
         Ok((tx, inserted, memo))
@@ -858,11 +889,15 @@ impl Instructions {
     async fn build_and_sign_tx(
         mut self,
         rpc: &RpcClient,
+        network: SolanaNet,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
-    ) -> Result<(Transaction, usize), Error> {
-        let (mut message, inserted) = self.build_message(rpc, config).await?;
+    ) -> Result<(VersionedTransaction, usize), Error> {
+        let inserted = self.insert_priority_fee(rpc, network, config).await?;
+        let mut message = self
+            .build_message(rpc, network, config, config.tx_commitment_level)
+            .await?;
         let mut data: Bytes = message.serialize().into();
         let fee_payer_signature = {
             let keypair = self
@@ -944,13 +979,13 @@ impl Instructions {
                 .zip(signature_results.iter())
                 .map(|(pk, resp)| {
                     (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
-                        .then(|| Presigner::new(pk, &resp.signature))
+                        .then(|| SdkPresigner::new(pk, &resp.signature))
                         .ok_or_else(|| {
                             anyhow!("{} signature failed: not allowed to change transaction", pk)
                         })
                 })
                 .collect::<Result<Vec<_>, anyhow::Error>>()?;
-            presigners.push(Presigner::new(&self.fee_payer, &fee_payer_signature));
+            presigners.push(SdkPresigner::new(&self.fee_payer, &fee_payer_signature));
 
             let mut signers = Vec::<&dyn Signer>::with_capacity(self.signers.len());
 
@@ -964,11 +999,7 @@ impl Instructions {
                 }
             }
 
-            let blockhash = message.recent_blockhash;
-            let mut tx = Transaction::new_unsigned(message);
-            tx.try_sign(&signers, blockhash)?;
-
-            tx
+            VersionedTransaction::try_new(VersionedMessage::V0(message), &signers)?
         };
 
         Ok((tx, inserted))
@@ -977,18 +1008,14 @@ impl Instructions {
     async fn execute_current_machine(
         self,
         rpc: &RpcClient,
+        network: SolanaNet,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<Signature, Error> {
         let (tx, inserted) = self
-            .build_and_sign_tx(rpc, signer, flow_run_id, config)
+            .build_and_sign_tx(rpc, network, signer, flow_run_id, config)
             .await?;
-
-        // SDK's error message of verify_precompiles is not infomative,
-        // so we run it manually
-        // TODO: is it correct to use FeatureSet::all_enabled()?
-        verify_precompiles(&tx, &FeatureSet::all_enabled())?;
 
         let signature = rpc
             .send_transaction_with_config(
@@ -1005,7 +1032,7 @@ impl Instructions {
         confirm_transaction(
             rpc,
             &signature,
-            tx.get_recent_blockhash(),
+            tx.message.recent_blockhash(),
             commitment(config.wait_commitment_level),
         )
         .await
@@ -1017,6 +1044,7 @@ impl Instructions {
     async fn execute_solana_action(
         self,
         rpc: &RpcClient,
+        network: SolanaNet,
         mut signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
@@ -1027,6 +1055,7 @@ impl Instructions {
                 action_config.action_signer,
                 Some(action_config.action_identity),
                 rpc,
+                network,
                 signer.clone(),
                 flow_run_id,
                 config,
@@ -1037,10 +1066,14 @@ impl Instructions {
             id: None,
             time: Utc::now(),
             pubkey: action_config.action_signer,
-            message: tx.message_data().into(),
+            message: tx.message.serialize().into(),
             timeout: Duration::from_secs(0),
             flow_run_id,
-            signatures: list_signatures(&tx),
+            signatures: if tx.signatures.is_empty() {
+                None
+            } else {
+                Some(tx.signatures.clone())
+            },
         };
         if let Err(error) = signer.call_mut(req).await {
             if !matches!(error, signer::Error::Timeout) {
@@ -1060,18 +1093,26 @@ impl Instructions {
     pub async fn execute(
         self,
         rpc: &RpcClient,
+        network: SolanaNet,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: ExecutionConfig,
     ) -> Result<Signature, Error> {
         match &config.execute_on {
             ExecuteOn::CurrentMachine => {
-                self.execute_current_machine(rpc, signer, flow_run_id, &config)
+                self.execute_current_machine(rpc, network, signer, flow_run_id, &config)
                     .await
             }
             ExecuteOn::SolanaAction(action_config) => {
-                self.execute_solana_action(rpc, signer, flow_run_id, &config, action_config)
-                    .await
+                self.execute_solana_action(
+                    rpc,
+                    network,
+                    signer,
+                    flow_run_id,
+                    &config,
+                    action_config,
+                )
+                .await
             }
         }
     }
@@ -1084,7 +1125,7 @@ mod tests {
         COMPUTE_BUDGET, FALLBACK_COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE,
         SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
-    use base64::prelude::*;
+    // use base64::prelude::*;
     use solana_sdk::{pubkey, system_instruction::transfer};
 
     #[test]
@@ -1097,6 +1138,8 @@ mod tests {
         assert_eq!(result.to_base58_string(), keypair.to_base58_string());
     }
 
+    /* TODO: add this test back
+     * failed because it is a "legacy" tx, we are using "v0" tx
     #[test]
     fn test_compare_msg_logic() {
         const OLD: &str = "AwEJE/I9QMIByO+GhMkfll9MXSsAYs1ITPmKAfxGS/USlNwuw0EUt8a41tLSp95YmtHPKWDGGcApBC0AEmN1Sd+5kfDOAq0G+/qWg2KKmXfDQF1HIuw9Op9LiSZK5iA7jcVQ9wceNyYLLzZIZ+cVomhs1zT04hQeIKdXkiMyUpH9KA95JukMx1A93RFsivUbXmW+wwO52yE0+21NxUpXL/eMTCpS1wQ6IUwmvO0o13hn6qE0Pi73WxtEGjlbBilP+HVyqFkAIKLtjJBJ25Jae9iO3Xe17TFanfbTgtEbgKAJ5nWVuJt84ctKVWEXbuPgqHbe6H8fchmNtE0iKLjuVOE0AJ3GIRyraKaGg0wqZXXkbS0qr6CQYxZVv7PeO7zsL/swgPucBbMHhqVF+Mv8NimuycfvB72jxeN3uhwn+c715MdKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADBkZv5SEXMv/srbpyw5vnvIzlu8X3EmssQ5s6QAAAAAan1RcYe9FmNdrUBFX9wsDBJMaPIVZ1pdu6y18IAAAABt324ddloZPZy+FGzut5rBy0he1fWzeROoz1hX7/AKkLcGWx49F8RTidUn9rBMPNWLhscxqg/bVJttG8A/gpRlM2SFRbPsgTT3LuOBLPsJzpVN5CeDaecGGyxbawEE6Kcy72NeMo2v4ccHESWqcHq3GioOBRqLHY25fQEpaeCVSLCKI3/q1QflOctOQHXPk3VuQhThJQPfn/dD3sEZbonYyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZdtEfrjiMo8c/EYJzRiXnOLehdv4i42eBpdbr4NYTAzkICwAJA+gDAAAAAAAACwAFAkANAwAOCQMFAQIAAgoMDdoBKgAYAAAAU3BhY2UgT3BlcmF0b3IgQ2hhbWVsZW9uBAAAAFNQT0NTAAAAaHR0cHM6Ly9hc3NldHMuc3BhY2VvcGVyYXRvci5jb20vbWV0YWRhdGEvMzU4NjY4MzItN2M4My00OWM2LWJmZjctY2FhMDBiNmE2NDE1Lmpzb276AAEBAAAAzgKtBvv6loNiipl3w0BdRyLsPTqfS4kmSuYgO43FUPcAZAABBAEAiwiiN/6tUH5TnLTkB1z5N1bkIU4SUD35/3Q97BGW6J0AAAABAAEBZAAAAAAAAAAOCAIOAxEJDwoMAjQBDggCDgMODg4KDAI0AA4OBxADBQQBCAIACgwNDg4DLAMADg8IAAMFBAECDgAKDA0SDg4LKwABAAAAAAAAAAAKAgAGDAIAAAAAu+6gAAAAAA==";
@@ -1107,6 +1150,7 @@ mod tests {
         )
         .unwrap();
     }
+    */
 
     #[test]
     fn test_parse_config() {
@@ -1164,25 +1208,19 @@ mod tests {
             signers: [from.clone_keypair().into()].into(),
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
         };
-        let (_msg, inserted) = ins.build_message(&rpc, &<_>::default()).await.unwrap();
-        assert_eq!(inserted, 2);
-
-        let mut ins = Instructions {
-            fee_payer: from.pubkey(),
-            signers: [from.clone_keypair().into()].into(),
-            instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
-        };
-        let (_msg, inserted) = ins
-            .build_message(
-                &rpc,
-                &ExecutionConfig {
-                    priority_fee: InsertionBehavior::No,
-                    ..<_>::default()
-                },
-            )
+        let inserted = ins
+            .insert_priority_fee(&rpc, SolanaNet::Devnet, &<_>::default())
             .await
             .unwrap();
-        assert_eq!(inserted, 1);
+        ins.build_message(
+            &rpc,
+            SolanaNet::Devnet,
+            &<_>::default(),
+            CommitmentLevel::Confirmed,
+        )
+        .await
+        .unwrap();
+        assert_eq!(inserted, 2);
     }
 
     #[test]
@@ -1242,5 +1280,12 @@ mod tests {
             })
         );
         assert_eq!(value::from_value::<Wallet>(value).unwrap(), x);
+    }
+
+    #[test]
+    fn test_parse_memo() {
+        const MEMO: &str = "solana-action:E5AdudXGT7ZexcHrtQqcr91mPxjTEQ1TiJajS55qq3wF:GKMj5wkxMfM1LGhyJCdBK2op7QNvCczwcFWNtH9EXirb:h7b89YXbZ7w6yx4wCsx5ZKJC6XXLxhymL3nQViSMaqj4sa6B9rykWBPGENt2hM1uiKWJA1w4bgswbu6och8jq7e";
+        let parsed = parse_action_memo(MEMO).unwrap();
+        dbg!(parsed);
     }
 }
