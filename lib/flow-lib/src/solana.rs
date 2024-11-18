@@ -1209,12 +1209,17 @@ mod tests {
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
         };
         let inserted = ins
-            .insert_priority_fee(&rpc, &<_>::default())
+            .insert_priority_fee(&rpc, SolanaNet::Devnet, &<_>::default())
             .await
             .unwrap();
-        ins.build_message(&rpc, &<_>::default(), CommitmentLevel::Confirmed)
-            .await
-            .unwrap();
+        ins.build_message(
+            &rpc,
+            SolanaNet::Devnet,
+            &<_>::default(),
+            CommitmentLevel::Confirmed,
+        )
+        .await
+        .unwrap();
         assert_eq!(inserted, 2);
     }
 
