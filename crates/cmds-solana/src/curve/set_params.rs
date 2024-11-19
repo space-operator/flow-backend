@@ -49,10 +49,15 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let (global, _) =
         Pubkey::find_program_address(&[Global::SEED_PREFIX], &curve_launchpad_program_id);
 
+    let (event_authority, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &curve_launchpad_program_id);
+
     let accounts = vec![
         AccountMeta::new(global, false),
         AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(system_program::ID, false),
+        AccountMeta::new_readonly(event_authority, false),
+        AccountMeta::new_readonly(curve_launchpad_program_id, false),
     ];
 
     let data = curve_launchpad::instruction::SetParams {
@@ -111,6 +116,11 @@ mod tests {
         let initial_virtual_sol_reserves: u64 = 30_000_000_000;
         let initial_real_token_reserves: u64 = 793_100_000_000_000;
         let fee_basis_points: u64 = 50;
+
+        let test: Vec<u8> = vec![
+            95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121,
+        ];
+        dbg!(String::from_utf8(test.to_vec()).unwrap());
 
         let input: Input = from_value(
             value::map! {

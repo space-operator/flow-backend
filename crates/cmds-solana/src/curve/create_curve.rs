@@ -67,8 +67,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &mpl_token_metadata::ID,
     );
 
+    let (event_authority, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &curve_launchpad_program_id);
+
     let accounts = vec![
-        AccountMeta::new(input.mint.pubkey(), false),
+        AccountMeta::new(input.mint.pubkey(), true),
         AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(mint_authority, false),
         AccountMeta::new(bonding_curve, false),
@@ -80,6 +83,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         AccountMeta::new_readonly(spl_associated_token_account::ID, false),
         AccountMeta::new_readonly(mpl_token_metadata::ID, false),
         AccountMeta::new_readonly(sysvar::rent::ID, false),
+        AccountMeta::new_readonly(event_authority, false),
+        AccountMeta::new_readonly(curve_launchpad_program_id, false),
     ];
 
     let data = curve_launchpad::instruction::Create {
@@ -96,7 +101,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
-        signers: vec![input.fee_payer],
+        signers: vec![input.fee_payer, input.mint],
         instructions: [instruction].into(),
     };
 
@@ -126,20 +131,21 @@ mod tests {
             "3LUpzbebV5SCftt8CPmicbKxNtQhtJegEz4n8s6LBf3b1s4yfjLapgJhbMERhP73xLmWEP2XJ2Rz7Y3TFiYgTpXv";
         let wallet = Wallet::Keypair(Keypair::from_base58_string(KEYPAIR));
 
-        let mint = Wallet::Keypair(Keypair::new());
+        let mint_wallet: Wallet = Wallet::Keypair(Keypair::new());
 
         let input: Input = from_value(
             value::map! {
                 "fee_payer" => value::to_value(&wallet).unwrap(),
-                "mint" => value::to_value(&mint).unwrap(),
+                "mint" => value::to_value(&mint_wallet).unwrap(),
                 "name" => "Curve".to_string(),
                 "symbol" => "CURVE".to_string(),
                 "uri" => "https://base.spaceoperator.com/storage/v1/object/public/blinks/dab24e10-8534-497f-af02-000825d48f26/8ec8974d-29bb-4493-8bc4-0dee123b111d.json".to_string(),
-                "submit" => true,
+                // "submit" => true,
             }
             .into(),
         )
         .unwrap();
+
         let output = run(ctx, input).await.unwrap();
 
         dbg!(output.signature.unwrap());
