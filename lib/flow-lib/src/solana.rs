@@ -51,6 +51,18 @@ pub use utils::*;
 pub mod watcher;
 pub use watcher::*;
 
+pub mod spl_memo {
+    use solana_sdk::{pubkey, pubkey::Pubkey};
+
+    pub const ID: Pubkey = pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+
+    pub mod v1 {
+        use solana_sdk::{pubkey, pubkey::Pubkey};
+
+        pub const ID: Pubkey = pubkey!("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo");
+    }
+}
+
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
@@ -271,13 +283,14 @@ fn instruction_de(i: AsInstructionImpl) -> Result<Instruction, Infallible> {
 serde_conv!(AsInstruction, Instruction, instruction_ser, instruction_de);
 
 #[serde_as]
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, bon::Builder)]
 pub struct Instructions {
     #[serde_as(as = "AsPubkey")]
     pub fee_payer: Pubkey,
     pub signers: Vec<Wallet>,
     #[serde_as(as = "Vec<AsInstruction>")]
     pub instructions: Vec<Instruction>,
+    pub lookup_tables: Option<Vec<Pubkey>>,
 }
 
 fn is_set_compute_unit_limit(ix: &Instruction) -> Option<()> {
