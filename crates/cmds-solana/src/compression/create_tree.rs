@@ -290,6 +290,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .instruction();
 
     let ins = Instructions {
+        lookup_tables: None,
         fee_payer: input.payer.pubkey(),
         signers: [input.payer, input.creator, input.merkle_tree].into(),
         instructions: [create_merkle_account_ix, create_tree_config_ix].into(),

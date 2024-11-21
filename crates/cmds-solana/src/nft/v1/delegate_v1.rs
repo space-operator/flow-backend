@@ -132,6 +132,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let create_ix = delegate_v1.instruction(input.delegate_args.into());
 
     let ins = Instructions {
+        lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer, input.update_authority].into(),
         instructions: [create_ix].into(),

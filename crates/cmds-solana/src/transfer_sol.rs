@@ -50,6 +50,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let fee_payer = signers[0].pubkey();
     let instructions = if input.submit {
         Instructions {
+            lookup_tables: None,
             fee_payer,
             signers,
             instructions: [instruction].into(),

@@ -148,6 +148,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let mint_account_pubkey = input.mint_account.pubkey();
 
     let ins = Instructions {
+        lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer, input.update_authority, input.mint_account].into(),
         instructions: [create_ix].into(),

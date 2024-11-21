@@ -50,6 +50,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     // TODO if signers not empty, add signers as signer
 
     let instructions = Instructions {
+        lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer].into(),
         instructions: [ix].into(),

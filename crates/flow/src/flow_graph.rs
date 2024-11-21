@@ -1085,6 +1085,7 @@ impl FlowGraph {
                     };
                     if !self.fees.is_empty() {
                         ins.combine(Instructions {
+                            lookup_tables: None,
                             fee_payer: ins.fee_payer,
                             signers: vec![],
                             instructions: transfer_many(&ins.fee_payer, &self.fees),
