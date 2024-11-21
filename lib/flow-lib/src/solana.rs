@@ -657,6 +657,16 @@ impl Instructions {
 
         self.instructions.extend(next.instructions);
 
+        if let Some(tables) = next.lookup_tables {
+            if let Some(current) = self.lookup_tables.as_mut() {
+                current.extend(tables);
+                current.sort_unstable();
+                current.dedup();
+            } else {
+                self.lookup_tables = Some(tables);
+            }
+        }
+
         Ok(())
     }
 
@@ -768,11 +778,17 @@ impl Instructions {
         config: &ExecutionConfig,
         commitment_level: CommitmentLevel,
     ) -> Result<v0::Message, Error> {
-        let lookups = if let Some(pubkey) = config.lookup_table(network).as_ref() {
-            [fetch_address_lookup_table(rpc, pubkey).await?].to_vec()
-        } else {
-            Vec::new()
-        };
+        let mut lookups = Vec::new();
+        for pubkey in self.lookup_tables.iter().flatten() {
+            let table = fetch_address_lookup_table(rpc, pubkey).await?;
+            lookups.push(table);
+        }
+        if let Some(pubkey) = config.lookup_table(network).as_ref() {
+            if !self.lookup_tables.iter().flatten().any(|pk| pk == pubkey) {
+                let table = fetch_address_lookup_table(rpc, pubkey).await?;
+                lookups.push(table);
+            }
+        }
 
         let blockhash = rpc
             .get_latest_blockhash_with_commitment(commitment(commitment_level))
