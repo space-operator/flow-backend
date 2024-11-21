@@ -1220,6 +1220,7 @@ mod tests {
             fee_payer: from.pubkey(),
             signers: [from.clone_keypair().into()].into(),
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
+            lookup_tables: None,
         };
         let inserted = ins
             .insert_priority_fee(&rpc, SolanaNet::Devnet, &<_>::default())
