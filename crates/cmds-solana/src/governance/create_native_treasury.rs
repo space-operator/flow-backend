@@ -68,6 +68,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         create_native_treasury(&program_id, &input.governance, &input.fee_payer.pubkey());
 
     let instructions = Instructions {
+        lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer].into(),
         instructions: [ix].into(),

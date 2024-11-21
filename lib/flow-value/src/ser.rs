@@ -162,9 +162,9 @@ impl serde::Serializer for Serializer {
         match name {
             crate::with::decimal::TOKEN => v.serialize(TaggedBytes::Decimal),
             #[cfg(feature = "solana")]
-            crate::with::keypair::TOKEN | crate::with::signature::TOKEN | crate::with::pubkey::TOKEN => {
-                v.serialize(TaggedBytes::Bytes)
-            }
+            crate::with::keypair::TOKEN
+            | crate::with::signature::TOKEN
+            | crate::with::pubkey::TOKEN => v.serialize(TaggedBytes::Bytes),
             _ => v.serialize(self),
         }
     }

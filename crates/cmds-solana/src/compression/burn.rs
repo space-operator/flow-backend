@@ -178,6 +178,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .instruction();
 
     let ins = Instructions {
+        lookup_tables: None,
         fee_payer: input.payer.pubkey(),
         signers: [input.payer, signer].into(),
         instructions: [ix].into(),

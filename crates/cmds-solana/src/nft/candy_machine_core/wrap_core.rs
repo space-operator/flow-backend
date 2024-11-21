@@ -54,6 +54,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let data = mpl_core_candy_guard::instruction::Wrap {}.data();
 
     let ins = Instructions {
+        lookup_tables: None,
         fee_payer: input.payer.pubkey(),
         signers: [
             input.payer,

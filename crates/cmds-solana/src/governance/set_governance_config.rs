@@ -60,6 +60,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let ix = set_governance_config(&program_id, &input.governance.pubkey(), input.config);
 
     let instructions = Instructions {
+        lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer, input.governance].into(),
         instructions: [ix].into(),

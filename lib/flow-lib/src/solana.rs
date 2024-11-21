@@ -51,6 +51,18 @@ pub use utils::*;
 pub mod watcher;
 pub use watcher::*;
 
+pub mod spl_memo {
+    use solana_sdk::{pubkey, pubkey::Pubkey};
+
+    pub const ID: Pubkey = pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+
+    pub mod v1 {
+        use solana_sdk::{pubkey, pubkey::Pubkey};
+
+        pub const ID: Pubkey = pubkey!("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo");
+    }
+}
+
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
@@ -271,13 +283,14 @@ fn instruction_de(i: AsInstructionImpl) -> Result<Instruction, Infallible> {
 serde_conv!(AsInstruction, Instruction, instruction_ser, instruction_de);
 
 #[serde_as]
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, bon::Builder)]
 pub struct Instructions {
     #[serde_as(as = "AsPubkey")]
     pub fee_payer: Pubkey,
     pub signers: Vec<Wallet>,
     #[serde_as(as = "Vec<AsInstruction>")]
     pub instructions: Vec<Instruction>,
+    pub lookup_tables: Option<Vec<Pubkey>>,
 }
 
 fn is_set_compute_unit_limit(ix: &Instruction) -> Option<()> {
@@ -644,6 +657,16 @@ impl Instructions {
 
         self.instructions.extend(next.instructions);
 
+        if let Some(tables) = next.lookup_tables {
+            if let Some(current) = self.lookup_tables.as_mut() {
+                current.extend(tables);
+                current.sort_unstable();
+                current.dedup();
+            } else {
+                self.lookup_tables = Some(tables);
+            }
+        }
+
         Ok(())
     }
 
@@ -755,11 +778,17 @@ impl Instructions {
         config: &ExecutionConfig,
         commitment_level: CommitmentLevel,
     ) -> Result<v0::Message, Error> {
-        let lookups = if let Some(pubkey) = config.lookup_table(network).as_ref() {
-            [fetch_address_lookup_table(rpc, pubkey).await?].to_vec()
-        } else {
-            Vec::new()
-        };
+        let mut lookups = Vec::new();
+        for pubkey in self.lookup_tables.iter().flatten() {
+            let table = fetch_address_lookup_table(rpc, pubkey).await?;
+            lookups.push(table);
+        }
+        if let Some(pubkey) = config.lookup_table(network).as_ref() {
+            if !self.lookup_tables.iter().flatten().any(|pk| pk == pubkey) {
+                let table = fetch_address_lookup_table(rpc, pubkey).await?;
+                lookups.push(table);
+            }
+        }
 
         let blockhash = rpc
             .get_latest_blockhash_with_commitment(commitment(commitment_level))
@@ -1207,6 +1236,7 @@ mod tests {
             fee_payer: from.pubkey(),
             signers: [from.clone_keypair().into()].into(),
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
+            lookup_tables: None,
         };
         let inserted = ins
             .insert_priority_fee(&rpc, SolanaNet::Devnet, &<_>::default())

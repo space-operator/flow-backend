@@ -98,6 +98,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let authority_or_delegate_pubkey = authority_or_delegate.pubkey();
 
     let ins = Instructions {
+        lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer, authority_or_delegate].into(),
         instructions: [create_ix].into(),

@@ -150,6 +150,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     info!("ix: {:?}", ix);
 
     let ins = Instructions {
+        lookup_tables: None,
         fee_payer: input.payer.pubkey(),
         signers: [input.payer].into(),
         instructions: [ix].into(),
