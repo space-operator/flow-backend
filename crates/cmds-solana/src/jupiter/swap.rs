@@ -108,7 +108,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     // instructions.extend(swap_instructions.cleanup_instruction);
 
     let ins = Instructions {
-        lookup_tables: None,
+        lookup_tables: Some(swap_instructions.address_lookup_table_addresses),
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer].into(),
         instructions: instructions.into(),
