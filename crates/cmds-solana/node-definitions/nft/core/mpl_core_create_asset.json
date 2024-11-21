@@ -81,6 +81,14 @@
       "passthrough": false
     },
     {
+      "name": "owner",
+      "type_bounds": ["pubkey"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
       "name": "name",
       "type_bounds": ["string"],
       "required": true,
