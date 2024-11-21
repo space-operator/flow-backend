@@ -57,16 +57,21 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let user_token_account = get_associated_token_address(&input.fee_payer.pubkey(), &input.mint);
 
+    let (event_authority, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &curve_launchpad_program_id);
+
     let accounts = vec![
         AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(global, false),
         AccountMeta::new(input.fee_recipient, false),
-        AccountMeta::new_readonly(input.mint, false),
+        AccountMeta::new(input.mint, false),
         AccountMeta::new(bonding_curve, false),
         AccountMeta::new(bonding_curve_token_account, false),
         AccountMeta::new(user_token_account, false),
         AccountMeta::new_readonly(system_program::ID, false),
         AccountMeta::new_readonly(spl_token::ID, false),
+        AccountMeta::new_readonly(event_authority, false),
+        AccountMeta::new_readonly(curve_launchpad_program_id, false),
     ];
 
     let data = curve_launchpad::instruction::Sell {
@@ -99,7 +104,6 @@ mod tests {
 
     use super::*;
 
-
     #[test]
     fn test_build() {
         build().unwrap();
@@ -109,16 +113,20 @@ mod tests {
         let ctx = Context::default();
 
         const KEYPAIR: &str =
-            "3LUpzbebV5SCftt8CPmicbKxNtQhtJegEz4n8s6LBf3b1s4yfjLapgJhbMERhP73xLmWEP2XJ2Rz7Y3TFiYgTpXv";
+            "oLXLpXdGn6RjMHz3fvcPdGNUDQxXu91t7YAFbtRew3TFVPHAU1UrZJpgiHDLKDtrWZRQg6trQFFp6zEX2TQ1S3k";
         let wallet = Wallet::Keypair(Keypair::from_base58_string(KEYPAIR));
 
-        let mint_str = "some_mint_pubkey";
+        let mint = Pubkey::from_str("D9ytTiHkUE5uDwCnVGwekErqgq4VoNyBz31YY7QLZbXm").unwrap();
+
+        let fee_recipient =
+            Pubkey::from_str("xe7tyibJPS22rBHFrhypM7DwguCJtAc9mHXNRU5CEYG").unwrap();
 
         let input: Input = from_value(
             value::map! {
                 "fee_payer" => value::to_value(&wallet).unwrap(),
-                "mint" => value::to_value(&mint_str).unwrap(),
-                "token_amount" => 1_000_000,
+                "mint" => value::to_value(&mint).unwrap(),
+                "fee_recipient" => value::to_value(&fee_recipient).unwrap(),
+                "token_amount" => 1_000_00,
                 "min_sol_output" => 1,
                 "submit" => true,
             }

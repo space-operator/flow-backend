@@ -5,7 +5,9 @@ use borsh::BorshSerialize;
 use curve_launchpad::state::{BondingCurve, Global};
 use flow_lib::{command::prelude::*, solana::Wallet};
 use solana_sdk::{instruction::Instruction, system_program};
-use spl_associated_token_account::get_associated_token_address;
+use spl_associated_token_account::{
+    get_associated_token_address, instruction::create_associated_token_account,
+};
 
 use crate::{curve::CURVE_LAUNCHPAD_PROGRAM_ID, utils::anchor_sighash};
 
@@ -56,17 +58,25 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let user_token_account = get_associated_token_address(&input.fee_payer.pubkey(), &input.mint);
 
     let bonding_curve_token_account = get_associated_token_address(&bonding_curve, &input.mint);
+    dbg!(&bonding_curve);
+    dbg!(&bonding_curve_token_account);
+    dbg!(&user_token_account);
+
+    let (event_authority, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &curve_launchpad_program_id);
 
     let accounts = vec![
         AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(global, false),
-        AccountMeta::new(input.fee_recipient, true),
-        AccountMeta::new_readonly(input.mint, false),
+        AccountMeta::new(input.fee_recipient, false),
+        AccountMeta::new(input.mint, false),
         AccountMeta::new(bonding_curve, false),
         AccountMeta::new(bonding_curve_token_account, false),
         AccountMeta::new(user_token_account, false),
         AccountMeta::new_readonly(system_program::ID, false),
         AccountMeta::new_readonly(spl_token::ID, false),
+        AccountMeta::new_readonly(event_authority, false),
+        AccountMeta::new_readonly(curve_launchpad_program_id, false),
     ];
 
     let data = curve_launchpad::instruction::Buy {
@@ -80,10 +90,29 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         data: (anchor_sighash("buy"), data).try_to_vec()?,
     };
 
+    let user_token_account = get_associated_token_address(&input.fee_payer.pubkey(), &input.mint);
+
+    // Check if the token account already exists
+    let mut instructions_vec = vec![];
+    if ctx
+        .solana_client
+        .get_account(&user_token_account)
+        .await
+        .is_err()
+    {
+        instructions_vec.push(create_associated_token_account(
+            &input.fee_payer.pubkey(),
+            &input.fee_payer.pubkey(),
+            &input.mint,
+            &spl_token::id(),
+        ));
+    }
+    instructions_vec.push(instruction);
+
     let instructions = Instructions {
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer].into(),
-        instructions: [instruction].into(),
+        instructions: instructions_vec.into(),
     };
 
     let signature = ctx.execute(instructions, value::map! {}).await?.signature;
@@ -91,47 +120,53 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     Ok(Output { signature })
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use flow::{flow_run_events::event_channel, FlowGraph};
-//     use flow_lib::{config::client::ClientConfig, FlowConfig};
+#[cfg(test)]
+mod tests {
+    use flow::{flow_run_events::event_channel, FlowGraph};
+    use flow_lib::{config::client::ClientConfig, FlowConfig};
 
-//     use value::from_value;
+    use value::from_value;
 
-//     use super::*;
+    use super::*;
 
-//     #[derive(Deserialize)]
-//     struct TestFile {
-//         flow: ClientConfig,
-//     }
+    #[derive(Deserialize)]
+    struct TestFile {
+        flow: ClientConfig,
+    }
 
-//     #[test]
-//     fn test_build() {
-//         build().unwrap();
-//     }
-//     #[tokio::test]
-//     async fn test_run() {
-//         let ctx = Context::default();
+    #[test]
+    fn test_build() {
+        build().unwrap();
+    }
+    #[tokio::test]
+    async fn test_run() {
+        let ctx = Context::default();
 
-//         const KEYPAIR: &str =
-//             "3LUpzbebV5SCftt8CPmicbKxNtQhtJegEz4n8s6LBf3b1s4yfjLapgJhbMERhP73xLmWEP2XJ2Rz7Y3TFiYgTpXv";
-//         let wallet = Wallet::Keypair(Keypair::from_base58_string(KEYPAIR));
-//         dbg!(&wallet.pubkey());
+        const KEYPAIR: &str =
+            "oLXLpXdGn6RjMHz3fvcPdGNUDQxXu91t7YAFbtRew3TFVPHAU1UrZJpgiHDLKDtrWZRQg6trQFFp6zEX2TQ1S3k";
 
-//         let input: Input = from_value(
-//             value::map! {
-//                 "fee_payer" => value::to_value(&wallet).unwrap(),
-//                 "mint" => value::to_value(&mint_str).unwrap(),
-//                 "name" => "Curve".to_string(),
-//                 "symbol" => "CURVE".to_string(),
-//                 "uri" => "https://base.spaceoperator.com/storage/v1/object/public/blinks/dab24e10-8534-497f-af02-000825d48f26/8ec8974d-29bb-4493-8bc4-0dee123b111d.json".to_string(),
-//                 "submit" => true,
-//             }
-//             .into(),
-//         )
-//         .unwrap();
-//         let output = run(ctx, input).await.unwrap();
+        let wallet = Wallet::Keypair(Keypair::from_base58_string(KEYPAIR));
+        dbg!(&wallet.pubkey());
 
-//         dbg!(output.signature.unwrap());
-//     }
-// }
+        let fee_recipient =
+            Pubkey::from_str("xe7tyibJPS22rBHFrhypM7DwguCJtAc9mHXNRU5CEYG").unwrap();
+
+        let mint = Pubkey::from_str("D9ytTiHkUE5uDwCnVGwekErqgq4VoNyBz31YY7QLZbXm").unwrap();
+
+        let input: Input = from_value(
+            value::map! {
+                "fee_payer" => value::to_value(&wallet).unwrap(),
+                "fee_recipient" => value::to_value(&fee_recipient).unwrap(),
+                "mint" => value::to_value(&mint).unwrap(),
+                "token_amount" => 1000000,
+                "max_sol_cost" => 100,
+                "submit" => true,
+            }
+            .into(),
+        )
+        .unwrap();
+        let output = run(ctx, input).await.unwrap();
+
+        dbg!(output.signature.unwrap());
+    }
+}

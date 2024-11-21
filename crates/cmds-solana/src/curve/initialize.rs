@@ -63,17 +63,17 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     };
 
     //
-    let account_data = ctx.solana_client.get_account(&global).await?;
+    // let account_data = ctx.solana_client.get_account(&global).await?;
 
-    let global_account: Global =
-        Global::try_deserialize(&mut &account_data.data[..]).map_err(|e| anyhow::anyhow!(e))?;
+    // let global_account: Global =
+    //     Global::try_deserialize(&mut &account_data.data[..]).map_err(|e| anyhow::anyhow!(e))?;
 
     let signature = ctx
         .execute(
             instructions,
             value::map! {
-                "authority" => value::to_value(&global_account.authority).unwrap(),
-                "initialized" => value::to_value(&global_account.initialized).unwrap(),
+                // "authority" => value::to_value(&global_account.authority).unwrap(),
+                // "initialized" => value::to_value(&global_account.initialized).unwrap(),
             },
         )
         .await?

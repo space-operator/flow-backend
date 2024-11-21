@@ -108,6 +108,7 @@ mod tests {
 
         let fee_recipient = Wallet::Keypair(Keypair::new()).pubkey();
         let withdraw_authority = Wallet::Keypair(Keypair::new()).pubkey();
+        dbg!(&fee_recipient);
 
         let default_decimals = 6;
         let initial_token_supply = 1_000_000_000 * 10u64.pow(default_decimals);
@@ -116,11 +117,6 @@ mod tests {
         let initial_virtual_sol_reserves: u64 = 30_000_000_000;
         let initial_real_token_reserves: u64 = 793_100_000_000_000;
         let fee_basis_points: u64 = 50;
-
-        let test: Vec<u8> = vec![
-            95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121,
-        ];
-        dbg!(String::from_utf8(test.to_vec()).unwrap());
 
         let input: Input = from_value(
             value::map! {

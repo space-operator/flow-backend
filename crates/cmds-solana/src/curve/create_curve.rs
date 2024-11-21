@@ -55,6 +55,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &curve_launchpad_program_id,
     );
 
+    dbg!(&bonding_curve);
+
     let bonding_curve_token_account =
         get_associated_token_address(&bonding_curve, &input.mint.pubkey());
 
@@ -76,7 +78,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         AccountMeta::new_readonly(mint_authority, false),
         AccountMeta::new(bonding_curve, false),
         AccountMeta::new(bonding_curve_token_account, false),
-        AccountMeta::new_readonly(global, false),
+        AccountMeta::new(global, false),
         AccountMeta::new(metadata, false),
         AccountMeta::new_readonly(system_program::ID, false),
         AccountMeta::new_readonly(spl_token::ID, false),
@@ -128,10 +130,12 @@ mod tests {
         let ctx = Context::default();
 
         const KEYPAIR: &str =
-            "3LUpzbebV5SCftt8CPmicbKxNtQhtJegEz4n8s6LBf3b1s4yfjLapgJhbMERhP73xLmWEP2XJ2Rz7Y3TFiYgTpXv";
+            "oLXLpXdGn6RjMHz3fvcPdGNUDQxXu91t7YAFbtRew3TFVPHAU1UrZJpgiHDLKDtrWZRQg6trQFFp6zEX2TQ1S3k";
         let wallet = Wallet::Keypair(Keypair::from_base58_string(KEYPAIR));
+        dbg!(&wallet.pubkey());
 
         let mint_wallet: Wallet = Wallet::Keypair(Keypair::new());
+        dbg!(&mint_wallet.pubkey());
 
         let input: Input = from_value(
             value::map! {

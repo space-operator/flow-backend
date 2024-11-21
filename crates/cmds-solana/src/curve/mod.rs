@@ -5,4 +5,4 @@ pub mod sell;
 pub mod set_params;
 pub mod withdraw;
 
-const CURVE_LAUNCHPAD_PROGRAM_ID: &str = "48ehyGMn9NTWY6iWSwVeQs6gDu6aV7UW9x6dUdeVwGim";
+const CURVE_LAUNCHPAD_PROGRAM_ID: &str = "6YHD1mw5fTmspDKfJWUWz9Y5EkSHevFBBdmY8hu5kMVu";
