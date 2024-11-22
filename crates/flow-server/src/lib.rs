@@ -540,4 +540,88 @@ mod tests {
         }
         assert!(!dup);
     }
+
+    #[tokio::test]
+    async fn test_create_token() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const KEYPAIR: &str = "3LUpzbebV5SCftt8CPmicbKxNtQhtJegEz4n8s6LBf3b1s4yfjLapgJhbMERhP73xLmWEP2XJ2Rz7Y3TFiYgTpXv";
+
+        let inputs: value::Map = {
+            let mut map = value::Map::new();
+            map.insert(
+                "fee_payer".to_string(),
+                Value::new_keypair_bs58(KEYPAIR).unwrap(),
+            );
+            map.insert(
+                "mint_authority".to_string(),
+                Value::new_keypair_bs58(KEYPAIR).unwrap(),
+            );
+            map
+        };
+
+        let json = include_str!("../../../test_files/create_token.json");
+        let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
+        let mut flow = FlowGraph::from_cfg(flow_config, <_>::default(), None)
+            .await
+            .unwrap();
+        let (tx, _rx) = event_channel();
+        let res = flow
+            .run(
+                tx,
+                <_>::default(),
+                inputs,
+                <_>::default(),
+                <_>::default(),
+                <_>::default(),
+            )
+            .await;
+        dbg!(&res.output);
+        dbg!(&res.node_errors);
+
+        println!(
+            "output: {}",
+            serde_json::to_string_pretty(&res.output).unwrap()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_create_asset() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const KEYPAIR: &str = "3LUpzbebV5SCftt8CPmicbKxNtQhtJegEz4n8s6LBf3b1s4yfjLapgJhbMERhP73xLmWEP2XJ2Rz7Y3TFiYgTpXv";
+
+        let inputs: value::Map = {
+            let mut map = value::Map::new();
+            map.insert(
+                "payer".to_string(),
+                Value::new_keypair_bs58(KEYPAIR).unwrap(),
+            );
+            map
+        };
+
+        let json = include_str!("../../../test_files/create_asset.json");
+        let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
+        let mut flow = FlowGraph::from_cfg(flow_config, <_>::default(), None)
+            .await
+            .unwrap();
+        let (tx, _rx) = event_channel();
+        let res = flow
+            .run(
+                tx,
+                <_>::default(),
+                inputs,
+                <_>::default(),
+                <_>::default(),
+                <_>::default(),
+            )
+            .await;
+        dbg!(&res.output);
+        dbg!(&res.node_errors);
+
+        println!(
+            "output: {}",
+            serde_json::to_string_pretty(&res.output).unwrap()
+        );
+    }
 }
