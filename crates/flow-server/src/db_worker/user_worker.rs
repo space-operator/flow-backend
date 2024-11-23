@@ -490,15 +490,7 @@ impl ResponseError for StartError {
                 flow::Error::Canceled(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 flow::Error::ValueNotFound(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 flow::Error::CreateCmd(_) => StatusCode::INTERNAL_SERVER_ERROR,
-                flow::Error::BuildGraphError(e) => match e {
-                    flow::flow_graph::BuildGraphError::EdgesSameTarget => StatusCode::BAD_REQUEST,
-                    flow::flow_graph::BuildGraphError::EdgeSourceNotFound(_) => {
-                        StatusCode::BAD_REQUEST
-                    }
-                    flow::flow_graph::BuildGraphError::NodeNotFoundInPartialConfig(_) => {
-                        StatusCode::BAD_REQUEST
-                    }
-                },
+                flow::Error::BuildGraphError(_) => StatusCode::BAD_REQUEST,
                 flow::Error::GetFlow(e) => match e {
                     get_flow::Error::NotFound => StatusCode::NOT_FOUND,
                     get_flow::Error::Unauthorized => StatusCode::UNAUTHORIZED,

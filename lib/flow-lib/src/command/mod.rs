@@ -126,6 +126,11 @@ pub trait CommandTrait: Send + Sync + 'static {
         self.outputs()
             .into_iter()
             .find_map(|o| (o.name == name).then_some(o.optional))
+            .or_else(|| {
+                self.inputs()
+                    .into_iter()
+                    .find_map(|i| (i.name == name && i.passthrough).then_some(!i.required))
+            })
     }
 }
 
