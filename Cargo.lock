@@ -4669,7 +4669,7 @@ dependencies = [
 [[package]]
 name = "mpl-hybrid"
 version = "0.1.0"
-source = "git+https://github.com/metaplex-foundation/mpl-hybrid#90d5eaeb05f81d8304b21038b0c2b58acaf3fdee"
+source = "git+https://github.com/metaplex-foundation/mpl-hybrid?rev=90d5eaeb05f81d8304b21038b0c2b58acaf3fdee#90d5eaeb05f81d8304b21038b0c2b58acaf3fdee"
 dependencies = [
  "base64 0.22.1",
  "borsh 0.10.4",

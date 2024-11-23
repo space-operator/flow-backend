@@ -105,6 +105,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     }
 
     let ix = Instructions {
+        lookup_tables: None,
         fee_payer: input.authority.pubkey(),
         signers: [input.authority].into(),
         instructions: [update_escrow_ix.instruction()].into(),

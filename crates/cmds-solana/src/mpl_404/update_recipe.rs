@@ -131,6 +131,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     }
 
     let ix = Instructions {
+        lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer].into(),
         instructions: [update_recipe_ix.instruction()].into(),
