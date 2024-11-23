@@ -95,15 +95,12 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     };
 
     let ix = input.submit.then_some(ix).unwrap_or_default();
-    let fee_payer_keypair = input.fee_payer.keypair().unwrap().clone_keypair();
 
     let signature = ctx
         .execute(
             ix,
             value::map! {
-                "fee_payer" => fee_payer_keypair,
                 "escrow" => escrow,
-                "collection" => input.collection,
             },
         )
         .await?

@@ -48,20 +48,6 @@
   },
   "sources": [
     {
-      "name": "fee_payer",
-      "type": "keypair",
-      "defaultValue": null,
-      "tooltip": "",
-      "optional": false
-    },
-    {
-      "name": "collection",
-      "type": "pubkey",
-      "defaultValue": null,
-      "tooltip": "",
-      "optional": false
-    },
-    {
       "name": "escrow",
       "type": "pubkey",
       "defaultValue": null,
@@ -83,7 +69,7 @@
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "fee_token_decimals",
@@ -107,7 +93,7 @@
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "token",
