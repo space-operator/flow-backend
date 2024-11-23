@@ -51,22 +51,31 @@
       "name": "signature",
       "type": "signature",
       "defaultValue": null,
-      "tooltip": "",
-      "optional": true
+      "tooltip": ""
+    },
+    {
+      "name": "escrow",
+      "type": "pubkey",
+      "defaultValue": null,
+      "tooltip": ""
     }
   ],
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "fee_token_decimals",
-      "type_bounds": ["u8"],
+      "type_bounds": [
+        "u8"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -74,7 +83,9 @@
     },
     {
       "name": "authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -82,15 +93,19 @@
     },
     {
       "name": "collection",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "token",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -98,7 +113,9 @@
     },
     {
       "name": "fee_location",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -106,7 +123,9 @@
     },
     {
       "name": "name",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -114,7 +133,9 @@
     },
     {
       "name": "uri",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -122,7 +143,9 @@
     },
     {
       "name": "max",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -130,7 +153,9 @@
     },
     {
       "name": "min",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -138,7 +163,9 @@
     },
     {
       "name": "amount",
-      "type_bounds": ["decimal"],
+      "type_bounds": [
+        "decimal"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -146,7 +173,9 @@
     },
     {
       "name": "fee_amount",
-      "type_bounds": ["decimal"],
+      "type_bounds": [
+        "decimal"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -154,7 +183,9 @@
     },
     {
       "name": "sol_fee_amount",
-      "type_bounds": ["decimal"],
+      "type_bounds": [
+        "decimal"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -162,7 +193,9 @@
     },
     {
       "name": "path",
-      "type_bounds": ["u16"],
+      "type_bounds": [
+        "u16"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -170,7 +203,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",
