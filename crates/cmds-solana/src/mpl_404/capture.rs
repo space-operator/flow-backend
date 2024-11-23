@@ -1,4 +1,7 @@
-use crate::{mpl_404::{constants::FEE_WALLET, utils::get_escrow_v1}, prelude::*};
+use crate::{
+    mpl_404::{constants::FEE_WALLET, utils::get_escrow_v1},
+    prelude::*,
+};
 use flow_lib::command::prelude::*;
 use mpl_hybrid::instructions::CaptureV1Builder;
 
@@ -82,9 +85,15 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ix = input.submit.then_some(ix).unwrap_or_default();
 
-    let signature = ctx.execute(ix, value::map! {
-        "asset" => input.asset,
-    }).await?.signature;
+    let signature = ctx
+        .execute(
+            ix,
+            value::map! {
+                "asset" => input.asset,
+            },
+        )
+        .await?
+        .signature;
 
     Ok(Output { signature })
 }
@@ -334,8 +343,6 @@ mod tests {
                 asset,
                 collection: collection.pubkey(),
                 token,
-                fee_project_account: fee_wallet,
-                fee_sol_account: None,
                 submit: true,
             },
         )
