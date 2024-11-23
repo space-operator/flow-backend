@@ -14,13 +14,30 @@ use solana_client::{
     rpc_response::RpcSimulateTransactionResult,
 };
 use solana_sdk::{
+    address_lookup_table::{state::AddressLookupTable, AddressLookupTableAccount},
     clock::{Slot, UnixTimestamp},
     feature_set::FeatureSet,
     precompiles::verify_if_precompile,
+    pubkey::Pubkey,
     signature::Signature,
-    transaction::Transaction,
+    transaction::{Transaction, VersionedTransaction},
 };
 use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
+
+pub async fn fetch_address_lookup_table(
+    rpc: &RpcClient,
+    pubkey: &Pubkey,
+) -> Result<AddressLookupTableAccount, Error> {
+    let raw_account = rpc
+        .get_account(pubkey)
+        .await
+        .map_err(|error| Error::solana(error, 0))?;
+    let table = AddressLookupTable::deserialize(&raw_account.data)?;
+    Ok(AddressLookupTableAccount {
+        key: *pubkey,
+        addresses: table.addresses.to_vec(),
+    })
+}
 
 pub fn find_failed_instruction(err: &ClientError) -> Option<usize> {
     if let ClientErrorKind::RpcError(RpcError::RpcResponseError { message, .. }) = &err.kind {
@@ -40,15 +57,16 @@ pub fn find_failed_instruction(err: &ClientError) -> Option<usize> {
     }
 }
 
-pub fn list_signatures(tx: &Transaction) -> Option<Vec<Presigner>> {
+pub fn list_signatures(tx: &VersionedTransaction) -> Option<Vec<Presigner>> {
     let placeholder = Transaction::get_invalid_signature();
+    let accounts = tx.message.static_account_keys();
     let vec = tx
         .signatures
         .iter()
         .enumerate()
         .filter(|(_, &sig)| sig != placeholder)
         .map(|(index, sig)| Presigner {
-            pubkey: tx.message.account_keys[index],
+            pubkey: accounts[index],
             signature: *sig,
         })
         .collect::<Vec<_>>();
