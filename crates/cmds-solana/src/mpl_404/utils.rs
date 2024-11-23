@@ -333,7 +333,7 @@ pub async fn submit(
 
     let mut all_signers = vec![payer.keypair().unwrap()];
     all_signers.extend(signers.iter().map(|w| w.keypair().unwrap()));
-    tx.try_sign(&all_signers, recent_blockhash)?;
+    tx.try_sign(&all_signers, recent_blockhash);
 
     submit_transaction(&ctx.solana_client, tx).await
 }
