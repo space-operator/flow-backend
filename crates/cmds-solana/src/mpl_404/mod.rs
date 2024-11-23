@@ -1,5 +1,4 @@
 pub mod constants;
-#[cfg(test)]
 pub mod utils;
 
 pub mod capture;

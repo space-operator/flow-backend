@@ -48,6 +48,20 @@
   },
   "sources": [
     {
+      "name": "collection",
+      "type": "pubkey",
+      "defaultValue": null,
+      "tooltip": "",
+      "optional": false
+    },
+    {
+      "name": "escrow",
+      "type": "pubkey",
+      "defaultValue": null,
+      "tooltip": "",
+      "optional": false
+    },
+    {
       "name": "signature",
       "type": "signature",
       "defaultValue": null,
@@ -62,7 +76,7 @@
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "fee_token_decimals",

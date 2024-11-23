@@ -96,7 +96,16 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let ix = input.submit.then_some(ix).unwrap_or_default();
 
-    let signature = ctx.execute(ix, value::map! {}).await?.signature;
+    let signature = ctx
+        .execute(
+            ix,
+            value::map! {
+                "escrow" => escrow,
+                "collection" => input.collection,
+            },
+        )
+        .await?
+        .signature;
 
     Ok(Output { signature })
 }

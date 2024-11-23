@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{mpl_404::{constants::FEE_WALLET, utils::get_escrow_v1}, prelude::*};
 use flow_lib::command::prelude::*;
 use mpl_hybrid::instructions::CaptureV1Builder;
 
@@ -26,10 +26,6 @@ pub struct Input {
     collection: Pubkey,
     #[serde_as(as = "AsPubkey")]
     token: Pubkey,
-    #[serde_as(as = "AsPubkey")]
-    fee_project_account: Pubkey,
-    #[serde_as(as = "Option<AsPubkey>")]
-    fee_sol_account: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }
@@ -49,6 +45,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &mpl_hybrid::ID,
     );
 
+    let escrow_v1 = get_escrow_v1(&ctx, escrow).await.unwrap();
+
     let user_token_account = spl_associated_token_account::get_associated_token_address(
         &input.owner.pubkey(),
         &input.token,
@@ -57,12 +55,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         spl_associated_token_account::get_associated_token_address(&escrow, &input.token);
 
     let fee_token_account = spl_associated_token_account::get_associated_token_address(
-        &input.fee_project_account,
+        &escrow_v1.fee_location,
         &input.token,
     );
 
-    let mut capture_v1_builder = CaptureV1Builder::new();
-    let mut capture_ix = capture_v1_builder
+    let capture_ix = CaptureV1Builder::new()
         .owner(input.owner.pubkey())
         .authority(input.authority.pubkey(), true)
         .escrow(escrow)
@@ -72,22 +69,22 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .escrow_token_account(escrow_token_account)
         .token(input.token)
         .fee_token_account(fee_token_account)
-        .fee_project_account(input.fee_project_account);
-
-    if let Some(fee_sol_account) = input.fee_sol_account {
-        capture_ix = capture_ix.fee_sol_account(fee_sol_account);
-    }
+        .fee_project_account(escrow_v1.fee_location)
+        .fee_sol_account(FEE_WALLET)
+        .instruction();
 
     let ix = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer, input.owner, input.authority].into(),
-        instructions: [capture_ix.instruction()].into(),
+        instructions: [capture_ix].into(),
     };
 
     let ix = input.submit.then_some(ix).unwrap_or_default();
 
-    let signature = ctx.execute(ix, value::map! {}).await?.signature;
+    let signature = ctx.execute(ix, value::map! {
+        "asset" => input.asset,
+    }).await?.signature;
 
     Ok(Output { signature })
 }

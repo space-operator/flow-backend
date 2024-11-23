@@ -47,6 +47,13 @@
     }
   },
   "sources": [
+		{
+			"name": "asset",
+			"type": "pubkey",
+			"defaultValue": null,
+			"tooltip": "",
+			"optional": false
+		},
     {
       "name": "signature",
       "type": "signature",
@@ -57,7 +64,7 @@
   ],
   "targets": [
     {
-      "name": "fee_player",
+      "name": "fee_payer",
       "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": null,
@@ -100,22 +107,6 @@
       "name": "token",
       "type_bounds": ["pubkey"],
       "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "fee_project_account",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "fee_sol_account",
-      "type_bounds": ["pubkey"],
-      "required": false,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false

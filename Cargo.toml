@@ -17,6 +17,7 @@ mpl-core-candy-guard = { git = "https://github.com/space-operator/mpl-core-candy
 [profile.dev]
 debug = 0
 opt-level = 1
+codegen-units = 1
 
 [profile.release]
 debug = 0

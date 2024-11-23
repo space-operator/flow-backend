@@ -1,4 +1,4 @@
-use mpl_hybrid::instructions::CaptureV2Builder;
+use mpl_hybrid::{accounts::EscrowV1, instructions::CaptureV2Builder};
 use solana_sdk::{commitment_config::CommitmentConfig, system_program};
 
 use crate::{prelude::*, utils::ui_amount_to_amount};
@@ -323,6 +323,33 @@ pub async fn init_ata_if_needed(
         .map(Some)
 }
 
+pub async fn get_escrow_v1(ctx: &Context, escrow: Pubkey) -> Result<EscrowV1, crate::Error> {
+    let get_escrow_account_response = ctx
+        .solana_client
+        .get_account_with_commitment(&escrow, CommitmentConfig::confirmed())
+        .await
+        .map_err(|e| {
+            tracing::error!("Error: {:?}", e);
+            crate::Error::AccountNotFound(escrow)
+        })?;
+
+    let escrow_account = match get_escrow_account_response.value {
+        Some(account) => account,
+        None => return Err(crate::Error::AccountNotFound(escrow)),
+    };
+
+    let escrow_data: &[u8] = &escrow_account.data;
+    let escrow_data: EscrowV1 = EscrowV1::from_bytes(escrow_data).map_err(|_| {
+        tracing::error!(
+            "Invalid data from EscrowV1: {:?}",
+            crate::Error::InvalidAccountData(escrow)
+        );
+        crate::Error::InvalidAccountData(escrow)
+    })?;
+
+    Ok(escrow_data)
+}
+
 pub async fn submit(
     ctx: &Context,
     ixs: &[Instruction],
@@ -333,7 +360,7 @@ pub async fn submit(
 
     let mut all_signers = vec![payer.keypair().unwrap()];
     all_signers.extend(signers.iter().map(|w| w.keypair().unwrap()));
-    tx.try_sign(&all_signers, recent_blockhash);
+    let _ = tx.try_sign(&all_signers, recent_blockhash).unwrap();
 
     submit_transaction(&ctx.solana_client, tx).await
 }
