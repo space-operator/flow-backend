@@ -360,6 +360,10 @@ pub enum BuildGraphError {
     EdgeSourceNotFound(NodeId),
     #[error("node not found in partial_config: {:?}", .0)]
     NodeNotFoundInPartialConfig(NodeId),
+    #[error("node {:?} has no input {:?}", .0.0, .0.1)]
+    NoInput((NodeId, String)),
+    #[error("node {:?} has no output {:?}", .0.0, .0.1)]
+    NoOutput((NodeId, String)),
 }
 
 impl FlowGraph {
@@ -455,7 +459,13 @@ impl FlowGraph {
                         continue;
                     }
                 }
-                Some(n) => (n.idx, n.command.input_is_required(&to.1).unwrap_or(true)),
+                Some(n) => {
+                    let required = n
+                        .command
+                        .input_is_required(&to.1)
+                        .ok_or_else(|| BuildGraphError::NoInput(to.clone()))?;
+                    (n.idx, required)
+                }
             };
             let (from_idx, optional) = match nodes.get(&from.0) {
                 None => {
@@ -480,10 +490,13 @@ impl FlowGraph {
                         continue;
                     }
                 }
-                Some(n) => (
-                    n.idx,
-                    n.command.output_is_optional(&from.1).unwrap_or(false),
-                ),
+                Some(n) => {
+                    let optional = n
+                        .command
+                        .output_is_optional(&from.1)
+                        .ok_or_else(|| BuildGraphError::NoOutput(from.clone()))?;
+                    (n.idx, optional)
+                }
             };
 
             g.add_edge(
@@ -1288,7 +1301,7 @@ impl FlowGraph {
                             .collect::<Vec<_>>()
                     })
                     .collect::<Vec<_>>();
-                tracing::trace!("transactions: {:?}", txs);
+                tracing::debug!("transactions: {:?}", txs);
             }
             Err(error) => {
                 s.flow_error(format!("sort_transactions failed: {}", error));

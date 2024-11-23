@@ -17,6 +17,7 @@ pub mod generate_keypair;
 pub mod get_balance;
 // pub mod metaboss;
 pub mod mint_token;
+pub mod mpl_404;
 pub mod nft;
 // pub mod proxy_authority;
 pub mod request_airdrop;
