@@ -1288,7 +1288,7 @@ impl FlowGraph {
                             .collect::<Vec<_>>()
                     })
                     .collect::<Vec<_>>();
-                tracing::trace!("transactions: {:?}", txs);
+                tracing::debug!("transactions: {:?}", txs);
             }
             Err(error) => {
                 s.flow_error(format!("sort_transactions failed: {}", error));
