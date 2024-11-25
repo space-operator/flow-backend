@@ -41,19 +41,12 @@
     "design": null,
     "options": null,
     "instruction_info": {
-      "before": ["owner", "payer"],
+      "before": ["fee_payer", "owner", "asset"],
       "signature": "signature",
       "after": []
     }
   },
   "sources": [
-		{
-			"name": "asset",
-			"type": "pubkey",
-			"defaultValue": null,
-			"tooltip": "",
-			"optional": false
-		},
     {
       "name": "signature",
       "type": "signature",
@@ -69,7 +62,7 @@
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true 
     },
     {
       "name": "owner",
@@ -77,7 +70,7 @@
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "authority",
@@ -93,7 +86,7 @@
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "collection",

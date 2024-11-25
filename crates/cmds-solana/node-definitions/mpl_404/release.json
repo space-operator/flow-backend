@@ -41,7 +41,7 @@
     "design": null,
     "options": null,
     "instruction_info": {
-      "before": ["owner", "payer"],
+      "before": ["fee_payer"],
       "signature": "signature",
       "after": []
     }
@@ -62,7 +62,7 @@
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "owner",
@@ -100,22 +100,6 @@
       "name": "token",
       "type_bounds": ["pubkey"],
       "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "fee_project_account",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "fee_sol_account",
-      "type_bounds": ["pubkey"],
-      "required": false,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false

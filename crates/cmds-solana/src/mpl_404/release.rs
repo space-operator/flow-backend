@@ -2,6 +2,8 @@ use crate::prelude::*;
 use flow_lib::command::prelude::*;
 use mpl_hybrid::instructions::ReleaseV1Builder;
 
+use super::{constants::FEE_WALLET, utils::get_escrow_v1};
+
 const NAME: &str = "release";
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
@@ -26,10 +28,6 @@ pub struct Input {
     collection: Pubkey,
     #[serde_as(as = "AsPubkey")]
     token: Pubkey,
-    #[serde_as(as = "AsPubkey")]
-    fee_project_account: Pubkey,
-    #[serde_as(as = "Option<AsPubkey>")]
-    fee_sol_account: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
     submit: bool,
 }
@@ -42,12 +40,13 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let mut builder = ReleaseV1Builder::new();
 
     let (escrow, _bump) = solana_sdk::pubkey::Pubkey::find_program_address(
         &[b"escrow", input.collection.as_ref()],
         &mpl_hybrid::ID,
     );
+
+    let escrow_v1 = get_escrow_v1(&ctx, escrow).await.unwrap();
 
     let user_token_account = spl_associated_token_account::get_associated_token_address(
         &input.owner.pubkey(),
@@ -57,11 +56,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         spl_associated_token_account::get_associated_token_address(&escrow, &input.token);
 
     let fee_token_account = spl_associated_token_account::get_associated_token_address(
-        &input.fee_project_account,
+        &escrow_v1.fee_location,
         &input.token,
     );
 
-    let mut release_ix = builder
+    let release_ix = ReleaseV1Builder::new()
         .owner(input.owner.pubkey())
         .authority(input.authority.pubkey(), true)
         .escrow(escrow)
@@ -71,17 +70,15 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .user_token_account(user_token_account)
         .escrow_token_account(escrow_token_account)
         .fee_token_account(fee_token_account)
-        .fee_project_account(input.fee_project_account);
-
-    if let Some(fee_sol_account) = input.fee_sol_account {
-        release_ix = release_ix.fee_sol_account(fee_sol_account);
-    }
+        .fee_project_account(escrow_v1.fee_location)
+        .fee_sol_account(FEE_WALLET)
+        .instruction();
 
     let ix = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer, input.owner, input.authority].into(),
-        instructions: [release_ix.instruction()].into(),
+        instructions: [release_ix].into(),
     };
 
     let signature = ctx.execute(ix, value::map! {}).await?.signature;
@@ -386,8 +383,6 @@ mod tests {
                 asset,
                 collection: collection.pubkey(),
                 token,
-                fee_project_account: fee_wallet.pubkey(),
-                fee_sol_account: None,
                 submit: true,
             },
         )

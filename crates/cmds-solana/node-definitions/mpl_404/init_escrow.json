@@ -41,7 +41,7 @@
     "design": null,
     "options": null,
     "instruction_info": {
-      "before": [],
+      "before": ["fee_payer", "collection", "escrow"],
       "signature": "signature",
       "after": []
     }
