@@ -1020,7 +1020,7 @@ impl FlowGraph {
         &mut self,
         s: &mut State,
         txs: Vec<Vec<NodeId>>,
-    ) -> ControlFlow<Instructions> {
+    ) -> ControlFlow<Result<Instructions, String>> {
         tracing::info!("collecting instructions");
         let mut txs: Vec<IndexMap<NodeId, Option<Waiting>>> = txs
             .into_iter()
@@ -1031,10 +1031,16 @@ impl FlowGraph {
                 Some(w) => w,
                 None => unreachable!("all_waiting == true"),
             };
-            let tx = txs
-                .iter_mut()
-                .find(|tx| tx.contains_key(&info.id))
-                .expect("bug in sort_transactions");
+            let tx = txs.iter_mut().find(|tx| tx.contains_key(&info.id));
+            let tx = match tx {
+                Some(tx) => tx,
+                None => {
+                    return ControlFlow::Break(Err(format!(
+                        "could not find transaction position of {}:{}",
+                        info.id, info.command_name
+                    )));
+                }
+            };
             tx[&info.id] = Some(w);
         }
 
@@ -1111,7 +1117,7 @@ impl FlowGraph {
                         for resp in resp {
                             resp.sender.send(Err(execute::Error::Canceled(None))).ok();
                         }
-                        return ControlFlow::Break(ins);
+                        return ControlFlow::Break(Ok(ins));
                     }
                     let res = if s.stop.token.is_cancelled() {
                         Err(execute::Error::Canceled(s.stop.get_reason()))
@@ -1388,10 +1394,17 @@ impl FlowGraph {
                     }
                 };
 
-                if let ControlFlow::Break(ins) =
+                if let ControlFlow::Break(result) =
                     self.collect_and_execute_instructions(&mut s, txs).await
                 {
-                    s.result.instructions = Some(ins);
+                    match result {
+                        Ok(ins) => {
+                            s.result.instructions = Some(ins);
+                        }
+                        Err(error) => {
+                            s.flow_error(error);
+                        }
+                    }
                     s.stop.token.cancel();
                     continue;
                 }
