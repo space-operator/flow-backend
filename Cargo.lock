@@ -1838,6 +1838,7 @@ dependencies = [
  "mpl-core",
  "mpl-core-candy-guard",
  "mpl-core-candy-machine-core",
+ "mpl-hybrid",
  "mpl-token-auth-rules",
  "mpl-token-metadata 4.1.2",
  "once_cell",
@@ -4663,6 +4664,22 @@ dependencies = [
  "solana-program 1.18.26",
  "spl-associated-token-account 2.3.0",
  "spl-token",
+]
+
+[[package]]
+name = "mpl-hybrid"
+version = "0.1.0"
+source = "git+https://github.com/metaplex-foundation/mpl-hybrid?rev=90d5eaeb05f81d8304b21038b0c2b58acaf3fdee#90d5eaeb05f81d8304b21038b0c2b58acaf3fdee"
+dependencies = [
+ "base64 0.22.1",
+ "borsh 0.10.4",
+ "modular-bitfield",
+ "num-derive 0.3.3",
+ "num-traits",
+ "rmp-serde",
+ "serde_json",
+ "solana-program 1.18.26",
+ "thiserror",
 ]
 
 [[package]]
