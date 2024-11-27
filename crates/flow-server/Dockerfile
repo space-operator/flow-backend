@@ -1,4 +1,4 @@
-FROM rust as rustc
+FROM docker.io/library/rust as rustc
 RUN apt-get update && apt-get install -y clang lld && rm -rf /var/lib/apt/lists/*
 ENV RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=lld"
 RUN cargo install cargo-chef --quiet
@@ -22,12 +22,12 @@ COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
 RUN cargo build --release --bin flow-server --quiet
 
-FROM denoland/deno:debian as deno
+FROM docker.io/denoland/deno:debian as deno
 
 # Step 4:
 # Create a tiny output image.
 # It only contains our final binaries.
-FROM debian:stable-slim as runtime
+FROM docker.io/library/debian:stable-slim as runtime
 COPY ./certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
 COPY ./crates/flow-server/entrypoint.bash /space-operator/
 RUN apt-get update && \
