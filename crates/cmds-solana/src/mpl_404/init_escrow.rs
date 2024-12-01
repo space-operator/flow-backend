@@ -90,13 +90,21 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let ix = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer, input.authority].into(),
+        signers: [input.fee_payer.clone(), input.authority].into(),
         instructions: [init_escrow_ix].into(),
     };
 
     let ix = input.submit.then_some(ix).unwrap_or_default();
 
-    let signature = ctx.execute(ix, value::map! {}).await?.signature;
+    let signature = ctx
+        .execute(
+            ix,
+            value::map! {
+                "escrow" => escrow,
+            },
+        )
+        .await?
+        .signature;
 
     Ok(Output { signature })
 }

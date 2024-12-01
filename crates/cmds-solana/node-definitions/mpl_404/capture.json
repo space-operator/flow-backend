@@ -41,7 +41,7 @@
     "design": null,
     "options": null,
     "instruction_info": {
-      "before": ["owner", "payer"],
+      "before": ["fee_payer", "owner", "asset"],
       "signature": "signature",
       "after": []
     }
@@ -57,12 +57,12 @@
   ],
   "targets": [
     {
-      "name": "fee_player",
+      "name": "fee_payer",
       "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true 
     },
     {
       "name": "owner",
@@ -70,7 +70,7 @@
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "authority",
@@ -86,7 +86,7 @@
       "required": true,
       "defaultValue": null,
       "tooltip": "",
-      "passthrough": false
+      "passthrough": true
     },
     {
       "name": "collection",
@@ -100,22 +100,6 @@
       "name": "token",
       "type_bounds": ["pubkey"],
       "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "fee_project_account",
-      "type_bounds": ["pubkey"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
-    {
-      "name": "fee_sol_account",
-      "type_bounds": ["pubkey"],
-      "required": false,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false

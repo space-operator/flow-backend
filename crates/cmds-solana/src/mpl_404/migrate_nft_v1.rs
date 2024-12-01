@@ -69,204 +69,13 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
 #[cfg(test)]
 mod tests {
-    use mpl_core::instructions::{CreateCollectionV2Builder, CreateV1Builder};
-    use mpl_hybrid::instructions::{InitEscrowV1Builder, InitEscrowV2Builder};
-
-    use crate::utils::ui_amount_to_amount;
+    use crate::mpl_404::utils::{
+        create_asset_v2, create_collection_v2, init_escrow_v1, init_escrow_v2, transfer_sol,
+        CreateAssetV2Accounts, CreateAssetV2Args, CreateCollectionV2Accounts,
+        CreateCollectionV2Args, InitEscrowV1Accounts, InitEscrowV1Args, InitEscrowV2Accounts,
+    };
 
     use super::*;
-
-    async fn transfer_sol(
-        ctx: &Context,
-        from_pubkey: Wallet,
-        to_pubkey: &Pubkey,
-        amount: Decimal,
-    ) -> crate::Result<Signature> {
-        let ix = solana_sdk::system_instruction::transfer(
-            &from_pubkey.pubkey(),
-            to_pubkey,
-            ui_amount_to_amount(amount, 9).unwrap(),
-        );
-
-        let (mut transfer_sol_tx, recent_blockhash) =
-            execute(&ctx.solana_client, &from_pubkey.pubkey(), &[ix])
-                .await
-                .unwrap();
-
-        transfer_sol_tx
-            .try_sign(&[from_pubkey.keypair().unwrap()], recent_blockhash)
-            .unwrap();
-
-        submit_transaction(&ctx.solana_client, transfer_sol_tx).await
-    }
-
-    async fn create_collection(
-        ctx: &Context,
-        collection: Wallet,
-        payer: Wallet,
-        authority: Wallet,
-        name: String,
-        uri: String,
-    ) -> crate::Result<Signature> {
-        let ix = CreateCollectionV2Builder::new()
-            .collection(collection.pubkey())
-            .update_authority(Some(authority.pubkey()))
-            .payer(payer.pubkey())
-            .name(name)
-            .uri(uri)
-            .instruction();
-
-        let (mut create_collection_tx, recent_blockhash) =
-            execute(&ctx.solana_client, &payer.pubkey(), &[ix])
-                .await
-                .unwrap();
-
-        create_collection_tx
-            .try_sign(
-                &[payer.keypair().unwrap(), authority.keypair().unwrap()],
-                recent_blockhash,
-            )
-            .unwrap();
-
-        submit_transaction(&ctx.solana_client, create_collection_tx).await
-    }
-
-    async fn create_asset(
-        ctx: &Context,
-        payer: Wallet,
-        authority: Wallet,
-        collection: Wallet,
-        owner: &Pubkey,
-        name: String,
-        uri: String,
-    ) -> crate::Result<(Pubkey, Signature)> {
-        let asset = Wallet::Keypair(Keypair::new());
-
-        let ix = CreateV1Builder::new()
-            .payer(payer.pubkey())
-            .authority(Some(authority.pubkey()))
-            .asset(asset.pubkey())
-            .collection(Some(collection.pubkey()))
-            .owner(Some(*owner))
-            .name(name)
-            .uri(uri)
-            .instruction();
-
-        let (mut create_asset_tx, recent_blockhash) =
-            execute(&ctx.solana_client, &payer.pubkey(), &[ix])
-                .await
-                .unwrap();
-
-        create_asset_tx
-            .try_sign(
-                &[
-                    asset.keypair().unwrap(),
-                    payer.keypair().unwrap(),
-                    authority.keypair().unwrap(),
-                ],
-                recent_blockhash,
-            )
-            .unwrap();
-
-        let result_signature = submit_transaction(&ctx.solana_client, create_asset_tx).await;
-        result_signature.map(|signature| (asset.pubkey(), signature))
-    }
-
-    async fn init_escrow_v1(
-        ctx: &Context,
-        payer: Wallet,
-        authority: Wallet,
-        collection: Wallet,
-        token: &Pubkey,
-        fee_wallet: &Pubkey,
-        escrow_name: String,
-        uri: String,
-        max: u64,
-        min: u64,
-        path: u16,
-    ) -> crate::Result<(Pubkey, Signature)> {
-        let (escrow, _bump) = solana_sdk::pubkey::Pubkey::find_program_address(
-            &[b"escrow", collection.pubkey().as_ref()],
-            &mpl_hybrid::ID,
-        );
-
-        let fee_ata = spl_associated_token_account::get_associated_token_address(fee_wallet, token);
-
-        let fee_token_decimals = 9;
-        let sol_fee_decimals = 9;
-
-        let ix = InitEscrowV1Builder::new()
-            .escrow(escrow)
-            .authority(authority.pubkey())
-            .collection(collection.pubkey())
-            .token(*token)
-            .fee_location(*fee_wallet)
-            .fee_ata(fee_ata)
-            .name(escrow_name)
-            .uri(uri)
-            .max(max)
-            .min(min)
-            .amount(ui_amount_to_amount(
-                rust_decimal_macros::dec!(0),
-                fee_token_decimals,
-            )?)
-            .fee_amount(ui_amount_to_amount(
-                rust_decimal_macros::dec!(0),
-                fee_token_decimals,
-            )?)
-            .sol_fee_amount(ui_amount_to_amount(
-                rust_decimal_macros::dec!(0),
-                sol_fee_decimals,
-            )?)
-            .path(path)
-            .instruction();
-
-        let (mut init_escrow_v1_tx, recent_blockhash) =
-            execute(&ctx.solana_client, &payer.pubkey(), &[ix])
-                .await
-                .unwrap();
-
-        init_escrow_v1_tx
-            .try_sign(
-                &[payer.keypair().unwrap(), authority.keypair().unwrap()],
-                recent_blockhash,
-            )
-            .unwrap();
-
-        let result_signature = submit_transaction(&ctx.solana_client, init_escrow_v1_tx).await;
-        result_signature.map(|signature| (escrow, signature))
-    }
-
-    async fn init_escrow_v2(
-        ctx: &Context,
-        fee_payer: Wallet,
-        authority: Wallet,
-    ) -> crate::Result<(Pubkey, Signature)> {
-        let (escrow, _bump) = solana_sdk::pubkey::Pubkey::find_program_address(
-            &[b"escrow", authority.pubkey().as_ref()],
-            &mpl_hybrid::ID,
-        );
-
-        let ix = InitEscrowV2Builder::new()
-            .escrow(escrow)
-            .authority(authority.pubkey())
-            .instruction();
-
-        let (mut init_escrow_v2_tx, recent_blockhash) =
-            execute(&ctx.solana_client, &fee_payer.pubkey(), &[ix])
-                .await
-                .unwrap();
-
-        init_escrow_v2_tx
-            .try_sign(
-                &[fee_payer.keypair().unwrap(), authority.keypair().unwrap()],
-                recent_blockhash,
-            )
-            .unwrap();
-
-        let result_signature = submit_transaction(&ctx.solana_client, init_escrow_v2_tx).await;
-        result_signature.map(|signature| (escrow, signature))
-    }
 
     async fn setup(
         ctx: &Context,
@@ -285,7 +94,7 @@ mod tests {
         let transfer_sol_signature = transfer_sol(
             ctx,
             payer.clone(),
-            &authority.pubkey(),
+            authority.pubkey(),
             rust_decimal_macros::dec!(0.03),
         )
         .await
@@ -293,14 +102,18 @@ mod tests {
 
         dbg!(transfer_sol_signature);
 
-        // create collection
-        let create_collection_signature = create_collection(
+        // create_collection
+        let create_collection_signature = create_collection_v2(
             ctx,
-            collection.clone(),
-            payer.clone(),
-            authority.clone(),
-            String::from("mock_collection"),
-            String::from("https://example.com"),
+            CreateCollectionV2Accounts {
+                payer: payer.clone(),
+                update_authority: Some(authority.pubkey()),
+                collection: collection.clone(),
+            },
+            CreateCollectionV2Args {
+                name: String::from("collection name"),
+                uri: String::from("https://example.com"),
+            },
         )
         .await
         .unwrap();
@@ -310,16 +123,24 @@ mod tests {
         // init escrow
         let (escrow_v1, init_escrow_v1_signature) = init_escrow_v1(
             ctx,
-            payer.clone(),
-            authority.clone(),
-            collection.clone(),
-            token,
-            fee_wallet,
-            escrow_name,
-            uri,
-            max,
-            min,
-            path,
+            InitEscrowV1Accounts {
+                payer: payer.clone(),
+                authority: authority.clone(),
+                collection: collection.clone(),
+                token: *token,
+                fee_location: *fee_wallet,
+            },
+            InitEscrowV1Args {
+                fee_token_decimals: 9,
+                name: escrow_name,
+                uri,
+                max,
+                min,
+                path,
+                amount: rust_decimal_macros::dec!(0),
+                fee_amount: rust_decimal_macros::dec!(0),
+                sol_fee_amount: rust_decimal_macros::dec!(0),
+            },
         )
         .await
         .unwrap();
@@ -327,29 +148,40 @@ mod tests {
         dbg!(init_escrow_v1_signature);
 
         // init_escrow_v2
-        let (escrow_v2, init_escrow_v2_signature) =
-            init_escrow_v2(ctx, payer.clone(), authority.clone())
-                .await
-                .unwrap();
+        let (escrow_v2, init_escrow_v2_signature) = init_escrow_v2(
+            ctx,
+            InitEscrowV2Accounts {
+                payer: payer.clone(),
+                authority: authority.clone(),
+            },
+        )
+        .await
+        .unwrap();
 
         dbg!(init_escrow_v2_signature);
 
         // create asset
-        let (asset, create_asset_signature) = create_asset(
+        let asset = Wallet::Keypair(Keypair::new());
+        let create_asset_signature = create_asset_v2(
             ctx,
-            payer.clone(),
-            authority.clone(),
-            collection.clone(),
-            &escrow_v1,
-            String::from("mock_asset_nft"),
-            String::from("https://example.com/0.json"),
+            CreateAssetV2Accounts {
+                payer: payer.clone(),
+                asset: asset.clone(),
+                collection: Some(collection.pubkey()),
+                authority: Some(authority.clone()),
+                owner: Some(escrow_v1),
+            },
+            CreateAssetV2Args {
+                name: String::from("asset name"),
+                uri: String::from("https://example.com"),
+            },
         )
         .await
         .unwrap();
 
         dbg!(create_asset_signature);
 
-        (escrow_v1, escrow_v2, asset)
+        (escrow_v1, escrow_v2, asset.pubkey())
     }
 
     #[test]

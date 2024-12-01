@@ -27,6 +27,8 @@ pub struct Input {
     pub fee_payer: Wallet,
     pub asset: Wallet,
     pub authority: Option<Wallet>,
+    #[serde(default, with = "value::pubkey::opt")]
+    pub owner: Option<Pubkey>,
     pub name: String,
     pub uri: String,
     pub plugins: Vec<PluginAuthorityPair>,
@@ -121,6 +123,12 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let builder = if !plugins.is_empty() {
         builder.plugins(plugins)
+    } else {
+        builder
+    };
+
+    let builder = if let Some(owner) = input.owner {
+        builder.owner(Some(owner))
     } else {
         builder
     };
