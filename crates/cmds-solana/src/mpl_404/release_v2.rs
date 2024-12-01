@@ -1,7 +1,4 @@
-use crate::{
-    mpl_404::constants::{FEE_WALLET, SLOT_HASHES},
-    prelude::*,
-};
+use crate::{mpl_404::constants::{FEE_WALLET, SLOT_HASHES}, prelude::*};
 
 use flow_lib::command::prelude::*;
 use mpl_hybrid::instructions::ReleaseV2Builder;
@@ -70,7 +67,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let release_v2_ix = ReleaseV2Builder::new()
         .owner(input.owner.pubkey())
-        .authority(input.authority.pubkey())
+        .authority(input.authority.pubkey(), true)
         .recipe(recipe)
         .escrow(escrow)
         .asset(input.asset)
@@ -79,8 +76,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .escrow_token_account(escrow_token_account)
         .token(input.token)
         .fee_token_account(fee_token_account)
-        .fee_sol_account(FEE_WALLET)
         .fee_project_account(input.fee_project_account)
+        .fee_sol_account(FEE_WALLET)
         .recent_blockhashes(SLOT_HASHES)
         .mpl_core(mpl_core::ID)
         .associated_token_program(spl_associated_token_account::ID)
@@ -102,7 +99,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 mod tests {
     use crate::mpl_404::utils::{
         capture_v2, create_asset_v1, create_collection_v2, init_ata_if_needed, init_escrow_v2,
-        init_recipe, transfer_sol, CaptureV2Accounts, CreateAssetV1Accounts, CreateAssetV1Args,
+        init_recipe_v1, transfer_sol, CaptureV2Accounts, CreateAssetV1Accounts, CreateAssetV1Args,
         CreateCollectionV2Accounts, CreateCollectionV2Args, InitEscrowV2Accounts,
         InitRecipeAccounts, InitRecipeArgs,
     };
@@ -183,7 +180,7 @@ mod tests {
         dbg!(create_asset_v1_signature);
 
         // init recipe
-        let init_recipe_signature = init_recipe(
+        let init_recipe_signature = init_recipe_v1(
             ctx,
             InitRecipeAccounts {
                 payer: payer.clone(),

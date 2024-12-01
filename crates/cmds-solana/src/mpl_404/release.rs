@@ -40,7 +40,6 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-
     let (escrow, _bump) = solana_sdk::pubkey::Pubkey::find_program_address(
         &[b"escrow", input.collection.as_ref()],
         &mpl_hybrid::ID,
@@ -91,7 +90,10 @@ mod tests {
     use mpl_core::instructions::{CreateCollectionV2Builder, CreateV1Builder};
     use mpl_hybrid::instructions::{CaptureV1Builder, InitEscrowV1Builder};
 
-    use crate::utils::ui_amount_to_amount;
+    use crate::{
+        mpl_404::utils::{capture_v1, CaptureV1Accounts},
+        utils::ui_amount_to_amount,
+    };
 
     use super::*;
 
@@ -331,9 +333,19 @@ mod tests {
         dbg!(create_asset_signature);
 
         // capture
-        let capture_signature = capture(ctx, payer, escrow, asset, collection, *token, *fee_wallet)
-            .await
-            .unwrap();
+        let capture_signature = capture_v1(
+            ctx,
+            CaptureV1Accounts {
+                owner: payer.clone(),
+                authority: payer.clone(),
+                asset,
+                collection: collection.pubkey(),
+                token: *token,
+                fee_project_account: *fee_wallet,
+            },
+        )
+        .await
+        .unwrap();
 
         dbg!(capture_signature);
 

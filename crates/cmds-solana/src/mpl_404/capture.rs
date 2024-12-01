@@ -1,7 +1,4 @@
-use crate::{
-    mpl_404::{constants::FEE_WALLET, utils::get_escrow_v1},
-    prelude::*,
-};
+use crate::{mpl_404::{constants::FEE_WALLET, utils::get_escrow_v1}, prelude::*};
 use flow_lib::command::prelude::*;
 use mpl_hybrid::instructions::CaptureV1Builder;
 

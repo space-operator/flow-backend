@@ -1,6 +1,6 @@
 use crate::{prelude::*, utils::ui_amount_to_amount};
 use flow_lib::command::prelude::*;
-use mpl_hybrid::instructions::InitRecipeBuilder;
+use mpl_hybrid::instructions::InitRecipeV1Builder;
 
 const NAME: &str = "init_recipe";
 
@@ -76,7 +76,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         &input.token,
     );
 
-    let init_recipe_ix = InitRecipeBuilder::new()
+    let init_recipe_ix = InitRecipeV1Builder::new()
         .recipe(recipe)
         .authority(input.authority.pubkey())
         .collection(input.collection)

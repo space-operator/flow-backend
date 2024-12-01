@@ -1,7 +1,4 @@
-use crate::{
-    mpl_404::constants::{FEE_WALLET, SLOT_HASHES},
-    prelude::*,
-};
+use crate::{mpl_404::constants::{FEE_WALLET, SLOT_HASHES}, prelude::*};
 use flow_lib::command::prelude::*;
 use mpl_hybrid::instructions::CaptureV2Builder;
 
@@ -71,7 +68,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let capture_v2_ix = CaptureV2Builder::new()
         .owner(input.owner.pubkey())
-        .authority(input.authority.pubkey())
+        .authority(input.authority.pubkey(), true)
         .recipe(recipe)
         .escrow(escrow)
         .asset(input.asset)
@@ -102,8 +99,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 #[cfg(test)]
 mod tests {
     use crate::mpl_404::utils::{
-        create_asset_v1, create_collection_v2, init_ata_if_needed, init_escrow_v2, init_recipe,
-        transfer_sol, CreateAssetV1Accounts, CreateAssetV1Args, CreateCollectionV2Accounts,
+        create_asset_v2, create_collection_v2, init_ata_if_needed, init_escrow_v2, init_recipe_v1,
+        transfer_sol, CreateAssetV2Accounts, CreateAssetV2Args, CreateCollectionV2Accounts,
         CreateCollectionV2Args, InitEscrowV2Accounts, InitRecipeAccounts, InitRecipeArgs,
     };
 
@@ -162,17 +159,17 @@ mod tests {
 
         dbg!(init_escrow_v2_signature);
 
-        // create asset v1
-        let create_asset_v1_signature = create_asset_v1(
+        // create asset v2
+        let create_asset_v2_signature = create_asset_v2(
             ctx,
-            CreateAssetV1Accounts {
+            CreateAssetV2Accounts {
                 payer: payer.clone(),
                 asset: asset.clone(),
                 collection: Some(collection.pubkey()),
                 authority: Some(authority.clone()),
                 owner: Some(escrow),
             },
-            CreateAssetV1Args {
+            CreateAssetV2Args {
                 name: String::from("asset name"),
                 uri: String::from("https://example.com"),
             },
@@ -180,10 +177,10 @@ mod tests {
         .await
         .unwrap();
 
-        dbg!(create_asset_v1_signature);
+        dbg!(create_asset_v2_signature);
 
         // init recipe
-        let init_recipe_signature = init_recipe(
+        let init_recipe_signature = init_recipe_v1(
             ctx,
             InitRecipeAccounts {
                 payer: payer.clone(),

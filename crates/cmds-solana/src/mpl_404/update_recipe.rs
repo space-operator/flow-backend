@@ -144,7 +144,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
 #[cfg(test)]
 mod tests {
-    use mpl_hybrid::instructions::InitRecipeBuilder;
+    use mpl_hybrid::instructions::InitRecipeV1Builder;
 
     use super::*;
 
@@ -204,7 +204,7 @@ mod tests {
         let fee_ata =
             spl_associated_token_account::get_associated_token_address(fee_location, token);
 
-        let ix = InitRecipeBuilder::new()
+        let ix = InitRecipeV1Builder::new()
             .recipe(recipe)
             .authority(payer.pubkey())
             .collection(collection.pubkey())
