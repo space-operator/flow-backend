@@ -4,7 +4,7 @@ use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use deadpool_postgres::{Object as Connection, Transaction};
 use flow_lib::{
-    config::client::{self, ClientConfig},
+    config::client::{self, ClientConfig, FlowRow},
     context::signer::Presigner,
     CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
 };
@@ -77,6 +77,8 @@ impl TryFrom<Row> for FlowInfo {
 
 #[async_trait]
 pub trait UserConnectionTrait: Any + 'static {
+    async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow>;
+
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()>;
 
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo>;
@@ -96,7 +98,7 @@ pub trait UserConnectionTrait: Any + 'static {
         nodes: &HashMap<NodeId, FlowRunId>,
     ) -> crate::Result<HashMap<NodeId, Vec<Value>>>;
 
-    async fn get_flow_config(&self, id: FlowId) -> crate::Result<client::ClientConfig>;
+    async fn get_flow_config(&self, id: FlowId) -> crate::Result<ClientConfig>;
 
     async fn set_start_time(&self, id: &FlowRunId, time: &DateTime<Utc>) -> crate::Result<()>;
 

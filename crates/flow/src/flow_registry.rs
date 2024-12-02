@@ -25,6 +25,10 @@ use tokio_util::sync::CancellationToken;
 use tracing::Instrument;
 use utils::actix_service::ActixService;
 
+// make a registry from entrypoint flow (currently)
+// get a registry from DB
+// start flow
+
 pub const MAX_CALL_DEPTH: u32 = 32;
 
 #[derive(Debug, ThisError)]
