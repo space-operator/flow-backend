@@ -84,5 +84,7 @@
   ],
   "targets_form.json_schema": {},
   "targets_form.ui_schema": {},
-  "targets_form.extra": {}
+  "targets_form.extra": {
+    "source": "import * as lib from \"jsr:@space-operator/flow-lib\";\nimport * as web3 from \"npm:@solana/web3.js\";\nimport { Instructions } from \"jsr:@space-operator/flow-lib/context\";\n\ninterface Inputs {\n  from: web3.PublicKey;\n  to: web3.PublicKey;\n  amount: number;\n}\n\nexport default class Playground extends lib.BaseCommand {\n  async run(\n    ctx: lib.Context,\n    params: Inputs,\n  ): Promise<Record<string, any>> {\n    const result = await ctx.execute(\n      new Instructions(\n        params.from,\n        [params.from],\n        [\n          web3.SystemProgram.transfer({\n            fromPubkey: params.from,\n            toPubkey: params.to,\n            lamports: params.amount,\n          }),\n        ]\n      ),\n      {}\n    );\n\n    return {\n      signature: result.signature!,\n    };\n  }\n}\n"
+  }
 }

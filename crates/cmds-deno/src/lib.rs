@@ -140,7 +140,7 @@ mod tests {
             client::{Extra, Source, Target, TargetsForm},
             node::Definition,
         },
-        Context,
+        CommandType, Context, ValueType,
     };
     use serde_json::Value as JsonValue;
     use std::sync::Arc;
@@ -203,6 +203,58 @@ mod tests {
             .unwrap();
         let c = value::from_value::<f64>(output["c"].clone()).unwrap();
         assert_eq!(c, 25.0);
+        drop(child);
+    }
+
+    fn node_data_no_def(source: &str) -> NodeData {
+        NodeData {
+            r#type: CommandType::Deno,
+            node_id: Uuid::new_v4().to_string(),
+            sources: vec![Source {
+                id: Uuid::new_v4(),
+                name: "input".to_string(),
+                optional: false,
+                r#type: ValueType::String,
+            }],
+            targets: vec![Target {
+                id: Uuid::new_v4(),
+                name: "output".to_string(),
+                required: true,
+                passthrough: false,
+                type_bounds: vec![ValueType::String],
+            }],
+            targets_form: TargetsForm {
+                form_data: JsonValue::Null,
+                wasm_bytes: None,
+                extra: Extra {
+                    supabase_id: None,
+                    rest: [("source".to_owned(), source.into())].into(),
+                },
+            },
+            instruction_info: None,
+        }
+    }
+
+    #[actix_web::test]
+    async fn test_run_without_def() {
+        tracing_subscriber::fmt::try_init().ok();
+        const SOURCE: &str =
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/playground.ts"));
+
+        let nd = node_data_no_def(SOURCE);
+
+        let (cmd, child) = new(&nd).await.unwrap();
+        let mut ctx = Context::default();
+        Arc::get_mut(&mut ctx.extensions)
+            .unwrap()
+            .insert(srpc::Server::start_http_server().unwrap());
+
+        let input = value::map! { "input_one" => 12, "input_two" => 13, "input_three" => true };
+
+        let output = cmd.run(ctx, input).await.unwrap();
+
+        dbg!(&output);
+
         drop(child);
     }
 }
