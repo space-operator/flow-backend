@@ -298,7 +298,7 @@ impl FlowRegistry {
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
             rpc_server: srpc::Server::start_http_server()
-                .inspect_err(|error| tracing::info!("srpc error: {}", error))
+                .inspect_err(|error| tracing::error!("srpc error: {}", error))
                 .ok(),
         })
     }
