@@ -29,7 +29,7 @@ impl CommandTrait for FlowOutputCommand {
 
     fn inputs(&self) -> Vec<Input> {
         [Input {
-            name: "".into(),
+            name: self.rename.clone(),
             type_bounds: [ValueType::Free].to_vec(),
             required: true,
             passthrough: false,
