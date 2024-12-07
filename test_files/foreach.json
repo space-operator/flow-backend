@@ -550,7 +550,7 @@
           "sources": [],
           "targets": [
             {
-              "name": "",
+              "name": "keypairs",
               "type_bounds": ["free"],
               "required": true,
               "defaultValue": "",

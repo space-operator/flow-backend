@@ -347,7 +347,7 @@
           "sources": [],
           "targets": [
             {
-              "name": "",
+              "name": "balance",
               "type_bounds": ["free"],
               "required": true,
               "defaultValue": "",
@@ -417,7 +417,7 @@
           "sources": [],
           "targets": [
             {
-              "name": "",
+              "name": "key",
               "type_bounds": ["free"],
               "required": true,
               "defaultValue": "",
