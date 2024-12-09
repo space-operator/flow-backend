@@ -608,7 +608,7 @@
           "sources": [],
           "targets": [
             {
-              "name": "",
+              "name": "1",
               "type_bounds": ["free"],
               "required": true,
               "defaultValue": "",
@@ -678,7 +678,7 @@
           "sources": [],
           "targets": [
             {
-              "name": "",
+              "name": "2",
               "type_bounds": ["free"],
               "required": true,
               "defaultValue": "",

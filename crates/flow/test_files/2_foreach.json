@@ -344,7 +344,7 @@
           "sources": [],
           "targets": [
             {
-              "name": "",
+              "name": "output",
               "type_bounds": ["free"],
               "required": true,
               "defaultValue": "",

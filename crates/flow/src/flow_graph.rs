@@ -360,10 +360,10 @@ pub enum BuildGraphError {
     EdgeSourceNotFound(NodeId),
     #[error("node not found in partial_config: {:?}", .0)]
     NodeNotFoundInPartialConfig(NodeId),
-    #[error("node {:?} has no input {:?}", .0.0, .0.1)]
-    NoInput((NodeId, String)),
-    #[error("node {:?} has no output {:?}", .0.0, .0.1)]
-    NoOutput((NodeId, String)),
+    #[error("node {:?}:{} has no input {:?}", .0.0, .1, .0.1)]
+    NoInput((NodeId, String), String),
+    #[error("node {:?}:{} has no output {:?}", .0.0, .1, .0.1)]
+    NoOutput((NodeId, String), String),
 }
 
 impl FlowGraph {
@@ -463,7 +463,7 @@ impl FlowGraph {
                     let required = n
                         .command
                         .input_is_required(&to.1)
-                        .ok_or_else(|| BuildGraphError::NoInput(to.clone()))?;
+                        .ok_or_else(|| BuildGraphError::NoInput(to.clone(), n.command.name()))?;
                     (n.idx, required)
                 }
             };
@@ -494,7 +494,7 @@ impl FlowGraph {
                     let optional = n
                         .command
                         .output_is_optional(&from.1)
-                        .ok_or_else(|| BuildGraphError::NoOutput(from.clone()))?;
+                        .ok_or_else(|| BuildGraphError::NoOutput(from.clone(), n.command.name()))?;
                     (n.idx, optional)
                 }
             };
