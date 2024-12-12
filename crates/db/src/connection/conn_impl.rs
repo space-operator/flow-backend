@@ -1,5 +1,6 @@
 use crate::{config::Encrypted, local_storage::CacheBucket, EncryptedWallet};
 use bytes::{Bytes, BytesMut};
+use client::FlowRow;
 use deadpool_postgres::Transaction;
 use flow_lib::config::client::NodeDataSkipWasm;
 use futures_util::StreamExt;
@@ -7,6 +8,30 @@ use tokio::task::spawn_blocking;
 use utils::bs58_decode;
 
 use super::*;
+
+struct FlowRowCache;
+
+impl CacheBucket for FlowRowCache {
+    type Key = FlowId;
+    type EncodedKey = kv::Integer;
+    type Object = FlowRow;
+
+    fn name() -> &'static str {
+        "FlowRowCache"
+    }
+
+    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+        obj.user_id == *user_id
+    }
+
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+        kv::Integer::from(*key)
+    }
+
+    fn cache_time() -> Duration {
+        Duration::from_secs(10)
+    }
+}
 
 struct FlowInfoCache;
 
@@ -82,6 +107,24 @@ impl CacheBucket for FlowConfigCache {
 
 #[async_trait]
 impl UserConnectionTrait for UserConnection {
+    async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow> {
+        if let Some(cached) = self.local.get_cache::<FlowRowCache>(&self.user_id, &id) {
+            return Ok(cached);
+        }
+        let result = self.get_flow(id).await;
+        if let Ok(result) = &result {
+            if let Err(error) = self.local.set_cache::<FlowRowCache>(&id, result.clone()) {
+                tracing::error!("set_cache error: {}", error);
+            }
+        }
+        result
+    }
+
+    async fn download_storage_file(&self, path: &str) -> crate::Result<Bytes> {
+        // TODO: cache
+        self.download_storage_file(path).await
+    }
+
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
         self.share_flow_run(id, user).await
     }
@@ -250,6 +293,47 @@ impl UserConnectionTrait for UserConnection {
     }
 }
 
+#[track_caller]
+fn row_to_flow_row(r: tokio_postgres::Row) -> crate::Result<FlowRow> {
+    Ok(FlowRow {
+        id: r.try_get("id").map_err(Error::data("flows.id"))?,
+        user_id: r.try_get("user_id").map_err(Error::data("flows.user_id"))?,
+        nodes: r
+            .try_get::<_, Vec<Json<client::Node>>>("nodes")
+            .map_err(Error::data("flows.nodes"))?
+            .into_iter()
+            .map(|x| x.0)
+            .collect(),
+        edges: r
+            .try_get::<_, Vec<Json<client::Edge>>>("edges")
+            .map_err(Error::data("flows.edges"))?
+            .into_iter()
+            .map(|x| x.0)
+            .collect(),
+        environment: r
+            .try_get::<_, Json<std::collections::HashMap<String, String>>>("environment")
+            .map_err(Error::data("flows.environment"))?
+            .0,
+        current_network: r
+            .try_get::<_, Json<client::Network>>("current_network")
+            .map_err(Error::data("flows.current_network"))?
+            .0,
+        instructions_bundling: r
+            .try_get::<_, Json<client::BundlingMode>>("instructions_bundling")
+            .map_err(Error::data("flows.current_network"))?
+            .0,
+        is_public: r
+            .try_get::<_, bool>("isPublic")
+            .map_err(Error::data("flows.isPublic"))?,
+        start_shared: r
+            .try_get::<_, bool>("start_shared")
+            .map_err(Error::data("flows.start_shared"))?,
+        start_unverified: r
+            .try_get::<_, bool>("start_unverified")
+            .map_err(Error::data("flows.start_unverified"))?,
+    })
+}
+
 impl UserConnection {
     pub fn new(
         pool: RealDbPool,
@@ -263,6 +347,36 @@ impl UserConnection {
             wasm_storage,
             local,
         }
+    }
+
+    async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow> {
+        let conn = self.pool.get_conn().await?;
+        let flow = conn
+            .do_query_opt(
+                r#"SELECT id,
+                        user_id,
+                        nodes,
+                        edges,
+                        environment,
+                        current_network,
+                        instructions_bundling
+                        "isPublic",
+                        start_shared,
+                        start_unverified
+                FROM flows
+                WHERE id = $1 AND user_id = $2"#,
+                &[&id, &self.user_id],
+            )
+            .await
+            .map_err(Error::exec("get_flow_config"))?
+            .ok_or_else(|| Error::not_found("flow", id))
+            .and_then(row_to_flow_row)?;
+
+        Ok(flow)
+    }
+
+    async fn download_storage_file(&self, path: &str) -> crate::Result<Bytes> {
+        Ok(self.wasm_storage.download(path).await?)
     }
 
     async fn get_encrypted_wallets(&self) -> crate::Result<Vec<EncryptedWallet>> {
