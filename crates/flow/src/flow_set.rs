@@ -1,15 +1,25 @@
-use std::{collections::VecDeque, sync::Arc};
-
-use anyhow::anyhow;
 use flow_lib::{
-    config::client::{BundlingMode, FlowRow, Network, PartialConfig},
-    context::signer,
-    solana::{ExecuteOn, Pubkey},
-    CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
+    config::{
+        client::{BundlingMode, ClientConfig, FlowRow, FlowRunOrigin, Network, PartialConfig},
+        Endpoints,
+    },
+    context::{execute, get_jwt, signer},
+    solana::{ExecuteOn, ExecutionConfig, Pubkey},
+    CommandType, FlowId, FlowRunId, NodeId, SolanaClientConfig, User, UserId, ValueSet,
 };
+use getset::Getters;
 use hashbrown::HashMap;
+use serde_json::Value as JsonValue;
+use std::sync::{Arc, Mutex};
+use tokio::sync::Semaphore;
 
-use crate::command::{interflow, interflow_instructions};
+use crate::{
+    command::{interflow, interflow_instructions},
+    flow_registry::{
+        get_flow, get_previous_values, new_flow_run, run_rhai, FlowRegistry, StartFlowOptions,
+    },
+    FlowGraph,
+};
 
 /// Who can start flows
 pub enum StartPermission {
@@ -21,14 +31,9 @@ pub enum StartPermission {
     Anonymous,
 }
 
-#[derive(bon::Builder)]
+#[derive(bon::Builder, Clone)]
 pub struct Flow {
     pub row: FlowRow,
-
-    pub partial_config: Option<PartialConfig>,
-    pub output_instructions: bool,
-    pub bundling_mode: Option<BundlingMode>,
-    pub inherit_bundling_mode: Option<bool>,
 }
 
 impl Flow {
@@ -81,6 +86,8 @@ impl Flow {
 
 #[derive(bon::Builder)]
 pub struct FlowDeployment {
+    /// Owner of this deployment (and all flows belonging to it)
+    pub owner: UserId,
     /// Flow ID to start the set
     pub entrypoint: FlowId,
     /// Flow configs
@@ -90,28 +97,16 @@ pub struct FlowDeployment {
     pub start_permission: StartPermission,
     /// Wallets are stored separately
     pub wallets_id: Vec<i64>,
-    /// Solana execution config
-    pub execution_config: ExecuteOn,
-
-    /// Environment variables customization
-    pub environment: Option<HashMap<String, String>>,
-    /// Solana network customization
-    pub sol_network: Option<Network>,
-    /// Addresses and amounts to send fees to
-    pub fees: Option<Vec<(Pubkey, u64)>>,
 }
 
 impl FlowDeployment {
     pub fn new(entry: FlowRow) -> Self {
-        let flow = Flow::builder()
-            .row(entry)
-            .output_instructions(false)
-            .build();
+        let flow = Flow::builder().row(entry).build();
         Self::builder()
             .entrypoint(flow.row.id)
             .start_permission(flow.start_permission())
             .wallets_id(flow.wallets_id())
-            .execution_config(ExecuteOn::CurrentMachine)
+            .owner(flow.row.user_id)
             .flows([(flow.row.id, flow)].into())
             .build()
     }
@@ -123,10 +118,9 @@ pub struct FlowStarter {
     pub authenticated: bool,
 }
 
-pub struct StartFlowOptions {
-    pub flow_id: FlowId,
+/// Start a flow deployment by starting the entrypoint
+pub struct StartFlowDeploymentOptions {
     pub inputs: ValueSet,
-    pub origin: StartFlowOrigin,
     pub starter: FlowStarter,
 }
 
@@ -141,13 +135,13 @@ pub enum StartFlowOrigin {
 }
 
 pub struct FlowSet {
-    flows: Arc<FlowDeployment>,
+    flows: FlowDeployment,
 
-    signers: signer::Svc,
+    ctx: FlowSetContext,
 }
 
 pub mod get_flow_row {
-    use flow_lib::{config::client::FlowRow, utils::TowerClient, BoxError, FlowId, UserId};
+    use flow_lib::{config::client::FlowRow, utils::TowerClient, BoxError, FlowId};
     use thiserror::Error as ThisError;
 
     pub type Svc = TowerClient<Request, Response, Error>;
@@ -179,10 +173,58 @@ pub mod get_flow_row {
     }
 }
 
+pub mod make_signer {
+    use flow_lib::{context::signer, utils::TowerClient, BoxError};
+    use thiserror::Error as ThisError;
+
+    pub type Svc = TowerClient<Request, Response, Error>;
+
+    pub struct Request {
+        pub wallets_id: Vec<i64>,
+    }
+
+    impl actix::Message for Request {
+        type Result = Result<Response, Error>;
+    }
+
+    pub struct Response {
+        pub signer: signer::Svc,
+    }
+
+    #[derive(ThisError, Debug)]
+    pub enum Error {
+        #[error(transparent)]
+        Worker(tower::BoxError),
+        #[error(transparent)]
+        MailBox(#[from] actix::MailboxError),
+        #[error(transparent)]
+        Other(#[from] BoxError),
+    }
+}
+
+fn to_client_config(flow: Flow) -> ClientConfig {
+    ClientConfig {
+        user_id: flow.row.user_id,
+        id: flow.row.id,
+        nodes: flow.row.nodes,
+        edges: flow.row.edges,
+        environment: flow.row.environment,
+        sol_network: flow.row.current_network,
+        instructions_bundling: flow.row.instructions_bundling,
+        partial_config: None,
+        collect_instructions: false,
+        call_depth: 0,
+        origin: FlowRunOrigin::Start {},
+        signers: JsonValue::Null,
+        interflow_instruction_info: Err("unimplemented".to_owned()),
+    }
+}
+
 impl FlowSet {
     pub async fn from_entrypoint(
         flow_id: FlowId,
-        get_flow_row_svc: get_flow_row::Svc,
+        mut get_flow_row_svc: get_flow_row::Svc,
+        ctx: FlowSetContext,
     ) -> crate::Result<FlowSet> {
         let resp = get_flow_row_svc
             .call_ref(get_flow_row::Request { flow_id })
@@ -202,7 +244,7 @@ impl FlowSet {
             }
 
             let row = get_flow_row_svc
-                .call_ref(get_flow_row::Request { flow_id: id })
+                .call_mut(get_flow_row::Request { flow_id: id })
                 .await?
                 .row;
             let flow = Flow::builder().row(row).output_instructions(false).build();
@@ -210,20 +252,79 @@ impl FlowSet {
             dep.flows.insert(id, flow);
         }
 
-        Ok(FlowSet {
-            flows: Arc::new(dep),
-            signers: signer::unimplemented_svc(),
-        })
+        let mut wallets_id = dep
+            .flows
+            .values()
+            .flat_map(|f| f.wallets_id())
+            .collect::<Vec<_>>();
+        wallets_id.sort_unstable();
+        wallets_id.dedup();
+        dep.wallets_id = wallets_id.clone();
+
+        Ok(FlowSet { flows: dep, ctx })
+    }
+
+    pub async fn start(self, options: StartFlowDeploymentOptions) {
+        let flow_id = self.flows.entrypoint;
+        let flow = self.flows.flows.get(&flow_id).unwrap().clone();
+        let registry = FlowRegistry::builder()
+            .flows(Arc::new(
+                self.flows
+                    .flows
+                    .into_iter()
+                    .map(|(k, v)| (k, to_client_config(v)))
+                    .collect(),
+            ))
+            .flow_owner(User {
+                id: self.flows.owner,
+            })
+            .started_by(User {
+                id: self.flows.owner,
+            })
+            .shared_with(Vec::new())
+            .signers_info(JsonValue::Null)
+            .endpoints(self.ctx.endpoints)
+            .depth(self.ctx.depth)
+            .signer(self.ctx.signer)
+            .token(self.ctx.get_jwt)
+            .new_flow_run(self.ctx.new_flow_run)
+            .get_previous_values(get_previous_values::unimplemented_svc())
+            .rhai_permit(self.ctx.rhai_permit)
+            .rhai_tx(self.ctx.rhai_tx)
+            .maybe_parent_flow_execute(self.ctx.parent_flow_execute)
+            .maybe_rpc_server(self.ctx.rpc_server)
+            .build();
+        registry
+            .start(
+                flow_id,
+                options.inputs,
+                StartFlowOptions {
+                    partial_config: None,
+                    collect_instructions: flow.output_instructions,
+                    action_identity: None,
+                    action_config: None,
+                    fees: Vec::new(),
+                    origin: FlowRunOrigin::Start {},
+                    solana_client: Some(SolanaClientConfig {
+                        url: flow.row.current_network.url.clone(),
+                        cluster: flow.row.current_network.cluster,
+                    }),
+                    parent_flow_execute: None,
+                },
+            )
+            .await;
     }
 }
 
-/*
+#[derive(bon::Builder, Getters, Clone)]
 pub struct FlowSetContext {
+    depth: u32,
     endpoints: Endpoints,
 
     signer: signer::Svc,
     get_jwt: get_jwt::Svc,
     new_flow_run: new_flow_run::Svc,
+    parent_flow_execute: Option<execute::Svc>,
 
     rhai_permit: Arc<Semaphore>,
     rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
@@ -231,6 +332,7 @@ pub struct FlowSetContext {
     rpc_server: Option<actix::Addr<srpc::Server>>,
 }
 
+/*
 pub struct FlowContext {
     set_context: FlowSetContext,
     flow_run_id: FlowRunId,

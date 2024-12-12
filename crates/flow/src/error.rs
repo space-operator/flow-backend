@@ -1,4 +1,8 @@
-use crate::{flow_graph::BuildGraphError, flow_registry::get_flow, flow_set::get_flow_row};
+use crate::{
+    flow_graph::BuildGraphError,
+    flow_registry::get_flow,
+    flow_set::{get_flow_row, make_signer},
+};
 use flow_lib::{command::CommandError, Name};
 use std::error::Error as StdError;
 use thiserror::Error as ThisError;
@@ -27,6 +31,8 @@ pub enum Error {
     GetFlow(#[from] get_flow::Error),
     #[error(transparent)]
     GetFlowRow(#[from] get_flow_row::Error),
+    #[error(transparent)]
+    MakeSigner(#[from] make_signer::Error),
     #[error("graph has cycle")]
     Cycle,
     #[error("flow must contain exactly 1 tx")]

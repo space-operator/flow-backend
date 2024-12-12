@@ -52,7 +52,7 @@ pub struct StartFlowOptions {
 }
 
 /// A collection of flows config to run together
-#[derive(Clone)]
+#[derive(Clone, bon::Builder)]
 pub struct FlowRegistry {
     flows: Arc<HashMap<FlowId, ClientConfig>>,
     pub(crate) flow_owner: User,
