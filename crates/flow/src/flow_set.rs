@@ -11,10 +11,11 @@ use getset::Getters;
 use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
 use std::sync::{Arc, Mutex};
-use tokio::sync::Semaphore;
+use tokio::{sync::Semaphore, task::JoinHandle};
 
 use crate::{
     command::{interflow, interflow_instructions},
+    flow_graph::FlowRunResult,
     flow_registry::{
         get_flow, get_previous_values, new_flow_run, run_rhai, FlowRegistry, StartFlowOptions,
     },
@@ -87,7 +88,7 @@ impl Flow {
 #[derive(bon::Builder)]
 pub struct FlowDeployment {
     /// Owner of this deployment (and all flows belonging to it)
-    pub owner: UserId,
+    pub user_id: UserId,
     /// Flow ID to start the set
     pub entrypoint: FlowId,
     /// Flow configs
@@ -106,7 +107,7 @@ impl FlowDeployment {
             .entrypoint(flow.row.id)
             .start_permission(flow.start_permission())
             .wallets_id(flow.wallets_id())
-            .owner(flow.row.user_id)
+            .user_id(flow.row.user_id)
             .flows([(flow.row.id, flow)].into())
             .build()
     }
@@ -247,7 +248,7 @@ impl FlowSet {
                 .call_mut(get_flow_row::Request { flow_id: id })
                 .await?
                 .row;
-            let flow = Flow::builder().row(row).output_instructions(false).build();
+            let flow = Flow::builder().row(row).build();
             queue.extend(flow.interflows_id());
             dep.flows.insert(id, flow);
         }
@@ -264,7 +265,10 @@ impl FlowSet {
         Ok(FlowSet { flows: dep, ctx })
     }
 
-    pub async fn start(self, options: StartFlowDeploymentOptions) {
+    pub async fn start(
+        self,
+        options: StartFlowDeploymentOptions,
+    ) -> Result<(FlowRunId, JoinHandle<FlowRunResult>), new_flow_run::Error> {
         let flow_id = self.flows.entrypoint;
         let flow = self.flows.flows.get(&flow_id).unwrap().clone();
         let registry = FlowRegistry::builder()
@@ -276,10 +280,10 @@ impl FlowSet {
                     .collect(),
             ))
             .flow_owner(User {
-                id: self.flows.owner,
+                id: self.flows.user_id,
             })
             .started_by(User {
-                id: self.flows.owner,
+                id: self.flows.user_id,
             })
             .shared_with(Vec::new())
             .signers_info(JsonValue::Null)
@@ -300,7 +304,7 @@ impl FlowSet {
                 options.inputs,
                 StartFlowOptions {
                     partial_config: None,
-                    collect_instructions: flow.output_instructions,
+                    collect_instructions: false,
                     action_identity: None,
                     action_config: None,
                     fees: Vec::new(),
@@ -312,7 +316,7 @@ impl FlowSet {
                     parent_flow_execute: None,
                 },
             )
-            .await;
+            .await
     }
 }
 

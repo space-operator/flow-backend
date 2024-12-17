@@ -499,6 +499,22 @@ impl ResponseError for StartError {
                     | get_flow::Error::MailBox(_)
                     | get_flow::Error::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 },
+                flow::Error::GetFlowRow(e) => match e {
+                    flow::flow_set::get_flow_row::Error::NotFound => StatusCode::NOT_FOUND,
+                    flow::flow_set::get_flow_row::Error::Unauthorized => StatusCode::UNAUTHORIZED,
+                    flow::flow_set::get_flow_row::Error::Worker(_)
+                    | flow::flow_set::get_flow_row::Error::MailBox(_)
+                    | flow::flow_set::get_flow_row::Error::Other(_) => {
+                        StatusCode::INTERNAL_SERVER_ERROR
+                    }
+                },
+                flow::Error::MakeSigner(e) => match e {
+                    flow::flow_set::make_signer::Error::Worker(_)
+                    | flow::flow_set::make_signer::Error::MailBox(_)
+                    | flow::flow_set::make_signer::Error::Other(_) => {
+                        StatusCode::INTERNAL_SERVER_ERROR
+                    }
+                },
                 flow::Error::Cycle => StatusCode::BAD_REQUEST,
                 flow::Error::NeedOneTx => StatusCode::BAD_REQUEST,
                 flow::Error::NeedOneSignatureOutput => StatusCode::BAD_REQUEST,
