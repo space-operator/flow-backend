@@ -15,6 +15,25 @@ fn default_interflow_instruction_info() -> Result<InstructionInfo, String> {
     Err("not available".to_string())
 }
 
+/// A row of `flows` table and `flow_deployments_flows`
+#[serde_as]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FlowRow {
+    pub id: FlowId,
+    pub user_id: UserId,
+    pub nodes: Vec<Node>,
+    pub edges: Vec<Edge>,
+    // TODO: remove default
+    #[serde(default)]
+    #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
+    pub environment: HashMap<String, String>,
+    pub current_network: Network,
+    pub instructions_bundling: BundlingMode,
+    pub is_public: bool,
+    pub start_shared: bool,
+    pub start_unverified: bool,
+}
+
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ClientConfig {
@@ -113,7 +132,7 @@ impl Default for Network {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Node {
-    pub id: Uuid,
+    pub id: NodeId,
     pub data: NodeData,
 }
 
