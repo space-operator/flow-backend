@@ -4,7 +4,7 @@ use flow_lib::{
         Endpoints,
     },
     context::{execute, get_jwt, signer},
-    solana::{ExecuteOn, ExecutionConfig, Pubkey},
+    solana::{ExecuteOn, ExecutionConfig, Pubkey, SolanaActionConfig},
     CommandType, FlowId, FlowRunId, NodeId, SolanaClientConfig, User, UserId, ValueSet,
 };
 use getset::Getters;
@@ -16,10 +16,7 @@ use tokio::{sync::Semaphore, task::JoinHandle};
 use crate::{
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
-    flow_registry::{
-        get_flow, get_previous_values, new_flow_run, run_rhai, FlowRegistry, StartFlowOptions,
-    },
-    FlowGraph,
+    flow_registry::{get_previous_values, new_flow_run, run_rhai, FlowRegistry, StartFlowOptions},
 };
 
 /// Who can start flows
@@ -98,6 +95,13 @@ pub struct FlowDeployment {
     pub start_permission: StartPermission,
     /// Wallets are stored separately
     pub wallets_id: Vec<i64>,
+
+    pub collect_instructions: bool,
+    pub partial_config: Option<PartialConfig>,
+    pub action_identity: Option<Pubkey>,
+    pub action_config: Option<SolanaActionConfig>,
+    pub fees: Vec<(Pubkey, u64)>,
+    pub solana_client: Option<SolanaClientConfig>,
 }
 
 impl FlowDeployment {
@@ -109,6 +113,8 @@ impl FlowDeployment {
             .wallets_id(flow.wallets_id())
             .user_id(flow.row.user_id)
             .flows([(flow.row.id, flow)].into())
+            .collect_instructions(false)
+            .fees(Vec::new())
             .build()
     }
 }
@@ -304,10 +310,10 @@ impl FlowSet {
                 options.inputs,
                 StartFlowOptions {
                     partial_config: None,
-                    collect_instructions: false,
-                    action_identity: None,
-                    action_config: None,
-                    fees: Vec::new(),
+                    collect_instructions: self.flows.collect_instructions,
+                    action_identity: self.flows.action_identity,
+                    action_config: self.flows.action_config,
+                    fees: self.flows.fees,
                     origin: FlowRunOrigin::Start {},
                     solana_client: Some(SolanaClientConfig {
                         url: flow.row.current_network.url.clone(),
