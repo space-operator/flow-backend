@@ -97,11 +97,9 @@ pub struct FlowDeployment {
     pub wallets_id: Vec<i64>,
 
     pub collect_instructions: bool,
-    pub partial_config: Option<PartialConfig>,
     pub action_identity: Option<Pubkey>,
     pub action_config: Option<SolanaActionConfig>,
     pub fees: Vec<(Pubkey, u64)>,
-    pub solana_client: Option<SolanaClientConfig>,
 }
 
 impl FlowDeployment {
