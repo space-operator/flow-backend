@@ -2,7 +2,11 @@ CREATE TABLE flow_deployments (
     user_id UUID NOT NULL,
     id UUID NOT NULL,
     entrypoint INTEGER NOT NULL,
-    start_permission JSONB NOT NULL
+    start_permission JSONB NOT NULL,
+    collect_instructions BOOL NOT NULL,
+    action_identity TEXT NULL,
+    action_config JSONB NULL,
+    fees JSONB [] NOT NULL
 );
 
 -- All wallets used in the deployment
