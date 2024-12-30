@@ -249,7 +249,7 @@ mod tests {
             .unwrap()
             .insert(srpc::Server::start_http_server().unwrap());
 
-        let input = value::map! { "input_one" => 12, "input_two" => 13, "input_three" => true };
+        let input = value::map! { "input_one" => "5LCDufGQwVqeTUKkiUC6YEwo3C8YSpibZn4wLXGh33xg", "input_two" => 13, "input_three" => true };
 
         let output = cmd.run(ctx, input).await.unwrap();
 
