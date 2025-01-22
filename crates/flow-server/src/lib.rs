@@ -528,6 +528,29 @@ mod tests {
         dbg!(res);
     }
 
+
+    #[tokio::test]
+    async fn test_flow_input() {
+        tracing_subscriber::fmt::try_init().ok();
+        let json = include_str!("../../../test_files/HTTP Request.json");
+        let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(json).unwrap().flow);
+        let mut flow = FlowGraph::from_cfg(flow_config, <_>::default(), None)
+            .await
+            .unwrap();
+        let (tx, _rx) = event_channel();
+        let res = flow
+            .run(
+                tx,
+                <_>::default(),
+                <_>::default(),
+                <_>::default(),
+                <_>::default(),
+                <_>::default(),
+            )
+            .await;
+        dbg!(res);
+    }
+
     #[test]
     fn test_name_unique() {
         let mut m = std::collections::HashSet::new();

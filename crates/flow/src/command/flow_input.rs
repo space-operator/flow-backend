@@ -35,7 +35,7 @@ impl CommandTrait for FlowInputCommand {
 
     fn outputs(&self) -> Vec<Output> {
         [Output {
-            name: OUTPUT.into(),
+            name: self.label.clone(),
             r#type: ValueType::Free,
             optional: false,
         }]
