@@ -609,7 +609,7 @@
                     "sources": [
                         {
                             "id": "98d07043-55be-4297-9fb3-d2ce7a1cd9eb",
-                            "name": "",
+                            "name": "basic_auth",
                             "type": "free",
                             "tooltip": "",
                             "defaultValue": ""
