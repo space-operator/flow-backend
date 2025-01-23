@@ -45,7 +45,7 @@ impl CommandTrait for FlowInputCommand {
     async fn run(&self, _ctx: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let value = inputs.swap_remove(&self.label).unwrap_or(Value::Null);
         Ok(value::map! {
-            self.label => value,
+            &self.label => value,
         })
     }
 
