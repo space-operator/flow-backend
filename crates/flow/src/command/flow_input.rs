@@ -35,7 +35,7 @@ impl CommandTrait for FlowInputCommand {
 
     fn outputs(&self) -> Vec<Output> {
         [Output {
-            name: OUTPUT.into(),
+            name: self.label.clone(),
             r#type: ValueType::Free,
             optional: false,
         }]
@@ -45,7 +45,7 @@ impl CommandTrait for FlowInputCommand {
     async fn run(&self, _ctx: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let value = inputs.swap_remove(&self.label).unwrap_or(Value::Null);
         Ok(value::map! {
-            OUTPUT => value,
+            &self.label => value,
         })
     }
 

@@ -21,8 +21,6 @@ jobs:
         with:
           submodules: "recursive"
       - uses: Swatinem/rust-cache@v2
-      - name: Install wasm32-wasi
-        run: rustup target add wasm32-wasi
       - run: rm Cargo.lock
       - name: Build
         run: cargo check --tests
