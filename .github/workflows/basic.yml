@@ -36,7 +36,7 @@ jobs:
       - name: Install deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v1.2
+          deno-version: v2.x
 #     - name: Build WASM
 #       run: ./scripts/build_wasm_tests.bash
       - name: Build tests
