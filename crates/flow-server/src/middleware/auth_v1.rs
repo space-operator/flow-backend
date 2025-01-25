@@ -158,6 +158,7 @@ struct AuthState {
 }
 
 pub struct Jwt {
+    #[allow(dead_code)]
     token: String,
     user_id: UserId,
     pubkey: [u8; 32],
@@ -209,6 +210,7 @@ impl Identity for Jwt {
 }
 
 pub struct ApiKey {
+    #[allow(dead_code)]
     key: String,
     user_id: UserId,
     pubkey: [u8; 32],
@@ -231,7 +233,7 @@ impl Identity for ApiKey {
         }
 
         let conn = auth.pool.get_admin_conn().await?;
-        let user = conn.get_user_from_apikey(&key).await?;
+        let user = conn.get_user_from_apikey(key).await?;
         Ok(ApiKey {
             key: key.to_owned(),
             user_id: user.user_id,
@@ -265,6 +267,7 @@ impl Identity for Unverified {
 }
 
 pub struct FlowRunToken {
+    #[allow(dead_code)]
     id: FlowRunId,
 }
 

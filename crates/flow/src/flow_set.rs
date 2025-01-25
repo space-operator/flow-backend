@@ -136,8 +136,7 @@ impl FlowDeployment {
         let mut queue: Vec<FlowId> = dep
             .flows
             .values()
-            .map(|flow| flow.interflows_id())
-            .flatten()
+            .flat_map(|flow| flow.interflows_id())
             .collect();
 
         while let Some(id) = queue.pop() {

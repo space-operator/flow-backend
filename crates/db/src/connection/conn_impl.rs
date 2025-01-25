@@ -121,7 +121,7 @@ where
     I: IntoIterator<Item = EncryptedWallet>,
     C: FromIterator<Wallet>,
 {
-    Ok(encrypted
+    encrypted
         .into_iter()
         .map(|e| {
             Ok(Wallet {
@@ -134,7 +134,7 @@ where
                     .map(|k| k.to_bytes()),
             })
         })
-        .collect::<crate::Result<C>>()?)
+        .collect::<crate::Result<C>>()
 }
 
 #[async_trait]
@@ -538,17 +538,16 @@ impl UserConnection {
         tag: &str,
     ) -> crate::Result<Uuid> {
         let conn = self.pool.get_conn().await?;
-        Ok(conn
-            .do_query_opt(
-                "select deployment_id flow_deployments_tags
+        conn.do_query_opt(
+            "select deployment_id flow_deployments_tags
                 where entrypoint = $1 and tag = $2",
-                &[entrypoint, &tag, &self.user_id],
-            )
-            .await
-            .map_err(Error::exec("get_deployment_id_from_tag"))?
-            .ok_or_else(|| Error::not_found("deployment", format!("{}:{}", entrypoint, tag)))?
-            .try_get::<_, Uuid>(0)
-            .map_err(Error::data("flow_deployments_tags.deployment_id"))?)
+            &[entrypoint, &tag, &self.user_id],
+        )
+        .await
+        .map_err(Error::exec("get_deployment_id_from_tag"))?
+        .ok_or_else(|| Error::not_found("deployment", format!("{}:{}", entrypoint, tag)))?
+        .try_get::<_, Uuid>(0)
+        .map_err(Error::data("flow_deployments_tags.deployment_id"))
     }
 
     async fn get_deployment_impl(&self, id: &DeploymentId) -> crate::Result<FlowDeployment> {

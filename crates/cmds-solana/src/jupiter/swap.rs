@@ -73,7 +73,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         quote_request.compute_auto_slippage = true;
     } else if let Some(slippage_percent) = input.slippage_percent {
         quote_request.auto_slippage = Some(false);
-        quote_request.slippage_bps = slippage_percent as u16 * 100;
+        quote_request.slippage_bps = slippage_percent * 100;
     };
 
     // GET /quote
@@ -111,7 +111,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         lookup_tables: Some(swap_instructions.address_lookup_table_addresses),
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer].into(),
-        instructions: instructions.into(),
+        instructions,
     };
 
     let ins = input.submit.then_some(ins).unwrap_or_default();

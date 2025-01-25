@@ -281,7 +281,7 @@ impl DbClient for Connection {
     }
 }
 
-impl<'a> DbClient for Transaction<'a> {
+impl DbClient for Transaction<'_> {
     async fn do_query_one(
         &self,
         stmt: &str,

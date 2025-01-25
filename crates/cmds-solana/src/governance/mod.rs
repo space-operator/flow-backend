@@ -222,7 +222,6 @@ pub enum GovernanceInstruction {
     /// the range indicated by Proposal transactions_next_index
     /// If a Transaction replaces an existing Transaction at a given index then
     /// the old one must be removed using RemoveTransaction first
-
     ///   0. `[]` Governance account
     ///   1. `[writable]` Proposal account
     ///   2. `[]` TokenOwnerRecord account of the Proposal owner

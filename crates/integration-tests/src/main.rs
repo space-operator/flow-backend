@@ -3,12 +3,12 @@
 use xshell::{cmd, Shell};
 
 fn get_tag(sh: &Shell) -> anyhow::Result<String> {
-    let dirty = cmd!(sh, "git describe --always --dirty")
-        .read()?
-        .trim()
-        .ends_with("-dirty")
-        .then_some("-dirty")
-        .unwrap_or("");
+    let stdout = cmd!(sh, "git describe --always --dirty").read()?;
+    let dirty = if stdout.trim().ends_with("-dirty") {
+        "-dirty"
+    } else {
+        ""
+    };
 
     let commit = cmd!(sh, "git rev-parse --verify HEAD").read()?;
 

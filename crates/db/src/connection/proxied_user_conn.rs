@@ -120,17 +120,17 @@ impl UserConnectionTrait for ProxiedUserConn {
         Box::new(self.clone())
     }
 
-    async fn insert_deployment(&self, d: &FlowDeployment) -> crate::Result<DeploymentId> {
+    async fn insert_deployment(&self, _: &FlowDeployment) -> crate::Result<DeploymentId> {
         // TODO
         Err(crate::Error::NotSupported)
     }
 
-    async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow> {
+    async fn get_flow(&self, _: FlowId) -> crate::Result<FlowRow> {
         // TODO
         Err(crate::Error::NotSupported)
     }
 
-    async fn download_storage_file(&self, path: &str) -> crate::Result<Bytes> {
+    async fn download_storage_file(&self, _: &str) -> crate::Result<Bytes> {
         // TODO
         Err(crate::Error::NotSupported)
     }

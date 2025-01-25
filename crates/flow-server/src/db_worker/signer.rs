@@ -198,7 +198,7 @@ impl SignerWorker {
             signers: HashMap::new(),
         };
         let conn = db.get_user_conn(user_id).await?;
-        let wallets = conn.get_some_wallets(&ids).await?;
+        let wallets = conn.get_some_wallets(ids).await?;
         for wallet in wallets {
             if let Err(error) = signer.add_wallet(&user_id, &sender, wallet) {
                 tracing::warn!("could not add wallet: {}", error);
