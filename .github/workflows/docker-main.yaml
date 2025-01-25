@@ -24,3 +24,5 @@ jobs:
           aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
       - name: Push
         run: ./scripts/ecr-push.bash login
+      - name: Clean up
+        run: podman image prune -f

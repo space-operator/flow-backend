@@ -225,7 +225,6 @@ impl AdminConn {
             size += 1;
         }
         let inserted = writer
-            .as_mut()
             .finish()
             .await
             .map_err(Error::exec("finish copy_in_flow_run_logs"))?;

@@ -28,7 +28,7 @@ if (exportResp.status !== 200) {
   Deno.exit(1);
 }
 const data = await exportResp.json();
-const SERVER = `http://localhost:${getEnv("KONG_HTTP_PORT")}/flow-server`;
+const SERVER = `http://127.0.0.1:8080`;
 console.log(`Importing data to ${SERVER}`);
 const importResp = await fetch(
   `${SERVER}/data/import`,

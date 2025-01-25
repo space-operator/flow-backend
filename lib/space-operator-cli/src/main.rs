@@ -165,6 +165,9 @@ enum Commands {
     Start {
         /// Path to configuration file
         config: Option<PathBuf>,
+        /// Connect to local Docker instance
+        #[arg(long)]
+        docker: bool,
     },
     /// Manage your nodes
     #[command(visible_alias = "n")]
@@ -238,6 +241,8 @@ pub struct Config {
 
 #[derive(ThisError, Debug)]
 pub enum Error {
+    #[error("please start docker-compose first")]
+    DockerComposeNotRunning,
     #[error("response from server: {}", .0)]
     ErrorResponse(String),
     #[error("{}: {}", .0, .1)]
@@ -1658,20 +1663,69 @@ fn make_absolute(path: impl AsRef<Path>) -> Result<PathBuf, Report<Error>> {
     }
 }
 
-async fn start_flow_server(config: &Option<PathBuf>) -> Result<(), Report<Error>> {
+async fn start_flow_server(
+    config: &Option<PathBuf>,
+    mut docker: bool,
+) -> Result<(), Report<Error>> {
+    if docker && config.is_some() {
+        eprintln!("both configuration file and --docker flag are set");
+        eprintln!("ignoring --docker");
+        docker = false;
+    };
     let meta =
         cargo_metadata().attach_printable("make sure you are inside flow-backend repository")?;
     find_target_crate_by_name(&meta, "flow-server")
         .attach_printable("make sure you are inside flow-backend repository")?;
 
-    let config_path = match config {
-        Some(config) => make_absolute(config)?,
-        None => {
-            let path = meta.workspace_root.join("config.toml");
-            if !path.is_file() {
-                generate_flow_server_config(&path).await?;
+    let config_path = if docker {
+        let local_config_path = meta
+            .workspace_root
+            .join("docker/.local-config.toml")
+            .into_std_path_buf();
+        if !std::fs::exists(&local_config_path)
+            .change_context_lazy(|| Error::ReadFile(local_config_path.clone()))
+            .attach_printable("could not read configuration file")?
+        {
+            println!("generating local configuration");
+            let base_config_path = meta
+                .workspace_root
+                .join("docker/.config.toml")
+                .into_std_path_buf();
+            if !std::fs::exists(&base_config_path)
+                .change_context_lazy(|| Error::ReadFile(base_config_path.clone()))
+                .attach_printable("could not read configuration file")?
+            {
+                return Err(Report::new(Error::DockerComposeNotRunning));
             }
-            path.into_std_path_buf()
+            let config = std::fs::read_to_string(&base_config_path)
+                .change_context_lazy(|| Error::ReadFile(base_config_path.clone()))?;
+            let mut config = toml::from_str::<toml::Table>(&config)
+                .change_context_lazy(|| Error::ReadFile(base_config_path.clone()))?;
+
+            config["supabase"]["endpoint"] = "http://127.0.0.1:8000".into();
+            config["db"]["host"] = "127.0.0.1".into();
+            config["local_storage"] = "_data/local_storage".into();
+            println!(
+                "writing to {}",
+                relative_to_pwd(&local_config_path).display()
+            );
+            std::fs::write(
+                &local_config_path,
+                toml::to_string(&config).change_context(Error::SerializeData)?,
+            )
+            .change_context_lazy(|| Error::WriteFile(local_config_path.clone()))?;
+        }
+        local_config_path
+    } else {
+        match config {
+            Some(config) => make_absolute(config)?,
+            None => {
+                let path = meta.workspace_root.join("config.toml");
+                if !path.is_file() {
+                    generate_flow_server_config(&path).await?;
+                }
+                path.into_std_path_buf()
+            }
         }
     };
 
@@ -1758,9 +1812,9 @@ async fn run() -> Result<(), Report<Error>> {
             println!("Logged in as {:?}", username);
             client.save_application_data().await?;
         }
-        Some(Commands::Start { config }) => {
+        Some(Commands::Start { config, docker }) => {
             check_latest_version().await?;
-            start_flow_server(config).await?;
+            start_flow_server(config, *docker).await?;
         }
         Some(Commands::Node { command }) => match command {
             NodeCommands::New {

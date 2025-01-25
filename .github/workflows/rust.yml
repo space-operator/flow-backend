@@ -13,6 +13,8 @@ jobs:
     runs-on: self-hosted
     permissions:
         checks: write
+    env:
+      SOLANA_DEVNET_URL: ${{ secrets.SOLANA_DEVNET_URL }}
     steps:
       - uses: actions-rs/toolchain@v1
         with:
@@ -37,9 +39,14 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - name: Build Integration Tests
+        run: cargo build --bin integration-tests --quiet
+      - name: Run Integration Tests
+        env:
+          APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
+          KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
+        run: cargo run --bin integration-tests --quiet
       - name: Build tests
         run: cargo test --quiet --no-run
       - name: Run tests
-        env:
-          SOLANA_DEVNET_URL: ${{ secrets.SOLANA_DEVNET_URL }}
         run: cargo test -- --skip need_key_
