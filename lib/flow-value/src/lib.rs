@@ -734,7 +734,7 @@ impl serde::de::Error for Error {
 // default implementation of [u8] doesn't call serialize_bytes
 pub struct Bytes<'a>(pub &'a [u8]);
 
-impl<'a> serde::Serialize for Bytes<'a> {
+impl serde::Serialize for Bytes<'_> {
     fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
