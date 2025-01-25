@@ -3,13 +3,13 @@ use crate::Value;
 #[derive(Debug)]
 pub struct TextRepr<'a>(&'a Value);
 
-impl<'a> TextRepr<'a> {
+impl TextRepr<'_> {
     pub fn new(value: &Value) -> TextRepr<'_> {
         TextRepr(value)
     }
 }
 
-impl<'a> serde::Serialize for TextRepr<'a> {
+impl serde::Serialize for TextRepr<'_> {
     fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

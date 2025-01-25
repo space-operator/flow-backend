@@ -1,4 +1,6 @@
+use crate::error::ErrorBody;
 use crate::SupabaseConfig;
+use actix_web::ResponseError;
 use bincode::{Decode, Encode};
 use db::pool::{DbPool, RealDbPool};
 use flow::BoxedError;
@@ -146,6 +148,16 @@ pub enum LoginError {
     Db(#[from] db::Error),
     #[error(transparent)]
     Supabase(SupabaseError),
+}
+
+impl ResponseError for LoginError {
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        actix_web::http::StatusCode::UNAUTHORIZED
+    }
+
+    fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
+        ErrorBody::build(self)
+    }
 }
 
 #[derive(Deserialize, ThisError, Debug)]

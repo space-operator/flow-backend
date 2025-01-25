@@ -19,6 +19,7 @@ pub enum Error {
     Upstream(String),
 }
 
+#[derive(Clone)]
 pub struct ProxiedUserConn {
     pub user_id: UserId,
     pub client: reqwest::Client,
@@ -85,6 +86,55 @@ impl ProxiedUserConn {
 
 #[async_trait::async_trait]
 impl UserConnectionTrait for ProxiedUserConn {
+    async fn get_wallet_by_pubkey(&self, _: &[u8; 32]) -> crate::Result<Wallet> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_some_wallets(&self, _: &[i64]) -> crate::Result<Vec<Wallet>> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_deployment_id_from_tag(&self, _: &FlowId, _: &str) -> crate::Result<DeploymentId> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_deployment(&self, _: &DeploymentId) -> crate::Result<FlowDeployment> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_deployment_wallets(&self, _: &DeploymentId) -> crate::Result<Vec<i64>> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_deployment_flows(&self, _: &DeploymentId) -> crate::Result<HashMap<FlowId, Flow>> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    fn clone_connection(&self) -> Box<dyn UserConnectionTrait> {
+        Box::new(self.clone())
+    }
+
+    async fn insert_deployment(&self, _: &FlowDeployment) -> crate::Result<DeploymentId> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_flow(&self, _: FlowId) -> crate::Result<FlowRow> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn download_storage_file(&self, _: &str) -> crate::Result<Bytes> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
         self.send("share_flow_run", &(id, user)).await
     }

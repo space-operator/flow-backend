@@ -6,8 +6,8 @@ use crate::db_worker::user_worker;
 
 #[derive(Debug, ThisError)]
 pub enum Error {
-    #[error("failed to execute flow operation:\n{0}")]
-    Flow(flow::Error),
+    #[error(transparent)]
+    Flow(#[from] flow::Error),
     #[error(transparent)]
     Db(#[from] db::Error),
     #[error(transparent)]

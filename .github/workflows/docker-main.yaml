@@ -24,3 +24,37 @@ jobs:
           aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
       - name: Push
         run: ./scripts/ecr-push.bash login
+      - name: Clean up
+        run: podman image prune -f
+  integration-test:
+    name: Integration Test
+    needs: build
+    runs-on: self-hosted
+    env:
+      APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
+      KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
+      SOLANA_DEVNET_URL: ${{ secrets.SOLANA_DEVNET_URL }}
+    steps:
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: default
+          override: true
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Install deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Build Integration Tests
+        run: cargo build --bin integration-tests --quiet
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
+      - name: Run Integration Tests
+        env:
+          APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
+          KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
+        run: cargo run --bin integration-tests --quiet -- --ecr-login

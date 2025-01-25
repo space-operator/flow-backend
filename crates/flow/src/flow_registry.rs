@@ -25,7 +25,11 @@ use tokio_util::sync::CancellationToken;
 use tracing::Instrument;
 use utils::actix_service::ActixService;
 
-pub const MAX_CALL_DEPTH: u32 = 32;
+// make a registry from entrypoint flow (currently)
+// get a registry from DB
+// start flow
+
+pub const MAX_CALL_DEPTH: u32 = 1024;
 
 #[derive(Debug, ThisError)]
 pub enum StopError {
@@ -48,7 +52,7 @@ pub struct StartFlowOptions {
 }
 
 /// A collection of flows config to run together
-#[derive(Clone)]
+#[derive(Clone, bon::Builder)]
 pub struct FlowRegistry {
     flows: Arc<HashMap<FlowId, ClientConfig>>,
     pub(crate) flow_owner: User,
@@ -294,7 +298,7 @@ impl FlowRegistry {
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
             rpc_server: srpc::Server::start_http_server()
-                .inspect_err(|error| tracing::info!("srpc error: {}", error))
+                .inspect_err(|error| tracing::error!("srpc error: {}", error))
                 .ok(),
         })
     }

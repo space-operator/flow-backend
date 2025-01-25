@@ -12,7 +12,10 @@ jobs:
     name: Unit test
     runs-on: self-hosted
     permissions:
-        checks: write
+      checks: write
+      contents: read
+    env:
+      SOLANA_DEVNET_URL: ${{ secrets.SOLANA_DEVNET_URL }}
     steps:
       - uses: actions-rs/toolchain@v1
         with:
@@ -20,8 +23,6 @@ jobs:
           profile: default
           override: true
       - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
       - uses: Swatinem/rust-cache@v2
       - uses: actions-rs/clippy-check@v1
         with:
@@ -33,13 +34,11 @@ jobs:
             -A clippy::too_many_arguments
       - name: Assert Cargo.lock unchanged
         run: .github/assert_cargo_lock_unchanged.bash
+      - name: Build tests
+        run: cargo test --quiet --no-run
       - name: Install deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: Build tests
-        run: cargo test --quiet --no-run
       - name: Run tests
-        env:
-          SOLANA_DEVNET_URL: ${{ secrets.SOLANA_DEVNET_URL }}
         run: cargo test -- --skip need_key_

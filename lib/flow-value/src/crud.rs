@@ -19,10 +19,7 @@ pub fn get<'v, S: AsRef<str>>(value: &'v Value, path: &[S]) -> Option<&'v Value>
     for s in path {
         let key = s.as_ref();
         result = match result {
-            Value::Map(map) => match map.get(key) {
-                Some(value) => value,
-                None => return None,
-            },
+            Value::Map(map) => map.get(key)?,
             Value::Array(array) => {
                 let idx = parse_index(key)?;
                 array.get(idx)?
@@ -39,10 +36,7 @@ pub fn get_mut<'v, S: AsRef<str>>(value: &'v mut Value, path: &[S]) -> Option<&'
     for s in path {
         let key = s.as_ref();
         result = match result {
-            Value::Map(map) => match map.get_mut(key) {
-                Some(value) => value,
-                None => return None,
-            },
+            Value::Map(map) => map.get_mut(key)?,
             Value::Array(array) => {
                 let idx = parse_index(key)?;
                 array.get_mut(idx)?

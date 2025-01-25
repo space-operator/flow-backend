@@ -6,7 +6,7 @@ use anyhow::{anyhow, bail, ensure};
 use borsh1::BorshDeserialize;
 use bytes::Bytes;
 use chrono::Utc;
-use futures::TryStreamExt;
+use futures::{future::Either, FutureExt, TryStreamExt};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv, DisplayFromStr};
@@ -85,7 +85,7 @@ impl Clone for Wallet {
         match self {
             Wallet::Keypair(keypair) => Wallet::Keypair(keypair.clone_keypair()),
             Wallet::Adapter { public_key } => Wallet::Adapter {
-                public_key: public_key.clone(),
+                public_key: *public_key,
             },
         }
     }
@@ -99,7 +99,7 @@ impl Wallet {
     pub fn pubkey(&self) -> Pubkey {
         match self {
             Wallet::Keypair(keypair) => keypair.pubkey(),
-            Wallet::Adapter { public_key, .. } => public_key.clone(),
+            Wallet::Adapter { public_key, .. } => *public_key,
         }
     }
 
@@ -566,7 +566,7 @@ impl PartialVersionedTransaction {
         let signatures = signers
             .try_sign_message(&message.serialize())?
             .into_iter()
-            .zip(signers.pubkeys().into_iter())
+            .zip(signers.pubkeys())
             .map(|(signature, pubkey)| signer::Presigner { signature, pubkey })
             .collect();
         Ok(Self {
@@ -802,6 +802,7 @@ impl Instructions {
         Ok(message)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn build_for_solana_action(
         mut self,
         action_signer: Pubkey,
@@ -1096,7 +1097,7 @@ impl Instructions {
             time: Utc::now(),
             pubkey: action_config.action_signer,
             message: tx.message.serialize().into(),
-            timeout: Duration::from_secs(0),
+            timeout: SIGNATURE_TIMEOUT,
             flow_run_id,
             signatures: if tx.signatures.is_empty() {
                 None
@@ -1104,19 +1105,26 @@ impl Instructions {
                 Some(tx.signatures.clone())
             },
         };
-        if let Err(error) = signer.call_mut(req).await {
-            if !matches!(error, signer::Error::Timeout) {
-                return Err(Error::other(error));
-            }
-        }
-        let signature = confirm_action_transaction(
+        let request_signature = signer.call_mut(req).boxed();
+        let confirm = confirm_action_transaction(
             rpc,
             action_config.action_identity,
             memo,
             config.wait_commitment_level,
         )
-        .await?;
-        Ok(signature)
+        .boxed();
+        let task = futures::future::select(request_signature, confirm);
+        match task.await {
+            Either::Left((result, task)) => {
+                if let Err(error) = result {
+                    if !matches!(error, signer::Error::Timeout) {
+                        return Err(Error::other(error));
+                    }
+                }
+                Ok(task.await?)
+            }
+            Either::Right((result, _)) => Ok(result?),
+        }
     }
 
     pub async fn execute(
@@ -1265,9 +1273,7 @@ mod tests {
     #[test]
     fn test_keypair_or_pubkey_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = WalletOrPubkey::Wallet(Wallet::Adapter {
-            public_key: pubkey.clone(),
-        });
+        let x = WalletOrPubkey::Wallet(Wallet::Adapter { public_key: pubkey });
         let value = value::to_value(&x).unwrap();
         assert_eq!(
             value,
@@ -1281,7 +1287,7 @@ mod tests {
     #[test]
     fn test_keypair_or_pubkey_pubkey() {
         let pubkey = Pubkey::new_unique();
-        let x = WalletOrPubkey::Pubkey(pubkey.clone());
+        let x = WalletOrPubkey::Pubkey(pubkey);
         let value = value::to_value(&x).unwrap();
         assert_eq!(value, Value::B32(pubkey.to_bytes()));
         assert_eq!(value::from_value::<WalletOrPubkey>(value).unwrap(), x);
@@ -1299,9 +1305,7 @@ mod tests {
     #[test]
     fn test_wallet_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = Wallet::Adapter {
-            public_key: pubkey.clone(),
-        };
+        let x = Wallet::Adapter { public_key: pubkey };
         let value = value::to_value(&x).unwrap();
         assert_eq!(
             value,

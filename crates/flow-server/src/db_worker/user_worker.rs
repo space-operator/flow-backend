@@ -1,10 +1,13 @@
 use super::{
-    flow_run_worker::FlowRunWorker, messages::SubscribeError, signer::SignerWorker, Counter,
-    DBWorker, FindActor, GetTokenWorker, RegisterLogs, StartFlowRunWorker,
+    flow_run_worker::FlowRunWorker,
+    messages::SubscribeError,
+    signer::{AddWalletError, SignerWorker},
+    Counter, DBWorker, FindActor, GetTokenWorker, GetUserWorker, RegisterLogs, StartFlowRunWorker,
 };
 use crate::error::ErrorBody;
 use actix::{
-    Actor, ActorFutureExt, AsyncContext, Response, ResponseActFuture, ResponseFuture, WrapFuture,
+    fut::wrap_future, Actor, ActorFutureExt, ActorTryFutureExt, AsyncContext, Response,
+    ResponseActFuture, ResponseFuture, WrapFuture,
 };
 use actix_web::{http::StatusCode, ResponseError};
 use bytes::Bytes;
@@ -12,6 +15,7 @@ use db::{pool::DbPool, Error as DbError};
 use flow::{
     flow_graph::StopSignal,
     flow_registry::{get_flow, get_previous_values, new_flow_run, FlowRegistry, StartFlowOptions},
+    flow_set::{FlowDeployment, FlowSet, FlowSetContext, StartFlowDeploymentOptions},
 };
 use flow_lib::{
     config::{
@@ -24,15 +28,16 @@ use flow_lib::{
         signer::{self, SignatureRequest},
     },
     solana::{is_same_message_logic, Pubkey, SolanaActionConfig},
+    utils::TowerClient,
     FlowId, FlowRunId, User, UserId,
 };
 use futures_channel::{mpsc, oneshot};
 use futures_util::{future::BoxFuture, TryFutureExt};
 use hashbrown::HashMap;
 use solana_sdk::signature::Signature;
-use std::future::ready;
+use std::future::{ready, Future};
 use thiserror::Error as ThisError;
-use utils::address_book::ManagableActor;
+use utils::{actix_service::ActixService, address_book::ManagableActor};
 
 pub struct UserWorker {
     root: actix::Addr<DBWorker>,
@@ -107,6 +112,18 @@ impl Actor for UserWorker {
     }
 }
 
+#[derive(ThisError, Debug)]
+pub enum MakeFlowSetContextError {
+    #[error(transparent)]
+    MakeTokenWorker(#[from] get_jwt::Error),
+    #[error(transparent)]
+    Db(#[from] DbError),
+    #[error(transparent)]
+    Mailbox(#[from] actix::MailboxError),
+    #[error(transparent)]
+    AddWallet(#[from] AddWalletError),
+}
+
 impl UserWorker {
     pub fn new(
         user_id: UserId,
@@ -123,6 +140,74 @@ impl UserWorker {
             root,
             sigreg: <_>::default(),
             subs: <_>::default(),
+        }
+    }
+
+    fn make_flow_set_context(
+        &mut self,
+        d: &FlowDeployment,
+        options: &StartFlowDeploymentOptions,
+        ctx: &mut actix::Context<Self>,
+    ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static {
+        let new_flow_run = TowerClient::from_service(
+            ActixService::from(ctx.address().recipient()),
+            new_flow_run::Error::Worker,
+            16,
+        );
+
+        let root = self.root.clone();
+        let db = self.db.clone();
+        let user_id = self.user_id;
+        let addr = ctx.address().recipient();
+        let wallets_id = d.wallets_id.clone();
+        let endpoints = self.endpoints.clone();
+        let starter = options.starter;
+        let action_identity = d.action_identity;
+        async move {
+            let get_jwt = root.send(GetTokenWorker { user_id }).await??;
+            let get_jwt = TowerClient::from_service(
+                ActixService::from(get_jwt.recipient()),
+                get_jwt::Error::worker,
+                16,
+            );
+
+            let mut signer =
+                SignerWorker::fetch_wallets_from_ids(&db, user_id, addr.clone(), &wallets_id)
+                    .await?;
+            if starter.user_id != user_id {
+                let addr = root
+                    .send(GetUserWorker {
+                        user_id: starter.user_id,
+                    })
+                    .await?;
+                let conn = db.get_user_conn(starter.user_id).await?;
+                // TODO: allow caller to specify which wallet they want to allow signing.
+                let wallet = conn
+                    .get_wallet_by_pubkey(&starter.pubkey.to_bytes())
+                    .await?;
+                signer.add_wallet(&starter.user_id, &addr.recipient(), wallet)?;
+            }
+            if let Some(pk) = action_identity {
+                if !signer.signers.contains_key(&pk) {
+                    let conn = db.get_user_conn(user_id).await?;
+                    let wallet = conn.get_wallet_by_pubkey(&pk.to_bytes()).await?;
+                    signer.add_wallet(&starter.user_id, &addr, wallet)?;
+                }
+            }
+            let signer = signer.start();
+            let signer = TowerClient::from_service(
+                ActixService::from(signer.recipient()),
+                signer::Error::Worker,
+                16,
+            );
+
+            Ok(FlowSetContext::builder()
+                .depth(0)
+                .endpoints(endpoints)
+                .get_jwt(get_jwt)
+                .new_flow_run(new_flow_run)
+                .signer(signer)
+                .build())
         }
     }
 
@@ -479,6 +564,8 @@ pub enum StartError {
     Mailbox(#[from] actix::MailboxError),
     #[error(transparent)]
     Db(#[from] db::Error),
+    #[error(transparent)]
+    FlowSet(#[from] MakeFlowSetContextError),
 }
 
 impl ResponseError for StartError {
@@ -498,6 +585,22 @@ impl ResponseError for StartError {
                     | get_flow::Error::Worker(_)
                     | get_flow::Error::MailBox(_)
                     | get_flow::Error::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                },
+                flow::Error::GetFlowRow(e) => match e {
+                    flow::flow_set::get_flow_row::Error::NotFound => StatusCode::NOT_FOUND,
+                    flow::flow_set::get_flow_row::Error::Unauthorized => StatusCode::UNAUTHORIZED,
+                    flow::flow_set::get_flow_row::Error::Worker(_)
+                    | flow::flow_set::get_flow_row::Error::MailBox(_)
+                    | flow::flow_set::get_flow_row::Error::Other(_) => {
+                        StatusCode::INTERNAL_SERVER_ERROR
+                    }
+                },
+                flow::Error::MakeSigner(e) => match e {
+                    flow::flow_set::make_signer::Error::Worker(_)
+                    | flow::flow_set::make_signer::Error::MailBox(_)
+                    | flow::flow_set::make_signer::Error::Other(_) => {
+                        StatusCode::INTERNAL_SERVER_ERROR
+                    }
                 },
                 flow::Error::Cycle => StatusCode::BAD_REQUEST,
                 flow::Error::NeedOneTx => StatusCode::BAD_REQUEST,
@@ -526,6 +629,7 @@ impl ResponseError for StartError {
             },
             StartError::Mailbox(_) => StatusCode::INTERNAL_SERVER_ERROR,
             StartError::Db(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            StartError::FlowSet(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -555,7 +659,8 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
             let wrk = root.send(GetTokenWorker { user_id }).await??;
 
             let (signer, signers_info) =
-                SignerWorker::fetch_and_start(db, &[(user_id, addr.clone().recipient())]).await?;
+                SignerWorker::fetch_all_and_start(db, &[(user_id, addr.clone().recipient())])
+                    .await?;
 
             let r = FlowRegistry::from_actix(
                 msg.user,
@@ -637,7 +742,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         Box::pin(async move {
             let wrk = root.send(GetTokenWorker { user_id }).await??;
 
-            let (signer, signers_info) = SignerWorker::fetch_and_start(
+            let (signer, signers_info) = SignerWorker::fetch_all_and_start(
                 db,
                 &[
                     (msg.started_by.0, msg.started_by.1.recipient()),
@@ -737,5 +842,37 @@ impl actix::Handler<CloneFlow> for UserWorker {
         };
 
         Box::pin(fut)
+    }
+}
+
+pub struct StartDeployment {
+    pub deployment: FlowDeployment,
+    pub options: StartFlowDeploymentOptions,
+}
+
+impl actix::Message for StartDeployment {
+    type Result = Result<FlowRunId, StartError>;
+}
+
+impl actix::Handler<StartDeployment> for UserWorker {
+    type Result = ResponseActFuture<Self, <StartDeployment as actix::Message>::Result>;
+
+    fn handle(&mut self, msg: StartDeployment, ctx: &mut Self::Context) -> Self::Result {
+        self.make_flow_set_context(&msg.deployment, &msg.options, ctx)
+            .map_err(StartError::from)
+            .into_actor(&*self)
+            .and_then(move |context, _, _| {
+                wrap_future::<_, Self>(async move {
+                    let id = FlowSet::builder()
+                        .deployment(msg.deployment)
+                        .context(context)
+                        .build()
+                        .start(msg.options)
+                        .await?
+                        .0;
+                    Ok(id)
+                })
+            })
+            .boxed_local()
     }
 }

@@ -6,9 +6,11 @@ export type {
   FlowRunId,
   UserId,
   NodeId,
+  DeploymentId,
   ErrorBody,
   RestResult,
 } from "./types/common.ts";
+export { DeploymentSpecifier } from "./types/rest.ts";
 export type {
   GetFlowOutputOutput,
   PartialConfig,
@@ -26,6 +28,9 @@ export type {
   StopFlowOutput,
   InitAuthOutput,
   ConfirmAuthOutput,
+  StartDeploymentParams,
+  IDeploymentSpecifier,
+  StartDeploymentOutput,
 } from "./types/rest.ts";
 export {
   type WsResponse,
@@ -51,3 +56,4 @@ export {
   type ISignatureRequest,
   SignatureRequest,
 } from "./types/ws.ts";
+export type { Database } from "./supabase.ts";

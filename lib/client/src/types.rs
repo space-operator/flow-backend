@@ -312,7 +312,6 @@ pub mod ws {
 
         #[derive(Serialize, Deserialize, Debug)]
         #[serde(tag = "event", content = "data")]
-
         pub enum Event {
             SignatureRequest(SignatureRequest),
         }

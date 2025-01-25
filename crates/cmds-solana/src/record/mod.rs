@@ -68,8 +68,6 @@ pub enum RecordInstruction {
 }
 
 /// Struct wrapping data and providing metadata
-/// #[repr(C)]
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize)]
 pub struct RecordData {

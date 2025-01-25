@@ -1,4 +1,5 @@
 import type { Value, IValue, SupabaseSession } from "../deps.ts";
+import type { FlowId } from "../mod.ts";
 import type { FlowRunId, NodeId } from "./common.ts";
 
 export interface InitAuthOutput {
@@ -13,7 +14,7 @@ export interface ConfirmAuthOutput {
 export type GetFlowOutputOutput = Value;
 
 export interface StartFlowSharedParams {
-  inputs: Record<string, Value>;
+  inputs?: Record<string, Value>;
 }
 
 export interface StartFlowSharedOutput {
@@ -49,7 +50,7 @@ export interface PartialConfig {
 }
 
 export interface StartFlowParams {
-  inputs: Record<string, Value>;
+  inputs?: Record<string, Value>;
   partial_config?: PartialConfig;
   environment?: Record<string, string>;
 }
@@ -74,4 +75,53 @@ export interface StopFlowParams {
 
 export interface StopFlowOutput {
   success: true;
+}
+
+export interface IDeploymentSpecifier {
+  id?: string;
+  flow?: FlowId;
+  tag?: string;
+}
+
+export class DeploymentSpecifier implements IDeploymentSpecifier {
+  id?: string;
+  flow?: FlowId;
+  tag?: string;
+  constructor(ctor: IDeploymentSpecifier) {
+    this.id = ctor.id;
+    this.flow = ctor.flow;
+    this.tag = ctor.tag;
+  }
+
+  static Id(id: string): DeploymentSpecifier {
+    return new DeploymentSpecifier({ id });
+  }
+
+  static Tag(flow: FlowId, tag: string): DeploymentSpecifier {
+    return new DeploymentSpecifier({ flow, tag });
+  }
+
+  formatQuery(): string {
+    const query = new URLSearchParams();
+    if (this.id != null) {
+      query.append("id", this.id);
+    }
+    if (this.flow != null) {
+      query.append("flow", this.flow.toString());
+      if (this.tag != null) {
+        query.append("tag", this.tag);
+      }
+    }
+    return query.toString();
+  }
+}
+
+export interface StartDeploymentParams {
+  inputs?: Record<string, IValue>;
+  action_signer?: string;
+}
+
+export interface StartDeploymentOutput {
+  flow_run_id: FlowRunId;
+  token: string;
 }

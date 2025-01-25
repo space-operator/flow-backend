@@ -11,7 +11,7 @@ pub enum Error {
     #[error(transparent)]
     Any(#[from] anyhow::Error),
     #[error("{}", flow_lib::solana::verbose_solana_error(.0))]
-    SolanaClient(#[from] solana_client::client_error::ClientError),
+    SolanaClient(#[from] Box<solana_client::client_error::ClientError>),
     #[error(transparent)]
     SolanaProgram(#[from] solana_sdk::program_error::ProgramError),
     #[error(transparent)]
@@ -62,6 +62,12 @@ pub enum Error {
     RhaiExecutionError(String),
     #[error("value not found in field \"{0}\"")]
     ValueNotFound(String),
+}
+
+impl From<solana_client::client_error::ClientError> for Error {
+    fn from(value: solana_client::client_error::ClientError) -> Self {
+        Box::new(value).into()
+    }
 }
 
 impl Error {

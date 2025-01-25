@@ -3,3 +3,4 @@
 .temp
 .env
 .config.toml
+.local-config.toml

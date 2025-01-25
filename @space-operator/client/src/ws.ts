@@ -1,16 +1,16 @@
-import { FlowRunId } from "./types/common.ts";
+import type { FlowRunId } from "./types/common.ts";
 import {
   AuthenticateRequest,
-  AuthenticateResponse,
-  FlowFinish,
-  FlowRunEvent,
+  type AuthenticateResponse,
+  type FlowFinish,
+  type FlowRunEvent,
   SignatureRequest,
-  SignatureRequestsEvent,
+  type SignatureRequestsEvent,
   SubscribeFlowRunEventsRequest,
-  SubscribeFlowRunEventsResponse,
+  type SubscribeFlowRunEventsResponse,
   SubscribeSignatureRequestsRequest,
-  SubscribeSignatureRequestsResponse,
-  WsResponse,
+  type SubscribeSignatureRequestsResponse,
+  type WsResponse,
 } from "./types/ws.ts";
 
 export interface WcClientOptions {

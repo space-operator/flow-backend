@@ -1,33 +1,36 @@
-FROM docker.io/library/rust as rustc
+FROM docker.io/library/rust AS rustc
 RUN apt-get update && apt-get install -y clang lld && rm -rf /var/lib/apt/lists/*
 ENV RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=lld"
 RUN cargo install cargo-chef --quiet
 WORKDIR /build/
 
 # Step 1: Compute a recipe file
-FROM rustc as planner
+FROM rustc AS planner
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
+
 # Step 2: Cache project dependencies
-FROM rustc as cacher
+FROM rustc AS cacher
+ARG PROFILE=release
 COPY --from=planner /build/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json --bin flow-server 2>/dev/null
 
 # Step 3: Build the binary
-FROM rustc as builder
+FROM rustc AS builder
 COPY . .
 # Copy over the cached dependencies from above
 COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
-RUN cargo build --release --bin flow-server --quiet
+ARG PROFILE=release
+RUN cargo build --profile=$PROFILE --bin flow-server --quiet
 
-FROM docker.io/denoland/deno:debian as deno
+FROM docker.io/denoland/deno:debian AS deno
 
 # Step 4:
 # Create a tiny output image.
 # It only contains our final binaries.
-FROM docker.io/library/debian:stable-slim as runtime
+FROM docker.io/library/debian:stable-slim AS runtime
 COPY ./certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
 COPY ./crates/flow-server/entrypoint.bash /space-operator/
 RUN apt-get update && \

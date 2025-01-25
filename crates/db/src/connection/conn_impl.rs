@@ -1,12 +1,45 @@
-use crate::{config::Encrypted, local_storage::CacheBucket, EncryptedWallet};
+use crate::{
+    config::{Encrypted, EncryptionKey},
+    local_storage::CacheBucket,
+    EncryptedWallet,
+};
+use anyhow::anyhow;
 use bytes::{Bytes, BytesMut};
+use client::FlowRow;
 use deadpool_postgres::Transaction;
-use flow_lib::config::client::NodeDataSkipWasm;
+use flow::flow_set::{DeploymentId, Flow, FlowDeployment};
+use flow_lib::{config::client::NodeDataSkipWasm, solana::Pubkey, SolanaClientConfig};
 use futures_util::StreamExt;
+use std::str::FromStr;
 use tokio::task::spawn_blocking;
+use tokio_postgres::{binary_copy::BinaryCopyInWriter, types::Type};
 use utils::bs58_decode;
 
 use super::*;
+
+struct FlowRowCache;
+
+impl CacheBucket for FlowRowCache {
+    type Key = FlowId;
+    type EncodedKey = kv::Integer;
+    type Object = FlowRow;
+
+    fn name() -> &'static str {
+        "FlowRowCache"
+    }
+
+    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+        obj.user_id == *user_id
+    }
+
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+        kv::Integer::from(*key)
+    }
+
+    fn cache_time() -> Duration {
+        Duration::from_secs(10)
+    }
+}
 
 struct FlowInfoCache;
 
@@ -80,8 +113,89 @@ impl CacheBucket for FlowConfigCache {
     }
 }
 
+fn decrypt<I, C>(key: &EncryptionKey, encrypted: I) -> crate::Result<C>
+where
+    I: IntoIterator<Item = EncryptedWallet>,
+    C: FromIterator<Wallet>,
+{
+    encrypted
+        .into_iter()
+        .map(|e| {
+            Ok(Wallet {
+                id: e.id,
+                pubkey: e.pubkey,
+                keypair: e
+                    .encrypted_keypair
+                    .map(|e| key.decrypt_keypair(&e))
+                    .transpose()?
+                    .map(|k| k.to_bytes()),
+            })
+        })
+        .collect::<crate::Result<C>>()
+}
+
 #[async_trait]
 impl UserConnectionTrait for UserConnection {
+    async fn get_wallet_by_pubkey(&self, pubkey: &[u8; 32]) -> crate::Result<Wallet> {
+        // TODO: caching
+        let w = self.get_encrypted_wallet_by_pubkey(pubkey).await?;
+        let key = self.pool.encryption_key()?;
+        Ok(decrypt::<_, Vec<Wallet>>(key, [w])?.pop().unwrap())
+    }
+
+    async fn get_deployment_id_from_tag(
+        &self,
+        entrypoint: &FlowId,
+        tag: &str,
+    ) -> crate::Result<DeploymentId> {
+        // TODO: caching
+        self.get_deployment_id_from_tag_impl(entrypoint, tag).await
+    }
+
+    async fn get_deployment(&self, id: &DeploymentId) -> crate::Result<FlowDeployment> {
+        // TODO: caching
+        self.get_deployment_impl(id).await
+    }
+
+    async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<Vec<i64>> {
+        // TODO: caching
+        self.get_deployment_wallets_impl(id).await
+    }
+
+    async fn get_deployment_flows(
+        &self,
+        id: &DeploymentId,
+    ) -> crate::Result<HashMap<FlowId, Flow>> {
+        // TODO: caching
+        self.get_deployment_flows_impl(id).await
+    }
+
+    fn clone_connection(&self) -> Box<dyn UserConnectionTrait> {
+        Box::new(self.clone())
+    }
+
+    async fn insert_deployment(&self, d: &FlowDeployment) -> crate::Result<DeploymentId> {
+        self.insert_deployment_impl(d).await
+    }
+
+    async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow> {
+        if let Some(cached) = self.local.get_cache::<FlowRowCache>(&self.user_id, &id) {
+            return Ok(cached);
+        }
+        let result = self.get_flow(id).await;
+        if let Ok(result) = &result {
+            if let Err(error) = self.local.set_cache::<FlowRowCache>(&id, result.clone()) {
+                tracing::error!("set_cache error: {}", error);
+            }
+        }
+        result
+    }
+
+    async fn download_storage_file(&self, path: &str) -> crate::Result<Bytes> {
+        // TODO: cache
+        self.download_storage_file(path).await
+    }
+
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
         self.share_flow_run(id, user).await
     }
@@ -105,29 +219,17 @@ impl UserConnectionTrait for UserConnection {
         result
     }
 
+    async fn get_some_wallets(&self, ids: &[i64]) -> crate::Result<Vec<Wallet>> {
+        // TODO: caching
+        let key = self.pool.encryption_key()?.clone();
+        let encrypted = self.get_some_wallets_impl(ids).await?;
+        Ok(spawn_blocking(move || decrypt(&key, encrypted)).await??)
+    }
+
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>> {
-        let key = self.pool.encryption_key()?;
+        let key = self.pool.encryption_key()?.clone();
         let encrypted = self.get_encrypted_wallets().await?;
-        Ok(spawn_blocking({
-            let key = key.clone();
-            move || {
-                encrypted
-                    .into_iter()
-                    .map(|e| {
-                        Ok(Wallet {
-                            id: e.id,
-                            pubkey: e.pubkey,
-                            keypair: e
-                                .encrypted_keypair
-                                .map(|e| key.decrypt_keypair(&e))
-                                .transpose()?
-                                .map(|k| k.to_bytes()),
-                        })
-                    })
-                    .collect::<crate::Result<Vec<_>>>()
-            }
-        })
-        .await??)
+        Ok(spawn_blocking(move || decrypt(&key, encrypted)).await??)
     }
 
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>> {
@@ -250,6 +352,47 @@ impl UserConnectionTrait for UserConnection {
     }
 }
 
+#[track_caller]
+fn row_to_flow_row(r: tokio_postgres::Row) -> crate::Result<FlowRow> {
+    Ok(FlowRow {
+        id: r.try_get("id").map_err(Error::data("flows.id"))?,
+        user_id: r.try_get("user_id").map_err(Error::data("flows.user_id"))?,
+        nodes: r
+            .try_get::<_, Vec<Json<client::Node>>>("nodes")
+            .map_err(Error::data("flows.nodes"))?
+            .into_iter()
+            .map(|x| x.0)
+            .collect(),
+        edges: r
+            .try_get::<_, Vec<Json<client::Edge>>>("edges")
+            .map_err(Error::data("flows.edges"))?
+            .into_iter()
+            .map(|x| x.0)
+            .collect(),
+        environment: r
+            .try_get::<_, Json<std::collections::HashMap<String, String>>>("environment")
+            .map_err(Error::data("flows.environment"))?
+            .0,
+        current_network: r
+            .try_get::<_, Json<client::Network>>("current_network")
+            .map_err(Error::data("flows.current_network"))?
+            .0,
+        instructions_bundling: r
+            .try_get::<_, Json<client::BundlingMode>>("instructions_bundling")
+            .map_err(Error::data("flows.instructions_bundling"))?
+            .0,
+        is_public: r
+            .try_get::<_, bool>("isPublic")
+            .map_err(Error::data("flows.isPublic"))?,
+        start_shared: r
+            .try_get::<_, bool>("start_shared")
+            .map_err(Error::data("flows.start_shared"))?,
+        start_unverified: r
+            .try_get::<_, bool>("start_unverified")
+            .map_err(Error::data("flows.start_unverified"))?,
+    })
+}
+
 impl UserConnection {
     pub fn new(
         pool: RealDbPool,
@@ -263,6 +406,297 @@ impl UserConnection {
             wasm_storage,
             local,
         }
+    }
+
+    async fn get_encrypted_wallet_by_pubkey(
+        &self,
+        pubkey: &[u8; 32],
+    ) -> crate::Result<EncryptedWallet> {
+        let pubkey_str = bs58::encode(pubkey).into_string();
+        let conn = self.pool.get_conn().await?;
+        parse_encrypted_wallet(
+            conn.do_query_one(
+                "select public_key, encrypted_keypair, id
+            from wallets where user_id = $1 and public_key = $2",
+                &[&self.user_id, &pubkey_str],
+            )
+            .await
+            .map_err(Error::exec("select wallet"))?,
+        )
+    }
+
+    async fn insert_deployment_impl(&self, d: &FlowDeployment) -> crate::Result<DeploymentId> {
+        if self.user_id != d.user_id {
+            return Err(Error::Unauthorized);
+        }
+        let mut conn = self.pool.get_conn().await?;
+        let tx = conn.transaction().await.map_err(Error::exec("start"))?;
+
+        let id = DeploymentId::now_v7();
+        let fees = d
+            .fees
+            .iter()
+            .map(|(pubkey, amount)| (pubkey.to_string(), *amount))
+            .collect::<Vec<_>>();
+        tx.do_execute(
+            "INSERT INTO flow_deployments
+            (
+                id,
+                user_id,
+                entrypoint,
+                start_permission,
+                output_instructions,
+                action_identity,
+                fees,
+                solana_network
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+            &[
+                &id,
+                &d.user_id,
+                &d.entrypoint,
+                &Json(d.start_permission),
+                &d.output_instructions,
+                &d.action_identity.as_ref().map(|p| p.to_string()),
+                &Json(fees),
+                &Json(&d.solana_network),
+            ],
+        )
+        .await
+        .map_err(Error::exec("insert flow_deployments"))?;
+
+        let stmt = tx
+            .prepare_cached(
+                "COPY flow_deployments_wallets (
+                    user_id,
+                    deployment_id,
+                    wallet_id
+                ) FROM STDIN WITH (FORMAT binary)",
+            )
+            .await
+            .map_err(Error::exec("prepare"))?;
+        let sink = tx
+            .copy_in::<_, Bytes>(&stmt)
+            .await
+            .map_err(Error::exec("copy in"))?;
+        let writer = BinaryCopyInWriter::new(sink, &[Type::UUID, Type::UUID, Type::INT8]);
+        futures_util::pin_mut!(writer);
+        for wallet_id in &d.wallets_id {
+            writer
+                .as_mut()
+                .write(&[&d.user_id, &id, &wallet_id])
+                .await
+                .map_err(Error::exec("copy in write"))?;
+        }
+        let written = writer
+            .finish()
+            .await
+            .map_err(Error::exec("copy in finish"))?;
+        if written != d.wallets_id.len() as u64 {
+            return Err(Error::LogicError(anyhow!(
+                "size={}; written={}",
+                d.wallets_id.len(),
+                written
+            )));
+        }
+
+        let stmt = tx
+            .prepare_cached(
+                "COPY flow_deployments_flows (
+                    deployment_id,
+                    flow_id,
+                    user_id,
+                    data
+                ) FROM STDIN WITH (FORMAT binary)",
+            )
+            .await
+            .map_err(Error::exec("prepare"))?;
+        let sink = tx
+            .copy_in::<_, Bytes>(&stmt)
+            .await
+            .map_err(Error::exec("copy in"))?;
+        let writer =
+            BinaryCopyInWriter::new(sink, &[Type::UUID, Type::INT4, Type::UUID, Type::JSONB]);
+        futures_util::pin_mut!(writer);
+        for f in d.flows.values() {
+            let f = &f.row;
+            writer
+                .as_mut()
+                .write(&[&id, &f.id, &f.user_id, &Json(f.data())])
+                .await
+                .map_err(Error::exec("copy in write"))?;
+        }
+        let written = writer
+            .finish()
+            .await
+            .map_err(Error::exec("copy in finish"))?;
+        if written != d.flows.len() as u64 {
+            return Err(Error::LogicError(anyhow!(
+                "size={}; written={}",
+                d.wallets_id.len(),
+                written
+            )));
+        }
+
+        tx.commit().await.map_err(Error::exec("commit"))?;
+
+        Ok(id)
+    }
+
+    async fn get_deployment_id_from_tag_impl(
+        &self,
+        entrypoint: &FlowId,
+        tag: &str,
+    ) -> crate::Result<Uuid> {
+        let conn = self.pool.get_conn().await?;
+        conn.do_query_opt(
+            "select deployment_id from flow_deployments_tags
+                where entrypoint = $1 and tag = $2",
+            &[entrypoint, &tag],
+        )
+        .await
+        .map_err(Error::exec("get_deployment_id_from_tag"))?
+        .ok_or_else(|| Error::not_found("deployment", format!("{}:{}", entrypoint, tag)))?
+        .try_get::<_, Uuid>(0)
+        .map_err(Error::data("flow_deployments_tags.deployment_id"))
+    }
+
+    async fn get_deployment_impl(&self, id: &DeploymentId) -> crate::Result<FlowDeployment> {
+        let conn = self.pool.get_conn().await?;
+        const QUERY: &str = //
+            r#"select
+                user_id,
+                entrypoint,
+                start_permission,
+                output_instructions,
+                action_identity,
+                fees,
+                solana_network
+            from flow_deployments
+            where id = $1 and (
+                (start_permission = '"Anonymous"')
+            or  (start_permission = '"Authenticated"' and $2::uuid <> '00000000-0000-0000-0000-000000000000')
+            or  (start_permission = '"Owner"' and $2::uuid = user_id)
+            )"#;
+        let r = conn
+            .do_query_opt(QUERY, &[id, &self.user_id])
+            .await
+            .map_err(Error::exec("select flow_deployments"))?
+            .ok_or_else(|| Error::not_found("flow_deployments", id))?;
+        let d = FlowDeployment {
+            user_id: r
+                .try_get("user_id")
+                .map_err(Error::data("flow_deployments.entrypoint"))?,
+            entrypoint: r
+                .try_get("entrypoint")
+                .map_err(Error::data("flow_deployments.entrypoint"))?,
+            flows: Default::default(),
+            start_permission: r
+                .try_get::<_, Json<_>>("start_permission")
+                .map_err(Error::data("flow_deployments.start_permission"))?
+                .0,
+            wallets_id: Default::default(),
+            output_instructions: r
+                .try_get("output_instructions")
+                .map_err(Error::data("flow_deployments.output_instructions"))?,
+            action_identity: r
+                .try_get::<_, Option<&str>>("action_identity")
+                .map_err(Error::data("flow_deployments.action_identity"))?
+                .map(|s| {
+                    s.parse::<Pubkey>()
+                        .map_err(Error::parsing("flow_deployments.action_identity"))
+                })
+                .transpose()?,
+            fees: r
+                .try_get::<_, Json<Vec<(String, u64)>>>("fees")
+                .map_err(Error::data("flow_deployments.fees"))?
+                .0
+                .into_iter()
+                .map(|(pubkey, amount)| Pubkey::from_str(&pubkey).map(|pk| (pk, amount)))
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(Error::parsing("flow_deployments.fees"))?,
+            solana_network: r
+                .try_get::<_, Json<SolanaClientConfig>>("solana_network")
+                .map_err(Error::data("flow_deployments.solana_network"))?
+                .0,
+        };
+        Ok(d)
+    }
+
+    async fn get_deployment_wallets_impl(&self, id: &DeploymentId) -> crate::Result<Vec<i64>> {
+        let conn = self.pool.get_conn().await?;
+        let ids = conn
+            .do_query(
+                "SELECT wallet_id FROM flow_deployments_wallets
+                WHERE deployment_id = $1 AND user_id = $2",
+                &[id, &self.user_id],
+            )
+            .await
+            .map_err(Error::exec("select flow_deployments_wallets"))?
+            .into_iter()
+            .map(|r| r.try_get(0))
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(Error::data("flow_deployments_wallets.wallet_id"))?;
+        Ok(ids)
+    }
+
+    async fn get_deployment_flows_impl(
+        &self,
+        id: &DeploymentId,
+    ) -> crate::Result<HashMap<FlowId, Flow>> {
+        fn parse(r: Row) -> crate::Result<(FlowId, Flow)> {
+            let id = r
+                .try_get("flow_id")
+                .map_err(Error::data("flow_deployments_flows.flow_id"))?;
+            let Json(flow) = r
+                .try_get::<_, Json<FlowRow>>("data")
+                .map_err(Error::data("flow_deployments_flows.data"))?;
+            Ok((id, Flow { row: flow }))
+        }
+
+        let conn = self.pool.get_conn().await?;
+        let flows = conn
+            .do_query(
+                "SELECT flow_id, data FROM flow_deployments_flows
+            WHERE deployment_id = $1 AND user_id = $2",
+                &[id, &self.user_id],
+            )
+            .await
+            .map_err(Error::exec("select flow_deployments_flows"))?
+            .into_iter()
+            .map(parse)
+            .collect::<Result<HashMap<_, _>, _>>()?;
+        Ok(flows)
+    }
+
+    async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow> {
+        let conn = self.pool.get_conn().await?;
+        let flow = conn
+            .do_query_opt(
+                r#"SELECT id,
+                        user_id,
+                        nodes,
+                        edges,
+                        environment,
+                        current_network,
+                        instructions_bundling,
+                        "isPublic",
+                        start_shared,
+                        start_unverified
+                FROM flows
+                WHERE id = $1 AND user_id = $2"#,
+                &[&id, &self.user_id],
+            )
+            .await
+            .map_err(Error::exec("get_flow_config"))?
+            .ok_or_else(|| Error::not_found("flow", id))
+            .and_then(row_to_flow_row)?;
+
+        Ok(flow)
+    }
+
+    async fn download_storage_file(&self, path: &str) -> crate::Result<Bytes> {
+        Ok(self.wasm_storage.download(path).await?)
     }
 
     async fn get_encrypted_wallets(&self) -> crate::Result<Vec<EncryptedWallet>> {
@@ -323,6 +757,23 @@ impl UserConnection {
         .try_into()
     }
 
+    async fn get_some_wallets_impl(&self, ids: &[i64]) -> crate::Result<Vec<EncryptedWallet>> {
+        let conn = self.pool.get_conn().await?;
+        let result = conn
+            .do_query(
+                "select public_key, encrypted_keypair, id from wallets
+                where id = any($1::bigint[]) and user_id = $2",
+                &[&ids, &self.user_id],
+            )
+            .await
+            .map_err(Error::exec("select wallets"))?
+            .into_iter()
+            .map(parse_encrypted_wallet)
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(result)
+    }
+
     async fn get_encrypted_wallets_query(&self) -> crate::Result<Vec<EncryptedWallet>> {
         let conn = self.pool.get_conn().await?;
         let result = conn
@@ -333,26 +784,7 @@ impl UserConnection {
             .await
             .map_err(Error::exec("get wallets"))?
             .into_iter()
-            .map(|r| {
-                let pubkey_str = r
-                    .try_get::<_, String>(0)
-                    .map_err(Error::data("wallets.public_key"))?;
-                let pubkey =
-                    bs58_decode(&pubkey_str).map_err(Error::parsing("wallets.public_key"))?;
-
-                let encrypted_keypair = r
-                    .try_get::<_, Option<Json<Encrypted>>>(1)
-                    .map_err(Error::data("wallets.encrypted_keypair"))?
-                    .map(|json| json.0);
-
-                let id = r.try_get(2).map_err(Error::data("wallets.id"))?;
-
-                Ok(EncryptedWallet {
-                    id,
-                    pubkey,
-                    encrypted_keypair,
-                })
-            })
+            .map(parse_encrypted_wallet)
             .collect::<crate::Result<Vec<EncryptedWallet>>>()?;
 
         Ok(result)
@@ -1127,6 +1559,26 @@ impl UserConnection {
             nodes,
         })
     }
+}
+
+fn parse_encrypted_wallet(r: Row) -> Result<EncryptedWallet, Error> {
+    let pubkey_str = r
+        .try_get::<_, String>(0)
+        .map_err(Error::data("wallets.public_key"))?;
+    let pubkey = bs58_decode(&pubkey_str).map_err(Error::parsing("wallets.public_key"))?;
+
+    let encrypted_keypair = r
+        .try_get::<_, Option<Json<Encrypted>>>(1)
+        .map_err(Error::data("wallets.encrypted_keypair"))?
+        .map(|json| json.0);
+
+    let id = r.try_get(2).map_err(Error::data("wallets.id"))?;
+
+    Ok(EncryptedWallet {
+        id,
+        pubkey,
+        encrypted_keypair,
+    })
 }
 
 async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<String> {

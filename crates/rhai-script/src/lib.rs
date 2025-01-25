@@ -4,7 +4,7 @@ use convert::{dynamic_to_value, value_to_dynamic};
 use flow_lib::command::prelude::*;
 use rhai::{
     packages::{Package, StandardPackage},
-    Dynamic,
+    Dynamic, EvalAltResult,
 };
 use rhai_rand::RandomPackage;
 
@@ -16,12 +16,21 @@ fn utc_now() -> String {
     Utc::now().to_string()
 }
 
+fn decimal(x: Dynamic) -> Result<Decimal, Box<EvalAltResult>> {
+    let value = dynamic_to_value(x)
+        .map_err(|error| EvalAltResult::ErrorSystem("convert error".to_owned(), Box::new(error)))?;
+    let decimal = value::decimal::deserialize(value)
+        .map_err(|error| EvalAltResult::ErrorSystem("convert error".to_owned(), Box::new(error)))?;
+    Ok(decimal)
+}
+
 pub fn setup_engine() -> Engine {
     let mut engine = Engine::new();
     engine
         .register_global_module(StandardPackage::new().as_shared_module())
         .register_static_module("rand", RandomPackage::new().as_shared_module())
         .register_fn("utc_now", utc_now)
+        .register_fn("Decimal", decimal)
         .set_max_expr_depths(32, 32)
         .set_max_call_levels(256)
         .set_max_operations(10_000_000)
