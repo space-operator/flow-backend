@@ -1,5 +1,6 @@
 #![allow(clippy::print_stderr, clippy::print_stdout)]
 
+use clap::Parser;
 use xshell::{cmd, Shell};
 
 fn get_tag(sh: &Shell) -> anyhow::Result<String> {
@@ -15,20 +16,21 @@ fn get_tag(sh: &Shell) -> anyhow::Result<String> {
     Ok(format!("{}{}", commit.trim(), dirty))
 }
 
-fn run(sh: &Shell) -> anyhow::Result<()> {
+fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     let meta = cargo_metadata::MetadataCommand::new().no_deps().exec()?;
     sh.change_dir(&meta.workspace_root);
 
-    cmd!(sh, "env PROFILE=dev ./scripts/build_images.bash docker").run()?;
+    if compile {
+        cmd!(sh, "env PROFILE=dev ./scripts/build_images.bash docker").run()?;
+    }
 
     sh.change_dir("docker/");
     cmd!(sh, "./gen-secrets.ts").run()?;
-    let tag = get_tag(sh)?;
-    cmd!(
-        sh,
-        "env IMAGE=space-operator/flow-server:{tag} docker compose up -d --wait"
-    )
-    .run()?;
+    let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
+    let repo = if compile { "" } else { "public.ecr.aws/" };
+    cmd!(sh, "docker compose up -d --wait")
+        .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
+        .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
     cmd!(sh, "./import-data.ts").run()?;
 
@@ -41,7 +43,15 @@ fn run(sh: &Shell) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[derive(clap::Parser)]
+struct Args {
+    compile: bool,
+    tag: Option<String>,
+}
+
 fn main() {
+    let args = Args::parse();
+
     let meta = cargo_metadata::MetadataCommand::new()
         .no_deps()
         .exec()
@@ -49,7 +59,7 @@ fn main() {
 
     let sh = Shell::new().unwrap();
     dotenv::dotenv().ok();
-    let result = run(&sh);
+    let result = run(&sh, args.compile, args.tag);
 
     sh.change_dir(&meta.workspace_root);
     sh.change_dir("docker/");

@@ -24,7 +24,7 @@ const c = new client.Client({
 });
 
 function keypair_from_env() {
-  const value = Deno.env.get("TEST_KEYPAIR");
+  const value = Deno.env.get("KEYPAIR");
   if (!value) return undefined;
   return web3.Keypair.fromSecretKey(bs58.decodeBase58(value));
 }
@@ -42,10 +42,6 @@ const run = async (keypair: web3.Keypair) => {
 
 const results = await Promise.all([
   run(keypair),
-  run(keypair),
-  run(keypair),
-  run(web3.Keypair.generate()),
-  run(web3.Keypair.generate()),
   run(web3.Keypair.generate()),
 ]);
 

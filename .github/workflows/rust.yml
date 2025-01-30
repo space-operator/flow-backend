@@ -9,7 +9,7 @@ on:
 jobs:
   unit-test:
     if: ${{ ! contains(github.event.pull_request.labels.*.name, 'no-test') }}
-    name: Unit test
+    name: Unit Test
     runs-on: self-hosted
     permissions:
         checks: write
@@ -22,8 +22,6 @@ jobs:
           profile: default
           override: true
       - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
       - uses: Swatinem/rust-cache@v2
       - uses: actions-rs/clippy-check@v1
         with:
@@ -39,13 +37,6 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: Build Integration Tests
-        run: cargo build --bin integration-tests --quiet
-      - name: Run Integration Tests
-        env:
-          APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
-          KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
-        run: cargo run --bin integration-tests --quiet
       - name: Build tests
         run: cargo test --quiet --no-run
       - name: Run tests

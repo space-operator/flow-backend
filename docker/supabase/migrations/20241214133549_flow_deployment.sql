@@ -45,7 +45,7 @@ CREATE TABLE flow_deployments_tags (
     FOREIGN KEY (deployment_id, entrypoint) REFERENCES flow_deployments (id, entrypoint)
 );
 
-create or replace function flow_deployments_insert() returns trigger as $flow_deployments_insert$
+create or replace function flow_deployments_insert() returns trigger as $$
 begin
     insert into
     flow_deployments_tags(entrypoint,      tag,     deployment_id, user_id)
@@ -54,12 +54,19 @@ begin
     do update set deployment_id = new.id;
     return new;
 end;
-$flow_deployments_insert$
+$$
 language plpgsql
 security definer;
 
 create trigger flow_deployments_insert after insert on flow_deployments
 for each row execute function flow_deployments_insert();
+
+-- create or replace function flow_deployments_delete() returns trigger as $$
+-- begin    
+-- end;
+-- $$
+-- language plpgsql
+-- security definer;
 
 GRANT SELECT, INSERT ON flow_deployments TO flow_runner;
 GRANT SELECT, INSERT ON flow_deployments_wallets TO flow_runner;
