@@ -47,28 +47,70 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
 struct Args {
     #[clap(long, action)]
     compile: bool,
+    #[clap(long, action)]
+    erc_login: bool,
     #[clap(long)]
     tag: Option<String>,
 }
 
 fn main() {
-    let args = Args::parse();
+    let mut args = Args::parse();
+
+    let sh = Shell::new().unwrap();
+
+    if args.erc_login {
+        if let Ok(password) = cmd!(sh, "aws ecr-public get-login-password --region us-east-1")
+            .read()
+            .inspect_err(|error| eprint!("{}", error))
+        {
+            cmd!(
+                sh,
+                "docker login --username AWS --password-stdin public.ecr.aws/space-operator"
+            )
+            .stdin(password.trim())
+            .run()
+            .inspect_err(|error| {
+                eprint!("{}", error);
+                args.erc_login = false;
+            })
+            .ok();
+        }
+    }
+
+    dotenv::dotenv().ok();
 
     let meta = cargo_metadata::MetadataCommand::new()
         .no_deps()
         .exec()
         .unwrap();
 
-    let sh = Shell::new().unwrap();
-    dotenv::dotenv().ok();
     let result = run(&sh, args.compile, args.tag);
 
     sh.change_dir(&meta.workspace_root);
     sh.change_dir("docker/");
-    cmd!(sh, "docker compose logs flow-server").run().ok();
-    cmd!(sh, "docker compose down -v").run().ok();
-    cmd!(sh, "docker compose down -v").run().ok();
-    cmd!(sh, "docker image prune -f").run().ok();
+    cmd!(sh, "docker compose logs flow-server")
+        .run()
+        .inspect_err(|error| eprint!("{}", error))
+        .ok();
+    cmd!(sh, "docker compose down -v")
+        .run()
+        .inspect_err(|error| eprint!("{}", error))
+        .ok();
+    cmd!(sh, "docker compose down -v")
+        .run()
+        .inspect_err(|error| eprint!("{}", error))
+        .ok();
+    cmd!(sh, "docker image prune -f")
+        .run()
+        .inspect_err(|error| eprint!("{}", error))
+        .ok();
+
+    if args.erc_login {
+        cmd!(sh, "docker logout public.ecr.aws/space-operator")
+            .run()
+            .inspect_err(|error| eprint!("{}", error))
+            .ok();
+    }
 
     if let Err(error) = result {
         eprintln!("{:?}", error);
