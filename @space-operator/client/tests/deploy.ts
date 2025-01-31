@@ -83,19 +83,16 @@ const res = await Promise.all([
     try {
       await run();
     } finally {
-      const sup = await owner.supabase();
+      const ownerDb = await owner.supabase();
       {
-        const result = await sup
+        const result = await ownerDb
           .from("node_run")
           .select("errors")
           .not("errors", "is", "null");
         console.log(result.data);
       }
       {
-        const result = await sup
-          .from("flow_run")
-          .select("errors")
-          .not("errors", "is", "null");
+        const result = await ownerDb.from("flow_run").select("*");
         console.log(result.data);
       }
     }

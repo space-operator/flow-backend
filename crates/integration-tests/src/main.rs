@@ -94,6 +94,7 @@ fn main() {
         .ok();
     cmd!(sh, "docker compose down -v")
         .ignore_stdout()
+        .ignore_stderr()
         .run()
         .inspect_err(|error| eprint!("{}", error))
         .ok();
