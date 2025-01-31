@@ -3,9 +3,11 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use deadpool_postgres::{Object as Connection, Transaction};
+use flow::flow_set::{get_flow_row, DeploymentId, Flow, FlowDeployment};
 use flow_lib::{
-    config::client::{self, ClientConfig},
+    config::client::{self, ClientConfig, FlowRow},
     context::signer::Presigner,
+    utils::BoxFuture,
     CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
 };
 use hashbrown::{HashMap, HashSet};
@@ -26,6 +28,7 @@ pub use admin::*;
 
 pub mod proxied_user_conn;
 
+#[derive(Clone)]
 pub struct UserConnection {
     pub local: LocalStorage,
     pub wasm_storage: WasmStorage,
@@ -75,13 +78,64 @@ impl TryFrom<Row> for FlowInfo {
     }
 }
 
+impl tower::Service<get_flow_row::Request> for Box<dyn UserConnectionTrait> {
+    type Response = get_flow_row::Response;
+    type Error = get_flow_row::Error;
+    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    fn poll_ready(
+        &mut self,
+        _: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        std::task::Poll::Ready(Ok(()))
+    }
+    fn call(&mut self, req: get_flow_row::Request) -> Self::Future {
+        let this = self.clone_connection();
+        Box::pin(async move {
+            let result = this.get_flow(req.flow_id).await;
+            match result {
+                Ok(row) => Ok(get_flow_row::Response { row }),
+                Err(error) => Err(match error {
+                    Error::Unauthorized => get_flow_row::Error::Unauthorized,
+                    Error::ResourceNotFound { .. } => get_flow_row::Error::NotFound,
+                    error => get_flow_row::Error::Other(error.into()),
+                }),
+            }
+        })
+    }
+}
+
 #[async_trait]
-pub trait UserConnectionTrait: Any + 'static {
+pub trait UserConnectionTrait: Any + Send + 'static {
+    async fn get_wallet_by_pubkey(&self, pubkey: &[u8; 32]) -> crate::Result<Wallet>;
+
+    async fn get_deployment_id_from_tag(
+        &self,
+        entrypoint: &FlowId,
+        tag: &str,
+    ) -> crate::Result<DeploymentId>;
+
+    async fn get_deployment(&self, id: &DeploymentId) -> crate::Result<FlowDeployment>;
+
+    async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<Vec<i64>>;
+
+    async fn get_deployment_flows(&self, id: &DeploymentId)
+        -> crate::Result<HashMap<FlowId, Flow>>;
+
+    async fn insert_deployment(&self, d: &FlowDeployment) -> crate::Result<DeploymentId>;
+
+    fn clone_connection(&self) -> Box<dyn UserConnectionTrait>;
+
+    async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow>;
+
+    async fn download_storage_file(&self, path: &str) -> crate::Result<Bytes>;
+
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()>;
 
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo>;
 
     async fn clone_flow(&mut self, flow_id: FlowId) -> crate::Result<HashMap<FlowId, FlowId>>;
+
+    async fn get_some_wallets(&self, ids: &[i64]) -> crate::Result<Vec<Wallet>>;
 
     async fn get_wallets(&self) -> crate::Result<Vec<Wallet>>;
 
@@ -96,7 +150,7 @@ pub trait UserConnectionTrait: Any + 'static {
         nodes: &HashMap<NodeId, FlowRunId>,
     ) -> crate::Result<HashMap<NodeId, Vec<Value>>>;
 
-    async fn get_flow_config(&self, id: FlowId) -> crate::Result<client::ClientConfig>;
+    async fn get_flow_config(&self, id: FlowId) -> crate::Result<ClientConfig>;
 
     async fn set_start_time(&self, id: &FlowRunId, time: &DateTime<Utc>) -> crate::Result<()>;
 
@@ -227,7 +281,7 @@ impl DbClient for Connection {
     }
 }
 
-impl<'a> DbClient for Transaction<'a> {
+impl DbClient for Transaction<'_> {
     async fn do_query_one(
         &self,
         stmt: &str,

@@ -14,13 +14,17 @@ dotenv.loadSync({
   export: true,
 });
 
+const anonKey = Deno.env.get("ANON_KEY");
+if (!anonKey) throw new Error("no ANON_KEY");
+
 const c = new client.Client({
   host: "http://localhost:8080",
-  anonKey: Deno.env.get("ANON_KEY"),
+  supabaseUrl: "http://localhost:8000",
+  anonKey,
 });
 
 function keypair_from_env() {
-  const value = Deno.env.get("TEST_KEYPAIR");
+  const value = Deno.env.get("KEYPAIR");
   if (!value) return undefined;
   return web3.Keypair.fromSecretKey(bs58.decodeBase58(value));
 }
@@ -28,19 +32,17 @@ function keypair_from_env() {
 const keypair = keypair_from_env() ?? web3.Keypair.generate();
 console.log("using", keypair.publicKey.toBase58());
 
-const run = async (
-  keypair: web3.Keypair
-): Promise<client.ConfirmAuthOutput> => {
+const run = async (keypair: web3.Keypair) => {
   const msg = await c.initAuth(keypair.publicKey);
   const sig = ed25519SignText(keypair, msg);
-  return await c.confirmAuth(msg, sig);
+  const result = await c.confirmAuth(msg, sig);
+  const sup = await c.supabase(result.session);
+  return await sup.auth.getUser();
 };
 
-await Promise.all([
+const results = await Promise.all([
   run(keypair),
-  run(keypair),
-  run(keypair),
-  run(web3.Keypair.generate()),
-  run(web3.Keypair.generate()),
   run(web3.Keypair.generate()),
 ]);
+
+console.log(results);

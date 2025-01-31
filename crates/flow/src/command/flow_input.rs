@@ -7,8 +7,6 @@ pub struct FlowInputCommand {
 
 pub const FLOW_INPUT: &str = "flow_input";
 
-const OUTPUT: &str = "";
-
 impl FlowInputCommand {
     fn new(data: &NodeData) -> Self {
         let form = &data.targets_form.form_data;

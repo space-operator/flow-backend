@@ -54,7 +54,7 @@ pub(crate) mod pubkey {
 
     pub(crate) const TOKEN: &str = "$$p";
 
-    impl<'a> Serialize for CustomPubkey<'a> {
+    impl Serialize for CustomPubkey<'_> {
         fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
         where
             S: serde::Serializer,
@@ -63,7 +63,7 @@ pub(crate) mod pubkey {
         }
     }
 
-    impl<'a, 'de> Deserialize<'de> for CustomPubkey<'a> {
+    impl<'de> Deserialize<'de> for CustomPubkey<'_> {
         fn deserialize<D>(d: D) -> Result<Self, D::Error>
         where
             D: serde::Deserializer<'de>,
@@ -134,9 +134,8 @@ pub(crate) mod pubkey {
                 Some(n) => {
                     if n == 32 {
                         let buffer: [u8; 32] = try_from_fn(|i| {
-                            Ok(seq
-                                .next_element()?
-                                .ok_or_else(|| de::Error::invalid_length(i, &"32"))?)
+                            seq.next_element()?
+                                .ok_or_else(|| de::Error::invalid_length(i, &"32"))
                         })?;
                         Ok(Pubkey::new_from_array(buffer))
                     } else if n == 64 {
@@ -144,9 +143,8 @@ pub(crate) mod pubkey {
                             seq.next_element::<u8>()?;
                         }
                         let buffer: [u8; 32] = try_from_fn(|i| {
-                            Ok(seq
-                                .next_element()?
-                                .ok_or_else(|| de::Error::invalid_length(i + 32, &"64"))?)
+                            seq.next_element()?
+                                .ok_or_else(|| de::Error::invalid_length(i + 32, &"64"))
                         })?;
                         Ok(Pubkey::new_from_array(buffer))
                     } else {
@@ -155,18 +153,16 @@ pub(crate) mod pubkey {
                 }
                 None => {
                     let buffer: [u8; 32] = try_from_fn(|i| {
-                        Ok(seq
-                            .next_element()?
-                            .ok_or_else(|| de::Error::invalid_length(i, &"32"))?)
+                        seq.next_element()?
+                            .ok_or_else(|| de::Error::invalid_length(i, &"32"))
                     })?;
                     let next = seq.next_element::<u8>()?;
                     if let Some(x) = next {
                         let mut result = [0u8; 32];
                         result[0] = x;
                         let buffer: [u8; 31] = try_from_fn(|i| {
-                            Ok(seq
-                                .next_element()?
-                                .ok_or_else(|| de::Error::invalid_length(i, &"64"))?)
+                            seq.next_element()?
+                                .ok_or_else(|| de::Error::invalid_length(i, &"64"))
                         })?;
                         result[1..].copy_from_slice(&buffer);
                         Ok(Pubkey::new_from_array(result))
@@ -241,7 +237,7 @@ pub(crate) mod pubkey {
 
     struct StrVisitor<K: Key>(PhantomData<fn() -> K>);
 
-    impl<'de, K: Key> de::Visitor<'de> for StrVisitor<K> {
+    impl<K: Key> de::Visitor<'_> for StrVisitor<K> {
         type Value = Const<K>;
 
         fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -260,7 +256,7 @@ pub(crate) mod pubkey {
         }
     }
 
-    fn to_custom_pubkey<'a>(pk: &'a Pubkey) -> CustomPubkey<'a> {
+    fn to_custom_pubkey(pk: &Pubkey) -> CustomPubkey<'_> {
         CustomPubkey(Cow::Borrowed(pk))
     }
     fn from_custom_pubkey(pk: CustomPubkey<'static>) -> Result<Pubkey, Infallible> {
@@ -321,7 +317,7 @@ pub(crate) mod signature {
 
     pub(crate) const TOKEN: &str = "$$s";
 
-    impl<'a> Serialize for CustomSignature<'a> {
+    impl Serialize for CustomSignature<'_> {
         fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
         where
             S: serde::Serializer,
@@ -330,7 +326,7 @@ pub(crate) mod signature {
         }
     }
 
-    impl<'a, 'de> Deserialize<'de> for CustomSignature<'a> {
+    impl<'de> Deserialize<'de> for CustomSignature<'_> {
         fn deserialize<D>(d: D) -> Result<Self, D::Error>
         where
             D: serde::Deserializer<'de>,
@@ -373,9 +369,8 @@ pub(crate) mod signature {
             A: serde::de::SeqAccess<'de>,
         {
             let buffer: [u8; 64] = try_from_fn(|i| {
-                Ok(seq
-                    .next_element()?
-                    .ok_or_else(|| de::Error::invalid_length(i, &"64"))?)
+                seq.next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(i, &"64"))
             })?;
 
             Ok(Signature::from(buffer))
@@ -389,7 +384,7 @@ pub(crate) mod signature {
         }
     }
 
-    fn to_custom_signature<'a>(pk: &'a Signature) -> CustomSignature<'a> {
+    fn to_custom_signature(pk: &Signature) -> CustomSignature<'_> {
         CustomSignature(Cow::Borrowed(pk))
     }
     fn from_custom_signature(pk: CustomSignature<'static>) -> Result<Signature, Infallible> {
@@ -488,9 +483,8 @@ pub(crate) mod keypair {
             A: serde::de::SeqAccess<'de>,
         {
             let buffer: [u8; 64] = try_from_fn(|i| {
-                Ok(seq
-                    .next_element()?
-                    .ok_or_else(|| de::Error::invalid_length(i, &"64"))?)
+                seq.next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(i, &"64"))
             })?;
 
             Ok(CustomKeypair(buffer))
@@ -545,7 +539,7 @@ pub(crate) mod decimal {
 
     pub(crate) const TOKEN: &str = "$$d";
 
-    impl<'a> Serialize for CustomDecimal<'a> {
+    impl Serialize for CustomDecimal<'_> {
         fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
         where
             S: serde::Serializer,
@@ -554,7 +548,7 @@ pub(crate) mod decimal {
         }
     }
 
-    impl<'a, 'de> Deserialize<'de> for CustomDecimal<'a> {
+    impl<'de> Deserialize<'de> for CustomDecimal<'_> {
         fn deserialize<D>(d: D) -> Result<Self, D::Error>
         where
             D: de::Deserializer<'de>,
@@ -625,7 +619,7 @@ pub(crate) mod decimal {
         }
     }
 
-    fn to_custom_decimal<'a>(d: &'a Decimal) -> CustomDecimal<'a> {
+    fn to_custom_decimal(d: &Decimal) -> CustomDecimal<'_> {
         CustomDecimal(Cow::Borrowed(d))
     }
     fn from_custom_decimal(d: CustomDecimal<'static>) -> Result<Decimal, Infallible> {

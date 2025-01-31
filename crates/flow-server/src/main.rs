@@ -12,6 +12,7 @@ use flow_server::{
     api::{self, prelude::Success},
     db_worker::{token_worker::token_from_apikeys, DBWorker, SystemShutdown},
     flow_logs,
+    middleware::auth_v1,
     user::SupabaseAuth,
     ws, Config,
 };
@@ -195,7 +196,8 @@ async fn main() {
             .service(api::start_flow_shared::service(&config, db.clone()))
             .service(api::clone_flow::service(&config, db.clone()))
             .service(api::get_flow_output::service(&config, db.clone()))
-            .service(api::get_signature_request::service(&config, db.clone()));
+            .service(api::get_signature_request::service(&config, db.clone()))
+            .service(api::deploy_flow::service(&config));
         if let Some(supabase_auth) = &supabase_auth {
             flow = flow.service(api::start_flow_unverified::service(
                 &config,
@@ -203,6 +205,7 @@ async fn main() {
                 web::Data::new(supabase_auth.clone()),
             ))
         }
+
         let websocket = web::scope("/ws").service(ws::service(&config, db.clone()));
         let signature = web::scope("/signature").service(api::submit_signature::service(&config));
 
@@ -231,11 +234,18 @@ async fn main() {
             None
         };
 
-        let app = App::new()
+        let deployment = web::scope("/deployment").service(api::start_deployment::service(&config));
+
+        let mut app = App::new()
             .wrap(Compress::default())
             .wrap(Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#).exclude("/healthcheck"))
             .app_data(web::Data::new(db.clone()))
-            .app_data(web::Data::new(db_worker.clone()));
+            .app_data(web::Data::new(db_worker.clone()))
+            .configure(|cfg| auth_v1::configure(cfg, &config, &db))
+            .app_data(web::Data::new(sig_auth));
+        if let Some(auth) = supabase_auth.clone() {
+            app = app.app_data(web::Data::new(auth));
+        }
 
         let mut app = match &db {
             DbPool::Real(db) => app.app_data(web::Data::new(db.clone())),
@@ -272,6 +282,7 @@ async fn main() {
             .service(kvstore)
             .service(healthcheck)
             .service(api::get_info::service(&config))
+            .service(deployment)
     })
     .shutdown_timeout(shutdown_timeout_secs as u64);
     if let Some(pool_size) = pool_size {

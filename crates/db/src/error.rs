@@ -1,9 +1,64 @@
 use crate::{connection::proxied_user_conn, StorageError};
-use std::panic::Location;
+use actix_web::{http::StatusCode, ResponseError};
+use serde::Serialize;
+use std::{
+    fmt::{Debug, Display},
+    panic::Location,
+};
 use thiserror::Error as ThisError;
+
+#[derive(Serialize, Debug)]
+pub struct ErrorBody {
+    pub error: String,
+}
+
+impl ErrorBody {
+    pub fn build<E: ResponseError>(e: &E) -> actix_web::HttpResponse {
+        actix_web::HttpResponse::build(e.status_code()).json(ErrorBody {
+            error: e.to_string(),
+        })
+    }
+}
+
+impl<E: Debug + Display> ResponseError for Error<E> {
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        match self {
+            Error::Unauthorized => StatusCode::NOT_FOUND,
+            Error::SpawnError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::EncryptionError => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::NoEncryptionKey => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::NotSupported => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Timeout => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::CreatePool(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::GetDbConnection(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::InitDb(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Execute { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Data { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Json { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Parsing { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::ResourceNotFound { .. } => StatusCode::NOT_FOUND,
+            Error::Io(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::NoCert => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::AddCert(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Deserialize(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Storage(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Bcrypt => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::Base58 => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::LogicError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::LocalStorage { .. } => todo!(),
+            Error::ProxyError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+
+    fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
+        ErrorBody::build(self)
+    }
+}
 
 #[derive(Debug, ThisError)]
 pub enum Error<E = anyhow::Error> {
+    #[error("unauthorized")]
+    Unauthorized,
     #[error("spawn error: {}", .0)]
     SpawnError(tokio::task::JoinError),
     #[error("encryption error")]
@@ -98,6 +153,7 @@ impl<E> From<chacha20poly1305::Error> for Error<E> {
 impl<E: Into<anyhow::Error>> Error<E> {
     pub fn erase_type(self) -> Error {
         match self {
+            Error::Unauthorized => Error::Unauthorized,
             Error::SpawnError(e) => Error::SpawnError(e),
             Error::EncryptionError => Error::EncryptionError,
             Error::NoEncryptionKey => Error::NoEncryptionKey,

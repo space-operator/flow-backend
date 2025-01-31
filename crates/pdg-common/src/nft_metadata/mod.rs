@@ -393,7 +393,7 @@ impl RenderParams {
         ) -> Result<E, FromPDGError> {
             let v = match m
                 .as_object_mut()
-                .ok_or_else(|| FromPDGError::ExpectedObject)?
+                .ok_or(FromPDGError::ExpectedObject)?
                 .remove(path)
             {
                 Some(json) => {
@@ -417,7 +417,7 @@ impl RenderParams {
         ) -> Result<(), FromPDGError> {
             let json = match m
                 .as_object_mut()
-                .ok_or_else(|| FromPDGError::ExpectedObject)?
+                .ok_or(FromPDGError::ExpectedObject)?
                 .remove(path)
             {
                 None => return Ok(()),
@@ -444,7 +444,7 @@ impl RenderParams {
         ) -> Result<f64, FromPDGError> {
             let v = match m
                 .as_object_mut()
-                .ok_or_else(|| FromPDGError::ExpectedObject)?
+                .ok_or(FromPDGError::ExpectedObject)?
                 .remove(path)
             {
                 Some(json) => {
@@ -468,7 +468,7 @@ impl RenderParams {
         ) -> Result<I, FromPDGError> {
             let v = match m
                 .as_object_mut()
-                .ok_or_else(|| FromPDGError::ExpectedObject)?
+                .ok_or(FromPDGError::ExpectedObject)?
                 .remove(path)
             {
                 Some(json) => {
@@ -491,7 +491,7 @@ impl RenderParams {
         ) -> Result<String, FromPDGError> {
             let v = match m
                 .as_object_mut()
-                .ok_or_else(|| FromPDGError::ExpectedObject)?
+                .ok_or(FromPDGError::ExpectedObject)?
                 .remove(path)
             {
                 Some(json) => {

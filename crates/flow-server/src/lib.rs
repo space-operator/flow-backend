@@ -528,7 +528,6 @@ mod tests {
         dbg!(res);
     }
 
-
     #[tokio::test]
     async fn test_flow_input() {
         tracing_subscriber::fmt::try_init().ok();

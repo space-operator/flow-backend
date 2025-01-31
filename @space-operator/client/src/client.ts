@@ -1,3 +1,4 @@
+import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { bs58, web3, Value, type IValue, Buffer } from "./deps.ts";
 import {
   type ErrorBody,
@@ -15,12 +16,26 @@ import {
   type GetFlowOutputOutput,
   type FlowId,
   type FlowRunId,
+  type DeploymentId,
+  DeploymentSpecifier,
   SignatureRequest,
   type InitAuthOutput,
   type ConfirmAuthOutput,
+  type StartDeploymentParams,
+  type StartDeploymentOutput,
+  type IDeploymentSpecifier,
 } from "./mod.ts";
+import type { Database } from "./supabase.ts";
 
 export type TokenProvider = string | (() => Promise<string>);
+
+function header(key: string): string {
+  if (key.startsWith("b3-")) {
+    return "x-api-key";
+  } else {
+    return "authorization";
+  }
+}
 
 async function getToken(token?: TokenProvider): Promise<string> {
   switch (typeof token) {
@@ -41,9 +56,11 @@ export interface ClientOptions {
   token?: TokenProvider;
   // Supabase Anon key
   anonKey?: TokenProvider;
+  supabaseUrl?: string;
 }
 
 const HOST = "https://dev-api.spaceoperator.com";
+const SUPABASE_URL = "https://base.spaceoperator.com";
 
 function noop() {}
 
@@ -66,14 +83,38 @@ async function parseResponse<T>(resp: Response): Promise<T> {
 
 export class Client {
   host: string;
+  supabaseUrl: string;
   token?: TokenProvider;
   anonKey?: TokenProvider;
+  #supabase?: SupabaseClient<Database, "public">;
   private logger: Function = noop;
 
   constructor(options: ClientOptions = {}) {
     this.host = options.host ?? HOST;
+    this.supabaseUrl = options.supabaseUrl ?? SUPABASE_URL;
     this.token = options.token;
     this.anonKey = options.anonKey;
+  }
+
+  async supabase(token?: {
+    access_token: string;
+    refresh_token: string;
+  }): Promise<SupabaseClient<Database>> {
+    if (this.#supabase === undefined) {
+      this.#supabase = createClient(
+        this.supabaseUrl,
+        await getToken(this.anonKey)
+      );
+      const session = await this.#supabase.auth.getSession();
+      if (!session.data.session) {
+        if (token !== undefined) {
+          await this.#supabase.auth.setSession(token);
+        } else {
+          await this.#claimToken();
+        }
+      }
+    }
+    return this.#supabase;
   }
 
   async upsertWallet(body: any): Promise<any> {
@@ -88,26 +129,37 @@ export class Client {
     this.logger = logger;
   }
 
+  async #setAuthHeader(
+    req: Request,
+    auth: boolean | TokenProvider = true
+  ): Promise<Request> {
+    switch (typeof auth) {
+      case "boolean":
+        if (auth === true) {
+          const token = await getToken(this.token);
+          req.headers.set(header(token), token);
+        }
+        break;
+      case "string":
+        req.headers.set(header(auth), auth);
+        break;
+      case "function": {
+        const token = await auth();
+        req.headers.set(header(token), token);
+        break;
+      }
+      default:
+        throw new TypeError("unexpected type");
+    }
+    return req;
+  }
+
   async #sendJSONGet<T>(
     url: string,
     auth: boolean | TokenProvider = true
   ): Promise<T> {
-    const req = new Request(url);
-    switch (typeof auth) {
-      case "boolean":
-        if (auth === true) {
-          req.headers.set("authorization", await getToken(this.token));
-        }
-        break;
-      case "string":
-        req.headers.set("authorization", auth);
-        break;
-      case "function":
-        req.headers.set("authorization", await auth());
-        break;
-      default:
-        throw new TypeError("unexpected type");
-    }
+    let req = new Request(url);
+    req = await this.#setAuthHeader(req, auth);
 
     const resp = await fetch(req);
     return await parseResponse(resp);
@@ -115,32 +167,24 @@ export class Client {
 
   async #sendJSONPost<T>(
     url: string,
-    body: any,
+    body?: any,
     auth: boolean | TokenProvider = true,
     anonKey: boolean = false
   ): Promise<T> {
-    const req = new Request(url, {
+    const reqBody = body !== undefined ? JSON.stringify(body) : undefined;
+    const headers: Record<string, string> =
+      body !== undefined
+        ? {
+            "content-type": "application/json",
+          }
+        : {};
+    let req = new Request(url, {
       method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "content-type": "application/json",
-      },
+      body: reqBody,
+      headers,
     });
-    switch (typeof auth) {
-      case "boolean":
-        if (auth === true) {
-          req.headers.set("authorization", await getToken(this.token));
-        }
-        break;
-      case "string":
-        req.headers.set("authorization", auth);
-        break;
-      case "function":
-        req.headers.set("authorization", await auth());
-        break;
-      default:
-        throw new TypeError("unexpected type");
-    }
+    req = await this.#setAuthHeader(req, auth);
+
     if (anonKey === true) {
       req.headers.set("apikey", await getToken(this.anonKey));
     }
@@ -293,6 +337,40 @@ export class Client {
       id: req.id,
       signature: bs58.encodeBase58(signature),
       new_msg,
+    });
+  }
+
+  async deployFlow(id: FlowId): Promise<DeploymentId> {
+    const result: {
+      deployment_id: string;
+    } = await this.#sendJSONPost(`${this.host}/flow/deploy/${id}`, {});
+    return result.deployment_id;
+  }
+
+  async startDeployment(
+    deployment: IDeploymentSpecifier,
+    params?: StartDeploymentParams
+  ): Promise<StartDeploymentOutput> {
+    return await this.#sendJSONPost(
+      `${this.host}/deployment/start?${new DeploymentSpecifier(
+        deployment
+      ).formatQuery()}`,
+      params
+    );
+  }
+
+  async #claimToken() {
+    if (this.#supabase === undefined) return;
+    interface Output {
+      access_token: string;
+      refresh_token: string;
+    }
+    const token: Output = await this.#sendJSONPost(
+      `${this.host}/auth/claim_token`
+    );
+    await this.#supabase.auth.setSession({
+      access_token: token.access_token,
+      refresh_token: token.refresh_token,
     });
   }
 }

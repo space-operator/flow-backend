@@ -1,5 +1,5 @@
 use actix::{Actor, ResponseFuture};
-use db::{pool::DbPool, Error as DbError};
+use db::{pool::DbPool, Error as DbError, Wallet};
 use flow_lib::{
     context::signer::{self, SignatureRequest},
     UserId,
@@ -9,6 +9,7 @@ use hashbrown::{hash_map::Entry, HashMap};
 use serde_json::Value as JsonValue;
 use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
 use std::future::ready;
+use thiserror::Error as ThisError;
 
 pub enum SignerType {
     Keypair(Box<Keypair>),
@@ -59,6 +60,14 @@ impl actix::Handler<SignatureRequest> for SignerWorker {
             }
         }
     }
+}
+
+#[derive(ThisError, Debug)]
+pub enum AddWalletError {
+    #[error("pubkey is not on curve")]
+    NotOnCurve,
+    #[error("invalid keypair")]
+    InvalidKeypair,
 }
 
 impl SignerWorker {
@@ -118,7 +127,7 @@ impl SignerWorker {
         Ok(Self { signers })
     }
 
-    pub async fn fetch_and_start<'a, I>(
+    pub async fn fetch_all_and_start<'a, I>(
         db: DbPool,
         users: I,
     ) -> Result<(actix::Addr<Self>, JsonValue), DbError>
@@ -140,5 +149,61 @@ impl SignerWorker {
             })
             .collect::<JsonValue>();
         Ok((signer.start(), signers_info))
+    }
+
+    pub fn add_wallet(
+        &mut self,
+        user_id: &UserId,
+        sender: &actix::Recipient<SignatureRequest>,
+        w: Wallet,
+    ) -> Result<(), AddWalletError> {
+        let pk = Pubkey::new_from_array(w.pubkey);
+        if !pk.is_on_curve() {
+            return Err(AddWalletError::NotOnCurve);
+        }
+        let s = if let Some(keypair) = w.keypair {
+            let keypair =
+                Keypair::from_bytes(&keypair).map_err(|_| AddWalletError::InvalidKeypair)?;
+            SignerType::Keypair(Box::new(keypair))
+        } else {
+            SignerType::UserWallet {
+                user_id: *user_id,
+                sender: sender.clone(),
+            }
+        };
+        match self.signers.entry(pk) {
+            Entry::Vacant(slot) => {
+                slot.insert(s);
+            }
+            Entry::Occupied(mut slot) => {
+                if matches!(
+                    (slot.get(), &s),
+                    (SignerType::UserWallet { .. }, SignerType::Keypair(_))
+                ) {
+                    slot.insert(s);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn fetch_wallets_from_ids(
+        db: &DbPool,
+        user_id: UserId,
+        sender: actix::Recipient<SignatureRequest>,
+        ids: &[i64],
+    ) -> Result<Self, DbError> {
+        let mut signer = Self {
+            signers: HashMap::new(),
+        };
+        let conn = db.get_user_conn(user_id).await?;
+        let wallets = conn.get_some_wallets(ids).await?;
+        for wallet in wallets {
+            if let Err(error) = signer.add_wallet(&user_id, &sender, wallet) {
+                tracing::warn!("could not add wallet: {}", error);
+            }
+        }
+        Ok(signer)
     }
 }

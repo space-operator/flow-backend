@@ -85,7 +85,7 @@ impl Clone for Wallet {
         match self {
             Wallet::Keypair(keypair) => Wallet::Keypair(keypair.clone_keypair()),
             Wallet::Adapter { public_key } => Wallet::Adapter {
-                public_key: public_key.clone(),
+                public_key: *public_key,
             },
         }
     }
@@ -99,7 +99,7 @@ impl Wallet {
     pub fn pubkey(&self) -> Pubkey {
         match self {
             Wallet::Keypair(keypair) => keypair.pubkey(),
-            Wallet::Adapter { public_key, .. } => public_key.clone(),
+            Wallet::Adapter { public_key, .. } => *public_key,
         }
     }
 
@@ -566,7 +566,7 @@ impl PartialVersionedTransaction {
         let signatures = signers
             .try_sign_message(&message.serialize())?
             .into_iter()
-            .zip(signers.pubkeys().into_iter())
+            .zip(signers.pubkeys())
             .map(|(signature, pubkey)| signer::Presigner { signature, pubkey })
             .collect();
         Ok(Self {
@@ -802,6 +802,7 @@ impl Instructions {
         Ok(message)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn build_for_solana_action(
         mut self,
         action_signer: Pubkey,
@@ -1265,9 +1266,7 @@ mod tests {
     #[test]
     fn test_keypair_or_pubkey_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = WalletOrPubkey::Wallet(Wallet::Adapter {
-            public_key: pubkey.clone(),
-        });
+        let x = WalletOrPubkey::Wallet(Wallet::Adapter { public_key: pubkey });
         let value = value::to_value(&x).unwrap();
         assert_eq!(
             value,
@@ -1281,7 +1280,7 @@ mod tests {
     #[test]
     fn test_keypair_or_pubkey_pubkey() {
         let pubkey = Pubkey::new_unique();
-        let x = WalletOrPubkey::Pubkey(pubkey.clone());
+        let x = WalletOrPubkey::Pubkey(pubkey);
         let value = value::to_value(&x).unwrap();
         assert_eq!(value, Value::B32(pubkey.to_bytes()));
         assert_eq!(value::from_value::<WalletOrPubkey>(value).unwrap(), x);
@@ -1299,9 +1298,7 @@ mod tests {
     #[test]
     fn test_wallet_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = Wallet::Adapter {
-            public_key: pubkey.clone(),
-        };
+        let x = Wallet::Adapter { public_key: pubkey };
         let value = value::to_value(&x).unwrap();
         assert_eq!(
             value,

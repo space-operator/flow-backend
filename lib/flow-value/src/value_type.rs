@@ -49,7 +49,7 @@ pub mod keys {
 
 struct ValueTypeVisitor;
 
-impl<'de> serde::de::Visitor<'de> for ValueTypeVisitor {
+impl serde::de::Visitor<'_> for ValueTypeVisitor {
     type Value = Variant;
 
     fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
