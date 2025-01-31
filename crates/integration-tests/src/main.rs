@@ -96,10 +96,6 @@ fn main() {
         .run()
         .inspect_err(|error| eprint!("{}", error))
         .ok();
-    cmd!(sh, "docker compose down -v")
-        .run()
-        .inspect_err(|error| eprint!("{}", error))
-        .ok();
     cmd!(sh, "docker image prune -f")
         .run()
         .inspect_err(|error| eprint!("{}", error))
