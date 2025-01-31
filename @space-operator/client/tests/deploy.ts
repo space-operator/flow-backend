@@ -92,7 +92,10 @@ const res = await Promise.all([
         console.log(result.data);
       }
       {
-        const result = await ownerDb.from("flow_run").select("*");
+        const result = await ownerDb
+          .from("flow_run")
+          .select("*")
+          .eq("flow_id", 3643);
         console.log(result.data);
       }
     }
