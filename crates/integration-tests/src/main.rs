@@ -43,9 +43,11 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     Ok(())
 }
 
-#[derive(clap::Parser)]
+#[derive(clap::Parser, Debug)]
 struct Args {
+    #[clap(long, action)]
     compile: bool,
+    #[clap(long)]
     tag: Option<String>,
 }
 
