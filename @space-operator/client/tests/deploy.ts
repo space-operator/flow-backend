@@ -82,15 +82,22 @@ const res = await Promise.all([
   (async () => {
     try {
       await run();
-    } catch (error) {
+    } finally {
       const sup = await owner.supabase();
-      const result = await sup
-        .from("node_run")
-        .select("errors")
-        .not("errors", "is", "null");
-      console.log(result);
-
-      throw error;
+      {
+        const result = await sup
+          .from("node_run")
+          .select("errors")
+          .not("errors", "is", "null");
+        console.log(result.data);
+      }
+      {
+        const result = await sup
+          .from("flow_run")
+          .select("errors")
+          .not("errors", "is", "null");
+        console.log(result.data);
+      }
     }
   })(),
 ]);
