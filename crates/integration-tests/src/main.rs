@@ -48,7 +48,7 @@ struct Args {
     #[clap(long, action)]
     compile: bool,
     #[clap(long, action)]
-    erc_login: bool,
+    ecr_login: bool,
     #[clap(long)]
     tag: Option<String>,
 }
@@ -58,7 +58,7 @@ fn main() {
 
     let sh = Shell::new().unwrap();
 
-    if args.erc_login {
+    if args.ecr_login {
         if let Ok(password) = cmd!(sh, "aws ecr-public get-login-password --region us-east-1")
             .read()
             .inspect_err(|error| eprint!("{}", error))
@@ -71,7 +71,7 @@ fn main() {
             .run()
             .inspect_err(|error| {
                 eprint!("{}", error);
-                args.erc_login = false;
+                args.ecr_login = false;
             })
             .ok();
         }
@@ -105,7 +105,7 @@ fn main() {
         .inspect_err(|error| eprint!("{}", error))
         .ok();
 
-    if args.erc_login {
+    if args.ecr_login {
         cmd!(sh, "docker logout public.ecr.aws/space-operator")
             .run()
             .inspect_err(|error| eprint!("{}", error))
