@@ -81,8 +81,8 @@ const run = async () => {
 const res = await Promise.all([
   (async () => {
     try {
-      await run();
-    } finally {
+      return await run();
+    } catch (error) {
       const ownerDb = await owner.supabase();
       {
         const result = await ownerDb
@@ -94,10 +94,11 @@ const res = await Promise.all([
       {
         const result = await ownerDb
           .from("flow_run")
-          .select("*")
-          .eq("flow_id", 3643);
+          .select("errors")
+          .not("errors", "is", "null");
         console.log(result.data);
       }
+      throw error;
     }
   })(),
 ]);
