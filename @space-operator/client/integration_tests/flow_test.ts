@@ -44,7 +44,6 @@ async function checkNoErrors(
 Deno.test("start flow", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl,
     anonKey,
     token: apiKey,
   });
