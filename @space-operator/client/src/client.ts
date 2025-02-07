@@ -327,13 +327,15 @@ export class Client {
 
   async startDeployment(
     deployment: IDeploymentSpecifier,
-    params?: StartDeploymentParams
+    params?: StartDeploymentParams,
+    token?: string
   ): Promise<StartDeploymentOutput> {
     return await this.#sendJSONPost(
       `${this.host}/deployment/start?${new DeploymentSpecifier(
         deployment
       ).formatQuery()}`,
-      params
+      params,
+      token ?? true
     );
   }
 

@@ -1,5 +1,6 @@
 export { Value, type IValue } from "./deps.ts";
-export { Client, type ClientOptions } from "./client.ts";
+export { Client } from "./client.ts";
+export type { ClaimTokenOutput, ClientOptions } from "./client.ts";
 export { WsClient, type WcClientOptions } from "./ws.ts";
 export type {
   FlowId,
