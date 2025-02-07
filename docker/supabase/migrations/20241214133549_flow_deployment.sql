@@ -1,5 +1,5 @@
 CREATE TABLE flow_deployments (
-    id UUID NOT NULL,
+    id UUID NOT NULL CHECK (id <> '00000000-0000-0000-0000-000000000000'),
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
     user_id UUID NOT NULL,
     entrypoint INTEGER NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE flow_deployments (
     UNIQUE (id, entrypoint)
 );
 
--- Wallet used in a deployment
+-- Wallets used in a deployment
 CREATE TABLE flow_deployments_wallets (
     user_id UUID NOT NULL,
     deployment_id UUID NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE flow_deployments_wallets (
     FOREIGN KEY (deployment_id) REFERENCES flow_deployments (id) ON DELETE CASCADE
 );
 
--- Flow used in a deployment
+-- Flows used in a deployment
 CREATE TABLE flow_deployments_flows (
     deployment_id UUID NOT NULL,
     flow_id INTEGER NOT NULL,
@@ -35,10 +35,11 @@ CREATE TABLE flow_deployments_flows (
 
 -- Tags to assign human-frienly references to flow deployments
 CREATE TABLE flow_deployments_tags (
+    user_id UUID NOT NULL,
     entrypoint INTEGER NOT NULL,
     tag TEXT NOT NULL,
     deployment_id UUID NOT NULL,
-    user_id UUID NOT NULL,
+    description TEXT NULL,
     PRIMARY KEY (entrypoint, tag),
     FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE,
     FOREIGN KEY (deployment_id) REFERENCES flow_deployments (id) ON DELETE CASCADE,
@@ -111,3 +112,9 @@ CREATE POLICY "owner-select" ON flow_deployments_tags FOR SELECT TO authenticate
 
 CREATE POLICY "owner-delete" ON flow_deployments FOR DELETE TO authenticated USING (auth.uid() = user_id);
 CREATE POLICY "owner-update" ON flow_deployments FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+
+CREATE POLICY "owner-delete" ON flow_deployments_tags FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "owner-insert" ON flow_deployments_tags FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "owner-update" ON flow_deployments_tags FOR DELETE TO authenticated USING (auth.uid() = user_id);
+
+alter table flow_run add column deployment_id uuid null references flow_deployments (id) on delete set null;

@@ -90,6 +90,8 @@ pub type DeploymentId = Uuid;
 
 #[derive(bon::Builder, Debug, Clone)]
 pub struct FlowDeployment {
+    /// Deployment ID, NIL if not inserted yet
+    pub id: DeploymentId,
     /// Owner of this deployment (and all flows belonging to it)
     pub user_id: UserId,
     /// Flow ID to start the set
@@ -115,6 +117,7 @@ impl FlowDeployment {
     fn new(entry: FlowRow) -> Self {
         let flow = Flow::builder().row(entry).build();
         Self::builder()
+            .id(DeploymentId::nil())
             .entrypoint(flow.row.id)
             .start_permission(flow.start_permission())
             .wallets_id(flow.wallets_id())
@@ -349,6 +352,7 @@ impl FlowSet {
                     origin: FlowRunOrigin::Start {},
                     solana_client: Some(self.deployment.solana_network),
                     parent_flow_execute: None,
+                    deployment_id: Some(self.deployment.id),
                 },
             )
             .await

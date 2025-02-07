@@ -584,6 +584,7 @@ impl UserConnection {
             .map_err(Error::exec("select flow_deployments"))?
             .ok_or_else(|| Error::not_found("flow_deployments", id))?;
         let d = FlowDeployment {
+            id: *id,
             user_id: r
                 .try_get("user_id")
                 .map_err(Error::data("flow_deployments.entrypoint"))?,
