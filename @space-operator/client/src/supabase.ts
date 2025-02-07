@@ -92,35 +92,35 @@ export type Database = {
       }
       flow_deployments: {
         Row: {
-          action_config: Json | null
           action_identity: string | null
           created_at: string
           entrypoint: number
-          fees: Json[]
+          fees: Json
           id: string
           output_instructions: boolean
+          solana_network: Json
           start_permission: Json
           user_id: string
         }
         Insert: {
-          action_config?: Json | null
           action_identity?: string | null
           created_at?: string
           entrypoint: number
-          fees: Json[]
+          fees: Json
           id: string
           output_instructions: boolean
+          solana_network: Json
           start_permission: Json
           user_id: string
         }
         Update: {
-          action_config?: Json | null
           action_identity?: string | null
           created_at?: string
           entrypoint?: number
-          fees?: Json[]
+          fees?: Json
           id?: string
           output_instructions?: boolean
+          solana_network?: Json
           start_permission?: Json
           user_id?: string
         }
@@ -163,18 +163,21 @@ export type Database = {
       flow_deployments_tags: {
         Row: {
           deployment_id: string
+          description: string | null
           entrypoint: number
           tag: string
           user_id: string
         }
         Insert: {
           deployment_id: string
+          description?: string | null
           entrypoint: number
           tag: string
           user_id: string
         }
         Update: {
           deployment_id?: string
+          description?: string | null
           entrypoint?: number
           tag?: string
           user_id?: string
@@ -235,6 +238,7 @@ export type Database = {
         Row: {
           call_depth: number
           collect_instructions: boolean
+          deployment_id: string | null
           edges: Json[]
           end_time: string | null
           environment: Json
@@ -256,6 +260,7 @@ export type Database = {
         Insert: {
           call_depth: number
           collect_instructions: boolean
+          deployment_id?: string | null
           edges: Json[]
           end_time?: string | null
           environment: Json
@@ -277,6 +282,7 @@ export type Database = {
         Update: {
           call_depth?: number
           collect_instructions?: boolean
+          deployment_id?: string | null
           edges?: Json[]
           end_time?: string | null
           environment?: Json
@@ -306,6 +312,12 @@ export type Database = {
             foreignKeyName: "fk-user_id"
             columns: ["user_id"]
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_run_deployment_id_fkey"
+            columns: ["deployment_id"]
+            referencedRelation: "flow_deployments"
             referencedColumns: ["id"]
           },
         ]
