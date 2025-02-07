@@ -55,7 +55,6 @@ export interface ClientOptions {
   token?: TokenProvider;
   // Supabase Anon key
   anonKey?: TokenProvider;
-  supabaseUrl?: string;
 }
 
 const HOST = "https://dev-api.spaceoperator.com";

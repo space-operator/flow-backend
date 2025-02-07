@@ -45,7 +45,6 @@ async function checkNoErrors(
 Deno.test("deploy and run", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl,
     anonKey,
     token: apiKey,
   });
@@ -59,7 +58,6 @@ Deno.test("deploy and run", async () => {
   const starterKeypair = web3.Keypair.generate();
   const starter = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl: "http://localhost:8000",
     anonKey,
   });
   starter.setToken(starterKeypair.publicKey.toString());
@@ -126,7 +124,6 @@ Deno.test("deploy and run", async () => {
 Deno.test("deploy and delete", async (t) => {
   const owner = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl,
     anonKey,
     token: apiKey,
   });
@@ -202,7 +199,6 @@ Deno.test("deploy and delete", async (t) => {
 Deno.test("output instructions", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl,
     anonKey,
     token: apiKey,
   });
@@ -227,7 +223,6 @@ Deno.test("output instructions", async () => {
   const starterKeypair = web3.Keypair.generate();
   const starter = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl: "http://localhost:8000",
     anonKey,
   });
   starter.setToken(starterKeypair.publicKey.toString());
@@ -254,7 +249,6 @@ Deno.test("output instructions", async () => {
 Deno.test("fees", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl,
     anonKey,
     token: apiKey,
   });
@@ -283,7 +277,6 @@ Deno.test("fees", async () => {
   const starterKeypair = web3.Keypair.generate();
   const starter = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl: "http://localhost:8000",
     anonKey,
   });
   starter.setToken(starterKeypair.publicKey.toString());
@@ -315,7 +308,6 @@ Deno.test("fees", async () => {
 Deno.test("action identity", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl,
     anonKey,
     token: apiKey,
   });
@@ -349,7 +341,6 @@ Deno.test("action identity", async () => {
   const starterKeypair = web3.Keypair.generate();
   const starter = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl: "http://localhost:8000",
     anonKey,
   });
   starter.setToken(starterKeypair.publicKey.toString());
@@ -379,7 +370,6 @@ Deno.test("action identity", async () => {
 Deno.test("execute on action", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl,
     anonKey,
     token: apiKey,
   });
@@ -413,7 +403,6 @@ Deno.test("execute on action", async () => {
   const starterKeypair = web3.Keypair.generate();
   const starter = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl: "http://localhost:8000",
     anonKey,
   });
   starter.setToken(starterKeypair.publicKey.toString());
@@ -472,7 +461,6 @@ Deno.test("execute on action", async () => {
 Deno.test("start by flow", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl,
     anonKey,
     token: apiKey,
   });
@@ -507,7 +495,6 @@ Deno.test("start by flow", async () => {
 Deno.test("start by flow + tag", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl,
     anonKey,
     token: apiKey,
   });
@@ -543,7 +530,6 @@ Deno.test("start by flow + tag", async () => {
 Deno.test("start custom tag", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
-    supabaseUrl,
     anonKey,
     token: apiKey,
   });
