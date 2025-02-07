@@ -539,3 +539,46 @@ Deno.test("start by flow + tag", async () => {
   await sup.auth.setSession(jwt);
   await checkNoErrors(sup, flow_run_id);
 });
+
+Deno.test("start custom tag", async () => {
+  const owner = new client.Client({
+    host: "http://localhost:8080",
+    supabaseUrl,
+    anonKey,
+    token: apiKey,
+  });
+  const sup = createClient<client.Database>(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false },
+  });
+  const jwt = await owner.claimToken();
+  await sup.auth.setSession(jwt);
+  const user_id = (await sup.auth.getUser()).data.user?.id!;
+
+  const flowId = 3675;
+  const id = await owner.deployFlow(flowId);
+  await sup.from("flow_deployments_tags").upsert({
+    deployment_id: id,
+    entrypoint: flowId,
+    tag: "v1",
+    user_id,
+  });
+
+  const { flow_run_id } = await owner.startDeployment(
+    {
+      flow: flowId,
+      tag: "v1",
+    },
+    {
+      inputs: new Value({
+        a: 1,
+        b: 2,
+      }).M!,
+    }
+  );
+
+  const result = await owner.getFlowOutput(flow_run_id);
+  const c = result.toJSObject().c;
+  assertEquals(c, 3);
+
+  await checkNoErrors(sup, flow_run_id);
+});
