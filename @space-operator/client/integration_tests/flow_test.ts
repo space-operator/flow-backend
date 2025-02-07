@@ -1,9 +1,8 @@
-import { bs58, Buffer, Value, web3 } from "../src/deps.ts";
+import { Value } from "../src/deps.ts";
 import * as client from "../src/mod.ts";
 import * as dotenv from "jsr:@std/dotenv";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
-import { assert, assertEquals } from "jsr:@std/assert";
-import { LAMPORTS_PER_SOL } from "npm:@solana/web3.js@^1.91.4";
+import { assertEquals } from "jsr:@std/assert";
 
 dotenv.loadSync({
   export: true,
