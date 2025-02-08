@@ -7,7 +7,7 @@ where
 
 struct Visitor<const N: usize>;
 
-impl<'de, const N: usize> serde::de::Visitor<'de> for Visitor<N> {
+impl<const N: usize> serde::de::Visitor<'_> for Visitor<N> {
     type Value = [u8; N];
 
     fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -38,7 +38,7 @@ where
 
 pub mod opt {
     struct Bs58<'a>(&'a [u8]);
-    impl<'a> serde::Serialize for Bs58<'a> {
+    impl serde::Serialize for Bs58<'_> {
         fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
         where
             S: serde::Serializer,

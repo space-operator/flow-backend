@@ -4,10 +4,18 @@ import * as dotenv from "jsr:@std/dotenv";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { assert, assertEquals } from "jsr:@std/assert";
 import { LAMPORTS_PER_SOL } from "npm:@solana/web3.js@^1.91.4";
+import * as nacl from "npm:tweetnacl";
 
 dotenv.loadSync({
   export: true,
 });
+
+function ed25519SignText(keypair: web3.Keypair, message: string): Uint8Array {
+  return nacl.default.sign.detached(
+    new TextEncoder().encode(message),
+    keypair.secretKey
+  );
+}
 
 function getEnv(key: string): string {
   const env = Deno.env.get(key);
@@ -458,7 +466,7 @@ Deno.test("execute on action", async () => {
   assertEquals(bs58.decodeBase58(signature), output.signature);
 });
 
-Deno.test("start by flow", async () => {
+Deno.test("start authenticated by flow", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
     anonKey,
@@ -467,8 +475,29 @@ Deno.test("start by flow", async () => {
 
   const flowId = 3675;
   const id = await owner.deployFlow(flowId);
+  const ownerSup = createClient<client.Database>(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false },
+  });
+  await ownerSup.auth.setSession(await owner.claimToken());
+  const updateResult = await ownerSup
+    .from("flow_deployments")
+    .update({
+      start_permission: "Authenticated",
+    })
+    .eq("id", id);
+  if (updateResult.error) throw new Error(JSON.stringify(updateResult.error));
 
-  const { flow_run_id } = await owner.startDeployment(
+  const starter = new client.Client({
+    host: "http://localhost:8080",
+    anonKey,
+  });
+  const starterKeypair = web3.Keypair.generate();
+  const initAuth = await starter.initAuth(starterKeypair.publicKey);
+  const signature = ed25519SignText(starterKeypair, initAuth);
+  const { session } = await starter.confirmAuth(initAuth, signature);
+  starter.setToken(`Bearer ${session.access_token}`);
+
+  const { flow_run_id } = await starter.startDeployment(
     {
       flow: flowId,
     },
@@ -480,17 +509,16 @@ Deno.test("start by flow", async () => {
     }
   );
 
-  const result = await owner.getFlowOutput(flow_run_id);
+  const result = await starter.getFlowOutput(flow_run_id);
   const c = result.toJSObject().c;
   assertEquals(c, 3);
 
-  const jwt = await owner.claimToken();
-  const sup = createClient<client.Database>(supabaseUrl, anonKey, {
+  const starterSup = createClient<client.Database>(supabaseUrl, anonKey, {
     auth: { autoRefreshToken: false },
   });
-  await sup.auth.setSession(jwt);
-  await checkNoErrors(sup, flow_run_id);
-  const selectResult = await sup
+  await starterSup.auth.setSession(session);
+  await checkNoErrors(starterSup, flow_run_id);
+  const selectResult = await starterSup
     .from("flow_run")
     .select("output")
     .eq("deployment_id", id)
