@@ -38,8 +38,11 @@ pub const KEY_PREFIX: &str = "b3-";
 
 impl APIKey {
     pub fn generate<R: rand::Rng + rand::CryptoRng>(rng: &mut R, info: KeyInfo) -> (Self, String) {
-        let key = KEY_PREFIX.to_owned()
-            + &base64::encode_config(rng.gen::<[u8; 32]>(), base64::URL_SAFE_NO_PAD);
+        let mut key = KEY_PREFIX.to_owned();
+        key.push_str(&base64::encode_config(
+            rng.gen::<[u8; 32]>(),
+            base64::URL_SAFE_NO_PAD,
+        ));
         let trimmed_key = "*****".to_owned() + &key[key.len() - 5..];
         let key_hash =
             base64::encode_config(blake3::hash(key.as_bytes()).as_bytes(), base64::URL_SAFE);
@@ -60,6 +63,7 @@ pub struct NameConflict;
 
 fn convert_error(error: Error) -> Error<NameConflict> {
     match error {
+        Error::Unauthorized => Error::Unauthorized,
         Error::SpawnError(e) => Error::SpawnError(e),
         Error::EncryptionError => Error::EncryptionError,
         Error::Timeout => Error::Timeout,

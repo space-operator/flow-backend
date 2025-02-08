@@ -19,6 +19,7 @@ pub enum Error {
     Upstream(String),
 }
 
+#[derive(Clone)]
 pub struct ProxiedUserConn {
     pub user_id: UserId,
     pub client: reqwest::Client,
@@ -85,6 +86,50 @@ impl ProxiedUserConn {
 
 #[async_trait::async_trait]
 impl UserConnectionTrait for ProxiedUserConn {
+    async fn get_wallet_by_pubkey(&self, _: &[u8; 32]) -> crate::Result<Wallet> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_some_wallets(&self, _: &[i64]) -> crate::Result<Vec<Wallet>> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_deployment_id_from_tag(&self, _: &FlowId, _: &str) -> crate::Result<DeploymentId> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_deployment(&self, _: &DeploymentId) -> crate::Result<FlowDeployment> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_deployment_wallets(&self, _: &DeploymentId) -> crate::Result<Vec<i64>> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_deployment_flows(&self, _: &DeploymentId) -> crate::Result<HashMap<FlowId, Flow>> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    fn clone_connection(&self) -> Box<dyn UserConnectionTrait> {
+        Box::new(self.clone())
+    }
+
+    async fn insert_deployment(&self, _: &FlowDeployment) -> crate::Result<DeploymentId> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
+    async fn get_flow(&self, _: FlowId) -> crate::Result<FlowRow> {
+        // TODO
+        Err(crate::Error::NotSupported)
+    }
+
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
         self.send("share_flow_run", &(id, user)).await
     }
@@ -105,8 +150,10 @@ impl UserConnectionTrait for ProxiedUserConn {
         &self,
         config: &ClientConfig,
         inputs: &ValueSet,
+        deployment_id: &Option<DeploymentId>,
     ) -> crate::Result<FlowRunId> {
-        self.send("new_flow_run", &(&config, &inputs)).await
+        self.send("new_flow_run", &(&config, &inputs, &deployment_id))
+            .await
     }
 
     async fn get_previous_values(
@@ -254,8 +301,8 @@ impl UserConnection {
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             "new_flow_run" => {
-                let (config, inputs) = serde_json::from_str(req.params.get())?;
-                let res = self.new_flow_run(&config, &inputs).await?;
+                let (config, inputs, deployment_id) = serde_json::from_str(req.params.get())?;
+                let res = self.new_flow_run(&config, &inputs, &deployment_id).await?;
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             "get_previous_values" => {

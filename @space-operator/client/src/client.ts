@@ -15,12 +15,26 @@ import {
   type GetFlowOutputOutput,
   type FlowId,
   type FlowRunId,
+  type DeploymentId,
+  DeploymentSpecifier,
   SignatureRequest,
   type InitAuthOutput,
   type ConfirmAuthOutput,
+  type StartDeploymentParams,
+  type StartDeploymentOutput,
+  type IDeploymentSpecifier,
+  Database,
 } from "./mod.ts";
 
 export type TokenProvider = string | (() => Promise<string>);
+
+function header(key: string): string {
+  if (key.startsWith("b3-")) {
+    return "x-api-key";
+  } else {
+    return "authorization";
+  }
+}
 
 async function getToken(token?: TokenProvider): Promise<string> {
   switch (typeof token) {
@@ -64,6 +78,11 @@ async function parseResponse<T>(resp: Response): Promise<T> {
   return await resp.json();
 }
 
+export interface ClaimTokenOutput {
+  access_token: string;
+  refresh_token: string;
+}
+
 export class Client {
   host: string;
   token?: TokenProvider;
@@ -88,26 +107,37 @@ export class Client {
     this.logger = logger;
   }
 
+  async #setAuthHeader(
+    req: Request,
+    auth: boolean | TokenProvider = true
+  ): Promise<Request> {
+    switch (typeof auth) {
+      case "boolean":
+        if (auth === true) {
+          const token = await getToken(this.token);
+          req.headers.set(header(token), token);
+        }
+        break;
+      case "string":
+        req.headers.set(header(auth), auth);
+        break;
+      case "function": {
+        const token = await auth();
+        req.headers.set(header(token), token);
+        break;
+      }
+      default:
+        throw new TypeError("unexpected type");
+    }
+    return req;
+  }
+
   async #sendJSONGet<T>(
     url: string,
     auth: boolean | TokenProvider = true
   ): Promise<T> {
-    const req = new Request(url);
-    switch (typeof auth) {
-      case "boolean":
-        if (auth === true) {
-          req.headers.set("authorization", await getToken(this.token));
-        }
-        break;
-      case "string":
-        req.headers.set("authorization", auth);
-        break;
-      case "function":
-        req.headers.set("authorization", await auth());
-        break;
-      default:
-        throw new TypeError("unexpected type");
-    }
+    let req = new Request(url);
+    req = await this.#setAuthHeader(req, auth);
 
     const resp = await fetch(req);
     return await parseResponse(resp);
@@ -115,32 +145,24 @@ export class Client {
 
   async #sendJSONPost<T>(
     url: string,
-    body: any,
+    body?: any,
     auth: boolean | TokenProvider = true,
     anonKey: boolean = false
   ): Promise<T> {
-    const req = new Request(url, {
+    const reqBody = body !== undefined ? JSON.stringify(body) : undefined;
+    const headers: Record<string, string> =
+      body !== undefined
+        ? {
+            "content-type": "application/json",
+          }
+        : {};
+    let req = new Request(url, {
       method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "content-type": "application/json",
-      },
+      body: reqBody,
+      headers,
     });
-    switch (typeof auth) {
-      case "boolean":
-        if (auth === true) {
-          req.headers.set("authorization", await getToken(this.token));
-        }
-        break;
-      case "string":
-        req.headers.set("authorization", auth);
-        break;
-      case "function":
-        req.headers.set("authorization", await auth());
-        break;
-      default:
-        throw new TypeError("unexpected type");
-    }
+    req = await this.#setAuthHeader(req, auth);
+
     if (anonKey === true) {
       req.headers.set("apikey", await getToken(this.anonKey));
     }
@@ -294,5 +316,30 @@ export class Client {
       signature: bs58.encodeBase58(signature),
       new_msg,
     });
+  }
+
+  async deployFlow(id: FlowId): Promise<DeploymentId> {
+    const result: {
+      deployment_id: string;
+    } = await this.#sendJSONPost(`${this.host}/flow/deploy/${id}`, {});
+    return result.deployment_id;
+  }
+
+  async startDeployment(
+    deployment: IDeploymentSpecifier,
+    params?: StartDeploymentParams,
+    token?: string
+  ): Promise<StartDeploymentOutput> {
+    return await this.#sendJSONPost(
+      `${this.host}/deployment/start?${new DeploymentSpecifier(
+        deployment
+      ).formatQuery()}`,
+      params,
+      token ?? true
+    );
+  }
+
+  async claimToken(): Promise<ClaimTokenOutput> {
+    return await this.#sendJSONPost(`${this.host}/auth/claim_token`);
   }
 }

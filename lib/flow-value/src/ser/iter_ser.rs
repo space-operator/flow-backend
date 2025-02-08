@@ -36,11 +36,11 @@ impl<I> Map<I> {
     }
 }
 
-impl<'a, I, K, V> serde::Serialize for Map<I>
+impl<I, K, V> serde::Serialize for Map<I>
 where
     I: Iterator<Item = (K, V)> + Clone,
-    K: serde::Serialize + 'a,
-    V: serde::Serialize + 'a,
+    K: serde::Serialize,
+    V: serde::Serialize,
 {
     fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
     where

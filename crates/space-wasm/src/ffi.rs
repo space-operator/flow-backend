@@ -82,8 +82,5 @@ pub fn http_call_request(ctx: FunctionEnvMut<SpaceEnv>, bytes: u32, bytes_len: u
         reader.read_to_end(&mut response)?;
         write_serialized(ctx, response)
     };
-    match stub(ctx, bytes, bytes_len) {
-        Ok(pointer) => pointer,
-        _ => 0,
-    }
+    stub(ctx, bytes, bytes_len).unwrap_or(0)
 }

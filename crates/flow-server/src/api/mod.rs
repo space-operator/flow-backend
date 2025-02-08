@@ -32,6 +32,9 @@ pub mod data_import;
 
 pub mod get_info;
 
+pub mod deploy_flow;
+pub mod start_deployment;
+
 pub mod prelude {
     pub use crate::{db_worker::DBWorker, error::Error, middleware::auth, Config};
     pub use actix_web::{dev::HttpServiceFactory, http::StatusCode, web};

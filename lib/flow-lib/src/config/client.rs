@@ -5,7 +5,7 @@ use crate::{
     FlowRunId, NodeId, SolanaClientConfig, SolanaNet, UserId, ValueType,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::Value as JsonValue;
+use serde_json::{value::RawValue, Value as JsonValue};
 use serde_with::serde_as;
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -13,6 +13,32 @@ use value::default::bool_false;
 
 fn default_interflow_instruction_info() -> Result<InstructionInfo, String> {
     Err("not available".to_string())
+}
+
+/// A row of `flows` table and `flow_deployments_flows.data` column
+#[serde_as]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FlowRow {
+    pub id: FlowId,
+    pub user_id: UserId,
+    pub nodes: Vec<Node>,
+    pub edges: Vec<Edge>,
+    // TODO: remove default
+    #[serde(default)]
+    #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
+    pub environment: HashMap<String, String>,
+    pub current_network: Network,
+    pub instructions_bundling: BundlingMode,
+    pub is_public: bool,
+    pub start_shared: bool,
+    pub start_unverified: bool,
+}
+
+impl FlowRow {
+    /// Serialize data for `flow_deployments_flows.data` column.
+    pub fn data(&self) -> Box<RawValue> {
+        serde_json::value::to_raw_value(self).unwrap()
+    }
 }
 
 #[serde_as]
@@ -113,7 +139,7 @@ impl Default for Network {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Node {
-    pub id: Uuid,
+    pub id: NodeId,
     pub data: NodeData,
 }
 

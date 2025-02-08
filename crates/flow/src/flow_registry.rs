@@ -2,6 +2,7 @@ use crate::{
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
     flow_run_events::{self, EventSender, NodeLog},
+    flow_set::DeploymentId,
     FlowGraph,
 };
 use chrono::Utc;
@@ -25,7 +26,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::Instrument;
 use utils::actix_service::ActixService;
 
-pub const MAX_CALL_DEPTH: u32 = 32;
+pub const MAX_CALL_DEPTH: u32 = 1024;
 
 #[derive(Debug, ThisError)]
 pub enum StopError {
@@ -45,10 +46,11 @@ pub struct StartFlowOptions {
     pub origin: FlowRunOrigin,
     pub solana_client: Option<SolanaClientConfig>,
     pub parent_flow_execute: Option<execute::Svc>,
+    pub deployment_id: Option<DeploymentId>,
 }
 
 /// A collection of flows config to run together
-#[derive(Clone)]
+#[derive(Clone, bon::Builder)]
 pub struct FlowRegistry {
     flows: Arc<HashMap<FlowId, ClientConfig>>,
     pub(crate) flow_owner: User,
@@ -294,7 +296,7 @@ impl FlowRegistry {
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
             rpc_server: srpc::Server::start_http_server()
-                .inspect_err(|error| tracing::info!("srpc error: {}", error))
+                .inspect_err(|error| tracing::error!("srpc error: {}", error))
                 .ok(),
         })
     }
@@ -383,6 +385,7 @@ impl FlowRegistry {
             origin,
             solana_client,
             parent_flow_execute,
+            deployment_id,
         } = options;
         let config = self
             .flows
@@ -405,6 +408,7 @@ impl FlowRegistry {
             .call_ref(new_flow_run::Request {
                 user_id: self.flow_owner.id,
                 shared_with: self.shared_with.clone(),
+                deployment_id,
                 config: ClientConfig {
                     call_depth: self.depth,
                     origin,
@@ -520,6 +524,7 @@ pub mod new_flow_run {
     use crate::{
         flow_graph::StopSignal,
         flow_run_events::{Event, EventSender},
+        flow_set::DeploymentId,
     };
     use flow_lib::{
         config::client::ClientConfig, utils::TowerClient, BoxError, FlowRunId, UserId, ValueSet,
@@ -533,6 +538,7 @@ pub mod new_flow_run {
         pub user_id: UserId,
         pub config: ClientConfig,
         pub shared_with: Vec<UserId>,
+        pub deployment_id: Option<DeploymentId>,
         pub inputs: ValueSet,
         pub tx: EventSender,
         pub stream: BoxStream<'static, Event>,
