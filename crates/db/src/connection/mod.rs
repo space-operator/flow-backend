@@ -127,8 +127,6 @@ pub trait UserConnectionTrait: Any + Send + 'static {
 
     async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow>;
 
-    async fn download_storage_file(&self, path: &str) -> crate::Result<Bytes>;
-
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()>;
 
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo>;

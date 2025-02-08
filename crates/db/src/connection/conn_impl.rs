@@ -191,11 +191,6 @@ impl UserConnectionTrait for UserConnection {
         result
     }
 
-    async fn download_storage_file(&self, path: &str) -> crate::Result<Bytes> {
-        // TODO: cache
-        self.download_storage_file(path).await
-    }
-
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
         self.share_flow_run(id, user).await
     }
@@ -695,10 +690,6 @@ impl UserConnection {
             .and_then(row_to_flow_row)?;
 
         Ok(flow)
-    }
-
-    async fn download_storage_file(&self, path: &str) -> crate::Result<Bytes> {
-        Ok(self.wasm_storage.download(path).await?)
     }
 
     async fn get_encrypted_wallets(&self) -> crate::Result<Vec<EncryptedWallet>> {

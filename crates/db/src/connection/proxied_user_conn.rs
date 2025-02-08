@@ -130,11 +130,6 @@ impl UserConnectionTrait for ProxiedUserConn {
         Err(crate::Error::NotSupported)
     }
 
-    async fn download_storage_file(&self, _: &str) -> crate::Result<Bytes> {
-        // TODO
-        Err(crate::Error::NotSupported)
-    }
-
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
         self.send("share_flow_run", &(id, user)).await
     }
