@@ -7,9 +7,9 @@ use flow::flow_set::{get_flow_row, DeploymentId, Flow, FlowDeployment};
 use flow_lib::{
     config::client::{self, ClientConfig, FlowRow},
     context::signer::Presigner,
-    utils::BoxFuture,
     CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
 };
+use futures_util::future::LocalBoxFuture;
 use hashbrown::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -81,7 +81,7 @@ impl TryFrom<Row> for FlowInfo {
 impl tower::Service<get_flow_row::Request> for Box<dyn UserConnectionTrait> {
     type Response = get_flow_row::Response;
     type Error = get_flow_row::Error;
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
     fn poll_ready(
         &mut self,
         _: &mut std::task::Context<'_>,
@@ -105,7 +105,7 @@ impl tower::Service<get_flow_row::Request> for Box<dyn UserConnectionTrait> {
 }
 
 #[async_trait]
-pub trait UserConnectionTrait: Any + Send + 'static {
+pub trait UserConnectionTrait: Any + 'static {
     async fn get_wallet_by_pubkey(&self, pubkey: &[u8; 32]) -> crate::Result<Wallet>;
 
     async fn get_deployment_id_from_tag(
