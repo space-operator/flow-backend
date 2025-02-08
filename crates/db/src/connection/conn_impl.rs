@@ -240,8 +240,9 @@ impl UserConnectionTrait for UserConnection {
         &self,
         config: &ClientConfig,
         inputs: &ValueSet,
+        deployment_id: &Option<DeploymentId>,
     ) -> crate::Result<FlowRunId> {
-        self.new_flow_run(config, inputs).await
+        self.new_flow_run(config, inputs, &deployment_id).await
     }
 
     async fn get_previous_values(
@@ -1005,6 +1006,7 @@ impl UserConnection {
         &self,
         config: &ClientConfig,
         inputs: &ValueSet,
+        deployment_id: &Option<DeploymentId>,
     ) -> crate::Result<FlowRunId> {
         let conn = self.pool.get_conn().await?;
         let r = conn
@@ -1023,6 +1025,7 @@ impl UserConnection {
                     edges,
                     collect_instructions,
                     partial_config,
+                    deployment_id,
                     signers)
                 VALUES (
                     gen_random_uuid(),
@@ -1030,7 +1033,7 @@ impl UserConnection {
                     jsonb_build_object('M', $3::JSONB),
                     $4, $5,
                     jsonb_build_object('SOL', $6::JSONB),
-                    $7, $8, $9, $10, $11, $12, $13)
+                    $7, $8, $9, $10, $11, $12, $13, $14)
                 RETURNING id",
                 &[
                     &self.user_id,
@@ -1054,6 +1057,7 @@ impl UserConnection {
                     &config.edges.iter().map(Json).collect::<Vec<_>>(),
                     &config.collect_instructions,
                     &config.partial_config.as_ref().map(Json),
+                    &deployment_id,
                     &Json(&config.signers),
                 ],
             )

@@ -466,7 +466,7 @@ Deno.test("start by flow", async () => {
   });
 
   const flowId = 3675;
-  await owner.deployFlow(flowId);
+  const id = await owner.deployFlow(flowId);
 
   const { flow_run_id } = await owner.startDeployment(
     {
@@ -490,6 +490,13 @@ Deno.test("start by flow", async () => {
   });
   await sup.auth.setSession(jwt);
   await checkNoErrors(sup, flow_run_id);
+  const selectResult = await sup
+    .from("flow_run")
+    .select("output")
+    .eq("deployment_id", id)
+    .single();
+  if (selectResult.error) throw new Error(JSON.stringify(selectResult.error));
+  assertEquals(selectResult.data.output, result as any);
 });
 
 Deno.test("start by flow + tag", async () => {

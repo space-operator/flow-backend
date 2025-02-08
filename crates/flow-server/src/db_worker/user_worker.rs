@@ -350,7 +350,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                 .await
                 .map_err(new_flow_run::Error::other)?;
             let run_id = conn
-                .new_flow_run(&msg.config, &msg.inputs)
+                .new_flow_run(&msg.config, &msg.inputs, &msg.deployment_id)
                 .await
                 .map_err(new_flow_run::Error::other)?;
 

@@ -155,8 +155,10 @@ impl UserConnectionTrait for ProxiedUserConn {
         &self,
         config: &ClientConfig,
         inputs: &ValueSet,
+        deployment_id: &Option<DeploymentId>,
     ) -> crate::Result<FlowRunId> {
-        self.send("new_flow_run", &(&config, &inputs)).await
+        self.send("new_flow_run", &(&config, &inputs, &deployment_id))
+            .await
     }
 
     async fn get_previous_values(
@@ -304,8 +306,8 @@ impl UserConnection {
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             "new_flow_run" => {
-                let (config, inputs) = serde_json::from_str(req.params.get())?;
-                let res = self.new_flow_run(&config, &inputs).await?;
+                let (config, inputs, deployment_id) = serde_json::from_str(req.params.get())?;
+                let res = self.new_flow_run(&config, &inputs, &deployment_id).await?;
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
             "get_previous_values" => {

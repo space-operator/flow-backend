@@ -143,6 +143,7 @@ pub trait UserConnectionTrait: Any + Send + 'static {
         &self,
         config: &ClientConfig,
         inputs: &ValueSet,
+        deployment_id: &Option<DeploymentId>,
     ) -> crate::Result<FlowRunId>;
 
     async fn get_previous_values(
