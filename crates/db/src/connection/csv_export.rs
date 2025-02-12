@@ -1,93 +1,66 @@
-use crate::Error;
+use polars::{
+    error::PolarsError,
+    frame::DataFrame,
+    io::{SerReader, SerWriter},
+    prelude::{CsvParseOptions, CsvReadOptions, CsvWriter},
+    series::Series,
+};
+use std::{io::Cursor, iter::repeat};
 
-pub fn reader() -> csv::ReaderBuilder {
-    let mut r = csv::ReaderBuilder::new();
-    r.delimiter(b';').quote(b'\'');
-    r
-}
-
-pub fn writer() -> csv::WriterBuilder {
-    let mut w = csv::WriterBuilder::new();
-    w.delimiter(b';').quote(b'\'');
-    w
-}
-
-pub fn clear_column(data: String, column: &str) -> crate::Result<String> {
-    let mut reader = reader().from_reader(data.as_bytes());
-    let headers = reader
-        .headers()
-        .map_err(Error::parsing("csv headers"))?
-        .clone();
-    let col_idx = headers
+pub fn format_sql_columns(df: &DataFrame) -> String {
+    df.get_column_names()
         .iter()
-        .position(|col| col == column)
-        .ok_or_else(|| Error::not_found("column", column))?;
-    let records = reader
-        .records()
-        .map(|r| {
-            r.map_err(Error::parsing("csv iter")).map(|r| {
-                r.into_iter()
-                    .enumerate()
-                    .map(|(i, v)| if i == col_idx { "" } else { v })
-                    .collect::<csv::StringRecord>()
-            })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    let mut buffer = Vec::new();
-    let mut writer = writer().from_writer(&mut buffer);
-    writer
-        .write_record(&headers)
-        .map_err(Error::parsing("build csv"))?;
-    for r in records {
-        writer
-            .write_record(&r)
-            .map_err(Error::parsing("build csv"))?;
-    }
-    writer.flush().map_err(Error::parsing("build csv"))?;
-    drop(writer);
-    String::from_utf8(buffer).map_err(Error::parsing("UTF8"))
+        .map(|name| format!("{:?}", name))
+        .collect::<Vec<String>>()
+        .join(",")
 }
 
-pub fn remove_column(data: String, column: &str) -> crate::Result<String> {
-    let mut reader = reader().from_reader(data.as_bytes());
-    let headers = reader
-        .headers()
-        .map_err(Error::parsing("csv headers"))?
-        .clone();
-    let col_idx = headers
-        .iter()
-        .position(|col| col == column)
-        .ok_or_else(|| Error::not_found("column", column))?;
-    let records = reader
-        .records()
-        .map(|r| {
-            r.map_err(Error::parsing("csv iter")).map(|r| {
-                r.into_iter()
-                    .enumerate()
-                    .filter_map(|(i, v)| (i != col_idx).then_some(v))
-                    .collect::<csv::StringRecord>()
-            })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+pub fn clear_column(df: &mut DataFrame, column: &str) -> Result<(), PolarsError> {
+    df.apply(column, |c| {
+        repeat(String::new()).take(c.len()).collect::<Series>()
+    })?;
+    Ok(())
+}
 
-    let mut buffer = Vec::new();
-    let mut writer = writer().from_writer(&mut buffer);
-    writer
-        .write_record(
-            &headers
-                .into_iter()
-                .enumerate()
-                .filter_map(|(i, v)| (i != col_idx).then_some(v))
-                .collect::<csv::StringRecord>(),
+fn read_df_impl(csv: &[u8]) -> Result<DataFrame, PolarsError> {
+    Ok(CsvReadOptions::default()
+        .with_parse_options(
+            CsvParseOptions::default()
+                .with_separator(b';')
+                .with_quote_char(Some(b'\'')),
         )
-        .map_err(Error::parsing("build csv"))?;
-    for r in records {
-        writer
-            .write_record(&r)
-            .map_err(Error::parsing("build csv"))?;
-    }
-    writer.flush().map_err(Error::parsing("build csv"))?;
-    drop(writer);
+        .into_reader_with_file_handle(Cursor::new(csv))
+        .finish()?)
+}
 
-    String::from_utf8(buffer).map_err(Error::parsing("UTF8"))
+pub fn read_df<T: AsRef<[u8]>>(csv: T) -> Result<DataFrame, PolarsError> {
+    let bytes = csv.as_ref();
+    read_df_impl(bytes)
+}
+
+pub fn write_df(df: &mut DataFrame) -> Result<Vec<u8>, PolarsError> {
+    let mut buffer = Vec::<u8>::new();
+    CsvWriter::new(&mut buffer)
+        .include_header(true)
+        .with_separator(b';')
+        .with_quote_char(b'\'')
+        .finish(df)?;
+    Ok(buffer)
+}
+
+pub mod df_serde {
+    use super::{read_df, write_df};
+    use polars::frame::DataFrame;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S: Serializer>(df: &DataFrame, s: S) -> Result<S::Ok, S::Error> {
+        String::from_utf8(write_df(&mut df.clone()).map_err(serde::ser::Error::custom)?)
+            .map_err(serde::ser::Error::custom)?
+            .serialize(s)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<DataFrame, D::Error> {
+        let text = String::deserialize(d)?;
+        Ok(read_df(text).map_err(serde::de::Error::custom)?)
+    }
 }

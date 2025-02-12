@@ -47,6 +47,7 @@ impl<E: Debug + Display> ResponseError for Error<E> {
             Error::LogicError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Error::LocalStorage { .. } => todo!(),
             Error::ProxyError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::PolarsError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -134,6 +135,8 @@ pub enum Error<E = anyhow::Error> {
     },
     #[error(transparent)]
     ProxyError(#[from] proxied_user_conn::Error),
+    #[error(transparent)]
+    PolarsError(#[from] polars::error::PolarsError),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -153,6 +156,7 @@ impl<E> From<chacha20poly1305::Error> for Error<E> {
 impl<E: Into<anyhow::Error>> Error<E> {
     pub fn erase_type(self) -> Error {
         match self {
+            Error::PolarsError(e) => Error::PolarsError(e),
             Error::Unauthorized => Error::Unauthorized,
             Error::SpawnError(e) => Error::SpawnError(e),
             Error::EncryptionError => Error::EncryptionError,
