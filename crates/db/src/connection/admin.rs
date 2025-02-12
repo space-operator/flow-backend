@@ -555,28 +555,3 @@ async fn copy_in(tx: &Transaction<'_>, table: &str, df: &mut DataFrame) -> crate
 
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::{
-        config::DbConfig, connection::ExportedUserData, pool::RealDbPool, LocalStorage, WasmStorage,
-    };
-    use serde::Deserialize;
-    use toml::value::Table;
-
-    #[tokio::test]
-    #[ignore]
-    async fn test_import() {
-        let full_config: Table =
-            toml::from_str(&std::fs::read_to_string("/tmp/local.toml").unwrap()).unwrap();
-        let db_config = DbConfig::deserialize(full_config["db"].clone()).unwrap();
-        let wasm = WasmStorage::new("http://localhost".parse().unwrap(), "", "").unwrap();
-        let temp = tempfile::tempdir().unwrap();
-        let local = LocalStorage::new(temp.path()).unwrap();
-        let pool = RealDbPool::new(&db_config, wasm, local).await.unwrap();
-        let mut conn = pool.get_admin_conn().await.unwrap();
-        let data: ExportedUserData =
-            serde_json::from_str(&std::fs::read_to_string("/tmp/data.json").unwrap()).unwrap();
-        conn.import_data(data).await.unwrap();
-    }
-}
