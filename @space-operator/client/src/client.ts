@@ -345,6 +345,6 @@ export class Client {
   }
 
   async export(): Promise<any> {
-    return await this.#sendJSONPost(`${this.host}/data.export`);
+    return await this.#sendJSONPost(`${this.host}/data/export`);
   }
 }
