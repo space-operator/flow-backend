@@ -8,7 +8,7 @@ use chrono::Utc;
 use deadpool_postgres::Transaction;
 use flow_lib::{FlowRunId, UserId};
 use futures_util::SinkExt;
-use polars::{frame::DataFrame, io::SerWriter, prelude::CsvWriter};
+use polars::frame::DataFrame;
 use std::{borrow::Borrow, time::Duration};
 use tokio_postgres::{
     binary_copy::BinaryCopyInWriter,
@@ -449,7 +449,14 @@ impl AdminConn {
             .await
             .map_err(Error::exec("disable trigger"))?;
 
-        tx.execute("CREATE TEMP TABLE tmp_table (LIKE pubkey_whitelists INCLUDING DEFAULTS) ON COMMIT DROP", &[]).await.map_err(Error::exec("create temp table"))?;
+        tx.execute(
+            "CREATE TEMP TABLE tmp_table
+            (LIKE pubkey_whitelists INCLUDING DEFAULTS)
+            ON COMMIT DROP",
+            &[],
+        )
+        .await
+        .map_err(Error::exec("create temp table"))?;
         copy_in(&tx, "tmp_table", &mut data.pubkey_whitelists).await?;
         tx.execute(
             "INSERT INTO pubkey_whitelists
@@ -461,23 +468,6 @@ impl AdminConn {
         .map_err(Error::exec("bulk insert"))?;
 
         copy_in(&tx, "auth.users", &mut data.users).await?;
-        tx.execute(
-            "UPDATE auth.users
-            SET
-                confirmation_token = '',
-                recovery_token = '',
-                email_change_token_new = '',
-                email_change = '',
-                email_change_token_current = '',
-                reauthentication_token = '',
-                phone_change = '',
-                phone_change_token = ''
-            WHERE id = $1
-            ",
-            &[&data.user_id],
-        )
-        .await
-        .map_err(Error::exec("fix users row"))?;
 
         copy_in(&tx, "auth.identities", &mut data.identities).await?;
         copy_in(&tx, "users_public", &mut data.users_public).await?;
