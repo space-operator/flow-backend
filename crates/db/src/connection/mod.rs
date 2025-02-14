@@ -2,6 +2,7 @@ use crate::{pool::RealDbPool, Error, LocalStorage, Wallet, WasmStorage};
 use async_trait::async_trait;
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
+use csv_export::df_serde;
 use deadpool_postgres::{Object as Connection, Transaction};
 use flow::flow_set::{get_flow_row, DeploymentId, Flow, FlowDeployment};
 use flow_lib::{
@@ -11,6 +12,7 @@ use flow_lib::{
 };
 use futures_util::future::LocalBoxFuture;
 use hashbrown::{HashMap, HashSet};
+use polars::frame::DataFrame;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::{any::Any, future::Future, time::Duration};
@@ -39,17 +41,28 @@ pub struct UserConnection {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExportedUserData {
     pub user_id: UserId,
-    pub users: String,
-    pub identities: String,
-    pub pubkey_whitelists: String,
-    pub users_public: String,
-    pub wallets: String,
-    pub apikeys: String,
-    pub user_quotas: String,
-    pub kvstore: String,
-    pub kvstore_metadata: String,
-    pub flows: String,
-    pub nodes: String,
+    #[serde(with = "df_serde")]
+    pub users: DataFrame,
+    #[serde(with = "df_serde")]
+    pub identities: DataFrame,
+    #[serde(with = "df_serde")]
+    pub pubkey_whitelists: DataFrame,
+    #[serde(with = "df_serde")]
+    pub users_public: DataFrame,
+    #[serde(with = "df_serde")]
+    pub wallets: DataFrame,
+    #[serde(with = "df_serde")]
+    pub apikeys: DataFrame,
+    #[serde(with = "df_serde")]
+    pub user_quotas: DataFrame,
+    #[serde(with = "df_serde")]
+    pub kvstore: DataFrame,
+    #[serde(with = "df_serde")]
+    pub kvstore_metadata: DataFrame,
+    #[serde(with = "df_serde")]
+    pub flows: DataFrame,
+    #[serde(with = "df_serde")]
+    pub nodes: DataFrame,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]

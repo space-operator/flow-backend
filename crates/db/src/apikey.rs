@@ -63,6 +63,7 @@ pub struct NameConflict;
 
 fn convert_error(error: Error) -> Error<NameConflict> {
     match error {
+        Error::PolarsError(e) => Error::PolarsError(e),
         Error::Unauthorized => Error::Unauthorized,
         Error::SpawnError(e) => Error::SpawnError(e),
         Error::EncryptionError => Error::EncryptionError,
