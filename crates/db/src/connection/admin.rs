@@ -1,14 +1,17 @@
 use crate::{
-    connection::csv_export::write_df, local_storage::CacheBucket, pool::RealDbPool, Error,
-    FlowRunLogsRow, LocalStorage,
+    config::EncryptionKey, connection::csv_export::write_df, local_storage::CacheBucket,
+    pool::RealDbPool, Error, FlowRunLogsRow, LocalStorage,
 };
 use anyhow::anyhow;
 use bytes::Bytes;
 use chrono::Utc;
 use deadpool_postgres::Transaction;
-use flow_lib::{FlowRunId, UserId};
+use flow_lib::{
+    solana::{Keypair, KeypairExt},
+    FlowRunId, UserId,
+};
 use futures_util::SinkExt;
-use polars::frame::DataFrame;
+use polars::{error::PolarsError, frame::DataFrame, series::Series};
 use std::{borrow::Borrow, time::Duration};
 use tokio_postgres::{
     binary_copy::BinaryCopyInWriter,
@@ -472,7 +475,8 @@ impl AdminConn {
         copy_in(&tx, "auth.identities", &mut data.identities).await?;
         copy_in(&tx, "users_public", &mut data.users_public).await?;
 
-        copy_in(&tx, "wallets", &mut data.wallets).await?;
+        let mut wallets = encrypt_wallets_df(data.wallets, self.pool.encryption_key()?.clone())?;
+        copy_in(&tx, "wallets", &mut wallets).await?;
         update_id_sequence(&tx, "wallets", "id", "wallets_id_seq").await?;
 
         copy_in(&tx, "apikeys", &mut data.apikeys).await?;
@@ -494,6 +498,26 @@ impl AdminConn {
 
         Ok(())
     }
+}
+
+fn encrypt_wallets_df(mut wallets: DataFrame, key: EncryptionKey) -> crate::Result<DataFrame> {
+    wallets.try_apply("keypair", |series| {
+        let str_series = series.str()?;
+        str_series
+            .into_iter()
+            .map(|opt| {
+                opt.map(|s| {
+                    let keypair = Keypair::from_str(s).map_err(Error::LogicError)?;
+                    let encrypted = key.encrypt_keypair(&keypair);
+                    let json = serde_json::to_string(&encrypted).map_err(Error::json("keypair"))?;
+                    Ok(json)
+                })
+                .transpose()
+            })
+            .collect::<Result<Series, Error>>()
+            .map_err(|error| PolarsError::ComputeError(error.to_string().into()))
+    })?;
+    Ok(wallets)
 }
 
 async fn update_id_sequence(

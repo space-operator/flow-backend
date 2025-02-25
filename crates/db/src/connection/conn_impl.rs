@@ -10,7 +10,7 @@ use deadpool_postgres::Transaction;
 use flow::flow_set::{DeploymentId, Flow, FlowDeployment};
 use flow_lib::{config::client::NodeDataSkipWasm, solana::Pubkey, SolanaClientConfig};
 use futures_util::StreamExt;
-use polars::frame::DataFrame;
+use polars::{error::PolarsError, frame::DataFrame, series::Series};
 use std::str::FromStr;
 use tokio::task::spawn_blocking;
 use tokio_postgres::{binary_copy::BinaryCopyInWriter, types::Type};
@@ -1502,6 +1502,8 @@ impl UserConnection {
             &format!("SELECT * FROM wallets WHERE user_id = '{}'", self.user_id),
         )
         .await?;
+        let key = self.pool.encryption_key()?.clone();
+        let wallets = spawn_blocking(move || decrypt_wallets_df(wallets, key)).await??;
 
         let apikeys = copy_out(
             &tx,
@@ -1556,6 +1558,26 @@ impl UserConnection {
             nodes,
         })
     }
+}
+
+fn decrypt_wallets_df(mut wallets: DataFrame, key: EncryptionKey) -> Result<DataFrame, Error> {
+    wallets.try_apply("encrypted_keypair", |series| {
+        let str_series = series.str()?;
+        str_series
+            .iter()
+            .map(|opt| {
+                opt.map(|s| {
+                    let encrypted: Encrypted =
+                        serde_json::from_str(s).map_err(Error::json("encrypted_keypair"))?;
+                    Ok(key.decrypt_keypair(&encrypted)?.to_base58_string())
+                })
+                .transpose()
+            })
+            .collect::<Result<Series, Error>>()
+            .map_err(|error| PolarsError::ComputeError(error.to_string().into()))
+    })?;
+    wallets.rename("encrypted_keypair", "keypair".into())?;
+    Ok(wallets)
 }
 
 fn parse_encrypted_wallet(r: Row) -> Result<EncryptedWallet, Error> {
