@@ -1,5 +1,6 @@
 import type { FlowRunId, NodeId } from "./common.ts";
 import { type Value, Buffer, bs58, web3 } from "../deps.ts";
+import { decodeBase64 } from "jsr:@std/encoding@0.221/base64";
 
 export interface WsResponse<T> {
   id: number;
@@ -155,7 +156,7 @@ export class SignatureRequest implements ISignatureRequest {
   }
 
   buildTransaction(): web3.VersionedTransaction {
-    const buffer = Buffer.from(this.message, "base64");
+    const buffer = decodeBase64(this.message);
     const solMsg = web3.VersionedMessage.deserialize(buffer);
 
     let sigs = undefined;

@@ -27,7 +27,7 @@ import {
 
 export type TokenProvider = string | (() => Promise<string>);
 
-function equals(a: Uint8Array, b: Uint8Array): boolean {
+function equals(a: Uint8Array | Buffer, b: Uint8Array | Buffer): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) return false;
