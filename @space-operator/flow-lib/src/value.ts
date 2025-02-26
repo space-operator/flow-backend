@@ -3,7 +3,7 @@
  * Node's inputs and outputs are encoded as `IValue`.
  */
 
-import { bs58, base64, web3, type Buffer } from "./deps.ts";
+import { bs58, base64, web3 } from "./deps.ts";
 
 /**
  * JSON representation of `Value`.
@@ -50,9 +50,13 @@ export function isIValue(v: any): v is IValue {
   return false;
 }
 
+interface IBuffer {
+  byteLength: number;
+}
+
 interface MaybePubkey {
   toBase58(): string;
-  toBuffer(): Buffer;
+  toBuffer(): IBuffer;
 }
 
 interface MaybeKeypair {
@@ -339,9 +343,7 @@ export class Value implements IValue {
   /**
    * Construct a Solana Signature value.
    */
-  public static Signature(
-    x: string | Buffer | Uint8Array | ArrayBuffer
-  ): Value {
+  public static Signature(x: string | Uint8Array | ArrayBuffer): Value {
     if (typeof x === "string") return Value.fromJSON({ B6: x });
     else return Value.#fromJSONUnchecked({ B6: bs58.encodeBase58(x) });
   }
@@ -350,7 +352,7 @@ export class Value implements IValue {
    * Construct a Solana Keypair value.
    */
   public static Keypair(
-    x: string | Buffer | Uint8Array | ArrayBuffer | web3.Keypair
+    x: string | Uint8Array | ArrayBuffer | web3.Keypair
   ): Value {
     if (typeof x === "string") {
       return Value.fromJSON({ B6: x });
@@ -368,7 +370,7 @@ export class Value implements IValue {
   /**
    * Construct a Bytes value.
    */
-  public static Bytes(x: Buffer | Uint8Array | ArrayBuffer): Value {
+  public static Bytes(x: Uint8Array | ArrayBuffer): Value {
     switch (x.byteLength) {
       case 32:
         return Value.#fromJSONUnchecked({ B3: bs58.encodeBase58(x) });

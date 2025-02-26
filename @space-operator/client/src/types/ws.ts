@@ -1,5 +1,5 @@
 import type { FlowRunId, NodeId } from "./common.ts";
-import { type Value, Buffer, bs58, web3 } from "../deps.ts";
+import { type Value, bs58, web3 } from "../deps.ts";
 import { decodeBase64 } from "jsr:@std/encoding@0.221/base64";
 
 export interface WsResponse<T> {

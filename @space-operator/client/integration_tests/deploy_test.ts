@@ -1,4 +1,4 @@
-import { bs58, Buffer, Value, web3 } from "../src/deps.ts";
+import { bs58, Value, web3 } from "../src/deps.ts";
 import * as client from "../src/mod.ts";
 import * as dotenv from "jsr:@std/dotenv";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";

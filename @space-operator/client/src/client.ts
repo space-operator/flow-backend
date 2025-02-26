@@ -1,4 +1,4 @@
-import { bs58, web3, Value, type IValue, Buffer } from "./deps.ts";
+import { bs58, web3, Value, type IValue } from "./deps.ts";
 import {
   type ErrorBody,
   type ISignatureRequest,
@@ -27,7 +27,12 @@ import {
 
 export type TokenProvider = string | (() => Promise<string>);
 
-function equals(a: Uint8Array | Buffer, b: Uint8Array | Buffer): boolean {
+interface ICompare {
+  length: number;
+  [index: number]: number;
+}
+
+function equals(a: ICompare, b: ICompare): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) return false;
