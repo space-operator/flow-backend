@@ -23,10 +23,17 @@ import {
   type StartDeploymentParams,
   type StartDeploymentOutput,
   type IDeploymentSpecifier,
-  Database,
 } from "./mod.ts";
 
 export type TokenProvider = string | (() => Promise<string>);
+
+function equals(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
 
 function header(key: string): string {
   if (key.startsWith("b3-")) {
@@ -309,9 +316,11 @@ export class Client {
     const signature = signedTx.signatures[signerPosition];
     if (signature == null) throw new Error("signature is null");
 
-    const before = Buffer.from(tx.message.serialize());
-    const after = Buffer.from(signedTx.message.serialize());
-    const new_msg = before.equals(after) ? undefined : after.toString("base64");
+    const before = tx.message.serialize();
+    const after = signedTx.message.serialize();
+    const new_msg = equals(before, after)
+      ? undefined
+      : after.toString("base64");
     await this.submitSignature({
       id: req.id,
       signature: bs58.encodeBase58(signature),
