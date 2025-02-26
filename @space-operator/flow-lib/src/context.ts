@@ -4,7 +4,7 @@
 
 import type { FlowRunId, NodeId, User } from "./common.ts";
 import { msgpack } from "./deps.ts";
-import { Buffer, base64, bs58, web3 } from "./deps.ts";
+import { base64, bs58, web3 } from "./deps.ts";
 import { Value } from "./mod.ts";
 
 export interface CommandContext {
@@ -35,12 +35,12 @@ export interface ContextData {
 }
 
 export interface RequestSignatureResponse {
-  signature: Buffer;
-  new_message?: Buffer;
+  signature: Uint8Array;
+  new_message?: Uint8Array;
 }
 
 export interface ExecuteResponse {
-  signature?: Buffer;
+  signature?: Uint8Array;
 }
 
 function isPubkey(x: web3.PublicKey | web3.Keypair): x is web3.PublicKey {
@@ -146,7 +146,7 @@ export class Context {
    */
   async requestSignature(
     pubkey: web3.PublicKey,
-    data: Buffer
+    data: Uint8Array
   ): Promise<RequestSignatureResponse> {
     const resp = await fetch(new URL("call", this._signer.base_url), {
       method: "POST",
@@ -174,9 +174,9 @@ export class Context {
       throw new Error(String(result.data));
     }
     const output = result.data;
-    const signature = Buffer.from(bs58.decodeBase58(output.signature));
+    const signature = bs58.decodeBase58(output.signature);
     const new_message = output.new_message
-      ? Buffer.from(base64.decodeBase64(output.new_message))
+      ? base64.decodeBase64(output.new_message)
       : undefined;
     return {
       signature,
@@ -213,7 +213,7 @@ export class Context {
     }
     const data = result.data;
     const signature = data.signature
-      ? Buffer.from(bs58.decodeBase58(data.signature))
+      ? bs58.decodeBase58(data.signature)
       : undefined;
     return {
       signature,

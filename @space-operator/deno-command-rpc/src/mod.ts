@@ -82,7 +82,7 @@ export async function start(
 
         data = { Ok: convertedOutputs };
         success = true;
-      } catch (error) {
+      } catch (error: any) {
         data = { Err: error.toString() };
         success = false;
       }

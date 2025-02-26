@@ -1,10 +1,11 @@
-import { bs58, Buffer, Value, web3 } from "../src/deps.ts";
+import { bs58, Value, web3 } from "../src/deps.ts";
 import * as client from "../src/mod.ts";
 import * as dotenv from "jsr:@std/dotenv";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { assert, assertEquals } from "jsr:@std/assert";
 import { LAMPORTS_PER_SOL } from "npm:@solana/web3.js@^1.91.4";
 import * as nacl from "npm:tweetnacl";
+import { decodeBase64 } from "jsr:@std/encoding@0.221/base64";
 
 dotenv.loadSync({
   export: true,
@@ -248,7 +249,7 @@ Deno.test("output instructions", async () => {
   const output = await starter.getFlowOutput(flow_run_id);
   const text = output.toJSObject().transaction;
   await checkNoErrors(sup, flow_run_id);
-  const tx = web3.VersionedTransaction.deserialize(Buffer.from(text, "base64"));
+  const tx = web3.VersionedTransaction.deserialize(decodeBase64(text));
   const msg = web3.TransactionMessage.decompile(tx.message);
   const transfer = web3.SystemInstruction.decodeTransfer(msg.instructions[2]);
   assertEquals(transfer.fromPubkey, starterKeypair.publicKey);
@@ -303,7 +304,7 @@ Deno.test("fees", async () => {
   const output = await starter.getFlowOutput(flow_run_id);
   const text = output.toJSObject().transaction;
   await checkNoErrors(sup, flow_run_id);
-  const tx = web3.VersionedTransaction.deserialize(Buffer.from(text, "base64"));
+  const tx = web3.VersionedTransaction.deserialize(decodeBase64(text));
   const msg = web3.TransactionMessage.decompile(tx.message);
   const transfer = web3.SystemInstruction.decodeTransfer(msg.instructions[2]);
   assertEquals(transfer.fromPubkey, starterKeypair.publicKey);
@@ -367,7 +368,7 @@ Deno.test("action identity", async () => {
   const output = await starter.getFlowOutput(flow_run_id);
   const text = output.toJSObject().transaction;
   await checkNoErrors(sup, flow_run_id);
-  const tx = web3.VersionedTransaction.deserialize(Buffer.from(text, "base64"));
+  const tx = web3.VersionedTransaction.deserialize(decodeBase64(text));
   const msg = web3.TransactionMessage.decompile(tx.message);
   const transfer = web3.SystemInstruction.decodeTransfer(msg.instructions[2]);
   assertEquals(transfer.fromPubkey, starterKeypair.publicKey);
