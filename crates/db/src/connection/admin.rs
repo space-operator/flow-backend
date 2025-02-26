@@ -517,6 +517,7 @@ fn encrypt_wallets_df(mut wallets: DataFrame, key: EncryptionKey) -> crate::Resu
             .collect::<Result<Series, Error>>()
             .map_err(|error| PolarsError::ComputeError(error.to_string().into()))
     })?;
+    wallets.rename("keypair", "encrypted_keypair".into())?;
     Ok(wallets)
 }
 
