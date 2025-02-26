@@ -154,6 +154,7 @@ export class Client {
       body !== undefined
         ? {
             "content-type": "application/json",
+            "accept-encoding": "gzip",
           }
         : {};
     let req = new Request(url, {
@@ -341,5 +342,9 @@ export class Client {
 
   async claimToken(): Promise<ClaimTokenOutput> {
     return await this.#sendJSONPost(`${this.host}/auth/claim_token`);
+  }
+
+  async export(): Promise<any> {
+    return await this.#sendJSONPost(`${this.host}/data/export`);
   }
 }

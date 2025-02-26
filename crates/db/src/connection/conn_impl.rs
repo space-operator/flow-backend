@@ -10,6 +10,7 @@ use deadpool_postgres::Transaction;
 use flow::flow_set::{DeploymentId, Flow, FlowDeployment};
 use flow_lib::{config::client::NodeDataSkipWasm, solana::Pubkey, SolanaClientConfig};
 use futures_util::StreamExt;
+use polars::{error::PolarsError, frame::DataFrame, series::Series};
 use std::str::FromStr;
 use tokio::task::spawn_blocking;
 use tokio_postgres::{binary_copy::BinaryCopyInWriter, types::Type};
@@ -1449,13 +1450,13 @@ impl UserConnection {
             .map_err(Error::data("users_public.pub_key"))?;
         bs58_decode::<32>(&pubkey).map_err(Error::parsing("base58"))?;
 
-        let users = copy_out(
+        let mut users = copy_out(
             &tx,
             &format!("SELECT * FROM auth.users WHERE id = '{}'", self.user_id),
         )
         .await?;
-        let users = csv_export::clear_column(users, "encrypted_password")?;
-        let users = csv_export::remove_column(users, "confirmed_at")?;
+        csv_export::clear_column(&mut users, "encrypted_password")?;
+        users.drop_in_place("confirmed_at")?;
 
         let nodes = copy_out(
             &tx,
@@ -1468,7 +1469,7 @@ impl UserConnection {
         )
         .await?;
 
-        let identities = copy_out(
+        let mut identities = copy_out(
             &tx,
             &format!(
                 "SELECT * FROM auth.identities WHERE user_id = '{}'",
@@ -1476,7 +1477,7 @@ impl UserConnection {
             ),
         )
         .await?;
-        let identities = csv_export::remove_column(identities, "email")?;
+        identities.drop_in_place("email")?;
 
         let pubkey_whitelists = copy_out(
             &tx,
@@ -1501,6 +1502,8 @@ impl UserConnection {
             &format!("SELECT * FROM wallets WHERE user_id = '{}'", self.user_id),
         )
         .await?;
+        let key = self.pool.encryption_key()?.clone();
+        let wallets = spawn_blocking(move || decrypt_wallets_df(wallets, key)).await??;
 
         let apikeys = copy_out(
             &tx,
@@ -1508,12 +1511,12 @@ impl UserConnection {
         )
         .await?;
 
-        let flows = copy_out(
+        let mut flows = copy_out(
             &tx,
             &format!("SELECT * FROM flows WHERE user_id = '{}'", self.user_id),
         )
         .await?;
-        let flows = csv_export::clear_column(flows, "lastest_flow_run_id")?;
+        csv_export::clear_column(&mut flows, "lastest_flow_run_id")?;
 
         let user_quotas = copy_out(
             &tx,
@@ -1557,6 +1560,26 @@ impl UserConnection {
     }
 }
 
+fn decrypt_wallets_df(mut wallets: DataFrame, key: EncryptionKey) -> Result<DataFrame, Error> {
+    wallets.try_apply("encrypted_keypair", |series| {
+        let str_series = series.str()?;
+        str_series
+            .iter()
+            .map(|opt| {
+                opt.map(|s| {
+                    let encrypted: Encrypted =
+                        serde_json::from_str(s).map_err(Error::json("encrypted_keypair"))?;
+                    Ok(key.decrypt_keypair(&encrypted)?.to_base58_string())
+                })
+                .transpose()
+            })
+            .collect::<Result<Series, Error>>()
+            .map_err(|error| PolarsError::ComputeError(error.to_string().into()))
+    })?;
+    wallets.rename("encrypted_keypair", "keypair".into())?;
+    Ok(wallets)
+}
+
 fn parse_encrypted_wallet(r: Row) -> Result<EncryptedWallet, Error> {
     let pubkey_str = r
         .try_get::<_, String>(0)
@@ -1577,7 +1600,7 @@ fn parse_encrypted_wallet(r: Row) -> Result<EncryptedWallet, Error> {
     })
 }
 
-async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<String> {
+async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<DataFrame> {
     let query = format!(
         r#"COPY ({}) TO stdout WITH (FORMAT csv, DELIMITER ';', QUOTE '''', HEADER)"#,
         query
@@ -1589,40 +1612,12 @@ async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<String> {
     while let Some(result) = stream.next().await {
         match result {
             Ok(data) => {
-                // tracing::debug!("read {} bytes", data.len());
                 buffer.extend_from_slice(&data[..]);
             }
             Err(error) => {
-                // tracing::debug!("{}", String::from_utf8_lossy(&buffer));
                 return Err(Error::exec("read copy-out stream")(error));
             }
         }
     }
-    String::from_utf8(buffer.into()).map_err(Error::parsing("UTF8"))
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::{config::DbConfig, pool::RealDbPool, LocalStorage, WasmStorage};
-    use flow_lib::UserId;
-    use serde::Deserialize;
-    use toml::value::Table;
-
-    #[tokio::test]
-    #[ignore]
-    async fn test_export() {
-        let user_id = std::env::var("USER_ID").unwrap().parse::<UserId>().unwrap();
-        let full_config: Table = toml::from_str(
-            &std::fs::read_to_string(std::env::var("CONFIG_FILE").unwrap()).unwrap(),
-        )
-        .unwrap();
-        let db_config = DbConfig::deserialize(full_config["db"].clone()).unwrap();
-        let wasm = WasmStorage::new("http://localhost".parse().unwrap(), "", "").unwrap();
-        let temp = tempfile::tempdir().unwrap();
-        let local = LocalStorage::new(temp.path()).unwrap();
-        let pool = RealDbPool::new(&db_config, wasm, local).await.unwrap();
-        let mut conn = pool.get_user_conn(user_id).await.unwrap();
-        let result = conn.export_user_data().await.unwrap();
-        std::fs::write("/tmp/data.json", serde_json::to_vec(&result).unwrap()).unwrap();
-    }
+    Ok(csv_export::read_df(&buffer)?)
 }

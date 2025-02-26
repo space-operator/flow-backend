@@ -1,10 +1,17 @@
-use crate::{local_storage::CacheBucket, pool::RealDbPool, Error, FlowRunLogsRow, LocalStorage};
+use crate::{
+    config::EncryptionKey, connection::csv_export::write_df, local_storage::CacheBucket,
+    pool::RealDbPool, Error, FlowRunLogsRow, LocalStorage,
+};
 use anyhow::anyhow;
 use bytes::Bytes;
 use chrono::Utc;
 use deadpool_postgres::Transaction;
-use flow_lib::{FlowRunId, UserId};
+use flow_lib::{
+    solana::{Keypair, KeypairExt},
+    FlowRunId, UserId,
+};
 use futures_util::SinkExt;
+use polars::{error::PolarsError, frame::DataFrame, series::Series};
 use std::{borrow::Borrow, time::Duration};
 use tokio_postgres::{
     binary_copy::BinaryCopyInWriter,
@@ -12,7 +19,7 @@ use tokio_postgres::{
 };
 use value::Value;
 
-use super::{csv_export, DbClient, ExportedUserData};
+use super::{DbClient, ExportedUserData};
 
 pub struct AdminConn {
     pub(crate) pool: RealDbPool,
@@ -437,7 +444,7 @@ impl AdminConn {
         Ok(old_value)
     }
 
-    pub async fn import_data(&mut self, data: ExportedUserData) -> crate::Result<()> {
+    pub async fn import_data(&mut self, mut data: ExportedUserData) -> crate::Result<()> {
         let mut conn = self.pool.get_conn().await?;
         let tx = conn.transaction().await.map_err(Error::exec("start"))?;
 
@@ -445,8 +452,15 @@ impl AdminConn {
             .await
             .map_err(Error::exec("disable trigger"))?;
 
-        tx.execute("CREATE TEMP TABLE tmp_table (LIKE pubkey_whitelists INCLUDING DEFAULTS) ON COMMIT DROP", &[]).await.map_err(Error::exec("create temp table"))?;
-        copy_in(&tx, "tmp_table", data.pubkey_whitelists).await?;
+        tx.execute(
+            "CREATE TEMP TABLE tmp_table
+            (LIKE pubkey_whitelists INCLUDING DEFAULTS)
+            ON COMMIT DROP",
+            &[],
+        )
+        .await
+        .map_err(Error::exec("create temp table"))?;
+        copy_in(&tx, "tmp_table", &mut data.pubkey_whitelists).await?;
         tx.execute(
             "INSERT INTO pubkey_whitelists
                 SELECT * FROM tmp_table
@@ -456,40 +470,24 @@ impl AdminConn {
         .await
         .map_err(Error::exec("bulk insert"))?;
 
-        copy_in(&tx, "auth.users", data.users).await?;
-        tx.execute(
-            "UPDATE auth.users
-            SET
-                confirmation_token = '',
-                recovery_token = '',
-                email_change_token_new = '',
-                email_change = '',
-                email_change_token_current = '',
-                reauthentication_token = '',
-                phone_change = '',
-                phone_change_token = ''
-            WHERE id = $1
-            ",
-            &[&data.user_id],
-        )
-        .await
-        .map_err(Error::exec("fix users row"))?;
+        copy_in(&tx, "auth.users", &mut data.users).await?;
 
-        copy_in(&tx, "auth.identities", data.identities).await?;
-        copy_in(&tx, "users_public", data.users_public).await?;
+        copy_in(&tx, "auth.identities", &mut data.identities).await?;
+        copy_in(&tx, "users_public", &mut data.users_public).await?;
 
-        copy_in(&tx, "wallets", data.wallets).await?;
+        let mut wallets = encrypt_wallets_df(data.wallets, self.pool.encryption_key()?.clone())?;
+        copy_in(&tx, "wallets", &mut wallets).await?;
         update_id_sequence(&tx, "wallets", "id", "wallets_id_seq").await?;
 
-        copy_in(&tx, "apikeys", data.apikeys).await?;
-        copy_in(&tx, "user_quotas", data.user_quotas).await?;
-        copy_in(&tx, "kvstore_metadata", data.kvstore_metadata).await?;
-        copy_in(&tx, "kvstore", data.kvstore).await?;
+        copy_in(&tx, "apikeys", &mut data.apikeys).await?;
+        copy_in(&tx, "user_quotas", &mut data.user_quotas).await?;
+        copy_in(&tx, "kvstore_metadata", &mut data.kvstore_metadata).await?;
+        copy_in(&tx, "kvstore", &mut data.kvstore).await?;
 
-        copy_in(&tx, "flows", data.flows).await?;
+        copy_in(&tx, "flows", &mut data.flows).await?;
         update_id_sequence(&tx, "flows", "id", "flows_id_seq").await?;
 
-        copy_in(&tx, "nodes", data.nodes).await?;
+        copy_in(&tx, "nodes", &mut data.nodes).await?;
         update_id_sequence(&tx, "nodes", "id", "nodes_id_seq").await?;
 
         tx.execute("SELECT auth.enable_users_triggers()", &[])
@@ -500,6 +498,27 @@ impl AdminConn {
 
         Ok(())
     }
+}
+
+fn encrypt_wallets_df(mut wallets: DataFrame, key: EncryptionKey) -> crate::Result<DataFrame> {
+    wallets.try_apply("keypair", |series| {
+        let str_series = series.str()?;
+        str_series
+            .into_iter()
+            .map(|opt| {
+                opt.map(|s| {
+                    let keypair = Keypair::from_str(s).map_err(Error::LogicError)?;
+                    let encrypted = key.encrypt_keypair(&keypair);
+                    let json = serde_json::to_string(&encrypted).map_err(Error::json("keypair"))?;
+                    Ok(json)
+                })
+                .transpose()
+            })
+            .collect::<Result<Series, Error>>()
+            .map_err(|error| PolarsError::ComputeError(error.to_string().into()))
+    })?;
+    wallets.rename("keypair", "encrypted_keypair".into())?;
+    Ok(wallets)
 }
 
 async fn update_id_sequence(
@@ -522,19 +541,17 @@ async fn update_id_sequence(
     Ok(())
 }
 
-async fn copy_in(tx: &Transaction<'_>, table: &str, data: String) -> crate::Result<()> {
-    let header = csv_export::reader()
-        .from_reader(data.as_bytes())
-        .headers()
-        .map_err(Error::parsing("csv"))?
-        .into_iter()
-        .fold(String::new(), |mut r, header| {
-            if !r.is_empty() {
-                r.push(',');
-            }
-            std::fmt::write(&mut r, format_args!("{:?}", header)).unwrap();
-            r
-        });
+async fn copy_in(tx: &Transaction<'_>, table: &str, df: &mut DataFrame) -> crate::Result<()> {
+    let header = {
+        let mut header = df
+            .get_columns()
+            .iter()
+            .map(|c| format!("{:?},", c.name()))
+            .collect::<String>();
+        header.pop();
+        header
+    };
+
     let query = format!(
         "COPY {} ({}) FROM stdin WITH (FORMAT csv, DELIMITER ';', QUOTE '''', HEADER MATCH)",
         table, header
@@ -544,35 +561,12 @@ async fn copy_in(tx: &Transaction<'_>, table: &str, data: String) -> crate::Resu
         .await
         .map_err(Error::exec("copy-in users"))?;
     futures_util::pin_mut!(sink);
-    sink.send(data.into())
+
+    sink.send(write_df(df)?.into())
         .await
         .map_err(Error::data("write copy-in"))?;
+
     sink.finish().await.map_err(Error::data("finish copy_in"))?;
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::{
-        config::DbConfig, connection::ExportedUserData, pool::RealDbPool, LocalStorage, WasmStorage,
-    };
-    use serde::Deserialize;
-    use toml::value::Table;
-
-    #[tokio::test]
-    #[ignore]
-    async fn test_import() {
-        let full_config: Table =
-            toml::from_str(&std::fs::read_to_string("/tmp/local.toml").unwrap()).unwrap();
-        let db_config = DbConfig::deserialize(full_config["db"].clone()).unwrap();
-        let wasm = WasmStorage::new("http://localhost".parse().unwrap(), "", "").unwrap();
-        let temp = tempfile::tempdir().unwrap();
-        let local = LocalStorage::new(temp.path()).unwrap();
-        let pool = RealDbPool::new(&db_config, wasm, local).await.unwrap();
-        let mut conn = pool.get_admin_conn().await.unwrap();
-        let data: ExportedUserData =
-            serde_json::from_str(&std::fs::read_to_string("/tmp/data.json").unwrap()).unwrap();
-        conn.import_data(data).await.unwrap();
-    }
 }
