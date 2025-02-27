@@ -5,7 +5,7 @@ export {
   type ContextData,
   type CommandTrait,
   type ServiceProxy,
-} from "jsr:@space-operator/flow-lib@0.10.0";
+} from "jsr:@space-operator/flow-lib@0.11.0";
 // } from "../../flow-lib/src/mod.ts";
 export {
   Application,
