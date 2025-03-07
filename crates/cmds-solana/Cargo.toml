@@ -72,6 +72,8 @@ bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
     "solana",
 ] }
 
+gg-staking = {git= "ssh://git@github.com/space-operator/staking.git"}
+
 # branch: vendor
 pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "84cc6fe07acbb8a81b216228be244bf039621560" }
 jupiter-swap-api-client = { git = "https://github.com/jup-ag/jupiter-swap-api-client.git", package = "jupiter-swap-api-client", rev = "e3c162b921f46eacc867ca9c55e7d610eefabe25"}
