@@ -43,27 +43,28 @@ bytemuck_derive = { version = "1.7.0" }
 struct-convert = { git = "https://github.com/juchiast/struct-convert", rev = "83b132915519515e364ce612ef2ac92441dc7bc9" }
 
 # solana libs
-solana-sdk = "=1.18.26"
-solana-client = "=1.18.26"
-solana-program = "=1.18.26"
-solana-account-decoder = "=1.18.26"
-solana-transaction-status = '=1.18.26'
-spl-token = { version = "=4.0.0", features = ["no-entrypoint"] }
-spl-token-2022 = { version = "=3.0.4", features = ["serde-traits"] }
-spl-memo = { version = "=4.0.0", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "=2.3.0", features = ["no-entrypoint"] }
-spl-account-compression = "=0.4.1"
-spl-noop = "=0.2.0"
-spl-pod = "=0.2.5"
+solana-sdk = "=2.2.1"
+solana-client = "=2.2.0"
+solana-program = "=2.2.1"
+solana-account-decoder = "=2.2.0"
+solana-transaction-status = "=2.2.0"
+
+# spl
+spl-token = { version = "=7.0.0", features = ["no-entrypoint"] }
+spl-token-2022 = { version = "=7.0.0", features = ["serde-traits"] }
+spl-memo = { version = "=6.0.0", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "=6.0.0", features = ["no-entrypoint"] }
+spl-account-compression = "=0.4.2"
 
 # metaplex
-mpl-token-auth-rules = "=1.5.1"
-mpl-token-metadata = "=4.1.2"
+mpl-token-metadata = "5.1.0"
+
 mpl-candy-machine-core = { version = "=3.0.1", features = ["no-entrypoint"] }
 mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
 # core, core candy machine and candy guard
 mpl-core-candy-machine-core = { version = "=0.2.1", features = ["no-entrypoint"] }
 mpl-core-candy-guard = { version = "=0.2.1", features = ["no-entrypoint"] }
+
 mpl-core = { version = "=0.8.0", features = ["serde"] }
 mpl-bubblegum = { version = "=1.4.0" }
 
@@ -73,7 +74,7 @@ bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
 ] }
 
 # branch: vendor
-pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "84cc6fe07acbb8a81b216228be244bf039621560" }
+pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "c658146e28322ab89720cef94efb56b3c5c12f28" }
 jupiter-swap-api-client = { git = "https://github.com/jup-ag/jupiter-swap-api-client.git", package = "jupiter-swap-api-client", rev = "e3c162b921f46eacc867ca9c55e7d610eefabe25"}
 
 # anchor
