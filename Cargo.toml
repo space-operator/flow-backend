@@ -14,6 +14,10 @@ mpl-candy-guard = { git = "https://github.com/space-operator/mpl-candy-machine",
 mpl-core-candy-machine-core = { git = "https://github.com/space-operator/mpl-core-candy-machine", rev = "e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226" }
 mpl-core-candy-guard = { git = "https://github.com/space-operator/mpl-core-candy-machine", rev = "e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226" }
 
+[patch."https://github.com/space-operator/flow-backend"]
+flow-lib = { path = "./lib/flow-lib" }
+flow-value = { path = "./lib/flow-value" }
+
 [profile.dev]
 debug = 0
 opt-level = 1

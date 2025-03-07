@@ -32,9 +32,7 @@ pub struct Payload {
 }
 
 fn bincode_config() -> impl bincode::config::Config {
-    bincode::config::standard()
-        .with_fixed_int_encoding()
-        .skip_fixed_array_length()
+    bincode::config::standard().with_fixed_int_encoding()
 }
 
 #[derive(ThisError, Debug)]
