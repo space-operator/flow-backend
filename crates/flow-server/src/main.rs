@@ -25,6 +25,7 @@ use utils::address_book::AddressBook;
 use cmds_pdg as _;
 use cmds_solana as _;
 use cmds_std as _;
+use gg_staking as _;
 
 #[actix::main]
 async fn main() {
