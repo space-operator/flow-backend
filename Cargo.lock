@@ -3716,7 +3716,6 @@ dependencies = [
 [[package]]
 name = "gg-staking"
 version = "0.0.0"
-source = "git+ssh://git@github.com/space-operator/staking.git#3035b2470f35750642de6e5a30463959547188cf"
 dependencies = [
  "anchor-lang 0.30.1",
  "anchor-spl",

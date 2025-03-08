@@ -17,7 +17,8 @@ utils = { workspace = true }
 cmds-pdg = { workspace = true }
 cmds-std = { workspace = true }
 cmds-solana = { workspace = true }
-gg-staking = { git= "ssh://git@github.com/space-operator/staking.git" }
+# gg-staking = { git= "ssh://git@github.com/space-operator/staking.git" }
+gg-staking = { path = "../../private/staking" }
 
 actix = "0.13"
 actix-web = "4"

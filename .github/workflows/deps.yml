@@ -16,6 +16,10 @@ jobs:
     name: Rust deps
     runs-on: self-hosted
     steps:
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.STAKING_SSH_KEY }}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable

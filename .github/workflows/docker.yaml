@@ -15,6 +15,10 @@ jobs:
     env:
       BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.STAKING_SSH_KEY }}
       - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
@@ -39,12 +43,18 @@ jobs:
       KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
       SOLANA_DEVNET_URL: ${{ secrets.SOLANA_DEVNET_URL }}
     steps:
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.STAKING_SSH_KEY }}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           profile: default
           override: true
       - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
       - uses: Swatinem/rust-cache@v2
       - name: Install deno
         uses: denoland/setup-deno@v2
