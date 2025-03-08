@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: "recursive"
+          token: ${{ secrets.PRIVATE_REPO_CLONE_KEY }}
       - uses: Swatinem/rust-cache@v2
       - run: rm Cargo.lock
       - name: Build

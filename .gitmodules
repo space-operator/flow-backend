@@ -1,0 +1,4 @@
+[submodule "private/staking"]
+	path = private/staking
+	url = git@github.com:space-operator/staking.git
+	branch = main
