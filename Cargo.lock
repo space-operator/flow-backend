@@ -535,6 +535,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "anchor-libs"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+]
+
+[[package]]
 name = "anchor-spl"
 version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
