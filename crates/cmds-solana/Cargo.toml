@@ -79,8 +79,8 @@ pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev =
 # jupiter-swap-api-client = { git = "https://github.com/jup-ag/jupiter-swap-api-client.git", package = "jupiter-swap-api-client", rev = "e3c162b921f46eacc867ca9c55e7d610eefabe25"}
 
 # anchor
-anchor-lang = "=0.30.1"
-anchor-spl = "=0.30.1"
+anchor-lang = "=0.31.0"
+anchor-spl = "=0.31.0"
 
 # clockwork-client = "=2.0.1"
 # clockwork-utils = "=2.0.1"
