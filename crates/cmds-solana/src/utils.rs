@@ -11,6 +11,10 @@ use solana_sdk::{signature::Presigner, transaction::Transaction};
 use std::time::Duration;
 use value::Error as ValueError;
 
+pub const fn pod_get_packed_len<T: bytemuck::Pod>() -> usize {
+    std::mem::size_of::<T>()
+}
+
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(60 * 5);
 
 pub async fn execute(
