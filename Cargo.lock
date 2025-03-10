@@ -2025,15 +2025,9 @@ dependencies = [
  "futures",
  "hex",
  "inventory",
- "jupiter-swap-api-client",
  "mime_guess",
- "mpl-bubblegum",
- "mpl-candy-guard",
- "mpl-candy-machine-core",
  "mpl-core",
- "mpl-core-candy-guard",
- "mpl-core-candy-machine-core",
- "mpl-token-metadata 5.1.0",
+ "mpl-token-metadata",
  "once_cell",
  "primitive-types 0.9.1",
  "pyth-sdk-solana",
@@ -4660,28 +4654,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "jupiter-swap-api-client"
-version = "0.1.0"
-source = "git+https://github.com/jup-ag/jupiter-swap-api-client.git?rev=e3c162b921f46eacc867ca9c55e7d610eefabe25#e3c162b921f46eacc867ca9c55e7d610eefabe25"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "reqwest 0.11.27",
- "rust_decimal",
- "serde",
- "serde_json",
- "serde_qs",
- "solana-account-decoder 1.18.26",
- "solana-sdk 1.18.26",
-]
-
-[[package]]
 name = "kaigan"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2ba15de5aeb137f0f65aa3bf82187647f1285abfe5b20c80c2c37f7007ad519a"
 dependencies = [
  "borsh 0.10.4",
+ "serde",
 ]
 
 [[package]]
@@ -5054,67 +5033,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7843ec2de400bcbc6a6328c958dc38e5359da6e93e72e37bc5246bf1ae776389"
 
 [[package]]
-name = "mpl-bubblegum"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9eff5ae5cafd1acdf7e7c93359da1eec91dcaede318470d9f68b78e8b7469f4"
-dependencies = [
- "borsh 0.10.4",
- "kaigan",
- "num-derive 0.3.3",
- "num-traits",
- "solana-program 1.18.26",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "mpl-candy-guard"
-version = "3.0.0"
-source = "git+https://github.com/space-operator/mpl-candy-machine?rev=6096215a779702fb7954103e0d3199d89e120e6f#6096215a779702fb7954103e0d3199d89e120e6f"
-dependencies = [
- "anchor-lang 0.30.1",
- "arrayref",
- "mpl-candy-guard-derive",
- "mpl-candy-machine-core",
- "mpl-token-metadata 3.2.3",
- "solana-gateway",
- "solana-program 1.18.26",
- "spl-associated-token-account 2.3.0",
- "spl-token 4.0.0",
- "spl-token-2022 3.0.4",
-]
-
-[[package]]
-name = "mpl-candy-guard-derive"
-version = "0.2.0"
-source = "git+https://github.com/space-operator/mpl-candy-machine?rev=6096215a779702fb7954103e0d3199d89e120e6f#6096215a779702fb7954103e0d3199d89e120e6f"
-dependencies = [
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "mpl-candy-machine-core"
-version = "3.0.1"
-source = "git+https://github.com/space-operator/mpl-candy-machine?rev=6096215a779702fb7954103e0d3199d89e120e6f#6096215a779702fb7954103e0d3199d89e120e6f"
-dependencies = [
- "anchor-lang 0.30.1",
- "arrayref",
- "mpl-token-metadata 3.2.3",
- "mpl-utils",
- "solana-program 1.18.26",
- "spl-associated-token-account 2.3.0",
- "spl-token 4.0.0",
-]
-
-[[package]]
 name = "mpl-core"
-version = "0.8.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "299e6db3f7d9ab8fba383e3c6e88f8869063e694cbeb56da8f1bdd355e255f8f"
+checksum = "376995625095764ecc2999148b8e94859cb9c180b89161bf82b8122ed2c780e8"
 dependencies = [
  "base64 0.22.1",
  "borsh 0.10.4",
+ "kaigan",
  "modular-bitfield",
  "num-derive 0.3.3",
  "num-traits",
@@ -5122,63 +5048,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with 3.12.0",
- "solana-program 1.18.26",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "mpl-core-candy-guard"
-version = "0.2.1"
-source = "git+https://github.com/space-operator/mpl-core-candy-machine?rev=e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226#e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226"
-dependencies = [
- "anchor-lang 0.30.1",
- "arrayref",
- "mpl-core",
- "mpl-core-candy-guard-derive",
- "mpl-core-candy-machine-core",
- "mpl-token-metadata 3.2.3",
- "regex-lite",
- "solana-gateway",
- "solana-program 1.18.26",
- "spl-associated-token-account 2.3.0",
- "spl-token 4.0.0",
- "spl-token-2022 3.0.4",
-]
-
-[[package]]
-name = "mpl-core-candy-guard-derive"
-version = "0.2.1"
-source = "git+https://github.com/space-operator/mpl-core-candy-machine?rev=e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226#e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226"
-dependencies = [
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "mpl-core-candy-machine-core"
-version = "0.2.1"
-source = "git+https://github.com/space-operator/mpl-core-candy-machine?rev=e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226#e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226"
-dependencies = [
- "anchor-lang 0.30.1",
- "arrayref",
- "mpl-core",
- "mpl-token-metadata 3.2.3",
- "mpl-utils",
- "solana-program 1.18.26",
- "spl-associated-token-account 2.3.0",
- "spl-token 4.0.0",
-]
-
-[[package]]
-name = "mpl-token-metadata"
-version = "3.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba8ee05284d79b367ae8966d558e1a305a781fc80c9df51f37775169117ba64f"
-dependencies = [
- "borsh 0.10.4",
- "num-derive 0.3.3",
- "num-traits",
- "solana-program 1.18.26",
+ "solana-program 2.2.1",
  "thiserror 1.0.69",
 ]
 
@@ -5193,16 +5063,6 @@ dependencies = [
  "num-traits",
  "solana-program 2.2.1",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "mpl-utils"
-version = "0.3.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b753edea723ac98ea87dea53932c1a9ba6990776a45e9230d6703682a37621b"
-dependencies = [
- "arrayref",
- "solana-program 1.18.26",
 ]
 
 [[package]]
@@ -7820,17 +7680,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_qs"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd34f36fe4c5ba9654417139a9b3a20d2e1de6012ee678ad14d240c22c78d8d6"
-dependencies = [
- "percent-encoding",
- "serde",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "serde_repr"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8824,19 +8673,6 @@ dependencies = [
  "quote",
  "rustc_version 0.4.1",
  "syn 2.0.98",
-]
-
-[[package]]
-name = "solana-gateway"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a11e5afc65ef1845214987e9724aa6406916d4a2d67ed66e4583cb75368bb645"
-dependencies = [
- "borsh 1.5.5",
- "num-derive 0.4.2",
- "num-traits",
- "solana-program 1.18.26",
- "thiserror 1.0.69",
 ]
 
 [[package]]

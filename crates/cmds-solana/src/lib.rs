@@ -9,7 +9,7 @@ pub mod error;
 
 pub mod associated_token_account;
 // pub mod clockwork;
-pub mod compression;
+// pub mod compression;
 pub mod create_mint_account;
 pub mod create_token_account;
 pub mod find_pda;
@@ -28,7 +28,7 @@ pub mod wormhole;
 // pub mod xnft;
 pub mod das;
 pub mod governance;
-pub mod jupiter;
+// pub mod jupiter;
 pub mod memo;
 pub mod pyth_price;
 pub mod record;

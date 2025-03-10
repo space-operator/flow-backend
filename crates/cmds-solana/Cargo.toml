@@ -59,14 +59,14 @@ spl-account-compression = "=0.4.2"
 # metaplex
 mpl-token-metadata = "5.1.0"
 
-mpl-candy-machine-core = { version = "=3.0.1", features = ["no-entrypoint"] }
-mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
-# core, core candy machine and candy guard
-mpl-core-candy-machine-core = { version = "=0.2.1", features = ["no-entrypoint"] }
-mpl-core-candy-guard = { version = "=0.2.1", features = ["no-entrypoint"] }
+# mpl-candy-machine-core = { version = "=3.0.1", features = ["no-entrypoint"] }
+# mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
+# # core, core candy machine and candy guard
+# mpl-core-candy-machine-core = { version = "=0.2.1", features = ["no-entrypoint"] }
+# mpl-core-candy-guard = { version = "=0.2.1", features = ["no-entrypoint"] }
 
-mpl-core = { version = "=0.8.0", features = ["serde"] }
-mpl-bubblegum = { version = "=1.4.0" }
+mpl-core = { version = "=0.9.1", features = ["serde"] }
+# mpl-bubblegum = { version = "=1.4.0" }
 
 # bundlr
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
@@ -76,7 +76,7 @@ bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
 # branch: vendor
 pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "c658146e28322ab89720cef94efb56b3c5c12f28" }
 
-jupiter-swap-api-client = { git = "https://github.com/jup-ag/jupiter-swap-api-client.git", package = "jupiter-swap-api-client", rev = "e3c162b921f46eacc867ca9c55e7d610eefabe25"}
+# jupiter-swap-api-client = { git = "https://github.com/jup-ag/jupiter-swap-api-client.git", package = "jupiter-swap-api-client", rev = "e3c162b921f46eacc867ca9c55e7d610eefabe25"}
 
 # anchor
 anchor-lang = "=0.30.1"
