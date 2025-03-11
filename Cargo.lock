@@ -382,7 +382,7 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37013051defd745a5437d6842bd404e5480e14ad4e4f0441dd9a81a4b9aea1d6"
 dependencies = [
- "anchor-syn",
+ "anchor-syn 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -394,7 +394,7 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92db0f793e924e18462b3fac53c5759a8248649a8072788b5e88a4af714998c8"
 dependencies = [
- "anchor-syn",
+ "anchor-syn 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bs58 0.5.1",
  "proc-macro2",
  "quote",
@@ -407,7 +407,7 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a98126ebfc96d6248899caadc9ea7c2403420c4f5c994e541802bce9f423674"
 dependencies = [
- "anchor-syn",
+ "anchor-syn 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote",
  "syn 1.0.109",
 ]
@@ -418,7 +418,7 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8a4dcb403f872fbcd0910fc39a3e05bb6c43a8399f915a1878e62eb680fbb23"
 dependencies = [
- "anchor-syn",
+ "anchor-syn 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote",
  "syn 1.0.109",
 ]
@@ -429,7 +429,7 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "420d651b2703ccff86f6c4b7c394140cb85049787c078a5f8280506121d48065"
 dependencies = [
- "anchor-syn",
+ "anchor-syn 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -438,11 +438,9 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-program"
 version = "0.31.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d258f3a9f47db7f4199888df0ee67e42b960a7acb8f5c336b585d4eb243b9665"
 dependencies = [
  "anchor-lang-idl",
- "anchor-syn",
+ "anchor-syn 0.31.0",
  "anyhow",
  "bs58 0.5.1",
  "heck 0.3.3",
@@ -458,7 +456,7 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "097147501de51105d8dbdad9bd5a96a1b17ecbb2cee9f200d6167031372eab3b"
 dependencies = [
- "anchor-syn",
+ "anchor-syn 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote",
  "syn 1.0.109",
 ]
@@ -469,7 +467,7 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5a24721da4ed67f0a1391cac27ea7e51c255cbd94cdcc6728a0aa56227628d0"
 dependencies = [
- "anchor-syn",
+ "anchor-syn 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "borsh-derive-internal",
  "proc-macro2",
  "quote",
@@ -513,8 +511,6 @@ dependencies = [
 [[package]]
 name = "anchor-lang-idl"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32e8599d21995f68e296265aa5ab0c3cef582fd58afec014d01bd0bce18a4418"
 dependencies = [
  "anchor-lang-idl-spec",
  "anyhow",
@@ -527,8 +523,6 @@ dependencies = [
 [[package]]
 name = "anchor-lang-idl-spec"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bdf143115440fe621bdac3a29a1f7472e09f6cd82b2aa569429a0c13f103838"
 dependencies = [
  "anyhow",
  "serde",
@@ -554,6 +548,22 @@ dependencies = [
  "spl-token-2022 6.0.0",
  "spl-token-group-interface",
  "spl-token-metadata-interface",
+]
+
+[[package]]
+name = "anchor-syn"
+version = "0.31.0"
+dependencies = [
+ "anyhow",
+ "bs58 0.5.1",
+ "heck 0.3.3",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "sha2 0.10.8",
+ "syn 1.0.109",
+ "thiserror 1.0.69",
 ]
 
 [[package]]

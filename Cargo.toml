@@ -1,15 +1,15 @@
 [workspace]
 members = ["lib/*", "crates/*"]
-exclude = ["crates/space-wasm/tests", "lib/space-operator-cli", "vendor/mpl-bubblegum"]
+exclude = [
+    "crates/space-wasm/tests",
+    "lib/space-operator-cli",
+    "vendor/mpl-bubblegum",
+]
 resolver = "2"
 
 [patch.crates-io]
 rhai = { git = "https://github.com/space-operator/rhai", rev = "b39d2bfb" }
-# # branch: update-deps
-# mpl-candy-machine-core = { git = "https://github.com/space-operator/mpl-candy-machine", rev = "6096215a779702fb7954103e0d3199d89e120e6f" }
-# mpl-candy-guard = { git = "https://github.com/space-operator/mpl-candy-machine", rev = "6096215a779702fb7954103e0d3199d89e120e6f" }
-# mpl-core-candy-machine-core = { git = "https://github.com/space-operator/mpl-core-candy-machine", rev = "e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226" }
-# mpl-core-candy-guard = { git = "https://github.com/space-operator/mpl-core-candy-machine", rev = "e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226" }
+anchor-attribute-program = { path = "/home/qwe/Desktop/upwork/space-operator/vendor/anchor/lang/attribute/program" }
 
 [profile.dev]
 debug = 0
