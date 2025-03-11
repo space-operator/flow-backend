@@ -9,7 +9,6 @@ resolver = "2"
 
 [patch.crates-io]
 rhai = { git = "https://github.com/space-operator/rhai", rev = "b39d2bfb" }
-anchor-attribute-program = { path = "/home/qwe/Desktop/upwork/space-operator/vendor/anchor/lang/attribute/program" }
 
 [profile.dev]
 debug = 0
