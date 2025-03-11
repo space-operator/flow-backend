@@ -37,6 +37,6 @@ five8 = { version = "0.2.1", features = ["std"] }
 bon = "3.0.2"
 
 # solana libs
-solana-sdk = { version = "1", default-features = false }
-solana-client = "1"
-solana-transaction-status = "1"
+solana-sdk = { version = "2", default-features = false }
+solana-client = "2"
+solana-transaction-status = "2"

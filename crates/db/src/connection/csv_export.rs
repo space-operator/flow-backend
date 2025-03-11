@@ -26,7 +26,7 @@ pub fn clear_column(df: &mut DataFrame, column: &str) -> Result<(), PolarsError>
 }
 
 fn read_df_impl(csv: &[u8]) -> Result<DataFrame, PolarsError> {
-    Ok(CsvReadOptions::default()
+    CsvReadOptions::default()
         .with_parse_options(
             CsvParseOptions::default()
                 .with_separator(b';')
@@ -37,7 +37,7 @@ fn read_df_impl(csv: &[u8]) -> Result<DataFrame, PolarsError> {
                 )))),
         )
         .into_reader_with_file_handle(Cursor::new(csv))
-        .finish()?)
+        .finish()
 }
 
 pub fn read_df<T: AsRef<[u8]>>(csv: T) -> Result<DataFrame, PolarsError> {
@@ -69,7 +69,7 @@ pub mod df_serde {
 
     pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<DataFrame, D::Error> {
         let text = String::deserialize(d)?;
-        Ok(read_df(text).map_err(serde::de::Error::custom)?)
+        read_df(text).map_err(serde::de::Error::custom)
     }
 }
 

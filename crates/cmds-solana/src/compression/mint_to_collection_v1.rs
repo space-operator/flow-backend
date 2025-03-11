@@ -155,11 +155,10 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 #[cfg(test)]
 mod tests {
     use anchor_lang::AnchorDeserialize;
-    use mpl_bubblegum::LeafSchemaEvent;
-    use spl_account_compression::{
-        events::{ApplicationDataEvent, ApplicationDataEventV1},
-        AccountCompressionEvent,
+    use anchor_libs::spl_account_compression::types::{
+        AccountCompressionEvent, ApplicationDataEvent, ApplicationDataEventV1,
     };
+    use mpl_bubblegum::LeafSchemaEvent;
 
     // use crate::compression::get_leaf_schema_event;
 

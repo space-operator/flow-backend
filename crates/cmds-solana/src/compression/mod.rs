@@ -13,9 +13,8 @@ use solana_transaction_status::UiParsedInstruction;
 use solana_transaction_status::{
     option_serializer::OptionSerializer, UiInstruction, UiTransactionEncoding,
 };
-use spl_account_compression::{
-    events::{ApplicationDataEvent, ApplicationDataEventV1},
-    AccountCompressionEvent,
+use spl_account_compression::types::{
+    AccountCompressionEvent, ApplicationDataEvent, ApplicationDataEventV1,
 };
 use std::str::FromStr;
 use tracing::info;
