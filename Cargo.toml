@@ -1,6 +1,6 @@
 [workspace]
 members = ["lib/*", "crates/*"]
-exclude = ["crates/space-wasm/tests", "lib/space-operator-cli"]
+exclude = ["crates/space-wasm/tests", "lib/space-operator-cli", "vendor/mpl-bubblegum"]
 resolver = "2"
 
 [patch.crates-io]
@@ -42,6 +42,7 @@ rhai-script = { path = "crates/rhai-script", version = "0.0.0" }
 srpc = { path = "crates/srpc", version = "0.0.0" }
 command-rpc = { path = "crates/command-rpc", version = "0.0.0" }
 cmds-deno = { path = "crates/cmds-deno", version = "0.0.0" }
+anchor-libs = { path = "crates/anchor-libs", version = "0.0.0" }
 
 # lib/
 value = { path = "lib/flow-value", version = "0.1.0", package = "flow-value" }

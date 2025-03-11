@@ -9,7 +9,7 @@ pub mod error;
 
 pub mod associated_token_account;
 // pub mod clockwork;
-// pub mod compression;
+pub mod compression;
 pub mod create_mint_account;
 pub mod create_token_account;
 pub mod find_pda;
@@ -42,6 +42,7 @@ pub use flow_lib::solana::WalletOrPubkey;
 
 pub mod prelude {
     pub use crate::utils::{execute, submit_transaction, try_sign_wallet};
+    pub use anchor_libs::spl_account_compression;
     pub use async_trait::async_trait;
     pub use flow_lib::{
         command::prelude::*,
