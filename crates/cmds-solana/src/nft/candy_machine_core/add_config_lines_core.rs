@@ -1,10 +1,7 @@
 use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_program::instruction::Instruction;
-use solana_sdk::pubkey::Pubkey;
-
 use super::ConfigLine;
-use mpl_core_candy_machine_core::instruction::AddConfigLines;
 
 // Command Name
 const NAME: &str = "add_config_lines_core";
@@ -59,7 +56,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         fee_payer: input.payer.pubkey(),
         signers: [input.payer, input.authority].into(),
         instructions: [Instruction {
-            program_id: mpl_core_candy_machine_core::id(),
+            program_id: mpl_core_candy_machine_core::ID,
             accounts,
             data,
         }]
