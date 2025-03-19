@@ -60,8 +60,8 @@ mpl-token-metadata = "5.1.0"
 # mpl-candy-machine-core = { version = "=3.0.1", features = ["no-entrypoint"] }
 # mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
 # # core, core candy machine and candy guard
-# mpl-core-candy-machine-core = { version = "=0.2.1", features = ["no-entrypoint"] }
-# mpl-core-candy-guard = { version = "=0.2.1", features = ["no-entrypoint"] }
+mpl-core-candy-machine-core.workspace = true
+mpl-core-candy-guard.workspace = true
 
 mpl-core = { version = "=0.9.1", features = ["serde"] }
 mpl-bubblegum = { path = "../../vendor/mpl-bubblegum" }

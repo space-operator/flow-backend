@@ -1,5 +1,5 @@
 [workspace]
-members = ["lib/*", "crates/*"]
+members = ["lib/*", "crates/*", "anchor-libs/*"]
 exclude = [
     "crates/space-wasm/tests",
     "lib/space-operator-cli",
@@ -42,6 +42,8 @@ srpc = { path = "crates/srpc", version = "0.0.0" }
 command-rpc = { path = "crates/command-rpc", version = "0.0.0" }
 cmds-deno = { path = "crates/cmds-deno", version = "0.0.0" }
 anchor-libs = { path = "crates/anchor-libs", version = "0.0.0" }
+mpl-core-candy-machine-core = { path = "anchor-libs/mpl-core-candy-machine-core", version = "0.0.0" }
+mpl-core-candy-guard = { path = "anchor-libs/mpl-core-candy-guard", version = "0.0.0" }
 
 # lib/
 value = { path = "lib/flow-value", version = "0.1.0", package = "flow-value" }

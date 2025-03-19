@@ -1706,6 +1706,8 @@ dependencies = [
  "mime_guess",
  "mpl-bubblegum",
  "mpl-core",
+ "mpl-core-candy-guard",
+ "mpl-core-candy-machine-core",
  "mpl-token-metadata",
  "once_cell",
  "primitive-types 0.9.1",
@@ -4688,6 +4690,20 @@ dependencies = [
  "serde_with",
  "solana-program",
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "mpl-core-candy-guard"
+version = "0.0.0"
+dependencies = [
+ "anchor-lang",
+]
+
+[[package]]
+name = "mpl-core-candy-machine-core"
+version = "0.0.0"
+dependencies = [
+ "anchor-lang",
 ]
 
 [[package]]
