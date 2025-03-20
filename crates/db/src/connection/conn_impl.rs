@@ -238,7 +238,7 @@ impl UserConnectionTrait for UserConnection {
         inputs: &ValueSet,
         deployment_id: &Option<DeploymentId>,
     ) -> crate::Result<FlowRunId> {
-        self.new_flow_run(config, inputs, &deployment_id).await
+        self.new_flow_run(config, inputs, deployment_id).await
     }
 
     async fn get_previous_values(

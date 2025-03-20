@@ -1,6 +1,6 @@
 use mpl_core::{accounts::BaseAssetV1, types::Key};
 use solana_client::{
-    rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
+    rpc_config::RpcProgramAccountsConfig,
     rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
 };
 use tracing::info;
@@ -58,13 +58,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
                         MemcmpEncodedBytes::Base58(collection.to_string()),
                     )),
                 ]),
-                account_config: RpcAccountInfoConfig {
-                    encoding: None,
-                    data_slice: None,
-                    commitment: None,
-                    min_context_slot: None,
-                },
-                with_context: None,
+                ..Default::default()
             },
         )
         .await

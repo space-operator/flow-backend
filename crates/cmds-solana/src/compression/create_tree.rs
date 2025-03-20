@@ -1,8 +1,10 @@
 use crate::prelude::*;
 use solana_program::system_instruction;
 use solana_sdk::pubkey::Pubkey;
-use spl_account_compression::{state::CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1, ConcurrentMerkleTree};
+use spl_concurrent_merkle_tree::concurrent_merkle_tree::ConcurrentMerkleTree;
 use std::mem::size_of;
+
+const CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1: usize = 2 + 54;
 
 // Command Name
 const NAME: &str = "create_tree";

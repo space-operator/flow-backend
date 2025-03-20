@@ -1,5 +1,5 @@
 use crate::prelude::Pubkey;
-use mpl_candy_machine_core::{CandyMachineData as MPLCandyMachineData, HiddenSettings};
+// use mpl_candy_machine_core::{CandyMachineData as MPLCandyMachineData, HiddenSettings};
 use mpl_token_metadata::types::{Collection, DataV2, UseMethod, Uses};
 use serde::{Deserialize, Serialize};
 
@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub mod arweave_file_upload;
 pub mod arweave_nft_upload;
 pub mod candy_machine_core;
-pub mod candy_machine_v3;
+// pub mod candy_machine_v3;
 pub mod core;
 pub mod create_master_edition;
 pub mod create_metadata_account;
@@ -144,15 +144,15 @@ impl From<NftCreator> for mpl_token_metadata::types::Creator {
     }
 }
 
-impl From<NftCreator> for mpl_candy_machine_core::Creator {
-    fn from(v: NftCreator) -> Self {
-        mpl_candy_machine_core::Creator {
-            address: v.address,
-            verified: v.verified.unwrap_or(false),
-            percentage_share: v.share,
-        }
-    }
-}
+// impl From<NftCreator> for mpl_candy_machine_core::Creator {
+//     fn from(v: NftCreator) -> Self {
+//         mpl_candy_machine_core::Creator {
+//             address: v.address,
+//             verified: v.verified.unwrap_or(false),
+//             percentage_share: v.share,
+//         }
+//     }
+// }
 
 // Candy machine configuration data.
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -175,21 +175,20 @@ pub struct CandyMachineDataAlias {
     pub hidden_settings: Option<HiddenSettingsAlias>,
 }
 
-//
-impl From<CandyMachineDataAlias> for MPLCandyMachineData {
-    fn from(v: CandyMachineDataAlias) -> Self {
-        MPLCandyMachineData {
-            items_available: v.items_available,
-            symbol: v.symbol,
-            seller_fee_basis_points: v.seller_fee_basis_points,
-            max_supply: v.max_supply,
-            is_mutable: v.is_mutable,
-            creators: v.creators.into_iter().map(|c| c.into()).collect(),
-            config_line_settings: v.config_line_settings.map(|c| c.into()),
-            hidden_settings: v.hidden_settings.map(|h| h.into()),
-        }
-    }
-}
+// impl From<CandyMachineDataAlias> for MPLCandyMachineData {
+//     fn from(v: CandyMachineDataAlias) -> Self {
+//         MPLCandyMachineData {
+//             items_available: v.items_available,
+//             symbol: v.symbol,
+//             seller_fee_basis_points: v.seller_fee_basis_points,
+//             max_supply: v.max_supply,
+//             is_mutable: v.is_mutable,
+//             creators: v.creators.into_iter().map(|c| c.into()).collect(),
+//             config_line_settings: v.config_line_settings.map(|c| c.into()),
+//             hidden_settings: v.hidden_settings.map(|h| h.into()),
+//         }
+//     }
+// }
 
 /// Hidden settings for large mints used with off-chain data.
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -202,16 +201,16 @@ pub struct HiddenSettingsAlias {
     pub hash: [u8; 32],
 }
 
-// implement From for HiddenSettingsAlias
-impl From<HiddenSettingsAlias> for HiddenSettings {
-    fn from(v: HiddenSettingsAlias) -> Self {
-        HiddenSettings {
-            name: v.name,
-            uri: v.uri,
-            hash: v.hash,
-        }
-    }
-}
+// // implement From for HiddenSettingsAlias
+// impl From<HiddenSettingsAlias> for HiddenSettings {
+//     fn from(v: HiddenSettingsAlias) -> Self {
+//         HiddenSettings {
+//             name: v.name,
+//             uri: v.uri,
+//             hash: v.hash,
+//         }
+//     }
+// }
 
 /// Config line settings to allocate space for individual name + URI.
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -228,18 +227,18 @@ pub struct ConfigLineSettingsAlias {
     pub is_sequential: bool,
 }
 
-// implement From for ConfigLineSettingsAlias
-impl From<ConfigLineSettingsAlias> for mpl_candy_machine_core::ConfigLineSettings {
-    fn from(v: ConfigLineSettingsAlias) -> Self {
-        mpl_candy_machine_core::ConfigLineSettings {
-            prefix_name: v.prefix_name,
-            name_length: v.name_length,
-            prefix_uri: v.prefix_uri,
-            uri_length: v.uri_length,
-            is_sequential: v.is_sequential,
-        }
-    }
-}
+// // implement From for ConfigLineSettingsAlias
+// impl From<ConfigLineSettingsAlias> for mpl_candy_machine_core::ConfigLineSettings {
+//     fn from(v: ConfigLineSettingsAlias) -> Self {
+//         mpl_candy_machine_core::ConfigLineSettings {
+//             prefix_name: v.prefix_name,
+//             name_length: v.name_length,
+//             prefix_uri: v.prefix_uri,
+//             uri_length: v.uri_length,
+//             is_sequential: v.is_sequential,
+//         }
+//     }
+// }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub enum CollectionDetails {

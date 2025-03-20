@@ -1,10 +1,7 @@
-use anchor_lang::error::Error;
+use anchor_lang::{error::Error, error_code};
 use flow_lib::solana::Pubkey;
-use mpl_core_candy_guard::guards::err;
-use mpl_core_candy_machine_core::{
-    constants::{HIDDEN_SECTION, MAX_NAME_LENGTH, MAX_URI_LENGTH},
-    errors::CandyError,
-    replace_patterns,
+use mpl_core_candy_machine_core::constants::{
+    HIDDEN_SECTION, MAX_NAME_LENGTH, MAX_URI_LENGTH, REPLACEMENT_INDEX, REPLACEMENT_INDEX_INCREMENT,
 };
 use serde::{Deserialize, Serialize};
 use struct_convert::Convert;
@@ -15,8 +12,118 @@ pub mod initialize_core_candy_machine;
 pub mod mint_core;
 pub mod wrap_core;
 
+pub fn replace_patterns(value: String, index: usize) -> String {
+    let mut mutable = value;
+    // check for pattern $ID+1$
+    if mutable.contains(REPLACEMENT_INDEX_INCREMENT) {
+        mutable = mutable.replace(REPLACEMENT_INDEX_INCREMENT, &(index + 1).to_string());
+    }
+    // check for pattern $ID$
+    if mutable.contains(REPLACEMENT_INDEX) {
+        mutable = mutable.replace(REPLACEMENT_INDEX, &index.to_string());
+    }
+
+    mutable
+}
+
+#[error_code]
+pub enum CandyError {
+    #[msg("Account does not have correct owner")]
+    IncorrectOwner,
+
+    #[msg("Account is not initialized")]
+    Uninitialized,
+
+    #[msg("Mint Mismatch")]
+    MintMismatch,
+
+    #[msg("Index greater than length")]
+    IndexGreaterThanLength,
+
+    #[msg("Numerical overflow error")]
+    NumericalOverflowError,
+
+    #[msg("Can only provide up to 4 creators to candy machine (because candy machine is one)")]
+    TooManyCreators,
+
+    #[msg("Candy machine is empty")]
+    CandyMachineEmpty,
+
+    #[msg("Candy machines using hidden uris do not have config lines, they have a single hash representing hashed order")]
+    HiddenSettingsDoNotHaveConfigLines,
+
+    #[msg("Cannot change number of lines unless is a hidden config")]
+    CannotChangeNumberOfLines,
+
+    #[msg("Cannot switch to hidden settings after items available is greater than 0")]
+    CannotSwitchToHiddenSettings,
+
+    #[msg("Incorrect collection NFT authority")]
+    IncorrectCollectionAuthority,
+
+    #[msg("The metadata account has data in it, and this must be empty to mint a new NFT")]
+    MetadataAccountMustBeEmpty,
+
+    #[msg("Can't change collection settings after items have begun to be minted")]
+    NoChangingCollectionDuringMint,
+
+    #[msg("Value longer than expected maximum value")]
+    ExceededLengthError,
+
+    #[msg("Missing config lines settings")]
+    MissingConfigLinesSettings,
+
+    #[msg("Cannot increase the length in config lines settings")]
+    CannotIncreaseLength,
+
+    #[msg("Cannot switch from hidden settings")]
+    CannotSwitchFromHiddenSettings,
+
+    #[msg("Cannot change sequential index generation after items have begun to be minted")]
+    CannotChangeSequentialIndexGeneration,
+
+    #[msg("Collection public key mismatch")]
+    CollectionKeyMismatch,
+
+    #[msg("Could not retrive config line data")]
+    CouldNotRetrieveConfigLineData,
+
+    #[msg("Not all config lines were added to the candy machine")]
+    NotFullyLoaded,
+
+    #[msg("Instruction could not be created")]
+    InstructionBuilderFailed,
+
+    #[msg("Missing collection authority record")]
+    MissingCollectionAuthorityRecord,
+
+    #[msg("Missing metadata delegate record")]
+    MissingMetadataDelegateRecord,
+
+    #[msg("Invalid token standard")]
+    InvalidTokenStandard,
+
+    #[msg("Missing token account")]
+    MissingTokenAccount,
+
+    #[msg("Missing token record")]
+    MissingTokenRecord,
+
+    #[msg("Missing instructions sysvar account")]
+    MissingInstructionsSysvar,
+
+    #[msg("Missing SPL ATA program")]
+    MissingSplAtaProgram,
+
+    #[msg("Invalid account version")]
+    InvalidAccountVersion,
+
+    #[msg("Invalid plugin authority")]
+    IncorrectPluginAuthority,
+}
+
 #[derive(Serialize, Deserialize, Clone, Default, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_machine_core::CandyMachineData")]
+#[convert(from_on = "mpl_core_candy_machine_core::types::CandyMachineData")]
 pub struct CandyMachineData {
     /// Number of assets available
     pub items_available: u64,
@@ -32,7 +139,7 @@ pub struct CandyMachineData {
 
 /// Hidden settings for large mints used with off-chain data.
 #[derive(Serialize, Deserialize, Clone, Default, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_machine_core::HiddenSettings")]
+#[convert(from_on = "mpl_core_candy_machine_core::types::HiddenSettings")]
 pub struct HiddenSettings {
     /// Asset prefix name
     pub name: String,
@@ -44,7 +151,7 @@ pub struct HiddenSettings {
 
 /// Config line struct for storing asset (NFT) data pre-mint.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_machine_core::ConfigLine")]
+#[convert(from_on = "mpl_core_candy_machine_core::types::ConfigLine")]
 pub struct ConfigLine {
     /// Name of the asset.
     pub name: String,
@@ -54,7 +161,7 @@ pub struct ConfigLine {
 
 /// Config line settings to allocate space for individual name + URI.
 #[derive(Serialize, Deserialize, Clone, Default, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_machine_core::ConfigLineSettings")]
+#[convert(from_on = "mpl_core_candy_machine_core::types::ConfigLineSettings")]
 pub struct ConfigLineSettings {
     /// Common name prefix
     pub prefix_name: String,
@@ -107,17 +214,17 @@ impl CandyMachineData {
         if let Some(hidden) = &self.hidden_settings {
             // config line settings should not be enabled at the same time as hidden settings
             if self.config_line_settings.is_some() {
-                return err!(CandyError::HiddenSettingsDoNotHaveConfigLines);
+                return Err(CandyError::HiddenSettingsDoNotHaveConfigLines.into());
             }
 
             let expected = replace_patterns(hidden.name.clone(), self.items_available as usize);
             if MAX_NAME_LENGTH < expected.len() {
-                return err!(CandyError::ExceededLengthError);
+                return Err(CandyError::ExceededLengthError.into());
             }
 
             let expected = replace_patterns(hidden.uri.clone(), self.items_available as usize);
             if MAX_URI_LENGTH < expected.len() {
-                return err!(CandyError::ExceededLengthError);
+                return Err(CandyError::ExceededLengthError.into());
             }
         } else if let Some(config_line) = &self.config_line_settings {
             let expected = replace_patterns(
@@ -125,7 +232,7 @@ impl CandyMachineData {
                 self.items_available as usize,
             );
             if MAX_NAME_LENGTH < (expected.len() + config_line.name_length as usize) {
-                return err!(CandyError::ExceededLengthError);
+                return Err(CandyError::ExceededLengthError.into());
             }
 
             let expected = replace_patterns(
@@ -133,10 +240,10 @@ impl CandyMachineData {
                 self.items_available as usize,
             );
             if MAX_URI_LENGTH < (expected.len() + config_line.uri_length as usize) {
-                return err!(CandyError::ExceededLengthError);
+                return Err(CandyError::ExceededLengthError.into());
             }
         } else {
-            return err!(CandyError::MissingConfigLinesSettings);
+            return Err(CandyError::MissingConfigLinesSettings.into());
         }
 
         Ok(())
@@ -146,7 +253,7 @@ impl CandyMachineData {
 /// A group represent a specific set of guards. When groups are used, transactions
 /// must specify which group should be used during validation.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::state::Group")]
+#[convert(from_on = "mpl_core_candy_guard::types::Group")]
 pub struct Group {
     pub label: String,
     pub guards: GuardSet,
@@ -158,7 +265,7 @@ pub struct CandyGuardData {
     pub groups: Option<Vec<Group>>,
 }
 
-impl From<CandyGuardData> for mpl_core_candy_guard::state::CandyGuardData {
+impl From<CandyGuardData> for mpl_core_candy_guard::types::CandyGuardData {
     fn from(value: CandyGuardData) -> Self {
         Self {
             default: value.default.into(),
@@ -171,7 +278,7 @@ impl From<CandyGuardData> for mpl_core_candy_guard::state::CandyGuardData {
 
 /// The set of guards available.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::state::GuardSet")]
+#[convert(from_on = "mpl_core_candy_guard::types::GuardSet")]
 pub struct GuardSet {
     /// Last instruction check and bot tax (penalty for invalid transactions).
     pub bot_tax: Option<BotTax>,
@@ -280,20 +387,20 @@ impl GuardType {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::AssetPayment")]
+#[convert(from_on = "mpl_core_candy_guard::types::AssetPayment")]
 pub struct AssetPayment {
     pub required_collection: Pubkey,
     pub destination: Pubkey,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::AssetBurn")]
+#[convert(from_on = "mpl_core_candy_guard::types::AssetBurn")]
 pub struct AssetBurn {
     pub required_collection: Pubkey,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::AssetMintLimit")]
+#[convert(from_on = "mpl_core_candy_guard::types::AssetMintLimit")]
 pub struct AssetMintLimit {
     /// Unique identifier of the mint limit.
     pub id: u8,
@@ -304,14 +411,14 @@ pub struct AssetMintLimit {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::AssetBurnMulti")]
+#[convert(from_on = "mpl_core_candy_guard::types::AssetBurnMulti")]
 pub struct AssetBurnMulti {
     pub required_collection: Pubkey,
     pub num: u8,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::AssetPaymentMulti")]
+#[convert(from_on = "mpl_core_candy_guard::types::AssetPaymentMulti")]
 pub struct AssetPaymentMulti {
     pub required_collection: Pubkey,
     pub destination: Pubkey,
@@ -319,26 +426,26 @@ pub struct AssetPaymentMulti {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::AssetGate")]
+#[convert(from_on = "mpl_core_candy_guard::types::AssetGate")]
 pub struct AssetGate {
     pub required_collection: Pubkey,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::VanityMint")]
+#[convert(from_on = "mpl_core_candy_guard::types::VanityMint")]
 pub struct VanityMint {
     pub regex: String,
 }
 
 /// Guard that restricts access to a specific address.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::AddressGate")]
+#[convert(from_on = "mpl_core_candy_guard::types::AddressGate")]
 pub struct AddressGate {
     pub address: Pubkey,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::Allocation")]
+#[convert(from_on = "mpl_core_candy_guard::types::Allocation")]
 pub struct Allocation {
     /// Unique identifier of the allocation.
     pub id: u8,
@@ -354,7 +461,7 @@ pub struct Allocation {
 /// The `bot_tax` is applied to any error that occurs during the
 /// validation of the guards.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::BotTax")]
+#[convert(from_on = "mpl_core_candy_guard::types::BotTax")]
 pub struct BotTax {
     pub lamports: u64,
     pub last_instruction: bool,
@@ -367,7 +474,7 @@ pub struct BotTax {
 ///   0. `[]` Pda created by the merkle proof instruction (seeds `["allow_list", merke tree root,
 ///           payer key, candy guard pubkey, candy machine pubkey]`).
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::AllowList")]
+#[convert(from_on = "mpl_core_candy_guard::types::AllowList")]
 pub struct AllowList {
     /// Merkle root of the addresses allowed to mint.
     pub merkle_root: [u8; 32],
@@ -375,14 +482,14 @@ pub struct AllowList {
 
 /// Guard that adds an edition plugin to the asset.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::Edition")]
+#[convert(from_on = "mpl_core_candy_guard::types::Edition")]
 pub struct Edition {
     pub edition_start_offset: u32,
 }
 
 /// Guard that sets a specific date for the mint to stop.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::EndDate")]
+#[convert(from_on = "mpl_core_candy_guard::types::EndDate")]
 pub struct EndDate {
     pub date: i64,
 }
@@ -396,7 +503,7 @@ pub struct EndDate {
 ///   1. `[]` Associate token account of the NFT (seeds `[payer pubkey, token
 ///           program pubkey, nft mint pubkey]`).
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::FreezeSolPayment")]
+#[convert(from_on = "mpl_core_candy_guard::types::FreezeSolPayment")]
 pub struct FreezeSolPayment {
     pub lamports: u64,
     pub destination: Pubkey,
@@ -413,7 +520,7 @@ pub struct FreezeSolPayment {
 ///                   pubkey, token program pubkey, nft mint pubkey]`).
 ///   3. `[]` SPL Token program.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::FreezeTokenPayment")]
+#[convert(from_on = "mpl_core_candy_guard::types::FreezeTokenPayment")]
 pub struct FreezeTokenPayment {
     pub amount: u64,
     pub mint: Pubkey,
@@ -429,7 +536,7 @@ pub struct FreezeTokenPayment {
 ///   1. `[]` Gatekeeper program account.
 ///   2. `[]` Gatekeeper expire account.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::Gatekeeper")]
+#[convert(from_on = "mpl_core_candy_guard::types::Gatekeeper")]
 pub struct Gatekeeper {
     /// The network for the gateway token required
     pub gatekeeper_network: Pubkey,
@@ -446,7 +553,7 @@ pub struct Gatekeeper {
 ///                   using the seed `["mint_limit", mint guard id, payer key,
 ///                   candy guard pubkey, candy machine pubkey]`.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::MintLimit")]
+#[convert(from_on = "mpl_core_candy_guard::types::MintLimit")]
 pub struct MintLimit {
     /// Unique identifier of the mint limit.
     pub id: u8,
@@ -455,7 +562,7 @@ pub struct MintLimit {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::NftBurn")]
+#[convert(from_on = "mpl_core_candy_guard::types::NftBurn")]
 pub struct NftBurn {
     pub required_collection: Pubkey,
 }
@@ -467,20 +574,20 @@ pub struct NftBurn {
 ///   0. `[]` Token account of the NFT.
 ///   1. `[]` Metadata account of the NFT.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::NftGate")]
+#[convert(from_on = "mpl_core_candy_guard::types::NftGate")]
 pub struct NftGate {
     pub required_collection: Pubkey,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::NftPayment")]
+#[convert(from_on = "mpl_core_candy_guard::types::NftPayment")]
 pub struct NftPayment {
     pub required_collection: Pubkey,
     pub destination: Pubkey,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::NftMintLimit")]
+#[convert(from_on = "mpl_core_candy_guard::types::NftMintLimit")]
 pub struct NftMintLimit {
     /// Unique identifier of the mint limit.
     pub id: u8,
@@ -493,7 +600,7 @@ pub struct NftMintLimit {
 /// Guard that restricts the programs that can be in a mint transaction. The guard allows the
 /// necessary programs for the mint and any other program specified in the configuration.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::ProgramGate")]
+#[convert(from_on = "mpl_core_candy_guard::types::ProgramGate")]
 pub struct ProgramGate {
     pub additional: Vec<Pubkey>,
 }
@@ -501,7 +608,7 @@ pub struct ProgramGate {
 /// Guard that stop the mint once the specified amount of items
 /// redeenmed is reached.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::RedeemedAmount")]
+#[convert(from_on = "mpl_core_candy_guard::types::RedeemedAmount")]
 pub struct RedeemedAmount {
     pub maximum: u64,
 }
@@ -512,7 +619,7 @@ pub struct RedeemedAmount {
 ///
 ///   0. `[]` Account to receive the fees.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::SolFixedFee")]
+#[convert(from_on = "mpl_core_candy_guard::types::SolFixedFee")]
 pub struct SolFixedFee {
     pub lamports: u64,
     pub destination: Pubkey,
@@ -524,7 +631,7 @@ pub struct SolFixedFee {
 ///
 ///   0. `[]` Account to receive the funds.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::SolPayment")]
+#[convert(from_on = "mpl_core_candy_guard::types::SolPayment")]
 pub struct SolPayment {
     pub lamports: u64,
     pub destination: Pubkey,
@@ -532,7 +639,7 @@ pub struct SolPayment {
 
 /// Guard that sets a specific start date for the mint.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::StartDate")]
+#[convert(from_on = "mpl_core_candy_guard::types::StartDate")]
 pub struct StartDate {
     pub date: i64,
 }
@@ -543,7 +650,7 @@ pub struct StartDate {
 ///
 ///   0. `[signer]` Signer of the transaction.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::ThirdPartySigner ")]
+#[convert(from_on = "mpl_core_candy_guard::types::ThirdPartySigner")]
 pub struct ThirdPartySigner {
     pub signer_key: Pubkey,
 }
@@ -557,7 +664,7 @@ pub struct ThirdPartySigner {
 ///   1. `[writable]` Token mint account.
 ///   2. `[]` SPL token program.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::TokenBurn")]
+#[convert(from_on = "mpl_core_candy_guard::types::TokenBurn")]
 pub struct TokenBurn {
     pub amount: u64,
     pub mint: Pubkey,
@@ -569,7 +676,7 @@ pub struct TokenBurn {
 ///
 ///   0. `[]` Token account holding the required amount.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::TokenGate")]
+#[convert(from_on = "mpl_core_candy_guard::types::TokenGate")]
 pub struct TokenGate {
     pub amount: u64,
     pub mint: Pubkey,
@@ -583,7 +690,7 @@ pub struct TokenGate {
 ///   1. `[writable]` Address of the ATA to receive the tokens.
 ///   2. `[]` SPL token program.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::TokenPayment")]
+#[convert(from_on = "mpl_core_candy_guard::types::TokenPayment")]
 pub struct TokenPayment {
     pub amount: u64,
     pub mint: Pubkey,
@@ -598,7 +705,7 @@ pub struct TokenPayment {
 ///   2. `[]` Mint account.
 ///   3. `[]` SPL Token-2022 program account.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
-#[convert(from_on = "mpl_core_candy_guard::guards::Token2022Payment")]
+#[convert(from_on = "mpl_core_candy_guard::types::Token2022Payment")]
 pub struct Token2022Payment {
     pub amount: u64,
     pub mint: Pubkey,

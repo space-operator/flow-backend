@@ -1,0 +1,7 @@
+[package]
+name = "anchor-libs"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+anchor-lang = "0.31.0"

@@ -28,7 +28,7 @@ pub mod wormhole;
 // pub mod xnft;
 pub mod das;
 pub mod governance;
-pub mod jupiter;
+// pub mod jupiter;
 pub mod memo;
 pub mod pyth_price;
 pub mod record;
@@ -42,6 +42,9 @@ pub use flow_lib::solana::WalletOrPubkey;
 
 pub mod prelude {
     pub use crate::utils::{execute, submit_transaction, try_sign_wallet};
+    pub use anchor_libs::{
+        candy_guard, candy_machine_core, mpl_core_candy_guard, spl_account_compression,
+    };
     pub use async_trait::async_trait;
     pub use flow_lib::{
         command::prelude::*,
