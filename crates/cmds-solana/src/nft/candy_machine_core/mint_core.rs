@@ -1,7 +1,7 @@
 use super::CandyGuardData;
 use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
-use mpl_core_candy_guard::instruction::MintV1;
+use mpl_core_candy_guard::client::args::MintV1;
 use solana_program::{instruction::Instruction, system_program, sysvar};
 use solana_sdk::{compute_budget::ComputeBudgetInstruction, pubkey::Pubkey};
 
@@ -63,7 +63,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let seeds = &["candy_guard".as_ref(), input.candy_machine.as_ref()];
     let candy_guard = Pubkey::find_program_address(seeds, &CANDY_GUARD_PROGRAM_ID).0;
 
-    let accounts = mpl_core_candy_guard::accounts::MintV1 {
+    let accounts = mpl_core_candy_guard::client::accounts::MintV1 {
         candy_guard,
         candy_machine: input.candy_machine,
         candy_machine_authority_pda,
@@ -81,7 +81,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     .to_account_metas(None);
 
     // serialize input.candy_guards
-    let data: mpl_core_candy_guard::state::CandyGuardData = input.candy_guards.into();
+    let data: mpl_core_candy_guard::types::CandyGuardData = input.candy_guards.into();
     let mut serialized_data = vec![0; data.size()];
     data.save(&mut serialized_data)?;
 
