@@ -2078,3 +2078,56 @@ pub mod utils {
         }
     }
 }
+
+// Empty value used for string padding.
+const NULL_STRING: &str = "\0";
+
+/// Return a padded string up to the specified length. If the specified
+/// string `value` is longer than the allowed `length`, return an error.
+pub fn fixed_length_string(value: String, length: usize) -> Result<String> {
+    if length < value.len() {
+        // the value is larger than the allowed length
+        return err!(CandyGuardError::ExceededLength);
+    }
+
+    let padding = NULL_STRING.repeat(length - value.len());
+    Ok(value + &padding)
+}
+
+/// Maximum group label size.
+pub const MAX_LABEL_SIZE: usize = 6;
+
+impl CandyGuardData {
+    /// Serialize the candy guard data into the specified data array.
+    pub fn save(&self, data: &mut [u8]) -> Result<()> {
+        let mut cursor = 0;
+
+        // saves the 'default' guard set
+        let _ = self.default.to_data(data)?;
+        cursor += self.default.size();
+
+        // stores the number of 'groups' guard set
+        let group_counter = if let Some(groups) = &self.groups {
+            groups.len() as u32
+        } else {
+            0
+        };
+        data[cursor..cursor + 4].copy_from_slice(&u32::to_le_bytes(group_counter));
+        cursor += 4;
+
+        // saves each individual 'groups' guard set
+        if let Some(groups) = &self.groups {
+            for group in groups {
+                // label
+                let label = fixed_length_string(group.label.to_string(), MAX_LABEL_SIZE)?;
+                data[cursor..cursor + MAX_LABEL_SIZE].copy_from_slice(label.as_bytes());
+                cursor += MAX_LABEL_SIZE;
+                // guard set
+                let _ = group.guards.to_data(&mut data[cursor..])?;
+                cursor += group.guards.size();
+            }
+        }
+
+        Ok(())
+    }
+}

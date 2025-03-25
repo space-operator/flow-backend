@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 anchor-lang = "0.31.0"
+mpl-candy-guard-derive = { path = "../mpl-candy-guard-derive" }
+arrayref = "0.3.9"

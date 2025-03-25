@@ -4673,6 +4673,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-candy-guard-derive"
+version = "0.2.0"
+dependencies = [
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "mpl-core"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4697,6 +4705,8 @@ name = "mpl-core-candy-guard"
 version = "0.0.0"
 dependencies = [
  "anchor-lang",
+ "arrayref",
+ "mpl-candy-guard-derive",
 ]
 
 [[package]]
