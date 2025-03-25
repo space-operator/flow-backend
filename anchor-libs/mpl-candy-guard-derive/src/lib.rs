@@ -158,16 +158,16 @@ pub fn derive(input: TokenStream) -> TokenStream {
         }
     });
     */
-    let route_arm = fields.iter().map(|f| {
-        if is_option_t(&f.ty) {
-            let ty = unwrap_option_t(&f.ty);
-            quote! {
-                GuardType::#ty => #ty::instruction(&ctx, route_context, args.data)
-            }
-        } else {
-            quote! {}
-        }
-    });
+    // let route_arm = fields.iter().map(|f| {
+    //     if is_option_t(&f.ty) {
+    //         let ty = unwrap_option_t(&f.ty);
+    //         quote! {
+    //             GuardType::#ty => #ty::instruction(&ctx, route_context, args.data)
+    //         }
+    //     } else {
+    //         quote! {}
+    //     }
+    // });
 
     let verify = fields.iter().map(|f| {
         if is_option_t(&f.ty) {
@@ -232,19 +232,19 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 size
             }
 
-            pub fn route<'c, 'info>(
-                ctx: &Context<'_, '_, 'c, 'info, crate::instructions::Route<'info>>,
-                route_context: crate::instructions::RouteContext<'info>,
-                args: crate::instructions::RouteArgs
-            ) -> anchor_lang::Result<()>
-            where
-                'c: 'info
-            {
-                match args.guard {
-                    #(#route_arm,)*
-                    _ => err!(CandyGuardError::InstructionNotFound)
-                }
-            }
+            // pub fn route<'c, 'info>(
+            //     ctx: &Context<'_, '_, 'c, 'info, crate::instructions::Route<'info>>,
+            //     route_context: crate::instructions::RouteContext<'info>,
+            //     args: crate::instructions::RouteArgs
+            // ) -> anchor_lang::Result<()>
+            // where
+            //     'c: 'info
+            // {
+            //     match args.guard {
+            //         #(#route_arm,)*
+            //         _ => err!(CandyGuardError::InstructionNotFound)
+            //     }
+            // }
 
             pub fn verify(data: &CandyGuardData) -> Result<()> {
                 #(#verify)*
