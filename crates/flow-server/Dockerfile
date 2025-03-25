@@ -19,6 +19,7 @@ RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json --bin flow-serv
 
 # Step 3: Build the binary
 FROM rustc AS builder
+COPY . .
 # Copy over the cached dependencies from above
 COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
