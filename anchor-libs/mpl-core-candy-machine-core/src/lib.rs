@@ -1,3 +1,5 @@
+#![allow(warnings)]
+
 use accounts::*;
 use anchor_lang::prelude::*;
 use events::*;

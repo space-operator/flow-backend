@@ -39,13 +39,13 @@ pub struct Output {
 }
 
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let accounts = mpl_core_candy_machine_core::accounts::AddConfigLines {
+    let accounts = mpl_core_candy_machine_core::client::accounts::AddConfigLines {
         candy_machine: input.candy_machine,
         authority: input.authority.pubkey(),
     }
     .to_account_metas(None);
 
-    let data = AddConfigLines {
+    let data = mpl_core_candy_machine_core::client::args::AddConfigLines {
         index: input.index,
         config_lines: input.config_lines.into_iter().map(Into::into).collect(),
     }

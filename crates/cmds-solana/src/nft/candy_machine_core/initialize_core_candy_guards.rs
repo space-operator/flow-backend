@@ -46,7 +46,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let seeds = &["candy_guard".as_ref(), base_pubkey.as_ref()];
     let candy_guard = Pubkey::find_program_address(seeds, &candy_guard_program).0;
 
-    let accounts = mpl_core_candy_guard::accounts::Initialize {
+    let accounts = mpl_core_candy_guard::client::accounts::Initialize {
         authority: input.authority,
         candy_guard,
         base: input.base.pubkey(),
@@ -56,7 +56,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     .to_account_metas(None);
 
     // serialize input.candy_guards
-    let data: mpl_core_candy_guard::state::CandyGuardData = input.candy_guards.into();
+    let data: mpl_core_candy_guard::types::CandyGuardData = input.candy_guards.into();
     let mut serialized_data = vec![0; data.size()];
     data.save(&mut serialized_data)?;
 
