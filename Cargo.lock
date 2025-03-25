@@ -4697,16 +4697,6 @@ name = "mpl-core-candy-guard"
 version = "0.0.0"
 dependencies = [
  "anchor-lang",
- "arrayref",
- "mpl-core-candy-guard-derive",
-]
-
-[[package]]
-name = "mpl-core-candy-guard-derive"
-version = "0.2.1"
-dependencies = [
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
