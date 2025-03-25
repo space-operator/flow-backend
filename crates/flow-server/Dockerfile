@@ -14,7 +14,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM rustc AS cacher
 ARG PROFILE=release
 COPY --from=planner /build/recipe.json recipe.json
-RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json --bin flow-server 2>/dev/null
+RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json --bin flow-server# 2>/dev/null
 
 # Step 3: Build the binary
 FROM rustc AS builder
