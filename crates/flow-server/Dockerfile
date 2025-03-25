@@ -14,7 +14,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM rustc AS cacher
 ARG PROFILE=release
 COPY --from=planner /build/recipe.json recipe.json
-RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json --bin flow-server# 2>/dev/null
+RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json --bin flow-server
 
 # Step 3: Build the binary
 FROM rustc AS builder
@@ -23,6 +23,8 @@ COPY . .
 COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
 ARG PROFILE=release
+RUN ls /build/
+RUN ls /build/vendor
 RUN cargo build --profile=$PROFILE --bin flow-server --quiet
 
 FROM docker.io/denoland/deno:debian AS deno
