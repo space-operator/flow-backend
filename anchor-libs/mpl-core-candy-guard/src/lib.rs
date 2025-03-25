@@ -1,5 +1,4 @@
 #![allow(warnings)]
-
 use accounts::*;
 use anchor_lang::prelude::*;
 use events::*;
@@ -145,6 +144,424 @@ pub mod events {
 #[doc = r" Note that account and event type definitions are not included in this module, as they"]
 #[doc = r" have their own dedicated modules."]
 pub mod types {
+    use crate::errors::CandyGuardError;
+    use std::collections::HashSet;
+
+    const MAXIMUM_LENGTH: usize = 100;
+
+    // Maximum number of programs in the additional list.
+    const MAXIMUM_SIZE: usize = 5;
+
+    impl Guard for AssetGate {
+        fn size() -> usize {
+            32 // required_collection
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::AssetGate)
+        }
+    }
+    impl Guard for AssetBurnMulti {
+        fn size() -> usize {
+            32 // required_collection
+            + 1 // num of assets to burn
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::AssetBurnMulti)
+        }
+    }
+    impl Guard for Gatekeeper {
+        fn size() -> usize {
+            32  // gatekeeper network
+            + 1 // expire on use
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::Gatekeeper)
+        }
+    }
+    impl Guard for AssetBurn {
+        fn size() -> usize {
+            32 // required_collection
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::AssetBurn)
+        }
+    }
+    impl Guard for VanityMint {
+        fn size() -> usize {
+            4 + // String prefix
+            100 // MAXIMUM_LENGTH
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::VanityMint)
+        }
+
+        fn verify(data: &CandyGuardData) -> Result<()> {
+            if let Some(vanity_mint) = &data.default.vanity_mint {
+                if vanity_mint.regex.len() > MAXIMUM_LENGTH {
+                    return err!(CandyGuardError::ExceededRegexLength);
+                }
+            }
+
+            if let Some(groups) = &data.groups {
+                for group in groups {
+                    if let Some(vanity_mint) = &group.guards.vanity_mint {
+                        if vanity_mint.regex.len() > MAXIMUM_LENGTH {
+                            return err!(CandyGuardError::ExceededRegexLength);
+                        }
+                    }
+                }
+            }
+
+            Ok(())
+        }
+    }
+    impl Guard for TokenPayment {
+        fn size() -> usize {
+            8    // amount
+            + 32 // token mint
+            + 32 // destination ata
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::TokenPayment)
+        }
+    }
+    impl Guard for Allocation {
+        fn size() -> usize {
+            1   // id
+            + 4 // count
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::Allocation)
+        }
+    }
+    impl Guard for TokenGate {
+        fn size() -> usize {
+            8    // amount
+            + 32 // mint
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::TokenGate)
+        }
+    }
+    impl Guard for AllowList {
+        fn size() -> usize {
+            32 // merkle_root
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::AllowList)
+        }
+    }
+    impl Guard for RedeemedAmount {
+        fn size() -> usize {
+            8 // maximum
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::RedeemedAmount)
+        }
+    }
+    impl Guard for AddressGate {
+        fn size() -> usize {
+            32 // address
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::AddressGate)
+        }
+    }
+    impl Guard for TokenBurn {
+        fn size() -> usize {
+            8    // amount
+            + 32 // mint
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::TokenBurn)
+        }
+    }
+    impl Guard for BotTax {
+        fn size() -> usize {
+            8 + 1 // u64 + bool
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::BotTax)
+        }
+    }
+    impl Guard for FreezeTokenPayment {
+        fn size() -> usize {
+            8    // amount
+            + 32 // token mint
+            + 32 // destination ata
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::FreezeTokenPayment)
+        }
+    }
+    impl Guard for AssetPayment {
+        fn size() -> usize {
+            32   // required_collection
+            + 32 // destination
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::AssetPayment)
+        }
+    }
+    impl Guard for Token2022Payment {
+        fn size() -> usize {
+            8    // amount
+            + 32 // token mint
+            + 32 // destination ata
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::Token2022Payment)
+        }
+    }
+    impl Guard for ProgramGate {
+        fn size() -> usize {
+            4 + (MAXIMUM_SIZE * 32) // programs
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::ProgramGate)
+        }
+
+        fn verify(data: &CandyGuardData) -> Result<()> {
+            if let Some(program_gate) = &data.default.program_gate {
+                if program_gate.additional.len() > MAXIMUM_SIZE {
+                    return err!(CandyGuardError::ExceededProgramListSize);
+                }
+            }
+
+            if let Some(groups) = &data.groups {
+                for group in groups {
+                    if let Some(program_gate) = &group.guards.program_gate {
+                        if program_gate.additional.len() > MAXIMUM_SIZE {
+                            return err!(CandyGuardError::ExceededProgramListSize);
+                        }
+                    }
+                }
+            }
+
+            Ok(())
+        }
+    }
+    impl Guard for AssetPaymentMulti {
+        fn size() -> usize {
+            32 // required_collection
+            + 32 // destination
+            + 1 // num of assets to pay
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::AssetPaymentMulti)
+        }
+    }
+    impl Guard for ThirdPartySigner {
+        fn size() -> usize {
+            32 // Pubkey
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::ThirdPartySigner)
+        }
+    }
+    impl Guard for AssetMintLimit {
+        fn size() -> usize {
+            1    // id
+            + 2  // limit
+            + 32 // required_collection
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::AssetMintLimit)
+        }
+
+        fn verify(data: &CandyGuardData) -> Result<()> {
+            let mut ids = HashSet::new();
+
+            if let Some(asset_mint_limit) = &data.default.asset_mint_limit {
+                ids.insert(asset_mint_limit.id);
+            }
+
+            if let Some(groups) = &data.groups {
+                for group in groups {
+                    if let Some(asset_mint_limit) = &group.guards.asset_mint_limit {
+                        if ids.contains(&asset_mint_limit.id) {
+                            return err!(CandyGuardError::DuplicatedMintLimitId);
+                        }
+
+                        ids.insert(asset_mint_limit.id);
+                    }
+                }
+            }
+
+            Ok(())
+        }
+    }
+    impl Guard for Edition {
+        fn size() -> usize {
+            4 // edition_start_offset
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::Edition)
+        }
+    }
+    impl Guard for StartDate {
+        fn size() -> usize {
+            8 // date
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::StartDate)
+        }
+    }
+    impl Guard for NftPayment {
+        fn size() -> usize {
+            32   // required_collection
+            + 32 // destination
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::NftPayment)
+        }
+    }
+    impl Guard for EndDate {
+        fn size() -> usize {
+            8 // date
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::EndDate)
+        }
+    }
+    impl Guard for NftBurn {
+        fn size() -> usize {
+            32 // required_collection
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::NftBurn)
+        }
+    }
+    impl Guard for SolPayment {
+        fn size() -> usize {
+            8    // lamports
+            + 32 // destination
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::SolPayment)
+        }
+    }
+    impl Guard for NftMintLimit {
+        fn size() -> usize {
+            1    // id
+            + 2  // limit
+            + 32 // required_collection
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::NftMintLimit)
+        }
+
+        fn verify(data: &CandyGuardData) -> Result<()> {
+            let mut ids = HashSet::new();
+
+            if let Some(nft_mint_limit) = &data.default.nft_mint_limit {
+                ids.insert(nft_mint_limit.id);
+            }
+
+            if let Some(groups) = &data.groups {
+                for group in groups {
+                    if let Some(nft_mint_limit) = &group.guards.nft_mint_limit {
+                        if ids.contains(&nft_mint_limit.id) {
+                            return err!(CandyGuardError::DuplicatedMintLimitId);
+                        }
+
+                        ids.insert(nft_mint_limit.id);
+                    }
+                }
+            }
+
+            Ok(())
+        }
+    }
+    impl Guard for SolFixedFee {
+        fn size() -> usize {
+            8    // lamports
+            + 32 // fee destination
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::SolFixedFee)
+        }
+    }
+    impl Guard for MintLimit {
+        fn size() -> usize {
+            1   // id
+            + 2 // limit
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::MintLimit)
+        }
+
+        fn verify(data: &CandyGuardData) -> Result<()> {
+            let mut ids = HashSet::new();
+
+            if let Some(mint_limit) = &data.default.mint_limit {
+                ids.insert(mint_limit.id);
+            }
+
+            if let Some(groups) = &data.groups {
+                for group in groups {
+                    if let Some(mint_limit) = &group.guards.mint_limit {
+                        if ids.contains(&mint_limit.id) {
+                            return err!(CandyGuardError::DuplicatedMintLimitId);
+                        }
+
+                        ids.insert(mint_limit.id);
+                    }
+                }
+            }
+
+            Ok(())
+        }
+    }
+    impl Guard for FreezeSolPayment {
+        fn size() -> usize {
+            8    // lamports
+            + 32 // destination
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::FreezeSolPayment)
+        }
+    }
+    impl Guard for NftGate {
+        fn size() -> usize {
+            32 // required_collection
+        }
+
+        fn mask() -> u64 {
+            GuardType::as_mask(GuardType::NftGate)
+        }
+    }
+
     use super::*;
     #[doc = " Guard that restricts access to a specific address."]
     #[derive(Debug, Default, AnchorSerialize, AnchorDeserialize, Clone, Copy)]
@@ -2131,6 +2548,20 @@ impl CandyGuardData {
 
         Ok(())
     }
+
+    pub fn size(&self) -> usize {
+        let mut size = self.default.size();
+        size += 4; // u32 (number of groups)
+
+        if let Some(groups) = &self.groups {
+            size += groups
+                .iter()
+                .map(|group| MAX_LABEL_SIZE + group.guards.size())
+                .sum::<usize>();
+        }
+
+        size
+    }
 }
 
 pub mod errors {
@@ -2140,107 +2571,223 @@ pub mod errors {
     pub enum CandyGuardError {
         #[msg("Could not save guard to account")]
         InvalidAccountSize,
+
         #[msg("Could not deserialize guard")]
         DeserializationError,
+
         #[msg("Public key mismatch")]
         PublicKeyMismatch,
+
         #[msg("Exceeded account increase limit")]
         DataIncrementLimitExceeded,
+
         #[msg("Account does not have correct owner")]
         IncorrectOwner,
+
         #[msg("Account is not initialized")]
         Uninitialized,
+
         #[msg("Missing expected remaining account")]
         MissingRemainingAccount,
+
         #[msg("Numerical overflow error")]
         NumericalOverflowError,
+
         #[msg("Missing required group label")]
         RequiredGroupLabelNotFound,
+
         #[msg("Group not found")]
         GroupNotFound,
+
         #[msg("Value exceeded maximum length")]
         ExceededLength,
+
         #[msg("Candy machine is empty")]
         CandyMachineEmpty,
+
         #[msg("No instruction was found")]
         InstructionNotFound,
+
         #[msg("Collection public key mismatch")]
         CollectionKeyMismatch,
+
         #[msg("Missing collection accounts")]
         MissingCollectionAccounts,
+
         #[msg("Collection update authority public key mismatch")]
         CollectionUpdateAuthorityKeyMismatch,
+
         #[msg("Mint must be the last instructions of the transaction")]
         MintNotLastTransaction,
+
         #[msg("Mint is not live")]
         MintNotLive,
+
         #[msg("Not enough SOL to pay for the mint")]
         NotEnoughSOL,
+
         #[msg("Token burn failed")]
         TokenBurnFailed,
+
         #[msg("Not enough tokens on the account")]
         NotEnoughTokens,
+
         #[msg("Token transfer failed")]
         TokenTransferFailed,
+
         #[msg("A signature was required but not found")]
         MissingRequiredSignature,
+
         #[msg("Gateway token is not valid")]
         GatewayTokenInvalid,
+
         #[msg("Current time is after the set end date")]
         AfterEndDate,
+
         #[msg("Current time is not within the allowed mint time")]
         InvalidMintTime,
+
         #[msg("Address not found on the allowed list")]
         AddressNotFoundInAllowedList,
+
         #[msg("Missing allowed list proof")]
         MissingAllowedListProof,
+
         #[msg("Allow list guard is not enabled")]
         AllowedListNotEnabled,
+
         #[msg("The maximum number of allowed mints was reached")]
         AllowedMintLimitReached,
+
         #[msg("Invalid NFT collection")]
         InvalidNftCollection,
+
         #[msg("Missing NFT on the account")]
         MissingNft,
+
         #[msg("Current redemeed items is at the set maximum amount")]
         MaximumRedeemedAmount,
+
         #[msg("Address not authorized")]
         AddressNotAuthorized,
+
         #[msg("Missing freeze instruction data")]
         MissingFreezeInstruction,
+
         #[msg("Freeze guard must be enabled")]
         FreezeGuardNotEnabled,
+
         #[msg("Freeze must be initialized")]
         FreezeNotInitialized,
+
         #[msg("Missing freeze period")]
         MissingFreezePeriod,
+
         #[msg("The freeze escrow account already exists")]
         FreezeEscrowAlreadyExists,
+
         #[msg("Maximum freeze period exceeded")]
         ExceededMaximumFreezePeriod,
+
         #[msg("Thaw is not enabled")]
         ThawNotEnabled,
+
         #[msg("Unlock is not enabled (not all NFTs are thawed)")]
         UnlockNotEnabled,
+
         #[msg("Duplicated group label")]
         DuplicatedGroupLabel,
+
         #[msg("Duplicated mint limit id")]
         DuplicatedMintLimitId,
+
         #[msg("An unauthorized program was found in the transaction")]
         UnauthorizedProgramFound,
+
         #[msg("Exceeded the maximum number of programs in the additional list")]
         ExceededProgramListSize,
+
         #[msg("Allocation PDA not initialized")]
         AllocationNotInitialized,
+
         #[msg("Allocation limit was reached")]
         AllocationLimitReached,
+
         #[msg("Allocation guard must be enabled")]
         AllocationGuardNotEnabled,
+
         #[msg("Candy machine has an invalid mint authority")]
         InvalidMintAuthority,
+
         #[msg("Instruction could not be created")]
         InstructionBuilderFailed,
+
         #[msg("Invalid account version")]
         InvalidAccountVersion,
+
+        #[msg("Exceeded the maximum length of a regex that can be used")]
+        ExceededRegexLength,
+
+        #[msg("Invalid vanity address")]
+        InvalidVanityAddress,
+
+        #[msg("Invalid regex")]
+        InvalidRegex,
+    }
+}
+pub trait Guard: AnchorSerialize + AnchorDeserialize {
+    /// Returns the number of bytes used by the guard configuration.
+    fn size() -> usize;
+
+    /// Returns the feature mask for the guard.
+    fn mask() -> u64;
+
+    /// Returns whether the guards is enabled or not on the specified features.
+    fn is_enabled(features: u64) -> bool {
+        features & Self::mask() > 0
+    }
+
+    /// Enables the guard on the specified `features` value.
+    fn enable(features: u64) -> u64 {
+        features | Self::mask()
+    }
+
+    /// Disables the guard on the specified `features` value.
+    fn disable(features: u64) -> u64 {
+        features & !Self::mask()
+    }
+
+    /// Serializes the guard into the specified data array.
+    fn save(&self, data: &mut [u8], offset: usize) -> Result<()> {
+        let mut result = Vec::with_capacity(Self::size());
+        self.serialize(&mut result)?;
+
+        data[offset..(result.len() + offset)].copy_from_slice(&result[..]);
+
+        Ok(())
+    }
+
+    /// Deserializes the guard from a slice of data. Only attempts the deserialization
+    /// if the data slice is large enough.
+    fn load(data: &[u8], offset: usize) -> Result<Option<Self>> {
+        if offset <= data.len() {
+            let mut slice = &data[offset - Self::size()..offset];
+            let guard = Self::deserialize(&mut slice)?;
+            Ok(Some(guard))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Verifies that the candy guard configuration is valid according to the rules
+    /// of the guard.
+    fn verify(_data: &CandyGuardData) -> Result<()> {
+        Ok(())
+    }
+}
+
+impl GuardType {
+    pub fn as_mask(guard_type: GuardType) -> u64 {
+        0b1u64 << (guard_type as u8)
     }
 }
