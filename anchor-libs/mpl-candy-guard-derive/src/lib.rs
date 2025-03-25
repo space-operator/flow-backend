@@ -107,19 +107,19 @@ pub fn derive(input: TokenStream) -> TokenStream {
         quote! { #name }
     });
 
-    let enabled = fields.iter().map(|f| {
-        let name = &f.ident;
+    // let enabled = fields.iter().map(|f| {
+    //     let name = &f.ident;
 
-        if is_option_t(&f.ty) {
-            quote! {
-                if let Some(#name) = &self.#name {
-                    conditions.push(#name);
-                }
-            }
-        } else {
-            quote! {}
-        }
-    });
+    //     if is_option_t(&f.ty) {
+    //         quote! {
+    //             if let Some(#name) = &self.#name {
+    //                 conditions.push(#name);
+    //             }
+    //         }
+    //     } else {
+    //         quote! {}
+    //     }
+    // });
 
     let struct_size = fields.iter().map(|f| {
         let name = &f.ident;
@@ -218,13 +218,13 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 #(#merge_data)*
             }
 
-            pub fn enabled_conditions(&self) -> Vec<&dyn Condition> {
-                // list of condition trait objects
-                let mut conditions: Vec<&dyn Condition> = vec![];
-                #(#enabled)*
+            // pub fn enabled_conditions(&self) -> Vec<&dyn Condition> {
+            //     // list of condition trait objects
+            //     let mut conditions: Vec<&dyn Condition> = vec![];
+            //     #(#enabled)*
 
-                conditions
-            }
+            //     conditions
+            // }
 
             pub fn size(&self) -> usize {
                 let mut size = 8; // features (u64)
