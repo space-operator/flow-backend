@@ -17,6 +17,7 @@ utils = { workspace = true }
 cmds-pdg = { workspace = true }
 cmds-std = { workspace = true }
 cmds-solana = { workspace = true }
+rhai-script = { workspace = true }
 
 actix = "0.13"
 actix-web = "4"
@@ -49,17 +50,21 @@ anyhow = "1"
 tokio-util = "0.7"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-solana-sdk = { version = "2", default-features = false }
-solana-client = "2"
 either = { version = "1.9", features = ["serde"] }
 regex = "1.8.3"
 once_cell = "1.17.2"
-rhai-script.workspace = true
 tracing-log = "0.2.0"
 url = { version = "2.5.0", features = ["serde"] }
 async-trait = "0.1.80"
 five8 = { version = "0.2.1", features = ["std"] }
 getset = "0.1.3"
+
+
+solana-pubkey = "2"
+solana-keypair = "2"
+solana-signer = "2"
+solana-signature = "2"
+solana-client = { version = "2", default-features = false }
 
 [dev-dependencies]
 criterion = "0.5"
