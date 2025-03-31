@@ -61,4 +61,4 @@ jobs:
         env:
           APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
           KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
-        run: cargo run --bin integration-tests --quiet -- --ecr-login
+        run: cargo run --bin integration-tests --quiet

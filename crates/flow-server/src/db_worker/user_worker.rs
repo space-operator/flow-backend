@@ -34,7 +34,7 @@ use flow_lib::{
 use futures_channel::{mpsc, oneshot};
 use futures_util::{future::BoxFuture, TryFutureExt};
 use hashbrown::HashMap;
-use solana_sdk::signature::Signature;
+use solana_signature::Signature;
 use std::future::{ready, Future};
 use thiserror::Error as ThisError;
 use utils::{actix_service::ActixService, address_book::ManagableActor};

@@ -1,18 +1,15 @@
 [workspace]
-members = ["lib/*", "crates/*"]
-exclude = ["crates/space-wasm/tests", "lib/space-operator-cli"]
+members = ["lib/*", "crates/*", "anchor-libs/*"]
+exclude = [
+    "crates/space-wasm/tests",
+    "lib/space-operator-cli",
+    "vendor/mpl-bubblegum",
+    "vendor/mpl-core-candy-guard",
+]
 resolver = "2"
 
 [patch.crates-io]
 rhai = { git = "https://github.com/space-operator/rhai", rev = "b39d2bfb" }
-# fix zeroize and subtle dep conflict
-aes-gcm-siv = { git = "https://github.com/RustCrypto/AEADs", rev = "555ae1d82d000f01899498f969e6dc1d0a4fe467" }
-curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", rev = "8274d5cbb6fc3f38cdc742b4798173895cd2a290" }
-# branch: update-deps
-mpl-candy-machine-core = { git = "https://github.com/space-operator/mpl-candy-machine", rev = "6096215a779702fb7954103e0d3199d89e120e6f" }
-mpl-candy-guard = { git = "https://github.com/space-operator/mpl-candy-machine", rev = "6096215a779702fb7954103e0d3199d89e120e6f" }
-mpl-core-candy-machine-core = { git = "https://github.com/space-operator/mpl-core-candy-machine", rev = "e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226" }
-mpl-core-candy-guard = { git = "https://github.com/space-operator/mpl-core-candy-machine", rev = "e5f4d6c60e6d556ef4a3d18f4518d76ac2c01226" }
 
 [profile.dev]
 debug = 0
@@ -45,6 +42,9 @@ rhai-script = { path = "crates/rhai-script", version = "0.0.0" }
 srpc = { path = "crates/srpc", version = "0.0.0" }
 command-rpc = { path = "crates/command-rpc", version = "0.0.0" }
 cmds-deno = { path = "crates/cmds-deno", version = "0.0.0" }
+anchor-libs = { path = "crates/anchor-libs", version = "0.0.0" }
+mpl-core-candy-machine-core = { path = "anchor-libs/mpl-core-candy-machine-core", version = "0.0.0" }
+mpl-core-candy-guard = { path = "anchor-libs/mpl-core-candy-guard", version = "0.0.0" }
 
 # lib/
 value = { path = "lib/flow-value", version = "0.1.0", package = "flow-value" }

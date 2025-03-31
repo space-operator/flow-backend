@@ -1,8 +1,8 @@
 use super::{CollectionDetails, NftDataV2};
 use crate::prelude::*;
 use mpl_token_metadata::accounts::Metadata;
+use solana_program::pubkey::Pubkey;
 use solana_program::system_program;
-use solana_sdk::pubkey::Pubkey;
 
 // Command Name
 const NAME: &str = "create_metadata_account";

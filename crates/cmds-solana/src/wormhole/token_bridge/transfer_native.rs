@@ -3,7 +3,7 @@ use crate::prelude::*;
 use borsh::BorshSerialize;
 use rand::Rng;
 use solana_program::instruction::AccountMeta;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 use super::{
     eth::hex_to_address, get_sequence_number_from_message, TokenBridgeInstructions,

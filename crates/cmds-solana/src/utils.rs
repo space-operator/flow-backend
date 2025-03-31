@@ -4,12 +4,17 @@ use rust_decimal::{
     prelude::{MathematicalOps, ToPrimitive},
     Decimal,
 };
+use solana_presigner::Presigner;
 use solana_program::{
     hash::Hash, instruction::Instruction, message::Message, native_token::LAMPORTS_PER_SOL,
 };
-use solana_sdk::{signature::Presigner, transaction::Transaction};
+use solana_transaction::Transaction;
 use std::time::Duration;
 use value::Error as ValueError;
+
+pub const fn pod_get_packed_len<T: bytemuck::Pod>() -> usize {
+    std::mem::size_of::<T>()
+}
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(60 * 5);
 

@@ -1,8 +1,9 @@
 #![allow(clippy::too_many_arguments)]
 
 use flow_lib::solana::Pubkey;
-use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_sdk::{commitment_config::CommitmentConfig, program_pack::Pack};
+use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+use solana_commitment_config::CommitmentConfig;
+use solana_program::program_pack::Pack;
 use tracing::info;
 
 pub mod error;
@@ -28,7 +29,7 @@ pub mod wormhole;
 // pub mod xnft;
 pub mod das;
 pub mod governance;
-pub mod jupiter;
+// pub mod jupiter;
 pub mod memo;
 pub mod pyth_price;
 pub mod record;
@@ -42,14 +43,16 @@ pub use flow_lib::solana::WalletOrPubkey;
 
 pub mod prelude {
     pub use crate::utils::{execute, submit_transaction, try_sign_wallet};
+    pub use anchor_libs::{candy_guard, candy_machine_core, spl_account_compression};
     pub use async_trait::async_trait;
     pub use flow_lib::{
         command::prelude::*,
         solana::{Instructions, KeypairExt, Wallet},
         CmdInputDescription as CmdInput, CmdOutputDescription as CmdOutput, SolanaNet,
     };
-    pub use solana_client::nonblocking::rpc_client::RpcClient;
-    pub use solana_sdk::{instruction::Instruction, signer::Signer};
+    pub use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+    pub use solana_program::instruction::Instruction;
+    pub use solana_signer::Signer;
     pub use std::sync::Arc;
     pub use value::HashMap;
 }

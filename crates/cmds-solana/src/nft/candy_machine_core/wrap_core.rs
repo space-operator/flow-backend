@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_program::instruction::Instruction;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 // Command Name
 const NAME: &str = "wrap_core";
@@ -42,7 +42,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     static CANDY_GUARD_PROGRAM_ID: Pubkey = mpl_core_candy_guard::ID;
     static CANDY_MACHINE_PROGRAM_ID: Pubkey = mpl_core_candy_machine_core::ID;
 
-    let accounts = mpl_core_candy_guard::accounts::Wrap {
+    let accounts = mpl_core_candy_guard::client::accounts::Wrap {
         authority: input.candy_guard_authority.pubkey(),
         candy_machine: input.candy_machine,
         candy_machine_program: CANDY_MACHINE_PROGRAM_ID,
@@ -51,7 +51,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     }
     .to_account_metas(None);
 
-    let data = mpl_core_candy_guard::instruction::Wrap {}.data();
+    let data = mpl_core_candy_guard::client::args::Wrap {}.data();
 
     let ins = Instructions {
         lookup_tables: None,

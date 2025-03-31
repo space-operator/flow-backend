@@ -5,7 +5,7 @@ use super::{
 use crate::prelude::*;
 use mpl_bubblegum::instructions::TransferBuilder;
 use solana_program::instruction::AccountMeta;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 use std::str::FromStr;
 
 // Command Name

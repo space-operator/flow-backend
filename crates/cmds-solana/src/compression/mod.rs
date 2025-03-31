@@ -6,16 +6,15 @@ use mpl_bubblegum::types::LeafSchema;
 use mpl_bubblegum::types::{MetadataArgs, UpdateArgs};
 use mpl_bubblegum::LeafSchemaEvent;
 use serde::{Deserialize, Serialize};
-use solana_client::rpc_config::RpcTransactionConfig;
+use solana_rpc_client_api::config::RpcTransactionConfig;
+use solana_commitment_config::CommitmentConfig;
 use solana_program::pubkey::Pubkey;
-use solana_sdk::commitment_config::CommitmentConfig;
 use solana_transaction_status::UiParsedInstruction;
 use solana_transaction_status::{
     option_serializer::OptionSerializer, UiInstruction, UiTransactionEncoding,
 };
-use spl_account_compression::{
-    events::{ApplicationDataEvent, ApplicationDataEventV1},
-    AccountCompressionEvent,
+use spl_account_compression::types::{
+    AccountCompressionEvent, ApplicationDataEvent, ApplicationDataEventV1,
 };
 use std::str::FromStr;
 use tracing::info;

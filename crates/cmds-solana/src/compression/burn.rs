@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use mpl_bubblegum::instructions::BurnBuilder;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 use std::str::FromStr;
 
 use super::{

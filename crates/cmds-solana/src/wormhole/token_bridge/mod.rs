@@ -6,8 +6,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use byteorder::{ByteOrder, LittleEndian};
 use flow_lib::Context;
 use serde::{Deserialize, Serialize};
+use solana_commitment_config::CommitmentConfig;
 use solana_program::pubkey::Pubkey;
-use solana_sdk::commitment_config::CommitmentConfig;
 use tracing::info;
 use wormhole_sdk::Amount;
 

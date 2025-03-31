@@ -325,8 +325,11 @@ impl Uploader {
             .parse::<Pubkey>()
             .map_err(crate::Error::custom)?;
 
-        let instruction =
-            solana_sdk::system_instruction::transfer(&self.fee_payer.pubkey(), &recipient, amount);
+        let instruction = solana_program::system_instruction::transfer(
+            &self.fee_payer.pubkey(),
+            &recipient,
+            amount,
+        );
         let (mut tx, recent_blockhash) =
             execute(&self.client, &self.fee_payer.pubkey(), &[instruction]).await?;
 

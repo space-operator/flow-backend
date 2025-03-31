@@ -48,7 +48,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_valid() {
-        let pubkey = solana_sdk::pubkey!("DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY");
+        let pubkey = solana_program::pubkey!("DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY");
         let amount: u64 = 1_500_000_000;
 
         let result = run(Context::default(), Input { amount, pubkey }).await;

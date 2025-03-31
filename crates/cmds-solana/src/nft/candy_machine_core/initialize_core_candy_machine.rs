@@ -1,10 +1,9 @@
 use super::CandyMachineData as CandyMachineDataAlias;
 use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
+use mpl_core_candy_machine_core::{constants::HIDDEN_SECTION, types::CandyMachineData};
+use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::Instruction, system_instruction, system_program};
-use solana_sdk::pubkey::Pubkey;
-
-use mpl_core_candy_machine_core::{instruction::Initialize, CandyMachineData};
 
 const NAME: &str = "initialize_candy_machine_core";
 
@@ -43,8 +42,28 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
+pub fn get_config_line_size(data: &CandyMachineData) -> usize {
+    if let Some(config_line) = &data.config_line_settings {
+        (config_line.name_length + config_line.uri_length) as usize
+    } else {
+        0
+    }
+}
+
+pub fn get_space_for_candy(data: &CandyMachineData) -> usize {
+    if data.hidden_settings.is_some() {
+        HIDDEN_SECTION
+    } else {
+        HIDDEN_SECTION
+            + 4
+            + (data.items_available as usize) * get_config_line_size(data)
+            + (data.items_available / 8 + 1) as usize
+            + (data.items_available as usize) * 4
+    }
+}
+
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let candy_machine_program = mpl_core_candy_machine_core::id();
+    let candy_machine_program = mpl_core_candy_machine_core::ID;
     let mpl_core_program = mpl_core::ID;
     let candy_pubkey = input.candy_machine.pubkey();
 
@@ -54,7 +73,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let candy_machine_data: CandyMachineData = input.candy_machine_data.into();
 
-    let accounts = mpl_core_candy_machine_core::accounts::Initialize {
+    let accounts = mpl_core_candy_machine_core::client::accounts::Initialize {
         candy_machine: candy_pubkey,
         authority_pda,
         authority: input.authority,
@@ -67,13 +86,13 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     }
     .to_account_metas(None);
 
-    let data = Initialize {
+    let data = mpl_core_candy_machine_core::client::args::Initialize {
         data: candy_machine_data.clone(),
     }
     .data();
 
     // TODO check size
-    let candy_account_size = candy_machine_data.get_space_for_candy().unwrap_or(216);
+    let candy_account_size = get_space_for_candy(&candy_machine_data);
 
     let lamports = ctx
         .solana_client

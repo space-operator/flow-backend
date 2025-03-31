@@ -546,8 +546,11 @@ async fn copy_in(tx: &Transaction<'_>, table: &str, df: &mut DataFrame) -> crate
         let mut header = df
             .get_columns()
             .iter()
-            .map(|c| format!("{:?},", c.name()))
-            .collect::<String>();
+            .fold(String::new(), |mut result, c| {
+                use std::fmt::Write;
+                write!(&mut result, "{:?},", c.name()).unwrap();
+                result
+            });
         header.pop();
         header
     };

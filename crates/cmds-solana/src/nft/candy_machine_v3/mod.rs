@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 pub mod add_config_lines;
 pub mod initialize;

@@ -17,11 +17,9 @@ use crate::{
 use bytes::Bytes;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use solana_client::nonblocking::rpc_client::RpcClient as SolanaClient;
-use solana_sdk::{
-    commitment_config::{CommitmentConfig, CommitmentLevel},
-    pubkey::Pubkey,
-};
+use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
+use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
+use solana_pubkey::Pubkey;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
 use tower::{Service, ServiceExt};
 
@@ -139,13 +137,14 @@ pub mod get_jwt {
 
 /// Request Solana signature from external wallets.
 pub mod signer {
-    use crate::{utils::TowerClient, BoxError, FlowRunId};
+    use crate::{
+        solana::{Pubkey, SdkPresigner, Signature},
+        utils::TowerClient,
+        BoxError, FlowRunId,
+    };
     use chrono::{DateTime, Utc};
     use serde::{Deserialize, Serialize};
     use serde_with::{base64::Base64, serde_as, DisplayFromStr, DurationSecondsWithFrac};
-    use solana_sdk::{
-        pubkey::Pubkey, signature::Signature, signer::presigner::Presigner as SdkPresigner,
-    };
     use std::time::Duration;
     use thiserror::Error as ThisError;
 
@@ -226,11 +225,12 @@ pub mod execute {
     use futures::channel::oneshot::Canceled;
     use serde::{Deserialize, Serialize};
     use serde_with::{base64::Base64, serde_as, DisplayFromStr};
-    use solana_client::client_error::ClientError;
-    use solana_sdk::{
+    use solana_rpc_client_api::client_error::Error as ClientError;
+    use solana_program::{
         instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
-        signature::Signature, signer::SignerError,
     };
+    use solana_signature::Signature;
+    use solana_signer::SignerError;
     use std::sync::Arc;
     use thiserror::Error as ThisError;
 

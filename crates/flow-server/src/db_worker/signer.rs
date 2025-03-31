@@ -7,7 +7,10 @@ use flow_lib::{
 use futures_util::FutureExt;
 use hashbrown::{hash_map::Entry, HashMap};
 use serde_json::Value as JsonValue;
-use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
+use solana_keypair::Keypair;
+use solana_pubkey::Pubkey;
+use solana_signer::Signer;
+
 use std::future::ready;
 use thiserror::Error as ThisError;
 

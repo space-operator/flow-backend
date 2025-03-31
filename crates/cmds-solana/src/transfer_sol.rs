@@ -37,8 +37,11 @@ pub struct Output {
 async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let amount = sol_to_lamports(input.amount)?;
 
-    let instruction =
-        solana_sdk::system_instruction::transfer(&input.sender.pubkey(), &input.recipient, amount);
+    let instruction = solana_program::system_instruction::transfer(
+        &input.sender.pubkey(),
+        &input.recipient,
+        amount,
+    );
 
     let sender_pubkey = input.sender.pubkey();
     let mut signers = vec![input.sender];
@@ -80,7 +83,7 @@ mod tests {
         let ctx = Context::default();
 
         let sender: Wallet = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").into();
-        let recipient = solana_sdk::pubkey!("GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9");
+        let recipient = solana_program::pubkey!("GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9");
 
         let balance = ctx
             .solana_client

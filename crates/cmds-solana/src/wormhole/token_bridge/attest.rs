@@ -2,8 +2,8 @@ use crate::prelude::*;
 
 use borsh::BorshSerialize;
 use rand::Rng;
+use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
-use solana_sdk::pubkey::Pubkey;
 
 use super::{get_sequence_number_from_message, AttestTokenData, TokenBridgeInstructions};
 

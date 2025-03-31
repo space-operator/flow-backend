@@ -1,5 +1,5 @@
 use crate::with::AsPubkey;
-use solana_sdk::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 type Target = Pubkey;
 
@@ -41,9 +41,9 @@ where
 mod tests {
     use super::*;
     use crate::Value;
-    use solana_sdk::pubkey::Pubkey;
-    use solana_sdk::signature::Signer;
-    use solana_sdk::signer::keypair::Keypair;
+    use solana_keypair::Keypair;
+    use solana_pubkey::Pubkey;
+    use solana_signer::Signer;
 
     fn de<'de, D: serde::Deserializer<'de>>(d: D) -> Pubkey {
         deserialize(d).unwrap()
@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn test_deserialize_value() {
-        let id = solana_sdk::feature_set::add_set_compute_unit_price_ix::id();
+        let id = solana_pubkey::new_rand();
         assert_eq!(de(Value::String(id.to_string())), id);
         assert_eq!(de(Value::B32(id.to_bytes())), id);
 
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn test_serialize() {
-        let id = solana_sdk::feature_set::add_set_compute_unit_price_ix::id();
+        let id = solana_pubkey::new_rand();
         assert_eq!(
             serialize(&id, crate::ser::Serializer).unwrap(),
             Value::B32(id.to_bytes())

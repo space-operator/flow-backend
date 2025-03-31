@@ -12,9 +12,10 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 # Step 2: Cache project dependencies
 FROM rustc AS cacher
+COPY vendor vendor
 ARG PROFILE=release
 COPY --from=planner /build/recipe.json recipe.json
-RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json --bin flow-server 2>/dev/null
+RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json --bin flow-server
 
 # Step 3: Build the binary
 FROM rustc AS builder

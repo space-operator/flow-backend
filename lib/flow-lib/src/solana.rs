@@ -7,20 +7,18 @@ use borsh1::BorshDeserialize;
 use bytes::Bytes;
 use chrono::Utc;
 use futures::{future::Either, FutureExt, TryStreamExt};
-use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv, DisplayFromStr};
-use solana_client::{nonblocking::rpc_client::RpcClient, rpc_config::RpcSendTransactionConfig};
-use solana_sdk::{
-    commitment_config::{CommitmentConfig, CommitmentLevel},
-    compute_budget::{self, ComputeBudgetInstruction},
+use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
+use solana_compute_budget_interface::ComputeBudgetInstruction;
+use solana_program::{
     instruction::{AccountMeta, Instruction},
     message::{v0, VersionedMessage},
-    signature::Presigner as SdkPresigner,
-    signer::{Signer, SignerError},
-    signers::Signers,
-    transaction::{Transaction, VersionedTransaction},
 };
+use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+use solana_rpc_client_api::config::RpcSendTransactionConfig;
+use solana_signer::{signers::Signers, Signer, SignerError};
+use solana_transaction::{versioned::VersionedTransaction, Transaction};
 use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
 };
@@ -31,6 +29,7 @@ use std::{
     fmt::Display,
     num::ParseIntError,
     str::FromStr,
+    sync::LazyLock,
     time::Duration,
 };
 use tower::ServiceExt;
@@ -41,9 +40,10 @@ use value::{
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
-pub use solana_sdk::pubkey::Pubkey;
-pub use solana_sdk::signature::Signature;
-pub use solana_sdk::signer::keypair::Keypair;
+pub use solana_keypair::Keypair;
+pub use solana_presigner::Presigner as SdkPresigner;
+pub use solana_pubkey::Pubkey;
+pub use solana_signature::Signature;
 
 pub mod utils;
 pub use utils::*;
@@ -52,14 +52,12 @@ pub mod watcher;
 pub use watcher::*;
 
 pub mod spl_memo {
-    use solana_sdk::{pubkey, pubkey::Pubkey};
-
-    pub const ID: Pubkey = pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+    pub const ID: solana_pubkey::Pubkey =
+        solana_pubkey::pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 
     pub mod v1 {
-        use solana_sdk::{pubkey, pubkey::Pubkey};
-
-        pub const ID: Pubkey = pubkey!("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo");
+        pub const ID: solana_pubkey::Pubkey =
+            solana_pubkey::pubkey!("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo");
     }
 }
 
@@ -218,8 +216,7 @@ impl KeypairExt for Keypair {
     fn from_str(s: &str) -> Result<Self, anyhow::Error> {
         let mut buf = [0u8; 64];
         five8::decode_64(s, &mut buf)?;
-        ed25519_dalek::SigningKey::from_keypair_bytes(&buf)?;
-        Ok(Keypair::from_bytes(&buf).unwrap())
+        Ok(Keypair::from_bytes(&buf)?)
     }
 
     fn clone_keypair(&self) -> Self {
@@ -294,7 +291,7 @@ pub struct Instructions {
 }
 
 fn is_set_compute_unit_limit(ix: &Instruction) -> Option<()> {
-    if compute_budget::check_id(&ix.program_id) {
+    if solana_compute_budget_interface::check_id(&ix.program_id) {
         let data = ComputeBudgetInstruction::try_from_slice(&ix.data)
             .map_err(|error| tracing::error!("could not decode instruction: {}", error))
             .ok()?;
@@ -305,7 +302,7 @@ fn is_set_compute_unit_limit(ix: &Instruction) -> Option<()> {
 }
 
 fn is_set_compute_unit_price(ix: &Instruction) -> Option<()> {
-    if compute_budget::check_id(&ix.program_id) {
+    if solana_compute_budget_interface::check_id(&ix.program_id) {
         let data = ComputeBudgetInstruction::try_from_slice(&ix.data)
             .map_err(|error| tracing::error!("could not decode instruction: {}", error))
             .ok()?;
@@ -316,7 +313,7 @@ fn is_set_compute_unit_price(ix: &Instruction) -> Option<()> {
 }
 
 async fn get_priority_fee(accounts: &BTreeSet<Pubkey>) -> Result<u64, anyhow::Error> {
-    static HTTP: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
+    static HTTP: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
     if let Ok(apikey) = std::env::var("HELIUS_API_KEY") {
         let helius = Helius::new(HTTP.clone(), &apikey);
         // Not available on devnet and testnet
@@ -1163,7 +1160,7 @@ mod tests {
         SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
     // use base64::prelude::*;
-    use solana_sdk::{pubkey, system_instruction::transfer};
+    use solana_program::{pubkey, system_instruction::transfer};
 
     #[test]
     fn test_wallet_serde() {

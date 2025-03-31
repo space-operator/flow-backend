@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_program::instruction::Instruction;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 use mpl_candy_machine_core::instruction::AddConfigLines as MPLAddConfigLines;
 

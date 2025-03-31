@@ -31,12 +31,12 @@ pub mod with;
 
 // custom serialize and deserialize modules
 pub mod decimal;
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-keypair")]
 #[deprecated]
 pub mod keypair;
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-pubkey")]
 pub mod pubkey;
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-signature")]
 pub mod signature;
 
 /// Interpret a [`Value`] as an instance of type `T`
@@ -44,8 +44,7 @@ pub mod signature;
 /// # Example
 ///
 /// ```
-/// use solana_sdk::pubkey::Pubkey;
-/// use solana_sdk::pubkey;
+/// use solana_pubkey::{Pubkey, pubkey};
 /// use flow_value::Value;
 ///
 /// #[derive(serde::Deserialize)]
@@ -70,8 +69,7 @@ where
 /// # Example
 ///
 /// ```
-/// use solana_sdk::pubkey::Pubkey;
-/// use solana_sdk::pubkey;
+/// use solana_pubkey::{Pubkey, pubkey};
 /// use flow_value::Value;
 ///
 /// #[derive(serde::Deserialize)]
@@ -96,10 +94,10 @@ where
 /// # Example
 ///
 /// ```
-/// use solana_sdk::signature::Signature;
+/// use solana_signature::Signature;
 /// use flow_value::Value;
 ///
-/// let signature = Signature::new_unique();
+/// let signature = Signature::default();
 /// let value = flow_value::to_value(&flow_value::Bytes(signature.as_ref())).unwrap();
 /// assert_eq!(value, Value::B64(signature.into()));
 /// ```
@@ -607,23 +605,23 @@ impl From<[u8; 64]> for Value {
     }
 }
 
-#[cfg(feature = "solana")]
-impl From<solana_sdk::pubkey::Pubkey> for Value {
-    fn from(x: solana_sdk::pubkey::Pubkey) -> Self {
+#[cfg(feature = "solana-pubkey")]
+impl From<solana_pubkey::Pubkey> for Value {
+    fn from(x: solana_pubkey::Pubkey) -> Self {
         Self::B32(x.to_bytes())
     }
 }
 
-#[cfg(feature = "solana")]
-impl From<solana_sdk::signer::keypair::Keypair> for Value {
-    fn from(x: solana_sdk::signer::keypair::Keypair) -> Self {
+#[cfg(feature = "solana-keypair")]
+impl From<solana_keypair::Keypair> for Value {
+    fn from(x: solana_keypair::Keypair) -> Self {
         Self::B64(x.to_bytes())
     }
 }
 
-#[cfg(feature = "solana")]
-impl From<solana_sdk::signature::Signature> for Value {
-    fn from(x: solana_sdk::signature::Signature) -> Self {
+#[cfg(feature = "solana-signature")]
+impl From<solana_signature::Signature> for Value {
+    fn from(x: solana_signature::Signature) -> Self {
         Self::B64(x.into())
     }
 }
@@ -788,8 +786,8 @@ mod tests {
 
     #[test]
     fn test_solana_instruction() {
-        use solana_sdk::instruction::{AccountMeta, Instruction};
-        use solana_sdk::pubkey;
+        use solana_instruction::{AccountMeta, Instruction};
+        use solana_pubkey::pubkey;
 
         let i = Instruction::new_with_bytes(
             pubkey!("ESxeViFP4r7THzVx9hJDkhj4HrNGSjJSFRPbGaAb97hN"),

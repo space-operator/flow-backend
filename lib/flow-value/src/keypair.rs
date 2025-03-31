@@ -1,5 +1,5 @@
 use crate::with::AsKeypair;
-use solana_sdk::signer::keypair::Keypair;
+use solana_keypair::Keypair;
 
 type Target = Keypair;
 
@@ -41,7 +41,7 @@ where
 mod tests {
     use super::*;
     use crate::Value;
-    use solana_sdk::signer::keypair::Keypair;
+    use solana_keypair::Keypair;
 
     fn de<'de, D: serde::Deserializer<'de>>(d: D) -> Keypair {
         deserialize(d).unwrap()

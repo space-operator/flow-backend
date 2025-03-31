@@ -3,8 +3,8 @@ use crate::wormhole::{PostVAAData, VAA};
 use crate::prelude::*;
 
 use borsh::BorshSerialize;
+use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
-use solana_sdk::pubkey::Pubkey;
 use wormhole_sdk::nft::Message;
 
 use super::{CompleteNativeData, NFTBridgeInstructions, PayloadTransfer};

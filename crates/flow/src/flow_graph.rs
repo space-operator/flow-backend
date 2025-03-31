@@ -32,7 +32,7 @@ use petgraph::{
     visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
     Directed, Direction,
 };
-use solana_sdk::system_instruction::transfer_many;
+use solana_program::system_instruction::transfer_many;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,

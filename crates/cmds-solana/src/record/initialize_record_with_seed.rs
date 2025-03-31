@@ -1,7 +1,7 @@
-use solana_sdk::{instruction::AccountMeta, rent::Rent, system_instruction};
-use spl_pod::bytemuck::pod_get_packed_len;
+use solana_program::{instruction::AccountMeta, rent::Rent, system_instruction};
 
 use crate::prelude::*;
+use crate::utils::pod_get_packed_len;
 
 use super::{record_program_id, RecordData, RecordInstruction};
 

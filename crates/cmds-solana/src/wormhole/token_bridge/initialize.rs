@@ -2,7 +2,7 @@ use super::TokenBridgeInstructions;
 use crate::prelude::*;
 use borsh::BorshSerialize;
 use solana_program::instruction::AccountMeta;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 // Command Name
 const NAME: &str = "initialize_token_bridge";
