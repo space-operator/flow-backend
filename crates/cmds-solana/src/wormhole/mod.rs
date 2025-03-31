@@ -4,7 +4,7 @@ use byteorder::{BigEndian, ReadBytesExt};
 use flow_lib::SolanaNet;
 use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
-use solana_sdk::pubkey;
+use solana_program::pubkey;
 use std::io::{Cursor, Read};
 use wormhole_sdk::{nft::Message as NftMessage, token::Message};
 

@@ -1,4 +1,4 @@
-use solana_sdk::{instruction::AccountMeta, rent::Rent, system_instruction};
+use solana_program::{instruction::AccountMeta, rent::Rent, system_instruction};
 
 use crate::prelude::*;
 use crate::utils::pod_get_packed_len;

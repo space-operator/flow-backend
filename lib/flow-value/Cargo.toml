@@ -3,7 +3,6 @@ name = "flow-value"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
 default = ["solana", "json"]
 solana = ["solana-pubkey", "solana-keypair", "solana-signature"]
@@ -26,14 +25,14 @@ ryu = "1"
 serde_json = { version = "1", optional = true }
 solana-pubkey = { version = "2", optional = true }
 solana-keypair = { version = "2", optional = true }
-solana-signature  = { version = "2", optional = true }
+solana-signature = { version = "2", optional = true }
 serde_with = "3.11.0"
 five8 = { version = "0.2.1", features = ["std"] }
 
 [dev-dependencies]
 rust_decimal_macros = "1.26"
 serde_json = { version = "1", features = ["preserve_order"] }
-solana-pubkey = "2"
+solana-pubkey = { version = "2", features = ["rand"] }
 solana-keypair = "2"
 solana-signature = "2"
 solana-signer = "2"

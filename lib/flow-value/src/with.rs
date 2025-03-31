@@ -402,7 +402,7 @@ pub(crate) mod signature {
 
         #[test]
         fn test_signature() {
-            let sig = Signature::new_unique();
+            let sig = Signature::default();
             let value = AsSignature::serialize_as(&sig, crate::ser::Serializer).unwrap();
             assert!(matches!(value, Value::B64(_)));
             let de_sig = AsSignature::deserialize_as(value).unwrap();

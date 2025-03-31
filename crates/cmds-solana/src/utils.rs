@@ -7,7 +7,7 @@ use rust_decimal::{
 use solana_program::{
     hash::Hash, instruction::Instruction, message::Message, native_token::LAMPORTS_PER_SOL,
 };
-use solana_sdk::{signature::Presigner, transaction::Transaction};
+use solana_program::{signature::Presigner, transaction::Transaction};
 use std::time::Duration;
 use value::Error as ValueError;
 

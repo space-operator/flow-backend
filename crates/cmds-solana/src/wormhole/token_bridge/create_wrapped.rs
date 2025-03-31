@@ -3,7 +3,7 @@ use crate::prelude::*;
 use crate::wormhole::{PostVAAData, VAA};
 use borsh::BorshSerialize;
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 use tracing::info;
 use wormhole_sdk::token::Message;
 

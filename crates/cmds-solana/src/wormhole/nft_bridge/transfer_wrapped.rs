@@ -6,7 +6,7 @@ use borsh::BorshSerialize;
 
 use rand::Rng;
 use solana_program::instruction::AccountMeta;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 use super::{NFTBridgeInstructions, TransferWrappedData};
 

@@ -4,7 +4,7 @@ use crate::{
 };
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_program::{instruction::Instruction, system_instruction, system_program};
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 use mpl_candy_machine_core::{instruction::InitializeV2, CandyMachineData};
 use mpl_token_metadata::{

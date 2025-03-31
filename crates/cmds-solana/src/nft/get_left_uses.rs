@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use async_trait::async_trait;
 use mpl_token_metadata::state::Metadata;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 #[derive(Debug, Clone)]
 pub struct GetLeftUses;

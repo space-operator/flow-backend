@@ -125,7 +125,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 //
 // #[cfg(test)]
 // mod tests {
-//     use solana_sdk::pubkey;
+//     use solana_program::pubkey;
 
 //     use super::*;
 

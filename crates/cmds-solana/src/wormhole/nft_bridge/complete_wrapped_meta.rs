@@ -5,7 +5,7 @@ use crate::prelude::*;
 use borsh::BorshSerialize;
 
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 use tracing::info;
 use wormhole_sdk::nft::Message;
 

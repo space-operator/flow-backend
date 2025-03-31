@@ -5,7 +5,7 @@ use crate::wormhole::token_bridge::{eth::hex_to_address, get_sequence_number_fro
 use borsh::BorshSerialize;
 use rand::Rng;
 use solana_program::instruction::AccountMeta;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 use tracing::info;
 
 // Command Name

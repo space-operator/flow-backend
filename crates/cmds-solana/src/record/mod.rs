@@ -2,9 +2,9 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use bytemuck::Zeroable;
 use flow_lib::SolanaNet;
 use serde::Serialize;
-use solana_sdk::pubkey::Pubkey;
-use solana_sdk::{program_pack::IsInitialized, pubkey};
-use {bytemuck::Pod, solana_sdk::program_error::ProgramError};
+use solana_program::pubkey::Pubkey;
+use solana_program::{program_pack::IsInitialized, pubkey};
+use {bytemuck::Pod, solana_program::program_error::ProgramError};
 
 pub mod initialize_record_with_seed;
 pub mod read_record;

@@ -99,7 +99,7 @@ mod tests {
     use flow_lib::config::client::{Extra, TargetsForm};
     use serde_json::json;
 
-    const PUBKEY: Pubkey = solana_sdk::pubkey!("DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY");
+    const PUBKEY: Pubkey = solana_program::pubkey!("DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY");
     const PUBKEY_STR: &str = "DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY";
 
     #[test]

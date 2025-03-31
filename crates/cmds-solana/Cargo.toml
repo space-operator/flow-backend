@@ -38,7 +38,6 @@ bytemuck_derive = { version = "1.7.0" }
 struct-convert = { git = "https://github.com/juchiast/struct-convert", rev = "83b132915519515e364ce612ef2ac92441dc7bc9" }
 
 # solana libs
-solana-sdk = "=2.2.1"
 solana-client = "=2.2.0"
 solana-program = "=2.2.1"
 solana-account-decoder = "=2.2.0"

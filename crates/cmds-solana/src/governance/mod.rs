@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use solana_sdk::{
+use solana_program::{
     clock::UnixTimestamp,
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,

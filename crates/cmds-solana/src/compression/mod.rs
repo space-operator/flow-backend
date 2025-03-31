@@ -8,7 +8,7 @@ use mpl_bubblegum::LeafSchemaEvent;
 use serde::{Deserialize, Serialize};
 use solana_client::rpc_config::RpcTransactionConfig;
 use solana_program::pubkey::Pubkey;
-use solana_sdk::commitment_config::CommitmentConfig;
+use solana_program::commitment_config::CommitmentConfig;
 use solana_transaction_status::UiParsedInstruction;
 use solana_transaction_status::{
     option_serializer::OptionSerializer, UiInstruction, UiTransactionEncoding,

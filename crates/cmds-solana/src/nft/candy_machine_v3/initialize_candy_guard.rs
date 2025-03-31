@@ -2,7 +2,7 @@ use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_candy_guard::instruction::Initialize;
 use solana_program::{instruction::Instruction, system_program};
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 // Command Name
 const INITIALIZE_CANDY_GUARD: &str = "initialize_candy_guard";

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use solana_sdk::{instruction::AccountMeta, system_program, sysvar};
+use solana_program::{instruction::AccountMeta, system_program, sysvar};
 use tracing::info;
 
 use crate::prelude::*;

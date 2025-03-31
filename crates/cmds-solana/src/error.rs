@@ -13,9 +13,9 @@ pub enum Error {
     #[error("{}", flow_lib::solana::verbose_solana_error(.0))]
     SolanaClient(#[from] Box<solana_client::client_error::ClientError>),
     #[error(transparent)]
-    SolanaProgram(#[from] solana_sdk::program_error::ProgramError),
+    SolanaProgram(#[from] solana_program::program_error::ProgramError),
     #[error(transparent)]
-    Signer(#[from] solana_sdk::signer::SignerError),
+    Signer(#[from] solana_program::signer::SignerError),
     #[error(transparent)]
     Value(#[from] value::Error),
     #[error(transparent)]
@@ -27,9 +27,9 @@ pub enum Error {
     #[error("solana error: associated token account doesn't exist")]
     AssociatedTokenAccountDoesntExist,
     #[error("account {0} not found")]
-    AccountNotFound(solana_sdk::pubkey::Pubkey),
+    AccountNotFound(solana_program::pubkey::Pubkey),
     #[error("Invalid account data for {0}")]
-    InvalidAccountData(solana_sdk::pubkey::Pubkey),
+    InvalidAccountData(solana_program::pubkey::Pubkey),
     #[error("bundlr isn't available on solana testnet")]
     BundlrNotAvailableOnTestnet,
     #[error("bundlr api returned an invalid response: {0}")]
@@ -47,7 +47,7 @@ pub enum Error {
     #[error("solana error: recipient address not funded")]
     RecipientAddressNotFunded,
     #[error("specified account: {0} isn't a token account")]
-    NotTokenAccount(solana_sdk::pubkey::Pubkey),
+    NotTokenAccount(solana_program::pubkey::Pubkey),
     #[error("insufficient solana balance, needed={needed}; have={balance};")]
     InsufficientSolanaBalance { needed: u64, balance: u64 },
     #[error("failed to snapshot mints: {0}")]

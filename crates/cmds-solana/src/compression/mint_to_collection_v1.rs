@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 use bytes::Bytes;
 use mpl_bubblegum::instructions::MintToCollectionV1Builder;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 use tracing::info;
 
 // Command Name

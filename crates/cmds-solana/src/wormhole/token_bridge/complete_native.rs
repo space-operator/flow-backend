@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 use borsh::BorshSerialize;
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 use wormhole_sdk::token::Message;
 
 use super::{CompleteNativeData, PayloadTransfer, TokenBridgeInstructions};

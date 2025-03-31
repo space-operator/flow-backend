@@ -48,14 +48,14 @@ mod tests {
 
     #[test]
     fn test_deserialize_value() {
-        let s = Signature::new_unique();
+        let s = Signature::default();
         assert_eq!(de(Value::B64(s.into())), s);
         assert_eq!(de(Value::String(s.to_string())), s);
     }
 
     #[test]
     fn test_serialize() {
-        let s = Signature::new_unique();
+        let s = Signature::default();
         assert_eq!(
             serialize(&s, crate::ser::Serializer).unwrap(),
             Value::B64(s.into())

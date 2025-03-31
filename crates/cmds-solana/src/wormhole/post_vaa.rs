@@ -2,7 +2,7 @@ use super::{PostVAAData, VAA};
 use crate::{prelude::*, wormhole::WormholeInstructions};
 use borsh::BorshSerialize;
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 // Command Name
 const NAME: &str = "post_vaa";

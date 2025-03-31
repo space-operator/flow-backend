@@ -1,4 +1,4 @@
-use solana_sdk::instruction::AccountMeta;
+use solana_program::instruction::AccountMeta;
 
 use crate::prelude::*;
 

@@ -2,7 +2,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use flow_lib::SolanaNet;
 use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
-use solana_sdk::pubkey;
+use solana_program::pubkey;
 
 pub mod create;
 pub mod withdraw;

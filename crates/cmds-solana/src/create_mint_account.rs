@@ -1,6 +1,6 @@
 use crate::prelude::*;
-use solana_sdk::program_pack::Pack;
-use solana_sdk::system_instruction;
+use solana_program::program_pack::Pack;
+use solana_program::system_instruction;
 use spl_token::state::Mint;
 
 const NAME: &str = "create_mint_account";
