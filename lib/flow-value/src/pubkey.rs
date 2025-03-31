@@ -1,5 +1,5 @@
 use crate::with::AsPubkey;
-use solana_sdk::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 type Target = Pubkey;
 
@@ -41,9 +41,9 @@ where
 mod tests {
     use super::*;
     use crate::Value;
-    use solana_sdk::pubkey::Pubkey;
-    use solana_sdk::signature::Signer;
-    use solana_sdk::signer::keypair::Keypair;
+    use solana_keypair::Keypair;
+    use solana_pubkey::Pubkey;
+    use solana_signer::Signer;
 
     fn de<'de, D: serde::Deserializer<'de>>(d: D) -> Pubkey {
         deserialize(d).unwrap()

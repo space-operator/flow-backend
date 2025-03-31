@@ -9,11 +9,11 @@ use std::{borrow::Cow, convert::Infallible};
 use std::{mem::MaybeUninit, ops::ControlFlow};
 
 pub use decimal::AsDecimal;
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-keypair")]
 pub use keypair::AsKeypair;
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-pubkey")]
 pub use pubkey::AsPubkey;
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-signature")]
 pub use signature::AsSignature;
 
 fn try_from_fn_erased<T: Copy, E>(
@@ -42,13 +42,13 @@ where
     }
 }
 
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-pubkey")]
 pub(crate) mod pubkey {
     use std::marker::PhantomData;
 
     use super::*;
     use five8::BASE58_ENCODED_32_MAX_LEN;
-    use solana_sdk::pubkey::Pubkey;
+    use solana_pubkey::Pubkey;
 
     struct CustomPubkey<'a>(Cow<'a, Pubkey>);
 
@@ -269,7 +269,8 @@ pub(crate) mod pubkey {
         use super::*;
         use crate::Value;
         use serde_with::{DeserializeAs, SerializeAs};
-        use solana_sdk::{signature::Keypair, signer::Signer};
+        use solana_keypair::Keypair;
+        use solana_signer::Signer;
 
         #[test]
         fn test_pubkey() {
@@ -308,10 +309,10 @@ pub(crate) mod pubkey {
     }
 }
 
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-signature")]
 pub(crate) mod signature {
     use super::*;
-    use solana_sdk::signature::Signature;
+    use solana_signature::Signature;
 
     struct CustomSignature<'a>(Cow<'a, Signature>);
 
@@ -397,7 +398,7 @@ pub(crate) mod signature {
         use super::*;
         use crate::Value;
         use serde_with::{DeserializeAs, SerializeAs};
-        use solana_sdk::signature::Signature;
+        use solana_signature::Signature;
 
         #[test]
         fn test_signature() {
@@ -423,10 +424,10 @@ pub(crate) mod signature {
     }
 }
 
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-keypair")]
 pub(crate) mod keypair {
     use super::*;
-    use solana_sdk::signer::keypair::Keypair;
+    use solana_keypair::Keypair;
 
     struct CustomKeypair([u8; 64]);
 

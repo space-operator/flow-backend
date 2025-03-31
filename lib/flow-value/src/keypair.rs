@@ -1,5 +1,5 @@
 use crate::with::AsKeypair;
-use solana_sdk::signer::keypair::Keypair;
+use solana_keypair::Keypair;
 
 type Target = Keypair;
 

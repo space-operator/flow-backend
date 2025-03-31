@@ -31,12 +31,12 @@ pub mod with;
 
 // custom serialize and deserialize modules
 pub mod decimal;
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-keypair")]
 #[deprecated]
 pub mod keypair;
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-pubkey")]
 pub mod pubkey;
-#[cfg(feature = "solana")]
+#[cfg(feature = "solana-signature")]
 pub mod signature;
 
 /// Interpret a [`Value`] as an instance of type `T`
@@ -607,23 +607,23 @@ impl From<[u8; 64]> for Value {
     }
 }
 
-#[cfg(feature = "solana")]
-impl From<solana_sdk::pubkey::Pubkey> for Value {
-    fn from(x: solana_sdk::pubkey::Pubkey) -> Self {
+#[cfg(feature = "solana-pubkey")]
+impl From<solana_pubkey::Pubkey> for Value {
+    fn from(x: solana_pubkey::Pubkey) -> Self {
         Self::B32(x.to_bytes())
     }
 }
 
-#[cfg(feature = "solana")]
-impl From<solana_sdk::signer::keypair::Keypair> for Value {
-    fn from(x: solana_sdk::signer::keypair::Keypair) -> Self {
+#[cfg(feature = "solana-keypair")]
+impl From<solana_keypair::Keypair> for Value {
+    fn from(x: solana_keypair::Keypair) -> Self {
         Self::B64(x.to_bytes())
     }
 }
 
-#[cfg(feature = "solana")]
-impl From<solana_sdk::signature::Signature> for Value {
-    fn from(x: solana_sdk::signature::Signature) -> Self {
+#[cfg(feature = "solana-signature")]
+impl From<solana_signature::Signature> for Value {
+    fn from(x: solana_signature::Signature) -> Self {
         Self::B64(x.into())
     }
 }

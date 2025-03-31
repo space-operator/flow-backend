@@ -1,5 +1,5 @@
 use crate::with::AsSignature;
-use solana_sdk::signature::Signature;
+use solana_signature::Signature;
 
 type Target = Signature;
 

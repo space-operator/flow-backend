@@ -3236,7 +3236,10 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "solana-sdk",
+ "solana-keypair",
+ "solana-pubkey",
+ "solana-signature",
+ "solana-signer",
  "thiserror 1.0.69",
 ]
 

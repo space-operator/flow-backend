@@ -6,7 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
 default = ["solana", "json"]
-solana = ["dep:solana-sdk"]
+solana = ["solana-pubkey", "solana-keypair", "solana-signature"]
+solana-pubkey = ["dep:solana-pubkey"]
+solana-keypair = ["dep:solana-keypair"]
+solana-signature = ["dep:solana-signature"]
 json = ["dep:serde_json"]
 
 [dependencies]
@@ -21,10 +24,16 @@ itoa = "1"
 ryu = "1"
 
 serde_json = { version = "1", optional = true }
-solana-sdk = { version = "2", optional = true }
+solana-pubkey = { version = "2", optional = true }
+solana-keypair = { version = "2", optional = true }
+solana-signature  = { version = "2", optional = true }
 serde_with = "3.11.0"
 five8 = { version = "0.2.1", features = ["std"] }
 
 [dev-dependencies]
 rust_decimal_macros = "1.26"
 serde_json = { version = "1", features = ["preserve_order"] }
+solana-pubkey = "2"
+solana-keypair = "2"
+solana-signature = "2"
+solana-signer = "2"
