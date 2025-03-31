@@ -3104,7 +3104,7 @@ dependencies = [
  "rust_decimal",
  "serde",
  "serde_json",
- "solana-sdk",
+ "solana-program",
  "space-wasm",
  "srpc",
  "tempfile",
