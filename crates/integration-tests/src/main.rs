@@ -29,7 +29,6 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let repo = if compile { "" } else { "public.ecr.aws/" };
     cmd!(sh, "docker compose up --quiet-pull -d --wait ")
-        .ignore_stderr()
         .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
         .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
