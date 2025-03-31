@@ -44,8 +44,7 @@ pub mod signature;
 /// # Example
 ///
 /// ```
-/// use solana_sdk::pubkey::Pubkey;
-/// use solana_sdk::pubkey;
+/// use solana_pubkey::{Pubkey, pubkey};
 /// use flow_value::Value;
 ///
 /// #[derive(serde::Deserialize)]
@@ -70,8 +69,7 @@ where
 /// # Example
 ///
 /// ```
-/// use solana_sdk::pubkey::Pubkey;
-/// use solana_sdk::pubkey;
+/// use solana_pubkey::{Pubkey, pubkey};
 /// use flow_value::Value;
 ///
 /// #[derive(serde::Deserialize)]
@@ -96,7 +94,7 @@ where
 /// # Example
 ///
 /// ```
-/// use solana_sdk::signature::Signature;
+/// use solana_signature::Signature;
 /// use flow_value::Value;
 ///
 /// let signature = Signature::new_unique();
@@ -788,8 +786,8 @@ mod tests {
 
     #[test]
     fn test_solana_instruction() {
-        use solana_sdk::instruction::{AccountMeta, Instruction};
-        use solana_sdk::pubkey;
+        use solana_instruction::{AccountMeta, Instruction};
+        use solana_pubkey::pubkey;
 
         let i = Instruction::new_with_bytes(
             pubkey!("ESxeViFP4r7THzVx9hJDkhj4HrNGSjJSFRPbGaAb97hN"),

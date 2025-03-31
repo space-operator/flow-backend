@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn test_deserialize_value() {
-        let id = solana_sdk::feature_set::add_set_compute_unit_price_ix::id();
+        let id = solana_pubkey::new_rand();
         assert_eq!(de(Value::String(id.to_string())), id);
         assert_eq!(de(Value::B32(id.to_bytes())), id);
 
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn test_serialize() {
-        let id = solana_sdk::feature_set::add_set_compute_unit_price_ix::id();
+        let id = solana_pubkey::new_rand();
         assert_eq!(
             serialize(&id, crate::ser::Serializer).unwrap(),
             Value::B32(id.to_bytes())
