@@ -97,7 +97,7 @@ where
 /// use solana_signature::Signature;
 /// use flow_value::Value;
 ///
-/// let signature = Signature::new_unique();
+/// let signature = Signature::default();
 /// let value = flow_value::to_value(&flow_value::Bytes(signature.as_ref())).unwrap();
 /// assert_eq!(value, Value::B64(signature.into()));
 /// ```
