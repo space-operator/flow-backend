@@ -2,7 +2,8 @@
 
 use flow_lib::solana::Pubkey;
 use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_program::{commitment_config::CommitmentConfig, program_pack::Pack};
+use solana_commitment_config::CommitmentConfig;
+use solana_program::program_pack::Pack;
 use tracing::info;
 
 pub mod error;
@@ -50,7 +51,8 @@ pub mod prelude {
         CmdInputDescription as CmdInput, CmdOutputDescription as CmdOutput, SolanaNet,
     };
     pub use solana_client::nonblocking::rpc_client::RpcClient;
-    pub use solana_program::{instruction::Instruction, signer::Signer};
+    pub use solana_program::instruction::Instruction;
+    pub use solana_signer::Signer;
     pub use std::sync::Arc;
     pub use value::HashMap;
 }

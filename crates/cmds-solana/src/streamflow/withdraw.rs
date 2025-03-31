@@ -6,8 +6,8 @@ use crate::utils::anchor_sighash;
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::rpc_config::RpcAccountInfoConfig;
+use solana_commitment_config::CommitmentConfig;
 use solana_program::instruction::AccountMeta;
-use solana_program::commitment_config::CommitmentConfig;
 use spl_associated_token_account::get_associated_token_address;
 use tracing::info;
 

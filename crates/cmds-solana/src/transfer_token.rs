@@ -1,9 +1,9 @@
 use crate::get_decimals;
 use crate::{prelude::*, utils::ui_amount_to_amount};
-use solana_program::system_program;
-use solana_program::commitment_config::CommitmentConfig;
+use solana_commitment_config::CommitmentConfig;
 use solana_program::instruction::Instruction;
 use solana_program::program_pack::Pack;
+use solana_program::system_program;
 use spl_associated_token_account::instruction;
 use spl_token::instruction::transfer_checked;
 use tracing::info;

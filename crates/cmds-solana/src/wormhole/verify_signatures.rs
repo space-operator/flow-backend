@@ -2,8 +2,8 @@ use super::{GuardianSetData, SignatureItem, VerifySignaturesData};
 use crate::{prelude::*, wormhole::WormholeInstructions};
 use borsh::{BorshDeserialize, BorshSerialize};
 use byteorder::{LittleEndian, WriteBytesExt};
-use solana_program::{instruction::AccountMeta, sysvar};
 use solana_program::pubkey::Pubkey;
+use solana_program::{instruction::AccountMeta, sysvar};
 use std::io::Write;
 
 // Command Name
@@ -50,7 +50,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     )
     .0;
 
-    let account: solana_program::account::Account =
+    let account: solana_account::Account =
         ctx.solana_client.get_account(&guardian_set).await.unwrap();
     let guardian_set_data: GuardianSetData =
         GuardianSetData::try_from_slice(&account.data).unwrap();

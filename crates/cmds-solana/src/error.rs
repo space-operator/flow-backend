@@ -15,7 +15,7 @@ pub enum Error {
     #[error(transparent)]
     SolanaProgram(#[from] solana_program::program_error::ProgramError),
     #[error(transparent)]
-    Signer(#[from] solana_program::signer::SignerError),
+    Signer(#[from] solana_signer::SignerError),
     #[error(transparent)]
     Value(#[from] value::Error),
     #[error(transparent)]

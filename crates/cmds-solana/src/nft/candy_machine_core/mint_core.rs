@@ -2,8 +2,8 @@ use super::CandyGuardData;
 use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_core_candy_guard::client::args::MintV1;
-use solana_program::{instruction::Instruction, system_program, sysvar};
-use solana_program::{compute_budget::ComputeBudgetInstruction, pubkey::Pubkey};
+use solana_compute_budget_interface::ComputeBudgetInstruction;
+use solana_program::{instruction::Instruction, pubkey::Pubkey, system_program, sysvar};
 
 // Command Name
 const NAME: &str = "mint_candy_machine_core";

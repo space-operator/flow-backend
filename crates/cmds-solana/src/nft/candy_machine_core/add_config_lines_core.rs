@@ -1,7 +1,7 @@
+use super::ConfigLine;
 use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_program::instruction::Instruction;
-use super::ConfigLine;
 
 // Command Name
 const NAME: &str = "add_config_lines_core";

@@ -2,8 +2,8 @@ use crate::{prelude::*, wormhole::WormholeInstructions};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use rand::Rng;
-use solana_program::{instruction::AccountMeta, system_instruction, sysvar};
 use solana_program::pubkey::Pubkey;
+use solana_program::{instruction::AccountMeta, system_instruction, sysvar};
 
 use super::{token_bridge::get_sequence_number_from_message, BridgeData, PostMessageData};
 
