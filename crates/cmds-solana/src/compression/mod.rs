@@ -6,7 +6,7 @@ use mpl_bubblegum::types::LeafSchema;
 use mpl_bubblegum::types::{MetadataArgs, UpdateArgs};
 use mpl_bubblegum::LeafSchemaEvent;
 use serde::{Deserialize, Serialize};
-use solana_client::rpc_config::RpcTransactionConfig;
+use solana_rpc_client_api::config::RpcTransactionConfig;
 use solana_commitment_config::CommitmentConfig;
 use solana_program::pubkey::Pubkey;
 use solana_transaction_status::UiParsedInstruction;

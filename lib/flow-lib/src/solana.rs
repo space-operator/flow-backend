@@ -9,13 +9,14 @@ use chrono::Utc;
 use futures::{future::Either, FutureExt, TryStreamExt};
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv, DisplayFromStr};
-use solana_client::{nonblocking::rpc_client::RpcClient, rpc_config::RpcSendTransactionConfig};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_compute_budget_interface::ComputeBudgetInstruction;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     message::{v0, VersionedMessage},
 };
+use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+use solana_rpc_client_api::config::RpcSendTransactionConfig;
 use solana_signer::{signers::Signers, Signer, SignerError};
 use solana_transaction::{versioned::VersionedTransaction, Transaction};
 use spo_helius::{

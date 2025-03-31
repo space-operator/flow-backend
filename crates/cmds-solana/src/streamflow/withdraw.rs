@@ -5,7 +5,7 @@ use crate::streamflow::StreamContract;
 use crate::utils::anchor_sighash;
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_account_decoder::UiAccountEncoding;
-use solana_client::rpc_config::RpcAccountInfoConfig;
+use solana_rpc_client_api::config::RpcAccountInfoConfig;
 use solana_commitment_config::CommitmentConfig;
 use solana_program::instruction::AccountMeta;
 use spl_associated_token_account::get_associated_token_address;

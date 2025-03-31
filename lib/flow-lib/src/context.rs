@@ -17,7 +17,7 @@ use crate::{
 use bytes::Bytes;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use solana_client::nonblocking::rpc_client::RpcClient as SolanaClient;
+use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_pubkey::Pubkey;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
@@ -225,7 +225,7 @@ pub mod execute {
     use futures::channel::oneshot::Canceled;
     use serde::{Deserialize, Serialize};
     use serde_with::{base64::Base64, serde_as, DisplayFromStr};
-    use solana_client::client_error::ClientError;
+    use solana_rpc_client_api::client_error::Error as ClientError;
     use solana_program::{
         instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
     };

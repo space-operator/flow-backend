@@ -35,7 +35,8 @@ five8 = { version = "0.2.1", features = ["std"] }
 bon = "3.0.2"
 
 # solana libs
-solana-client = "2"
+solana-rpc-client = "2"
+solana-rpc-client-api = "2"
 solana-transaction-status = "2"
 solana-pubkey = "2"
 solana-signer = "2"

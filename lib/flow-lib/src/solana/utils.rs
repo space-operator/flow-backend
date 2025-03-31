@@ -9,16 +9,16 @@ use nom::{
     IResult,
 };
 use solana_address_lookup_table_interface::state::AddressLookupTable;
-use solana_client::{
-    client_error::{ClientError, ClientErrorKind},
-    nonblocking::rpc_client::RpcClient,
-    rpc_request::{RpcError, RpcResponseErrorData},
-    rpc_response::RpcSimulateTransactionResult,
-};
 use solana_clock::{Slot, UnixTimestamp};
 use solana_feature_set::FeatureSet;
 use solana_precompiles::verify_if_precompile;
 use solana_program::message::AddressLookupTableAccount;
+use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+use solana_rpc_client_api::{
+    client_error::{Error as ClientError, ErrorKind as ClientErrorKind},
+    request::{RpcError, RpcResponseErrorData},
+    response::RpcSimulateTransactionResult,
+};
 use solana_transaction::{versioned::VersionedTransaction, Transaction};
 use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
 

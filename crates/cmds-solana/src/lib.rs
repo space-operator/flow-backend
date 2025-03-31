@@ -1,7 +1,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use flow_lib::solana::Pubkey;
-use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_commitment_config::CommitmentConfig;
 use solana_program::program_pack::Pack;
 use tracing::info;
@@ -50,7 +50,7 @@ pub mod prelude {
         solana::{Instructions, KeypairExt, Wallet},
         CmdInputDescription as CmdInput, CmdOutputDescription as CmdOutput, SolanaNet,
     };
-    pub use solana_client::nonblocking::rpc_client::RpcClient;
+    pub use solana_rpc_client::nonblocking::rpc_client::RpcClient;
     pub use solana_program::instruction::Instruction;
     pub use solana_signer::Signer;
     pub use std::sync::Arc;

@@ -11,7 +11,7 @@ pub enum Error {
     #[error(transparent)]
     Any(#[from] anyhow::Error),
     #[error("{}", flow_lib::solana::verbose_solana_error(.0))]
-    SolanaClient(#[from] Box<solana_client::client_error::ClientError>),
+    SolanaClient(#[from] Box<solana_rpc_client_api::client_error::Error>),
     #[error(transparent)]
     SolanaProgram(#[from] solana_program::program_error::ProgramError),
     #[error(transparent)]
@@ -64,8 +64,8 @@ pub enum Error {
     ValueNotFound(String),
 }
 
-impl From<solana_client::client_error::ClientError> for Error {
-    fn from(value: solana_client::client_error::ClientError) -> Self {
+impl From<solana_rpc_client_api::client_error::Error> for Error {
+    fn from(value: solana_rpc_client_api::client_error::Error) -> Self {
         Box::new(value).into()
     }
 }

@@ -1,7 +1,7 @@
 use mpl_core::{accounts::BaseAssetV1, types::Key};
-use solana_client::{
-    rpc_config::RpcProgramAccountsConfig,
-    rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
+use solana_rpc_client_api::{
+    config::RpcProgramAccountsConfig,
+    filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
 };
 use tracing::info;
 

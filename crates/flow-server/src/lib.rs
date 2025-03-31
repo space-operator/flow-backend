@@ -11,7 +11,7 @@ use middleware::{
     req_fn::{self, Function, ReqFn},
 };
 use serde::Deserialize;
-use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use std::{path::PathBuf, rc::Rc};
 use url::Url;
 use user::SignatureAuth;

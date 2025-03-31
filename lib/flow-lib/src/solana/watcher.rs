@@ -1,13 +1,13 @@
 use super::{parse_action_memo, parse_rpc_memo_field};
 use super::{Pubkey, Signature};
 use anyhow::{anyhow, ensure};
-use solana_client::{
-    client_error, nonblocking::rpc_client::RpcClient,
-    rpc_client::GetConfirmedSignaturesForAddress2Config, rpc_request::RpcError,
-};
 use solana_clock::MAX_HASH_AGE_IN_SECONDS;
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_program::hash::Hash;
+use solana_rpc_client::{
+    nonblocking::rpc_client::RpcClient, rpc_client::GetConfirmedSignaturesForAddress2Config,
+};
+use solana_rpc_client_api::{client_error, request::RpcError};
 use std::time::{Duration, Instant};
 
 pub const ACTION_CONFIRM_TIMEOUT: Duration = Duration::from_secs(60 * 3);
@@ -79,7 +79,7 @@ pub async fn confirm_transaction(
     signature: &Signature,
     recent_blockhash: &Hash,
     commitment: CommitmentConfig,
-) -> Result<(), client_error::ClientError> {
+) -> Result<(), client_error::Error> {
     let mut confirmations = 0;
 
     let now = Instant::now();
