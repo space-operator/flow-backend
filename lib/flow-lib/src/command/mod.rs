@@ -29,7 +29,7 @@ pub mod prelude {
         },
         config::{client::NodeData, node::Permissions},
         context::Context,
-        solana::Instructions,
+        solana::{Instructions, Keypair, Pubkey, Signature},
         CmdInputDescription as Input, CmdOutputDescription as Output, FlowId, Name, ValueSet,
         ValueType,
     };
@@ -38,7 +38,6 @@ pub mod prelude {
     pub use serde::{Deserialize, Serialize};
     pub use serde_json::Value as JsonValue;
     pub use serde_with::serde_as;
-    pub use solana_sdk::{pubkey::Pubkey, signature::Signature, signer::keypair::Keypair};
     pub use thiserror::Error as ThisError;
     pub use value::{
         self,
