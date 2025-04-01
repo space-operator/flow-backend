@@ -28,6 +28,10 @@ tokio = "1.33.0"
 once_cell = "1.17"
 url = { version = "2.5.0", features = ["serde"] }
 hyper = { version = "0.14.26", default-features = false, features = ["client"] }
+clickhouse = { version = "0.13.2", features = ["test-util", "rustls-tls"] }
+uuid = "1.16.0"
+dotenvy = "0.15.7"
+
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
