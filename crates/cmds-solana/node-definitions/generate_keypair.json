@@ -85,7 +85,16 @@
       "defaultValue": null,
       "tooltip": "",
       "passthrough": false
+    },
+    {
+      "name": "check_new_account",
+      "type_bounds": ["bool"],
+      "required": false,
+      "defaultValue": false,
+      "tooltip": "Check that generated keypair is a new account",
+      "passthrough": false
     }
+
   ],
   "targets_form.json_schema": {},
   "targets_form.ui_schema": {}
