@@ -1,6 +1,11 @@
+use std::any;
+
 use crate::prelude::*;
 use crate::WalletOrPubkey;
+use anyhow::anyhow;
+use anyhow::bail;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
+use solana_commitment_config::CommitmentConfig;
 use solana_keypair::{keypair_from_seed, Keypair};
 
 const GENERATE_KEYPAIR: &str = "generate_keypair";
@@ -27,6 +32,8 @@ pub struct Input {
     seed: String,
     #[serde(default)]
     passphrase: String,
+    #[serde(default = "value::default::bool_false")]
+    check_new_account: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -36,42 +43,79 @@ pub struct Output {
     pub keypair: Wallet,
 }
 
-fn generate_keypair(passphrase: &str, seed: &str) -> crate::Result<Keypair> {
-    let sanitized = seed.split_whitespace().collect::<Vec<&str>>().join(" ");
-    let parse_language_fn = || {
-        for language in &[
-            Language::English,
-            Language::ChineseSimplified,
-            Language::ChineseTraditional,
-            Language::Japanese,
-            Language::Spanish,
-            Language::Korean,
-            Language::French,
-            Language::Italian,
-        ] {
-            if let Ok(mnemonic) = Mnemonic::from_phrase(&sanitized, *language) {
-                return Ok(mnemonic);
+async fn generate_keypair(
+    passphrase: &str,
+    seed: &str,
+    check: Option<Arc<RpcClient>>,
+) -> crate::Result<Keypair> {
+    loop {
+        let sanitized = seed.split_whitespace().collect::<Vec<&str>>().join(" ");
+        let parse_language_fn = || {
+            for language in &[
+                Language::English,
+                Language::ChineseSimplified,
+                Language::ChineseTraditional,
+                Language::Japanese,
+                Language::Spanish,
+                Language::Korean,
+                Language::French,
+                Language::Italian,
+            ] {
+                if let Ok(mnemonic) = Mnemonic::from_phrase(&sanitized, *language) {
+                    return Ok(mnemonic);
+                }
             }
+            Err(crate::Error::CantGetMnemonicFromPhrase)
+        };
+        let mnemonic = parse_language_fn()?;
+        let seed = Seed::new(&mnemonic, passphrase);
+        let keypair = keypair_from_seed(seed.as_bytes())
+            .map_err(|e| crate::Error::KeypairFromSeed(e.to_string()))?;
+
+        if let Some(rpc) = check.as_ref() {
+            let exists = account_exists(&rpc, &keypair.pubkey()).await?;
+            if exists {
+                continue;
+            } else {
+                break Ok(keypair);
+            }
+        } else {
+            break Ok(keypair);
         }
-        Err(crate::Error::CantGetMnemonicFromPhrase)
-    };
-    let mnemonic = parse_language_fn()?;
-    let seed = Seed::new(&mnemonic, passphrase);
-    keypair_from_seed(seed.as_bytes()).map_err(|e| crate::Error::KeypairFromSeed(e.to_string()))
+    }
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
-    let keypair = input
-        .private_key
-        .map(|either| match either {
-            WalletOrPubkey::Wallet(keypair) => Ok(keypair),
-            WalletOrPubkey::Pubkey(public_key) => Ok(Wallet::Adapter { public_key }),
-        })
-        .unwrap_or_else(|| {
-            generate_keypair(&input.passphrase, &input.seed)
-                .map_err(CommandError::from)
-                .map(Into::into)
-        })?;
+async fn account_exists(rpc: &RpcClient, pk: &Pubkey) -> Result<bool, CommandError> {
+    Ok(rpc
+        .get_account_with_commitment(pk, CommitmentConfig::processed())
+        .await?
+        .value
+        .is_some())
+}
+
+async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+    let keypair = match input.private_key {
+        Some(either) => {
+            let keypair = match either {
+                WalletOrPubkey::Wallet(keypair) => keypair,
+                WalletOrPubkey::Pubkey(public_key) => Wallet::Adapter { public_key },
+            };
+            if input.check_new_account {
+                if account_exists(&ctx.solana_client, &keypair.pubkey()).await? {
+                    bail!(anyhow!("account already exists"));
+                }
+            }
+            keypair
+        }
+        None => generate_keypair(
+            &input.passphrase,
+            &input.seed,
+            input.check_new_account.then_some(ctx.solana_client),
+        )
+        .await?
+        .into(),
+    };
+
     Ok(Output {
         pubkey: keypair.pubkey(),
         keypair,
@@ -158,7 +202,9 @@ mod tests {
             "letter advice cage absurd amount doctor acoustic avoid letter advice cage above";
         let passphrase = "Hunter1!";
 
-        let keypair = generate_keypair(passphrase, seed_phrase).unwrap();
+        let keypair = generate_keypair(passphrase, seed_phrase, None)
+            .await
+            .unwrap();
 
         let input = value::map! {
             "seed" => Value::String(seed_phrase.to_owned()),
