@@ -37,3 +37,4 @@ dotenvy = "0.15.7"
 tokio = { version = "1", features = ["rt", "macros"] }
 criterion = "0.5"
 futures-executor = "0.3"
+mockito = "1.7.0"

@@ -117,6 +117,14 @@
       "passthrough": false,
       "defaultValue": null,
       "tooltip": "content-type will be automatically set to multipart/form-data"
+    },
+    {
+      "name": "retry",
+      "type_bounds": ["json"],
+      "required": false,
+      "passthrough": false,
+      "defaultValue": null,
+      "tooltip": "Retry configuration"
     }
   ],
   "targets_form.json_schema": {},
