@@ -44,22 +44,25 @@
   },
   "sources": [
     {
-      "name": "response",
-      "type": "json",
-      "defaultValue": null,
-      "tooltip": "",
-      "optional": false
+      "name": "success",
+      "type": "boolean",
+      "defaultValue": "",
+      "tooltip": ""
+    },
+    {
+      "name": "message",
+      "type": "string",
+      "defaultValue": "",
+      "tooltip": ""
+    },
+    {
+      "name": "row_count",
+      "type": "number",
+      "defaultValue": "",
+      "tooltip": ""
     }
   ],
   "targets": [
-    {
-      "name": "table_name",
-      "type_bounds": ["string"],
-      "required": true,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
-    },
     {
       "name": "batches",
       "type_bounds": ["json"],
@@ -69,7 +72,7 @@
       "passthrough": false
     },
     {
-      "name": "clickhouse_config",
+      "name": "clickhouse",
       "type_bounds": ["json"],
       "required": true,
       "defaultValue": null,

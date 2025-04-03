@@ -46,10 +46,8 @@
     {
       "name": "response",
       "type": "json",
-      "defaultValue": null,
-      "tooltip": "",
-      "optional": false
-    }
+      "defaultValue": "",
+      "tooltip": ""    }
   ],
   "targets": [
     {
