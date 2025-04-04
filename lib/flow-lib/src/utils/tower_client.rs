@@ -3,6 +3,7 @@ use tower::{buffer::Buffer, util::BoxService, Service, ServiceExt};
 
 use super::BoxFuture;
 
+#[deprecated]
 pub struct TowerClient<T, U, E> {
     inner: Buffer<BoxService<T, U, E>, T>,
     worker_error: fn(tower::BoxError) -> E,
