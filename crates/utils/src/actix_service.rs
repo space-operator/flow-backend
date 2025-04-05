@@ -1,13 +1,24 @@
 use actix::MailboxError;
-use futures_util::{future::Map, FutureExt};
+use futures_util::{FutureExt, future::Map};
 
-#[derive(Clone)]
 pub struct ActixService<T>
 where
     T: actix::Message + Send,
     T::Result: Send,
 {
     inner: actix::Recipient<T>,
+}
+
+impl<T> Clone for ActixService<T>
+where
+    T: actix::Message + Send,
+    T::Result: Send,
+{
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
 }
 
 impl<T> From<actix::Recipient<T>> for ActixService<T>

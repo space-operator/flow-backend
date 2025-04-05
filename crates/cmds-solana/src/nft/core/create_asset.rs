@@ -107,16 +107,14 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .name(input.name)
         .uri(input.uri);
 
-    let builder = if let Some(ref authority) = input.authority {
-        builder.authority(Some(authority.pubkey()))
-    } else {
-        builder.authority(None)
+    let builder = match input.authority {
+        Some(ref authority) => builder.authority(Some(authority.pubkey())),
+        _ => builder.authority(None),
     };
 
-    let builder = if let Some(collection) = input.collection {
-        builder.collection(Some(collection))
-    } else {
-        builder
+    let builder = match input.collection {
+        Some(collection) => builder.collection(Some(collection)),
+        _ => builder,
     };
 
     let builder = if !plugins.is_empty() {

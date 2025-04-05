@@ -1,5 +1,5 @@
-use crate::{value_type::Variant, Error, Map, Value};
-use rust_decimal::{prelude::ToPrimitive, Decimal};
+use crate::{Error, Map, Value, value_type::Variant};
+use rust_decimal::{Decimal, prelude::ToPrimitive};
 use serde::de::value::SeqDeserializer;
 
 pub(crate) mod const_bytes;

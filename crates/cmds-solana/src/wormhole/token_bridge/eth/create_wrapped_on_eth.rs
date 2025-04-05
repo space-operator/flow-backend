@@ -3,8 +3,8 @@ use tracing::info;
 use crate::{
     prelude::*,
     wormhole::token_bridge::{
-        eth::{hex_to_address, CreateWrappedResponse},
         Address,
+        eth::{CreateWrappedResponse, hex_to_address},
     },
 };
 

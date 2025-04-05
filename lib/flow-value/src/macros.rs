@@ -1,10 +1,10 @@
 #[macro_export]
 macro_rules! map {
     (@single $($x:tt)*) => (());
-    (@count $($rest:expr),*) => (<[()]>::len(&[$($crate::map!(@single $rest)),*]));
+    (@count $($rest:expr_2021),*) => (<[()]>::len(&[$($crate::map!(@single $rest)),*]));
 
-    ($($key:expr => $value:expr,)+) => { $crate::map!($($key => $value),+) };
-    ($($key:expr => $value:expr),*) => {
+    ($($key:expr_2021 => $value:expr_2021,)+) => { $crate::map!($($key => $value),+) };
+    ($($key:expr_2021 => $value:expr_2021),*) => {
         {
             let _cap = $crate::map!(@count $($key),*);
             let mut _map = $crate::Map::with_capacity(_cap);
@@ -19,10 +19,10 @@ macro_rules! map {
 #[macro_export]
 macro_rules! array {
     (@single $($x:tt)*) => (());
-    (@count $($rest:expr),*) => (<[()]>::len(&[$($crate::array!(@single $rest)),*]));
+    (@count $($rest:expr_2021),*) => (<[()]>::len(&[$($crate::array!(@single $rest)),*]));
 
-    ($($value:expr,)+) => { $crate::array!($($value),+) };
-    ($($value:expr),*) => {
+    ($($value:expr_2021,)+) => { $crate::array!($($value),+) };
+    ($($value:expr_2021),*) => {
         {
             let _cap = $crate::array!(@count $($value),*);
             let mut _vec = ::std::vec::Vec::<$crate::Value>::with_capacity(_cap);

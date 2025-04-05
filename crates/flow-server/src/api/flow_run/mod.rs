@@ -5,7 +5,7 @@ use actix_web_actors::ws;
 use flow::event;
 use value::json_repr::JsonRepr;
 
-pub fn service(config: &Config, _db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, _db: DbPool) -> impl HttpServiceFactory + 'static {
     web::scope("/run/{flow_run_id}")
         .wrap(config.cors())
         .service(web::resource("/events").route(web::get().to(events_stream)))

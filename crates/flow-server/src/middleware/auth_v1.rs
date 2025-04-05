@@ -1,14 +1,14 @@
 use crate::{
     error::ErrorBody,
-    user::{SignatureAuth, FLOW_RUN_TOKEN_PREFIX},
+    user::{FLOW_RUN_TOKEN_PREFIX, SignatureAuth},
 };
 use actix_web::{
+    FromRequest, HttpRequest, ResponseError,
     http::{
-        header::{HeaderName, AUTHORIZATION},
         StatusCode,
+        header::{AUTHORIZATION, HeaderName},
     },
     web::{self, ServiceConfig},
-    FromRequest, HttpRequest, ResponseError,
 };
 use chrono::Utc;
 use db::{
@@ -16,7 +16,7 @@ use db::{
     pool::{DbPool, RealDbPool},
 };
 use flow_lib::{FlowRunId, UserId};
-use futures_util::{future::LocalBoxFuture, FutureExt};
+use futures_util::{FutureExt, future::LocalBoxFuture};
 use getset::Getters;
 use hmac::{Hmac, Mac};
 use serde::Deserialize;

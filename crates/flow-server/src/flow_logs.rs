@@ -1,11 +1,11 @@
 use chrono::Utc;
-use flow::flow_run_events::{Event, EventSender, FlowLog, NodeLog, FLOW_SPAN_NAME, NODE_SPAN_NAME};
+use flow::flow_run_events::{Event, EventSender, FLOW_SPAN_NAME, FlowLog, NODE_SPAN_NAME, NodeLog};
 use flow_lib::NodeId;
 use hashbrown::HashMap;
 use std::sync::{Arc, RwLock};
-use tracing::{span, Subscriber};
+use tracing::{Subscriber, span};
 use tracing_log::NormalizeEvent;
-use tracing_subscriber::{layer::Filter, registry::LookupSpan, EnvFilter, Layer};
+use tracing_subscriber::{EnvFilter, Layer, layer::Filter, registry::LookupSpan};
 
 #[derive(Debug)]
 pub struct Data {

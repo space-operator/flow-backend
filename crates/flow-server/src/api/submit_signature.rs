@@ -13,7 +13,7 @@ pub struct Params {
     new_msg: Option<Bytes>,
 }
 
-pub fn service(config: &Config) -> impl HttpServiceFactory {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/submit")
         .wrap(config.cors())
         .route(web::post().to(submit_signature))

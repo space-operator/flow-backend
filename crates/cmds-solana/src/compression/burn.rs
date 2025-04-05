@@ -4,8 +4,8 @@ use solana_program::pubkey::Pubkey;
 use std::str::FromStr;
 
 use super::{
-    types::asset::{Asset, AssetProof},
     GetAssetResponse, WalletOrPubkey,
+    types::asset::{Asset, AssetProof},
 };
 
 // Command Name

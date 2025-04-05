@@ -1,7 +1,7 @@
 use super::prelude::*;
 use db::connection::ExportedUserData;
 
-pub fn service(config: &Config) -> Option<impl HttpServiceFactory> {
+pub fn service(config: &Config) -> Option<impl HttpServiceFactory + 'static> {
     Some(
         web::resource("/import")
             .wrap(config.service_key()?)

@@ -2,8 +2,8 @@ use super::FileSpec;
 use crate::supabase_error;
 use flow_lib::command::prelude::*;
 use reqwest::{
-    header::{AUTHORIZATION, CONTENT_TYPE},
     StatusCode,
+    header::{AUTHORIZATION, CONTENT_TYPE},
 };
 
 pub const NAME: &str = "storage_download";

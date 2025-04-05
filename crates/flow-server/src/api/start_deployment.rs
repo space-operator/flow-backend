@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::{
-    db_worker::{user_worker::StartDeployment, GetUserWorker},
+    db_worker::{GetUserWorker, user_worker::StartDeployment},
     middleware::{
         auth_v1::{Auth2, AuthenticatedUser, Unverified},
         optional,
@@ -66,7 +66,7 @@ pub struct Output {
     pub token: String,
 }
 
-pub fn service(config: &Config) -> impl HttpServiceFactory {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/start")
         .wrap(config.cors())
         .route(web::post().to(start_deployment))
@@ -138,7 +138,7 @@ async fn start_deployment(
 
 #[cfg(test)]
 mod tests {
-    use actix_web::{test::TestRequest, FromRequest};
+    use actix_web::{FromRequest, test::TestRequest};
 
     use super::*;
 

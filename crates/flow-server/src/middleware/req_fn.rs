@@ -1,14 +1,14 @@
 use actix_web::{
-    body::EitherBody,
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     Error, ResponseError,
+    body::EitherBody,
+    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
 };
 use futures_util::{
-    future::{Either, MapOk},
     TryFutureExt,
+    future::{Either, MapOk},
 };
 use std::{
-    future::{ready, Ready},
+    future::{Ready, ready},
     ops::Deref,
     rc::Rc,
 };

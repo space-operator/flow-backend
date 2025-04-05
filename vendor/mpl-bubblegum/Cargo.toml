@@ -5,7 +5,7 @@ description = "Metaplex Bubblegum SDK"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/mpl-bubblegum"
 license-file = "../../LICENSE"
-edition = "2021"
+edition = "2024"
 readme = "README.md"
 
 [workspace]

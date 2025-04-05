@@ -49,7 +49,9 @@ pub enum CandyError {
     #[msg("Candy machine is empty")]
     CandyMachineEmpty,
 
-    #[msg("Candy machines using hidden uris do not have config lines, they have a single hash representing hashed order")]
+    #[msg(
+        "Candy machines using hidden uris do not have config lines, they have a single hash representing hashed order"
+    )]
     HiddenSettingsDoNotHaveConfigLines,
 
     #[msg("Cannot change number of lines unless is a hidden config")]

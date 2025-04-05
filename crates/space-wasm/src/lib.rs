@@ -1,6 +1,6 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use byteorder::{LittleEndian, ReadBytesExt};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::{cell::RefCell, collections::HashMap, io::Cursor};
 use wasmer::{
     Function, FunctionEnv, Instance, Memory, MemoryView, Module, Store, Value, ValueType, WasmSlice,

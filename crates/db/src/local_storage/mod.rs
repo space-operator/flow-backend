@@ -2,7 +2,7 @@ use crate::Error;
 use chrono::{DateTime, Utc};
 use flow_lib::UserId;
 use kv::{Bucket, Store};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::{path::Path, time::Duration};
 
 pub trait CacheBucket {

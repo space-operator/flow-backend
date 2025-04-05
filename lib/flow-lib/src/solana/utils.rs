@@ -4,9 +4,9 @@ use crate::context::signer::Presigner;
 use anyhow::{anyhow, bail};
 use base64::prelude::*;
 use nom::{
+    IResult,
     bytes::complete::take,
     character::complete::{char, u64},
-    IResult,
 };
 use solana_address_lookup_table_interface::state::AddressLookupTable;
 use solana_clock::{Slot, UnixTimestamp};
@@ -19,7 +19,7 @@ use solana_rpc_client_api::{
     request::{RpcError, RpcResponseErrorData},
     response::RpcSimulateTransactionResult,
 };
-use solana_transaction::{versioned::VersionedTransaction, Transaction};
+use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
 
 pub async fn fetch_address_lookup_table(
@@ -62,17 +62,13 @@ pub fn list_signatures(tx: &VersionedTransaction) -> Option<Vec<Presigner>> {
         .signatures
         .iter()
         .enumerate()
-        .filter(|(_, &sig)| sig != placeholder)
+        .filter(|(_, sig)| **sig != placeholder)
         .map(|(index, sig)| Presigner {
             pubkey: accounts[index],
             signature: *sig,
         })
         .collect::<Vec<_>>();
-    if vec.is_empty() {
-        None
-    } else {
-        Some(vec)
-    }
+    if vec.is_empty() { None } else { Some(vec) }
 }
 
 fn parse_rpc_memo_field_impl(mut s: &str) -> IResult<&str, Vec<String>> {

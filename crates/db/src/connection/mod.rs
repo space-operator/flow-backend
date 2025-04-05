@@ -1,14 +1,14 @@
-use crate::{pool::RealDbPool, Error, LocalStorage, Wallet, WasmStorage};
+use crate::{Error, LocalStorage, Wallet, WasmStorage, pool::RealDbPool};
 use async_trait::async_trait;
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use csv_export::df_serde;
 use deadpool_postgres::{Object as Connection, Transaction};
-use flow::flow_set::{get_flow_row, DeploymentId, Flow, FlowDeployment};
+use flow::flow_set::{DeploymentId, Flow, FlowDeployment, get_flow_row};
 use flow_lib::{
+    CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
     config::client::{self, ClientConfig, FlowRow},
     context::signer::Presigner,
-    CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
 };
 use futures_util::future::LocalBoxFuture;
 use hashbrown::{HashMap, HashSet};
@@ -17,8 +17,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::{any::Any, future::Future, time::Duration};
 use tokio_postgres::{
-    types::{Json, ToSql},
     Error as PgError, Row,
+    types::{Json, ToSql},
 };
 use uuid::Uuid;
 use value::Value;
@@ -132,7 +132,7 @@ pub trait UserConnectionTrait: Any + 'static {
     async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<Vec<i64>>;
 
     async fn get_deployment_flows(&self, id: &DeploymentId)
-        -> crate::Result<HashMap<FlowId, Flow>>;
+    -> crate::Result<HashMap<FlowId, Flow>>;
 
     async fn insert_deployment(&self, d: &FlowDeployment) -> crate::Result<DeploymentId>;
 

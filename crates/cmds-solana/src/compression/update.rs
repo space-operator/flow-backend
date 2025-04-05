@@ -1,6 +1,6 @@
 use super::{
-    types::asset::{Asset, AssetProof},
     GetAssetResponse, MetadataBubblegum,
+    types::asset::{Asset, AssetProof},
 };
 use crate::prelude::*;
 use mpl_bubblegum::instructions::UpdateMetadataBuilder;

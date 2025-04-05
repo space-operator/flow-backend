@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::db_worker::{
-    flow_run_worker::{FlowRunWorker, StopError, StopFlow},
     FindActor,
+    flow_run_worker::{FlowRunWorker, StopError, StopFlow},
 };
 
 #[derive(Deserialize)]
@@ -11,7 +11,7 @@ pub struct Params {
     pub reason: Option<String>,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/stop/{id}")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

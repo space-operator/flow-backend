@@ -5,7 +5,7 @@ use solana_program::{instruction::AccountMeta, system_program};
 use crate::prelude::*;
 
 use super::{
-    with_realm_config_accounts, GovernanceConfig, GovernanceInstruction, SPL_GOVERNANCE_ID,
+    GovernanceConfig, GovernanceInstruction, SPL_GOVERNANCE_ID, with_realm_config_accounts,
 };
 
 const NAME: &str = "create_governance";

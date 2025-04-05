@@ -1,20 +1,20 @@
 use crate::{
+    FlowGraph,
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
     flow_run_events::{self, EventSender, NodeLog},
     flow_set::DeploymentId,
-    FlowGraph,
 };
 use chrono::Utc;
 use flow_lib::{
+    CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
     config::{
-        client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
         Endpoints,
+        client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
     },
-    context::{execute, get_jwt, signer, User},
+    context::{User, execute, get_jwt, signer},
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
     utils::TowerClient,
-    CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
 };
 use futures::channel::oneshot;
 use hashbrown::HashMap;
@@ -23,6 +23,7 @@ use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
 use tokio::sync::Semaphore;
 use tokio_util::sync::CancellationToken;
+use tower::{Service, ServiceExt};
 use tracing::Instrument;
 use utils::actix_service::ActixService;
 
@@ -111,7 +112,9 @@ async fn get_all_flows(
     while let Some(flow_id) = queue.pop() {
         let config = {
             let mut config = get_flow
-                .call_mut(get_flow::Request { user_id, flow_id })
+                .ready()
+                .await?
+                .call(get_flow::Request { user_id, flow_id })
                 .await?
                 .config;
             for (k, v) in &environment {
@@ -144,7 +147,7 @@ async fn get_all_flows(
                         node_id,
                         error,
                     }
-                    .into())
+                    .into());
                 }
             }
         }
@@ -341,29 +344,14 @@ impl FlowRegistry {
             started_by,
             shared_with,
             entrypoint,
-            (
-                TowerClient::from_service(ActixService::from(signer), signer::Error::Worker, 16),
-                signers_info,
-            ),
-            TowerClient::from_service(
-                ActixService::from(new_flow_run),
-                new_flow_run::Error::Worker,
-                16,
-            ),
-            TowerClient::from_service(ActixService::from(get_flow), get_flow::Error::Worker, 16),
-            TowerClient::from_service(
-                ActixService::from(get_previous_values),
-                get_previous_values::Error::Worker,
-                16,
-            ),
-            TowerClient::from_service(
-                tower::retry::Retry::new(
-                    get_jwt::RetryPolicy::default(),
-                    ActixService::from(token),
-                ),
-                get_jwt::Error::worker,
-                16,
-            ),
+            (TowerClient::new(ActixService::from(signer)), signers_info),
+            TowerClient::new(ActixService::from(new_flow_run)),
+            TowerClient::new(ActixService::from(get_flow)),
+            TowerClient::new(ActixService::from(get_previous_values)),
+            TowerClient::new(tower::retry::Retry::new(
+                get_jwt::RetryPolicy::default(),
+                ActixService::from(token),
+            )),
             environment,
             endpoints,
         )
@@ -405,7 +393,10 @@ impl FlowRegistry {
         let (tx, rx) = flow_run_events::channel();
         let run = self
             .new_flow_run
-            .call_ref(new_flow_run::Request {
+            .clone()
+            .ready()
+            .await?
+            .call(new_flow_run::Request {
                 user_id: self.flow_owner.id,
                 shared_with: self.shared_with.clone(),
                 deployment_id,
@@ -480,7 +471,9 @@ impl FlowRegistry {
                 .collect::<HashMap<NodeId, FlowRunId>>();
             let previous_values = if !nodes.is_empty() {
                 get_previous_values_svc
-                    .call_mut(get_previous_values::Request { user_id, nodes })
+                    .ready()
+                    .await?
+                    .call(get_previous_values::Request { user_id, nodes })
                     .await?
                     .values
             } else {
@@ -503,7 +496,7 @@ impl FlowRegistry {
 }
 
 pub mod run_rhai {
-    use flow_lib::{command::CommandError, Context, ValueSet};
+    use flow_lib::{Context, ValueSet, command::CommandError};
     use futures::channel::oneshot;
     use std::sync::Arc;
 
@@ -527,7 +520,7 @@ pub mod new_flow_run {
         flow_set::DeploymentId,
     };
     use flow_lib::{
-        config::client::ClientConfig, utils::TowerClient, BoxError, FlowRunId, UserId, ValueSet,
+        BoxError, FlowRunId, UserId, ValueSet, config::client::ClientConfig, utils::TowerClient,
     };
     use futures::stream::BoxStream;
     use thiserror::Error as ThisError;
@@ -582,13 +575,15 @@ pub mod new_flow_run {
     }
 
     pub fn unimplemented_svc() -> Svc {
-        Svc::unimplemented(|| BoxError::from("unimplemented").into(), Error::Worker)
+        Svc::new(tower::service_fn(|_| {
+            std::future::ready(Err(Error::other("unimplemented")))
+        }))
     }
 }
 
 pub mod get_flow {
     use flow_lib::{
-        config::client::ClientConfig, utils::TowerClient, BoxError, FlowId, NodeId, UserId,
+        BoxError, FlowId, NodeId, UserId, config::client::ClientConfig, utils::TowerClient,
     };
     use thiserror::Error as ThisError;
 
@@ -634,7 +629,7 @@ pub mod get_flow {
 }
 
 pub mod get_previous_values {
-    use flow_lib::{utils::TowerClient, BoxError, FlowRunId, NodeId, UserId};
+    use flow_lib::{BoxError, FlowRunId, NodeId, UserId, utils::TowerClient};
     use hashbrown::HashMap;
     use thiserror::Error as ThisError;
     use value::Value;
@@ -667,6 +662,8 @@ pub mod get_previous_values {
     }
 
     pub fn unimplemented_svc() -> Svc {
-        Svc::unimplemented(|| BoxError::from("unimplemented").into(), Error::Worker)
+        Svc::new(tower::service_fn(|_| {
+            std::future::ready(Err(BoxError::from("unimplemented").into()))
+        }))
     }
 }

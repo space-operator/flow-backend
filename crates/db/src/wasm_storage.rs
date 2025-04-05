@@ -1,7 +1,7 @@
 use bytes::Bytes;
 use reqwest::{
-    header::{HeaderValue, AUTHORIZATION},
     Url,
+    header::{AUTHORIZATION, HeaderValue},
 };
 use thiserror::Error as ThisError;
 

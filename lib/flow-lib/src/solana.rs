@@ -1,24 +1,24 @@
 use crate::{
-    context::{execute::Error, signer},
     FlowRunId, SolanaNet,
+    context::{execute::Error, signer},
 };
 use anyhow::{anyhow, bail, ensure};
 use borsh1::BorshDeserialize;
 use bytes::Bytes;
 use chrono::Utc;
-use futures::{future::Either, FutureExt, TryStreamExt};
+use futures::{FutureExt, TryStreamExt, future::Either};
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, serde_conv, DisplayFromStr};
+use serde_with::{DisplayFromStr, serde_as, serde_conv};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_compute_budget_interface::ComputeBudgetInstruction;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
-    message::{v0, VersionedMessage},
+    message::{VersionedMessage, v0},
 };
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::config::RpcSendTransactionConfig;
-use solana_signer::{signers::Signers, Signer, SignerError};
-use solana_transaction::{versioned::VersionedTransaction, Transaction};
+use solana_signer::{Signer, SignerError, signers::Signers};
+use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
 };
@@ -32,10 +32,11 @@ use std::{
     sync::LazyLock,
     time::Duration,
 };
+use tower::Service;
 use tower::ServiceExt;
 use value::{
-    with::{AsKeypair, AsPubkey},
     Value,
+    with::{AsKeypair, AsPubkey},
 };
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
@@ -608,7 +609,9 @@ async fn action_identity_memo(
     let reference_bytes = build_action_reference(Utc::now().timestamp(), run_id);
     let reference = bs58::encode(&reference_bytes).into_string();
     let signature = signer
-        .call_mut(signer::SignatureRequest {
+        .ready()
+        .await?
+        .call(signer::SignatureRequest {
             id: None,
             time: Utc::now(),
             pubkey: identity,
@@ -917,7 +920,7 @@ impl Instructions {
         mut self,
         rpc: &RpcClient,
         network: SolanaNet,
-        signer: signer::Svc,
+        mut signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<(VersionedTransaction, usize), Error> {
@@ -937,7 +940,7 @@ impl Instructions {
             if let Some(keypair) = keypair.keypair() {
                 keypair.sign_message(&data)
             } else {
-                let fut = signer.call_ref(signer::SignatureRequest {
+                let fut = signer.ready().await?.call(signer::SignatureRequest {
                     id: None,
                     time: Utc::now(),
                     pubkey: keypair.pubkey(),
@@ -1102,7 +1105,7 @@ impl Instructions {
                 Some(tx.signatures.clone())
             },
         };
-        let request_signature = signer.call_mut(req).boxed();
+        let request_signature = signer.ready().await?.call(req).boxed();
         let confirm = confirm_action_transaction(
             rpc,
             action_config.action_identity,

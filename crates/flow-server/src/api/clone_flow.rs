@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::db_worker::{user_worker::CloneFlow, GetUserWorker};
+use crate::db_worker::{GetUserWorker, user_worker::CloneFlow};
 use db::pool::DbPool;
 use hashbrown::HashMap;
 
@@ -9,7 +9,7 @@ pub struct Output {
     pub id_map: HashMap<FlowId, FlowId>,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/clone/{id}")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

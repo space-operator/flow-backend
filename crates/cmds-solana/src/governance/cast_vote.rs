@@ -5,7 +5,7 @@ use tracing::info;
 
 use crate::prelude::*;
 
-use super::{with_realm_config_accounts, GovernanceInstruction, Vote, SPL_GOVERNANCE_ID};
+use super::{GovernanceInstruction, SPL_GOVERNANCE_ID, Vote, with_realm_config_accounts};
 
 const NAME: &str = "cast_vote";
 

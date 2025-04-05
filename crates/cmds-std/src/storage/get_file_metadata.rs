@@ -3,8 +3,8 @@ use crate::supabase_error;
 use anyhow::anyhow;
 use flow_lib::command::prelude::*;
 use reqwest::{
-    header::{AUTHORIZATION, CONTENT_TYPE, LAST_MODIFIED},
     StatusCode,
+    header::{AUTHORIZATION, CONTENT_TYPE, LAST_MODIFIED},
 };
 
 pub const NAME: &str = "storage_get_file_metadata";

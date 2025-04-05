@@ -155,10 +155,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             AccountMeta::new(claim_key, false),
             AccountMeta::new_readonly(endpoint, false),
             AccountMeta::new(to, false),
-            if let Some(fee_r) = input.fee_recipient {
-                AccountMeta::new(fee_r, false)
-            } else {
-                AccountMeta::new(to, false)
+            match input.fee_recipient {
+                Some(fee_r) => AccountMeta::new(fee_r, false),
+                _ => AccountMeta::new(to, false),
             },
             AccountMeta::new(mint, false),
             AccountMeta::new_readonly(mint_meta, false),

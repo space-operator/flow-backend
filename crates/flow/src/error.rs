@@ -3,7 +3,7 @@ use crate::{
     flow_registry::get_flow,
     flow_set::{get_flow_row, make_signer},
 };
-use flow_lib::{command::CommandError, Name};
+use flow_lib::{Name, command::CommandError};
 use std::error::Error as StdError;
 use thiserror::Error as ThisError;
 

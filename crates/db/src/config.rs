@@ -1,4 +1,4 @@
-use chacha20poly1305::{aead::Aead, AeadCore, ChaCha20Poly1305, KeyInit};
+use chacha20poly1305::{AeadCore, ChaCha20Poly1305, KeyInit, aead::Aead};
 use flow_lib::solana::Keypair;
 use serde::{Deserialize, Serialize};
 use serde_with::{base64::Base64, serde_as};

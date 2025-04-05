@@ -1,5 +1,5 @@
-use crate::{connection::proxied_user_conn, StorageError};
-use actix_web::{http::StatusCode, ResponseError};
+use crate::{StorageError, connection::proxied_user_conn};
+use actix_web::{ResponseError, http::StatusCode};
 use serde::Serialize;
 use std::{
     fmt::{Debug, Display},

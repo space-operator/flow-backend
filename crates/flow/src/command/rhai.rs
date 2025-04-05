@@ -1,7 +1,7 @@
 use flow_lib::command::prelude::*;
 use std::sync::Arc;
 
-use crate::flow_registry::{run_rhai, FlowRegistry};
+use crate::flow_registry::{FlowRegistry, run_rhai};
 
 struct Command {
     name: Name,

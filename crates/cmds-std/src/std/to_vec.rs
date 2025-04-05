@@ -60,10 +60,13 @@ impl CommandTrait for ToVec {
     async fn run(&self, _ctx: Context, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let Input { first, second } = value::from_map::<Input>(inputs)?;
 
-        let result = if let Some(second) = second {
-            vec![first, second]
-        } else {
-            vec![first]
+        let result = match second {
+            Some(second) => {
+                vec![first, second]
+            }
+            _ => {
+                vec![first]
+            }
         };
 
         Ok(value::to_map(&Output { result })?)

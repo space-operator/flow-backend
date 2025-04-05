@@ -1,6 +1,6 @@
 use crate::supabase_error;
 use flow_lib::command::prelude::*;
-use reqwest::header::{HeaderName, AUTHORIZATION};
+use reqwest::header::{AUTHORIZATION, HeaderName};
 use std::{collections::HashMap, str::FromStr};
 
 const NAME: &str = "postgrest_execute_query";

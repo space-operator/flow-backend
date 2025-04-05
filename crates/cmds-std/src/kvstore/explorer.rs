@@ -2,7 +2,7 @@ use super::read_item::SuccessBody;
 use crate::supabase_error;
 use flow_lib::command::prelude::*;
 use futures_util::future::join_all;
-use reqwest::{header::AUTHORIZATION, StatusCode};
+use reqwest::{StatusCode, header::AUTHORIZATION};
 
 pub const KV_EXPLORER: &str = "kvexplorer";
 

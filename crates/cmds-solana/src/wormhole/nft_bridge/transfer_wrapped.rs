@@ -84,7 +84,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         Pubkey::find_program_address(&[b"fee_collector"], &wormhole_core_program_id).0;
 
     // TODO: use a real nonce
-    let nonce = rand::thread_rng().gen();
+    let nonce = rand::thread_rng().r#gen();
 
     let wrapped_data = TransferWrappedData {
         nonce,

@@ -1,14 +1,14 @@
 use crate::{
+    EncryptedWallet,
     config::{Encrypted, EncryptionKey},
     local_storage::CacheBucket,
-    EncryptedWallet,
 };
 use anyhow::anyhow;
 use bytes::{Bytes, BytesMut};
 use client::FlowRow;
 use deadpool_postgres::Transaction;
 use flow::flow_set::{DeploymentId, Flow, FlowDeployment};
-use flow_lib::{config::client::NodeDataSkipWasm, solana::Pubkey, SolanaClientConfig};
+use flow_lib::{SolanaClientConfig, config::client::NodeDataSkipWasm, solana::Pubkey};
 use futures_util::StreamExt;
 use polars::{error::PolarsError, frame::DataFrame, series::Series};
 use std::str::FromStr;

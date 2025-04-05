@@ -3,42 +3,42 @@ use crate::{
     context::CommandFactory,
     flow_registry::FlowRegistry,
     flow_run_events::{
-        EventSender, FlowError, FlowFinish, FlowStart, NodeError, NodeFinish, NodeOutput,
-        NodeStart, NODE_SPAN_NAME,
+        EventSender, FlowError, FlowFinish, FlowStart, NODE_SPAN_NAME, NodeError, NodeFinish,
+        NodeOutput, NodeStart,
     },
 };
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
 use flow_lib::{
+    CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
-    context::{execute, get_jwt, CommandContext, Context},
-    solana::{find_failed_instruction, ExecutionConfig, Instructions, Pubkey, Wallet},
+    context::{CommandContext, Context, execute, get_jwt},
+    solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
     utils::{Extensions, TowerClient},
-    CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
 };
 use futures::{
+    FutureExt, StreamExt,
     channel::{mpsc, oneshot},
     future::{BoxFuture, Either},
     stream::FuturesUnordered,
-    FutureExt, StreamExt,
 };
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexMap;
 use petgraph::{
+    Directed, Direction,
     csr::DefaultIx,
     graph::EdgeIndex,
     stable_graph::{Edges, NodeIndex, StableGraph},
     visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
-    Directed, Direction,
 };
 use solana_program::system_instruction::transfer_many;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
     sync::{
-        atomic::{AtomicU32, Ordering},
         Arc, RwLock,
+        atomic::{AtomicU32, Ordering},
     },
     task::Poll,
     time::Duration,
@@ -50,6 +50,7 @@ use tokio::{
     task::{JoinError, JoinHandle},
 };
 use tokio_util::sync::CancellationToken;
+use tower::{Service, ServiceExt};
 use tracing::Instrument;
 use uuid::Uuid;
 use value::Value;
@@ -1127,18 +1128,23 @@ impl FlowGraph {
                         Ok(execute::Response { signature: None })
                     } else if let Some(exec) = &self.parent_flow_execute {
                         self.collect_flow_output(s).await;
-                        s.stop
-                            .race(
-                                std::pin::pin!(s.stop_shared.race(
-                                    std::pin::pin!(exec.call_ref(execute::Request {
-                                        instructions: ins,
-                                        output: s.result.output.clone(),
-                                    })),
-                                    execute::Error::Canceled,
-                                )),
-                                execute::Error::Canceled,
-                            )
-                            .await
+                        match exec.clone().ready().await {
+                            Ok(exec) => {
+                                s.stop
+                                    .race(
+                                        std::pin::pin!(s.stop_shared.race(
+                                            std::pin::pin!(exec.call(execute::Request {
+                                                instructions: ins,
+                                                output: s.result.output.clone(),
+                                            })),
+                                            execute::Error::Canceled,
+                                        )),
+                                        execute::Error::Canceled,
+                                    )
+                                    .await
+                            }
+                            Err(error) => Err(error),
+                        }
                     } else {
                         tracing::info!("executing instructions");
                         let config = self.tx_exec_config.clone();
@@ -1577,6 +1583,7 @@ impl FlowGraph {
     }
 }
 
+#[derive(Clone)]
 struct ExecuteWithBundling {
     node_id: NodeId,
     times: u32,
@@ -1607,6 +1614,7 @@ impl tower::Service<execute::Request> for ExecuteWithBundling {
     }
 }
 
+#[derive(Clone)]
 struct ExecuteNoBundling {
     node_id: NodeId,
     times: u32,
@@ -1691,30 +1699,22 @@ async fn run_command(
     tx_exec_config: ExecutionConfig,
 ) -> Finished {
     let svc = match mode {
-        client::BundlingMode::Off => TowerClient::from_service(
-            ExecuteNoBundling {
-                node_id: node.id,
-                times,
-                tx: tx.clone(),
-                simple_svc: execute::simple(&ctx, 32, Some(flow_run_id), tx_exec_config.clone()),
-                stop_shared,
-                overwrite_feepayer: tx_exec_config
-                    .overwrite_feepayer
-                    .clone()
-                    .map(|x| x.to_keypair()),
-            },
-            execute::Error::worker,
-            32,
-        ),
-        client::BundlingMode::Automatic => TowerClient::from_service(
-            ExecuteWithBundling {
-                node_id: node.id,
-                times,
-                tx: tx.clone(),
-            },
-            execute::Error::worker,
-            32,
-        ),
+        client::BundlingMode::Off => TowerClient::new(ExecuteNoBundling {
+            node_id: node.id,
+            times,
+            tx: tx.clone(),
+            simple_svc: execute::simple(&ctx, Some(flow_run_id), tx_exec_config.clone()),
+            stop_shared,
+            overwrite_feepayer: tx_exec_config
+                .overwrite_feepayer
+                .clone()
+                .map(|x| x.to_keypair()),
+        }),
+        client::BundlingMode::Automatic => TowerClient::new(ExecuteWithBundling {
+            node_id: node.id,
+            times,
+            tx: tx.clone(),
+        }),
     };
     ctx.command = Some(CommandContext {
         svc,
@@ -1799,11 +1799,7 @@ fn finished_recursive(
     }
 
     if filled {
-        if has_array_input {
-            false
-        } else {
-            ran
-        }
+        if has_array_input { false } else { ran }
     } else {
         !all_sources_not_finished
     }

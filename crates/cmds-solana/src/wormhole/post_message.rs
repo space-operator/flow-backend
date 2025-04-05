@@ -5,7 +5,7 @@ use rand::Rng;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, system_instruction, sysvar};
 
-use super::{token_bridge::get_sequence_number_from_message, BridgeData, PostMessageData};
+use super::{BridgeData, PostMessageData, token_bridge::get_sequence_number_from_message};
 
 // Command Name
 const NAME: &str = "post_message";
@@ -45,7 +45,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         crate::wormhole::wormhole_core_program_id(ctx.cfg.solana_client.cluster);
 
     // TODO: use a real nonce
-    let nonce = rand::thread_rng().gen();
+    let nonce = rand::thread_rng().r#gen();
 
     let emitter = input.emitter.pubkey();
 

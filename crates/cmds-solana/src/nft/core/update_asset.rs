@@ -44,28 +44,24 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .asset(input.asset.pubkey())
         .payer(input.fee_payer.pubkey());
 
-    let builder = if let Some(collection) = input.collection {
-        builder.collection(Some(collection))
-    } else {
-        builder
+    let builder = match input.collection {
+        Some(collection) => builder.collection(Some(collection)),
+        _ => builder,
     };
 
-    let builder = if let Some(new_name) = input.new_name {
-        builder.new_name(new_name)
-    } else {
-        builder
+    let builder = match input.new_name {
+        Some(new_name) => builder.new_name(new_name),
+        _ => builder,
     };
 
-    let builder = if let Some(new_uri) = input.new_uri {
-        builder.new_uri(new_uri)
-    } else {
-        builder
+    let builder = match input.new_uri {
+        Some(new_uri) => builder.new_uri(new_uri),
+        _ => builder,
     };
 
-    let builder = if let Some(new_update_authority) = input.new_update_authority {
-        builder.new_update_authority(new_update_authority)
-    } else {
-        builder
+    let builder = match input.new_update_authority {
+        Some(new_update_authority) => builder.new_update_authority(new_update_authority),
+        _ => builder,
     };
 
     let ins = builder.instruction();

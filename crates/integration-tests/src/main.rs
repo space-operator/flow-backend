@@ -1,7 +1,7 @@
 #![allow(clippy::print_stderr, clippy::print_stdout)]
 
 use clap::Parser;
-use xshell::{cmd, Shell};
+use xshell::{Shell, cmd};
 
 fn get_tag(sh: &Shell) -> anyhow::Result<String> {
     let stdout = cmd!(sh, "git describe --always --dirty").read()?;

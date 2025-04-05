@@ -1,15 +1,15 @@
 use super::{
+    CopyIn, Counter, DBWorker, SystemShutdown,
     messages::{SubscribeError, SubscriptionID},
     user_worker::SigReqEvent,
-    CopyIn, Counter, DBWorker, SystemShutdown,
 };
 use crate::{api::prelude::auth::TokenType, error::ErrorBody};
 use actix::{
-    fut::wrap_future, Actor, ActorContext, ActorFutureExt, AsyncContext, ResponseActFuture,
-    ResponseFuture, StreamHandler, WrapFuture,
+    Actor, ActorContext, ActorFutureExt, AsyncContext, ResponseActFuture, ResponseFuture,
+    StreamHandler, WrapFuture, fut::wrap_future,
 };
 use actix_web::http::StatusCode;
-use db::{pool::DbPool, FlowRunLogsRow};
+use db::{FlowRunLogsRow, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
     flow_run_events::{
@@ -19,7 +19,7 @@ use flow::{
 };
 use flow_lib::{FlowRunId, UserId};
 use futures_channel::mpsc;
-use futures_util::{stream::BoxStream, FutureExt, StreamExt};
+use futures_util::{FutureExt, StreamExt, stream::BoxStream};
 use hashbrown::{HashMap, HashSet};
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast::{self, error::RecvError};

@@ -1,11 +1,11 @@
 //! Parse JS front-end flow config into back-end flow config
 
 use crate::{
-    command::InstructionInfo, CmdInputDescription, CmdOutputDescription, CommandType, FlowId,
-    FlowRunId, NodeId, SolanaClientConfig, SolanaNet, UserId, ValueType,
+    CmdInputDescription, CmdOutputDescription, CommandType, FlowId, FlowRunId, NodeId,
+    SolanaClientConfig, SolanaNet, UserId, ValueType, command::InstructionInfo,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{value::RawValue, Value as JsonValue};
+use serde_json::{Value as JsonValue, value::RawValue};
 use serde_with::serde_as;
 use std::collections::HashMap;
 use uuid::Uuid;

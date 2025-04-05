@@ -5,12 +5,12 @@ use crate::{
 };
 use actix::{Actor, ActorFutureExt, Addr, AsyncContext, ResponseFuture, WrapFuture};
 use chrono::{Duration, Utc};
-use db::{local_storage::Jwt, pool::RealDbPool, LocalStorage};
-use flow_lib::{config::Endpoints, context::get_jwt, UserId};
+use db::{LocalStorage, local_storage::Jwt, pool::RealDbPool};
+use flow_lib::{UserId, config::Endpoints, context::get_jwt};
 use futures_channel::oneshot;
-use futures_util::{future::BoxFuture, FutureExt};
+use futures_util::{FutureExt, future::BoxFuture};
 use hashbrown::HashMap;
-use reqwest::{header::HeaderName, StatusCode};
+use reqwest::{StatusCode, header::HeaderName};
 use serde::{Deserialize, Serialize};
 use std::future::ready;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
@@ -409,11 +409,7 @@ pub async fn token_from_apikeys(
     let services = actors
         .iter()
         .map(|(user_id, addr)| {
-            let svc = get_jwt::Svc::from_service(
-                ActixService::from(addr.clone().recipient()),
-                get_jwt::Error::worker,
-                16,
-            );
+            let svc = get_jwt::Svc::new(ActixService::from(addr.clone().recipient()));
             (*user_id, svc)
         })
         .collect::<HashMap<UserId, get_jwt::Svc>>();

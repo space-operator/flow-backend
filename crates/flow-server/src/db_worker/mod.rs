@@ -1,22 +1,22 @@
-use crate::{flow_logs, Config};
+use crate::{Config, flow_logs};
 use actix::{
-    fut::wrap_future, Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context,
-    ResponseActFuture, ResponseFuture, WrapFuture,
+    Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context, ResponseActFuture,
+    ResponseFuture, WrapFuture, fut::wrap_future,
 };
 use db::{
-    pool::{DbPool, ProxiedDbPool, RealDbPool},
     FlowRunLogsRow,
+    pool::{DbPool, ProxiedDbPool, RealDbPool},
 };
-use flow::flow_run_events::{EventSender, DEFAULT_LOG_FILTER, FLOW_SPAN_NAME};
-use flow_lib::{config::Endpoints, context::get_jwt, BoxError, FlowRunId, UserId};
+use flow::flow_run_events::{DEFAULT_LOG_FILTER, EventSender, FLOW_SPAN_NAME};
+use flow_lib::{BoxError, FlowRunId, UserId, config::Endpoints, context::get_jwt};
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
 use std::{
-    sync::{atomic::AtomicU64, Arc},
+    sync::{Arc, atomic::AtomicU64},
     time::Duration,
 };
 use tokio::sync::broadcast;
-use tracing::{level_filters::LevelFilter, Span};
+use tracing::{Span, level_filters::LevelFilter};
 use tracing_subscriber::EnvFilter;
 use utils::address_book::{AddressBook, AlreadyStarted, ManagableActor};
 

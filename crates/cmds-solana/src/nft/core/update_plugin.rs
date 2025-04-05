@@ -48,10 +48,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .collection(input.collection)
         .plugin(plugin);
 
-    let builder = if let Some(ref update_authority) = input.update_authority {
-        builder.authority(Some(update_authority.pubkey()))
-    } else {
-        builder
+    let builder = match input.update_authority {
+        Some(ref update_authority) => builder.authority(Some(update_authority.pubkey())),
+        _ => builder,
     };
 
     let ins = builder.instruction();

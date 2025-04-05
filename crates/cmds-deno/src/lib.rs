@@ -4,8 +4,8 @@ use flow_lib::{
     command::{CommandError, CommandTrait},
     config::client::NodeData,
 };
-use serde::de::value::MapDeserializer;
 use serde::Deserialize;
+use serde::de::value::MapDeserializer;
 use std::process::Stdio;
 use tempfile::tempdir;
 use tokio::{
@@ -40,7 +40,7 @@ fn copy_dir_all(
 }
 
 macro_rules! include {
-    ($path:expr) => {
+    ($path:expr_2021) => {
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), $path))
     };
 }
@@ -136,11 +136,11 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
 #[cfg(test)]
 mod tests {
     use flow_lib::{
+        Context,
         config::{
             client::{Extra, Source, Target, TargetsForm},
             node::Definition,
         },
-        Context,
     };
     use serde_json::Value as JsonValue;
     use std::sync::Arc;

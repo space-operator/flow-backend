@@ -2,7 +2,7 @@ use solana_program::instruction::AccountMeta;
 
 use crate::prelude::*;
 
-use super::{record_program_id, RecordInstruction};
+use super::{RecordInstruction, record_program_id};
 
 const NAME: &str = "write_to_record";
 

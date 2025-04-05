@@ -1,4 +1,4 @@
-use flow_lib::{command::prelude::*, SolanaNet};
+use flow_lib::{SolanaNet, command::prelude::*};
 
 const NAME: &str = "flow_run_info";
 

@@ -1,7 +1,7 @@
 [package]
 name = "flow"
 version = "0.0.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 flow-lib = { workspace = true }
@@ -28,7 +28,7 @@ uuid = { version = "1", features = ["v4", "serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 hashbrown = { version = "0.14", features = ["serde"] }
-tower = { version = "0.4", features = ["util"] }
+tower = { version = "0.5", features = ["util"] }
 tokio-util = "0.7"
 tracing = "0.1"
 actix = "0.13"

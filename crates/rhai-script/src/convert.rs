@@ -1,4 +1,4 @@
-use flow_lib::{value::Decimal, Name, Value};
+use flow_lib::{Name, Value, value::Decimal};
 use rhai::Dynamic;
 use thiserror::Error as ThisError;
 

@@ -1,8 +1,8 @@
 use crate::read;
 use serde::Serialize;
 use space_lib::{
-    common::{Method, RequestData},
     Result,
+    common::{Method, RequestData},
 };
 use wasmer::{AsStoreRef, FunctionEnvMut, Memory, MemoryView};
 

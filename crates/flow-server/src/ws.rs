@@ -1,18 +1,18 @@
 use crate::{
+    Config,
     api::prelude::auth::TokenType,
     auth::ApiAuth,
     db_worker::{
+        DBWorker, FindActor, GetUserWorker,
         flow_run_worker::{FlowRunWorker, SubscribeEvents},
         messages::SubscriptionID,
         user_worker::SubscribeSigReq,
-        DBWorker, FindActor, GetUserWorker,
     },
-    Config,
 };
 use actix::{
     Actor, ActorContext, ActorFutureExt, ActorStreamExt, AsyncContext, WrapFuture, WrapStream,
 };
-use actix_web::{dev::HttpServiceFactory, guard, web, HttpRequest};
+use actix_web::{HttpRequest, dev::HttpServiceFactory, guard, web};
 use actix_web_actors::ws::{self, CloseCode, WebsocketContext};
 use db::pool::DbPool;
 use flow::flow_run_events::Event;
@@ -66,7 +66,7 @@ pub struct WsEvent<T> {
     event: T,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     let auth = web::Data::new(config.all_auth(db));
     web::resource("")
         .app_data(auth)

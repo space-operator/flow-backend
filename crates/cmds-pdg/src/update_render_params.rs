@@ -1,11 +1,11 @@
 use flow_lib::{
-    command::{
-        builder::{BuildResult, BuilderCache, CmdBuilder},
-        CommandDescription, CommandError,
-    },
     Context,
+    command::{
+        CommandDescription, CommandError,
+        builder::{BuildResult, BuilderCache, CmdBuilder},
+    },
 };
-use pdg_common::nft_metadata::{generate::Effect, RenderParams};
+use pdg_common::nft_metadata::{RenderParams, generate::Effect};
 use serde::{Deserialize, Serialize};
 
 const NAME: &str = "update_render_params";

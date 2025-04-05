@@ -106,22 +106,21 @@ async fn command_transfer_token(
             spl_associated_token_account::get_associated_token_address(&recipient, &token_mint);
 
         let needs_funding = {
-            if let Some(recipient_token_account_data) = client
+            match client
                 .get_account_with_commitment(&recipient_token_account, commitment)
                 .await?
                 .value
             {
-                match recipient_token_account_data.owner {
+                Some(recipient_token_account_data) => match recipient_token_account_data.owner {
                     x if x == system_program::ID => true,
                     y if y == spl_token::ID => false,
                     _ => {
                         return Err(crate::Error::UnsupportedRecipientAddress(
                             recipient.to_string(),
-                        ))
+                        ));
                     }
-                }
-            } else {
-                true
+                },
+                _ => true,
             }
         };
 

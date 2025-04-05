@@ -36,12 +36,12 @@ pub mod deploy_flow;
 pub mod start_deployment;
 
 pub mod prelude {
-    pub use crate::{db_worker::DBWorker, error::Error, middleware::auth, Config};
+    pub use crate::{Config, db_worker::DBWorker, error::Error, middleware::auth};
     pub use actix_web::{dev::HttpServiceFactory, http::StatusCode, web};
     pub use db::{
+        Error as DbError,
         connection::{UserConnection, UserConnectionTrait},
         pool::{DbPool, RealDbPool},
-        Error as DbError,
     };
     pub use flow_lib::{FlowId, FlowRunId, UserId, ValueSet};
     pub use serde::{Deserialize, Serialize};

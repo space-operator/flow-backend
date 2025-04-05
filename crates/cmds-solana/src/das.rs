@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use flow_lib::command::prelude::*;
-use reqwest::{header::CONTENT_TYPE, StatusCode};
+use reqwest::{StatusCode, header::CONTENT_TYPE};
 use serde_json::json;
 
 pub const NAME: &str = "das_api";
