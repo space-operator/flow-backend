@@ -1,20 +1,20 @@
 use crate::{
+    FlowGraph,
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
     flow_run_events::{self, EventSender, NodeLog},
     flow_set::DeploymentId,
-    FlowGraph,
 };
 use chrono::Utc;
 use flow_lib::{
+    CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
     config::{
-        client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
         Endpoints,
+        client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
     },
-    context::{execute, get_jwt, signer, User},
+    context::{User, execute, get_jwt, signer},
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
     utils::TowerClient,
-    CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
 };
 use futures::channel::oneshot;
 use hashbrown::HashMap;
@@ -147,7 +147,7 @@ async fn get_all_flows(
                         node_id,
                         error,
                     }
-                    .into())
+                    .into());
                 }
             }
         }
@@ -496,7 +496,7 @@ impl FlowRegistry {
 }
 
 pub mod run_rhai {
-    use flow_lib::{command::CommandError, Context, ValueSet};
+    use flow_lib::{Context, ValueSet, command::CommandError};
     use futures::channel::oneshot;
     use std::sync::Arc;
 
@@ -520,7 +520,7 @@ pub mod new_flow_run {
         flow_set::DeploymentId,
     };
     use flow_lib::{
-        config::client::ClientConfig, utils::TowerClient, BoxError, FlowRunId, UserId, ValueSet,
+        BoxError, FlowRunId, UserId, ValueSet, config::client::ClientConfig, utils::TowerClient,
     };
     use futures::stream::BoxStream;
     use thiserror::Error as ThisError;
@@ -583,7 +583,7 @@ pub mod new_flow_run {
 
 pub mod get_flow {
     use flow_lib::{
-        config::client::ClientConfig, utils::TowerClient, BoxError, FlowId, NodeId, UserId,
+        BoxError, FlowId, NodeId, UserId, config::client::ClientConfig, utils::TowerClient,
     };
     use thiserror::Error as ThisError;
 
@@ -629,7 +629,7 @@ pub mod get_flow {
 }
 
 pub mod get_previous_values {
-    use flow_lib::{utils::TowerClient, BoxError, FlowRunId, NodeId, UserId};
+    use flow_lib::{BoxError, FlowRunId, NodeId, UserId, utils::TowerClient};
     use hashbrown::HashMap;
     use thiserror::Error as ThisError;
     use value::Value;

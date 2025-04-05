@@ -6,8 +6,8 @@ use solana_program::instruction::AccountMeta;
 use solana_program::pubkey::Pubkey;
 
 use super::{
-    eth::hex_to_address, get_sequence_number_from_message, TokenBridgeInstructions,
-    TransferNativeData,
+    TokenBridgeInstructions, TransferNativeData, eth::hex_to_address,
+    get_sequence_number_from_message,
 };
 
 // Command Name
@@ -80,7 +80,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         Pubkey::find_program_address(&[b"fee_collector"], &wormhole_core_program_id).0;
 
     // TODO: use a real nonce
-    let nonce = rand::thread_rng().gen();
+    let nonce = rand::thread_rng().r#gen();
 
     let address = hex_to_address(&input.target_address).map_err(anyhow::Error::msg)?;
 

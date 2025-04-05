@@ -1,32 +1,37 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{DeriveInput, parse_macro_input};
 
 #[proc_macro_derive(GuardSet)]
 pub fn derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let name = &ast.ident;
 
-    let fields = if let syn::Data::Struct(syn::DataStruct {
-        fields: syn::Fields::Named(syn::FieldsNamed { ref named, .. }),
-        ..
-    }) = ast.data
-    {
-        named
-    } else {
-        panic!("No fields found");
+    let fields = match ast.data {
+        syn::Data::Struct(syn::DataStruct {
+            fields: syn::Fields::Named(syn::FieldsNamed { ref named, .. }),
+            ..
+        }) => named,
+        _ => {
+            panic!("No fields found");
+        }
     };
 
     let is_option_t = |ty: &syn::Type| -> bool {
-        if let syn::Type::Path(ref p) = ty {
+        if let syn::Type::Path(p) = ty {
             if p.path.segments.len() != 1 || p.path.segments[0].ident != "Option" {
                 return false;
             }
             if let syn::PathArguments::AngleBracketed(ref inner_ty) = p.path.segments[0].arguments {
                 if inner_ty.args.len() != 1 {
                     return false;
-                } else if let syn::GenericArgument::Type(ref _ty) = inner_ty.args.first().unwrap() {
-                    return true;
+                } else {
+                    match inner_ty.args.first().unwrap() {
+                        syn::GenericArgument::Type(_ty) => {
+                            return true;
+                        }
+                        _ => {}
+                    }
                 }
             }
         }
@@ -34,15 +39,20 @@ pub fn derive(input: TokenStream) -> TokenStream {
     };
 
     let unwrap_option_t = |ty: &syn::Type| -> syn::Type {
-        if let syn::Type::Path(ref p) = ty {
+        if let syn::Type::Path(p) = ty {
             if p.path.segments.len() != 1 || p.path.segments[0].ident != "Option" {
                 panic!("Type was not Option<T>");
             }
             if let syn::PathArguments::AngleBracketed(ref inner_ty) = p.path.segments[0].arguments {
                 if inner_ty.args.len() != 1 {
                     panic!("Option type was not Option<T>");
-                } else if let syn::GenericArgument::Type(ref ty) = inner_ty.args.first().unwrap() {
-                    return ty.clone();
+                } else {
+                    match inner_ty.args.first().unwrap() {
+                        syn::GenericArgument::Type(ty) => {
+                            return ty.clone();
+                        }
+                        _ => {}
+                    }
                 }
             }
         }

@@ -4,7 +4,7 @@ use solana_program::instruction::AccountMeta;
 
 use crate::prelude::*;
 
-use super::{with_realm_config_accounts, GovernanceInstruction, SPL_GOVERNANCE_ID};
+use super::{GovernanceInstruction, SPL_GOVERNANCE_ID, with_realm_config_accounts};
 
 const NAME: &str = "finalize_vote";
 

@@ -4,7 +4,7 @@ use solana_program::instruction::AccountMeta;
 
 use crate::prelude::*;
 
-use super::{GovernanceInstruction, SetRealmAuthorityAction, SPL_GOVERNANCE_ID};
+use super::{GovernanceInstruction, SPL_GOVERNANCE_ID, SetRealmAuthorityAction};
 
 const NAME: &str = "set_realm_authority";
 

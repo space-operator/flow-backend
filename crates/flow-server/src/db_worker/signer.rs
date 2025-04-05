@@ -1,11 +1,11 @@
 use actix::{Actor, ResponseFuture};
-use db::{pool::DbPool, Error as DbError, Wallet};
+use db::{Error as DbError, Wallet, pool::DbPool};
 use flow_lib::{
-    context::signer::{self, SignatureRequest},
     UserId,
+    context::signer::{self, SignatureRequest},
 };
 use futures_util::FutureExt;
-use hashbrown::{hash_map::Entry, HashMap};
+use hashbrown::{HashMap, hash_map::Entry};
 use serde_json::Value as JsonValue;
 use solana_keypair::Keypair;
 use solana_pubkey::Pubkey;

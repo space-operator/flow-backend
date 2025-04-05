@@ -9,7 +9,7 @@ pub struct Output {
     pub token: Token,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/auth")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

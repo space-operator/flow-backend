@@ -8,7 +8,7 @@ pub struct Params {
 #[derive(Serialize)]
 pub struct Output {}
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/delete")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

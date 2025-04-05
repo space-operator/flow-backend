@@ -1,13 +1,13 @@
 use crate::{
+    Error, LocalStorage, WasmStorage,
     config::{DbConfig, Encrypted, EncryptionKey, ProxiedDbConfig},
     connection::{
-        proxied_user_conn::{self, ProxiedUserConn},
         AdminConn, UserConnection, UserConnectionTrait,
+        proxied_user_conn::{self, ProxiedUserConn},
     },
-    Error, LocalStorage, WasmStorage,
 };
 use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, PoolConfig, SslMode};
-use flow_lib::{context::get_jwt, solana::Keypair, UserId};
+use flow_lib::{UserId, context::get_jwt, solana::Keypair};
 use futures_util::FutureExt;
 use hashbrown::HashMap;
 use std::time::{Duration, Instant};

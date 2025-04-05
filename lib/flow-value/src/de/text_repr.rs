@@ -1,4 +1,4 @@
-use crate::{value_type::Variant, Value};
+use crate::{Value, value_type::Variant};
 use serde::de::VariantAccess;
 use std::borrow::Cow;
 

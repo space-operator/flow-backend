@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use anyhow::anyhow;
 use flow_lib::command::builder::{BuildResult, BuilderCache};
-use reqwest::{dns::Name as DomainName, Url};
+use reqwest::{Url, dns::Name as DomainName};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
 const HTTP_REQUEST: &str = "http_request";

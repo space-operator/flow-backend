@@ -1,7 +1,7 @@
 use super::super::prelude::*;
 use value::Value;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/write_item")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

@@ -1,11 +1,10 @@
-
-use crate::prelude::*;
 use crate::WalletOrPubkey;
+use crate::prelude::*;
 use anyhow::anyhow;
 use anyhow::bail;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use solana_commitment_config::CommitmentConfig;
-use solana_keypair::{keypair_from_seed, Keypair};
+use solana_keypair::{Keypair, keypair_from_seed};
 
 const GENERATE_KEYPAIR: &str = "generate_keypair";
 
@@ -71,15 +70,18 @@ async fn generate_keypair(
         let keypair = keypair_from_seed(seed.as_bytes())
             .map_err(|e| crate::Error::KeypairFromSeed(e.to_string()))?;
 
-        if let Some(rpc) = check.as_ref() {
-            let exists = account_exists(&rpc, &keypair.pubkey()).await?;
-            if exists {
-                continue;
-            } else {
+        match check.as_ref() {
+            Some(rpc) => {
+                let exists = account_exists(&rpc, &keypair.pubkey()).await?;
+                if exists {
+                    continue;
+                } else {
+                    break Ok(keypair);
+                }
+            }
+            _ => {
                 break Ok(keypair);
             }
-        } else {
-            break Ok(keypair);
         }
     }
 }
@@ -155,8 +157,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_private_key_keypair() {
-        let private_key =
-            "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu";
+        let private_key = "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu";
         let input = value::map! {
             "private_key" => private_key,
         };

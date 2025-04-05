@@ -1,7 +1,7 @@
 [package]
 name = "command-rpc"
 version = "0.0.0"
-edition = "2021"
+edition = "2024"
 
 [build-dependencies]
 capnpc = "0.20"

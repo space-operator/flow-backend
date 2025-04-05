@@ -1,7 +1,7 @@
 use super::prelude::*;
 use db::{
-    apikey::{self, NameConflict},
     Error as DbError,
+    apikey::{self, NameConflict},
 };
 
 #[derive(Deserialize)]
@@ -16,7 +16,7 @@ pub struct Output {
     pub key: apikey::APIKey,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/create")
         .wrap(config.all_auth(db))
         .wrap(config.cors())
@@ -34,7 +34,7 @@ async fn create_key(
     let (key, full_key) = match r {
         Ok(r) => r,
         Err(DbError::LogicError(NameConflict)) => {
-            return Err(Error::custom(StatusCode::BAD_REQUEST, "NameConflict"))
+            return Err(Error::custom(StatusCode::BAD_REQUEST, "NameConflict"));
         }
         Err(error) => return Err(error.erase_type().into()),
     };

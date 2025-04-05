@@ -1,10 +1,10 @@
 use super::prelude::*;
 use crate::db_worker::{
-    flow_run_worker::{FlowRunWorker, WaitFinish},
     FindActor,
+    flow_run_worker::{FlowRunWorker, WaitFinish},
 };
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/output/{run_id}")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

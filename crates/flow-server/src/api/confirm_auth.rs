@@ -15,7 +15,7 @@ pub struct Output {
     new_user: bool,
 }
 
-pub fn service(config: &Config) -> impl HttpServiceFactory {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/confirm")
         .wrap(config.anon_key())
         .wrap(config.cors())

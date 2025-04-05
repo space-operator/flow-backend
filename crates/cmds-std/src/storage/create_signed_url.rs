@@ -1,7 +1,7 @@
 use super::FileSpec;
 use crate::supabase_error;
 use flow_lib::command::prelude::*;
-use reqwest::{header::AUTHORIZATION, StatusCode};
+use reqwest::{StatusCode, header::AUTHORIZATION};
 use rust_decimal::Decimal;
 use std::borrow::Cow;
 

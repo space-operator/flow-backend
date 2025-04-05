@@ -11,7 +11,7 @@ pub struct Output {
     pub payload: TokenType,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     let auth = web::Data::new(config.all_auth(db));
     web::resource("/ws_auth")
         .app_data(auth)

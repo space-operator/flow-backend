@@ -122,12 +122,9 @@ pub fn to_map<T>(t: &T) -> Result<Map, Error>
 where
     T: serde::Serialize,
 {
-    to_value(t).and_then(|v| {
-        if let Value::Map(map) = v {
-            Ok(map)
-        } else {
-            Err(Error::ExpectedMap)
-        }
+    to_value(t).and_then(|v| match v {
+        Value::Map(map) => Ok(map),
+        _ => Err(Error::ExpectedMap),
     })
 }
 

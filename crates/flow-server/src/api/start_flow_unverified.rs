@@ -1,12 +1,12 @@
 use super::prelude::*;
 use crate::{
-    db_worker::{user_worker::StartFlowShared, GetUserWorker},
+    db_worker::{GetUserWorker, user_worker::StartFlowShared},
     user::{SignatureAuth, SupabaseAuth},
 };
 use db::pool::DbPool;
 use flow_lib::solana::{Pubkey, SolanaActionConfig};
 use hashbrown::HashMap;
-use serde_with::{serde_as, DisplayFromStr};
+use serde_with::{DisplayFromStr, serde_as};
 use value::Value;
 
 #[serde_as]
@@ -34,7 +34,7 @@ pub fn service(
     config: &Config,
     db: DbPool,
     sup: web::Data<SupabaseAuth>,
-) -> impl HttpServiceFactory {
+) -> impl HttpServiceFactory + 'static {
     web::resource("/start_unverified/{id}")
         .app_data(sup)
         .app_data(web::Data::new(config.signature_auth()))

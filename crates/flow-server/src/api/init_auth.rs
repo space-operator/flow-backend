@@ -12,7 +12,7 @@ pub struct Output {
     pub msg: String,
 }
 
-pub fn service(config: &Config) -> impl HttpServiceFactory {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/init")
         .wrap(config.anon_key())
         .wrap(config.cors())

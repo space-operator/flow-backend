@@ -3,8 +3,8 @@ use chrono::Utc;
 use convert::{dynamic_to_value, value_to_dynamic};
 use flow_lib::command::prelude::*;
 use rhai::{
-    packages::{Package, StandardPackage},
     Dynamic, EvalAltResult,
+    packages::{Package, StandardPackage},
 };
 use rhai_rand::RandomPackage;
 

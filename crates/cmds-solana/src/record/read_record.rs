@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-use super::{pod_from_bytes, RecordData};
+use super::{RecordData, pod_from_bytes};
 
 pub const NAME: &str = "read_record";
 

@@ -1,7 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use primitive_types::U256;
 
-use super::{token_bridge::Address, ForeignAddress};
+use super::{ForeignAddress, token_bridge::Address};
 
 pub mod complete_native;
 pub mod complete_wrapped;

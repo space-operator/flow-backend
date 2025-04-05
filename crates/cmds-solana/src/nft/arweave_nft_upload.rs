@@ -1,6 +1,6 @@
 use super::NftMetadata;
 use crate::prelude::*;
-use bundlr_sdk::{error::BundlrError, tags::Tag, Bundlr, Ed25519Signer};
+use bundlr_sdk::{Bundlr, Ed25519Signer, error::BundlrError, tags::Tag};
 use flow_lib::solana::SIGNATURE_TIMEOUT;
 use std::collections::HashSet;
 
@@ -21,26 +21,27 @@ impl bundlr_sdk::Signer for BundlrSigner {
     const PUB_LENGTH: u16 = Ed25519Signer::PUB_LENGTH;
 
     fn sign(&self, msg: bytes::Bytes) -> Result<bytes::Bytes, BundlrError> {
-        let sig = if let Some(keypair) = self.keypair.keypair() {
-            keypair.sign_message(&msg)
-        } else {
-            let rt = self
-                .ctx
-                .get::<tokio::runtime::Handle>()
-                .ok_or_else(|| BundlrError::SigningError("tokio runtime not found".to_owned()))?
-                .clone();
-            let ctx = self.ctx.clone();
-            let pubkey = self.keypair.pubkey();
-            rt.block_on(async move {
-                tokio::time::timeout(
-                    SIGNATURE_TIMEOUT,
-                    ctx.request_signature(pubkey, msg, SIGNATURE_TIMEOUT),
-                )
-                .await
-                .map(|res| res.map(|res| res.signature))
-            })
-            .map_err(|e| BundlrError::SigningError(e.to_string()))?
-            .map_err(|e| BundlrError::SigningError(e.to_string()))?
+        let sig = match self.keypair.keypair() {
+            Some(keypair) => keypair.sign_message(&msg),
+            _ => {
+                let rt = self
+                    .ctx
+                    .get::<tokio::runtime::Handle>()
+                    .ok_or_else(|| BundlrError::SigningError("tokio runtime not found".to_owned()))?
+                    .clone();
+                let ctx = self.ctx.clone();
+                let pubkey = self.keypair.pubkey();
+                rt.block_on(async move {
+                    tokio::time::timeout(
+                        SIGNATURE_TIMEOUT,
+                        ctx.request_signature(pubkey, msg, SIGNATURE_TIMEOUT),
+                    )
+                    .await
+                    .map(|res| res.map(|res| res.signature))
+                })
+                .map_err(|e| BundlrError::SigningError(e.to_string()))?
+                .map_err(|e| BundlrError::SigningError(e.to_string()))?
+            }
         };
         Ok(<[u8; 64]>::from(sig).to_vec().into())
     }
@@ -259,13 +260,14 @@ impl Uploader {
     }
 
     async fn get_file(&mut self, path: &str) -> crate::Result<bytes::Bytes> {
-        if let Some(content) = self.content_cache.get(path) {
-            Ok(content.clone())
-        } else {
-            let resp = reqwest::get(path).await?;
-            let data = resp.bytes().await?;
-            self.content_cache.insert(path.to_owned(), data.clone());
-            Ok(data)
+        match self.content_cache.get(path) {
+            Some(content) => Ok(content.clone()),
+            _ => {
+                let resp = reqwest::get(path).await?;
+                let data = resp.bytes().await?;
+                self.content_cache.insert(path.to_owned(), data.clone());
+                Ok(data)
+            }
         }
     }
 

@@ -4,7 +4,7 @@ use solana_program::{instruction::AccountMeta, system_program};
 use tracing::info;
 
 use crate::{
-    governance::{create_realm::with_governing_token_config_args, RealmConfigArgs},
+    governance::{RealmConfigArgs, create_realm::with_governing_token_config_args},
     prelude::*,
 };
 

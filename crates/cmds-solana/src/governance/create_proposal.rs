@@ -4,7 +4,7 @@ use solana_program::{instruction::AccountMeta, system_program};
 
 use crate::prelude::*;
 
-use super::{with_realm_config_accounts, GovernanceInstruction, VoteType, SPL_GOVERNANCE_ID};
+use super::{GovernanceInstruction, SPL_GOVERNANCE_ID, VoteType, with_realm_config_accounts};
 
 const NAME: &str = "create_proposal";
 

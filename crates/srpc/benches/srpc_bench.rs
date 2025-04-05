@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use srpc::{GetBaseUrl, RegisterJsonService};
 use std::convert::Infallible;
 use tungstenite::Message;

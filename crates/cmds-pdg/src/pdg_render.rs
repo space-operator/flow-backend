@@ -1,11 +1,11 @@
 use flow_lib::{
     command::{
-        builder::{BuildResult, BuilderError, CmdBuilder},
         CommandDescription, CommandError,
+        builder::{BuildResult, BuilderError, CmdBuilder},
     },
     context::Context,
 };
-use futures::{stream::BoxStream, FutureExt, SinkExt, StreamExt};
+use futures::{FutureExt, SinkExt, StreamExt, stream::BoxStream};
 use once_cell::sync::Lazy;
 use pdg_common::{PostReply, RenderRequest, RenderSuccess, ResultBool, WaitRequest, WorkItem};
 use serde::{Deserialize, Serialize};
@@ -13,8 +13,8 @@ use std::{collections::HashMap, future::pending, time::Duration};
 use thiserror::Error as ThisError;
 use tokio::{net::TcpStream, time::Instant};
 use tokio_tungstenite::{
-    tungstenite::{Error as WsError, Message},
     MaybeTlsStream, WebSocketStream,
+    tungstenite::{Error as WsError, Message},
 };
 use tracing::instrument::WithSubscriber;
 use uuid::Uuid;
@@ -152,15 +152,13 @@ async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
             "rand_seed={}",
             &rand_seed.as_ref().unwrap_or(&"".to_owned())
         );
-        let text = serde_json::to_string({
-            &RenderRequest {
-                rand_seed,
-                version: "6".to_owned(),
-                workitem: WorkItem {
-                    attributes: input.attributes,
-                    ..<_>::default()
-                },
-            }
+        let text = serde_json::to_string(&RenderRequest {
+            rand_seed,
+            version: "6".to_owned(),
+            workitem: WorkItem {
+                attributes: input.attributes,
+                ..<_>::default()
+            },
         })?;
         tracing::debug!("{}", text);
         text.into()

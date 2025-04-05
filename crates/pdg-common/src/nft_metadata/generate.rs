@@ -1,10 +1,10 @@
 use super::{
-    metaplex::COLOR_NAMES, BodyMaterialVariations, BodyType, EnumRandExt, EnvLight, Fx0, Fx1, Fx1a,
-    Fx2, Fx3, Fx4, Fx5, Fx6, FxJellyfish, FxLineartHelper, GlowingLogo, HelmetLight, HelmetType,
-    LightReflectionMult, MarbleVariation, Pose, RenderParams, WoodVariation,
+    BodyMaterialVariations, BodyType, EnumRandExt, EnvLight, Fx0, Fx1, Fx1a, Fx2, Fx3, Fx4, Fx5,
+    Fx6, FxJellyfish, FxLineartHelper, GlowingLogo, HelmetLight, HelmetType, LightReflectionMult,
+    MarbleVariation, Pose, RenderParams, WoodVariation, metaplex::COLOR_NAMES,
 };
 use indexmap::IndexSet;
-use rand::{seq::SliceRandom, Rng};
+use rand::{Rng, seq::SliceRandom};
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
@@ -276,7 +276,7 @@ impl RenderParams {
             }
             Fx0::Pixel => {
                 self.env_light = EnvLight::day_or_night(rng);
-                self.pixel_amount = rng.gen::<f64>() * rng.gen_range(20.0..=40.0);
+                self.pixel_amount = rng.r#gen::<f64>() * rng.gen_range(20.0..=40.0);
             }
             _ => {
                 self.env_light = EnvLight::day_or_night(rng);
@@ -334,30 +334,30 @@ impl RenderParams {
         match fx1 {
             Fx1::No => {}
             Fx1::Melted => {
-                self.melt_amount = rng.gen::<f64>() * 30.0;
+                self.melt_amount = rng.r#gen::<f64>() * 30.0;
                 self.melting_glow_amount = 50.0;
             }
-            Fx1::Disintegration => self.disintegration_amount = rng.gen::<f64>() * 30.0,
+            Fx1::Disintegration => self.disintegration_amount = rng.r#gen::<f64>() * 30.0,
         }
 
         let fx2 = Fx2::choose(rng);
         self.fx2 = fx2;
         match fx2 {
             Fx2::No => {}
-            Fx2::Butterflies => self.butterfly_amount = rng.gen::<f64>() * 30.0,
+            Fx2::Butterflies => self.butterfly_amount = rng.r#gen::<f64>() * 30.0,
             Fx2::Underwater => {} // underwater is handled separately
-            Fx2::Fireflyies => self.firefly_amount = rng.gen::<f64>() * 30.0,
-            Fx2::Fall => self.fall_amount = rng.gen::<f64>() * 30.0,
-            Fx2::Ladybag => self.ladybag_amount = rng.gen::<f64>() * 30.0,
-            Fx2::Spring => self.spring_amount = rng.gen::<f64>() * 30.0,
+            Fx2::Fireflyies => self.firefly_amount = rng.r#gen::<f64>() * 30.0,
+            Fx2::Fall => self.fall_amount = rng.r#gen::<f64>() * 30.0,
+            Fx2::Ladybag => self.ladybag_amount = rng.r#gen::<f64>() * 30.0,
+            Fx2::Spring => self.spring_amount = rng.r#gen::<f64>() * 30.0,
         }
 
         let fx4 = Fx4::choose(rng);
         self.fx4 = fx4;
         match fx4 {
             Fx4::No => {}
-            Fx4::Frozen => self.frozen_amount = rng.gen::<f64>() * 30.0,
-            Fx4::Rain => self.rain_amount = rng.gen::<f64>() * 40.0,
+            Fx4::Frozen => self.frozen_amount = rng.r#gen::<f64>() * 30.0,
+            Fx4::Rain => self.rain_amount = rng.r#gen::<f64>() * 40.0,
         }
 
         let fx5 = Fx5::choose(rng);
@@ -387,7 +387,7 @@ impl RenderParams {
             let jellyfish = FxJellyfish::choose(rng);
             self.fx_jellifish = jellyfish;
 
-            self.underwater_fog_amount = rng.gen::<f64>() * 30.0;
+            self.underwater_fog_amount = rng.r#gen::<f64>() * 30.0;
             self.background_underwater_color_hue = 38.8;
 
             let env_light = if self.fx0 == Fx0::Hologram {
@@ -456,7 +456,7 @@ impl RenderParams {
     }
 
     pub fn generate_random_value<R: rand::Rng + ?Sized>(mut self, rng: &mut R) -> Self {
-        self.random_value = rng.gen::<f64>() * 360.0;
+        self.random_value = rng.r#gen::<f64>() * 360.0;
         self
     }
 

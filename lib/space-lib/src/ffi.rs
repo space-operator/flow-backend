@@ -1,9 +1,9 @@
 use crate::{
-    common::{Method, RequestData},
     Result,
+    common::{Method, RequestData},
 };
 
-extern "C" {
+unsafe extern "C" {
     fn http_call_request(bytes: u32, bytes_len: u32) -> u64;
 }
 

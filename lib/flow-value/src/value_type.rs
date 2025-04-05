@@ -79,7 +79,7 @@ impl serde::de::Visitor<'_> for ValueTypeVisitor {
                 return Err(serde::de::Error::invalid_value(
                     serde::de::Unexpected::Unsigned(v as u64),
                     &"value in [0, 13]",
-                ))
+                ));
             }
         })
     }
@@ -107,7 +107,7 @@ impl serde::de::Visitor<'_> for ValueTypeVisitor {
                 return Err(serde::de::Error::invalid_value(
                     serde::de::Unexpected::Str(v),
                     &"one of valid keys",
-                ))
+                ));
             }
         })
     }

@@ -1,7 +1,7 @@
 use super::prelude::*;
 use serde_json::value::RawValue;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/db_rpc")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

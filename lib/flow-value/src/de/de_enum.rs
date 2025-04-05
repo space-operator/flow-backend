@@ -1,5 +1,5 @@
 use crate::{Error, Value};
-use serde::de::{value::U32Deserializer, IntoDeserializer};
+use serde::de::{IntoDeserializer, value::U32Deserializer};
 
 pub struct EnumDeserializer {
     pub variant: String,

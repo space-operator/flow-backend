@@ -1,26 +1,26 @@
 use crate::{
     api::{auth_proxy, ws_auth_proxy},
     error::ErrorBody,
-    user::{SignatureAuth, FLOW_RUN_TOKEN_PREFIX},
+    user::{FLOW_RUN_TOKEN_PREFIX, SignatureAuth},
 };
 use actix_web::{
-    body::EitherBody,
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
-    http::{
-        header::{
-            from_one_raw_str, Header, HeaderName, HeaderValue, InvalidHeaderValue,
-            TryIntoHeaderValue, AUTHORIZATION,
-        },
-        StatusCode,
-    },
     HttpMessage, HttpResponse, ResponseError,
+    body::EitherBody,
+    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
+    http::{
+        StatusCode,
+        header::{
+            AUTHORIZATION, Header, HeaderName, HeaderValue, InvalidHeaderValue, TryIntoHeaderValue,
+            from_one_raw_str,
+        },
+    },
 };
 use db::{
     apikey,
     pool::{ProxiedDbPool, RealDbPool},
 };
 use flow_lib::{FlowRunId, UserId};
-use futures_util::{future::LocalBoxFuture, FutureExt};
+use futures_util::{FutureExt, future::LocalBoxFuture};
 use hmac::{Hmac, Mac};
 use reqwest::header as req;
 use serde::{Deserialize, Serialize};

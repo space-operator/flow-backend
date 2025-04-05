@@ -124,10 +124,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     };
 
     // TODO: check this: update_authority is not in signer list
-    let builder = if let Some(update_authority) = input.update_authority {
-        builder.update_authority(Some(update_authority.pubkey()))
-    } else {
-        builder
+    let builder = match input.update_authority {
+        Some(update_authority) => builder.update_authority(Some(update_authority.pubkey())),
+        _ => builder,
     };
 
     let ins = builder.instruction();

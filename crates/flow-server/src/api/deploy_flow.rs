@@ -9,7 +9,7 @@ pub struct Output {
     pub deployment_id: DeploymentId,
 }
 
-pub fn service(config: &Config) -> impl HttpServiceFactory {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/deploy/{id}")
         .wrap(config.cors())
         .route(web::post().to(deploy_flow))

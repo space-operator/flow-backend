@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use base64::decode;
 use primitive_types::U256;
-use wormhole_sdk::{nft::Message as NftMessage, vaa::Digest, Address, Chain, Vaa};
+use wormhole_sdk::{Address, Chain, Vaa, nft::Message as NftMessage, vaa::Digest};
 
 use super::MessageAlias;
 

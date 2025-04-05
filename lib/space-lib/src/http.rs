@@ -1,4 +1,4 @@
-use crate::{common::Method, ffi, Result};
+use crate::{Result, common::Method, ffi};
 
 pub struct Request {
     url: String,

@@ -3,42 +3,42 @@ use crate::{
     context::CommandFactory,
     flow_registry::FlowRegistry,
     flow_run_events::{
-        EventSender, FlowError, FlowFinish, FlowStart, NodeError, NodeFinish, NodeOutput,
-        NodeStart, NODE_SPAN_NAME,
+        EventSender, FlowError, FlowFinish, FlowStart, NODE_SPAN_NAME, NodeError, NodeFinish,
+        NodeOutput, NodeStart,
     },
 };
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
 use flow_lib::{
+    CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
-    context::{execute, get_jwt, CommandContext, Context},
-    solana::{find_failed_instruction, ExecutionConfig, Instructions, Pubkey, Wallet},
+    context::{CommandContext, Context, execute, get_jwt},
+    solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
     utils::{Extensions, TowerClient},
-    CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
 };
 use futures::{
+    FutureExt, StreamExt,
     channel::{mpsc, oneshot},
     future::{BoxFuture, Either},
     stream::FuturesUnordered,
-    FutureExt, StreamExt,
 };
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexMap;
 use petgraph::{
+    Directed, Direction,
     csr::DefaultIx,
     graph::EdgeIndex,
     stable_graph::{Edges, NodeIndex, StableGraph},
     visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
-    Directed, Direction,
 };
 use solana_program::system_instruction::transfer_many;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
     sync::{
-        atomic::{AtomicU32, Ordering},
         Arc, RwLock,
+        atomic::{AtomicU32, Ordering},
     },
     task::Poll,
     time::Duration,
@@ -1799,11 +1799,7 @@ fn finished_recursive(
     }
 
     if filled {
-        if has_array_input {
-            false
-        } else {
-            ran
-        }
+        if has_array_input { false } else { ran }
     } else {
         !all_sources_not_finished
     }

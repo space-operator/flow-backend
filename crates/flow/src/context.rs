@@ -1,11 +1,11 @@
 use crate::{
-    command::wasm::{Description, WasmCommand},
     Error,
+    command::wasm::{Description, WasmCommand},
 };
 use flow_lib::{
+    CommandType,
     command::{CommandDescription, CommandTrait},
     config::client::NodeData,
-    CommandType,
 };
 use std::{borrow::Cow, collections::BTreeMap};
 use tokio::process::Child;

@@ -3,8 +3,8 @@ use bytes::Bytes;
 use flow_lib::command::prelude::*;
 use mime_guess::MimeGuess;
 use reqwest::{
-    header::{AUTHORIZATION, CONTENT_TYPE},
     StatusCode,
+    header::{AUTHORIZATION, CONTENT_TYPE},
 };
 use std::{borrow::Cow, path::PathBuf};
 

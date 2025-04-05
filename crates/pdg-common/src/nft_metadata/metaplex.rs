@@ -1,4 +1,4 @@
-use super::{generate::EffectsList, EnumExt, PropertyNotFound, RenderParams};
+use super::{EnumExt, PropertyNotFound, RenderParams, generate::EffectsList};
 use serde::{Deserialize, Serialize};
 use thiserror::Error as ThisError;
 

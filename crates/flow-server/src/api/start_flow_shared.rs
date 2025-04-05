@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::db_worker::{user_worker::StartFlowShared, GetUserWorker};
+use crate::db_worker::{GetUserWorker, user_worker::StartFlowShared};
 use db::pool::DbPool;
 use hashbrown::HashMap;
 use value::Value;
@@ -17,7 +17,7 @@ pub struct Output {
     pub flow_run_id: FlowRunId,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/start_shared/{id}")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

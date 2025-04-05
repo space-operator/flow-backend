@@ -3,7 +3,7 @@ use db::SqlState;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/create_store")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

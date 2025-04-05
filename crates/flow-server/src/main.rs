@@ -1,24 +1,26 @@
 use actix::Actor;
 use actix_web::{
+    App, HttpServer,
     middleware::{Compress, Logger},
-    web, App, HttpServer,
+    web,
 };
 use db::{
-    pool::{DbPool, ProxiedDbPool, RealDbPool},
     LocalStorage, WasmStorage,
+    pool::{DbPool, ProxiedDbPool, RealDbPool},
 };
 use either::Either;
 use flow_server::{
+    Config,
     api::{self, prelude::Success},
-    db_worker::{token_worker::token_from_apikeys, DBWorker, SystemShutdown},
+    db_worker::{DBWorker, SystemShutdown, token_worker::token_from_apikeys},
     flow_logs,
     middleware::auth_v1,
     user::SupabaseAuth,
-    ws, Config,
+    ws,
 };
-use futures_util::{future::ok, TryFutureExt};
+use futures_util::{TryFutureExt, future::ok};
 use std::{borrow::Cow, collections::BTreeSet, convert::Infallible, sync::Arc, time::Duration};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Layer};
+use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
@@ -159,17 +161,25 @@ async fn main() {
     let shutdown_timeout_secs = config.shutdown_timeout_secs;
 
     if let Some(key) = &config.helius_api_key {
-        std::env::set_var("HELIUS_API_KEY", key);
+        unsafe {
+            std::env::set_var("HELIUS_API_KEY", key);
+        }
     }
     if let Some(solana) = &config.solana {
         if let Some(url) = &solana.devnet_url {
-            std::env::set_var("SOLANA_DEVNET_URL", url.to_string());
+            unsafe {
+                std::env::set_var("SOLANA_DEVNET_URL", url.to_string());
+            }
         }
         if let Some(url) = &solana.testnet_url {
-            std::env::set_var("SOLANA_TESTNET_URL", url.to_string());
+            unsafe {
+                std::env::set_var("SOLANA_TESTNET_URL", url.to_string());
+            }
         }
         if let Some(url) = &solana.mainnet_url {
-            std::env::set_var("SOLANA_MAINNET_URL", url.to_string());
+            unsafe {
+                std::env::set_var("SOLANA_MAINNET_URL", url.to_string());
+            }
         }
     }
 

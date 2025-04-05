@@ -5,7 +5,7 @@ pub struct Output {
     pub user_id: UserId,
 }
 
-pub fn service(config: &Config) -> impl HttpServiceFactory {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/info")
         .wrap(config.cors())
         .route(web::get().to(key_info))

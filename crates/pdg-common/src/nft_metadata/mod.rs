@@ -1,6 +1,6 @@
 use self::pdg::{Attr, AttrCfg};
 use rand::seq::{IteratorRandom, SliceRandom};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::{borrow::Cow, collections::HashMap, fmt::Debug};
 use strum::{Display, IntoEnumIterator};

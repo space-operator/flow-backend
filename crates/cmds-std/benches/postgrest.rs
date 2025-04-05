@@ -1,8 +1,8 @@
 use cmds_std::postgrest::builder_select;
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use flow_lib::{
-    value::{self, array, map},
     Context, Value,
+    value::{self, array, map},
 };
 use reqwest::header::{HeaderMap, HeaderValue};
 

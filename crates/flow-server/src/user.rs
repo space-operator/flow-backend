@@ -1,5 +1,5 @@
-use crate::error::ErrorBody;
 use crate::SupabaseConfig;
+use crate::error::ErrorBody;
 use actix_web::ResponseError;
 use bincode::{Decode, Encode};
 use db::pool::{DbPool, RealDbPool};

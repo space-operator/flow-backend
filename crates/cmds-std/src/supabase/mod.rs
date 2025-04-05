@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use anyhow::anyhow;
 use flow_lib::config::node::Permissions;
-use reqwest::{header::AUTHORIZATION, StatusCode};
+use reqwest::{StatusCode, header::AUTHORIZATION};
 
 // Command Name
 const NAME: &str = "supabase";

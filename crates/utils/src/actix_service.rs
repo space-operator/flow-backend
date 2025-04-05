@@ -1,5 +1,5 @@
 use actix::MailboxError;
-use futures_util::{future::Map, FutureExt};
+use futures_util::{FutureExt, future::Map};
 
 pub struct ActixService<T>
 where

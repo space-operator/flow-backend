@@ -5,7 +5,7 @@ use rand::Rng;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, system_program, sysvar};
 
-use super::{get_sequence_number_from_message, AttestTokenData, TokenBridgeInstructions};
+use super::{AttestTokenData, TokenBridgeInstructions, get_sequence_number_from_message};
 
 // Command Name
 const NAME: &str = "attest_token";
@@ -48,7 +48,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         crate::wormhole::token_bridge_program_id(ctx.cfg.solana_client.cluster);
 
     // TODO: use a real nonce
-    let nonce = rand::thread_rng().gen();
+    let nonce = rand::thread_rng().r#gen();
 
     let config_key = Pubkey::find_program_address(&[b"config"], &token_bridge_program_id).0;
 

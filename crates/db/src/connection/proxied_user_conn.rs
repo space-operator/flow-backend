@@ -2,9 +2,9 @@
 
 use super::*;
 use crate::FlowRunLogsRow;
-use flow_lib::{context::get_jwt, BoxError, UserId};
+use flow_lib::{BoxError, UserId, context::get_jwt};
 use reqwest::header::AUTHORIZATION;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::value::RawValue;
 use thiserror::Error as ThisError;
 use tower::{Service, ServiceExt};

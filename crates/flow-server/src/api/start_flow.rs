@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::db_worker::{user_worker::StartFlowFresh, GetUserWorker};
+use crate::db_worker::{GetUserWorker, user_worker::StartFlowFresh};
 use db::pool::DbPool;
 use flow_lib::config::client::PartialConfig;
 use hashbrown::HashMap;
@@ -21,7 +21,7 @@ pub struct Output {
     pub flow_run_id: FlowRunId,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/start/{id}")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

@@ -84,7 +84,7 @@ impl CommandTrait for WasmCommand {
                                 return Ok(ValueSet::from([(
                                     output_name,
                                     object["Ok"].clone().into(),
-                                )]))
+                                )]));
                             }
                         }
                     };

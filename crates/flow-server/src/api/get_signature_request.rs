@@ -1,15 +1,15 @@
 use super::prelude::*;
 use crate::db_worker::{
+    FindActor, UserWorker,
     flow_run_worker::{FlowRunWorker, SubscribeEvents},
     user_worker::SigReqExists,
-    FindActor, UserWorker,
 };
 use db::connection::FlowRunInfo;
 use flow::flow_run_events::Event;
 use flow_lib::context::signer::SignatureRequest;
 use futures_util::StreamExt;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/signature_request/{run_id}")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

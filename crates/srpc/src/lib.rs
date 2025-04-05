@@ -4,19 +4,19 @@
 
 use actix::{Actor, ActorFutureExt, AsyncContext, Context, ResponseFuture, WrapFuture};
 use actix_web::{
-    dev::ServerHandle, error::InternalError, http::StatusCode, web, App, HttpRequest, HttpResponse,
-    HttpServer,
+    App, HttpRequest, HttpResponse, HttpServer, dev::ServerHandle, error::InternalError,
+    http::StatusCode, web,
 };
 use actix_web_actors::ws::{self, WebsocketContext};
 use futures_channel::oneshot;
 use futures_util::TryFutureExt;
 use hashbrown::HashMap;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::Value as JsonValue;
 use smallvec::SmallVec;
 use std::{collections::VecDeque, fmt::Display, marker::PhantomData};
 use thiserror::Error as ThisError;
-use tower::{util::BoxService, BoxError, Service as _, ServiceBuilder, ServiceExt};
+use tower::{BoxError, Service as _, ServiceBuilder, ServiceExt, util::BoxService};
 use url::Url;
 
 pub type JsonService = BoxService<JsonValue, JsonValue, JsonValue>;
@@ -458,7 +458,7 @@ async fn call(
                 envelope,
                 success: false,
                 data: "Server stopped".into(),
-            })
+            });
         }
     };
 

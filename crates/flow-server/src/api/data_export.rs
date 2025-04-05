@@ -1,7 +1,7 @@
 use super::prelude::*;
 use db::connection::ExportedUserData;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/export")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

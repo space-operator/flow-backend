@@ -2,7 +2,7 @@ use super::prelude::*;
 use crate::user::{SupabaseAuth, UpsertWalletBody};
 use serde_json::value::RawValue;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/upsert")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

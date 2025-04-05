@@ -2,7 +2,7 @@ use super::prelude::*;
 use crate::db_worker::CopyIn;
 use db::FlowRunLogsRow;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory {
+pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
     web::resource("/db_push_logs")
         .wrap(config.all_auth(db))
         .wrap(config.cors())

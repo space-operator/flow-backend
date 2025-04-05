@@ -1,6 +1,6 @@
 use crate::{
-    connection::{AdminConn, DbClient, UserConnection},
     Error,
+    connection::{AdminConn, DbClient, UserConnection},
 };
 use chrono::NaiveDateTime;
 use flow_lib::UserId;
@@ -40,7 +40,7 @@ impl APIKey {
     pub fn generate<R: rand::Rng + rand::CryptoRng>(rng: &mut R, info: KeyInfo) -> (Self, String) {
         let mut key = KEY_PREFIX.to_owned();
         key.push_str(&base64::encode_config(
-            rng.gen::<[u8; 32]>(),
+            rng.r#gen::<[u8; 32]>(),
             base64::URL_SAFE_NO_PAD,
         ));
         let trimmed_key = "*****".to_owned() + &key[key.len() - 5..];
@@ -173,7 +173,7 @@ impl UserConnection {
                         if *db_error.code() == SqlState::UNIQUE_VIOLATION {
                             match db_error.constraint() {
                                 Some("uc-user_id-name") => {
-                                    return Err(Error::LogicError(NameConflict))
+                                    return Err(Error::LogicError(NameConflict));
                                 }
                                 Some("apikeys_pkey") => {
                                     continue;

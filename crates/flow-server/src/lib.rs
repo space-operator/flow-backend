@@ -1,4 +1,4 @@
-use actix_web::http::header::{HeaderName, HeaderValue, AUTHORIZATION};
+use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
 use anyhow::Context;
 use db::{
     config::{DbConfig, ProxiedDbConfig},
@@ -390,8 +390,8 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow::{flow_run_events::event_channel, FlowGraph};
-    use flow_lib::{command::CommandDescription, config::client::ClientConfig, FlowConfig};
+    use flow::{FlowGraph, flow_run_events::event_channel};
+    use flow_lib::{FlowConfig, command::CommandDescription, config::client::ClientConfig};
     use value::Value;
 
     use cmds_solana as _;
