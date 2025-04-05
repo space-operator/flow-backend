@@ -149,11 +149,7 @@ impl UserWorker {
         options: &StartFlowDeploymentOptions,
         ctx: &mut actix::Context<Self>,
     ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static {
-        let new_flow_run = TowerClient::from_service(
-            ActixService::from(ctx.address().recipient()),
-            new_flow_run::Error::Worker,
-            16,
-        );
+        let new_flow_run = TowerClient::new(ActixService::from(ctx.address().recipient()));
 
         let root = self.root.clone();
         let db = self.db.clone();
@@ -165,11 +161,7 @@ impl UserWorker {
         let action_identity = d.action_identity;
         async move {
             let get_jwt = root.send(GetTokenWorker { user_id }).await??;
-            let get_jwt = TowerClient::from_service(
-                ActixService::from(get_jwt.recipient()),
-                get_jwt::Error::worker,
-                16,
-            );
+            let get_jwt = TowerClient::new(ActixService::from(get_jwt.recipient()));
 
             let mut signer =
                 SignerWorker::fetch_wallets_from_ids(&db, user_id, addr.clone(), &wallets_id)
@@ -195,11 +187,7 @@ impl UserWorker {
                 }
             }
             let signer = signer.start();
-            let signer = TowerClient::from_service(
-                ActixService::from(signer.recipient()),
-                signer::Error::Worker,
-                16,
-            );
+            let signer = TowerClient::new(ActixService::from(signer.recipient()));
 
             Ok(FlowSetContext::builder()
                 .depth(0)

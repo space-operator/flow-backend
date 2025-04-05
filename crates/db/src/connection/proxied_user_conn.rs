@@ -7,6 +7,7 @@ use reqwest::header::AUTHORIZATION;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::value::RawValue;
 use thiserror::Error as ThisError;
+use tower::{Service, ServiceExt};
 use value::ConstBytes;
 
 #[derive(ThisError, Debug)]
@@ -38,7 +39,11 @@ impl ProxiedUserConn {
     pub async fn push_logs(&self, rows: &[FlowRunLogsRow]) -> crate::Result<()> {
         let jwt = self
             .jwt_svc
-            .call_ref(get_jwt::Request {
+            .clone()
+            .ready()
+            .await
+            .map_err(Error::from)?
+            .call(get_jwt::Request {
                 user_id: self.user_id,
             })
             .await
@@ -63,7 +68,11 @@ impl ProxiedUserConn {
     {
         let jwt = self
             .jwt_svc
-            .call_ref(get_jwt::Request {
+            .clone()
+            .ready()
+            .await
+            .map_err(Error::from)?
+            .call(get_jwt::Request {
                 user_id: self.user_id,
             })
             .await

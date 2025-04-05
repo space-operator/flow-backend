@@ -18,7 +18,7 @@ srpc.workspace = true
 thiserror = "1.0.63"
 tokio = { version = "1", features = ["net"] }
 tokio-tungstenite = { version = "0.24.0", features = ["__rustls-tls"] }
-tower = "0.4.13"
+tower = "0.5"
 tracing = "0.1.40"
 url = { version = "2.5.0", features = ["serde"] }
 capnp = "0.20"

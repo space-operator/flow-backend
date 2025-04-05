@@ -50,6 +50,7 @@ use tokio::{
     task::{JoinError, JoinHandle},
 };
 use tokio_util::sync::CancellationToken;
+use tower::{Service, ServiceExt};
 use tracing::Instrument;
 use uuid::Uuid;
 use value::Value;
@@ -1127,18 +1128,23 @@ impl FlowGraph {
                         Ok(execute::Response { signature: None })
                     } else if let Some(exec) = &self.parent_flow_execute {
                         self.collect_flow_output(s).await;
-                        s.stop
-                            .race(
-                                std::pin::pin!(s.stop_shared.race(
-                                    std::pin::pin!(exec.call_ref(execute::Request {
-                                        instructions: ins,
-                                        output: s.result.output.clone(),
-                                    })),
-                                    execute::Error::Canceled,
-                                )),
-                                execute::Error::Canceled,
-                            )
-                            .await
+                        match exec.clone().ready().await {
+                            Ok(exec) => {
+                                s.stop
+                                    .race(
+                                        std::pin::pin!(s.stop_shared.race(
+                                            std::pin::pin!(exec.call(execute::Request {
+                                                instructions: ins,
+                                                output: s.result.output.clone(),
+                                            })),
+                                            execute::Error::Canceled,
+                                        )),
+                                        execute::Error::Canceled,
+                                    )
+                                    .await
+                            }
+                            Err(error) => Err(error),
+                        }
                     } else {
                         tracing::info!("executing instructions");
                         let config = self.tx_exec_config.clone();
@@ -1577,6 +1583,7 @@ impl FlowGraph {
     }
 }
 
+#[derive(Clone)]
 struct ExecuteWithBundling {
     node_id: NodeId,
     times: u32,
@@ -1607,6 +1614,7 @@ impl tower::Service<execute::Request> for ExecuteWithBundling {
     }
 }
 
+#[derive(Clone)]
 struct ExecuteNoBundling {
     node_id: NodeId,
     times: u32,
@@ -1691,30 +1699,22 @@ async fn run_command(
     tx_exec_config: ExecutionConfig,
 ) -> Finished {
     let svc = match mode {
-        client::BundlingMode::Off => TowerClient::from_service(
-            ExecuteNoBundling {
-                node_id: node.id,
-                times,
-                tx: tx.clone(),
-                simple_svc: execute::simple(&ctx, 32, Some(flow_run_id), tx_exec_config.clone()),
-                stop_shared,
-                overwrite_feepayer: tx_exec_config
-                    .overwrite_feepayer
-                    .clone()
-                    .map(|x| x.to_keypair()),
-            },
-            execute::Error::worker,
-            32,
-        ),
-        client::BundlingMode::Automatic => TowerClient::from_service(
-            ExecuteWithBundling {
-                node_id: node.id,
-                times,
-                tx: tx.clone(),
-            },
-            execute::Error::worker,
-            32,
-        ),
+        client::BundlingMode::Off => TowerClient::new(ExecuteNoBundling {
+            node_id: node.id,
+            times,
+            tx: tx.clone(),
+            simple_svc: execute::simple(&ctx, Some(flow_run_id), tx_exec_config.clone()),
+            stop_shared,
+            overwrite_feepayer: tx_exec_config
+                .overwrite_feepayer
+                .clone()
+                .map(|x| x.to_keypair()),
+        }),
+        client::BundlingMode::Automatic => TowerClient::new(ExecuteWithBundling {
+            node_id: node.id,
+            times,
+            tx: tx.clone(),
+        }),
     };
     ctx.command = Some(CommandContext {
         svc,

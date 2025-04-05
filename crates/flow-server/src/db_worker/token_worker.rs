@@ -409,11 +409,7 @@ pub async fn token_from_apikeys(
     let services = actors
         .iter()
         .map(|(user_id, addr)| {
-            let svc = get_jwt::Svc::from_service(
-                ActixService::from(addr.clone().recipient()),
-                get_jwt::Error::worker,
-                16,
-            );
+            let svc = get_jwt::Svc::new(ActixService::from(addr.clone().recipient()));
             (*user_id, svc)
         })
         .collect::<HashMap<UserId, get_jwt::Svc>>();

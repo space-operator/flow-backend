@@ -1339,9 +1339,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.17"
+version = "1.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fcb57c740ae1daf453ae85f16e37396f672b039e00d9d866e07ddb24e328e3a"
+checksum = "525046617d8376e3db1deffb079e91cef90a89fc3ca5c185bbf8c9ecdd15cd5c"
 dependencies = [
  "jobserver",
  "libc",
@@ -1692,7 +1692,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tokio-tungstenite 0.24.0",
- "tower 0.4.13",
+ "tower",
  "tracing",
  "url",
 ]
@@ -2333,7 +2333,7 @@ dependencies = [
  "tokio-postgres",
  "tokio-postgres-rustls",
  "toml",
- "tower 0.4.13",
+ "tower",
  "tracing",
  "tracing-subscriber",
  "url",
@@ -2723,9 +2723,9 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "errno"
-version = "0.3.10"
+version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33d852cb9b869c2a9b3df2f71a3074817f01e1844f839a144f5fcef059a4eb5d"
+checksum = "976dd42dc7e85965fe702eb8164f21f450704bdde31faefd6471dba214cb594e"
 dependencies = [
  "libc",
  "windows-sys 0.59.0",
@@ -2851,7 +2851,7 @@ dependencies = [
  "getset",
  "hashbrown 0.14.5",
  "home",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "inventory",
  "mime_guess",
  "petgraph",
@@ -2867,7 +2867,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tokio-util 0.7.14",
- "tower 0.4.13",
+ "tower",
  "tracing",
  "tracing-subscriber",
  "url",
@@ -2920,7 +2920,7 @@ dependencies = [
  "spo-helius",
  "thiserror 1.0.69",
  "tokio",
- "tower 0.4.13",
+ "tower",
  "tracing",
  "uuid 1.16.0",
 ]
@@ -2978,7 +2978,7 @@ dependencies = [
  "tokio",
  "tokio-util 0.7.14",
  "toml",
- "tower 0.4.13",
+ "tower",
  "tracing",
  "tracing-log",
  "tracing-subscriber",
@@ -2995,7 +2995,7 @@ dependencies = [
  "bs58 0.4.0",
  "bytes",
  "five8",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "itoa",
  "rust_decimal",
  "rust_decimal_macros",
@@ -3267,7 +3267,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http 0.2.12",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "slab",
  "tokio",
  "tokio-util 0.7.14",
@@ -3286,7 +3286,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "http 1.3.1",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "slab",
  "tokio",
  "tokio-util 0.7.14",
@@ -3843,9 +3843,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.8.0"
+version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3954d50fe15b02142bf25d3b8bdadb634ec3948f103d04ffe3031bc8fe9d7058"
+checksum = "cea70ddb795996207ad57735b50c5982d8844f38ba9ee5f1aedcfb708a2aa11e"
 dependencies = [
  "equivalent",
  "hashbrown 0.15.2",
@@ -4663,9 +4663,9 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "openssl"
-version = "0.10.71"
+version = "0.10.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e14130c6a98cd258fdcb0fb6d744152343ff729cbfcb28c656a9d12b999fbcd"
+checksum = "fedfea7d58a1f73118430a55da6a286e7b044961736ce96a16a17068ea25e5da"
 dependencies = [
  "bitflags 2.9.0",
  "cfg-if",
@@ -4704,9 +4704,9 @@ dependencies = [
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.106"
+version = "0.9.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bb61ea9811cc39e3c2069f40b8b8e2e70d8569b361f879786cc7ed48b777cdd"
+checksum = "8288979acd84749c744a9014b4382d42b8f7b2592847b5afb2ed29e5d16ede07"
 dependencies = [
  "cc",
  "libc",
@@ -4835,7 +4835,7 @@ name = "pdg-common"
 version = "0.0.0"
 dependencies = [
  "derive_more 0.99.19",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "rand 0.8.5",
  "serde",
  "serde_json",
@@ -4867,7 +4867,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4c5cc86750666a3ed20bdaf5ca2a0344f9c67674cae0515bec2da16fbaa47db"
 dependencies = [
  "fixedbitset",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
 ]
 
 [[package]]
@@ -4906,26 +4906,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67eabc2ef2a60eb7faa00097bd1ffdb5bd28e62bf39990626a582201b7a754e5"
 dependencies = [
  "siphasher",
-]
-
-[[package]]
-name = "pin-project"
-version = "1.1.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "677f1add503faace112b9f1373e43e9e054bfdd22ff1a63c1bc485eaec6a6a8a"
-dependencies = [
- "pin-project-internal",
-]
-
-[[package]]
-name = "pin-project-internal"
-version = "1.1.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e918e4ff8c4549eb882f14b3a4bc8c8bc93de829416eacf579f1207a8fbf861"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.100",
 ]
 
 [[package]]
@@ -5098,7 +5078,7 @@ dependencies = [
  "either",
  "hashbrown 0.14.5",
  "hashbrown 0.15.2",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "itoa",
  "num-traits",
  "once_cell",
@@ -5249,7 +5229,7 @@ dependencies = [
  "either",
  "hashbrown 0.15.2",
  "hex",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "memchr",
  "num-traits",
  "once_cell",
@@ -5379,7 +5359,7 @@ version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "416621ae82b84466cf4ff36838a9b0aeb4a67e76bd3065edc8c9cb7da19b1bc7"
 dependencies = [
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "polars-error",
  "polars-utils",
  "version_check",
@@ -5470,7 +5450,7 @@ dependencies = [
  "bytes",
  "compact_str",
  "hashbrown 0.15.2",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "libc",
  "memmap2 0.9.5",
  "num-traits",
@@ -5573,9 +5553,9 @@ dependencies = [
 
 [[package]]
 name = "prettyplease"
-version = "0.2.31"
+version = "0.2.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5316f57387668042f561aae71480de936257848f9c43ce528e311d89a07cadeb"
+checksum = "664ec5419c51e34154eec046ebcba56312d5a2fc3b09a06da188e1ad21afadf6"
 dependencies = [
  "proc-macro2",
  "syn 2.0.100",
@@ -6197,7 +6177,7 @@ dependencies = [
  "tokio-native-tls",
  "tokio-rustls 0.26.2",
  "tokio-util 0.7.14",
- "tower 0.5.2",
+ "tower",
  "tower-service",
  "url",
  "wasm-bindgen",
@@ -6229,7 +6209,7 @@ source = "git+https://github.com/space-operator/rhai?rev=b39d2bfb#b39d2bfb1b7412
 dependencies = [
  "ahash 0.8.11",
  "bitflags 2.9.0",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "instant",
  "num-traits",
  "once_cell",
@@ -6749,7 +6729,7 @@ version = "1.0.140"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20068b6e96dc6c9bd23e01df8827e6c7e1f2fddd43c21810382803c136b99373"
 dependencies = [
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "itoa",
  "memchr",
  "ryu",
@@ -6789,7 +6769,7 @@ dependencies = [
  "chrono",
  "hex",
  "indexmap 1.9.3",
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "serde",
  "serde_derive",
  "serde_json",
@@ -6986,9 +6966,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.14.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fcf8323ef1faaee30a44a340193b1ac6814fd9b7b4e88e9d4519a3e4abe1cfd"
+checksum = "8917285742e9f3e1683f0a9c4e6b57960b7314d0b08d30d1ecd426713ee2eee9"
 
 [[package]]
 name = "smartstring"
@@ -8967,7 +8947,7 @@ dependencies = [
  "smallvec",
  "thiserror 1.0.69",
  "tokio",
- "tower 0.4.13",
+ "tower",
  "tracing",
  "tungstenite 0.24.0",
  "url",
@@ -9699,26 +9679,9 @@ version = "0.22.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17b4795ff5edd201c7cd6dca065ae59972ce77d1b80fa0a84d94950ece7d1474"
 dependencies = [
- "indexmap 2.8.0",
+ "indexmap 2.9.0",
  "toml_datetime",
  "winnow",
-]
-
-[[package]]
-name = "tower"
-version = "0.4.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8fa9be0de6cf49e536ce1851f987bd21a43b771b09473c3549a6c853db37c1c"
-dependencies = [
- "futures-core",
- "futures-util",
- "pin-project",
- "pin-project-lite",
- "tokio",
- "tokio-util 0.7.14",
- "tower-layer",
- "tower-service",
- "tracing",
 ]
 
 [[package]]
@@ -9732,8 +9695,10 @@ dependencies = [
  "pin-project-lite",
  "sync_wrapper 1.0.2",
  "tokio",
+ "tokio-util 0.7.14",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -10056,7 +10021,7 @@ dependencies = [
  "hashbrown 0.14.5",
  "serde",
  "thiserror 1.0.69",
- "tower 0.4.13",
+ "tower",
 ]
 
 [[package]]

@@ -1,5 +1,8 @@
 use crate::{
-    context::{execute::Error, signer},
+    context::{
+        execute::{self, Error},
+        signer,
+    },
     FlowRunId, SolanaNet,
 };
 use anyhow::{anyhow, bail, ensure};
@@ -32,6 +35,7 @@ use std::{
     sync::LazyLock,
     time::Duration,
 };
+use tower::Service;
 use tower::ServiceExt;
 use value::{
     with::{AsKeypair, AsPubkey},
@@ -608,7 +612,9 @@ async fn action_identity_memo(
     let reference_bytes = build_action_reference(Utc::now().timestamp(), run_id);
     let reference = bs58::encode(&reference_bytes).into_string();
     let signature = signer
-        .call_mut(signer::SignatureRequest {
+        .ready()
+        .await?
+        .call(signer::SignatureRequest {
             id: None,
             time: Utc::now(),
             pubkey: identity,
@@ -917,7 +923,7 @@ impl Instructions {
         mut self,
         rpc: &RpcClient,
         network: SolanaNet,
-        signer: signer::Svc,
+        mut signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<(VersionedTransaction, usize), Error> {
@@ -937,7 +943,7 @@ impl Instructions {
             if let Some(keypair) = keypair.keypair() {
                 keypair.sign_message(&data)
             } else {
-                let fut = signer.call_ref(signer::SignatureRequest {
+                let fut = signer.ready().await?.call(signer::SignatureRequest {
                     id: None,
                     time: Utc::now(),
                     pubkey: keypair.pubkey(),
@@ -1102,7 +1108,7 @@ impl Instructions {
                 Some(tx.signatures.clone())
             },
         };
-        let request_signature = signer.call_mut(req).boxed();
+        let request_signature = signer.ready().await?.call(req).boxed();
         let confirm = confirm_action_transaction(
             rpc,
             action_config.action_identity,

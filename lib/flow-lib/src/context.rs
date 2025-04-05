@@ -17,9 +17,9 @@ use crate::{
 use bytes::Bytes;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_pubkey::Pubkey;
+use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
 use tower::{Service, ServiceExt};
 
@@ -98,11 +98,15 @@ pub mod get_jwt {
     pub type Svc = TowerClient<Request, Response, Error>;
 
     pub fn unimplemented_svc() -> Svc {
-        Svc::unimplemented(|| Error::other("unimplemented"), Error::worker)
+        Svc::new(tower::service_fn(|_| {
+            std::future::ready(Result::<Response, _>::Err(Error::other("unimplemented")))
+        }))
     }
 
     pub fn not_allowed() -> Svc {
-        Svc::unimplemented(|| Error::NotAllowed, Error::worker)
+        Svc::new(tower::service_fn(|_| {
+            std::future::ready(Result::<Response, _>::Err(Error::NotAllowed))
+        }))
     }
 
     #[derive(Clone, Copy, Debug)]
@@ -115,21 +119,26 @@ pub mod get_jwt {
     }
 
     impl tower::retry::Policy<Request, Response, Error> for RetryPolicy {
-        type Future = Ready<Self>;
+        type Future = Ready<()>;
 
-        fn retry(&self, _: &Request, result: Result<&Response, &Error>) -> Option<Self::Future> {
+        fn retry(
+            &mut self,
+            _: &mut Request,
+            result: &mut Result<Response, Error>,
+        ) -> Option<Self::Future> {
             match result {
                 Err(Error::Supabase {
                     error_description, ..
                 }) if error_description.contains("Refresh Token") && self.0 > 0 => {
                     tracing::error!("get_jwt error: {}, retrying", error_description);
-                    Some(std::future::ready(Self(self.0 - 1)))
+                    self.0 -= 1;
+                    Some(std::future::ready(()))
                 }
                 _ => None,
             }
         }
 
-        fn clone_request(&self, req: &Request) -> Option<Request> {
+        fn clone_request(&mut self, req: &Request) -> Option<Request> {
             Some(*req)
         }
     }
@@ -211,7 +220,11 @@ pub mod signer {
     }
 
     pub fn unimplemented_svc() -> Svc {
-        Svc::unimplemented(|| BoxError::from("unimplemented").into(), Error::Worker)
+        Svc::new(tower::service_fn(|_| {
+            std::future::ready(Err::<SignatureResponse, _>(Error::Other(
+                "unimplemented".into(),
+            )))
+        }))
     }
 }
 
@@ -225,14 +238,16 @@ pub mod execute {
     use futures::channel::oneshot::Canceled;
     use serde::{Deserialize, Serialize};
     use serde_with::{base64::Base64, serde_as, DisplayFromStr};
-    use solana_rpc_client_api::client_error::Error as ClientError;
     use solana_program::{
         instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
     };
+    use solana_rpc_client_api::client_error::Error as ClientError;
     use solana_signature::Signature;
     use solana_signer::SignerError;
     use std::sync::Arc;
     use thiserror::Error as ThisError;
+
+    use super::signer;
 
     pub type Svc = TowerClient<Request, Response, Error>;
 
@@ -319,6 +334,19 @@ pub mod execute {
         }
     }
 
+    impl From<signer::Error> for Error {
+        fn from(value: signer::Error) -> Self {
+            match value {
+                e @ signer::Error::Pubkey(_) => Self::other(e),
+                e @ signer::Error::User => Self::other(e),
+                signer::Error::Timeout => Self::Timeout,
+                signer::Error::Worker(error) => Self::Worker(Arc::new(error)),
+                signer::Error::MailBox(mailbox_error) => Self::MailBox(mailbox_error),
+                signer::Error::Other(error) => Self::other(error),
+            }
+        }
+    }
+
     impl From<anyhow::Error> for Error {
         fn from(value: anyhow::Error) -> Self {
             value.downcast::<Self>().unwrap_or_else(Self::other)
@@ -366,12 +394,13 @@ pub mod execute {
     }
 
     pub fn unimplemented_svc() -> Svc {
-        Svc::unimplemented(|| Error::other("unimplemented"), Error::worker)
+        Svc::new(tower::service_fn(|_| {
+            std::future::ready(Err::<Response, _>(Error::other("unimplemented")))
+        }))
     }
 
     pub fn simple(
         ctx: &super::Context,
-        size: usize,
         flow_run_id: Option<FlowRunId>,
         config: ExecutionConfig,
     ) -> Svc {
@@ -392,7 +421,7 @@ pub mod execute {
                 })
             }
         };
-        Svc::from_service(tower::service_fn(handle), Error::worker, size)
+        Svc::new(tower::service_fn(handle))
     }
 }
 
@@ -430,7 +459,7 @@ impl Default for Context {
             Extensions::default(),
         );
         ctx.command = Some(CommandContext {
-            svc: execute::simple(&ctx, 1, None, <_>::default()),
+            svc: execute::simple(&ctx, None, <_>::default()),
             flow_run_id: uuid::Uuid::nil(),
             node_id: uuid::Uuid::nil(),
             times: 0,

@@ -23,6 +23,7 @@ use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
 use tokio::sync::Semaphore;
 use tokio_util::sync::CancellationToken;
+use tower::{Service, ServiceExt};
 use tracing::Instrument;
 use utils::actix_service::ActixService;
 
@@ -111,7 +112,9 @@ async fn get_all_flows(
     while let Some(flow_id) = queue.pop() {
         let config = {
             let mut config = get_flow
-                .call_mut(get_flow::Request { user_id, flow_id })
+                .ready()
+                .await?
+                .call(get_flow::Request { user_id, flow_id })
                 .await?
                 .config;
             for (k, v) in &environment {
@@ -341,29 +344,14 @@ impl FlowRegistry {
             started_by,
             shared_with,
             entrypoint,
-            (
-                TowerClient::from_service(ActixService::from(signer), signer::Error::Worker, 16),
-                signers_info,
-            ),
-            TowerClient::from_service(
-                ActixService::from(new_flow_run),
-                new_flow_run::Error::Worker,
-                16,
-            ),
-            TowerClient::from_service(ActixService::from(get_flow), get_flow::Error::Worker, 16),
-            TowerClient::from_service(
-                ActixService::from(get_previous_values),
-                get_previous_values::Error::Worker,
-                16,
-            ),
-            TowerClient::from_service(
-                tower::retry::Retry::new(
-                    get_jwt::RetryPolicy::default(),
-                    ActixService::from(token),
-                ),
-                get_jwt::Error::worker,
-                16,
-            ),
+            (TowerClient::new(ActixService::from(signer)), signers_info),
+            TowerClient::new(ActixService::from(new_flow_run)),
+            TowerClient::new(ActixService::from(get_flow)),
+            TowerClient::new(ActixService::from(get_previous_values)),
+            TowerClient::new(tower::retry::Retry::new(
+                get_jwt::RetryPolicy::default(),
+                ActixService::from(token),
+            )),
             environment,
             endpoints,
         )
@@ -405,7 +393,10 @@ impl FlowRegistry {
         let (tx, rx) = flow_run_events::channel();
         let run = self
             .new_flow_run
-            .call_ref(new_flow_run::Request {
+            .clone()
+            .ready()
+            .await?
+            .call(new_flow_run::Request {
                 user_id: self.flow_owner.id,
                 shared_with: self.shared_with.clone(),
                 deployment_id,
@@ -480,7 +471,9 @@ impl FlowRegistry {
                 .collect::<HashMap<NodeId, FlowRunId>>();
             let previous_values = if !nodes.is_empty() {
                 get_previous_values_svc
-                    .call_mut(get_previous_values::Request { user_id, nodes })
+                    .ready()
+                    .await?
+                    .call(get_previous_values::Request { user_id, nodes })
                     .await?
                     .values
             } else {
@@ -582,7 +575,9 @@ pub mod new_flow_run {
     }
 
     pub fn unimplemented_svc() -> Svc {
-        Svc::unimplemented(|| BoxError::from("unimplemented").into(), Error::Worker)
+        Svc::new(tower::service_fn(|_| {
+            std::future::ready(Err(Error::other("unimplemented")))
+        }))
     }
 }
 
@@ -667,6 +662,8 @@ pub mod get_previous_values {
     }
 
     pub fn unimplemented_svc() -> Svc {
-        Svc::unimplemented(|| BoxError::from("unimplemented").into(), Error::Worker)
+        Svc::new(tower::service_fn(|_| {
+            std::future::ready(Err(BoxError::from("unimplemented").into()))
+        }))
     }
 }
