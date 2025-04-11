@@ -20,7 +20,7 @@ async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError>
         .url
         .unwrap_or_else(|| format!("{}/rest/v1", ctx.endpoints().supabase));
     let url = format!("{}/rpc/{}", url, input.function);
-    let query = postgrest::Builder::new(url, input.schema, <_>::default(), ctx.http)
+    let query = postgrest::Builder::new(url, input.schema, <_>::default(), ctx.http().clone())
         .rpc(serde_json::to_string(&input.params)?)
         .into();
 

@@ -470,6 +470,35 @@ impl CommandContextX {
     pub fn endpoints(&self) -> &Endpoints {
         &self.data.flow.set.endpoints
     }
+
+    pub fn flow_owner(&self) -> &User {
+        &self.data.flow.set.flow_owner
+    }
+
+    pub fn started_by(&self) -> &User {
+        &self.data.flow.set.started_by
+    }
+
+    pub fn solana_config(&self) -> &SolanaClientConfig {
+        &self.data.flow.set.solana
+    }
+
+    pub fn http(&self) -> &reqwest::Client {
+        &self.flow.set.http
+    }
+
+    /// Call [`get_jwt`] service, the result will have `Bearer ` prefix.
+    pub async fn get_jwt_header(&mut self) -> Result<String, get_jwt::Error> {
+        let user_id = self.flow_owner().id;
+        let access_token = self
+            .get_jwt
+            .ready()
+            .await?
+            .call(get_jwt::Request { user_id })
+            .await?
+            .access_token;
+        Ok(["Bearer ", &access_token].concat())
+    }
 }
 
 #[derive(Clone)]

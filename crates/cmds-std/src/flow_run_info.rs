@@ -24,8 +24,8 @@ struct Output {
 
 async fn run(ctx: CommandContextX, _: Input) -> Result<Output, CommandError> {
     Ok(Output {
-        flow_owner: ctx.flow_owner.id.to_string(),
-        started_by: ctx.started_by.id.to_string(),
-        solana_net: ctx.cfg.solana_client.cluster,
+        flow_owner: ctx.flow_owner().id.to_string(),
+        started_by: ctx.started_by().id.to_string(),
+        solana_net: ctx.solana_config().cluster,
     })
 }

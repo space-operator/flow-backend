@@ -15,7 +15,7 @@ struct Output {
 }
 
 async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
-    let mut query = postgrest::Builder::from_query(input.query, ctx.http);
+    let mut query = postgrest::Builder::from_query(input.query, ctx.http().clone());
     for (k, v) in input.body {
         let v = match v {
             JsonValue::Null => "null".to_owned(),

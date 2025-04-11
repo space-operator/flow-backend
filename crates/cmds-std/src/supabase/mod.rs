@@ -46,7 +46,7 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
     // headers.insert("apikey", HeaderValue::from_str(&apikey).unwrap());
 
     let mut req = ctx
-        .http
+        .http()
         .post(format!("{}/rest/v1/users_nft", ctx.endpoints().supabase))
         .json(&input.string);
 

@@ -15,7 +15,7 @@ struct Output {
 
 async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     Ok(Output {
-        query: postgrest::Builder::from_query(input.query, ctx.http)
+        query: postgrest::Builder::from_query(input.query, ctx.http().clone())
             .limit(input.count as usize)
             .into(),
     })

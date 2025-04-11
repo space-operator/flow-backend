@@ -31,14 +31,14 @@ struct Output {
 }
 
 async fn run(mut ctx: CommandContextX, input: FileSpec) -> Result<Output, CommandError> {
-    let key = input.key(&ctx.flow_owner.id);
+    let key = input.key(&ctx.flow_owner().id);
     let url = format!(
         "{}/storage/v1/object/info/authenticated/{}",
         ctx.endpoints().supabase, key
     );
     tracing::debug!("using URL: {}", url);
     let resp = ctx
-        .http
+        .http()
         .head(url)
         .header(AUTHORIZATION, ctx.get_jwt_header().await?)
         .send()

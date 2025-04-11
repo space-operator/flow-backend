@@ -99,7 +99,7 @@ impl CommandTrait for ExplorerCommand {
         let results = join_all(
             self.pinned
                 .iter()
-                .map(|k| read_item(&ctx.http, &url, k, &auth)),
+                .map(|k| read_item(&ctx.http(), &url, k, &auth)),
         )
         .await;
 

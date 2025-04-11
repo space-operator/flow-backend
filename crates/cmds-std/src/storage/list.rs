@@ -35,7 +35,7 @@ struct Output {
 async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let path = input.path;
     let prefix = if ["user-storages", "user-public-storages"].contains(&input.bucket.as_str()) {
-        format!("{}/{}", ctx.flow_owner.id, path.display())
+        format!("{}/{}", ctx.flow_owner().id, path.display())
     } else {
         format!("{}", path.display())
     };
@@ -46,7 +46,7 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
     tracing::debug!("using URL: {}", url);
     tracing::debug!("using prefix: {}", prefix);
     let req = ctx
-        .http
+        .http()
         .post(url)
         .header(AUTHORIZATION, ctx.get_jwt_header().await?);
 

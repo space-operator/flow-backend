@@ -184,7 +184,7 @@ async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError>
         None => return Err(anyhow::anyhow!("URL has no host")),
     }
 
-    let client = ctx.http;
+    let client = ctx.http();
 
     let mut req = client.request(input.method.parse()?, input.url);
 
@@ -264,7 +264,7 @@ mod tests {
     #[tokio::test]
     async fn test_local() {
         async fn test(url: &str) {
-            let c = Context::default();
+            let c = CommandContextX::default();
             let e = run(
                 c.clone(),
                 value::from_map(value::map! {"url" => url}).unwrap(),

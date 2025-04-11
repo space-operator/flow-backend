@@ -74,14 +74,14 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
             ctx.endpoints().supabase, input.bucket
         );
         if ["user-storages", "user-public-storages"].contains(&input.bucket.as_ref()) {
-            write!(&mut url, "/{}", ctx.flow_owner.id).unwrap();
+            write!(&mut url, "/{}", ctx.flow_owner().id).unwrap();
         }
         write!(&mut url, "/{}", input.path.display()).unwrap();
         url
     };
 
     let mut req = ctx
-        .http
+        .http()
         .post(url)
         .header(AUTHORIZATION, auth)
         .header(CONTENT_TYPE, &content_type)
