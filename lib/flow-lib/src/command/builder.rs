@@ -65,9 +65,10 @@
 
 use super::{CommandError, CommandTrait};
 use crate::{
-    Context, Name,
+    Name,
     command::InstructionInfo,
     config::node::{Definition, Permissions},
+    context::CommandContextX,
     utils::BoxFuture,
 };
 use serde::{Serialize, de::DeserializeOwned};
@@ -147,7 +148,7 @@ impl CmdBuilder {
     /// - `Output` must implement [`Serialize`].
     pub fn build<T, U, Fut, F>(self, f: F) -> Box<dyn CommandTrait>
     where
-        F: Fn(Context, T) -> Fut + Send + Sync + 'static,
+        F: Fn(CommandContextX, T) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<U, CommandError>> + Send + 'static,
         T: DeserializeOwned + 'static,
         U: Serialize,
@@ -158,7 +159,7 @@ impl CmdBuilder {
             outputs: Vec<crate::CmdOutputDescription>,
             instruction_info: Option<InstructionInfo>,
             permissions: Permissions,
-            run: Box<dyn Fn(Context, T) -> Fut + Send + Sync + 'static>,
+            run: Box<dyn Fn(CommandContextX, T) -> Fut + Send + Sync + 'static>,
         }
 
         impl<T, U, Fut> CommandTrait for Command<T, Fut>
@@ -185,7 +186,7 @@ impl CmdBuilder {
 
             fn run<'a: 'b, 'b>(
                 &'a self,
-                ctx: Context,
+                ctx: CommandContextX,
                 params: crate::ValueSet,
             ) -> BoxFuture<'b, Result<crate::ValueSet, CommandError>> {
                 match value::from_map(params) {

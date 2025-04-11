@@ -240,7 +240,7 @@ impl CommandTrait for RpcCommandClient {
         self.node_data.outputs()
     }
 
-    async fn run(&self, ctx: Context, params: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContextX, params: ValueSet) -> Result<ValueSet, CommandError> {
         let url = self.base_url.join("call").unwrap();
         let http = ctx.http.clone();
         let ctx_proxy = ContextProxy::new(ctx).await?;

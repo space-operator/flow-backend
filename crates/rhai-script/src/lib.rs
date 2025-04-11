@@ -57,7 +57,7 @@ impl Command {
     pub fn run(
         &self,
         engine: &mut Engine,
-        ctx: Context,
+        ctx: CommandContextX,
         mut input: ValueSet,
     ) -> Result<ValueSet, CommandError> {
         let code = String::deserialize(
@@ -69,7 +69,7 @@ impl Command {
         let mut scope = rhai::Scope::new();
 
         let rhai_env = ctx
-            .environment
+            .environment()
             .iter()
             .map(|(k, v)| (k.into(), v.into()))
             .collect::<rhai::Map>();

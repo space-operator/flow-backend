@@ -9,7 +9,7 @@
 //! - [`signer`]
 
 use crate::{
-    ContextConfig, FlowRunId, NodeId, UserId,
+    ContextConfig, FlowRunId, NodeId, SolanaClientConfig, UserId,
     config::{Endpoints, client::FlowRunOrigin},
     solana::Instructions,
     utils::Extensions,
@@ -82,10 +82,6 @@ pub mod get_jwt {
     }
 
     impl Error {
-        pub fn worker(e: BoxError) -> Self {
-            Error::Other(Arc::new(e))
-        }
-
         pub fn other<E: Into<BoxError>>(e: E) -> Self {
             Error::Other(Arc::new(e.into()))
         }
@@ -384,10 +380,6 @@ pub mod execute {
     }
 
     impl Error {
-        pub fn worker(e: BoxError) -> Self {
-            Error::Worker(Arc::new(e))
-        }
-
         pub fn other<E: Into<BoxError>>(e: E) -> Self {
             Error::Other(Arc::new(e.into()))
         }
@@ -431,6 +423,49 @@ pub struct CommandContext {
     pub flow_run_id: FlowRunId,
     pub node_id: NodeId,
     pub times: u32,
+}
+
+pub struct FlowSetContextData {
+    flow_owner: User,
+    started_by: User,
+    endpoints: Endpoints,
+    solana: SolanaClientConfig,
+    extensions: Arc<Extensions>,
+}
+
+struct FlowContextData {
+    flow_run_id: FlowRunId,
+    environment: HashMap<String, String>,
+    set: FlowSetContextData,
+}
+
+pub struct CommandContextData {
+    node_id: NodeId,
+    times: u32,
+    flow: FlowContextData,
+}
+
+pub struct FlowSetContext {
+    http: reqwest::Client,
+    solana_client: Arc<SolanaClient>,
+}
+
+pub struct FlowContext {
+    signer: signer::Svc,
+    set: FlowSetContext,
+}
+
+pub struct CommandContextX {
+    data: CommandContextData,
+    execute: execute::Svc,
+    get_jwt: get_jwt::Svc,
+    flow: FlowContext,
+}
+
+impl CommandContextX {
+    pub fn environment(&self) -> &HashMap<String, String> {
+        &self.data.flow.environment
+    }
 }
 
 #[derive(Clone)]
