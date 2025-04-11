@@ -82,7 +82,7 @@ impl CommandTrait for FindPDA {
         .to_vec()
     }
 
-    async fn run(&self, _: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContextX, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let Input { program_id } = value::from_map(inputs.clone())?;
 
         let seed_1: Option<Value> = inputs.swap_remove(SEED_1);

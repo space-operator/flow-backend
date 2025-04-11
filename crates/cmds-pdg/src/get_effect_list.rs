@@ -32,7 +32,7 @@ struct Output {
     effects: Vec<Effect>,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     Ok(Output {
         effects: EffectsList::from(input.attributes)
             .effects

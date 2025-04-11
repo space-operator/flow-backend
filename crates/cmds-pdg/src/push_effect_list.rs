@@ -30,7 +30,7 @@ struct Output {
     effects: Vec<Effect>,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let mut e = EffectsList::from(input.effects);
     e.push(input.element);
     Ok(Output {

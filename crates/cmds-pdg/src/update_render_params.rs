@@ -30,7 +30,7 @@ struct Output {
     params: RenderParams,
 }
 
-async fn run(_: Context, mut input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, mut input: Input) -> Result<Output, CommandError> {
     input.params.add_effect(input.effect);
     Ok(Output {
         params: input.params,

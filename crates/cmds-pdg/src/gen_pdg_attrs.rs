@@ -37,7 +37,7 @@ struct Output {
     attributes: serde_json::Value,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let attributes = match input.flag {
         Some(flag) => match flag.as_str() {
             "base" => RenderParams::generate_base(&mut rand::thread_rng()),

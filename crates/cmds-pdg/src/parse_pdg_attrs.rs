@@ -40,7 +40,7 @@ struct Output {
     attributes: RenderParams,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     Ok(Output {
         attributes: RenderParams::from_pdg_metadata(
             &mut input.attributes.into(),
