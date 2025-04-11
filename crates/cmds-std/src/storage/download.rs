@@ -29,11 +29,11 @@ struct Output {
     content_type: String,
 }
 
-async fn run(mut ctx: Context, input: FileSpec) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: FileSpec) -> Result<Output, CommandError> {
     let key = input.key(&ctx.flow_owner.id);
     let url = format!(
         "{}/storage/v1/object/authenticated/{}",
-        ctx.endpoints.supabase, key
+        ctx.endpoints().supabase, key
     );
     tracing::debug!("using URL: {}", url);
     let resp = ctx

@@ -163,7 +163,7 @@ impl Ipv6Ext for Ipv6Addr {
     }
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     match input.url.host() {
         Some(url::Host::Domain(domain)) => {
             let _ = Resolver

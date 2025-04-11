@@ -27,10 +27,10 @@ struct Input {
 #[derive(Serialize)]
 struct Output {}
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let mut req = ctx
         .http
-        .post(format!("{}/kv/delete_store", ctx.endpoints.flow_server))
+        .post(format!("{}/kv/delete_store", ctx.endpoints().flow_server))
         .json(&input);
     req = req.header(AUTHORIZATION, ctx.get_jwt_header().await?);
     let resp = req.send().await.map_err(|e| anyhow!("HTTP error: {}", e))?;

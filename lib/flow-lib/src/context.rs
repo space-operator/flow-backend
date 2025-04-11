@@ -466,6 +466,10 @@ impl CommandContextX {
     pub fn environment(&self) -> &HashMap<String, String> {
         &self.data.flow.environment
     }
+
+    pub fn endpoints(&self) -> &Endpoints {
+        &self.data.flow.set.endpoints
+    }
 }
 
 #[derive(Clone)]

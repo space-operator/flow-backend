@@ -14,10 +14,10 @@ struct Output {
     query: postgrest::Query,
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let url = input
         .url
-        .unwrap_or_else(|| format!("{}/rest/v1/{}", ctx.endpoints.supabase, input.table));
+        .unwrap_or_else(|| format!("{}/rest/v1/{}", ctx.endpoints().supabase, input.table));
     let query = postgrest::Builder::new(url, input.schema, <_>::default(), ctx.http).into();
     Ok(Output { query })
 }

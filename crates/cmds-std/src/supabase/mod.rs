@@ -30,7 +30,7 @@ pub struct Output {
     pub res: HashMap<String, String>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     // info!("{:#?}", ctx.environment);
 
     // info!("{:#?}", ctx.user.id);
@@ -47,7 +47,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let mut req = ctx
         .http
-        .post(format!("{}/rest/v1/users_nft", ctx.endpoints.supabase))
+        .post(format!("{}/rest/v1/users_nft", ctx.endpoints().supabase))
         .json(&input.string);
 
     req = req.header(AUTHORIZATION, ctx.get_jwt_header().await?);

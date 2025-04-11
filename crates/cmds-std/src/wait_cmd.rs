@@ -24,7 +24,7 @@ pub struct Input {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {}
 
-async fn run(_ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     if let Some(duration) = input.duration_ms {
         time::sleep(Duration::from_millis(duration)).await;
     }

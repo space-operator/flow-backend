@@ -19,11 +19,11 @@ struct Output {
     url: String,
 }
 
-async fn run(ctx: Context, input: FileSpec) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: FileSpec) -> Result<Output, CommandError> {
     let key = input.key(&ctx.flow_owner.id);
     let url = format!(
         "{}/storage/v1/object/public/{}",
-        ctx.endpoints.supabase, key
+        ctx.endpoints().supabase, key
     );
     Ok(Output { url })
 }

@@ -93,9 +93,9 @@ impl CommandTrait for ExplorerCommand {
         Permissions { user_tokens: true }
     }
 
-    async fn run(&self, mut ctx: Context, _: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, mut ctx: CommandContextX, _: ValueSet) -> Result<ValueSet, CommandError> {
         let auth = ctx.get_jwt_header().await?;
-        let url = format!("{}/kv/read_item", ctx.endpoints.flow_server);
+        let url = format!("{}/kv/read_item", ctx.endpoints().flow_server);
         let results = join_all(
             self.pinned
                 .iter()
