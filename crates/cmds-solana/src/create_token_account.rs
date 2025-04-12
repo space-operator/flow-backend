@@ -37,7 +37,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let minimum_balance_for_rent_exemption = ctx
         .solana_client
         .get_minimum_balance_for_rent_exemption(spl_token::state::Account::LEN)

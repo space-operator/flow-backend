@@ -25,7 +25,7 @@ struct Output {
     price: i64,
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let mut sol_price_account = ctx
         .solana_client
         .get_account(&input.price_feed_id)

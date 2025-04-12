@@ -44,7 +44,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     const API_BASE_URL: &str = "https://quote-api.jup.ag/v6";
     const MAX_AUTO_SLIPPAGE_BPS: u16 = 300;
     const DEXES: &str = "Whirlpool,Meteora DLMM,Raydium CLMM";

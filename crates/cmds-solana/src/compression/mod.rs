@@ -197,7 +197,7 @@ pub struct GetAssetResponse<T> {
 }
 
 pub async fn get_leaf_schema_event(
-    ctx: Context,
+    ctx: CommandContextX,
     signature: Signature,
     is_mint_to_collection: bool,
 ) -> Result<(LeafSchemaEvent, LeafSchema), anyhow::Error> {

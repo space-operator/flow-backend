@@ -30,7 +30,7 @@ pub struct Output {
     vaa: Option<String>,
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let wormhole_endpoint = match ctx.cfg.solana_client.cluster {
         SolanaNet::Mainnet => "",
         SolanaNet::Testnet => "",

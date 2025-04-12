@@ -57,7 +57,7 @@ pub enum DelegateType {
     Token(TokenDelegateRole),
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let (metadata_account, _) = Metadata::find_pda(&input.mint_account);
 
     let (master_edition_account, _) = MasterEdition::find_pda(&input.mint_account);

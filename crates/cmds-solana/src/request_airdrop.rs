@@ -29,7 +29,7 @@ pub struct Output {
     pub signature: Signature,
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let signature = ctx
         .solana_client
         .request_airdrop(&input.pubkey, input.amount)

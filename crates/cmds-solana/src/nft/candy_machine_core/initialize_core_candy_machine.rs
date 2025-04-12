@@ -62,7 +62,7 @@ pub fn get_space_for_candy(data: &CandyMachineData) -> usize {
     }
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let candy_machine_program = mpl_core_candy_machine_core::ID;
     let mpl_core_program = mpl_core::ID;
     let candy_pubkey = input.candy_machine.pubkey();

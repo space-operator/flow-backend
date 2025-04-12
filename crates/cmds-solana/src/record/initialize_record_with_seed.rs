@@ -38,7 +38,7 @@ pub struct Output {
     account: Pubkey,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let record_program_id = record_program_id(ctx.cfg.solana_client.cluster);
 
     let account =

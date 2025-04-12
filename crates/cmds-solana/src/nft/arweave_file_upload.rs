@@ -66,7 +66,7 @@ impl CommandTrait for ArweaveFileUpload {
         .to_vec()
     }
 
-    async fn run(&self, ctx: Context, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let Input {
             fee_payer,
             file_path,

@@ -34,7 +34,7 @@ pub struct Output {
     pub signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let amount = sol_to_lamports(input.amount)?;
 
     let instruction = solana_program::system_instruction::transfer(

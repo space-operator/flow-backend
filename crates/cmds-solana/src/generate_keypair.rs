@@ -94,7 +94,7 @@ async fn account_exists(rpc: &RpcClient, pk: &Pubkey) -> Result<bool, CommandErr
         .is_some())
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let keypair = match input.private_key {
         Some(either) => {
             let keypair = match either {

@@ -41,7 +41,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let (metadata_account, _) = Metadata::find_pda(&input.mint_account);
 
     let create_ix = mpl_token_metadata::instructions::CreateMetadataAccountV3 {

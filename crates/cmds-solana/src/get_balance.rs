@@ -22,7 +22,7 @@ pub struct Output {
     balance: u64,
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let balance = ctx.solana_client.get_balance(&input.pubkey).await?;
     Ok(Output { balance })
 }

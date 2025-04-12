@@ -33,7 +33,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let wormhole_core_program_id =
         crate::wormhole::wormhole_core_program_id(ctx.cfg.solana_client.cluster);
 

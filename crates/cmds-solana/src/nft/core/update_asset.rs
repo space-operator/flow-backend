@@ -37,7 +37,7 @@ pub struct Output {
     pub signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let mut builder = UpdateV1Builder::new();
 
     let builder = builder

@@ -6,7 +6,7 @@ use std::collections::HashSet;
 
 pub struct BundlrSigner {
     keypair: Wallet,
-    ctx: Context,
+    ctx: CommandContextX,
 }
 
 impl BundlrSigner {
@@ -125,7 +125,7 @@ impl CommandTrait for ArweaveNftUpload {
         .to_vec()
     }
 
-    async fn run(&self, ctx: Context, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let Input {
             fee_payer,
             mut metadata,
@@ -354,7 +354,7 @@ impl Uploader {
         Ok(())
     }
 
-    pub async fn upload_file(&mut self, ctx: Context, file_path: &str) -> crate::Result<String> {
+    pub async fn upload_file(&mut self, ctx: CommandContextX, file_path: &str) -> crate::Result<String> {
         if let Some(url) = self.cache.get(file_path) {
             return Ok(url.clone());
         }
@@ -374,7 +374,7 @@ impl Uploader {
 
     pub async fn upload(
         &self,
-        ctx: Context,
+        ctx: CommandContextX,
         data: bytes::Bytes,
         content_type: String,
     ) -> crate::Result<String> {
