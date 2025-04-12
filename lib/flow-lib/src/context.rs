@@ -12,7 +12,7 @@ use crate::{
     ContextConfig, FlowRunId, NodeId, SolanaClientConfig, UserId,
     config::{Endpoints, client::FlowRunOrigin},
     solana::Instructions,
-    utils::Extensions,
+    utils::{Extensions, tower_client::unimplemented_svc},
 };
 use bytes::Bytes;
 use chrono::Utc;
@@ -40,8 +40,8 @@ pub mod env {
 /// Get user's JWT, require
 /// [`user_token`][crate::config::node::Permissions::user_tokens] permission.
 pub mod get_jwt {
-    use crate::{BoxError, UserId, utils::TowerClient};
-    use std::{future::Ready, sync::Arc};
+    use crate::{UserId, utils::TowerClient, utils::tower_client::CommonError};
+    use std::future::Ready;
     use thiserror::Error as ThisError;
 
     #[derive(Clone, Copy)]
@@ -62,29 +62,13 @@ pub mod get_jwt {
         UserNotFound,
         #[error("wrong recipient")]
         WrongRecipient,
-        #[error(transparent)]
-        Worker(Arc<BoxError>),
-        #[error(transparent)]
-        MailBox(#[from] Arc<actix::MailboxError>),
         #[error("{}: {}", error, error_description)]
         Supabase {
             error: String,
             error_description: String,
         },
         #[error(transparent)]
-        Other(#[from] Arc<BoxError>),
-    }
-
-    impl From<actix::MailboxError> for Error {
-        fn from(error: actix::MailboxError) -> Self {
-            Error::MailBox(Arc::new(error))
-        }
-    }
-
-    impl Error {
-        pub fn other<E: Into<BoxError>>(e: E) -> Self {
-            Error::Other(Arc::new(e.into()))
-        }
+        Common(#[from] CommonError),
     }
 
     impl actix::Message for Request {
@@ -92,12 +76,6 @@ pub mod get_jwt {
     }
 
     pub type Svc = TowerClient<Request, Response, Error>;
-
-    pub fn unimplemented_svc() -> Svc {
-        Svc::new(tower::service_fn(|_| {
-            std::future::ready(Result::<Response, _>::Err(Error::other("unimplemented")))
-        }))
-    }
 
     pub fn not_allowed() -> Svc {
         Svc::new(tower::service_fn(|_| {
@@ -143,9 +121,9 @@ pub mod get_jwt {
 /// Request Solana signature from external wallets.
 pub mod signer {
     use crate::{
-        BoxError, FlowRunId,
+        FlowRunId,
         solana::{Pubkey, SdkPresigner, Signature},
-        utils::TowerClient,
+        utils::{TowerClient, tower_client::CommonError},
     };
     use chrono::{DateTime, Utc};
     use serde::{Deserialize, Serialize};
@@ -162,11 +140,7 @@ pub mod signer {
         #[error("timeout")]
         Timeout,
         #[error(transparent)]
-        Worker(BoxError),
-        #[error(transparent)]
-        MailBox(#[from] actix::MailboxError),
-        #[error(transparent)]
-        Other(#[from] BoxError),
+        Common(#[from] CommonError),
     }
 
     pub type Svc = TowerClient<SignatureRequest, SignatureResponse, Error>;
@@ -214,22 +188,17 @@ pub mod signer {
         #[serde_as(as = "Option<Base64>")]
         pub new_message: Option<bytes::Bytes>,
     }
-
-    pub fn unimplemented_svc() -> Svc {
-        Svc::new(tower::service_fn(|_| {
-            std::future::ready(Err::<SignatureResponse, _>(Error::Other(
-                "unimplemented".into(),
-            )))
-        }))
-    }
 }
 
 /// Output values and Solana instructions to be executed.
 pub mod execute {
     use crate::{
-        BoxError, FlowRunId,
+        FlowRunId, SolanaNet,
         solana::{ExecutionConfig, Instructions},
-        utils::TowerClient,
+        utils::{
+            TowerClient,
+            tower_client::{CommonError, CommonErrorExt},
+        },
     };
     use futures::channel::oneshot::Canceled;
     use serde::{Deserialize, Serialize};
@@ -237,6 +206,7 @@ pub mod execute {
     use solana_program::{
         instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
     };
+    use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
     use solana_rpc_client_api::client_error::Error as ClientError;
     use solana_signature::Signature;
     use solana_signer::SignerError;
@@ -312,13 +282,9 @@ pub mod execute {
         #[error(transparent)]
         SanitizeError(#[from] Arc<SanitizeError>),
         #[error(transparent)]
-        Worker(Arc<BoxError>),
-        #[error(transparent)]
-        MailBox(#[from] actix::MailboxError),
-        #[error(transparent)]
         ChannelClosed(#[from] Canceled),
         #[error(transparent)]
-        Other(#[from] Arc<BoxError>),
+        Common(#[from] CommonError),
     }
 
     impl Error {
@@ -336,22 +302,8 @@ pub mod execute {
                 e @ signer::Error::Pubkey(_) => Self::other(e),
                 e @ signer::Error::User => Self::other(e),
                 signer::Error::Timeout => Self::Timeout,
-                signer::Error::Worker(error) => Self::Worker(Arc::new(error)),
-                signer::Error::MailBox(mailbox_error) => Self::MailBox(mailbox_error),
-                signer::Error::Other(error) => Self::other(error),
+                signer::Error::Common(error) => Self::Common(error),
             }
-        }
-    }
-
-    impl From<anyhow::Error> for Error {
-        fn from(value: anyhow::Error) -> Self {
-            value.downcast::<Self>().unwrap_or_else(Self::other)
-        }
-    }
-
-    impl From<BoxError> for Error {
-        fn from(value: BoxError) -> Self {
-            Error::Other(Arc::new(value))
         }
     }
 
@@ -379,26 +331,13 @@ pub mod execute {
         }
     }
 
-    impl Error {
-        pub fn other<E: Into<BoxError>>(e: E) -> Self {
-            Error::Other(Arc::new(e.into()))
-        }
-    }
-
-    pub fn unimplemented_svc() -> Svc {
-        Svc::new(tower::service_fn(|_| {
-            std::future::ready(Err::<Response, _>(Error::other("unimplemented")))
-        }))
-    }
-
     pub fn simple(
-        ctx: &super::Context,
+        rpc: Arc<SolanaClient>,
+        network: SolanaNet,
+        signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: ExecutionConfig,
     ) -> Svc {
-        let rpc = ctx.solana_client.clone();
-        let signer = ctx.signer.clone();
-        let network = ctx.cfg.solana_client.cluster;
         let handle = move |req: Request| {
             let rpc = rpc.clone();
             let signer = signer.clone();
@@ -463,6 +402,44 @@ pub struct CommandContextX {
 }
 
 impl CommandContextX {
+    pub fn test_context() -> Self {
+        let config = ContextConfig::default();
+        let solana_client = Arc::new(SolanaClient::new_with_timeouts_and_commitment(
+            config.solana_client.url.clone(),
+            Duration::from_secs(30),
+            CommitmentConfig {
+                commitment: CommitmentLevel::Finalized,
+            },
+            Duration::from_secs(180),
+        ));
+        Self {
+            data: CommandContextData {
+                node_id: NodeId::nil(),
+                times: 0,
+                flow: FlowContextData {
+                    flow_run_id: FlowRunId::nil(),
+                    environment: HashMap::new(),
+                    set: FlowSetContextData {
+                        flow_owner: User::default(),
+                        started_by: User::default(),
+                        endpoints: Endpoints::default(),
+                        solana: config.solana_client,
+                        extensions: <_>::default(),
+                    },
+                },
+            },
+            execute: unimplemented_svc(),
+            get_jwt: unimplemented_svc(),
+            flow: FlowContext {
+                signer: unimplemented_svc(),
+                set: FlowSetContext {
+                    http: reqwest::Client::new(),
+                    solana_client,
+                },
+            },
+        }
+    }
+
     pub fn environment(&self) -> &HashMap<String, String> {
         &self.data.flow.environment
     }
@@ -501,6 +478,12 @@ impl CommandContextX {
     }
 }
 
+impl Default for CommandContextX {
+    fn default() -> Self {
+        Self::test_context()
+    }
+}
+
 #[derive(Clone)]
 pub struct Context {
     pub flow_owner: User,
@@ -522,16 +505,16 @@ impl Default for Context {
             &ContextConfig::default(),
             User::default(),
             User::default(),
-            signer::unimplemented_svc(),
-            get_jwt::unimplemented_svc(),
+            unimplemented_svc(),
+            unimplemented_svc(),
             Extensions::default(),
         );
-        ctx.command = Some(CommandContext {
-            svc: execute::simple(&ctx, None, <_>::default()),
-            flow_run_id: uuid::Uuid::nil(),
-            node_id: uuid::Uuid::nil(),
-            times: 0,
-        });
+        // ctx.command = Some(CommandContext {
+        //     svc: execute::simple(&ctx, None, <_>::default()),
+        //     flow_run_id: uuid::Uuid::nil(),
+        //     node_id: uuid::Uuid::nil(),
+        //     times: 0,
+        // });
         ctx
     }
 }
