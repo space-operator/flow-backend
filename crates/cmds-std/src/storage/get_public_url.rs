@@ -23,7 +23,8 @@ async fn run(ctx: CommandContextX, input: FileSpec) -> Result<Output, CommandErr
     let key = input.key(&ctx.flow_owner().id);
     let url = format!(
         "{}/storage/v1/object/public/{}",
-        ctx.endpoints().supabase, key
+        ctx.endpoints().supabase,
+        key
     );
     Ok(Output { url })
 }

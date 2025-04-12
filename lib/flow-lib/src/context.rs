@@ -257,8 +257,6 @@ pub mod execute {
     pub enum Error {
         #[error("canceled {}", unwrap(.0))]
         Canceled(Option<String>),
-        #[error("not available on this Context")]
-        NotAvailable,
         #[error("some node failed to provide instructions")]
         TxIncomplete,
         #[error("time out")]
@@ -482,6 +480,22 @@ impl CommandContextX {
             .access_token;
         Ok(["Bearer ", &access_token].concat())
     }
+
+    /// Call [`execute`] service.
+    pub async fn execute(
+        &mut self,
+        instructions: Instructions,
+        output: value::Map,
+    ) -> Result<execute::Response, execute::Error> {
+        self.execute
+            .ready()
+            .await?
+            .call(execute::Request {
+                instructions,
+                output,
+            })
+            .await
+    }
 }
 
 impl Default for CommandContextX {
@@ -617,7 +631,7 @@ impl Context {
                 })
                 .await
         } else {
-            Err(execute::Error::NotAvailable)
+            panic!();
         }
     }
 

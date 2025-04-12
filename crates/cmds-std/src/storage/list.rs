@@ -41,7 +41,8 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
     };
     let url = format!(
         "{}/storage/v1/object/list/{}",
-        ctx.endpoints().supabase, input.bucket,
+        ctx.endpoints().supabase,
+        input.bucket,
     );
     tracing::debug!("using URL: {}", url);
     tracing::debug!("using prefix: {}", prefix);

@@ -354,7 +354,11 @@ impl Uploader {
         Ok(())
     }
 
-    pub async fn upload_file(&mut self, ctx: CommandContextX, file_path: &str) -> crate::Result<String> {
+    pub async fn upload_file(
+        &mut self,
+        ctx: CommandContextX,
+        file_path: &str,
+    ) -> crate::Result<String> {
         if let Some(url) = self.cache.get(file_path) {
             return Ok(url.clone());
         }

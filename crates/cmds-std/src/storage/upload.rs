@@ -71,7 +71,8 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
         use std::fmt::Write;
         let mut url = format!(
             "{}/storage/v1/object/{}",
-            ctx.endpoints().supabase, input.bucket
+            ctx.endpoints().supabase,
+            input.bucket
         );
         if ["user-storages", "user-public-storages"].contains(&input.bucket.as_ref()) {
             write!(&mut url, "/{}", ctx.flow_owner().id).unwrap();

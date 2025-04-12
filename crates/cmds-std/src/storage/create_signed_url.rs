@@ -92,7 +92,11 @@ struct SuccessBody {
 
 async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let key = input.file.key(&ctx.flow_owner().id);
-    let url = format!("{}/storage/v1/object/sign/{}", ctx.endpoints().supabase, key);
+    let url = format!(
+        "{}/storage/v1/object/sign/{}",
+        ctx.endpoints().supabase,
+        key
+    );
     tracing::debug!("using URL: {}", url);
     let mut req = ctx.http().post(url);
 
@@ -118,7 +122,9 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
             Ok(Output {
                 url: format!(
                     "{}/storage/v1{}{}",
-                    ctx.endpoints().supabase, body.signedURL, download
+                    ctx.endpoints().supabase,
+                    body.signedURL,
+                    download
                 ),
             })
         }

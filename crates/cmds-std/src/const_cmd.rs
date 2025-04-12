@@ -132,7 +132,11 @@ impl CommandTrait for ConstCommand {
         .to_vec()
     }
 
-    async fn run(&self, _ctx: CommandContextX, _inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(
+        &self,
+        _ctx: CommandContextX,
+        _inputs: ValueSet,
+    ) -> Result<ValueSet, CommandError> {
         match &self.inner.value {
             FormValue::Value(value) => Ok(value::map! {
                 SOURCE => value.clone(),
