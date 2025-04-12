@@ -265,13 +265,10 @@ mod tests {
     async fn test_local() {
         async fn test(url: &str) {
             let c = CommandContextX::default();
-            let e = run(
-                c.clone(),
-                value::from_map(value::map! {"url" => url}).unwrap(),
-            )
-            .await
-            .unwrap_err()
-            .to_string();
+            let e = run(c, value::from_map(value::map! {"url" => url}).unwrap())
+                .await
+                .unwrap_err()
+                .to_string();
             assert!(e.contains("IP address not allowed"));
         }
 

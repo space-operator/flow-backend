@@ -364,6 +364,7 @@ pub struct CommandContext {
     pub times: u32,
 }
 
+#[derive(Clone)]
 pub struct FlowSetContextData {
     flow_owner: User,
     started_by: User,
@@ -372,28 +373,33 @@ pub struct FlowSetContextData {
     extensions: Arc<Extensions>,
 }
 
+#[derive(Clone)]
 struct FlowContextData {
     flow_run_id: FlowRunId,
     environment: HashMap<String, String>,
     set: FlowSetContextData,
 }
 
+#[derive(Clone)]
 pub struct CommandContextData {
     node_id: NodeId,
     times: u32,
     flow: FlowContextData,
 }
 
+#[derive(Clone)]
 pub struct FlowSetContext {
     http: reqwest::Client,
     solana_client: Arc<SolanaClient>,
 }
 
+#[derive(Clone)]
 pub struct FlowContext {
     signer: signer::Svc,
     set: FlowSetContext,
 }
 
+#[derive(Clone)]
 pub struct CommandContextX {
     data: CommandContextData,
     execute: execute::Svc,
