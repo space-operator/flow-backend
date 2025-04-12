@@ -74,8 +74,8 @@ impl CommandTrait for ArweaveFileUpload {
         } = value::from_map(inputs)?;
 
         let mut uploader = Uploader::new(
-            ctx.solana_client.clone(),
-            ctx.cfg.solana_client.cluster,
+            ctx.solana_client().clone(),
+            ctx.solana_config().cluster,
             fee_payer,
         )?;
 

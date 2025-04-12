@@ -105,7 +105,7 @@ impl CommandTrait for SignMetadata {
             self.command_sign_metadata(metadata_account, creator.pubkey())?;
 
         let (mut transaction, recent_blockhash) = execute(
-            &ctx.solana_client,
+            &ctx.solana_client(),
             &fee_payer.pubkey(),
             &instructions,
             minimum_balance_for_rent_exemption,
@@ -121,7 +121,7 @@ impl CommandTrait for SignMetadata {
         .await?;
 
         let signature = if submit {
-            Some(submit_transaction(&ctx.solana_client, transaction).await?)
+            Some(submit_transaction(&ctx.solana_client(), transaction).await?)
         } else {
             None
         };

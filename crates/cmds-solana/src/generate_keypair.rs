@@ -102,7 +102,7 @@ async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError>
                 WalletOrPubkey::Pubkey(public_key) => Wallet::Adapter { public_key },
             };
             if input.check_new_account {
-                if account_exists(&ctx.solana_client, &keypair.pubkey()).await? {
+                if account_exists(&ctx.solana_client(), &keypair.pubkey()).await? {
                     bail!(anyhow!("account already exists"));
                 }
             }
@@ -111,7 +111,9 @@ async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError>
         None => generate_keypair(
             &input.passphrase,
             &input.seed,
-            input.check_new_account.then_some(ctx.solana_client),
+            input
+                .check_new_account
+                .then_some(ctx.solana_client().clone()),
         )
         .await?
         .into(),
@@ -134,7 +136,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_no_input() {
-        let ctx = Context::default();
+        let ctx = CommandContextX::default();
         build().unwrap().run(ctx, ValueSet::new()).await.unwrap();
     }
 
@@ -142,7 +144,7 @@ mod tests {
     async fn test_no_password() {
         let seed_phrase =
             "letter advice cage absurd amount doctor acoustic avoid letter advice cage above";
-        let ctx = Context::default();
+        let ctx = CommandContextX::default();
         build()
             .unwrap()
             .run(
@@ -163,7 +165,7 @@ mod tests {
         };
         let output = build()
             .unwrap()
-            .run(Context::default(), input)
+            .run(CommandContextX::default(), input)
             .await
             .unwrap();
         let output = value::from_map::<Output>(output).unwrap();
@@ -184,7 +186,7 @@ mod tests {
         };
         let output = build()
             .unwrap()
-            .run(Context::default(), input)
+            .run(CommandContextX::default(), input)
             .await
             .unwrap();
         let output = value::from_map::<Output>(output).unwrap();
@@ -212,7 +214,7 @@ mod tests {
         };
         let output = build()
             .unwrap()
-            .run(Context::default(), input)
+            .run(CommandContextX::default(), input)
             .await
             .unwrap();
         let output = value::from_map::<Output>(output).unwrap();
@@ -240,7 +242,10 @@ mod tests {
             "passphrase" => Value::String(passphrase.to_owned()),
             "private_key" => Value::String(private_key.to_string()),
         };
-        let result = build().unwrap().run(Context::default(), input).await;
+        let result = build()
+            .unwrap()
+            .run(CommandContextX::default(), input)
+            .await;
         assert!(result.is_err());
     }
 }

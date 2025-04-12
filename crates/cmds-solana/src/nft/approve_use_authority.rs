@@ -167,7 +167,7 @@ impl CommandTrait for ApproveUseAuthority {
 
         let (minimum_balance_for_rent_exemption, instructions) = self
             .command_approve_use_authority(
-                &ctx.solana_client,
+                &ctx.solana_client(),
                 use_authority_record_pubkey,
                 use_authority,
                 owner.pubkey(),
@@ -181,7 +181,7 @@ impl CommandTrait for ApproveUseAuthority {
             .await?;
 
         let (mut transaction, recent_blockhash) = execute(
-            &ctx.solana_client,
+            &ctx.solana_client(),
             &fee_payer.pubkey(),
             &instructions,
             minimum_balance_for_rent_exemption,
@@ -197,7 +197,7 @@ impl CommandTrait for ApproveUseAuthority {
         .await?;
 
         let signature = if submit {
-            Some(submit_transaction(&ctx.solana_client, transaction).await?)
+            Some(submit_transaction(&ctx.solana_client(), transaction).await?)
         } else {
             None
         };

@@ -42,10 +42,10 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let wormhole_core_program_id =
-        crate::wormhole::wormhole_core_program_id(ctx.cfg.solana_client.cluster);
+        crate::wormhole::wormhole_core_program_id(ctx.solana_config().cluster);
 
     let token_bridge_program_id =
-        crate::wormhole::token_bridge_program_id(ctx.cfg.solana_client.cluster);
+        crate::wormhole::token_bridge_program_id(ctx.solana_config().cluster);
 
     // TODO: use a real nonce
     let nonce = rand::thread_rng().r#gen();

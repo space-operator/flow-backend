@@ -41,7 +41,7 @@ pub struct Output {
 async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let decimals = match input.decimals {
         Some(d) => d,
-        None => get_decimals(&ctx.solana_client, input.mint_account).await?,
+        None => get_decimals(&ctx.solana_client(), input.mint_account).await?,
     };
 
     let amount = ui_amount_to_amount(input.amount, decimals)?;

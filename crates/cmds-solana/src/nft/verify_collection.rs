@@ -56,7 +56,7 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
     let (metadata_account, _) = mpl_token_metadata::pda::find_metadata_account(&input.mint_account);
 
     let minimum_balance_for_rent_exemption = ctx
-        .solana_client
+        .solana_client()
         .get_minimum_balance_for_rent_exemption(
             100, // std::mem::size_of::<
                 // mpl_token_metadata::state::VerifyCollection,

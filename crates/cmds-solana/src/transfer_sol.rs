@@ -80,13 +80,13 @@ mod tests {
     #[ignore]
     async fn test_valid() {
         tracing_subscriber::fmt::try_init().ok();
-        let ctx = Context::default();
+        let ctx = CommandContextX::default();
 
         let sender: Wallet = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").into();
         let recipient = solana_program::pubkey!("GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9");
 
         let balance = ctx
-            .solana_client
+            .solana_client()
             .get_balance(&sender.pubkey())
             .await
             .unwrap() as f64
@@ -94,7 +94,7 @@ mod tests {
 
         if balance < 0.1 {
             let _ = ctx
-                .solana_client
+                .solana_client()
                 .request_airdrop(&sender.pubkey(), 1_000_000_000)
                 .await;
         }
@@ -102,7 +102,7 @@ mod tests {
         // Transfer
         let output = run(
             ctx,
-            Input {
+            super::Input {
                 fee_payer: None,
                 sender,
                 recipient,

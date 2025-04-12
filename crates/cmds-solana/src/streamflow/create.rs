@@ -92,7 +92,7 @@ fn create_create_stream_instruction(
 }
 
 async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
-    let timelock_program = crate::streamflow::streamflow_program_id(ctx.cfg.solana_client.cluster);
+    let timelock_program = crate::streamflow::streamflow_program_id(ctx.solana_config().cluster);
 
     let data: CreateData = input.data.into();
 

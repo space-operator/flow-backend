@@ -54,7 +54,7 @@ impl CommandTrait for GetLeftUses {
         let (metadata_account, _) = Metadata::find_pda(&mint_account);
 
         let account_data = ctx
-            .solana_client
+            .solana_client()
             .get_account_data(&metadata_account)
             .await?;
 

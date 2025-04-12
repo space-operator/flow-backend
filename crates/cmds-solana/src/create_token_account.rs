@@ -39,7 +39,7 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let minimum_balance_for_rent_exemption = ctx
-        .solana_client
+        .solana_client()
         .get_minimum_balance_for_rent_exemption(spl_token::state::Account::LEN)
         .await?;
 
@@ -64,8 +64,8 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
 
     // TODO: with bundling, this data might be outdated when tx is submitted
     if let Some(account_data) = ctx
-        .solana_client
-        .get_account_with_commitment(&account, ctx.solana_client.commitment())
+        .solana_client()
+        .get_account_with_commitment(&account, ctx.solana_client().commitment())
         .await?
         .value
     {

@@ -40,7 +40,7 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let wormhole_core_program_id =
-        crate::wormhole::wormhole_core_program_id(ctx.cfg.solana_client.cluster);
+        crate::wormhole::wormhole_core_program_id(ctx.solana_config().cluster);
     let bridge = Pubkey::find_program_address(&[b"Bridge"], &wormhole_core_program_id).0;
 
     let guardian_set = Pubkey::find_program_address(

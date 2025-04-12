@@ -34,7 +34,7 @@ pub struct Output {
 
 async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     // let rpc_data = ctx
-    //     .solana_client
+    //     .solana_client()
     //     .get_account_data(&input.collection)
     //     .await
     //     .unwrap();
@@ -43,7 +43,7 @@ async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError>
     info!("Collection {:?}", collection);
 
     let rpc_data = ctx
-        .solana_client
+        .solana_client()
         .get_program_accounts_with_config(
             &mpl_core::ID,
             RpcProgramAccountsConfig {

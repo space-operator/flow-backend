@@ -48,7 +48,7 @@ async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError>
     };
 
     let response: RedeemOnEthResponse = ctx
-        .http
+        .http()
         .post("https://space-operator.deno.dev/api/redeem_nft_on_eth")
         .json(&payload)
         .send()

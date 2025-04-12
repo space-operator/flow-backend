@@ -262,7 +262,7 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
         CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1 + merkle_tree_account_size + canopy_size as usize;
 
     let rent = ctx
-        .solana_client
+        .solana_client()
         .get_minimum_balance_for_rent_exemption(merkle_tree_account_size)
         .await?;
 

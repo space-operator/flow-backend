@@ -71,7 +71,7 @@ async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError>
     );
 
     let req = ctx
-        .http
+        .http()
         .post(input.url)
         .header(CONTENT_TYPE, content_type)
         .json(&body);

@@ -54,8 +54,8 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
         .token(token_account);
 
     if let Some(acc) = ctx
-        .solana_client
-        .get_account_with_commitment(&metadata_account, ctx.solana_client.commitment())
+        .solana_client()
+        .get_account_with_commitment(&metadata_account, ctx.solana_client().commitment())
         .await?
         .value
     {

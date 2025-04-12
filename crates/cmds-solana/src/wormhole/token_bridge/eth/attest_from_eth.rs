@@ -49,7 +49,7 @@ async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError>
     info!("payload: {:?}", payload);
 
     let response: ServerlessOutput = ctx
-        .http
+        .http()
         .post("https://space-operator.deno.dev/api/attest_from_eth")
         .json(&payload)
         .send()

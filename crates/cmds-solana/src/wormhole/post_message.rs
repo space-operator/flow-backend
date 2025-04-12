@@ -42,7 +42,7 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let wormhole_core_program_id =
-        crate::wormhole::wormhole_core_program_id(ctx.cfg.solana_client.cluster);
+        crate::wormhole::wormhole_core_program_id(ctx.solana_config().cluster);
 
     // TODO: use a real nonce
     let nonce = rand::thread_rng().r#gen();
@@ -85,7 +85,7 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
     };
 
     // Get message fee
-    let bridge_config_account = ctx.solana_client.get_account(&bridge).await?;
+    let bridge_config_account = ctx.solana_client().get_account(&bridge).await?;
     let bridge_config = BridgeData::try_from_slice(bridge_config_account.data.as_slice())?;
     let fee = bridge_config.config.fee;
 

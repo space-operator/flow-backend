@@ -10,7 +10,7 @@ pub struct BundlrSigner {
 }
 
 impl BundlrSigner {
-    pub fn new(keypair: Wallet, ctx: Context) -> Self {
+    pub fn new(keypair: Wallet, ctx: CommandContextX) -> Self {
         Self { keypair, ctx }
     }
 }
@@ -133,8 +133,8 @@ impl CommandTrait for ArweaveNftUpload {
         } = value::from_map(inputs)?;
 
         let mut uploader = Uploader::new(
-            ctx.solana_client.clone(),
-            ctx.cfg.solana_client.cluster,
+            ctx.solana_client().clone(),
+            ctx.solana_config().cluster,
             fee_payer,
         )?;
 
@@ -201,7 +201,11 @@ impl Uploader {
         })
     }
 
-    pub async fn lazy_fund(&mut self, file_path: &str, signer: &Context) -> crate::Result<()> {
+    pub async fn lazy_fund(
+        &mut self,
+        file_path: &str,
+        signer: &CommandContextX,
+    ) -> crate::Result<()> {
         let mut needed_size = self.get_file_size(file_path).await?;
         needed_size += 10_000;
 
@@ -220,7 +224,7 @@ impl Uploader {
     pub async fn lazy_fund_metadata(
         &mut self,
         metadata: &NftMetadata,
-        signer: &Context,
+        signer: &CommandContextX,
     ) -> crate::Result<()> {
         let mut processed = HashSet::new();
         let mut needed_size = 0;
@@ -306,7 +310,7 @@ impl Uploader {
         }
     }
 
-    async fn fund(&self, amount: u64, signer: &Context) -> crate::Result<()> {
+    async fn fund(&self, amount: u64, signer: &CommandContextX) -> crate::Result<()> {
         #[derive(Deserialize, Serialize)]
         struct Addresses {
             solana: String,

@@ -40,7 +40,7 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let lamports = ctx
-        .solana_client
+        .solana_client()
         .get_minimum_balance_for_rent_exemption(Mint::LEN)
         .await?;
 

@@ -120,7 +120,7 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
     let candy_account_size = candy_machine_data.get_space_for_candy().unwrap_or(216);
 
     let lamports = ctx
-        .solana_client
+        .solana_client()
         .get_minimum_balance_for_rent_exemption(candy_account_size)
         .await?;
 

@@ -50,7 +50,7 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
         );
 
     let minimum_balance_for_rent_exemption = ctx
-        .solana_client
+        .solana_client()
         .get_minimum_balance_for_rent_exemption(std::mem::size_of::<
             mpl_token_metadata::state::CollectionAuthorityRecord,
         >())

@@ -60,7 +60,7 @@ async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError>
     };
 
     let response: CreateWrappedResponse = ctx
-        .http
+        .http()
         .post("https://space-operator.deno.dev/api/create_wrapped_on_eth")
         .json(&payload)
         .send()

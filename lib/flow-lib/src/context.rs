@@ -464,6 +464,10 @@ impl CommandContextX {
         &self.data.flow.set.solana
     }
 
+    pub fn solana_client(&self) -> &Arc<SolanaClient> {
+        &self.flow.set.solana_client
+    }
+
     pub fn http(&self) -> &reqwest::Client {
         &self.flow.set.http
     }

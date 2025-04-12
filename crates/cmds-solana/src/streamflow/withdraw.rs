@@ -87,7 +87,7 @@ fn create_withdraw_stream_instruction(
 }
 
 async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
-    let timelock_program = crate::streamflow::streamflow_program_id(ctx.cfg.solana_client.cluster);
+    let timelock_program = crate::streamflow::streamflow_program_id(ctx.solana_config().cluster);
 
     let data: WithdrawData = input.data.into();
 
@@ -101,7 +101,7 @@ async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandEr
     };
 
     let response = ctx
-        .solana_client
+        .solana_client()
         .get_account_with_config(&input.metadata, config)
         .await
         .map_err(|e| {
