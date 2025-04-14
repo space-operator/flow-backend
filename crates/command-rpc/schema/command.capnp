@@ -58,3 +58,9 @@ struct CommandContextData {
     times @1 : UInt32;
     flow @2 : FlowContextData;
 }
+
+interface CommandTrait {
+    init @0 (name: Text, nd: Data) -> (cmd: CommandTrait);
+
+    run @1 (inputs: Data) -> (output: Data);
+}
