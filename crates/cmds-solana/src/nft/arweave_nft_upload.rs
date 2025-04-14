@@ -26,10 +26,11 @@ impl bundlr_sdk::Signer for BundlrSigner {
             _ => {
                 let rt = self
                     .ctx
+                    // TODO: store this officially instead of extension
                     .get::<tokio::runtime::Handle>()
                     .ok_or_else(|| BundlrError::SigningError("tokio runtime not found".to_owned()))?
                     .clone();
-                let ctx = self.ctx.clone();
+                let mut ctx = self.ctx.clone();
                 let pubkey = self.keypair.pubkey();
                 rt.block_on(async move {
                     tokio::time::timeout(
@@ -125,7 +126,7 @@ impl CommandTrait for ArweaveNftUpload {
         .to_vec()
     }
 
-    async fn run(&self, ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, mut ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let Input {
             fee_payer,
             mut metadata,
@@ -139,7 +140,7 @@ impl CommandTrait for ArweaveNftUpload {
         )?;
 
         if fund_bundlr {
-            uploader.lazy_fund_metadata(&metadata, &ctx).await?;
+            uploader.lazy_fund_metadata(&metadata, &mut ctx).await?;
         }
 
         metadata.image = uploader.upload_file(ctx.clone(), &metadata.image).await?;
@@ -204,7 +205,7 @@ impl Uploader {
     pub async fn lazy_fund(
         &mut self,
         file_path: &str,
-        signer: &CommandContextX,
+        signer: &mut CommandContextX,
     ) -> crate::Result<()> {
         let mut needed_size = self.get_file_size(file_path).await?;
         needed_size += 10_000;
@@ -224,7 +225,7 @@ impl Uploader {
     pub async fn lazy_fund_metadata(
         &mut self,
         metadata: &NftMetadata,
-        signer: &CommandContextX,
+        signer: &mut CommandContextX,
     ) -> crate::Result<()> {
         let mut processed = HashSet::new();
         let mut needed_size = 0;
@@ -310,7 +311,7 @@ impl Uploader {
         }
     }
 
-    async fn fund(&self, amount: u64, signer: &CommandContextX) -> crate::Result<()> {
+    async fn fund(&self, amount: u64, signer: &mut CommandContextX) -> crate::Result<()> {
         #[derive(Deserialize, Serialize)]
         struct Addresses {
             solana: String,

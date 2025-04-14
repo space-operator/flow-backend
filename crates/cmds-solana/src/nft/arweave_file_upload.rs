@@ -66,7 +66,7 @@ impl CommandTrait for ArweaveFileUpload {
         .to_vec()
     }
 
-    async fn run(&self, ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, mut ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let Input {
             fee_payer,
             file_path,
@@ -80,7 +80,7 @@ impl CommandTrait for ArweaveFileUpload {
         )?;
 
         if fund_bundlr {
-            uploader.lazy_fund(&file_path, &ctx).await?;
+            uploader.lazy_fund(&file_path, &mut ctx).await?;
         }
 
         let file_url = uploader.upload_file(ctx, &file_path).await?;

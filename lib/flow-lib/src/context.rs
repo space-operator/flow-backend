@@ -9,7 +9,7 @@
 //! - [`signer`]
 
 use crate::{
-    ContextConfig, FlowRunId, NodeId, SolanaClientConfig, UserId,
+    ContextConfig, FlowRunId, HttpClientConfig, NodeId, SolanaClientConfig, UserId,
     config::{Endpoints, client::FlowRunOrigin},
     solana::Instructions,
     utils::{Extensions, tower_client::unimplemented_svc},
@@ -368,7 +368,7 @@ pub struct FlowSetContextData {
     started_by: User,
     endpoints: Endpoints,
     solana: SolanaClientConfig,
-    extensions: Arc<Extensions>,
+    http: HttpClientConfig,
 }
 
 #[derive(Clone)]
@@ -386,15 +386,16 @@ pub struct CommandContextData {
 }
 
 #[derive(Clone)]
-pub struct FlowSetContext {
+pub struct FlowSetServices {
     http: reqwest::Client,
     solana_client: Arc<SolanaClient>,
+    extensions: Arc<Extensions>,
 }
 
 #[derive(Clone)]
-pub struct FlowContext {
+pub struct FlowServices {
     signer: signer::Svc,
-    set: FlowSetContext,
+    set: FlowSetServices,
 }
 
 #[derive(Clone)]
@@ -402,7 +403,7 @@ pub struct CommandContextX {
     data: CommandContextData,
     execute: execute::Svc,
     get_jwt: get_jwt::Svc,
-    flow: FlowContext,
+    flow: FlowServices,
 }
 
 impl CommandContextX {
@@ -428,17 +429,18 @@ impl CommandContextX {
                         started_by: User::default(),
                         endpoints: Endpoints::default(),
                         solana: config.solana_client,
-                        extensions: <_>::default(),
+                        http: config.http_client,
                     },
                 },
             },
             execute: unimplemented_svc(),
             get_jwt: unimplemented_svc(),
-            flow: FlowContext {
+            flow: FlowServices {
                 signer: unimplemented_svc(),
-                set: FlowSetContext {
+                set: FlowSetServices {
                     http: reqwest::Client::new(),
                     solana_client,
+                    extensions: <_>::default(),
                 },
             },
         }
@@ -500,6 +502,35 @@ impl CommandContextX {
             })
             .await
     }
+
+    /// Call [`signer`] service.
+    pub async fn request_signature(
+        &mut self,
+        pubkey: Pubkey,
+        message: Bytes,
+        timeout: Duration,
+    ) -> Result<signer::SignatureResponse, signer::Error> {
+        Ok(self
+            .flow
+            .signer
+            .ready()
+            .await?
+            .call(signer::SignatureRequest {
+                id: None,
+                time: Utc::now(),
+                pubkey,
+                message,
+                timeout,
+                flow_run_id: Some(self.data.flow.flow_run_id),
+                signatures: None,
+            })
+            .await?)
+    }
+
+    /// Get an extension by type.
+    pub fn get<T: Any + Send + Sync + 'static>(&self) -> Option<&T> {
+        self.flow.set.extensions.get::<T>()
+    }
 }
 
 impl Default for CommandContextX {
@@ -525,7 +556,7 @@ pub struct Context {
 
 impl Default for Context {
     fn default() -> Self {
-        let mut ctx = Context::from_cfg(
+        let ctx = Context::from_cfg(
             &ContextConfig::default(),
             User::default(),
             User::default(),

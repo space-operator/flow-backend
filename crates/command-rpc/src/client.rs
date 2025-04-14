@@ -5,7 +5,7 @@ use flow_lib::{
     ContextConfig, FlowRunId, NodeId, User,
     command::{InstructionInfo, prelude::*},
     config::Endpoints,
-    context::CommandContext,
+    context::CommandContextX,
 };
 use serde_with::{DisplayFromStr, serde_as};
 use srpc::GetBaseUrl;
