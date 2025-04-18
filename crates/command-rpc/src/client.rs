@@ -4,12 +4,11 @@ use async_trait::async_trait;
 use flow_lib::{
     ContextConfig, FlowRunId, NodeId, User,
     command::{InstructionInfo, prelude::*},
-    config::Endpoints,
-    context::CommandContextX,
+    context::{self, CommandContextX},
 };
 use serde_with::{DisplayFromStr, serde_as};
 use srpc::GetBaseUrl;
-use std::{collections::HashMap, convert::Infallible};
+use std::convert::Infallible;
 use tower::util::ServiceExt;
 use tracing::Instrument;
 use url::Url;
@@ -86,52 +85,25 @@ impl ServiceProxy {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct CommandContextData {
-    flow_run_id: FlowRunId,
-    node_id: NodeId,
-    times: u32,
-    svc: ServiceProxy,
+struct ContextProxy {
+    data: context::CommandContextData,
+    signer: ServiceProxy,
+    execute: ServiceProxy,
     log: ServiceProxy,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct ContextProxy {
-    flow_owner: User,
-    started_by: User,
-    cfg: ContextConfig,
-    environment: HashMap<String, String>,
-    endpoints: Endpoints,
-    command: Option<CommandContextData>,
-    signer: ServiceProxy,
-}
-
 impl ContextProxy {
-    async fn new(
-        Context {
-            flow_owner,
-            started_by,
-            cfg,
-            http: _,
-            solana_client: _,
-            environment,
-            endpoints,
-            extensions,
-            command,
-            signer,
-            get_jwt: _,
-        }: Context,
-    ) -> Result<Self, CommandError> {
-        let server = extensions
+    async fn new(ctx: CommandContextX) -> Result<Self, CommandError> {
+        let server = ctx
             .get::<actix::Addr<srpc::Server>>()
             .ok_or_else(|| CommandError::msg("srpc::Server not available"))?;
         let our_base_url = server
             .send(GetBaseUrl)
             .await?
             .ok_or_else(|| CommandError::msg("srpc::Server is not listening on any interfaces"))?;
-        let flow_run_id = command
-            .as_ref()
-            .map(|c| c.flow_run_id)
-            .ok_or_else(|| CommandError::msg("CommandContext not available"))?;
+        let flow_run_id = *ctx.flow_run_id();
+
+        let signer = ctx.raw().services.signer.clone();
 
         let signer = server
             .send(srpc::RegisterJsonService::new(
@@ -141,42 +113,16 @@ impl ContextProxy {
             ))
             .await?;
 
-        let command = match command {
-            Some(command) => {
-                Some(CommandContextData::new(command, our_base_url.clone(), server).await?)
-            }
-            None => None,
-        };
+        let data = ctx.raw().data.clone();
 
-        Ok(Self {
-            flow_owner,
-            started_by,
-            cfg,
-            environment,
-            endpoints,
-            command,
-            signer: ServiceProxy::new(signer, our_base_url, server),
-        })
-    }
-}
-
-impl CommandContextData {
-    async fn new(
-        CommandContext {
-            svc,
-            flow_run_id,
-            node_id,
-            times,
-        }: CommandContext,
-        base_url: Url,
-        server: &actix::Addr<srpc::Server>,
-    ) -> Result<Self, CommandError> {
         let span = tracing::Span::current();
-        let svc = server
+        let id = format!("{};{};{}", flow_run_id, ctx.node_id(), ctx.times());
+        let execute = ctx.raw().services.execute.clone();
+        let execute = server
             .send(srpc::RegisterJsonService::new(
                 "execute".to_owned(),
-                format!("{};{};{}", flow_run_id, node_id, times),
-                svc.map_future({
+                id.clone(),
+                execute.map_future({
                     let span = span.clone();
                     move |f| f.instrument(span.clone())
                 }),
@@ -185,16 +131,16 @@ impl CommandContextData {
         let log = server
             .send(srpc::RegisterJsonService::new(
                 "log".to_owned(),
-                format!("{};{};{}", flow_run_id, node_id, times),
+                id,
                 LogSvc { span },
             ))
             .await?;
+
         Ok(Self {
-            flow_run_id,
-            node_id,
-            times,
-            svc: ServiceProxy::new(svc, base_url.clone(), server),
-            log: ServiceProxy::new(log, base_url, server),
+            data,
+            signer: ServiceProxy::new(signer, our_base_url.clone(), server),
+            execute: ServiceProxy::new(execute, our_base_url.clone(), server),
+            log: ServiceProxy::new(log, our_base_url, server),
         })
     }
 }

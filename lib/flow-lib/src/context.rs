@@ -362,27 +362,27 @@ pub struct CommandContext {
     pub times: u32,
 }
 
-#[derive(Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FlowSetContextData {
-    flow_owner: User,
-    started_by: User,
-    endpoints: Endpoints,
-    solana: SolanaClientConfig,
-    http: HttpClientConfig,
+    pub flow_owner: User,
+    pub started_by: User,
+    pub endpoints: Endpoints,
+    pub solana: SolanaClientConfig,
+    pub http: HttpClientConfig,
 }
 
-#[derive(Clone)]
-struct FlowContextData {
-    flow_run_id: FlowRunId,
-    environment: HashMap<String, String>,
-    set: FlowSetContextData,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FlowContextData {
+    pub flow_run_id: FlowRunId,
+    pub environment: HashMap<String, String>,
+    pub set: FlowSetContextData,
 }
 
-#[derive(Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CommandContextData {
-    node_id: NodeId,
-    times: u32,
-    flow: FlowContextData,
+    pub node_id: NodeId,
+    pub times: u32,
+    pub flow: FlowContextData,
 }
 
 #[derive(Clone)]
@@ -444,6 +444,18 @@ impl CommandContextX {
                 },
             },
         }
+    }
+
+    pub fn flow_run_id(&self) -> &FlowRunId {
+        &self.data.flow.flow_run_id
+    }
+
+    pub fn node_id(&self) -> &NodeId {
+        &self.data.node_id
+    }
+
+    pub fn times(&self) -> &u32 {
+        &self.data.times
     }
 
     pub fn environment(&self) -> &HashMap<String, String> {
@@ -531,6 +543,30 @@ impl CommandContextX {
     pub fn get<T: Any + Send + Sync + 'static>(&self) -> Option<&T> {
         self.flow.set.extensions.get::<T>()
     }
+
+    pub fn extensions_mut(&mut self) -> Option<&mut Extensions> {
+        Arc::get_mut(&mut self.flow.set.extensions)
+    }
+
+    pub fn raw(&self) -> RawContext<'_> {
+        RawContext {
+            data: &self.data,
+            services: RawServices {
+                signer: &self.flow.signer,
+                execute: &self.execute,
+            },
+        }
+    }
+}
+
+pub struct RawServices<'a> {
+    pub signer: &'a signer::Svc,
+    pub execute: &'a execute::Svc,
+}
+
+pub struct RawContext<'a> {
+    pub data: &'a CommandContextData,
+    pub services: RawServices<'a>,
 }
 
 impl Default for CommandContextX {
