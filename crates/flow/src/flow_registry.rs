@@ -14,7 +14,7 @@ use flow_lib::{
     },
     context::{User, execute, get_jwt, signer},
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
-    utils::TowerClient,
+    utils::{TowerClient, tower_client::unimplemented_svc},
 };
 use futures::channel::oneshot;
 use hashbrown::HashMap;
@@ -76,10 +76,10 @@ pub struct FlowRegistry {
 
 impl Default for FlowRegistry {
     fn default() -> Self {
-        let signer = signer::unimplemented_svc();
-        let new_flow_run = new_flow_run::unimplemented_svc();
-        let get_previous_values = get_previous_values::unimplemented_svc();
-        let token = get_jwt::unimplemented_svc();
+        let signer = unimplemented_svc();
+        let new_flow_run = unimplemented_svc();
+        let get_previous_values = unimplemented_svc();
+        let token = unimplemented_svc();
         Self {
             depth: 0,
             flow_owner: User::new(UserId::nil()),
@@ -196,60 +196,56 @@ fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) 
     tokio::task::spawn_blocking(move || {
         let mut engine = rhai_script::setup_engine();
         while let Ok((req, tx)) = rx.recv() {
-            match (req.ctx.extensions.get::<EventSender>(), &req.ctx.command) {
-                (Some(tx), Some(cmd)) => {
-                    let tx1 = tx.clone();
-                    let tx2 = tx.clone();
-                    let node_id = cmd.node_id;
-                    let times = cmd.times;
-                    engine
-                        .on_print(move |s| {
-                            tx1.unbounded_send(
-                                NodeLog {
-                                    time: Utc::now(),
-                                    node_id,
-                                    times,
-                                    level: flow_run_events::LogLevel::Info,
-                                    module: None,
-                                    content: s.to_owned(),
-                                }
-                                .into(),
-                            )
-                            .ok();
-                        })
-                        .on_debug(move |s, _, pos| {
-                            let module = if let (Some(line), Some(position)) =
-                                (pos.line(), pos.position())
-                            {
+            if let Some(tx) = req.ctx.get::<EventSender>() {
+                let tx1 = tx.clone();
+                let tx2 = tx.clone();
+                let node_id = *req.ctx.node_id();
+                let times = *req.ctx.times();
+                engine
+                    .on_print(move |s| {
+                        tx1.unbounded_send(
+                            NodeLog {
+                                time: Utc::now(),
+                                node_id,
+                                times,
+                                level: flow_run_events::LogLevel::Info,
+                                module: None,
+                                content: s.to_owned(),
+                            }
+                            .into(),
+                        )
+                        .ok();
+                    })
+                    .on_debug(move |s, _, pos| {
+                        let module =
+                            if let (Some(line), Some(position)) = (pos.line(), pos.position()) {
                                 Some(format!("script.rhai:{}:{}", line, position))
                             } else {
                                 None
                             };
-                            tx2.unbounded_send(
-                                NodeLog {
-                                    time: Utc::now(),
-                                    node_id,
-                                    times,
-                                    level: flow_run_events::LogLevel::Debug,
-                                    module,
-                                    content: s.to_owned(),
-                                }
-                                .into(),
-                            )
-                            .ok();
-                        });
-                }
-                _ => {
-                    engine
-                        .on_print(|s| {
-                            tracing::info!("rhai: {}", s);
-                        })
-                        .on_debug(move |s, _, pos| {
-                            tracing::info!("rhai: {}, at {}", s, pos);
-                        });
-                }
+                        tx2.unbounded_send(
+                            NodeLog {
+                                time: Utc::now(),
+                                node_id,
+                                times,
+                                level: flow_run_events::LogLevel::Debug,
+                                module,
+                                content: s.to_owned(),
+                            }
+                            .into(),
+                        )
+                        .ok();
+                    });
+            } else {
+                engine
+                    .on_print(|s| {
+                        tracing::info!("rhai: {}", s);
+                    })
+                    .on_debug(move |s, _, pos| {
+                        tracing::info!("rhai: {}, at {}", s, pos);
+                    });
             }
-            match req.ctx.extensions.get::<CancellationToken>().cloned() {
+            match req.ctx.get::<CancellationToken>().cloned() {
                 Some(stop_token) => {
                     engine.on_progress(move |c| {
                         (c % 4096 == 0 && stop_token.is_cancelled()).then(|| "canceled".into())
@@ -496,7 +492,7 @@ impl FlowRegistry {
 }
 
 pub mod run_rhai {
-    use flow_lib::{Context, ValueSet, command::CommandError};
+    use flow_lib::{ValueSet, command::CommandError, context::CommandContextX};
     use futures::channel::oneshot;
     use std::sync::Arc;
 
@@ -504,7 +500,7 @@ pub mod run_rhai {
 
     pub struct Request {
         pub command: Arc<rhai_script::Command>,
-        pub ctx: Context,
+        pub ctx: CommandContextX,
         pub input: ValueSet,
     }
 
@@ -520,7 +516,9 @@ pub mod new_flow_run {
         flow_set::DeploymentId,
     };
     use flow_lib::{
-        BoxError, FlowRunId, UserId, ValueSet, config::client::ClientConfig, utils::TowerClient,
+        FlowRunId, UserId, ValueSet,
+        config::client::ClientConfig,
+        utils::{TowerClient, tower_client::CommonError},
     };
     use futures::stream::BoxStream;
     use thiserror::Error as ThisError;
@@ -554,17 +552,7 @@ pub mod new_flow_run {
         #[error(transparent)]
         BuildFlow(#[from] crate::Error),
         #[error(transparent)]
-        Worker(tower::BoxError),
-        #[error(transparent)]
-        MailBox(#[from] actix::MailboxError),
-        #[error(transparent)]
-        Other(#[from] BoxError),
-    }
-
-    impl Error {
-        pub fn other<E: Into<BoxError>>(e: E) -> Self {
-            Self::Other(e.into())
-        }
+        Common(#[from] CommonError),
     }
 
     pub struct Response {
@@ -572,12 +560,6 @@ pub mod new_flow_run {
         pub stop_signal: StopSignal,
         pub stop_shared_signal: StopSignal,
         pub span: tracing::Span,
-    }
-
-    pub fn unimplemented_svc() -> Svc {
-        Svc::new(tower::service_fn(|_| {
-            std::future::ready(Err(Error::other("unimplemented")))
-        }))
     }
 }
 
@@ -629,7 +611,10 @@ pub mod get_flow {
 }
 
 pub mod get_previous_values {
-    use flow_lib::{BoxError, FlowRunId, NodeId, UserId, utils::TowerClient};
+    use flow_lib::{
+        FlowRunId, NodeId, UserId,
+        utils::{TowerClient, tower_client::CommonError},
+    };
     use hashbrown::HashMap;
     use thiserror::Error as ThisError;
     use value::Value;
@@ -654,16 +639,6 @@ pub mod get_previous_values {
         #[error("unauthorized")]
         Unauthorized,
         #[error(transparent)]
-        Worker(tower::BoxError),
-        #[error(transparent)]
-        MailBox(#[from] actix::MailboxError),
-        #[error(transparent)]
-        Other(#[from] BoxError),
-    }
-
-    pub fn unimplemented_svc() -> Svc {
-        Svc::new(tower::service_fn(|_| {
-            std::future::ready(Err(BoxError::from("unimplemented").into()))
-        }))
+        Common(#[from] CommonError),
     }
 }

@@ -387,18 +387,18 @@ pub struct CommandContextData {
 
 #[derive(Clone)]
 pub struct FlowSetServices {
-    http: reqwest::Client,
-    solana_client: Arc<SolanaClient>,
-    extensions: Arc<Extensions>,
+    pub http: reqwest::Client,
+    pub solana_client: Arc<SolanaClient>,
+    pub extensions: Arc<Extensions>,
 }
 
 #[derive(Clone)]
 pub struct FlowServices {
-    signer: signer::Svc,
-    set: FlowSetServices,
+    pub signer: signer::Svc,
+    pub set: FlowSetServices,
 }
 
-#[derive(Clone)]
+#[derive(Clone, bon::Builder)]
 pub struct CommandContextX {
     data: CommandContextData,
     execute: execute::Svc,
@@ -409,14 +409,7 @@ pub struct CommandContextX {
 impl CommandContextX {
     pub fn test_context() -> Self {
         let config = ContextConfig::default();
-        let solana_client = Arc::new(SolanaClient::new_with_timeouts_and_commitment(
-            config.solana_client.url.clone(),
-            Duration::from_secs(30),
-            CommitmentConfig {
-                commitment: CommitmentLevel::Finalized,
-            },
-            Duration::from_secs(180),
-        ));
+        let solana_client = Arc::new(config.solana_client.build_client());
         Self {
             data: CommandContextData {
                 node_id: NodeId::nil(),

@@ -13,9 +13,12 @@ use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
-    context::{CommandContext, Context, execute, get_jwt},
+    context::{
+        CommandContextData, CommandContextX, FlowContextData, FlowServices, FlowSetContextData,
+        FlowSetServices, execute, get_jwt,
+    },
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
-    utils::{Extensions, TowerClient},
+    utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
 };
 use futures::{
     FutureExt, StreamExt,
@@ -117,7 +120,9 @@ impl StopSignal {
 
 pub struct FlowGraph {
     pub id: FlowId,
-    pub ctx: Context,
+    pub ctx_data: FlowContextData,
+    pub ctx_svcs: FlowServices,
+    pub get_jwt: get_jwt::Svc,
     pub g: StableGraph<NodeId, Edge>,
     pub nodes: HashMap<NodeId, Node>,
     pub mode: client::BundlingMode,
@@ -373,28 +378,42 @@ impl FlowGraph {
         registry: FlowRegistry,
         partial_config: Option<&PartialConfig>,
     ) -> crate::Result<Self> {
-        let flow_owner = registry.flow_owner;
-        let started_by = registry.started_by;
-        let signer = registry.signer.clone();
-        let token = registry.token.clone();
         let rhai_permit = registry.rhai_permit.clone();
         let tx_exec_config = ExecutionConfig::from_env(&c.ctx.environment)
             .inspect_err(|error| tracing::error!("error parsing ExecutionConfig: {}", error))
             .unwrap_or_default();
         let parent_flow_execute = registry.parent_flow_execute.clone();
         tracing::debug!("execution config: {:?}", tx_exec_config);
+        let get_jwt = registry.token.clone();
 
-        let ext = {
-            let mut ext = Extensions::new();
-            if let Some(rpc) = registry.rpc_server.clone() {
-                ext.insert(rpc);
-            }
-            ext.insert(registry);
-            ext.insert(tokio::runtime::Handle::current());
-            ext
+        // let ctx = Context::from_cfg(&c.ctx, flow_owner, started_by, signer, token, ext);
+        let ctx_data = FlowContextData {
+            environment: c.ctx.environment,
+            flow_run_id: FlowRunId::nil(),
+            set: FlowSetContextData {
+                endpoints: c.ctx.endpoints,
+                flow_owner: registry.flow_owner,
+                started_by: registry.started_by,
+                http: c.ctx.http_client,
+                solana: c.ctx.solana_client,
+            },
         };
-
-        let ctx = Context::from_cfg(&c.ctx, flow_owner, started_by, signer, token, ext);
+        let ctx_svcs = FlowServices {
+            signer: registry.signer.clone(),
+            set: FlowSetServices {
+                extensions: Arc::new({
+                    let mut ext = Extensions::new();
+                    if let Some(rpc) = registry.rpc_server.clone() {
+                        ext.insert(rpc);
+                    }
+                    ext.insert(registry);
+                    ext.insert(tokio::runtime::Handle::current());
+                    ext
+                }),
+                http: reqwest::Client::new(),
+                solana_client: Arc::new(ctx_data.set.solana.build_client()),
+            },
+        };
 
         let f = CommandFactory::new();
 
@@ -515,7 +534,9 @@ impl FlowGraph {
 
         Ok(Self {
             id: c.id,
-            ctx,
+            ctx_data,
+            ctx_svcs,
+            get_jwt,
             g,
             nodes,
             mode: c.instructions_bundling,
@@ -928,7 +949,7 @@ impl FlowGraph {
                     });
                 } else {
                     let error = "this node should not have instructions, did you forget to define instruction_info?";
-                    o.resp.send(Err(execute::Error::other(error))).ok();
+                    o.resp.send(Err(execute::Error::msg(error))).ok();
                     node_error(
                         &s.event_tx,
                         &mut s.result,
@@ -940,7 +961,7 @@ impl FlowGraph {
             }
             Err(error) => {
                 let err_str = error.to_string();
-                o.resp.send(Err(error.into())).ok();
+                o.resp.send(Err(execute::Error::from_anyhow(error))).ok();
                 node_error(&s.event_tx, &mut s.result, info.id, info.times, err_str);
             }
         }
@@ -1148,14 +1169,14 @@ impl FlowGraph {
                     } else {
                         tracing::info!("executing instructions");
                         let config = self.tx_exec_config.clone();
-                        let network = self.ctx.cfg.solana_client.cluster;
+                        let network = self.ctx_data.set.solana.cluster;
                         s.stop
                             .race(
                                 std::pin::pin!(s.stop_shared.race(
                                     std::pin::pin!(ins.execute(
-                                        &self.ctx.solana_client,
+                                        &self.ctx_svcs.set.solana_client,
                                         network,
-                                        self.ctx.signer.clone(),
+                                        self.ctx_svcs.signer.clone(),
                                         Some(s.flow_run_id),
                                         config,
                                     )),
@@ -1355,7 +1376,7 @@ impl FlowGraph {
         self.supply_partial_run_values(fake_node, &mut s);
 
         // TODO: is this the best way to do this
-        match Arc::get_mut(&mut self.ctx.extensions) {
+        match Arc::get_mut(&mut self.ctx_svcs.set.extensions) {
             Some(ext) => {
                 ext.insert(s.event_tx.clone());
                 ext.insert(s.stop.token.clone());
@@ -1492,9 +1513,9 @@ impl FlowGraph {
                     .build_for_solana_action(
                         fee_payer,
                         self.action_identity,
-                        &self.ctx.solana_client,
-                        self.ctx.cfg.solana_client.cluster,
-                        self.ctx.signer.clone(),
+                        &self.ctx_svcs.set.solana_client,
+                        self.ctx_data.set.solana.cluster,
+                        self.ctx_svcs.signer.clone(),
                         Some(s.flow_run_id),
                         &self.tx_exec_config,
                     )
@@ -1552,19 +1573,21 @@ impl FlowGraph {
         let is_rhai_script = rhai_script::is_rhai_script(&node.command.name());
         let span =
             tracing::error_span!(NODE_SPAN_NAME, node_id = node.id.to_string(), times = times);
-        let task = run_command(
-            node,
-            s.flow_run_id,
-            times,
-            inputs,
-            self.ctx.clone(),
-            s.event_tx.clone(),
-            s.stop.clone(),
-            s.stop_shared.clone(),
-            s.out_tx.clone(),
-            self.mode.clone(),
-            self.tx_exec_config.clone(),
-        );
+        let task = run_command()
+            .node(node)
+            .flow_run_id(s.flow_run_id)
+            .times(times)
+            .inputs(inputs)
+            .ctx_data(self.ctx_data.clone())
+            .ctx_svcs(self.ctx_svcs.clone())
+            .event_tx(s.event_tx.clone())
+            .stop(s.stop.clone())
+            .stop_shared(s.stop_shared.clone())
+            .tx(s.out_tx.clone())
+            .mode(self.mode.clone())
+            .tx_exec_config(self.tx_exec_config.clone())
+            .get_jwt(self.get_jwt.clone())
+            .call();
         let handler = tokio::spawn(
             async move {
                 if is_rhai_script {
@@ -1685,12 +1708,15 @@ struct Finished {
 }
 
 #[allow(clippy::too_many_arguments)]
+#[bon::builder]
 async fn run_command(
     node: Node,
     flow_run_id: FlowRunId,
     times: u32,
     inputs: value::Map,
-    mut ctx: Context,
+    ctx_data: FlowContextData,
+    ctx_svcs: FlowServices,
+    get_jwt: get_jwt::Svc,
     event_tx: EventSender,
     stop: StopSignal,
     stop_shared: StopSignal,
@@ -1698,12 +1724,18 @@ async fn run_command(
     mode: client::BundlingMode,
     tx_exec_config: ExecutionConfig,
 ) -> Finished {
-    let svc = match mode {
+    let execute = match mode {
         client::BundlingMode::Off => TowerClient::new(ExecuteNoBundling {
             node_id: node.id,
             times,
             tx: tx.clone(),
-            simple_svc: execute::simple(&ctx, Some(flow_run_id), tx_exec_config.clone()),
+            simple_svc: execute::simple(
+                ctx_svcs.set.solana_client.clone(),
+                ctx_data.set.solana.cluster,
+                ctx_svcs.signer.clone(),
+                Some(flow_run_id),
+                tx_exec_config.clone(),
+            ),
             stop_shared,
             overwrite_feepayer: tx_exec_config
                 .overwrite_feepayer
@@ -1716,15 +1748,18 @@ async fn run_command(
             tx: tx.clone(),
         }),
     };
-    ctx.command = Some(CommandContext {
-        svc,
-        flow_run_id,
-        node_id: node.id,
-        times,
-    });
-    if !node.command.permissions().user_tokens {
-        ctx.get_jwt = get_jwt::not_allowed();
-    }
+    if !node.command.permissions().user_tokens {}
+
+    let ctx = CommandContextX::builder()
+        .data(CommandContextData {
+            flow: ctx_data,
+            node_id: node.id,
+            times,
+        })
+        .execute(execute)
+        .get_jwt(get_jwt::not_allowed())
+        .flow(ctx_svcs)
+        .build();
 
     event_tx
         .unbounded_send(
