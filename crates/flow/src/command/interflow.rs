@@ -70,19 +70,13 @@ impl CommandTrait for Interflow {
         self.outputs.clone()
     }
 
-    async fn run(&self, ctx: Context, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let registry = ctx
             .get::<FlowRegistry>()
             .ok_or_else(|| anyhow::anyhow!("FlowRegistry not found"))?;
 
-        let svc = if self.instruction_info.is_some() {
-            Some(
-                ctx.command
-                    .as_ref()
-                    .ok_or_else(|| CommandError::msg("command context not found"))?
-                    .svc
-                    .clone(),
-            )
+        let parent_flow_execute = if self.instruction_info.is_some() {
+            Some(ctx.raw().services.execute.clone())
         } else {
             None
         };
@@ -92,11 +86,9 @@ impl CommandTrait for Interflow {
                 self.id,
                 inputs,
                 StartFlowOptions {
-                    origin: ctx
-                        .new_interflow_origin()
-                        .ok_or_else(|| anyhow::anyhow!("this is a bug"))?,
-                    solana_client: Some(ctx.cfg.solana_client.clone()),
-                    parent_flow_execute: svc,
+                    origin: ctx.new_interflow_origin(),
+                    solana_client: Some(ctx.solana_config().clone()),
+                    parent_flow_execute,
                     ..Default::default()
                 },
             )

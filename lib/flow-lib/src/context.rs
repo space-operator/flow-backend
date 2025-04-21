@@ -71,6 +71,12 @@ pub mod get_jwt {
         Common(#[from] CommonError),
     }
 
+    impl From<actix::MailboxError> for Error {
+        fn from(value: actix::MailboxError) -> Self {
+            CommonError::from(value).into()
+        }
+    }
+
     impl actix::Message for Request {
         type Result = Result<Response, Error>;
     }
@@ -125,6 +131,7 @@ pub mod signer {
         solana::{Pubkey, SdkPresigner, Signature},
         utils::{TowerClient, tower_client::CommonError},
     };
+    use actix::MailboxError;
     use chrono::{DateTime, Utc};
     use serde::{Deserialize, Serialize};
     use serde_with::{DisplayFromStr, DurationSecondsWithFrac, base64::Base64, serde_as};
@@ -141,6 +148,12 @@ pub mod signer {
         Timeout,
         #[error(transparent)]
         Common(#[from] CommonError),
+    }
+
+    impl From<MailboxError> for Error {
+        fn from(value: MailboxError) -> Self {
+            CommonError::from(value).into()
+        }
     }
 
     pub type Svc = TowerClient<SignatureRequest, SignatureResponse, Error>;
@@ -283,6 +296,12 @@ pub mod execute {
         ChannelClosed(#[from] Canceled),
         #[error(transparent)]
         Common(#[from] CommonError),
+    }
+
+    impl From<actix::MailboxError> for Error {
+        fn from(value: actix::MailboxError) -> Self {
+            CommonError::from(value).into()
+        }
     }
 
     impl Error {
@@ -436,6 +455,14 @@ impl CommandContextX {
                     extensions: <_>::default(),
                 },
             },
+        }
+    }
+
+    pub fn new_interflow_origin(&self) -> FlowRunOrigin {
+        FlowRunOrigin::Interflow {
+            flow_run_id: *self.flow_run_id(),
+            node_id: *self.node_id(),
+            times: *self.times(),
         }
     }
 

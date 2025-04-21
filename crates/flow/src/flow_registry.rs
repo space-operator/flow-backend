@@ -555,6 +555,12 @@ pub mod new_flow_run {
         Common(#[from] CommonError),
     }
 
+    impl From<actix::MailboxError> for Error {
+        fn from(value: actix::MailboxError) -> Self {
+            CommonError::from(value).into()
+        }
+    }
+
     pub struct Response {
         pub flow_run_id: FlowRunId,
         pub stop_signal: StopSignal,
@@ -640,5 +646,11 @@ pub mod get_previous_values {
         Unauthorized,
         #[error(transparent)]
         Common(#[from] CommonError),
+    }
+
+    impl From<actix::MailboxError> for Error {
+        fn from(value: actix::MailboxError) -> Self {
+            CommonError::from(value).into()
+        }
     }
 }

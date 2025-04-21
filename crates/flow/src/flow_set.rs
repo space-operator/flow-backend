@@ -6,6 +6,7 @@ use flow_lib::{
     },
     context::{execute, get_jwt, signer},
     solana::{Pubkey, SolanaActionConfig},
+    utils::tower_client::unimplemented_svc,
 };
 use getset::Getters;
 use hashbrown::HashMap;
@@ -322,7 +323,7 @@ impl FlowSet {
             .signer(self.context.signer)
             .token(self.context.get_jwt)
             .new_flow_run(self.context.new_flow_run)
-            .get_previous_values(get_previous_values::unimplemented_svc())
+            .get_previous_values(unimplemented_svc())
             .rhai_permit(self.context.rhai_permit)
             .rhai_tx(self.context.rhai_tx)
             .maybe_parent_flow_execute(self.context.parent_flow_execute)

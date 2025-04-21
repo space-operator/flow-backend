@@ -15,7 +15,7 @@ pub enum CommonError {
     #[error("unimplemented")]
     Unimplemented,
     #[error(transparent)]
-    MailBox(MailboxError),
+    MailBox(#[from] MailboxError),
     #[error(transparent)]
     Other(Arc<anyhow::Error>),
 }

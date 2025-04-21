@@ -48,7 +48,7 @@ impl CommandTrait for WasmCommand {
             .collect()
     }
 
-    async fn run(&self, ctx: Context, values: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContextX, values: ValueSet) -> Result<ValueSet, CommandError> {
         let command = self.clone();
         let output_name = self
             .outputs
@@ -56,7 +56,7 @@ impl CommandTrait for WasmCommand {
             .ok_or(CommandError::msg("Expected 1 output, got 0"))?
             .name
             .clone();
-        let env = ctx.environment;
+        let env = ctx.environment().clone();
         tokio::task::spawn_blocking(move || {
             let input: Json = match values.first() {
                 _ if values.len() > 1 => {

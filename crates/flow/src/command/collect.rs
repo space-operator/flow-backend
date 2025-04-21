@@ -34,7 +34,11 @@ impl CommandTrait for Collect {
         .to_vec()
     }
 
-    async fn run(&self, _ctx: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(
+        &self,
+        _: CommandContextX,
+        mut inputs: ValueSet,
+    ) -> Result<ValueSet, CommandError> {
         let v = inputs
             .swap_remove(ELEMENT)
             .unwrap_or_else(|| Value::Array(Vec::new()));
