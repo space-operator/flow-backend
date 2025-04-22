@@ -136,7 +136,6 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
 #[cfg(test)]
 mod tests {
     use flow_lib::{
-        Context,
         config::{
             client::{Extra, Source, Target, TargetsForm},
             node::Definition,
@@ -144,7 +143,6 @@ mod tests {
         context::CommandContextX,
     };
     use serde_json::Value as JsonValue;
-    use std::sync::Arc;
     use uuid::Uuid;
 
     use super::*;
