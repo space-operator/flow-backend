@@ -29,7 +29,7 @@ use flow_lib::{
         signer::{self, SignatureRequest},
     },
     solana::{Pubkey, SolanaActionConfig, is_same_message_logic},
-    utils::TowerClient,
+    utils::{TowerClient, tower_client::CommonErrorExt},
 };
 use futures_channel::{mpsc, oneshot};
 use futures_util::{TryFutureExt, future::BoxFuture};
@@ -239,12 +239,9 @@ impl UserWorker {
                         resp.send(Err(signer::Error::Timeout)).ok();
                     }
                 });
-                Box::pin(async move {
-                    rx.await
-                        .map_err(|_| signer::Error::Other("tx dropped".into()))?
-                })
+                Box::pin(async move { rx.await.map_err(|_| signer::Error::msg("tx dropped"))? })
             }
-            Err(error) => Box::pin(ready(Err(signer::Error::Other(error.into())))),
+            Err(error) => Box::pin(ready(Err(signer::Error::other(error)))),
         }
     }
 }
