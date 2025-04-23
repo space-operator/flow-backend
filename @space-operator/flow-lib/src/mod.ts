@@ -1,13 +1,14 @@
 export type {
   CommandContext,
+  ContextConfig,
+  ContextProxy,
   Endpoints,
   HttpClientConfig,
-  ContextConfig,
+  ServiceProxy,
   SolanaClientConfig,
   SolanaNet,
-  ServiceProxy,
 } from "./context.ts";
 export { Context } from "./context.ts";
-export { type CommandTrait, BaseCommand } from "./command.ts";
-export { Value, type IValue } from "./value.ts";
+export { BaseCommand, type CommandTrait } from "./command.ts";
+export { type IValue, Value } from "./value.ts";
 export type { FlowId, FlowRunId, NodeId, User, UserId } from "./common.ts";

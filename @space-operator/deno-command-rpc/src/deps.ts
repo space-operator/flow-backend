@@ -2,10 +2,10 @@ export {
   Context,
   type IValue,
   Value,
-  type ContextData,
   type CommandTrait,
   type ServiceProxy,
-} from "jsr:@space-operator/flow-lib@0.12.0";
+  type ContextProxy,
+} from "jsr:@space-operator/flow-lib@0.13.0";
 // } from "../../flow-lib/src/mod.ts";
 export {
   Application,
