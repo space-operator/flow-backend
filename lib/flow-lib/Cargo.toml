@@ -51,3 +51,4 @@ solana-address-lookup-table-interface = "2"
 solana-clock = "2"
 solana-feature-set = "2"
 solana-precompiles = "2"
+schemars = { version = "1.0.0-alpha.17", features = ["indexmap2", "preserve_order", "rust_decimal1", "url2", "uuid1"] }

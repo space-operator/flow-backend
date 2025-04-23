@@ -10,6 +10,7 @@
 //! - Getting and updating nested values with JSON Pointer syntax.
 
 use rust_decimal::prelude::ToPrimitive;
+use schemars::JsonSchema;
 use thiserror::Error as ThisError;
 
 pub use rust_decimal::Decimal;
@@ -340,6 +341,20 @@ pub enum Value {
     /// }
     /// ```
     Map(Map),
+}
+
+impl JsonSchema for Value {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        "Value".into()
+    }
+
+    fn schema_id() -> std::borrow::Cow<'static, str> {
+        concat!(module_path!(), "::Value").into()
+    }
+
+    fn json_schema(_: &mut schemars::SchemaGenerator) -> schemars::Schema {
+        serde_json::from_str(include_str!("../../../schema/value.schema.json")).unwrap()
+    }
 }
 
 impl Value {

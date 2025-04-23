@@ -16,6 +16,7 @@ use crate::{
 };
 use bytes::Bytes;
 use chrono::Utc;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_pubkey::Pubkey;
@@ -381,7 +382,7 @@ pub struct CommandContext {
     pub times: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct FlowSetContextData {
     pub flow_owner: User,
     pub started_by: User,
@@ -390,14 +391,14 @@ pub struct FlowSetContextData {
     pub http: HttpClientConfig,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct FlowContextData {
     pub flow_run_id: FlowRunId,
     pub environment: HashMap<String, String>,
     pub set: FlowSetContextData,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct CommandContextData {
     pub node_id: NodeId,
     pub times: u32,
@@ -630,7 +631,7 @@ impl Default for Context {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize, Debug)]
+#[derive(Clone, Copy, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct User {
     pub id: UserId,
 }

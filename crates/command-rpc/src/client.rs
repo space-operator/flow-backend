@@ -5,6 +5,7 @@ use flow_lib::{
     command::{InstructionInfo, prelude::*},
     context::{self, CommandContextX},
 };
+use schemars::JsonSchema;
 use serde_with::{DisplayFromStr, serde_as};
 use srpc::GetBaseUrl;
 use std::convert::Infallible;
@@ -48,7 +49,7 @@ impl tower::Service<Log> for LogSvc {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 struct ServiceProxy {
     name: String,
     id: String,
@@ -83,7 +84,7 @@ impl ServiceProxy {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 struct ContextProxy {
     data: context::CommandContextData,
     signer: ServiceProxy,
@@ -144,7 +145,7 @@ impl ContextProxy {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, JsonSchema)]
 struct RunInput<'a> {
     ctx: &'a ContextProxy,
     params: ValueSet,
@@ -219,5 +220,16 @@ impl CommandTrait for RpcCommandClient {
 
     fn instruction_info(&self) -> Option<InstructionInfo> {
         self.node_data.instruction_info.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn print_schema() {
+        let s = schemars::schema_for!(RunInput);
+        println!("{}", serde_json::to_string_pretty(&s).unwrap());
     }
 }
