@@ -1,4 +1,4 @@
-import { BaseCommand, Context } from "jsr:@space-operator/flow-lib@0.11.0";
+import { BaseCommand, Context } from "jsr:@space-operator/flow-lib@0.14.0";
 
 export default class MyCommand extends BaseCommand {
   override async run(_: Context, inputs: any): Promise<any> {
