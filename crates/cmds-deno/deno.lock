@@ -19,6 +19,14 @@
         "npm:@solana/web3.js@1.94.0"
       ]
     },
+    "@space-operator/flow-lib@0.13.0": {
+      "integrity": "26cb57e7992627693aa780491bb7635cc0580110c0992130b9292e958409f988",
+      "dependencies": [
+        "jsr:@std/encoding",
+        "jsr:@std/msgpack",
+        "npm:@solana/web3.js@1.94.0"
+      ]
+    },
     "@std/bytes@0.221.0": {
       "integrity": "64a047011cf833890a4a2ab7293ac55a1b4f5a050624ebc6a0159c357de91966"
     },

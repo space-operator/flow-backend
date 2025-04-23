@@ -12,6 +12,7 @@ export interface CommandContext {
   node_id: NodeId;
   times: number;
   svc: ServiceProxy;
+  log: ServiceProxy;
 }
 
 export interface ContextProxy {
@@ -162,6 +163,7 @@ export class Context {
       node_id: this.#data.data.node_id,
       times: this.#data.data.times,
       svc: this.#data.execute,
+      log: this.#data.log,
     };
   }
 
