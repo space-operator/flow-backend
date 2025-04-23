@@ -229,7 +229,7 @@ mod tests {
 
     #[test]
     fn print_schema() {
-        let s = schemars::schema_for!(RunInput);
+        let s = schemars::schema_for!(ContextProxy);
         println!("{}", serde_json::to_string_pretty(&s).unwrap());
     }
 }

@@ -5,7 +5,6 @@ export type {
   ContextConfig,
   SolanaClientConfig,
   SolanaNet,
-  ContextData,
   ServiceProxy,
 } from "./context.ts";
 export { Context } from "./context.ts";

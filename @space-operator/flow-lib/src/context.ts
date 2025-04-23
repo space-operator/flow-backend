@@ -12,26 +12,48 @@ export interface CommandContext {
   node_id: NodeId;
   times: number;
   svc: ServiceProxy;
-  log: ServiceProxy;
 }
 
+export interface ContextProxy {
+  data: CommandContextData;
+  signer: ServiceProxy;
+  execute: ServiceProxy;
+  log: ServiceProxy;
+}
+export interface CommandContextData {
+  node_id: string;
+  times: number;
+  flow: FlowContextData;
+}
+export interface FlowContextData {
+  flow_run_id: FlowRunId;
+  environment: Record<string, string>;
+  set: FlowSetContextData;
+}
+export interface FlowSetContextData {
+  flow_owner: User;
+  started_by: User;
+  endpoints: Endpoints;
+  solana: SolanaClientConfig;
+  http: HttpClientConfig;
+}
+export interface Endpoints {
+  flow_server: string;
+  supabase: string;
+  supabase_anon_key: string;
+}
+export interface SolanaClientConfig {
+  url: string;
+  cluster: SolanaNet;
+}
+export interface HttpClientConfig {
+  timeout_in_secs: number;
+  gzip: boolean;
+}
 export interface ServiceProxy {
   name: string;
   id: string;
   base_url: string;
-}
-
-/**
- * ContextData is Context when serialized and sent over the network.
- */
-export interface ContextData {
-  flow_owner: User;
-  started_by: User;
-  cfg: ContextConfig;
-  environment: Record<string, string>;
-  endpoints: Endpoints;
-  command?: CommandContext;
-  signer: ServiceProxy;
 }
 
 export interface RequestSignatureResponse {
@@ -57,7 +79,7 @@ export class Instructions {
   constructor(
     feePayer: web3.PublicKey,
     signers: Array<web3.Keypair | web3.PublicKey>,
-    instructions: web3.TransactionInstruction[]
+    instructions: web3.TransactionInstruction[],
   ) {
     this.#data = {
       fee_payer: feePayer.toBytes(),
@@ -72,7 +94,7 @@ export class Instructions {
       }),
       instructions: instructions.map((i) => ({
         program_id: i.programId.toBytes(),
-        accounts: i.keys.map((k) => ({
+        accounts: i.keys.map((k: any) => ({
           pubkey: k.pubkey.toBytes(),
           is_signer: k.isSigner,
           is_writable: k.isWritable,
@@ -91,43 +113,56 @@ export class Instructions {
  * Providing services and information about the current invocation for nodes to use.
  */
 export class Context {
-  /**
-   * Owner of current flow.
-   */
-  flow_owner: User;
-  /**
-   * Who started the invocation.
-   */
-  started_by: User;
-  private _cfg: ContextConfig;
-  /**
-   * Environment variables.
-   */
-  environment: Record<string, string>;
-  /**
-   * URLs to call other services.
-   */
-  endpoints: Endpoints;
-  /**
-   * Context of the current node.
-   */
-  command?: CommandContext;
+  #data: ContextProxy;
+
   /**
    * Solana RPC client.
    */
   solana: web3.Connection;
 
-  private _signer: ServiceProxy;
+  constructor(data: ContextProxy) {
+    this.#data = data;
+    this.solana = new web3.Connection(data.data.flow.set.solana.url);
+  }
 
-  constructor(data: ContextData) {
-    this.flow_owner = data.flow_owner;
-    this.started_by = data.started_by;
-    this._cfg = data.cfg;
-    this.environment = data.environment;
-    this.endpoints = data.endpoints;
-    this.command = data.command;
-    this._signer = data.signer;
-    this.solana = new web3.Connection(this._cfg.solana_client.url);
+  /**
+   * Owner of current flow.
+   */
+  get flow_owner(): User {
+    return this.#data.data.flow.set.flow_owner;
+  }
+
+  /**
+   * Who started the invocation.
+   */
+  get started_by(): User {
+    return this.#data.data.flow.set.started_by;
+  }
+
+  /**
+   * Environment variables.
+   */
+  get environment(): Record<string, string> {
+    return this.#data.data.flow.environment;
+  }
+
+  /**
+   * URLs to call other services.
+   */
+  get endpoints(): Endpoints {
+    return this.#data.data.flow.set.endpoints;
+  }
+
+  /**
+   * Context of the current node.
+   */
+  get command(): CommandContext {
+    return {
+      flow_run_id: this.#data.data.flow.flow_run_id,
+      node_id: this.#data.data.node_id,
+      times: this.#data.data.times,
+      svc: this.#data.execute,
+    };
   }
 
   /**
@@ -139,21 +174,20 @@ export class Context {
    * or [Message.serialize](https://solana-labs.github.io/solana-web3.js/classes/Message.html#serialize).
    * We only support legacy transaction at the moment.
    *
-   *
    * @param pubkey Public key
    * @param data Message data
    * @returns Signature and the (optional) [updated transaction message](https://docs.phantom.app/developer-powertools/solana-priority-fees#how-phantom-applies-priority-fees-to-dapp-transactions)
    */
   async requestSignature(
     pubkey: web3.PublicKey,
-    data: Uint8Array
+    data: Uint8Array,
   ): Promise<RequestSignatureResponse> {
-    const resp = await fetch(new URL("call", this._signer.base_url), {
+    const resp = await fetch(new URL("call", this.#data.signer.base_url), {
       method: "POST",
       body: JSON.stringify({
         envelope: "",
-        svc_name: this._signer.name,
-        svc_id: this._signer.id,
+        svc_name: this.#data.signer.name,
+        svc_id: this.#data.signer.id,
         input: {
           id: null,
           time: Date.now(),
@@ -186,7 +220,7 @@ export class Context {
 
   async execute(
     instructions: Instructions,
-    output: Record<string, any>
+    output: Record<string, any>,
   ): Promise<ExecuteResponse> {
     const svc = this.command?.svc;
     if (!svc) throw new Error("service not available");
