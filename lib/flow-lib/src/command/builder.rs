@@ -6,7 +6,7 @@
 //!
 //! A command that adds 2 numbers:
 //! ```
-//! use flow_lib::{Context, command::{*, builder::*}};
+//! use flow_lib::command::{*, prelude::*, builder::*};
 //!
 //! inventory::submit!(CommandDescription::new("add", |_| build()));
 //!
@@ -58,7 +58,7 @@
 //!     result: i64,
 //! }
 //!
-//! async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+//! async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
 //!     Ok(Output { result: input.a + input.b })
 //! }
 //! ```
