@@ -1,6 +1,7 @@
 use super::Error;
 use super::{Pubkey, Signature};
 use crate::context::signer::Presigner;
+use crate::utils::tower_client::CommonErrorExt;
 use anyhow::{anyhow, bail};
 use base64::prelude::*;
 use nom::{

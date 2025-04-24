@@ -2,8 +2,8 @@ import { PromiseSet, CaptureLog } from "./utils.ts";
 import {
   Context,
   type IValue,
+  type ContextProxy,
   Value,
-  type ContextData,
   type CommandTrait,
   Application,
   type ListenOptions,
@@ -21,7 +21,7 @@ interface IRequest<T> {
 }
 
 interface RunInput {
-  ctx: ContextData;
+  ctx: ContextProxy;
   params: Record<string, IValue>;
 }
 

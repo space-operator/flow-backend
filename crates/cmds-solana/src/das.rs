@@ -43,7 +43,7 @@ struct Output {
     response: JsonValue,
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let content_type = "application/json";
 
     // get time
@@ -71,7 +71,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     );
 
     let req = ctx
-        .http
+        .http()
         .post(input.url)
         .header(CONTENT_TYPE, content_type)
         .json(&body);

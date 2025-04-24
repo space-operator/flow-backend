@@ -38,7 +38,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let candy_guard_program = mpl_core_candy_guard::ID;
 
     let base_pubkey = input.base.pubkey();

@@ -1,10 +1,4 @@
-use flow_lib::{
-    Context,
-    command::{
-        CommandDescription, CommandError,
-        builder::{BuildResult, BuilderCache, CmdBuilder},
-    },
-};
+use flow_lib::command::prelude::*;
 use pdg_common::nft_metadata::RenderParams;
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -37,7 +31,7 @@ struct Output {
     attributes: serde_json::Value,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let attributes = match input.flag {
         Some(flag) => match flag.as_str() {
             "base" => RenderParams::generate_base(&mut rand::thread_rng()),

@@ -29,8 +29,8 @@ struct Output {
     data: String,
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let resp = ctx.solana_client.get_account(&input.account).await?;
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+    let resp = ctx.solana_client().get_account(&input.account).await?;
 
     let account_data = pod_from_bytes::<RecordData>(&resp.data[..RecordData::WRITABLE_START_INDEX])
         .map_err(|_| {

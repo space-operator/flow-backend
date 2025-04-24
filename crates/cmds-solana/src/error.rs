@@ -1,3 +1,4 @@
+use flow_lib::context::signer;
 use std::error::Error as StdError;
 use std::result::Result as StdResult;
 use thiserror::Error as ThisError;
@@ -16,6 +17,8 @@ pub enum Error {
     SolanaProgram(#[from] solana_program::program_error::ProgramError),
     #[error(transparent)]
     Signer(#[from] solana_signer::SignerError),
+    #[error(transparent)]
+    SignerService(#[from] signer::Error),
     #[error(transparent)]
     Value(#[from] value::Error),
     #[error(transparent)]
@@ -49,7 +52,10 @@ pub enum Error {
     #[error("specified account: {0} isn't a token account")]
     NotTokenAccount(solana_program::pubkey::Pubkey),
     #[error("insufficient solana balance, needed={needed}; have={balance};")]
-    InsufficientSolanaBalance { needed: u64, balance: u64 },
+    InsufficientSolanaBalance {
+        needed: u64,
+        balance: u64,
+    },
     #[error("failed to snapshot mints: {0}")]
     ErrorSnapshottingMints(String),
     #[error("failed to fetch mint snapshot")]

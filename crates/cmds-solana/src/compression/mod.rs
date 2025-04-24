@@ -197,7 +197,7 @@ pub struct GetAssetResponse<T> {
 }
 
 pub async fn get_leaf_schema_event(
-    ctx: Context,
+    ctx: CommandContextX,
     signature: Signature,
     is_mint_to_collection: bool,
 ) -> Result<(LeafSchemaEvent, LeafSchema), anyhow::Error> {
@@ -210,7 +210,7 @@ pub async fn get_leaf_schema_event(
         max_supported_transaction_version: None,
     };
     let tx_meta = ctx
-        .solana_client
+        .solana_client()
         .get_transaction_with_config(&signature, config)
         .await?
         .transaction

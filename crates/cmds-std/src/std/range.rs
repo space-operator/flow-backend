@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use flow_lib::command::prelude::*;
 
 // Command Name
 const NAME: &str = "range";
@@ -28,7 +28,7 @@ pub struct Output {
     pub result: Vec<Value>,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     const MAX_LENGTH: usize = 10_000_000;
     let mut start = input.start;
     let end = input.end;

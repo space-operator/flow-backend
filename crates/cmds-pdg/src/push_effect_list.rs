@@ -1,10 +1,4 @@
-use flow_lib::{
-    Context,
-    command::{
-        CommandDescription, CommandError,
-        builder::{BuildResult, BuilderCache, CmdBuilder},
-    },
-};
+use flow_lib::command::prelude::*;
 use pdg_common::nft_metadata::generate::{Effect, EffectsList};
 use serde::{Deserialize, Serialize};
 
@@ -30,7 +24,7 @@ struct Output {
     effects: Vec<Effect>,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let mut e = EffectsList::from(input.effects);
     e.push(input.element);
     Ok(Output {

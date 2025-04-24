@@ -66,7 +66,7 @@ impl CommandTrait for ArweaveFileUpload {
         .to_vec()
     }
 
-    async fn run(&self, ctx: Context, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, mut ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let Input {
             fee_payer,
             file_path,
@@ -74,13 +74,13 @@ impl CommandTrait for ArweaveFileUpload {
         } = value::from_map(inputs)?;
 
         let mut uploader = Uploader::new(
-            ctx.solana_client.clone(),
-            ctx.cfg.solana_client.cluster,
+            ctx.solana_client().clone(),
+            ctx.solana_config().cluster,
             fee_payer,
         )?;
 
         if fund_bundlr {
-            uploader.lazy_fund(&file_path, &ctx).await?;
+            uploader.lazy_fund(&file_path, &mut ctx).await?;
         }
 
         let file_url = uploader.upload_file(ctx, &file_path).await?;

@@ -38,7 +38,7 @@ pub struct Output {
     pub signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let mut collection_metadata: Option<Pubkey> = None;
     let mut collection_master_edition: Option<Pubkey> = None;
 

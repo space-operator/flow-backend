@@ -76,7 +76,7 @@ impl CommandTrait for Interflow {
         .into()
     }
 
-    async fn run(&self, ctx: Context, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let registry = ctx
             .get::<FlowRegistry>()
             .ok_or_else(|| anyhow::anyhow!("FlowRegistry not found"))?;
@@ -87,10 +87,8 @@ impl CommandTrait for Interflow {
                 inputs,
                 StartFlowOptions {
                     collect_instructions: true,
-                    origin: ctx
-                        .new_interflow_origin()
-                        .ok_or_else(|| anyhow::anyhow!("this is a bug"))?,
-                    solana_client: Some(ctx.cfg.solana_client.clone()),
+                    origin: ctx.new_interflow_origin(),
+                    solana_client: Some(ctx.solana_config().clone()),
                     ..Default::default()
                 },
             )

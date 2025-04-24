@@ -62,7 +62,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let token_metadata_program = mpl_token_metadata::ID;
     let candy_machine_program = mpl_candy_machine_core::id();
     let candy_pubkey = input.candy_machine.pubkey();
@@ -120,7 +120,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     let candy_account_size = candy_machine_data.get_space_for_candy().unwrap_or(216);
 
     let lamports = ctx
-        .solana_client
+        .solana_client()
         .get_minimum_balance_for_rent_exemption(candy_account_size)
         .await?;
 

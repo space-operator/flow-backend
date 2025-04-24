@@ -38,8 +38,8 @@ pub struct Output {
     account: Pubkey,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let record_program_id = record_program_id(ctx.cfg.solana_client.cluster);
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+    let record_program_id = record_program_id(ctx.solana_config().cluster);
 
     let account =
         Pubkey::create_with_seed(&input.authority.pubkey(), &input.seed, &record_program_id)

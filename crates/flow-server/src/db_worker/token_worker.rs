@@ -6,7 +6,7 @@ use crate::{
 use actix::{Actor, ActorFutureExt, Addr, AsyncContext, ResponseFuture, WrapFuture};
 use chrono::{Duration, Utc};
 use db::{LocalStorage, local_storage::Jwt, pool::RealDbPool};
-use flow_lib::{UserId, config::Endpoints, context::get_jwt};
+use flow_lib::{UserId, config::Endpoints, context::get_jwt, utils::tower_client::CommonErrorExt};
 use futures_channel::oneshot;
 use futures_util::{FutureExt, future::BoxFuture};
 use hashbrown::HashMap;
@@ -199,7 +199,10 @@ async fn supabase_error(resp: reqwest::Response) -> get_jwt::Error {
             error,
             error_description,
         },
-        Err(_) => get_jwt::Error::other(String::from_utf8_lossy(&bytes)),
+        Err(_) => {
+            let msg = String::from_utf8_lossy(&bytes).into_owned();
+            get_jwt::Error::msg(msg)
+        }
     }
 }
 
@@ -300,7 +303,7 @@ impl actix::Handler<get_jwt::Request> for TokenWorker {
 
         let result: Self::Result;
         let from_rx = |rx: oneshot::Receiver<_>| {
-            Box::pin(async move { rx.await.map_err(|_| get_jwt::Error::other("canceled"))? })
+            Box::pin(async move { rx.await.map_err(|_| get_jwt::Error::msg("canceled"))? })
         };
         self.state =
             match std::mem::replace(&mut self.state, TokenState::None) {

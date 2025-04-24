@@ -1,9 +1,8 @@
-use serde_json::Value as JsonValue;
-
-use value::from_value;
-
 use crate::error::Error::ValueNotFound;
 use crate::prelude::*;
+use flow_lib::command::prelude::*;
+use serde_json::Value as JsonValue;
+use value::from_value;
 
 #[derive(Debug, Clone)]
 pub struct JsonGetField;
@@ -70,7 +69,11 @@ impl CommandTrait for JsonGetField {
         .to_vec()
     }
 
-    async fn run(&self, _ctx: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(
+        &self,
+        _ctx: CommandContextX,
+        mut inputs: ValueSet,
+    ) -> Result<ValueSet, CommandError> {
         let Input { field } = value::from_map(inputs.clone())?;
 
         let json = inputs
@@ -134,7 +137,7 @@ mod tests {
             FIELD => "amount",
         };
 
-        let output = JsonGetField.run(Context::default(), inputs).await.unwrap();
+        let output = JsonGetField.run(<_>::default(), inputs).await.unwrap();
         let result = value::from_map::<Output>(output).unwrap().result_json;
         assert_eq!(result, 100);
     }

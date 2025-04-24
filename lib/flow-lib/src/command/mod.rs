@@ -12,7 +12,7 @@ use crate::{
         CmdInputDescription, CmdOutputDescription, Name, ValueSet, client::NodeData,
         node::Permissions,
     },
-    context::Context,
+    context::CommandContextX,
 };
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -30,7 +30,7 @@ pub mod prelude {
             builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
         },
         config::{client::NodeData, node::Permissions},
-        context::Context,
+        context::CommandContextX,
         solana::{Instructions, Keypair, Pubkey, Signature},
     };
     pub use async_trait::async_trait;
@@ -61,7 +61,7 @@ pub trait CommandTrait: Send + Sync + 'static {
     fn outputs(&self) -> Vec<CmdOutputDescription>;
 
     /// Run the command.
-    async fn run(&self, ctx: Context, params: ValueSet) -> Result<ValueSet, CommandError>;
+    async fn run(&self, ctx: CommandContextX, params: ValueSet) -> Result<ValueSet, CommandError>;
 
     /// Specify how [`form_data`][crate::config::NodeConfig::form_data] are read.
     fn read_form_data(&self, data: serde_json::Value) -> ValueSet {

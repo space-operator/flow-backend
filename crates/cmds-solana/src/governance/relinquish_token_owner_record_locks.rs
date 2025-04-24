@@ -78,7 +78,7 @@ pub fn relinquish_token_owner_record_locks(
     (instruction, realm_config_address)
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
     let (ix, realm_config_address) = relinquish_token_owner_record_locks(

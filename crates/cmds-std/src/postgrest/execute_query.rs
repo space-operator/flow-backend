@@ -12,7 +12,7 @@ struct Input {
     pub headers: Vec<(String, String)>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<ValueSet, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<ValueSet, CommandError> {
     let contain_auth_header = !input.headers.iter().any(|(k, _)| {
         HeaderName::from_str(k)
             .ok()
@@ -22,18 +22,18 @@ async fn run(mut ctx: Context, input: Input) -> Result<ValueSet, CommandError> {
     let is_supabase = input
         .query
         .url
-        .starts_with(&format!("{}/rest/v1", ctx.endpoints.supabase));
+        .starts_with(&format!("{}/rest/v1", ctx.endpoints().supabase));
 
-    let mut req = postgrest::Builder::from_query(input.query, ctx.http.clone()).build();
+    let mut req = postgrest::Builder::from_query(input.query, ctx.http().clone()).build();
     for (k, v) in input.headers {
         req = req.header(k, v);
     }
     if contain_auth_header && is_supabase {
-        tracing::info!("using JWT of user: {}", ctx.flow_owner.id);
-        req = req.header("apikey", &ctx.endpoints.supabase_anon_key);
+        tracing::info!("using JWT of user: {}", ctx.flow_owner().id);
+        req = req.header("apikey", &ctx.endpoints().supabase_anon_key);
         req = req.header(AUTHORIZATION, ctx.get_jwt_header().await?);
     }
-    let resp = ctx.http.execute(req.build()?).await?;
+    let resp = ctx.http().execute(req.build()?).await?;
 
     if resp.status().is_success() {
         let headers = resp

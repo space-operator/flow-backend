@@ -49,7 +49,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     static CANDY_MACHINE_PROGRAM_ID: Pubkey = mpl_core_candy_machine_core::ID;
     static CANDY_GUARD_PROGRAM_ID: Pubkey = mpl_core_candy_guard::ID;
     static MPL_CORE_PROGRAM_ID: Pubkey = mpl_core::ID;

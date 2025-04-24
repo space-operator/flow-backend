@@ -1,10 +1,4 @@
-use flow_lib::{
-    Context, Value,
-    command::{
-        CommandDescription, CommandError,
-        builder::{BuildResult, BuilderCache, CmdBuilder},
-    },
-};
+use flow_lib::command::prelude::*;
 use pdg_common::nft_metadata::RenderParams;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -40,7 +34,7 @@ struct Output {
     attributes: RenderParams,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     Ok(Output {
         attributes: RenderParams::from_pdg_metadata(
             &mut input.attributes.into(),

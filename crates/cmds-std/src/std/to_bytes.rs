@@ -24,7 +24,7 @@ pub struct Output {
     pub bytes: bytes::Bytes,
 }
 
-async fn run(mut _ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut _ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let string = input.string;
     let bytes = bytes::Bytes::from(string);
 

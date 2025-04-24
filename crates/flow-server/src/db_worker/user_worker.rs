@@ -29,7 +29,10 @@ use flow_lib::{
         signer::{self, SignatureRequest},
     },
     solana::{Pubkey, SolanaActionConfig, is_same_message_logic},
-    utils::TowerClient,
+    utils::{
+        TowerClient,
+        tower_client::{CommonError, CommonErrorExt},
+    },
 };
 use futures_channel::{mpsc, oneshot};
 use futures_util::{TryFutureExt, future::BoxFuture};
@@ -239,12 +242,9 @@ impl UserWorker {
                         resp.send(Err(signer::Error::Timeout)).ok();
                     }
                 });
-                Box::pin(async move {
-                    rx.await
-                        .map_err(|_| signer::Error::Other("tx dropped".into()))?
-                })
+                Box::pin(async move { rx.await.map_err(|_| signer::Error::msg("tx dropped"))? })
             }
-            Err(error) => Box::pin(ready(Err(signer::Error::Other(error.into())))),
+            Err(error) => Box::pin(ready(Err(signer::Error::other(error)))),
         }
     }
 }
@@ -279,10 +279,10 @@ impl actix::Handler<get_previous_values::Request> for UserWorker {
             let values = db
                 .get_user_conn(user_id)
                 .await
-                .map_err(|e| get_previous_values::Error::Other(e.into()))?
+                .map_err(|e| get_previous_values::Error::other(e))?
                 .get_previous_values(&msg.nodes)
                 .await
-                .map_err(|e| get_previous_values::Error::Other(e.into()))?;
+                .map_err(|e| get_previous_values::Error::other(e))?;
 
             Ok(get_previous_values::Response { values })
         };
@@ -376,7 +376,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                 },
             })
             .await?
-            .map_err(|_| new_flow_run::Error::Other("could not start worker".into()))?;
+            .map_err(|_| new_flow_run::Error::msg("could not start worker"))?;
 
             let span = root
                 .send(RegisterLogs {
@@ -385,7 +385,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                     filter: msg.config.environment.get(RUST_LOG).cloned(),
                 })
                 .await?
-                .map_err(new_flow_run::Error::Other)?;
+                .map_err(|error| new_flow_run::Error::Common(CommonError::from_boxed(error)))?;
 
             Ok(new_flow_run::Response {
                 flow_run_id: run_id,
@@ -601,19 +601,15 @@ impl ResponseError for StartError {
                 new_flow_run::Error::NotFound => StatusCode::NOT_FOUND,
                 new_flow_run::Error::Unauthorized => StatusCode::UNAUTHORIZED,
                 new_flow_run::Error::MaxDepthReached => StatusCode::BAD_REQUEST,
-                new_flow_run::Error::Worker(_)
-                | new_flow_run::Error::MailBox(_)
-                | new_flow_run::Error::Other(_) => StatusCode::UNAUTHORIZED,
+                new_flow_run::Error::Common(_) => StatusCode::INTERNAL_SERVER_ERROR,
             },
             StartError::Jwt(e) => match e {
                 get_jwt::Error::NotAllowed | get_jwt::Error::UserNotFound => {
                     StatusCode::UNAUTHORIZED
                 }
                 get_jwt::Error::WrongRecipient
-                | get_jwt::Error::Worker(_)
-                | get_jwt::Error::MailBox(_)
                 | get_jwt::Error::Supabase { .. }
-                | get_jwt::Error::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                | get_jwt::Error::Common(_) => StatusCode::INTERNAL_SERVER_ERROR,
             },
             StartError::Mailbox(_) => StatusCode::INTERNAL_SERVER_ERROR,
             StartError::Db(_) => StatusCode::INTERNAL_SERVER_ERROR,

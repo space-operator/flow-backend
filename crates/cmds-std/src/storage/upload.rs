@@ -55,7 +55,7 @@ struct SuccessBody {
     Key: String,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let auth = ctx.get_jwt_header().await?;
 
     let content_type = input.content_type.unwrap_or_else(|| {
@@ -71,17 +71,18 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         use std::fmt::Write;
         let mut url = format!(
             "{}/storage/v1/object/{}",
-            ctx.endpoints.supabase, input.bucket
+            ctx.endpoints().supabase,
+            input.bucket
         );
         if ["user-storages", "user-public-storages"].contains(&input.bucket.as_ref()) {
-            write!(&mut url, "/{}", ctx.flow_owner.id).unwrap();
+            write!(&mut url, "/{}", ctx.flow_owner().id).unwrap();
         }
         write!(&mut url, "/{}", input.path.display()).unwrap();
         url
     };
 
     let mut req = ctx
-        .http
+        .http()
         .post(url)
         .header(AUTHORIZATION, auth)
         .header(CONTENT_TYPE, &content_type)

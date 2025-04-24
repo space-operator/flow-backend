@@ -46,7 +46,7 @@ impl CommandTrait for FlowOutputCommand {
         .to_vec()
     }
 
-    async fn run(&self, _ctx: Context, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         Ok(match inputs.into_values().next() {
             Some(value) => ValueSet::from([(self.rename.clone(), value)]),
             None => ValueSet::new(),

@@ -40,9 +40,9 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let wormhole_core_program_id =
-        crate::wormhole::wormhole_core_program_id(ctx.cfg.solana_client.cluster);
+        crate::wormhole::wormhole_core_program_id(ctx.solana_config().cluster);
 
     let guardian_set = Pubkey::find_program_address(
         &[b"GuardianSet", &input.guardian_set_index.to_le_bytes()],
@@ -50,8 +50,11 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
     )
     .0;
 
-    let account: solana_account::Account =
-        ctx.solana_client.get_account(&guardian_set).await.unwrap();
+    let account: solana_account::Account = ctx
+        .solana_client()
+        .get_account(&guardian_set)
+        .await
+        .unwrap();
     let guardian_set_data: GuardianSetData =
         GuardianSetData::try_from_slice(&account.data).unwrap();
 

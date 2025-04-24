@@ -22,7 +22,7 @@ pub use config::{
     FlowRunId, Gate, HttpClientConfig, Name, NodeConfig, NodeId, SolanaClientConfig, SolanaNet,
     ValueSet, ValueType,
 };
-pub use context::{Context, User};
+pub use context::User;
 pub use inventory::submit;
 pub use value::{self, Error as ValueError, Value};
 

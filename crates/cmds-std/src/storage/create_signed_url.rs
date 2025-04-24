@@ -90,11 +90,15 @@ struct SuccessBody {
     signedURL: String,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let key = input.file.key(&ctx.flow_owner.id);
-    let url = format!("{}/storage/v1/object/sign/{}", ctx.endpoints.supabase, key);
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+    let key = input.file.key(&ctx.flow_owner().id);
+    let url = format!(
+        "{}/storage/v1/object/sign/{}",
+        ctx.endpoints().supabase,
+        key
+    );
     tracing::debug!("using URL: {}", url);
-    let mut req = ctx.http.post(url);
+    let mut req = ctx.http().post(url);
 
     req = req.header(AUTHORIZATION, ctx.get_jwt_header().await?);
 
@@ -118,7 +122,9 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
             Ok(Output {
                 url: format!(
                     "{}/storage/v1{}{}",
-                    ctx.endpoints.supabase, body.signedURL, download
+                    ctx.endpoints().supabase,
+                    body.signedURL,
+                    download
                 ),
             })
         }

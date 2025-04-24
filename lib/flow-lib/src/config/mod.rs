@@ -1,6 +1,9 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use std::{collections::HashMap, num::NonZeroU64, str::FromStr, sync::LazyLock};
+use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
+use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+use std::{collections::HashMap, num::NonZeroU64, str::FromStr, sync::LazyLock, time::Duration};
 use thiserror::Error as ThisError;
 use uuid::Uuid;
 
@@ -125,7 +128,7 @@ pub struct NodeConfig {
     pub client_node_data: client::NodeData,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Endpoints {
     pub flow_server: String,
     pub supabase: String,
@@ -167,16 +170,29 @@ impl Default for ContextConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct HttpClientConfig {
     pub timeout_in_secs: NonZeroU64,
     pub gzip: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct SolanaClientConfig {
     pub url: String,
     pub cluster: SolanaNet,
+}
+
+impl SolanaClientConfig {
+    pub fn build_client(&self) -> RpcClient {
+        RpcClient::new_with_timeouts_and_commitment(
+            self.url.clone(),
+            Duration::from_secs(30),
+            CommitmentConfig {
+                commitment: CommitmentLevel::Finalized,
+            },
+            Duration::from_secs(180),
+        )
+    }
 }
 
 impl From<Network> for SolanaClientConfig {
@@ -198,7 +214,7 @@ impl Default for SolanaClientConfig {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub enum SolanaNet {
     #[serde(rename = "devnet")]
     Devnet,

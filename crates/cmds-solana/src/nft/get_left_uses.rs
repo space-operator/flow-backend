@@ -48,13 +48,13 @@ impl CommandTrait for GetLeftUses {
         .to_vec()
     }
 
-    async fn run(&self, ctx: Context, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let Input { mint_account } = value::from_map(inputs)?;
 
         let (metadata_account, _) = Metadata::find_pda(&mint_account);
 
         let account_data = ctx
-            .solana_client
+            .solana_client()
             .get_account_data(&metadata_account)
             .await?;
 

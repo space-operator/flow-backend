@@ -42,7 +42,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let bubble_gum_program_id = mpl_bubblegum::ID;
 
     // Allocate tree's account
@@ -262,7 +262,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1 + merkle_tree_account_size + canopy_size as usize;
 
     let rent = ctx
-        .solana_client
+        .solana_client()
         .get_minimum_balance_for_rent_exemption(merkle_tree_account_size)
         .await?;
 

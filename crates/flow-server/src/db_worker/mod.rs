@@ -8,7 +8,10 @@ use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
 };
 use flow::flow_run_events::{DEFAULT_LOG_FILTER, EventSender, FLOW_SPAN_NAME};
-use flow_lib::{BoxError, FlowRunId, UserId, config::Endpoints, context::get_jwt};
+use flow_lib::{
+    BoxError, FlowRunId, UserId, config::Endpoints, context::get_jwt,
+    utils::tower_client::CommonErrorExt,
+};
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
 use std::{
@@ -224,7 +227,7 @@ impl actix::Handler<GetTokenWorker> for DBWorker {
                 .get::<TokenWorker>(id)
                 .ok_or(get_jwt::Error::NotAllowed)?
                 .upgrade()
-                .ok_or(get_jwt::Error::other("TokenWorker stopped")),
+                .ok_or(get_jwt::Error::msg("TokenWorker stopped")),
         }
     }
 }

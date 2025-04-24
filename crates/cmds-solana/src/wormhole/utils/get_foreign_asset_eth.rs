@@ -28,7 +28,7 @@ pub struct Output {
     address: String,
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     #[derive(Serialize, Deserialize, Debug)]
     struct Payload {
         #[serde(rename = "networkName")]
@@ -48,7 +48,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
     };
 
     let response: GetForeignAddress = ctx
-        .http
+        .http()
         .post("https://space-operator.deno.dev/api/get_foreign_asset_eth")
         .json(&payload)
         .send()

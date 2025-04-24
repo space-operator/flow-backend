@@ -19,7 +19,11 @@ impl CommandTrait for NoteCommand {
         [].to_vec()
     }
 
-    async fn run(&self, _ctx: Context, _inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(
+        &self,
+        _ctx: CommandContextX,
+        _inputs: ValueSet,
+    ) -> Result<ValueSet, CommandError> {
         Ok(ValueSet::new())
     }
 }

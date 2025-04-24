@@ -37,7 +37,11 @@ impl CommandTrait for PrintCommand {
         .to_vec()
     }
 
-    async fn run(&self, _ctx: Context, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(
+        &self,
+        _ctx: CommandContextX,
+        mut inputs: ValueSet,
+    ) -> Result<ValueSet, CommandError> {
         let input = inputs
             .swap_remove(PRINT)
             .ok_or_else(|| anyhow!("input not found: {}", PRINT))?;

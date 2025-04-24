@@ -1,10 +1,4 @@
-use flow_lib::{
-    Context,
-    command::{
-        CommandDescription, CommandError,
-        builder::{BuildResult, BuilderCache, CmdBuilder},
-    },
-};
+use flow_lib::command::prelude::*;
 use pdg_common::nft_metadata::{
     RenderParams,
     generate::{Effect, EffectsList},
@@ -34,7 +28,7 @@ struct Output {
     attributes: Vec<MetaplexAttribute>,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let traits = NftTraits::new(&input.attributes, &EffectsList::from(input.effects));
     Ok(Output {
         attributes: traits.gen_metaplex_attrs()?,

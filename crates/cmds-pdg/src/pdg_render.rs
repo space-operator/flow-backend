@@ -1,10 +1,4 @@
-use flow_lib::{
-    command::{
-        CommandDescription, CommandError,
-        builder::{BuildResult, BuilderError, CmdBuilder},
-    },
-    context::Context,
-};
+use flow_lib::command::prelude::*;
 use futures::{FutureExt, SinkExt, StreamExt, stream::BoxStream};
 use once_cell::sync::Lazy;
 use pdg_common::{PostReply, RenderRequest, RenderSuccess, ResultBool, WaitRequest, WorkItem};
@@ -132,7 +126,7 @@ async fn ws_wait(
     Ok(run_ws(ws))
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let (mut ws, _) = tokio_tungstenite::connect_async(&input.url).await?;
 
     let rand_seed = input.rand_seed.or_else(|| {

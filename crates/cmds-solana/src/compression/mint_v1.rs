@@ -51,7 +51,7 @@ pub struct Output {
     leaf_hash: Option<Bytes>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let mint_ix = MintV1Builder::new()
         .leaf_delegate(input.leaf_delegate.unwrap_or(input.leaf_owner))
         .leaf_owner(input.leaf_owner)

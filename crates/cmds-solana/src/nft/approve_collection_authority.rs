@@ -32,7 +32,7 @@ pub struct Output {
     pub signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let program_id = mpl_token_metadata::id();
 
     let metadata_seeds = &[
@@ -50,7 +50,7 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         );
 
     let minimum_balance_for_rent_exemption = ctx
-        .solana_client
+        .solana_client()
         .get_minimum_balance_for_rent_exemption(std::mem::size_of::<
             mpl_token_metadata::state::CollectionAuthorityRecord,
         >())

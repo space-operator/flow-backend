@@ -30,8 +30,8 @@ pub struct Output {
     vaa: Option<String>,
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
-    let wormhole_endpoint = match ctx.cfg.solana_client.cluster {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+    let wormhole_endpoint = match ctx.solana_config().cluster {
         SolanaNet::Mainnet => "",
         SolanaNet::Testnet => "",
         SolanaNet::Devnet => "https://api.testnet.wormscan.io",
@@ -56,7 +56,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
 
     let timeout = Duration::from_secs(60);
 
-    let mut response = send_wormhole_request(&ctx.http, &wormhole_url, timeout).await?;
+    let mut response = send_wormhole_request(&ctx.http(), &wormhole_url, timeout).await?;
 
     while response.status() != 200 {
         // Solana
@@ -67,7 +67,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
         if input.chain_id == "10002" {
             sleep(Duration::from_secs(45)).await;
         }
-        response = send_wormhole_request(&ctx.http, &wormhole_url, timeout).await?;
+        response = send_wormhole_request(&ctx.http(), &wormhole_url, timeout).await?;
     }
 
     let response_text = response.text().await?;

@@ -1,6 +1,7 @@
 use crate::{
     FlowRunId, SolanaNet,
     context::{execute::Error, signer},
+    utils::tower_client::CommonErrorExt,
 };
 use anyhow::{anyhow, bail, ensure};
 use borsh1::BorshDeserialize;
@@ -825,7 +826,7 @@ impl Instructions {
                     .instructions
                     .iter_mut()
                     .find(|i| i.program_id != spl_memo::ID && i.program_id != spl_memo::v1::ID)
-                    .ok_or_else(|| Error::other("at least 1 non-memo instruction is required"))?;
+                    .ok_or_else(|| Error::msg("at least 1 non-memo instruction is required"))?;
                 non_memo.accounts.push(AccountMeta {
                     pubkey: action_identity,
                     is_signer: false,
@@ -837,8 +838,7 @@ impl Instructions {
                 flow_run_id.unwrap_or_default(),
                 &mut signer,
             )
-            .await
-            .map_err(Error::other)?;
+            .await?;
             self.instructions.push(Instruction {
                 // memo v2 fail
                 program_id: spl_memo::v1::ID,
@@ -892,10 +892,11 @@ impl Instructions {
                 (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
                     .then(|| SdkPresigner::new(pk, &resp.signature))
                     .ok_or_else(|| {
-                        anyhow!("{} signature failed: not allowed to change transaction", pk)
+                        format!("{} signature failed: not allowed to change transaction", pk)
                     })
             })
-            .collect::<Result<Vec<_>, anyhow::Error>>()?;
+            .collect::<Result<Vec<_>, String>>()
+            .map_err(Error::msg)?;
 
         let tx = {
             let mut signers = Vec::<&dyn Signer>::with_capacity(self.signers.len() - 1);
@@ -934,7 +935,7 @@ impl Instructions {
                 .signers
                 .iter()
                 .find(|w| w.pubkey() == self.fee_payer)
-                .ok_or_else(|| Error::other("fee payer is not in signers"))?;
+                .ok_or_else(|| Error::msg("fee payer is not in signers"))?;
 
             tracing::info!("{} signing", keypair.pubkey());
             if let Some(keypair) = keypair.keypair() {
@@ -951,10 +952,10 @@ impl Instructions {
                 });
                 let resp = tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
                     .await
-                    .map_err(|_| Error::Timeout)?
-                    .map_err(Error::other)?;
+                    .map_err(|_| Error::Timeout)??;
                 if let Some(new) = resp.new_message {
-                    let new_message = is_same_message_logic(&data, &new)?;
+                    let new_message =
+                        is_same_message_logic(&data, &new).map_err(Error::from_anyhow)?;
                     tracing::info!("updating transaction");
                     message = new_message;
                     data = new;
@@ -1011,10 +1012,11 @@ impl Instructions {
                     (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
                         .then(|| SdkPresigner::new(pk, &resp.signature))
                         .ok_or_else(|| {
-                            anyhow!("{} signature failed: not allowed to change transaction", pk)
+                            format!("{} signature failed: not allowed to change transaction", pk)
                         })
                 })
-                .collect::<Result<Vec<_>, anyhow::Error>>()?;
+                .collect::<Result<Vec<_>, String>>()
+                .map_err(Error::msg)?;
             presigners.push(SdkPresigner::new(&self.fee_payer, &fee_payer_signature));
 
             let mut signers = Vec::<&dyn Signer>::with_capacity(self.signers.len());
@@ -1121,9 +1123,9 @@ impl Instructions {
                         return Err(Error::other(error));
                     }
                 }
-                Ok(task.await?)
+                task.await.map_err(Error::from_anyhow)
             }
-            Either::Right((result, _)) => Ok(result?),
+            Either::Right((result, _)) => result.map_err(Error::from_anyhow),
         }
     }
 

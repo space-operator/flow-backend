@@ -73,7 +73,7 @@ pub fn execute_transaction(
         data: borsh::to_vec(&instruction).unwrap(),
     }
 }
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
     let ix = execute_transaction(

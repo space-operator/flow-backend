@@ -17,7 +17,7 @@ pub mod prelude {
             builder::{BuildResult, BuilderCache, CmdBuilder},
         },
         config::client::NodeData,
-        context::Context,
+        context::CommandContextX,
     };
     pub use serde::{Deserialize, Serialize};
     pub use serde_json::Value as JsonValue;

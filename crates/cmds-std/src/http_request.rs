@@ -163,7 +163,7 @@ impl Ipv6Ext for Ipv6Addr {
     }
 }
 
-async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     match input.url.host() {
         Some(url::Host::Domain(domain)) => {
             let _ = Resolver
@@ -184,7 +184,7 @@ async fn run(ctx: Context, input: Input) -> Result<Output, CommandError> {
         None => return Err(anyhow::anyhow!("URL has no host")),
     }
 
-    let client = ctx.http;
+    let client = ctx.http();
 
     let mut req = client.request(input.method.parse()?, input.url);
 
@@ -264,14 +264,11 @@ mod tests {
     #[tokio::test]
     async fn test_local() {
         async fn test(url: &str) {
-            let c = Context::default();
-            let e = run(
-                c.clone(),
-                value::from_map(value::map! {"url" => url}).unwrap(),
-            )
-            .await
-            .unwrap_err()
-            .to_string();
+            let c = CommandContextX::default();
+            let e = run(c, value::from_map(value::map! {"url" => url}).unwrap())
+                .await
+                .unwrap_err()
+                .to_string();
             assert!(e.contains("IP address not allowed"));
         }
 

@@ -1,10 +1,4 @@
-use flow_lib::{
-    Context,
-    command::{
-        CommandDescription, CommandError,
-        builder::{BuildResult, BuilderCache, CmdBuilder},
-    },
-};
+use flow_lib::command::prelude::*;
 use pdg_common::nft_metadata::{
     RenderParams,
     generate::{Effect, EffectsList},
@@ -32,7 +26,7 @@ struct Output {
     effects: Vec<Effect>,
 }
 
-async fn run(_: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
     Ok(Output {
         effects: EffectsList::from(input.attributes)
             .effects

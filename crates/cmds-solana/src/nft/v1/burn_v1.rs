@@ -37,7 +37,7 @@ pub struct Output {
     pub signature: Option<Signature>,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let (metadata_account, _) = Metadata::find_pda(&input.mint_account);
 
     // // get associated token account pda
@@ -54,8 +54,8 @@ async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
         .token(token_account);
 
     if let Some(acc) = ctx
-        .solana_client
-        .get_account_with_commitment(&metadata_account, ctx.solana_client.commitment())
+        .solana_client()
+        .get_account_with_commitment(&metadata_account, ctx.solana_client().commitment())
         .await?
         .value
     {

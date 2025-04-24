@@ -48,12 +48,11 @@ pub struct Output {
     sequence: String,
 }
 
-async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     let wormhole_core_program_id =
-        crate::wormhole::wormhole_core_program_id(ctx.cfg.solana_client.cluster);
+        crate::wormhole::wormhole_core_program_id(ctx.solana_config().cluster);
 
-    let nft_bridge_program_id =
-        crate::wormhole::nft_bridge_program_id(ctx.cfg.solana_client.cluster);
+    let nft_bridge_program_id = crate::wormhole::nft_bridge_program_id(ctx.solana_config().cluster);
 
     let config_key = Pubkey::find_program_address(&[b"config"], &nft_bridge_program_id).0;
     let custody_key =
