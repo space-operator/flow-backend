@@ -18,7 +18,6 @@ use bytes::Bytes;
 use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_pubkey::Pubkey;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
@@ -602,41 +601,6 @@ impl Default for CommandContextX {
     }
 }
 
-#[derive(Clone)]
-pub struct Context {
-    pub flow_owner: User,
-    pub started_by: User,
-    pub cfg: ContextConfig,
-    pub http: reqwest::Client,
-    pub solana_client: Arc<SolanaClient>,
-    pub environment: HashMap<String, String>,
-    pub endpoints: Endpoints,
-    pub extensions: Arc<Extensions>,
-    pub command: Option<CommandContext>,
-    pub signer: signer::Svc,
-    pub get_jwt: get_jwt::Svc,
-}
-
-impl Default for Context {
-    fn default() -> Self {
-        let ctx = Context::from_cfg(
-            &ContextConfig::default(),
-            User::default(),
-            User::default(),
-            unimplemented_svc(),
-            unimplemented_svc(),
-            Extensions::default(),
-        );
-        // ctx.command = Some(CommandContext {
-        //     svc: execute::simple(&ctx, None, <_>::default()),
-        //     flow_run_id: uuid::Uuid::nil(),
-        //     node_id: uuid::Uuid::nil(),
-        //     times: 0,
-        // });
-        ctx
-    }
-}
-
 #[derive(Clone, Copy, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct User {
     pub id: UserId,
@@ -654,128 +618,5 @@ impl Default for User {
         User {
             id: uuid::Uuid::nil(),
         }
-    }
-}
-
-impl Context {
-    pub fn from_cfg(
-        cfg: &ContextConfig,
-        flow_owner: User,
-        started_by: User,
-        sig_svc: signer::Svc,
-        token_svc: get_jwt::Svc,
-        extensions: Extensions,
-    ) -> Self {
-        let solana_client = SolanaClient::new_with_timeouts_and_commitment(
-            cfg.solana_client.url.clone(),
-            Duration::from_secs(30),
-            CommitmentConfig {
-                commitment: CommitmentLevel::Finalized,
-            },
-            Duration::from_secs(180),
-        );
-
-        Self {
-            flow_owner,
-            started_by,
-            cfg: cfg.clone(),
-            http: reqwest::Client::new(),
-            solana_client: Arc::new(solana_client),
-            environment: cfg.environment.clone(),
-            endpoints: cfg.endpoints.clone(),
-            extensions: Arc::new(extensions),
-            command: None,
-            signer: sig_svc,
-            get_jwt: token_svc,
-        }
-    }
-
-    /// Call [`get_jwt`] service, the result will have `Bearer ` prefix.
-    pub async fn get_jwt_header(&mut self) -> Result<String, get_jwt::Error> {
-        Ok("Bearer ".to_owned()
-            + &self
-                .get_jwt
-                .ready()
-                .await?
-                .call(get_jwt::Request {
-                    user_id: self.flow_owner.id,
-                })
-                .await?
-                .access_token)
-    }
-
-    pub fn new_interflow_origin(&self) -> Option<FlowRunOrigin> {
-        let c = self.command.as_ref()?;
-        Some(FlowRunOrigin::Interflow {
-            flow_run_id: c.flow_run_id,
-            node_id: c.node_id,
-            times: c.times,
-        })
-    }
-
-    /// Call [`execute`] service.
-    pub async fn execute(
-        &mut self,
-        instructions: Instructions,
-        output: value::Map,
-    ) -> Result<execute::Response, execute::Error> {
-        if let Some(ctx) = &mut self.command {
-            ctx.svc
-                .ready()
-                .await?
-                .call(execute::Request {
-                    instructions,
-                    output,
-                })
-                .await
-        } else {
-            panic!();
-        }
-    }
-
-    /// Call [`signer`] service.
-    pub async fn request_signature(
-        &self,
-        pubkey: Pubkey,
-        message: Bytes,
-        timeout: Duration,
-    ) -> Result<signer::SignatureResponse, anyhow::Error> {
-        let mut s = self.signer.clone();
-
-        Ok(s.ready()
-            .await?
-            .call(signer::SignatureRequest {
-                id: None,
-                time: Utc::now(),
-                pubkey,
-                message,
-                timeout,
-                flow_run_id: self.command.as_ref().map(|ctx| ctx.flow_run_id),
-                signatures: None,
-            })
-            .await?)
-    }
-
-    /// Get an extension by type.
-    pub fn get<T: Any + Send + Sync + 'static>(&self) -> Option<&T> {
-        self.extensions.get::<T>()
-    }
-
-    // A function to make sure Context is Send + Sync,
-    // because !Sync will make it really hard to write async code.
-    #[allow(dead_code)]
-    const fn assert_send_sync() {
-        const fn f<T: Send + Sync + 'static>() {}
-        f::<Self>();
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_no_tokio() {
-        Context::default();
     }
 }
