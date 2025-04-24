@@ -9,7 +9,7 @@
 //! - [`signer`]
 
 use crate::{
-    ContextConfig, FlowRunId, HttpClientConfig, NodeId, SolanaClientConfig, UserId,
+    ContextConfig, FlowRunId, HttpClientConfig, NodeId, SolanaClientConfig, UserId, ValueSet,
     config::{Endpoints, client::FlowRunOrigin},
     solana::Instructions,
     utils::{Extensions, tower_client::unimplemented_svc},
@@ -395,6 +395,7 @@ pub struct FlowSetContextData {
 pub struct FlowContextData {
     pub flow_run_id: FlowRunId,
     pub environment: HashMap<String, String>,
+    pub inputs: ValueSet,
     pub set: FlowSetContextData,
 }
 
@@ -437,6 +438,7 @@ impl CommandContextX {
                 flow: FlowContextData {
                     flow_run_id: FlowRunId::nil(),
                     environment: HashMap::new(),
+                    inputs: ValueSet::default(),
                     set: FlowSetContextData {
                         flow_owner: User::default(),
                         started_by: User::default(),
@@ -457,6 +459,10 @@ impl CommandContextX {
                 },
             },
         }
+    }
+
+    pub fn flow_inputs(&self) -> &value::Map {
+        &self.data.flow.inputs
     }
 
     pub fn new_interflow_origin(&self) -> FlowRunOrigin {

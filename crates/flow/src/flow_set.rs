@@ -20,7 +20,7 @@ use uuid::Uuid;
 use crate::{
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
-    flow_registry::{FlowRegistry, StartFlowOptions, get_previous_values, new_flow_run, run_rhai},
+    flow_registry::{FlowRegistry, StartFlowOptions, new_flow_run, run_rhai},
 };
 
 /// Who can start flows

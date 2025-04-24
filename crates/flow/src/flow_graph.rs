@@ -390,6 +390,7 @@ impl FlowGraph {
         let ctx_data = FlowContextData {
             environment: c.ctx.environment,
             flow_run_id: FlowRunId::nil(),
+            inputs: ValueSet::default(),
             set: FlowSetContextData {
                 endpoints: c.ctx.endpoints,
                 flow_owner: registry.flow_owner,
@@ -1303,6 +1304,7 @@ impl FlowGraph {
             .ok();
 
         let (out_tx, out_rx) = mpsc::unbounded::<PartialOutput>();
+        self.ctx_data.inputs = flow_inputs.clone();
         let mut s = State {
             flow_run_id,
             previous_values,
@@ -1757,7 +1759,7 @@ async fn run_command(
             times,
         })
         .execute(execute)
-        .get_jwt(get_jwt::not_allowed())
+        .get_jwt(get_jwt)
         .flow(ctx_svcs)
         .build();
 
