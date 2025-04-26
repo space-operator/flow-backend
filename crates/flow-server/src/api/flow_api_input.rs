@@ -1,14 +1,9 @@
-use std::sync::Mutex;
-
+use super::prelude::*;
 use actix_web::web::ServiceConfig;
-use flow_lib::{
-    context::api_input,
-    utils::{TowerClient, tower_client::CommonErrorExt},
-};
+use flow_lib::{NodeId, context::api_input, utils::TowerClient};
 use futures_channel::oneshot;
 use futures_util::future::BoxFuture;
-
-use super::prelude::*;
+use std::sync::Mutex;
 
 struct Responder {
     oneshot: oneshot::Sender<Result<api_input::Response, api_input::Error>>,
@@ -20,11 +15,11 @@ pub struct RequestStore {
 }
 
 #[derive(Clone)]
-pub struct Service {
+pub struct NewRequestService {
     store: web::Data<Mutex<RequestStore>>,
 }
 
-impl tower::Service<api_input::Request> for Service {
+impl tower::Service<api_input::Request> for NewRequestService {
     type Response = api_input::Response;
 
     type Error = api_input::Error;
@@ -51,8 +46,32 @@ impl tower::Service<api_input::Request> for Service {
 
 pub fn configure(app: &mut ServiceConfig) {
     let store = web::Data::new(Mutex::new(RequestStore::default()));
-    let service = TowerClient::new(Service {
+    let service = TowerClient::new(NewRequestService {
         store: store.clone(),
     });
-    app.app_data(service);
+    app.app_data(service)
+        .app_data(store)
+        .service(web::resource("/submit/{flow_run_id}/{node_id}/{times}").post(submit_data));
+}
+
+async fn submit_data(
+    path: web::Path<(FlowRunId, NodeId, u32)>,
+    store: web::Data<Mutex<RequestStore>>,
+) -> Result<web::Json<()>, actix_web::Error> {
+    let (flow_run_id, node_id, times) = path.into_inner();
+    let req = api_input::Request {
+        flow_run_id,
+        node_id,
+        times,
+    };
+    if let Some(resp) = store.lock().unwrap().reqs.remove(&req) {
+        resp.oneshot
+            .send(Ok(api_input::Response {
+                value: value::Value::Null,
+            }))
+            .map_err(|_| Error::NotFound)?;
+        Ok(web::Json(()))
+    } else {
+        return Err(Error::NotFound.into());
+    }
 }
