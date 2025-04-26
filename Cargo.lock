@@ -2947,6 +2947,7 @@ dependencies = [
  "actix-cors",
  "actix-web",
  "actix-web-actors",
+ "ahash 0.8.11",
  "anyhow",
  "async-trait",
  "base64 0.13.1",

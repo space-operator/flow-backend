@@ -45,6 +45,7 @@ pub mod api_input {
     use thiserror::Error as ThisError;
     use value::Value;
 
+    #[derive(Hash, PartialEq, Eq)]
     pub struct Request {
         pub flow_run_id: FlowRunId,
         pub node_id: NodeId,
@@ -536,9 +537,12 @@ impl CommandContextX {
     }
 
     pub async fn api_input(&mut self) -> Result<api_input::Response, api_input::Error> {
-        Err(api_input::Error::Common(
-            crate::utils::tower_client::CommonError::Unimplemented,
-        ))
+        let req = api_input::Request {
+            flow_run_id: *self.flow_run_id(),
+            node_id: *self.node_id(),
+            times: *self.times(),
+        };
+        self.api_input.ready().await?.call(req).await
     }
 
     /// Call [`get_jwt`] service, the result will have `Bearer ` prefix.
