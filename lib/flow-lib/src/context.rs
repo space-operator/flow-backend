@@ -37,6 +37,35 @@ pub mod env {
     pub const MAINNET_LOOKUP_TABLE: &str = "MAINNET_LOOKUP_TABLE";
 }
 
+pub mod api_input {
+    use crate::{
+        FlowRunId, NodeId,
+        utils::{TowerClient, tower_client::CommonError},
+    };
+    use thiserror::Error as ThisError;
+    use value::Value;
+
+    pub struct Request {
+        pub flow_run_id: FlowRunId,
+        pub node_id: NodeId,
+        pub times: u32,
+        // TODO: authorization
+        // TODO: data validation
+    }
+
+    pub struct Response {
+        pub value: Value,
+    }
+
+    #[derive(ThisError, Debug, Clone)]
+    pub enum Error {
+        #[error(transparent)]
+        Common(#[from] CommonError),
+    }
+
+    pub type Svc = TowerClient<Request, Response, Error>;
+}
+
 /// Get user's JWT, require
 /// [`user_token`][crate::config::node::Permissions::user_tokens] permission.
 pub mod get_jwt {
@@ -373,14 +402,6 @@ pub mod execute {
     }
 }
 
-#[derive(Clone)]
-pub struct CommandContext {
-    pub svc: execute::Svc,
-    pub flow_run_id: FlowRunId,
-    pub node_id: NodeId,
-    pub times: u32,
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct FlowSetContextData {
     pub flow_owner: User,
@@ -423,6 +444,7 @@ pub struct CommandContextX {
     data: CommandContextData,
     execute: execute::Svc,
     get_jwt: get_jwt::Svc,
+    api_input: api_input::Svc,
     flow: FlowServices,
 }
 
@@ -449,6 +471,7 @@ impl CommandContextX {
             },
             execute: unimplemented_svc(),
             get_jwt: unimplemented_svc(),
+            api_input: unimplemented_svc(),
             flow: FlowServices {
                 signer: unimplemented_svc(),
                 set: FlowSetServices {
@@ -510,6 +533,12 @@ impl CommandContextX {
 
     pub fn http(&self) -> &reqwest::Client {
         &self.flow.set.http
+    }
+
+    pub async fn api_input(&mut self) -> Result<api_input::Response, api_input::Error> {
+        Err(api_input::Error::Common(
+            crate::utils::tower_client::CommonError::Unimplemented,
+        ))
     }
 
     /// Call [`get_jwt`] service, the result will have `Bearer ` prefix.

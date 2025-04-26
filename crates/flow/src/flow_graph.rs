@@ -18,7 +18,10 @@ use flow_lib::{
         FlowSetServices, execute, get_jwt,
     },
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
-    utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
+    utils::{
+        Extensions, TowerClient,
+        tower_client::{CommonErrorExt, unimplemented_svc},
+    },
 };
 use futures::{
     FutureExt, StreamExt,
@@ -1761,6 +1764,7 @@ async fn run_command(
         .execute(execute)
         .get_jwt(get_jwt)
         .flow(ctx_svcs)
+        .api_input(unimplemented_svc()) // TODO
         .build();
 
     event_tx
