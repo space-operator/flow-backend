@@ -4,7 +4,7 @@ use super::{
     messages::SubscribeError,
     signer::{AddWalletError, SignerWorker},
 };
-use crate::error::ErrorBody;
+use crate::{api::flow_api_input::NewRequestService, error::ErrorBody};
 use actix::{
     Actor, ActorFutureExt, ActorTryFutureExt, AsyncContext, Response, ResponseActFuture,
     ResponseFuture, WrapFuture, fut::wrap_future,
@@ -50,6 +50,7 @@ pub struct UserWorker {
     endpoints: Endpoints,
     sigreg: HashMap<i64, SigReq>,
     subs: HashMap<u64, Subscription>,
+    new_flow_api_request: NewRequestService,
 }
 
 pub struct SubscribeSigReq {}
@@ -134,6 +135,7 @@ impl UserWorker {
         db: DbPool,
         counter: Counter,
         root: actix::Addr<DBWorker>,
+        new_flow_api_request: NewRequestService,
     ) -> Self {
         Self {
             user_id,
@@ -143,6 +145,7 @@ impl UserWorker {
             root,
             sigreg: <_>::default(),
             subs: <_>::default(),
+            new_flow_api_request,
         }
     }
 
@@ -162,6 +165,7 @@ impl UserWorker {
         let endpoints = self.endpoints.clone();
         let starter = options.starter;
         let action_identity = d.action_identity;
+        let new_flow_api_request = self.new_flow_api_request.clone();
         async move {
             let get_jwt = root.send(GetTokenWorker { user_id }).await??;
             let get_jwt = TowerClient::new(ActixService::from(get_jwt.recipient()));
@@ -198,6 +202,7 @@ impl UserWorker {
                 .get_jwt(get_jwt)
                 .new_flow_run(new_flow_run)
                 .signer(signer)
+                .new_flow_api_request(TowerClient::new(new_flow_api_request))
                 .build())
         }
     }

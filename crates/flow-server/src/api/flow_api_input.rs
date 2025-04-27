@@ -1,6 +1,6 @@
 use super::prelude::*;
 use actix_web::web::ServiceConfig;
-use flow_lib::{NodeId, context::api_input, utils::TowerClient};
+use flow_lib::{NodeId, context::api_input};
 use futures_channel::oneshot;
 use futures_util::future::BoxFuture;
 use std::sync::Mutex;
@@ -14,9 +14,15 @@ pub struct RequestStore {
     reqs: ahash::HashMap<api_input::Request, Responder>,
 }
 
+impl RequestStore {
+    pub fn new_app_data() -> web::Data<Mutex<Self>> {
+        web::Data::new(Mutex::new(Self::default()))
+    }
+}
+
 #[derive(Clone)]
 pub struct NewRequestService {
-    store: web::Data<Mutex<RequestStore>>,
+    pub store: web::Data<Mutex<RequestStore>>,
 }
 
 impl tower::Service<api_input::Request> for NewRequestService {
@@ -44,14 +50,11 @@ impl tower::Service<api_input::Request> for NewRequestService {
     }
 }
 
-pub fn configure(app: &mut ServiceConfig) {
-    let store = web::Data::new(Mutex::new(RequestStore::default()));
-    let service = TowerClient::new(NewRequestService {
-        store: store.clone(),
-    });
-    app.app_data(service)
-        .app_data(store)
-        .service(web::resource("/submit/{flow_run_id}/{node_id}/{times}").post(submit_data));
+pub fn configure(store: web::Data<Mutex<RequestStore>>) -> impl FnOnce(&mut ServiceConfig) {
+    move |app: &mut ServiceConfig| {
+        app.app_data(store)
+            .service(web::resource("/submit/{flow_run_id}/{node_id}/{times}").post(submit_data));
+    }
 }
 
 async fn submit_data(

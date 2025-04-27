@@ -12,7 +12,7 @@ use flow_lib::{
         Endpoints,
         client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
     },
-    context::{User, execute, get_jwt, signer},
+    context::{User, api_input, execute, get_jwt, signer},
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
     utils::{TowerClient, tower_client::unimplemented_svc},
 };
@@ -62,6 +62,7 @@ pub struct FlowRegistry {
 
     depth: u32,
 
+    pub(crate) api_input: api_input::Svc,
     pub(crate) signer: signer::Svc,
     pub(crate) token: get_jwt::Svc,
     new_flow_run: new_flow_run::Svc,
@@ -80,6 +81,7 @@ impl Default for FlowRegistry {
         let new_flow_run = unimplemented_svc();
         let get_previous_values = unimplemented_svc();
         let token = unimplemented_svc();
+        let api_input = unimplemented_svc();
         Self {
             depth: 0,
             flow_owner: User::new(UserId::nil()),
@@ -88,6 +90,7 @@ impl Default for FlowRegistry {
             flows: <_>::default(),
             endpoints: <_>::default(),
             signers_info: <_>::default(),
+            api_input,
             signer,
             token,
             new_flow_run,
@@ -270,6 +273,7 @@ impl FlowRegistry {
         started_by: User,
         shared_with: Vec<UserId>,
         entrypoint: FlowId,
+        api_input: api_input::Svc,
         (signer, signers_info): (signer::Svc, JsonValue),
         new_flow_run: new_flow_run::Svc,
         get_flow: get_flow::Svc,
@@ -288,6 +292,7 @@ impl FlowRegistry {
             signer,
             signers_info,
             new_flow_run,
+            api_input,
             get_previous_values,
             parent_flow_execute: None,
             token,
@@ -327,6 +332,7 @@ impl FlowRegistry {
         started_by: User,
         shared_with: Vec<UserId>,
         entrypoint: FlowId,
+        api_input: api_input::Svc,
         (signer, signers_info): (actix::Recipient<signer::SignatureRequest>, JsonValue),
         new_flow_run: actix::Recipient<new_flow_run::Request>,
         get_flow: actix::Recipient<get_flow::Request>,
@@ -340,6 +346,7 @@ impl FlowRegistry {
             started_by,
             shared_with,
             entrypoint,
+            api_input,
             (TowerClient::new(ActixService::from(signer)), signers_info),
             TowerClient::new(ActixService::from(new_flow_run)),
             TowerClient::new(ActixService::from(get_flow)),

@@ -1,8 +1,13 @@
-use crate::{Config, flow_logs};
+use crate::{
+    Config,
+    api::flow_api_input::{NewRequestService, RequestStore},
+    flow_logs,
+};
 use actix::{
     Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context, ResponseActFuture,
     ResponseFuture, WrapFuture, fut::wrap_future,
 };
+use actix_web::web;
 use db::{
     FlowRunLogsRow,
     pool::{DbPool, ProxiedDbPool, RealDbPool},
@@ -58,6 +63,7 @@ pub struct DBWorker {
     tracing_data: flow_logs::Map,
     tx: mpsc::UnboundedSender<Vec<FlowRunLogsRow>>,
     done_tx: broadcast::Sender<()>,
+    new_flow_api_request: NewRequestService,
 }
 
 impl DBWorker {
@@ -66,6 +72,7 @@ impl DBWorker {
         config: &Config,
         actors: AddressBook,
         tracing_data: flow_logs::Map,
+        new_flow_api_request: NewRequestService,
         ctx: &mut actix::Context<Self>,
     ) -> Self {
         let (tx, rx) = mpsc::unbounded();
@@ -90,6 +97,7 @@ impl DBWorker {
             tx,
             tracing_data,
             done_tx: broadcast::channel(1).0,
+            new_flow_api_request,
         }
     }
 }
@@ -181,9 +189,10 @@ impl actix::Handler<GetUserWorker> for DBWorker {
             let db = self.db.clone();
             let root = ctx.address();
             let endpoints = self.endpoints.clone();
+            let new_flow_api_request = self.new_flow_api_request.clone();
             move || {
                 UserWorker::start_in_arbiter(&Arbiter::current(), move |_| {
-                    UserWorker::new(id, endpoints, db, counter, root)
+                    UserWorker::new(id, endpoints, db, counter, root, new_flow_api_request)
                 })
             }
         })

@@ -432,6 +432,7 @@ pub struct FlowSetServices {
     pub http: reqwest::Client,
     pub solana_client: Arc<SolanaClient>,
     pub extensions: Arc<Extensions>,
+    pub api_input: api_input::Svc,
 }
 
 #[derive(Clone)]
@@ -445,7 +446,6 @@ pub struct CommandContextX {
     data: CommandContextData,
     execute: execute::Svc,
     get_jwt: get_jwt::Svc,
-    api_input: api_input::Svc,
     flow: FlowServices,
 }
 
@@ -472,13 +472,13 @@ impl CommandContextX {
             },
             execute: unimplemented_svc(),
             get_jwt: unimplemented_svc(),
-            api_input: unimplemented_svc(),
             flow: FlowServices {
                 signer: unimplemented_svc(),
                 set: FlowSetServices {
                     http: reqwest::Client::new(),
                     solana_client,
                     extensions: <_>::default(),
+                    api_input: unimplemented_svc(),
                 },
             },
         }
@@ -542,7 +542,7 @@ impl CommandContextX {
             node_id: *self.node_id(),
             times: *self.times(),
         };
-        self.api_input.ready().await?.call(req).await
+        self.flow.set.api_input.ready().await?.call(req).await
     }
 
     /// Call [`get_jwt`] service, the result will have `Bearer ` prefix.

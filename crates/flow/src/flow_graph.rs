@@ -18,10 +18,7 @@ use flow_lib::{
         FlowSetServices, execute, get_jwt,
     },
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
-    utils::{
-        Extensions, TowerClient,
-        tower_client::{CommonErrorExt, unimplemented_svc},
-    },
+    utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
 };
 use futures::{
     FutureExt, StreamExt,
@@ -405,6 +402,7 @@ impl FlowGraph {
         let ctx_svcs = FlowServices {
             signer: registry.signer.clone(),
             set: FlowSetServices {
+                api_input: registry.api_input.clone(),
                 extensions: Arc::new({
                     let mut ext = Extensions::new();
                     if let Some(rpc) = registry.rpc_server.clone() {
@@ -1764,7 +1762,6 @@ async fn run_command(
         .execute(execute)
         .get_jwt(get_jwt)
         .flow(ctx_svcs)
-        .api_input(unimplemented_svc()) // TODO
         .build();
 
     event_tx

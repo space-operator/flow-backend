@@ -11,7 +11,11 @@ use db::{
 use either::Either;
 use flow_server::{
     Config,
-    api::{self, prelude::Success},
+    api::{
+        self,
+        flow_api_input::{NewRequestService, RequestStore},
+        prelude::Success,
+    },
     db_worker::{DBWorker, SystemShutdown, token_worker::token_from_apikeys},
     flow_logs,
     middleware::auth_v1,
@@ -139,8 +143,20 @@ async fn main() {
         }
     }
 
-    let db_worker =
-        DBWorker::create(|ctx| DBWorker::new(db.clone(), &config, actors, tracing_data, ctx));
+    let store = RequestStore::new_app_data();
+
+    let db_worker = DBWorker::create(|ctx| {
+        DBWorker::new(
+            db.clone(),
+            &config,
+            actors,
+            tracing_data,
+            NewRequestService {
+                store: store.clone(),
+            },
+            ctx,
+        )
+    });
 
     let sig_auth = config.signature_auth();
     let supabase_auth = match SupabaseAuth::new(&config.supabase, db.clone()) {
@@ -208,7 +224,7 @@ async fn main() {
             .service(api::get_flow_output::service(&config, db.clone()))
             .service(api::get_signature_request::service(&config, db.clone()))
             .service(api::deploy_flow::service(&config))
-            .configure(api::flow_api_input::configure);
+            .configure(api::flow_api_input::configure(store.clone()));
         if let Some(supabase_auth) = &supabase_auth {
             flow = flow.service(api::start_flow_unverified::service(
                 &config,
