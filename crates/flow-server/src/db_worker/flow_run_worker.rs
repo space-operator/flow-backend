@@ -424,6 +424,7 @@ async fn save_to_db(
                     log_index += 1;
                 }
                 Event::SignatureRequest(_) => {}
+                Event::ApiInput(_) => {}
             }
         }
         drop(conn);
