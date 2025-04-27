@@ -640,6 +640,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
         let endpoints = self.endpoints.clone();
         let root = self.root.clone();
         let db = self.db.clone();
+        let new_flow_api_request = self.new_flow_api_request.clone();
         Box::pin(async move {
             if msg.user.id != user_id {
                 return Err(StartError::Unauthorized);
@@ -656,6 +657,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 msg.user,
                 Vec::new(),
                 msg.flow_id,
+                TowerClient::new(new_flow_api_request),
                 (signer.recipient(), signers_info),
                 addr.clone().recipient(),
                 addr.clone().recipient(),
@@ -728,6 +730,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let endpoints = self.endpoints.clone();
         let root = self.root.clone();
         let db = self.db.clone();
+        let new_flow_api_request = self.new_flow_api_request.clone();
         Box::pin(async move {
             let wrk = root.send(GetTokenWorker { user_id }).await??;
 
@@ -747,6 +750,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                 },
                 [msg.started_by.0].into(),
                 msg.flow_id,
+                TowerClient::new(new_flow_api_request),
                 (signer.recipient(), signers_info),
                 addr.clone().recipient(),
                 addr.clone().recipient(),

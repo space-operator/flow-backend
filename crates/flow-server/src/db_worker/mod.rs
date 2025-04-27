@@ -1,13 +1,8 @@
-use crate::{
-    Config,
-    api::flow_api_input::{NewRequestService, RequestStore},
-    flow_logs,
-};
+use crate::{Config, api::flow_api_input::NewRequestService, flow_logs};
 use actix::{
     Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context, ResponseActFuture,
     ResponseFuture, WrapFuture, fut::wrap_future,
 };
-use actix_web::web;
 use db::{
     FlowRunLogsRow,
     pool::{DbPool, ProxiedDbPool, RealDbPool},
