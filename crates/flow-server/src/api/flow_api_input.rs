@@ -1,10 +1,9 @@
-use crate::db_worker::{FindActor, FlowRunWorker};
-
 use super::prelude::*;
+use crate::db_worker::{FindActor, FlowRunWorker};
 use actix_web::web::ServiceConfig;
 use chrono::Utc;
 use flow::flow_run_events::ApiInput;
-use flow_lib::{NodeId, config::Endpoints, context::api_input};
+use flow_lib::{config::Endpoints, context::api_input};
 use futures_channel::oneshot;
 use futures_util::future::BoxFuture;
 use std::sync::Mutex;
@@ -13,14 +12,29 @@ struct Responder {
     oneshot: oneshot::Sender<Result<api_input::Response, api_input::Error>>,
 }
 
-#[derive(Default)]
 pub struct RequestStore {
-    reqs: ahash::HashMap<api_input::Request, Responder>,
+    reqs: ahash::HashMap<blake3::Hash, Responder>,
+    secret: [u8; blake3::KEY_LEN],
 }
 
 impl RequestStore {
+    fn new() -> Self {
+        Self {
+            reqs: <_>::default(),
+            secret: rand::random(),
+        }
+    }
+
     pub fn new_app_data() -> web::Data<Mutex<Self>> {
-        web::Data::new(Mutex::new(Self::default()))
+        web::Data::new(Mutex::new(Self::new()))
+    }
+
+    pub fn make_key(&self, req: &api_input::Request) -> blake3::Hash {
+        let mut h = blake3::Hasher::new_keyed(&self.secret);
+        h.update(req.flow_run_id.as_bytes());
+        h.update(req.node_id.as_bytes());
+        h.update(&req.times.to_le_bytes());
+        h.finalize()
     }
 }
 
@@ -48,15 +62,15 @@ impl tower::Service<api_input::Request> for NewRequestService {
     fn call(&mut self, req: api_input::Request) -> Self::Future {
         let (tx, rx) = oneshot::channel();
         let flow_run_id = req.flow_run_id;
+
+        let mut store = self.store.lock().unwrap();
+        let key = store.make_key(&req);
+        store.reqs.insert(key, Responder { oneshot: tx });
         let url = format!(
-            "{}/flow/submit/{}/{}/{}",
-            self.endpoints.flow_server, req.flow_run_id, req.node_id, req.times
+            "{}/flow/submit/{}",
+            self.endpoints.flow_server,
+            key.to_hex(),
         );
-        self.store
-            .lock()
-            .unwrap()
-            .reqs
-            .insert(req, Responder { oneshot: tx });
         let db_worker = self.db_worker.clone();
         Box::pin(async move {
             match db_worker
@@ -70,7 +84,7 @@ impl tower::Service<api_input::Request> for NewRequestService {
                     });
                 }
                 _ => {
-                    tracing::warn!("flow is not running: {}", flow_run_id);
+                    tracing::error!("flow is not running: {}", flow_run_id);
                 }
             };
             rx.await.expect("we never drop this channel")
@@ -81,7 +95,7 @@ impl tower::Service<api_input::Request> for NewRequestService {
 pub fn configure(store: web::Data<Mutex<RequestStore>>) -> impl FnOnce(&mut ServiceConfig) {
     move |app: &mut ServiceConfig| {
         app.app_data(store)
-            .service(web::resource("/submit/{flow_run_id}/{node_id}/{times}").post(submit_data));
+            .service(web::resource("/submit/{key}").post(submit_data));
     }
 }
 
@@ -91,17 +105,12 @@ struct Body {
 }
 
 async fn submit_data(
-    path: web::Path<(FlowRunId, NodeId, u32)>,
+    path: web::Path<String>,
     store: web::Data<Mutex<RequestStore>>,
     body: web::Json<Body>,
 ) -> Result<web::Json<()>, actix_web::Error> {
-    let (flow_run_id, node_id, times) = path.into_inner();
-    let req = api_input::Request {
-        flow_run_id,
-        node_id,
-        times,
-    };
-    if let Some(resp) = store.lock().unwrap().reqs.remove(&req) {
+    let key = blake3::Hash::from_hex(path.into_inner()).map_err(|_| Error::NotFound)?;
+    if let Some(resp) = store.lock().unwrap().reqs.remove(&key) {
         resp.oneshot
             .send(Ok(api_input::Response {
                 value: body.into_inner().value,

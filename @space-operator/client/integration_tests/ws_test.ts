@@ -47,7 +47,6 @@ Deno.test("start flow", async () => {
     anonKey,
     token: apiKey,
   });
-  // owner.setLogger((...values: any[]) => console.log(...values));
 
   const flowId = 3730;
   const ws = owner.ws();
@@ -63,7 +62,7 @@ Deno.test("start flow", async () => {
     async (ev) => {
       console.log(ev);
       if (ev.event === "ApiInput") {
-        let resp = await fetch(ev.data.url, {
+        const resp = await fetch(ev.data.url, {
           method: "POST",
           headers: [["content-type", "application/json"]],
           body: JSON.stringify({ value: new Value("hello") }),
