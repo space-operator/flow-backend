@@ -66,7 +66,7 @@ Deno.test("start flow", async () => {
         let resp = await fetch(ev.data.url, {
           method: "POST",
           headers: [["content-type", "application/json"]],
-          body: JSON.stringify(new Value("hello")),
+          body: JSON.stringify({ value: new Value("hello") }),
         });
         await resp.text();
       }

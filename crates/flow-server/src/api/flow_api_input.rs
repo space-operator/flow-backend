@@ -85,10 +85,15 @@ pub fn configure(store: web::Data<Mutex<RequestStore>>) -> impl FnOnce(&mut Serv
     }
 }
 
+#[derive(Deserialize)]
+struct Body {
+    value: value::Value,
+}
+
 async fn submit_data(
     path: web::Path<(FlowRunId, NodeId, u32)>,
     store: web::Data<Mutex<RequestStore>>,
-    body: web::Json<value::Value>,
+    body: web::Json<Body>,
 ) -> Result<web::Json<()>, actix_web::Error> {
     let (flow_run_id, node_id, times) = path.into_inner();
     let req = api_input::Request {
@@ -99,7 +104,7 @@ async fn submit_data(
     if let Some(resp) = store.lock().unwrap().reqs.remove(&req) {
         resp.oneshot
             .send(Ok(api_input::Response {
-                value: body.into_inner(),
+                value: body.into_inner().value,
             }))
             .map_err(|_| Error::NotFound)?;
         Ok(web::Json(()))
