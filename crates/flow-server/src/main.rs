@@ -1,4 +1,4 @@
-use actix::Actor;
+use actix::{Actor, AsyncContext};
 use actix_web::{
     App, HttpServer,
     middleware::{Compress, Logger},
@@ -153,6 +153,8 @@ async fn main() {
             tracing_data,
             NewRequestService {
                 store: store.clone(),
+                db_worker: ctx.address(),
+                endpoints: config.endpoints(),
             },
             ctx,
         )

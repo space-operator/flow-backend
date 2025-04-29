@@ -3,8 +3,8 @@ use crate::{
     context::CommandFactory,
     flow_registry::FlowRegistry,
     flow_run_events::{
-        ApiInput, EventSender, FlowError, FlowFinish, FlowStart, NODE_SPAN_NAME, NodeError,
-        NodeFinish, NodeOutput, NodeStart,
+        EventSender, FlowError, FlowFinish, FlowStart, NODE_SPAN_NAME, NodeError, NodeFinish,
+        NodeOutput, NodeStart,
     },
 };
 use base64::prelude::*;
@@ -18,10 +18,7 @@ use flow_lib::{
         FlowSetServices, execute, get_jwt,
     },
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
-    utils::{
-        Extensions, TowerClient,
-        tower_client::{CommonErrorExt, unimplemented_svc},
-    },
+    utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
 };
 use futures::{
     FutureExt, StreamExt,
@@ -1303,29 +1300,14 @@ impl FlowGraph {
         stop_shared: StopSignal,
         previous_values: HashMap<NodeId, Vec<Value>>,
     ) -> FlowRunResult {
-        self.ctx_svcs.set.api_input = TowerClient::new(
-            std::mem::replace(&mut self.ctx_svcs.set.api_input, unimplemented_svc()).map_request({
-                let tx = event_tx.clone();
-                move |req| {
-                    tx.unbounded_send(
-                        ApiInput {
-                            url: String::new(),
-                            time: Utc::now(),
-                        }
-                        .into(),
-                    )
-                    .ok();
-                    req
-                }
-            }),
-        );
+        self.ctx_data.inputs = flow_inputs.clone();
+        self.ctx_data.flow_run_id = flow_run_id;
 
         event_tx
             .unbounded_send(FlowStart { time: Utc::now() }.into())
             .ok();
 
         let (out_tx, out_rx) = mpsc::unbounded::<PartialOutput>();
-        self.ctx_data.inputs = flow_inputs.clone();
         let mut s = State {
             flow_run_id,
             previous_values,

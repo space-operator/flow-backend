@@ -13,8 +13,7 @@ use db::{FlowRunLogsRow, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
     flow_run_events::{
-        self, Event, FlowError, FlowFinish, FlowLog, FlowStart, NodeError, NodeFinish, NodeLog,
-        NodeOutput, NodeStart,
+        self, ApiInput, Event, FlowError, FlowFinish, FlowLog, FlowStart, NodeError, NodeFinish, NodeLog, NodeOutput, NodeStart
     },
 };
 use flow_lib::{FlowRunId, UserId};
@@ -72,6 +71,13 @@ impl actix::Handler<WaitFinish> for FlowRunWorker {
     fn handle(&mut self, _: WaitFinish, _: &mut Self::Context) -> Self::Result {
         let mut rx = self.done_tx.subscribe();
         async move { rx.recv().await }.boxed()
+    }
+}
+
+impl actix::Handler<ApiInput> for FlowRunWorker {
+    type Result = ();
+    fn handle(&mut self, msg: ApiInput, ctx: &mut Self::Context) -> Self::Result {
+        StreamHandler::handle(self, Event::ApiInput(msg), ctx)
     }
 }
 

@@ -1,6 +1,10 @@
+use crate::db_worker::{FindActor, FlowRunWorker};
+
 use super::prelude::*;
 use actix_web::web::ServiceConfig;
-use flow_lib::{NodeId, context::api_input};
+use chrono::Utc;
+use flow::flow_run_events::ApiInput;
+use flow_lib::{NodeId, config::Endpoints, context::api_input};
 use futures_channel::oneshot;
 use futures_util::future::BoxFuture;
 use std::sync::Mutex;
@@ -23,6 +27,8 @@ impl RequestStore {
 #[derive(Clone)]
 pub struct NewRequestService {
     pub store: web::Data<Mutex<RequestStore>>,
+    pub db_worker: actix::Addr<DBWorker>,
+    pub endpoints: Endpoints,
 }
 
 impl tower::Service<api_input::Request> for NewRequestService {
@@ -41,12 +47,34 @@ impl tower::Service<api_input::Request> for NewRequestService {
 
     fn call(&mut self, req: api_input::Request) -> Self::Future {
         let (tx, rx) = oneshot::channel();
+        let flow_run_id = req.flow_run_id;
+        let url = format!(
+            "{}/flow/submit/{}/{}/{}",
+            self.endpoints.flow_server, req.flow_run_id, req.node_id, req.times
+        );
         self.store
             .lock()
             .unwrap()
             .reqs
             .insert(req, Responder { oneshot: tx });
-        Box::pin(async move { rx.await.expect("we never drop this channel") })
+        let db_worker = self.db_worker.clone();
+        Box::pin(async move {
+            match db_worker
+                .send(FindActor::<FlowRunWorker>::new(flow_run_id))
+                .await
+            {
+                Ok(Some(addr)) => {
+                    addr.do_send(ApiInput {
+                        time: Utc::now(),
+                        url,
+                    });
+                }
+                _ => {
+                    tracing::warn!("flow is not running: {}", flow_run_id);
+                }
+            };
+            rx.await.expect("we never drop this channel")
+        })
     }
 }
 
@@ -60,6 +88,7 @@ pub fn configure(store: web::Data<Mutex<RequestStore>>) -> impl FnOnce(&mut Serv
 async fn submit_data(
     path: web::Path<(FlowRunId, NodeId, u32)>,
     store: web::Data<Mutex<RequestStore>>,
+    body: web::Json<value::Value>,
 ) -> Result<web::Json<()>, actix_web::Error> {
     let (flow_run_id, node_id, times) = path.into_inner();
     let req = api_input::Request {
@@ -70,7 +99,7 @@ async fn submit_data(
     if let Some(resp) = store.lock().unwrap().reqs.remove(&req) {
         resp.oneshot
             .send(Ok(api_input::Response {
-                value: value::Value::Null,
+                value: body.into_inner(),
             }))
             .map_err(|_| Error::NotFound)?;
         Ok(web::Json(()))

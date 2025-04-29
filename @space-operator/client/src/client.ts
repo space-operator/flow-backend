@@ -1,7 +1,18 @@
-import { bs58, web3, Value, type IValue } from "./deps.ts";
+import { bs58, type IValue, Value, web3 } from "./deps.ts";
 import {
+  type ConfirmAuthOutput,
+  type DeploymentId,
+  DeploymentSpecifier,
   type ErrorBody,
+  type FlowId,
+  type FlowRunId,
+  type GetFlowOutputOutput,
+  type IDeploymentSpecifier,
+  type InitAuthOutput,
   type ISignatureRequest,
+  SignatureRequest,
+  type StartDeploymentOutput,
+  type StartDeploymentParams,
   type StartFlowOutput,
   type StartFlowParams,
   type StartFlowSharedOutput,
@@ -12,17 +23,7 @@ import {
   type StopFlowParams,
   type SubmitSignatureOutput,
   type SubmitSignatureParams,
-  type GetFlowOutputOutput,
-  type FlowId,
-  type FlowRunId,
-  type DeploymentId,
-  DeploymentSpecifier,
-  SignatureRequest,
-  type InitAuthOutput,
-  type ConfirmAuthOutput,
-  type StartDeploymentParams,
-  type StartDeploymentOutput,
-  type IDeploymentSpecifier,
+  WsClient,
 } from "./mod.ts";
 
 export type TokenProvider = string | (() => Promise<string>);
@@ -121,7 +122,7 @@ export class Client {
 
   async #setAuthHeader(
     req: Request,
-    auth: boolean | TokenProvider = true
+    auth: boolean | TokenProvider = true,
   ): Promise<Request> {
     switch (typeof auth) {
       case "boolean":
@@ -146,7 +147,7 @@ export class Client {
 
   async #sendJSONGet<T>(
     url: string,
-    auth: boolean | TokenProvider = true
+    auth: boolean | TokenProvider = true,
   ): Promise<T> {
     let req = new Request(url);
     req = await this.#setAuthHeader(req, auth);
@@ -159,16 +160,15 @@ export class Client {
     url: string,
     body?: any,
     auth: boolean | TokenProvider = true,
-    anonKey: boolean = false
+    anonKey: boolean = false,
   ): Promise<T> {
     const reqBody = body !== undefined ? JSON.stringify(body) : undefined;
-    const headers: Record<string, string> =
-      body !== undefined
-        ? {
-            "content-type": "application/json",
-            "accept-encoding": "gzip",
-          }
-        : {};
+    const headers: Record<string, string> = body !== undefined
+      ? {
+        "content-type": "application/json",
+        "accept-encoding": "gzip",
+      }
+      : {};
     let req = new Request(url, {
       method: "POST",
       body: reqBody,
@@ -198,14 +198,14 @@ export class Client {
           pubkey: pubkeyBs58,
         },
         false,
-        true
+        true,
       )) as InitAuthOutput
     ).msg;
   }
 
   async confirmAuth(
     msg: string,
-    signature: ArrayBuffer | Uint8Array | string
+    signature: ArrayBuffer | Uint8Array | string,
   ): Promise<ConfirmAuthOutput> {
     let sig;
     if (typeof signature === "string") {
@@ -220,75 +220,75 @@ export class Client {
         token,
       },
       false,
-      true
+      true,
     );
   }
 
   async startFlow(
     id: FlowId,
-    params: StartFlowParams
+    params: StartFlowParams,
   ): Promise<StartFlowOutput> {
     return await this.#sendJSONPost(`${this.host}/flow/start/${id}`, params);
   }
 
   async startFlowShared(
     id: FlowId,
-    params: StartFlowSharedParams
+    params: StartFlowSharedParams,
   ): Promise<StartFlowSharedOutput> {
     return await this.#sendJSONPost(
       `${this.host}/flow/start_shared/${id}`,
-      params
+      params,
     );
   }
 
   async startFlowUnverified(
     id: FlowId,
     publicKey: web3.PublicKey,
-    params: StartFlowUnverifiedParams
+    params: StartFlowUnverifiedParams,
   ): Promise<StartFlowUnverifiedOutput> {
     return await this.#sendJSONPost(
       `${this.host}/flow/start_unverified/${id}`,
       params,
-      publicKey.toBase58()
+      publicKey.toBase58(),
     );
   }
 
   async getFlowOutput(
     runId: FlowRunId,
-    token?: string
+    token?: string,
   ): Promise<GetFlowOutputOutput> {
     const value: IValue = await this.#sendJSONGet(
       `${this.host}/flow/output/${runId}`,
-      token ?? true
+      token ?? true,
     );
     return Value.fromJSON(value);
   }
 
   async getSignatureRequest(
     runId: FlowRunId,
-    token?: string
+    token?: string,
   ): Promise<SignatureRequest> {
     const value: ISignatureRequest = await this.#sendJSONGet(
       `${this.host}/flow/signature_request/${runId}`,
-      token ?? true
+      token ?? true,
     );
     return new SignatureRequest(value);
   }
 
   async stopFlow(
     runId: FlowRunId,
-    params: StopFlowParams
+    params: StopFlowParams,
   ): Promise<StopFlowOutput> {
     return await this.#sendJSONPost(`${this.host}/flow/stop/${runId}`, params);
   }
 
   async submitSignature(
-    params: SubmitSignatureParams
+    params: SubmitSignatureParams,
   ): Promise<SubmitSignatureOutput> {
     return await this.#sendJSONPost(
       `${this.host}/signature/submit`,
       params,
-      false
+      false,
     );
   }
 
@@ -296,15 +296,13 @@ export class Client {
     req: SignatureRequest,
     publicKey: web3.PublicKey,
     signTransaction: (
-      tx: web3.VersionedTransaction
-    ) => Promise<web3.VersionedTransaction>
+      tx: web3.VersionedTransaction,
+    ) => Promise<web3.VersionedTransaction>,
   ) {
     const requestedPublicKey = new web3.PublicKey(req.pubkey);
     if (!publicKey.equals(requestedPublicKey)) {
       throw new Error(
-        `different public key:\nrequested: ${
-          req.pubkey
-        }}\nwallet: ${publicKey.toBase58()}`
+        `different public key:\nrequested: ${req.pubkey}}\nwallet: ${publicKey.toBase58()}`,
       );
     }
 
@@ -343,14 +341,16 @@ export class Client {
   async startDeployment(
     deployment: IDeploymentSpecifier,
     params?: StartDeploymentParams,
-    token?: string
+    token?: string,
   ): Promise<StartDeploymentOutput> {
     return await this.#sendJSONPost(
-      `${this.host}/deployment/start?${new DeploymentSpecifier(
-        deployment
-      ).formatQuery()}`,
+      `${this.host}/deployment/start?${
+        new DeploymentSpecifier(
+          deployment,
+        ).formatQuery()
+      }`,
       params,
-      token ?? true
+      token ?? true,
     );
   }
 
@@ -360,5 +360,13 @@ export class Client {
 
   async export(): Promise<any> {
     return await this.#sendJSONPost(`${this.host}/data/export`);
+  }
+
+  ws(): WsClient {
+    return new WsClient({
+      token: this.token,
+      url: this.host.replace(/^http/, "ws") + "/ws",
+      logger: (msg, data) => this.logger(msg, data),
+    });
   }
 }
