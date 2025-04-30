@@ -3,10 +3,10 @@ use crate::db_worker::{FindActor, FlowRunWorker};
 use actix_web::web::ServiceConfig;
 use chrono::Utc;
 use flow::flow_run_events::ApiInput;
-use flow_lib::{config::Endpoints, context::api_input};
+use flow_lib::{config::Endpoints, context::api_input, utils::tower_client::CommonErrorExt};
 use futures_channel::oneshot;
 use futures_util::future::BoxFuture;
-use std::sync::Mutex;
+use std::{sync::Mutex, time::Duration};
 
 struct Responder {
     oneshot: oneshot::Sender<Result<api_input::Response, api_input::Error>>,
@@ -65,6 +65,7 @@ impl tower::Service<api_input::Request> for NewRequestService {
 
         let mut store = self.store.lock().unwrap();
         let key = store.make_key(&req);
+        let timeout = req.timeout;
         store.reqs.insert(key, Responder { oneshot: tx });
         let url = format!(
             "{}/flow/submit/{}",
@@ -84,10 +85,20 @@ impl tower::Service<api_input::Request> for NewRequestService {
                     });
                 }
                 _ => {
-                    tracing::error!("flow is not running: {}", flow_run_id);
+                    return Err(api_input::Error::msg(format!(
+                        "flow is not running: {}",
+                        flow_run_id
+                    )));
                 }
             };
-            rx.await.expect("we never drop this channel")
+            if timeout != Duration::MAX {
+                tokio::time::timeout(timeout, rx)
+                    .await
+                    .map_err(|_| api_input::Error::Timeout)?
+                    .map_err(|_| api_input::Error::Timeout)?
+            } else {
+                rx.await.map_err(|_| api_input::Error::Timeout)?
+            }
         })
     }
 }

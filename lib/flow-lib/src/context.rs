@@ -38,6 +38,8 @@ pub mod env {
 }
 
 pub mod api_input {
+    use std::time::Duration;
+
     use crate::{
         FlowRunId, NodeId,
         utils::{TowerClient, tower_client::CommonError},
@@ -45,13 +47,11 @@ pub mod api_input {
     use thiserror::Error as ThisError;
     use value::Value;
 
-    #[derive(Hash, PartialEq, Eq)]
     pub struct Request {
         pub flow_run_id: FlowRunId,
         pub node_id: NodeId,
         pub times: u32,
-        // TODO: authorization
-        // TODO: data validation
+        pub timeout: Duration,
     }
 
     pub struct Response {
@@ -60,6 +60,8 @@ pub mod api_input {
 
     #[derive(ThisError, Debug, Clone)]
     pub enum Error {
+        #[error("timeout")]
+        Timeout,
         #[error(transparent)]
         Common(#[from] CommonError),
     }
@@ -536,11 +538,15 @@ impl CommandContextX {
         &self.flow.set.http
     }
 
-    pub async fn api_input(&mut self) -> Result<api_input::Response, api_input::Error> {
+    pub async fn api_input(
+        &mut self,
+        timeout: Option<Duration>,
+    ) -> Result<api_input::Response, api_input::Error> {
         let req = api_input::Request {
             flow_run_id: *self.flow_run_id(),
             node_id: *self.node_id(),
             times: *self.times(),
+            timeout: timeout.unwrap_or(Duration::MAX),
         };
         self.flow.set.api_input.ready().await?.call(req).await
     }

@@ -55,11 +55,11 @@
     {
       "name": "timeout",
       "type_bounds": [
-        "u32"
+        "f64"
       ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Timeout (seconds)",
       "passthrough": false
     }
   ],

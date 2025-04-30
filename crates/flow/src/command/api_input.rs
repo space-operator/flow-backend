@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use flow_lib::command::prelude::*;
 const NAME: &str = "api_input";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
@@ -10,17 +12,19 @@ fn build() -> BuildResult {
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Input {
-    // TODO
-    timeout: Option<u32>,
+    timeout: Option<f64>,
 }
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Output {
     pub value: Value,
 }
-async fn run(mut ctx: CommandContextX, _: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
     Ok(Output {
-        value: ctx.api_input().await?.value,
+        value: ctx
+            .api_input(input.timeout.map(Duration::from_secs_f64))
+            .await?
+            .value,
     })
 }
 #[cfg(test)]
