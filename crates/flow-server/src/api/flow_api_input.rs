@@ -67,12 +67,14 @@ impl tower::Service<api_input::Request> for NewRequestService {
         let key = store.make_key(&req);
         let timeout = req.timeout;
         store.reqs.insert(key, Responder { oneshot: tx });
+        drop(store);
         let url = format!(
             "{}/flow/submit/{}",
             self.endpoints.flow_server,
             key.to_hex(),
         );
         let db_worker = self.db_worker.clone();
+        let store = self.store.clone();
         Box::pin(async move {
             match db_worker
                 .send(FindActor::<FlowRunWorker>::new(flow_run_id))
@@ -94,10 +96,13 @@ impl tower::Service<api_input::Request> for NewRequestService {
             if timeout != Duration::MAX {
                 tokio::time::timeout(timeout, rx)
                     .await
-                    .map_err(|_| api_input::Error::Timeout)?
-                    .map_err(|_| api_input::Error::Timeout)?
+                    .map_err(move |_| {
+                        store.lock().unwrap().reqs.remove(&key);
+                        api_input::Error::Timeout
+                    })?
+                    .expect("we never drop tx without sending response")
             } else {
-                rx.await.map_err(|_| api_input::Error::Timeout)?
+                rx.await.expect("we never drop tx without sending response")
             }
         })
     }
