@@ -2,6 +2,7 @@
   "version": "4",
   "specifiers": {
     "jsr:@space-operator/flow-lib@0.10.0": "0.10.0",
+    "jsr:@space-operator/flow-lib@0.11.0": "0.11.0",
     "jsr:@std/assert@*": "1.0.9",
     "jsr:@std/async@*": "1.0.10",
     "jsr:@std/bytes@0.221": "0.221.0",
@@ -11,6 +12,7 @@
     "jsr:@std/msgpack@0.221.0": "0.221.0",
     "jsr:@supabase/supabase-js@2": "2.48.1",
     "npm:@solana/web3.js@1": "1.98.0",
+    "npm:@solana/web3.js@1.94.0": "1.94.0",
     "npm:@solana/web3.js@^1.91.4": "1.98.0",
     "npm:@supabase/auth-js@2": "2.68.0",
     "npm:@supabase/auth-js@2.67.3": "2.67.3",
@@ -30,6 +32,14 @@
         "jsr:@std/encoding",
         "jsr:@std/msgpack",
         "npm:@solana/web3.js@^1.91.4"
+      ]
+    },
+    "@space-operator/flow-lib@0.11.0": {
+      "integrity": "f15ae8d5b1fbaab8e131263caaebf8380f17906d95a86d10de914b82bb02ac2a",
+      "dependencies": [
+        "jsr:@std/encoding",
+        "jsr:@std/msgpack",
+        "npm:@solana/web3.js@1.94.0"
       ]
     },
     "@std/assert@1.0.9": {
@@ -93,6 +103,26 @@
         "buffer"
       ]
     },
+    "@solana/web3.js@1.94.0": {
+      "integrity": "sha512-wMiBebzu5I2fTSz623uj6VXpWFhl0d7qJKqPFK2I4IBLTNUdv+bOeA4H7OBM7Gworv7sOvB3xibRql6l61MeqA==",
+      "dependencies": [
+        "@babel/runtime",
+        "@noble/curves",
+        "@noble/hashes",
+        "@solana/buffer-layout",
+        "agentkeepalive",
+        "bigint-buffer",
+        "bn.js",
+        "borsh",
+        "bs58",
+        "buffer",
+        "fast-stable-stringify",
+        "jayson",
+        "node-fetch",
+        "rpc-websockets",
+        "superstruct@1.0.4"
+      ]
+    },
     "@solana/web3.js@1.98.0": {
       "integrity": "sha512-nz3Q5OeyGFpFCR+erX2f6JPt3sKhzhYcSycBCSPkWjzSVDh/Rr1FqTVMRe58FKO16/ivTUcuJjeS5MyBvpkbzA==",
       "dependencies": [
@@ -110,7 +140,7 @@
         "jayson",
         "node-fetch",
         "rpc-websockets",
-        "superstruct"
+        "superstruct@2.0.2"
       ]
     },
     "@supabase/auth-js@2.67.3": {
@@ -368,6 +398,9 @@
     },
     "safe-buffer@5.2.1": {
       "integrity": "sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ=="
+    },
+    "superstruct@1.0.4": {
+      "integrity": "sha512-7JpaAoX2NGyoFlI9NBh66BQXGONc+uE+MRS5i2iOBKuS4e+ccgMDjATgZldkah+33DakBxDHiss9kvUcGAO8UQ=="
     },
     "superstruct@2.0.2": {
       "integrity": "sha512-uV+TFRZdXsqXTL2pRvujROjdZQ4RAlBUS5BTh9IGm+jTqQntYThciG/qu57Gs69yjnVUSqdxF9YLmSnpupBW9A=="

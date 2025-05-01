@@ -37,6 +37,40 @@ pub mod env {
     pub const MAINNET_LOOKUP_TABLE: &str = "MAINNET_LOOKUP_TABLE";
 }
 
+pub mod api_input {
+    use std::time::Duration;
+
+    use crate::{
+        FlowRunId, NodeId,
+        utils::{TowerClient, tower_client::CommonError},
+    };
+    use thiserror::Error as ThisError;
+    use value::Value;
+
+    pub struct Request {
+        pub flow_run_id: FlowRunId,
+        pub node_id: NodeId,
+        pub times: u32,
+        pub timeout: Duration,
+    }
+
+    pub struct Response {
+        pub value: Value,
+    }
+
+    #[derive(ThisError, Debug, Clone)]
+    pub enum Error {
+        #[error("canceled by user")]
+        Canceled,
+        #[error("timeout")]
+        Timeout,
+        #[error(transparent)]
+        Common(#[from] CommonError),
+    }
+
+    pub type Svc = TowerClient<Request, Response, Error>;
+}
+
 /// Get user's JWT, require
 /// [`user_token`][crate::config::node::Permissions::user_tokens] permission.
 pub mod get_jwt {
@@ -373,14 +407,6 @@ pub mod execute {
     }
 }
 
-#[derive(Clone)]
-pub struct CommandContext {
-    pub svc: execute::Svc,
-    pub flow_run_id: FlowRunId,
-    pub node_id: NodeId,
-    pub times: u32,
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct FlowSetContextData {
     pub flow_owner: User,
@@ -410,6 +436,7 @@ pub struct FlowSetServices {
     pub http: reqwest::Client,
     pub solana_client: Arc<SolanaClient>,
     pub extensions: Arc<Extensions>,
+    pub api_input: api_input::Svc,
 }
 
 #[derive(Clone)]
@@ -455,6 +482,7 @@ impl CommandContextX {
                     http: reqwest::Client::new(),
                     solana_client,
                     extensions: <_>::default(),
+                    api_input: unimplemented_svc(),
                 },
             },
         }
@@ -510,6 +538,19 @@ impl CommandContextX {
 
     pub fn http(&self) -> &reqwest::Client {
         &self.flow.set.http
+    }
+
+    pub async fn api_input(
+        &mut self,
+        timeout: Option<Duration>,
+    ) -> Result<api_input::Response, api_input::Error> {
+        let req = api_input::Request {
+            flow_run_id: *self.flow_run_id(),
+            node_id: *self.node_id(),
+            times: *self.times(),
+            timeout: timeout.unwrap_or(Duration::MAX),
+        };
+        self.flow.set.api_input.ready().await?.call(req).await
     }
 
     /// Call [`get_jwt`] service, the result will have `Bearer ` prefix.

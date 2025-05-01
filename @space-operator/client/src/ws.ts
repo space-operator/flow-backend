@@ -34,11 +34,24 @@ export class WsClient {
     new Map();
   private streamCallbacks: Map<number, { callback: Function }> = new Map();
   private queue: Array<string> = [];
+  private futureStreams: Map<number, any[]> = new Map();
+  private closed: Promise<void>;
+  private resolveClosed?: Function;
 
   constructor(options: WcClientOptions) {
     this.url = options.url ?? WS_URL;
     this.token = options.token;
     this.logger = options.logger ?? noop;
+    this.closed = new Promise((resolve, _) => {
+      this.resolveClosed = resolve;
+    });
+  }
+
+  public async close() {
+    if (this.conn) {
+      this.conn.close();
+      await this.closed;
+    }
   }
 
   public getIdentity(): WsClient["identity"] {
@@ -53,21 +66,30 @@ export class WsClient {
     this.token = token;
   }
 
+  private newStream(id: number, c: { callback: Function }) {
+    this.streamCallbacks.set(id, c);
+    const msgs = this.futureStreams.get(id);
+    if (msgs != null) {
+      msgs.forEach((value) => c.callback(value));
+      this.futureStreams.delete(id);
+    }
+  }
+
   public async subscribeFlowRunEvents(
     callback: (ev: FlowRunEvent) => any,
     id: FlowRunId,
     token?: string,
-    finishCallback?: (ev: FlowFinish) => any
+    finishCallback?: (ev: FlowFinish) => any,
   ) {
     const result: SubscribeFlowRunEventsResponse = await this.send(
-      new SubscribeFlowRunEventsRequest(this.nextId(), id, token)
+      new SubscribeFlowRunEventsRequest(this.nextId(), id, token),
     );
     if (result.Err !== undefined) {
       throw new Error(result.Err);
     }
     if (result.Ok !== undefined) {
       const id = result.Ok.stream_id;
-      this.streamCallbacks.set(id, {
+      this.newStream(id, {
         callback: (ev: FlowRunEvent) => {
           if (ev.event === "SignatureRequest") {
             ev.data = new SignatureRequest(ev.data);
@@ -87,16 +109,16 @@ export class WsClient {
   }
 
   public async subscribeSignatureRequest(
-    callback: (ev: SignatureRequestsEvent) => any
+    callback: (ev: SignatureRequestsEvent) => any,
   ) {
     const result: SubscribeSignatureRequestsResponse = await this.send(
-      new SubscribeSignatureRequestsRequest(this.nextId())
+      new SubscribeSignatureRequestsRequest(this.nextId()),
     );
     if (result.Err !== undefined) {
       throw new Error(result.Err);
     }
     if (result.Ok !== undefined) {
-      this.streamCallbacks.set(result.Ok.stream_id, {
+      this.newStream(result.Ok.stream_id, {
         callback: (ev: SignatureRequestsEvent) => {
           if (ev.event === "SignatureRequest") {
             ev.data = new SignatureRequest(ev.data);
@@ -138,6 +160,7 @@ export class WsClient {
     });
     this.streamCallbacks.clear();
     this.reqCallbacks.clear();
+    if (this.resolveClosed) this.resolveClosed();
   }
 
   private onConnClose(event: any) {
@@ -167,7 +190,12 @@ export class WsClient {
         if (cb != null) {
           cb.callback(json);
         } else {
-          throw `no callback for stream ${json.steam_id}`;
+          const msgs = this.futureStreams.get(json.stream_id);
+          if (msgs != null) {
+            msgs.push(json);
+          } else {
+            this.futureStreams.set(json.stream_id, [json]);
+          }
         }
       } else {
         throw new Error("invalid message");
@@ -208,7 +236,7 @@ export class WsClient {
     if (this.token === undefined) return;
     const token = await this.getToken();
     const result: AuthenticateResponse = await this.send(
-      new AuthenticateRequest(this.nextId(), token)
+      new AuthenticateRequest(this.nextId(), token),
     );
     if (result.Err !== undefined) {
       console.error("Authenticate error", result.Err);

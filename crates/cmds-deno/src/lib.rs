@@ -104,6 +104,7 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
         .kill_on_drop(true)
         .arg("run")
         .arg("--allow-net")
+        .arg("--allow-env=WS_NO_BUFFER_UTIL")
         .arg("--no-prompt")
         .arg("run.ts")
         .spawn()

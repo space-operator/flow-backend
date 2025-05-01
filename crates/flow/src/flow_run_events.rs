@@ -17,6 +17,7 @@ pub enum Event {
     NodeLog(NodeLog),
     NodeFinish(NodeFinish),
     SignatureRequest(SignatureRequest),
+    ApiInput(ApiInput),
 }
 
 impl Event {
@@ -32,6 +33,7 @@ impl Event {
             Event::NodeLog(e) => e.time,
             Event::NodeFinish(e) => e.time,
             Event::SignatureRequest(e) => e.time,
+            Event::ApiInput(e) => e.time,
         }
     }
 }
@@ -62,6 +64,13 @@ impl From<tracing::Level> for LogLevel {
             tracing::Level::ERROR => LogLevel::Error,
         }
     }
+}
+
+#[derive(actix::Message, Default, Clone, Debug, Serialize)]
+#[rtype(result = "()")]
+pub struct ApiInput {
+    pub time: DateTime<Utc>,
+    pub url: String,
 }
 
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]

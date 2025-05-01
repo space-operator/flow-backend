@@ -4,7 +4,7 @@ use flow_lib::{
         Endpoints,
         client::{ClientConfig, FlowRow, FlowRunOrigin},
     },
-    context::{execute, get_jwt, signer},
+    context::{api_input, execute, get_jwt, signer},
     solana::{Pubkey, SolanaActionConfig},
     utils::tower_client::unimplemented_svc,
 };
@@ -328,6 +328,7 @@ impl FlowSet {
             .rhai_tx(self.context.rhai_tx)
             .maybe_parent_flow_execute(self.context.parent_flow_execute)
             .maybe_rpc_server(self.context.rpc_server)
+            .api_input(self.context.new_flow_api_request)
             .build();
         let action_config = if let (Some(action_identity), Some(action_signer)) = (
             self.deployment.action_identity,
@@ -376,22 +377,6 @@ pub struct FlowSetContext {
     rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
 
     rpc_server: Option<actix::Addr<srpc::Server>>,
-}
 
-/*
-pub struct FlowContext {
-    set_context: FlowSetContext,
-    flow_run_id: FlowRunId,
-    http: reqwest::Client,
-    solana_rpc: Arc<SolanaClient>,
-    parent_flow_execute: execute::Svc,
+    new_flow_api_request: api_input::Svc,
 }
-
-pub struct Context {
-    flow: FlowContext,
-    execute: execute::Svc,
-    start_interflow: start_interflow::Svc,
-    node_id: NodeId,
-    times: u32,
-}
-*/

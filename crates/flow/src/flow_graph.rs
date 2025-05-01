@@ -402,6 +402,7 @@ impl FlowGraph {
         let ctx_svcs = FlowServices {
             signer: registry.signer.clone(),
             set: FlowSetServices {
+                api_input: registry.api_input.clone(),
                 extensions: Arc::new({
                     let mut ext = Extensions::new();
                     if let Some(rpc) = registry.rpc_server.clone() {
@@ -1299,12 +1300,14 @@ impl FlowGraph {
         stop_shared: StopSignal,
         previous_values: HashMap<NodeId, Vec<Value>>,
     ) -> FlowRunResult {
+        self.ctx_data.inputs = flow_inputs.clone();
+        self.ctx_data.flow_run_id = flow_run_id;
+
         event_tx
             .unbounded_send(FlowStart { time: Utc::now() }.into())
             .ok();
 
         let (out_tx, out_rx) = mpsc::unbounded::<PartialOutput>();
-        self.ctx_data.inputs = flow_inputs.clone();
         let mut s = State {
             flow_run_id,
             previous_values,

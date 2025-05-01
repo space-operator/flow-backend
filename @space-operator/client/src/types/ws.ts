@@ -1,5 +1,5 @@
 import type { FlowRunId, NodeId } from "./common.ts";
-import { type Value, bs58, web3 } from "../deps.ts";
+import { bs58, type Value, web3 } from "../deps.ts";
 import { decodeBase64 } from "jsr:@std/encoding@0.221/base64";
 
 export interface WsResponse<T> {
@@ -85,45 +85,49 @@ export type FlowRunEvent = { stream_id: number } & FlowRunEventEnum;
 
 export type FlowRunEventEnum =
   | {
-      event: "FlowStart";
-      data: FlowStart;
-    }
+    event: "FlowStart";
+    data: FlowStart;
+  }
   | {
-      event: "FlowError";
-      data: FlowLog;
-    }
+    event: "FlowError";
+    data: FlowLog;
+  }
   | {
-      event: "FlowFinish";
-      data: FlowFinish;
-    }
+    event: "FlowFinish";
+    data: FlowFinish;
+  }
   | {
-      event: "FlowLog";
-      data: FlowLog;
-    }
+    event: "FlowLog";
+    data: FlowLog;
+  }
   | {
-      event: "NodeStart";
-      data: NodeStart;
-    }
+    event: "NodeStart";
+    data: NodeStart;
+  }
   | {
-      event: "NodeOutput";
-      data: NodeOutput;
-    }
+    event: "NodeOutput";
+    data: NodeOutput;
+  }
   | {
-      event: "NodeError";
-      data: NodeError;
-    }
+    event: "NodeError";
+    data: NodeError;
+  }
   | {
-      event: "NodeFinish";
-      data: NodeFinish;
-    }
+    event: "NodeFinish";
+    data: NodeFinish;
+  }
   | {
-      event: "NodeLog";
-      data: NodeLog;
-    }
+    event: "NodeLog";
+    data: NodeLog;
+  }
   | {
-      event: "SignatureRequest";
-      data: SignatureRequest;
-    };
+    event: "SignatureRequest";
+    data: SignatureRequest;
+  }
+  | {
+    event: "ApiInput";
+    data: ApiInput;
+  };
 
 export type LogLevel = "Trace" | "Debug" | "Info" | "Warn" | "Error";
 
@@ -166,7 +170,7 @@ export class SignatureRequest implements ISignatureRequest {
       for (let i = 0; i < solMsg.header.numRequiredSignatures; i++) {
         const pubkey = solMsg.staticAccountKeys[i].toBase58();
         let signature = this.signatures.find(
-          (x) => x.pubkey === pubkey
+          (x) => x.pubkey === pubkey,
         )?.signature;
         if (signature === undefined) {
           signature = defaultSignature;
@@ -244,4 +248,10 @@ export interface NodeFinish {
   time: string;
   node_id: NodeId;
   times: number;
+}
+
+export interface ApiInput {
+  flow_run_id: FlowRunId;
+  time: string;
+  url: string;
 }
