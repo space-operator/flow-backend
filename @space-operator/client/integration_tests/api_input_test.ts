@@ -3,6 +3,7 @@ import * as client from "../src/mod.ts";
 import * as dotenv from "jsr:@std/dotenv";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { assertEquals } from "jsr:@std/assert";
+import { resolve } from "node:path";
 
 dotenv.loadSync({
   export: true,
@@ -41,7 +42,7 @@ async function checkNoErrors(
   if (errors.length > 0) throw new Error(JSON.stringify(errors));
 }
 
-Deno.test("start flow", async () => {
+Deno.test("submit", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
     anonKey,
@@ -51,16 +52,10 @@ Deno.test("start flow", async () => {
   const flowId = 3730;
   const ws = owner.ws();
   await ws.authenticate();
-  console.log(ws.getIdentity());
-  const { flow_run_id } = await owner.startFlow(flowId, {
-    inputs: new Value({
-      a: 1,
-      b: 2,
-    }).M!,
-  });
+  const { flow_run_id } = await owner.startFlow(flowId, {});
   ws.subscribeFlowRunEvents(
     async (ev) => {
-      console.log(ev);
+      // console.log(ev);
       if (ev.event === "ApiInput") {
         const resp = await fetch(ev.data.url, {
           method: "POST",
@@ -83,5 +78,66 @@ Deno.test("start flow", async () => {
   });
   await sup.auth.setSession(jwt);
   await checkNoErrors(sup, flow_run_id);
+  await ws.close();
+});
+
+Deno.test("cancel", async () => {
+  const owner = new client.Client({
+    host: "http://localhost:8080",
+    anonKey,
+    token: apiKey,
+  });
+
+  const flowId = 3730;
+  const ws = owner.ws();
+  await ws.authenticate();
+  const { flow_run_id } = await owner.startFlow(flowId, {});
+  let setNodeError: (value: unknown) => void;
+  const nodeError = new Promise((resolve) => {
+    setNodeError = resolve;
+  });
+  ws.subscribeFlowRunEvents(
+    async (ev) => {
+      // console.log(ev);
+      if (ev.event === "ApiInput") {
+        const resp = await fetch(ev.data.url, {
+          method: "DELETE",
+        });
+        await resp.text();
+      } else if (ev.event === "NodeError") {
+        setNodeError(ev.data.error);
+      }
+    },
+    flow_run_id,
+  );
+  assertEquals(await nodeError, "canceled by user");
+  await ws.close();
+});
+
+Deno.test("timeout", async () => {
+  const owner = new client.Client({
+    host: "http://localhost:8080",
+    anonKey,
+    token: apiKey,
+  });
+
+  const flowId = 3730;
+  const ws = owner.ws();
+  await ws.authenticate();
+  const { flow_run_id } = await owner.startFlow(flowId, {});
+  let setNodeError: (value: unknown) => void;
+  const nodeError = new Promise((resolve) => {
+    setNodeError = resolve;
+  });
+  ws.subscribeFlowRunEvents(
+    async (ev) => {
+      // console.log(ev);
+      if (ev.event === "NodeError") {
+        setNodeError(ev.data.error);
+      }
+    },
+    flow_run_id,
+  );
+  assertEquals(await nodeError, "timeout");
   await ws.close();
 });

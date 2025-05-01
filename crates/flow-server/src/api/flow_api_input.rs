@@ -13,6 +13,8 @@ struct Responder {
 }
 
 pub struct RequestStore {
+    // TODO: clean up when a flow stopped for other reasons
+    // the request this won't be deleted
     reqs: ahash::HashMap<blake3::Hash, Responder>,
     secret: [u8; blake3::KEY_LEN],
 }
