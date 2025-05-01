@@ -60,6 +60,8 @@ pub mod api_input {
 
     #[derive(ThisError, Debug, Clone)]
     pub enum Error {
+        #[error("canceled by user")]
+        Canceled,
         #[error("timeout")]
         Timeout,
         #[error(transparent)]

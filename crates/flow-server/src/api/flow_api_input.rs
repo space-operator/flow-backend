@@ -100,9 +100,9 @@ impl tower::Service<api_input::Request> for NewRequestService {
                         store.lock().unwrap().reqs.remove(&key);
                         api_input::Error::Timeout
                     })?
-                    .expect("we never drop tx without sending response")
+                    .map_err(|_| api_input::Error::Canceled)?
             } else {
-                rx.await.expect("we never drop tx without sending response")
+                rx.await.map_err(|_| api_input::Error::Canceled)?
             }
         })
     }
@@ -110,9 +110,26 @@ impl tower::Service<api_input::Request> for NewRequestService {
 
 pub fn configure(store: web::Data<Mutex<RequestStore>>) -> impl FnOnce(&mut ServiceConfig) {
     move |app: &mut ServiceConfig| {
-        app.app_data(store)
-            .service(web::resource("/submit/{key}").post(submit_data));
+        app.app_data(store).service(
+            web::resource("/submit/{key}")
+                .post(submit_data)
+                .delete(cancel),
+        );
     }
+}
+
+async fn cancel(
+    path: web::Path<String>,
+    store: web::Data<Mutex<RequestStore>>,
+) -> Result<web::Json<()>, actix_web::Error> {
+    let key = blake3::Hash::from_hex(path.into_inner()).map_err(|_| Error::NotFound)?;
+    store
+        .lock()
+        .unwrap()
+        .reqs
+        .remove(&key)
+        .ok_or(Error::NotFound)?;
+    Ok(web::Json(()))
 }
 
 #[derive(Deserialize)]
