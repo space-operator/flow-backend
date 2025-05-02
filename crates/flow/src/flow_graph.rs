@@ -14,7 +14,7 @@ use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
     context::{
-        CommandContextData, CommandContextX, FlowContextData, FlowServices, FlowSetContextData,
+        CommandContextData, CommandContext, FlowContextData, FlowServices, FlowSetContextData,
         FlowSetServices, execute, get_jwt,
     },
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
@@ -1757,7 +1757,7 @@ async fn run_command(
         get_jwt = get_jwt::Svc::new(service_fn(|_| std::future::ready(Err(get_jwt::Error::NotAllowed))));
     }
 
-    let ctx = CommandContextX::builder()
+    let ctx = CommandContext::builder()
         .data(CommandContextData {
             flow: ctx_data,
             node_id: node.id,

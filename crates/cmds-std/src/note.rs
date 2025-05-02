@@ -21,7 +21,7 @@ impl CommandTrait for NoteCommand {
 
     async fn run(
         &self,
-        _ctx: CommandContextX,
+        _ctx: CommandContext,
         _inputs: ValueSet,
     ) -> Result<ValueSet, CommandError> {
         Ok(ValueSet::new())

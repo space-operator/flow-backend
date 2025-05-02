@@ -22,7 +22,7 @@ pub struct Output {
     balance: u64,
 }
 
-async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let balance = ctx.solana_client().get_balance(&input.pubkey).await?;
     Ok(Output { balance })
 }
@@ -34,7 +34,7 @@ mod tests {
     #[tokio::test]
     async fn test_valid() {
         let cmd = build().unwrap();
-        let ctx = CommandContextX::default();
+        let ctx = CommandContext::default();
         dbg!(ctx.solana_client().url());
         let output = cmd
             .run(

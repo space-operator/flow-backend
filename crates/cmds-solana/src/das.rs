@@ -43,7 +43,7 @@ struct Output {
     response: JsonValue,
 }
 
-async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let content_type = "application/json";
 
     // get time

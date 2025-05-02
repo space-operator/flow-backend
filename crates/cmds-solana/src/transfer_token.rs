@@ -184,7 +184,7 @@ pub struct Output {
     pub signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (instructions, recipient_token_account) = command_transfer_token(
         ctx.solana_client(),
         &input.fee_payer.pubkey(),

@@ -92,7 +92,7 @@ async fn account_exists(rpc: &RpcClient, pk: &Pubkey) -> Result<bool, CommandErr
         .is_some())
 }
 
-async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let keypair = match input.private_key {
         Some(either) => {
             let keypair = match either {
@@ -134,7 +134,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_no_input() {
-        let ctx = CommandContextX::default();
+        let ctx = CommandContext::default();
         build().unwrap().run(ctx, ValueSet::new()).await.unwrap();
     }
 
@@ -142,7 +142,7 @@ mod tests {
     async fn test_no_password() {
         let seed_phrase =
             "letter advice cage absurd amount doctor acoustic avoid letter advice cage above";
-        let ctx = CommandContextX::default();
+        let ctx = CommandContext::default();
         build()
             .unwrap()
             .run(
@@ -163,7 +163,7 @@ mod tests {
         };
         let output = build()
             .unwrap()
-            .run(CommandContextX::default(), input)
+            .run(CommandContext::default(), input)
             .await
             .unwrap();
         let output = value::from_map::<Output>(output).unwrap();
@@ -184,7 +184,7 @@ mod tests {
         };
         let output = build()
             .unwrap()
-            .run(CommandContextX::default(), input)
+            .run(CommandContext::default(), input)
             .await
             .unwrap();
         let output = value::from_map::<Output>(output).unwrap();
@@ -212,7 +212,7 @@ mod tests {
         };
         let output = build()
             .unwrap()
-            .run(CommandContextX::default(), input)
+            .run(CommandContext::default(), input)
             .await
             .unwrap();
         let output = value::from_map::<Output>(output).unwrap();
@@ -242,7 +242,7 @@ mod tests {
         };
         let result = build()
             .unwrap()
-            .run(CommandContextX::default(), input)
+            .run(CommandContext::default(), input)
             .await;
         assert!(result.is_err());
     }

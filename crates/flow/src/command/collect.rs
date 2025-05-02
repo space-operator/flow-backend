@@ -36,7 +36,7 @@ impl CommandTrait for Collect {
 
     async fn run(
         &self,
-        _: CommandContextX,
+        _: CommandContext,
         mut inputs: ValueSet,
     ) -> Result<ValueSet, CommandError> {
         let v = inputs

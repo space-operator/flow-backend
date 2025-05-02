@@ -126,7 +126,7 @@ async fn ws_wait(
     Ok(run_ws(ws))
 }
 
-async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (mut ws, _) = tokio_tungstenite::connect_async(&input.url).await?;
 
     let rand_seed = input.rand_seed.or_else(|| {

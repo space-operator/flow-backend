@@ -499,7 +499,7 @@ impl FlowRegistry {
 }
 
 pub mod run_rhai {
-    use flow_lib::{ValueSet, command::CommandError, context::CommandContextX};
+    use flow_lib::{ValueSet, command::CommandError, context::CommandContext};
     use futures::channel::oneshot;
     use std::sync::Arc;
 
@@ -507,7 +507,7 @@ pub mod run_rhai {
 
     pub struct Request {
         pub command: Arc<rhai_script::Command>,
-        pub ctx: CommandContextX,
+        pub ctx: CommandContext,
         pub input: ValueSet,
     }
 

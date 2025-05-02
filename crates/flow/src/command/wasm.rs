@@ -48,7 +48,7 @@ impl CommandTrait for WasmCommand {
             .collect()
     }
 
-    async fn run(&self, ctx: CommandContextX, values: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContext, values: ValueSet) -> Result<ValueSet, CommandError> {
         let command = self.clone();
         let output_name = self
             .outputs

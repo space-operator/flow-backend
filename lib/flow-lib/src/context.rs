@@ -446,14 +446,14 @@ pub struct FlowServices {
 }
 
 #[derive(Clone, bon::Builder)]
-pub struct CommandContextX {
+pub struct CommandContext {
     data: CommandContextData,
     execute: execute::Svc,
     get_jwt: get_jwt::Svc,
     flow: FlowServices,
 }
 
-impl CommandContextX {
+impl CommandContext {
     pub fn test_context() -> Self {
         let config = ContextConfig::default();
         let solana_client = Arc::new(config.solana_client.build_client());
@@ -635,7 +635,7 @@ pub struct RawContext<'a> {
     pub services: RawServices<'a>,
 }
 
-impl Default for CommandContextX {
+impl Default for CommandContext {
     fn default() -> Self {
         Self::test_context()
     }

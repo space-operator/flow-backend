@@ -38,7 +38,7 @@ pub struct SuccessBody {
     pub value: Value,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let mut req = ctx
         .http()
         .post(format!("{}/kv/read_item", ctx.endpoints().flow_server))

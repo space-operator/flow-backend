@@ -29,7 +29,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let instruction = spl_memo::build_memo(input.memo.as_bytes(), &[&input.fee_payer.pubkey()]);
 
     let ins = Instructions {

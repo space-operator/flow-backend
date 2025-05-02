@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use flow_lib::{
     command::{InstructionInfo, prelude::*},
-    context::{self, CommandContextX},
+    context::{self, CommandContext},
 };
 use schemars::JsonSchema;
 use serde_with::{DisplayFromStr, serde_as};
@@ -93,7 +93,7 @@ struct ContextProxy {
 }
 
 impl ContextProxy {
-    async fn new(ctx: CommandContextX) -> Result<Self, CommandError> {
+    async fn new(ctx: CommandContext) -> Result<Self, CommandError> {
         let server = ctx
             .get::<actix::Addr<srpc::Server>>()
             .ok_or_else(|| CommandError::msg("srpc::Server not available"))?;
@@ -186,7 +186,7 @@ impl CommandTrait for RpcCommandClient {
         self.node_data.outputs()
     }
 
-    async fn run(&self, ctx: CommandContextX, params: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContext, params: ValueSet) -> Result<ValueSet, CommandError> {
         let url = self.base_url.join("call").unwrap();
         let http = ctx.http().clone();
         let ctx_proxy = ContextProxy::new(ctx).await?;

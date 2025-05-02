@@ -163,7 +163,7 @@ impl Ipv6Ext for Ipv6Addr {
     }
 }
 
-async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     match input.url.host() {
         Some(url::Host::Domain(domain)) => {
             let _ = Resolver
@@ -264,7 +264,7 @@ mod tests {
     #[tokio::test]
     async fn test_local() {
         async fn test(url: &str) {
-            let c = CommandContextX::default();
+            let c = CommandContext::default();
             let e = run(c, value::from_map(value::map! {"url" => url}).unwrap())
                 .await
                 .unwrap_err()

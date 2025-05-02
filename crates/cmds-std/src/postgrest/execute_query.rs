@@ -12,7 +12,7 @@ struct Input {
     pub headers: Vec<(String, String)>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<ValueSet, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<ValueSet, CommandError> {
     let contain_auth_header = !input.headers.iter().any(|(k, _)| {
         HeaderName::from_str(k)
             .ok()

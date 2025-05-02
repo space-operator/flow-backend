@@ -38,7 +38,7 @@ pub struct Output {
     nft_token_id: Option<String>,
 }
 
-async fn run(_ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let vaa_string = &input.vaa;
 
     let vaa_bytes = decode(vaa_string)
