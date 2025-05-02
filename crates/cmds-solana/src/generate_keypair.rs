@@ -70,7 +70,7 @@ async fn generate_keypair(
 
         match check.as_ref() {
             Some(rpc) => {
-                let exists = account_exists(&rpc, &keypair.pubkey()).await?;
+                let exists = account_exists(rpc, &keypair.pubkey()).await?;
                 if exists {
                     continue;
                 } else {
@@ -100,7 +100,7 @@ async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError>
                 WalletOrPubkey::Pubkey(public_key) => Wallet::Adapter { public_key },
             };
             if input.check_new_account
-                && account_exists(&ctx.solana_client(), &keypair.pubkey()).await?
+                && account_exists(ctx.solana_client(), &keypair.pubkey()).await?
             {
                 return Err(CommandError::msg("account already exists"));
             }
