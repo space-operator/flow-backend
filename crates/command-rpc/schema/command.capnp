@@ -59,8 +59,22 @@ struct CommandContextData {
     flow @2 : FlowContextData;
 }
 
+enum LogLevel {
+    trace @0;
+    debug @1;
+    info @2;
+    warn @3;
+    error @4;
+}
+
+interface CommandContext {
+    data @0 () -> (data: CommandContextData);
+
+    log @1 (level: LogLevel, msg: Text);
+}
+
 interface CommandTrait {
     init @0 (name: Text, nd: Data) -> (cmd: CommandTrait);
 
-    run @1 (inputs: Data) -> (output: Data);
+    run @1 (ctx: CommandContext, inputs: Data) -> (output: Data);
 }
