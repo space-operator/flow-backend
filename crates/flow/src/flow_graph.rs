@@ -53,7 +53,7 @@ use tokio::{
     task::{JoinError, JoinHandle},
 };
 use tokio_util::sync::CancellationToken;
-use tower::{Service, ServiceExt};
+use tower::{service_fn, Service, ServiceExt};
 use tracing::Instrument;
 use uuid::Uuid;
 use value::Value;
@@ -1721,7 +1721,7 @@ async fn run_command(
     inputs: value::Map,
     ctx_data: FlowContextData,
     ctx_svcs: FlowServices,
-    get_jwt: get_jwt::Svc,
+    mut get_jwt: get_jwt::Svc,
     event_tx: EventSender,
     stop: StopSignal,
     stop_shared: StopSignal,
@@ -1753,7 +1753,9 @@ async fn run_command(
             tx: tx.clone(),
         }),
     };
-    if !node.command.permissions().user_tokens {}
+    if !node.command.permissions().user_tokens {
+        get_jwt = get_jwt::Svc::new(service_fn(|_| std::future::ready(Err(get_jwt::Error::NotAllowed))));
+    }
 
     let ctx = CommandContextX::builder()
         .data(CommandContextData {

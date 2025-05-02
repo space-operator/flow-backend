@@ -589,8 +589,7 @@ impl CommandContextX {
         message: Bytes,
         timeout: Duration,
     ) -> Result<signer::SignatureResponse, signer::Error> {
-        Ok(self
-            .flow
+        self.flow
             .signer
             .ready()
             .await?
@@ -603,7 +602,7 @@ impl CommandContextX {
                 flow_run_id: Some(self.data.flow.flow_run_id),
                 signatures: None,
             })
-            .await?)
+            .await
     }
 
     /// Get an extension by type.
