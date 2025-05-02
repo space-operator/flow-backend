@@ -58,7 +58,7 @@
 //!     result: i64,
 //! }
 //!
-//! async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
+//! async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
 //!     Ok(Output { result: input.a + input.b })
 //! }
 //! ```
