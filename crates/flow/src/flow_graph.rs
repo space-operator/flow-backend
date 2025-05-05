@@ -14,7 +14,7 @@ use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
     context::{
-        CommandContextData, CommandContext, FlowContextData, FlowServices, FlowSetContextData,
+        CommandContext, CommandContextData, FlowContextData, FlowServices, FlowSetContextData,
         FlowSetServices, execute, get_jwt,
     },
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
@@ -53,7 +53,7 @@ use tokio::{
     task::{JoinError, JoinHandle},
 };
 use tokio_util::sync::CancellationToken;
-use tower::{service_fn, Service, ServiceExt};
+use tower::{Service, ServiceExt, service_fn};
 use tracing::Instrument;
 use uuid::Uuid;
 use value::Value;
@@ -386,7 +386,6 @@ impl FlowGraph {
         tracing::debug!("execution config: {:?}", tx_exec_config);
         let get_jwt = registry.token.clone();
 
-        // let ctx = Context::from_cfg(&c.ctx, flow_owner, started_by, signer, token, ext);
         let ctx_data = FlowContextData {
             environment: c.ctx.environment,
             flow_run_id: FlowRunId::nil(),
@@ -1754,7 +1753,9 @@ async fn run_command(
         }),
     };
     if !node.command.permissions().user_tokens {
-        get_jwt = get_jwt::Svc::new(service_fn(|_| std::future::ready(Err(get_jwt::Error::NotAllowed))));
+        get_jwt = get_jwt::Svc::new(service_fn(|_| {
+            std::future::ready(Err(get_jwt::Error::NotAllowed))
+        }));
     }
 
     let ctx = CommandContext::builder()

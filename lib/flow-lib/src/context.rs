@@ -431,7 +431,7 @@ pub struct CommandContextData {
     pub flow: FlowContextData,
 }
 
-#[derive(Clone)]
+#[derive(Clone, bon::Builder)]
 pub struct FlowSetServices {
     pub http: reqwest::Client,
     pub solana_client: Arc<SolanaClient>,
@@ -439,7 +439,7 @@ pub struct FlowSetServices {
     pub api_input: api_input::Svc,
 }
 
-#[derive(Clone)]
+#[derive(Clone, bon::Builder)]
 pub struct FlowServices {
     pub signer: signer::Svc,
     pub set: FlowSetServices,
