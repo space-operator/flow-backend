@@ -1,13 +1,55 @@
 use crate::{Value, value_type::Variant};
 use bincode::{
     Decode, Encode,
+    config::standard,
     de::Decoder,
     enc::Encoder,
     error::{DecodeError, EncodeError},
 };
 use rust_decimal::Decimal;
 
-impl bincode::Encode for Value {
+pub struct MapEncode<'a>(pub &'a crate::Map);
+
+impl<'a> Encode for MapEncode<'a> {
+    fn encode<E: Encoder>(&self, e: &mut E) -> Result<(), EncodeError> {
+        (self.0.len() as u64).encode(e)?;
+
+        for (k, v) in self.0.iter() {
+            k.encode(e)?;
+            v.encode(e)?;
+        }
+
+        Ok(())
+    }
+}
+
+fn decode_slice_len<C, D: Decoder<Context = C>>(d: &mut D) -> Result<usize, DecodeError> {
+    let v = u64::decode(d)?;
+
+    v.try_into().map_err(|_| DecodeError::OutsideUsizeRange(v))
+}
+
+pub struct MapDecode(pub crate::Map);
+
+impl<C> Decode<C> for MapDecode {
+    fn decode<D: Decoder<Context = C>>(d: &mut D) -> Result<Self, DecodeError> {
+        let len = decode_slice_len(d)?;
+        d.claim_container_read::<(String, Value)>(len)?;
+
+        let mut map = crate::Map::with_capacity(len);
+
+        for _ in 0..len {
+            d.unclaim_bytes_read(core::mem::size_of::<(String, Value)>());
+            let key = String::decode(d)?;
+            let value = Value::decode(d)?;
+            map.insert(key, value);
+        }
+
+        Ok(Self(map))
+    }
+}
+
+impl Encode for Value {
     fn encode<E: Encoder>(&self, e: &mut E) -> Result<(), EncodeError> {
         (self.kind() as u8).encode(e)?;
         match self {
@@ -24,24 +66,13 @@ impl bincode::Encode for Value {
             crate::Value::B64(x) => x.encode(e)?,
             crate::Value::Bytes(x) => x.encode(e)?,
             crate::Value::Array(x) => x.encode(e)?,
-            crate::Value::Map(x) => encode_map(x, e)?,
+            crate::Value::Map(x) => MapEncode(x).encode(e)?,
         }
         Ok(())
     }
 }
 
-fn encode_map<E: Encoder>(map: &crate::Map, e: &mut E) -> Result<(), EncodeError> {
-    (map.len() as u64).encode(e)?;
-
-    for (k, v) in map.iter() {
-        k.encode(e)?;
-        v.encode(e)?;
-    }
-
-    Ok(())
-}
-
-impl<C> bincode::Decode<C> for crate::Value {
+impl<C> Decode<C> for crate::Value {
     fn decode<D: Decoder<Context = C>>(d: &mut D) -> Result<Self, DecodeError> {
         let kind_num = u8::decode(d)?;
         let kind =
@@ -67,34 +98,17 @@ impl<C> bincode::Decode<C> for crate::Value {
             Variant::B64 => Value::B64(<_>::decode(d)?),
             Variant::Bytes => Value::Bytes(Vec::<u8>::decode(d)?.into()),
             Variant::Array => Value::Array(<_>::decode(d)?),
-            Variant::Map => Value::Map(decode_map(d)?),
+            Variant::Map => Value::Map(MapDecode::decode(d)?.0),
         })
     }
 }
 
-fn decode_slice_len<C, D: Decoder<Context = C>>(d: &mut D) -> Result<usize, DecodeError> {
-    let v = u64::decode(d)?;
-
-    v.try_into().map_err(|_| DecodeError::OutsideUsizeRange(v))
-}
-
-fn decode_map<C, D: Decoder<Context = C>>(d: &mut D) -> Result<crate::Map, DecodeError> {
-    let len = decode_slice_len(d)?;
-    d.claim_container_read::<(String, Value)>(len)?;
-
-    let mut map = crate::Map::with_capacity(len);
-
-    for _ in 0..len {
-        d.unclaim_bytes_read(core::mem::size_of::<(String, Value)>());
-        let key = String::decode(d)?;
-        let value = Value::decode(d)?;
-        map.insert(key, value);
+impl Value {
+    pub fn to_bincode(&self) -> Result<Vec<u8>, EncodeError> {
+        bincode::encode_to_vec(self, standard())
     }
 
-    Ok(map)
-}
-
-impl Value {
-    pub fn to_bincode() {}
-    pub fn from_bincode() {}
+    pub fn from_bincode(data: &[u8]) -> Result<Self, DecodeError> {
+        bincode::decode_from_slice(data, standard()).map(|(value, _)| value)
+    }
 }
