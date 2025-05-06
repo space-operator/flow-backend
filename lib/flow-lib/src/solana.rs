@@ -113,13 +113,13 @@ impl Wallet {
 
 /// `l` is old, `r` is new
 pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<v0::Message, anyhow::Error> {
-    let l = bincode::deserialize::<VersionedMessage>(l)?;
+    let l = bincode1::deserialize::<VersionedMessage>(l)?;
     let l = if let VersionedMessage::V0(l) = l {
         l
     } else {
         return Err(anyhow!("only V0 message is supported"));
     };
-    let r = bincode::deserialize::<VersionedMessage>(r)?;
+    let r = bincode1::deserialize::<VersionedMessage>(r)?;
     let r = if let VersionedMessage::V0(r) = r {
         r
     } else {
@@ -594,7 +594,7 @@ impl PartialVersionedTransaction {
                     .unwrap_or(placeholder)
             })
             .collect();
-        bincode::serialize(&VersionedTransaction {
+        bincode1::serialize(&VersionedTransaction {
             signatures,
             message: self.message.clone(),
         })
