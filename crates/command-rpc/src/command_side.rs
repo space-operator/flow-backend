@@ -5,7 +5,7 @@ use flow_lib::{
     config::client::NodeData,
     context::{CommandContext, CommandContextData, FlowServices, FlowSetServices},
     utils::tower_client::unimplemented_svc,
-    value,
+    value::{self, bincode_impl::map_from_bincode},
 };
 use futures::TryFutureExt;
 use std::{borrow::Cow, collections::BTreeMap, str::Utf8Error, sync::Arc};
@@ -15,9 +15,13 @@ use tokio::sync::Mutex;
 #[derive(ThisError, Debug)]
 enum Error {
     #[error(transparent)]
-    Decode(#[from] rmp_serde::decode::Error),
+    RmpDecode(#[from] rmp_serde::decode::Error),
     #[error(transparent)]
-    Encode(#[from] rmp_serde::encode::Error),
+    RmpEncode(#[from] rmp_serde::encode::Error),
+    #[error(transparent)]
+    BincodeDecode(#[from] bincode::error::DecodeError),
+    #[error(transparent)]
+    BincodeEncode(#[from] bincode::error::EncodeError),
     #[error("data contain invalid UTF-8")]
     Utf8(#[from] Utf8Error),
     #[error("command is not available: {:?}", .0)]
@@ -83,7 +87,7 @@ struct CommandTraitImpl {
 
 fn parse_inputs(params: run_params::Reader<'_>) -> Result<value::Map, Error> {
     let inputs = params.get_inputs()?;
-    Ok(rmp_serde::from_slice(inputs)?)
+    Ok(map_from_bincode(inputs)?)
 }
 
 impl CommandTraitImpl {
@@ -94,9 +98,7 @@ impl CommandTraitImpl {
     ) -> impl Future<Output = Result<(), Error>> + 'static {
         let cmd = self.cmd.clone();
         async move {
-            dbg!("reading input");
             let inputs = parse_inputs(params.get()?)?;
-            dbg!(&inputs);
             let context = params.get()?.get_ctx()?;
             let data: CommandContextData = rmp_serde::from_slice(
                 context
@@ -150,7 +152,7 @@ mod tests {
     use flow_lib::{
         CmdInputDescription, CmdOutputDescription, Name, ValueType,
         config::client::{Extra, TargetsForm},
-        value::{Decimal, with::AsDecimal},
+        value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
     };
     use futures::{FutureExt, future::BoxFuture};
     use rust_decimal_macros::dec;
@@ -257,7 +259,7 @@ mod tests {
         let cmd = result.get().unwrap().get_cmd().unwrap();
         let mut req = cmd.run_request();
         req.get().set_inputs(
-            rmp_serde::to_vec_named(&value::map! {
+            map_to_bincode(&value::map! {
                 "a" => dec!(1.2888),
                 "v" => dec!(3.5541),
             })

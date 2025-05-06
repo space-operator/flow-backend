@@ -1689,6 +1689,7 @@ version = "0.0.0"
 dependencies = [
  "actix",
  "async-trait",
+ "bincode 2.0.1",
  "capnp 0.21.0",
  "capnp-rpc",
  "capnpc",

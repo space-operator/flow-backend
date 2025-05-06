@@ -23,6 +23,10 @@ impl<'a> Encode for MapEncode<'a> {
     }
 }
 
+pub fn map_to_bincode(map: &crate::Map) -> Result<Vec<u8>, EncodeError> {
+    bincode::encode_to_vec(MapEncode(map), standard())
+}
+
 fn decode_slice_len<C, D: Decoder<Context = C>>(d: &mut D) -> Result<usize, DecodeError> {
     let v = u64::decode(d)?;
 
@@ -47,6 +51,14 @@ impl<C> Decode<C> for MapDecode {
 
         Ok(Self(map))
     }
+}
+
+pub fn map_from_bincode(data: &[u8]) -> Result<crate::Map, DecodeError> {
+    Ok(
+        bincode::decode_from_slice::<MapDecode, _>(data, standard())?
+            .0
+            .0,
+    )
 }
 
 impl Encode for Value {
