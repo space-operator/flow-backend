@@ -1698,7 +1698,6 @@ dependencies = [
  "futures",
  "inventory",
  "reqwest 0.12.15",
- "rmp-serde",
  "rust_decimal",
  "rust_decimal_macros",
  "schemars 1.0.0-alpha.17",

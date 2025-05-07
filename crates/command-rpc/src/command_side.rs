@@ -21,10 +21,6 @@ enum Error {
     #[error(transparent)]
     Value(#[from] value::Error),
     #[error(transparent)]
-    RmpDecode(#[from] rmp_serde::decode::Error),
-    #[error(transparent)]
-    RmpEncode(#[from] rmp_serde::encode::Error),
-    #[error(transparent)]
     BincodeDecode(#[from] bincode::error::DecodeError),
     #[error(transparent)]
     BincodeEncode(#[from] bincode::error::EncodeError),
@@ -62,7 +58,7 @@ impl CommandFactoryImpl {
         let name = params.get()?.get_name()?.to_str()?;
         if let Some(description) = self.availables.get(name) {
             let nd = params.get()?.get_nd()?;
-            let nd: NodeData = rmp_serde::from_slice(nd)?;
+            let nd: NodeData = value::from_value(Value::from_bincode(nd)?)?;
             let cmd = (description.fn_new)(&nd).map_err(Error::NewCommand)?;
             let cmd = Arc::new(Mutex::new(cmd));
             results
@@ -243,24 +239,22 @@ mod tests {
         let client = capnp_rpc::new_client::<command_capnp::command_factory::Client, _>(factory);
         let mut req = client.init_request();
         req.get().set_name("add");
-        req.get().set_nd(
-            rmp_serde::to_vec_named(&NodeData {
-                r#type: flow_lib::CommandType::Native,
-                node_id: String::new(),
-                sources: Vec::new(),
-                targets: Vec::new(),
-                targets_form: TargetsForm {
-                    form_data: serde_json::Value::Null,
-                    extra: Extra {
-                        ..Default::default()
-                    },
-                    wasm_bytes: None,
+        let nd = NodeData {
+            r#type: flow_lib::CommandType::Native,
+            node_id: String::new(),
+            sources: Vec::new(),
+            targets: Vec::new(),
+            targets_form: TargetsForm {
+                form_data: serde_json::Value::Null,
+                extra: Extra {
+                    ..Default::default()
                 },
-                instruction_info: None,
-            })
-            .unwrap()
-            .as_slice(),
-        );
+                wasm_bytes: None,
+            },
+            instruction_info: None,
+        };
+        req.get()
+            .set_nd(&value::to_value(&nd).unwrap().to_bincode().unwrap());
         let result = req.send().promise.await.unwrap();
         let cmd = result.get().unwrap().get_cmd().unwrap();
         let mut req = cmd.run_request();
