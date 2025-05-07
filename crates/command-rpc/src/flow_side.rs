@@ -1,22 +1,47 @@
 use crate::command_capnp::command_context;
 use capnp::capability::Promise;
-use capnp_rpc::pry;
-use flow_lib::context::CommandContext;
+use flow_lib::{context::CommandContext, value};
+use std::future::ready;
+use thiserror::Error as ThisError;
 
-struct CommandContextImpl {
-    context: CommandContext,
+#[derive(ThisError, Debug)]
+enum Error {
+    #[error(transparent)]
+    Value(#[from] value::Error),
+    #[error(transparent)]
+    BincodeEncode(#[from] bincode::error::EncodeError),
+}
+
+impl From<Error> for capnp::Error {
+    fn from(value: Error) -> capnp::Error {
+        capnp::Error::failed(value.to_string())
+    }
+}
+
+pub struct CommandContextImpl {
+    pub(crate) context: CommandContext,
+}
+
+impl CommandContextImpl {
+    fn data_impl(
+        &mut self,
+        _: command_context::DataParams,
+        mut result: command_context::DataResults,
+    ) -> Result<(), Error> {
+        let ctx_data = self.context.raw().data;
+        let data = value::to_value(ctx_data)?.to_bincode()?;
+        result.get().set_data(&data);
+        Ok(())
+    }
 }
 
 impl command_context::Server for CommandContextImpl {
     fn data(
         &mut self,
-        _: command_context::DataParams,
-        mut result: command_context::DataResults,
+        params: command_context::DataParams,
+        result: command_context::DataResults,
     ) -> Promise<(), ::capnp::Error> {
-        let data = self.context.raw().data;
-        result.get().set_data(todo!());
-        Promise::err(::capnp::Error::unimplemented(
-            "method command_context::Server::data not implemented".to_string(),
-        ))
+        let result = self.data_impl(params, result).map_err(capnp::Error::from);
+        Promise::from_future(ready(result))
     }
 }

@@ -1,11 +1,15 @@
 use crate::command_capnp::{command_factory, command_trait, command_trait::run_params};
 use capnp::capability::Promise;
 use flow_lib::{
+    Value,
     command::{CommandDescription, CommandError, CommandTrait},
     config::client::NodeData,
     context::{CommandContext, CommandContextData, FlowServices, FlowSetServices},
     utils::tower_client::unimplemented_svc,
-    value::{self, bincode_impl::map_from_bincode},
+    value::{
+        self,
+        bincode_impl::{map_from_bincode, map_to_bincode},
+    },
 };
 use futures::TryFutureExt;
 use std::{borrow::Cow, collections::BTreeMap, str::Utf8Error, sync::Arc};
@@ -14,6 +18,8 @@ use tokio::sync::Mutex;
 
 #[derive(ThisError, Debug)]
 enum Error {
+    #[error(transparent)]
+    Value(#[from] value::Error),
     #[error(transparent)]
     RmpDecode(#[from] rmp_serde::decode::Error),
     #[error(transparent)]
@@ -43,7 +49,7 @@ impl From<Error> for capnp::Error {
     }
 }
 
-struct CommandFactoryImpl {
+pub struct CommandFactoryImpl {
     availables: BTreeMap<Cow<'static, str>, CommandDescription>,
 }
 
@@ -81,7 +87,7 @@ impl command_factory::Server for CommandFactoryImpl {
     }
 }
 
-struct CommandTraitImpl {
+pub struct CommandTraitImpl {
     cmd: Arc<Mutex<Box<dyn CommandTrait>>>,
 }
 
@@ -100,7 +106,7 @@ impl CommandTraitImpl {
         async move {
             let inputs = parse_inputs(params.get()?)?;
             let context = params.get()?.get_ctx()?;
-            let data: CommandContextData = rmp_serde::from_slice(
+            let data: CommandContextData = value::from_value(Value::from_bincode(
                 context
                     .data_request()
                     .send()
@@ -108,7 +114,7 @@ impl CommandTraitImpl {
                     .await?
                     .get()?
                     .get_data()?,
-            )?;
+            )?)?;
             let result = cmd
                 .lock_owned()
                 .await
@@ -131,7 +137,7 @@ impl CommandTraitImpl {
                 )
                 .await
                 .map_err(Error::Run)?;
-            results.get().set_output(&rmp_serde::to_vec_named(&result)?);
+            results.get().set_output(&map_to_bincode(&result)?);
             Ok(())
         }
     }
@@ -158,7 +164,7 @@ mod tests {
     use rust_decimal_macros::dec;
     use serde::Deserialize;
 
-    use crate::command_capnp;
+    use crate::{command_capnp, flow_side::CommandContextImpl};
 
     use super::*;
 
@@ -261,11 +267,16 @@ mod tests {
         req.get().set_inputs(
             map_to_bincode(&value::map! {
                 "a" => dec!(1.2888),
-                "v" => dec!(3.5541),
+                "b" => dec!(3.5541),
             })
             .unwrap()
             .as_slice(),
         );
+        req.get().set_ctx(capnp_rpc::new_client(CommandContextImpl {
+            context: CommandContext::test_context(),
+        }));
         let result = req.send().promise.await.unwrap();
+        let output = map_from_bincode(result.get().unwrap().get_output().unwrap()).unwrap();
+        dbg!(output);
     }
 }
