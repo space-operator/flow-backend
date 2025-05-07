@@ -153,7 +153,7 @@ impl command_trait::Server for CommandTraitImpl {
 mod tests {
     use flow_lib::{
         CmdInputDescription, CmdOutputDescription, Name, ValueType,
-        config::client::{Extra, TargetsForm},
+        config::client::{Extra, Source, Target, TargetsForm},
         value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
     };
     use futures::{FutureExt, future::BoxFuture};
@@ -241,9 +241,31 @@ mod tests {
         req.get().set_name("add");
         let nd = NodeData {
             r#type: flow_lib::CommandType::Native,
-            node_id: String::new(),
-            sources: Vec::new(),
-            targets: Vec::new(),
+            node_id: "add".to_owned(),
+            sources: [Source {
+                id: <_>::default(),
+                name: "c".to_owned(),
+                r#type: ValueType::Decimal,
+                optional: false,
+            }]
+            .into(),
+            targets: [
+                Target {
+                    id: <_>::default(),
+                    name: "a".to_owned(),
+                    type_bounds: [ValueType::Decimal].into(),
+                    required: true,
+                    passthrough: false,
+                },
+                Target {
+                    id: <_>::default(),
+                    name: "b".to_owned(),
+                    type_bounds: [ValueType::Decimal].into(),
+                    required: true,
+                    passthrough: false,
+                },
+            ]
+            .into(),
             targets_form: TargetsForm {
                 form_data: serde_json::Value::Null,
                 extra: Extra {
