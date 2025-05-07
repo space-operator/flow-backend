@@ -3,6 +3,10 @@ name = "command-rpc"
 version = "0.0.0"
 edition = "2024"
 
+[[bench]]
+name = "serialize"
+harness = false
+
 [build-dependencies]
 capnpc = "0.20"
 
@@ -28,8 +32,10 @@ features = "0.10.0"
 uuid1 = "0.0.2"
 reqwest = { version = "0.12.15", default-features = false }
 bincode = "2"
+simd-json = "0.15.1"
 
 [dev-dependencies]
+criterion = "0.5.1"
 rust_decimal = "1.37.1"
 rust_decimal_macros = "1.37.1"
 serde_json = { workspace = true, features = ["preserve_order"] }
