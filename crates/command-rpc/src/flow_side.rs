@@ -45,3 +45,5 @@ impl command_context::Server for CommandContextImpl {
         Promise::from_future(ready(result))
     }
 }
+
+pub struct RemoteCommand {}
