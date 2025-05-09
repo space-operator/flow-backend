@@ -19,6 +19,8 @@ use tokio::sync::Mutex;
 #[derive(ThisError, Debug)]
 enum Error {
     #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error(transparent)]
     Value(#[from] value::Error),
     #[error(transparent)]
     BincodeDecode(#[from] bincode::error::DecodeError),
@@ -58,7 +60,7 @@ impl CommandFactoryImpl {
         let name = params.get()?.get_name()?.to_str()?;
         if let Some(description) = self.availables.get(name) {
             let nd = params.get()?.get_nd()?;
-            let nd: NodeData = value::from_value(Value::from_bincode(nd)?)?;
+            let nd: NodeData = serde_json::from_slice(nd)?;
             let cmd = (description.fn_new)(&nd).map_err(Error::NewCommand)?;
             let cmd = Arc::new(Mutex::new(cmd));
             results
@@ -275,8 +277,7 @@ mod tests {
             },
             instruction_info: None,
         };
-        req.get()
-            .set_nd(&value::to_value(&nd).unwrap().to_bincode().unwrap());
+        req.get().set_nd(&simd_json::to_vec(&nd).unwrap());
         let result = req.send().promise.await.unwrap();
         let cmd = result.get().unwrap().get_cmd().unwrap();
         let mut req = cmd.run_request();

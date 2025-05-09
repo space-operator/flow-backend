@@ -33,10 +33,10 @@ uuid1 = "0.0.2"
 reqwest = { version = "0.12.15", default-features = false }
 bincode = "2"
 simd-json = "0.15.1"
+serde_json = { workspace = true, features = ["preserve_order"] }
 
 [dev-dependencies]
 criterion = "0.5.1"
 rust_decimal = "1.37.1"
 rust_decimal_macros = "1.37.1"
-serde_json = { workspace = true, features = ["preserve_order"] }
 tokio = { version = "1", features = ["macros"] }
