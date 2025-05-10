@@ -84,7 +84,7 @@ impl CommandTrait for FindPDA {
 
     async fn run(
         &self,
-        _: CommandContextX,
+        _: CommandContext,
         mut inputs: ValueSet,
     ) -> Result<ValueSet, CommandError> {
         let Input { program_id } = value::from_map(inputs.clone())?;

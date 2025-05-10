@@ -49,7 +49,7 @@ impl CommandTrait for ExplorerCommand {
         self.outputs.clone()
     }
 
-    async fn run(&self, _: CommandContextX, _: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContext, _: ValueSet) -> Result<ValueSet, CommandError> {
         Ok(self.result.clone())
     }
 }

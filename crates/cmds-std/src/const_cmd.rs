@@ -134,7 +134,7 @@ impl CommandTrait for ConstCommand {
 
     async fn run(
         &self,
-        _ctx: CommandContextX,
+        _ctx: CommandContext,
         _inputs: ValueSet,
     ) -> Result<ValueSet, CommandError> {
         match &self.inner.value {

@@ -70,7 +70,7 @@ impl CommandTrait for Interflow {
         self.outputs.clone()
     }
 
-    async fn run(&self, ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContext, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let registry = ctx
             .get::<FlowRegistry>()
             .ok_or_else(|| anyhow::anyhow!("FlowRegistry not found"))?;

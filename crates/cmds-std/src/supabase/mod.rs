@@ -30,7 +30,7 @@ pub struct Output {
     pub res: HashMap<String, String>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     // info!("{:#?}", ctx.environment);
 
     // info!("{:#?}", ctx.user.id);

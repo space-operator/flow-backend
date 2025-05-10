@@ -1,4 +1,5 @@
 use crate::Value;
+use thiserror::Error as ThisError;
 
 #[derive(Clone, Copy, Debug)]
 #[repr(u32)]
@@ -20,9 +21,43 @@ pub enum Variant {
 }
 
 impl Variant {
+    pub const MIN: u32 = 0;
+    pub const MAX: u32 = 13;
+
     pub const fn variant(&self) -> (u32, &'static str) {
         let idx = *self as u32;
         (idx, keys::ALL[idx as usize])
+    }
+}
+
+#[derive(Debug, ThisError)]
+#[error("invalid variant: {}", .0)]
+pub struct InvalidVariant(u32);
+
+impl TryFrom<u32> for Variant {
+    type Error = InvalidVariant;
+
+    fn try_from(v: u32) -> Result<Self, Self::Error> {
+        const VALUES: &[Variant] = &[
+            Variant::Null,
+            Variant::String,
+            Variant::Bool,
+            Variant::U64,
+            Variant::I64,
+            Variant::F64,
+            Variant::Decimal,
+            Variant::I128,
+            Variant::U128,
+            Variant::B32,
+            Variant::B64,
+            Variant::Bytes,
+            Variant::Array,
+            Variant::Map,
+        ];
+        VALUES
+            .get(v as usize)
+            .copied()
+            .ok_or_else(|| InvalidVariant(v))
     }
 }
 
@@ -53,35 +88,14 @@ impl serde::de::Visitor<'_> for ValueTypeVisitor {
     type Value = Variant;
 
     fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.write_str("ValueType")
+        f.write_str("Variant")
     }
 
     fn visit_u32<E>(self, v: u32) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
     {
-        Ok(match v {
-            0 => Variant::Null,
-            1 => Variant::String,
-            2 => Variant::Bool,
-            3 => Variant::U64,
-            4 => Variant::I64,
-            5 => Variant::F64,
-            6 => Variant::Decimal,
-            7 => Variant::I128,
-            8 => Variant::U128,
-            9 => Variant::B32,
-            10 => Variant::B64,
-            11 => Variant::Bytes,
-            12 => Variant::Array,
-            13 => Variant::Map,
-            _ => {
-                return Err(serde::de::Error::invalid_value(
-                    serde::de::Unexpected::Unsigned(v as u64),
-                    &"value in [0, 13]",
-                ));
-            }
-        })
+        Self::Value::try_from(v).map_err(serde::de::Error::custom)
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
@@ -127,7 +141,7 @@ impl<'de> serde::Deserialize<'de> for Variant {
 }
 
 impl Value {
-    pub fn kind(&self) -> Variant {
+    pub const fn kind(&self) -> Variant {
         match self {
             Value::Null => Variant::Null,
             Value::String(_) => Variant::String,

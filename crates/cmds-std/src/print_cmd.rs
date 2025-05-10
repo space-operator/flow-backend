@@ -39,7 +39,7 @@ impl CommandTrait for PrintCommand {
 
     async fn run(
         &self,
-        _ctx: CommandContextX,
+        _ctx: CommandContext,
         mut inputs: ValueSet,
     ) -> Result<ValueSet, CommandError> {
         let input = inputs

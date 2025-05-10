@@ -32,7 +32,7 @@ struct Output {
     files: Vec<String>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let path = input.path;
     let prefix = if ["user-storages", "user-public-storages"].contains(&input.bucket.as_str()) {
         format!("{}/{}", ctx.flow_owner().id, path.display())

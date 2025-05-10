@@ -71,7 +71,7 @@ impl CommandTrait for JsonGetField {
 
     async fn run(
         &self,
-        _ctx: CommandContextX,
+        _ctx: CommandContext,
         mut inputs: ValueSet,
     ) -> Result<ValueSet, CommandError> {
         let Input { field } = value::from_map(inputs.clone())?;

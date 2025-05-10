@@ -43,7 +43,7 @@ impl CommandTrait for ToString {
 
     async fn run(
         &self,
-        _: CommandContextX,
+        _: CommandContext,
         mut inputs: ValueSet,
     ) -> Result<ValueSet, CommandError> {
         let input = inputs.swap_remove(STRINGIFY).unwrap_or("".into());

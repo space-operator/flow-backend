@@ -14,7 +14,7 @@ struct Output {
     trimmed_json: Value,
 }
 
-async fn run(_: CommandContextX, mut input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContext, mut input: Input) -> Result<Output, CommandError> {
     let path = value::crud::path::Path::parse(&input.field_path)?;
     let extracted =
         value::crud::remove(&mut input.json_input, &path.segments).unwrap_or(Value::Null);

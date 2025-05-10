@@ -90,7 +90,7 @@ struct SuccessBody {
     signedURL: String,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let key = input.file.key(&ctx.flow_owner().id);
     let url = format!(
         "{}/storage/v1/object/sign/{}",

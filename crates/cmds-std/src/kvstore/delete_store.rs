@@ -27,7 +27,7 @@ struct Input {
 #[derive(Serialize)]
 struct Output {}
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let mut req = ctx
         .http()
         .post(format!("{}/kv/delete_store", ctx.endpoints().flow_server))

@@ -1257,7 +1257,7 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
 
         #output_struct
 
-        async fn run(mut ctx: Context, input: Input) -> Result<Output, CommandError> {
+        async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
             tracing::info!("input: {:?}", input);
 
             #execute
@@ -1277,7 +1277,7 @@ fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
 
             #[tokio::test]
             async fn test_run() {
-                let ctx = Context::default();
+                let ctx = CommandContext::test_context();
 
                 build().unwrap().run(ctx, ValueSet::new()).await.unwrap_err();
             }
