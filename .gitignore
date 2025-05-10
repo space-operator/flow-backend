@@ -6,3 +6,4 @@ local_storage
 config.toml
 .env
 .ipynb_checkpoints
+.idea
