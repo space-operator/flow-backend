@@ -71,6 +71,8 @@ impl CommandFactoryImpl {
             Err(Error::NotAvailable(name.to_owned()))
         }
     }
+
+    
 }
 
 impl command_factory::Server for CommandFactoryImpl {

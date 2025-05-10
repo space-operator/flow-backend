@@ -1702,6 +1702,7 @@ dependencies = [
  "rust_decimal",
  "rust_decimal_macros",
  "schemars 1.0.0-alpha.17",
+ "semver 1.0.26",
  "serde",
  "serde_json",
  "serde_with",

@@ -34,6 +34,7 @@ reqwest = { version = "0.12.15", default-features = false }
 bincode = "2"
 simd-json = "0.15.1"
 serde_json = { workspace = true, features = ["preserve_order"] }
+semver = "1.0.26"
 
 [dev-dependencies]
 criterion = "0.5.1"

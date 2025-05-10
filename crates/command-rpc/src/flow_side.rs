@@ -1,7 +1,13 @@
-use crate::command_capnp::command_context;
+use crate::command_capnp::{command_context, command_factory};
 use capnp::capability::Promise;
-use flow_lib::{context::CommandContext, value};
-use std::future::ready;
+use flow_lib::{
+    CommandType, Name,
+    command::{CommandError, CommandTrait},
+    config::client::NodeData,
+    context::CommandContext,
+    value,
+};
+use std::{collections::BTreeSet, future::ready};
 use thiserror::Error as ThisError;
 
 #[derive(ThisError, Debug)]
@@ -43,6 +49,33 @@ impl command_context::Server for CommandContextImpl {
     ) -> Promise<(), ::capnp::Error> {
         let result = self.data_impl(params, result).map_err(capnp::Error::from);
         Promise::from_future(ready(result))
+    }
+}
+
+pub struct AddressBook {
+    addresses: Vec<Address>,
+}
+
+pub struct Address {
+    client: command_factory::Client,
+    availables: Vec<Available>,
+}
+
+enum Available {
+    Specific {
+        kind: CommandType,
+        name: String,
+        version: semver::Version,
+    },
+}
+
+impl AddressBook {
+    pub async fn new_command(
+        &self,
+        name: &str,
+        nd: &NodeData,
+    ) -> Result<Box<dyn CommandTrait>, CommandError> {
+        Err(CommandError::msg("not available"))
     }
 }
 
