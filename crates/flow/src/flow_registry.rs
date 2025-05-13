@@ -448,6 +448,7 @@ impl FlowRegistry {
         let flow_run_id = run.flow_run_id;
         let stop = run.stop_signal;
         let stop_shared = run.stop_shared_signal;
+        let rt = self.rt.clone();
 
         async move {
             this.flows.iter().for_each(|(id, flow)| {
@@ -503,7 +504,7 @@ impl FlowRegistry {
                 <_>::default()
             };
 
-            let join_handle = tokio::spawn(
+            let join_handle = rt.spawn(
                 async move {
                     flow.run(tx, flow_run_id, inputs, stop, stop_shared, previous_values)
                         .await
