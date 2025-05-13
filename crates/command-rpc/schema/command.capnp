@@ -1,9 +1,5 @@
 @0xea2e5dc9f8697f6c;
 
-struct Available {
-
-}
-
 interface CommandContext {
     data @0 () -> (data: Data);
 }

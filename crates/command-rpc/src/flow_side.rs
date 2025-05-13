@@ -1,14 +1,19 @@
-use crate::command_capnp::{command_context, command_factory};
+use crate::command_capnp::{command_context, command_factory, command_trait};
 use capnp::capability::Promise;
 use flow_lib::{
-    CommandType, Name,
+    CmdInputDescription, CmdOutputDescription, CommandType, Name,
     command::{CommandError, CommandTrait},
     config::client::NodeData,
     context::CommandContext,
     value,
 };
-use std::{collections::BTreeSet, future::ready};
+use std::{
+    collections::BTreeSet,
+    future::ready,
+    sync::{Arc, Mutex},
+};
 use thiserror::Error as ThisError;
+use tokio::task::LocalSet;
 
 #[derive(ThisError, Debug)]
 enum Error {
@@ -61,12 +66,10 @@ pub struct Address {
     availables: Vec<Available>,
 }
 
-enum Available {
-    Specific {
-        kind: CommandType,
-        name: String,
-        version: semver::Version,
-    },
+struct Available {
+    kind: CommandType,
+    name: String,
+    // version: semver::Version,
 }
 
 impl AddressBook {
@@ -75,8 +78,51 @@ impl AddressBook {
         name: &str,
         nd: &NodeData,
     ) -> Result<Box<dyn CommandTrait>, CommandError> {
+        for a in &self.addresses {
+            if a.availables.iter().any(
+                |a| a.kind == nd.r#type && a.name == name, // TODO check version
+            ) {
+                let mut req = a.client.init_request();
+                req.get().set_name(name);
+                req.get().set_nd(&simd_json::to_vec(nd)?);
+                let resp = req.send().promise.await?;
+                let cmd = resp.get()?.to_owned().get_cmd()?;
+            }
+        }
         Err(CommandError::msg("not available"))
     }
 }
 
 pub struct RemoteCommand {}
+
+impl CommandTrait for RemoteCommand {
+    fn name(&self) -> Name {
+        todo!()
+    }
+
+    fn inputs(&self) -> Vec<CmdInputDescription> {
+        todo!()
+    }
+
+    fn outputs(&self) -> Vec<CmdOutputDescription> {
+        todo!()
+    }
+
+    fn run<'life0, 'async_trait>(
+        &'life0 self,
+        ctx: CommandContext,
+        params: value::Map,
+    ) -> ::core::pin::Pin<
+        Box<
+            dyn ::core::future::Future<Output = Result<value::Map, CommandError>>
+                + ::core::marker::Send
+                + 'async_trait,
+        >,
+    >
+    where
+        'life0: 'async_trait,
+        Self: 'async_trait,
+    {
+        todo!()
+    }
+}
