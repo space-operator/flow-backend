@@ -19,9 +19,9 @@ use flow_lib::{
 use futures::channel::oneshot;
 use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use thiserror::Error as ThisError;
-use tokio::sync::Semaphore;
+use tokio::{runtime::Handle, sync::Semaphore};
 use tokio_util::sync::CancellationToken;
 use tower::{Service, ServiceExt};
 use tracing::Instrument;
@@ -73,6 +73,23 @@ pub struct FlowRegistry {
     rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
 
     pub(crate) rpc_server: Option<actix::Addr<srpc::Server>>,
+
+    /// handle of local-thread runtime used to run flows
+    #[builder(default = init_rt())]
+    pub(crate) rt: Handle,
+}
+
+fn init_rt() -> Handle {
+    let handle_lock = Arc::new(OnceLock::new());
+    std::thread::spawn({
+        let handle_lock = handle_lock.clone();
+        move || {
+            let rt = tokio::runtime::LocalRuntime::new().expect("failed to initialize runtime");
+            handle_lock.set(rt.handle().clone()).unwrap();
+        }
+    });
+    handle_lock.wait();
+    handle_lock.get().unwrap().clone()
 }
 
 impl Default for FlowRegistry {
@@ -82,6 +99,7 @@ impl Default for FlowRegistry {
         let get_previous_values = unimplemented_svc();
         let token = unimplemented_svc();
         let api_input = unimplemented_svc();
+
         Self {
             depth: 0,
             flow_owner: User::new(UserId::nil()),
@@ -99,6 +117,7 @@ impl Default for FlowRegistry {
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
             rpc_server: None, // TODO: try this
+            rt: init_rt(),
         }
     }
 }
@@ -302,6 +321,7 @@ impl FlowRegistry {
             rpc_server: srpc::Server::start_http_server()
                 .inspect_err(|error| tracing::error!("srpc error: {}", error))
                 .ok(),
+            rt: init_rt(),
         })
     }
 
@@ -659,5 +679,20 @@ pub mod get_previous_values {
         fn from(value: actix::MailboxError) -> Self {
             CommonError::from(value).into()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_registry() {
+        FlowRegistry::default();
+    }
+
+    #[test]
+    fn test_init_rt() {
+        init_rt();
     }
 }
