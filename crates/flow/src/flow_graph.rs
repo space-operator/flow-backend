@@ -1592,7 +1592,7 @@ impl FlowGraph {
             .tx_exec_config(self.tx_exec_config.clone())
             .get_jwt(self.get_jwt.clone())
             .call();
-        let handler = tokio::spawn(
+        let handler = tokio::task::spawn_local(
             async move {
                 if is_rhai_script {
                     let p = rhai_permit.acquire().await;
