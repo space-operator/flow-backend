@@ -86,6 +86,7 @@ fn init_rt() -> Handle {
         move || {
             let rt = tokio::runtime::LocalRuntime::new().expect("failed to initialize runtime");
             handle_lock.set(rt.handle().clone()).unwrap();
+            rt.block_on(std::future::pending::<()>());
         }
     });
     handle_lock.wait();

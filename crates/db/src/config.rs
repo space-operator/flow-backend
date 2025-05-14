@@ -80,6 +80,7 @@ pub struct DbConfig {
 
 #[derive(Deserialize, Clone, Default)]
 pub struct SslConfig {
+    pub use_builtin_supabase_cert: bool,
     pub enabled: bool,
     pub cert: Option<std::path::PathBuf>,
 }
