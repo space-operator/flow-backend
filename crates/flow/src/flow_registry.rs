@@ -273,40 +273,6 @@ fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) 
     });
 }
 
-pub struct StartReq {
-    flow_id: FlowId,
-    inputs: value::Map,
-    options: StartFlowOptions,
-    recv: oneshot::Sender<StartResp>,
-}
-
-type StartResp = Result<(FlowRunId, tokio::task::JoinHandle<FlowRunResult>), new_flow_run::Error>;
-
-pub struct FlowRegistryHandle {
-    tx: mpsc::Sender<StartReq>,
-}
-
-impl FlowRegistryHandle {
-    pub async fn start(
-        &self,
-        flow_id: FlowId,
-        inputs: ValueSet,
-        options: StartFlowOptions,
-    ) -> Result<(FlowRunId, tokio::task::JoinHandle<FlowRunResult>), new_flow_run::Error> {
-        let (tx, rx) = oneshot::channel();
-        self.tx
-            .send(StartReq {
-                flow_id,
-                inputs,
-                options,
-                recv: tx,
-            })
-            .await
-            .map_err(new_flow_run::Error::other)?;
-        rx.await.map_err(new_flow_run::Error::other)?
-    }
-}
-
 impl FlowRegistry {
     #[allow(clippy::too_many_arguments)]
     pub async fn new(
@@ -322,43 +288,28 @@ impl FlowRegistry {
         token: get_jwt::Svc,
         environment: HashMap<String, String>,
         endpoints: Endpoints,
-    ) -> crate::Result<FlowRegistryHandle> {
-        let (tx, mut rx) = mpsc::channel::<StartReq>(1);
-        std::thread::spawn(move || {
-            let rt = tokio::runtime::LocalRuntime::new().unwrap();
-            rt.block_on(async move {
-                let flows = get_all_flows(entrypoint, flow_owner.id, get_flow, environment).await?;
-                let registry = Self {
-                    depth: 0,
-                    flow_owner,
-                    started_by,
-                    shared_with,
-                    flows: Arc::new(flows),
-                    signer,
-                    signers_info,
-                    new_flow_run,
-                    api_input,
-                    get_previous_values,
-                    parent_flow_execute: None,
-                    token,
-                    endpoints,
-                    rhai_permit: Arc::new(Semaphore::new(1)),
-                    rhai_tx: <_>::default(),
-                    rpc_server: srpc::Server::start_http_server()
-                        .inspect_err(|error| tracing::error!("srpc error: {}", error))
-                        .ok(),
-                };
-
-                while let Some(req) = rx.recv().await {
-                    req.recv
-                        .send(registry.start(req.flow_id, req.inputs, req.options).await)
-                        .ok();
-                }
-
-                Ok::<(), crate::Error>(())
-            })
-        });
-        Ok(FlowRegistryHandle { tx })
+    ) -> crate::Result<Self> {
+        let flows = get_all_flows(entrypoint, flow_owner.id, get_flow, environment).await?;
+        Ok(Self {
+            depth: 0,
+            flow_owner,
+            started_by,
+            shared_with,
+            flows: Arc::new(flows),
+            signer,
+            signers_info,
+            new_flow_run,
+            api_input,
+            get_previous_values,
+            parent_flow_execute: None,
+            token,
+            endpoints,
+            rhai_permit: Arc::new(Semaphore::new(1)),
+            rhai_tx: <_>::default(),
+            rpc_server: srpc::Server::start_http_server()
+                .inspect_err(|error| tracing::error!("srpc error: {}", error))
+                .ok(),
+        })
     }
 
     pub async fn run_rhai(
@@ -396,7 +347,7 @@ impl FlowRegistry {
         token: actix::Recipient<get_jwt::Request>,
         environment: HashMap<String, String>,
         endpoints: Endpoints,
-    ) -> crate::Result<FlowRegistryHandle> {
+    ) -> crate::Result<Self> {
         Self::new(
             flow_owner,
             started_by,
