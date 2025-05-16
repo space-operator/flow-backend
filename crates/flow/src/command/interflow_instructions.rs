@@ -45,7 +45,7 @@ fn build_error(r: &FlowRunResult) -> CommandError {
     CommandError::msg(msg)
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for Interflow {
     fn name(&self) -> Name {
         INTERFLOW_INSTRUCTIONS.into()

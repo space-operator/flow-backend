@@ -8,7 +8,7 @@ struct Command {
     inner: Arc<rhai_script::Command>,
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for Command {
     fn name(&self) -> Name {
         self.name.clone()

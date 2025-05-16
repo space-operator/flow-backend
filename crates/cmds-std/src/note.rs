@@ -5,7 +5,7 @@ pub struct NoteCommand {}
 
 const NOTE: &str = "note";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for NoteCommand {
     fn name(&self) -> Name {
         NOTE.into()

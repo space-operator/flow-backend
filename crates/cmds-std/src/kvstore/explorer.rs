@@ -75,7 +75,7 @@ async fn read_item(
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for ExplorerCommand {
     fn name(&self) -> Name {
         KV_EXPLORER.into()

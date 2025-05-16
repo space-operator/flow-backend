@@ -25,7 +25,7 @@ const MINT_ACCOUNT: &str = "mint_account";
 // Outputs
 const LEFT_USES: &str = "left_uses";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for GetLeftUses {
     fn name(&self) -> Name {
         GET_LEFT_USES.into()

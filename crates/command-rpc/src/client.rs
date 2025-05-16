@@ -172,7 +172,7 @@ impl RpcCommandClient {
 
 const RUN_SVC: &str = "run";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for RpcCommandClient {
     fn name(&self) -> Name {
         self.node_data.node_id.clone()

@@ -113,7 +113,7 @@ impl ConstCommand {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for ConstCommand {
     fn name(&self) -> Name {
         CONST_CMD.into()

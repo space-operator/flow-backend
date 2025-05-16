@@ -14,20 +14,14 @@ use flow_lib::{
     },
     context::{User, api_input, execute, get_jwt, signer},
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
-    utils::{
-        TowerClient,
-        tower_client::{CommonErrorExt, unimplemented_svc},
-    },
+    utils::{TowerClient, tower_client::unimplemented_svc},
 };
 use futures::channel::oneshot;
 use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
 use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
-use tokio::{
-    sync::{Semaphore, mpsc},
-    task::spawn_local,
-};
+use tokio::{sync::Semaphore, task::spawn_local};
 use tokio_util::sync::CancellationToken;
 use tower::{Service, ServiceExt};
 use tracing::Instrument;

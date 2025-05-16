@@ -69,7 +69,7 @@ use crate::{
     command::InstructionInfo,
     config::node::{Definition, Permissions},
     context::CommandContext,
-    utils::BoxFuture,
+    utils::LocalBoxFuture,
 };
 use serde::{Serialize, de::DeserializeOwned};
 use std::{future::Future, sync::LazyLock};
@@ -188,7 +188,7 @@ impl CmdBuilder {
                 &'a self,
                 ctx: CommandContext,
                 params: crate::ValueSet,
-            ) -> BoxFuture<'b, Result<crate::ValueSet, CommandError>> {
+            ) -> LocalBoxFuture<'b, Result<crate::ValueSet, CommandError>> {
                 match value::from_map(params) {
                     Ok(input) => {
                         let fut = (self.run)(ctx, input);

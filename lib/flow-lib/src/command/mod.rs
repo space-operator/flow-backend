@@ -49,8 +49,8 @@ pub mod prelude {
 pub type CommandError = anyhow::Error;
 
 /// Generic trait for implementing commands.
-#[async_trait::async_trait]
-pub trait CommandTrait: Send + Sync + 'static {
+#[async_trait::async_trait(?Send)]
+pub trait CommandTrait: 'static {
     /// Unique name to identify the command.
     fn name(&self) -> Name;
 

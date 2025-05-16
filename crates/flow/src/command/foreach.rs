@@ -9,7 +9,7 @@ pub const ARRAY: &str = "array";
 
 pub const ELEMENT: &str = "element";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for Foreach {
     fn name(&self) -> Name {
         FOREACH.into()

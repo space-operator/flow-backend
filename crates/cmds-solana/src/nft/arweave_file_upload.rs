@@ -27,7 +27,7 @@ const FUND_BUNDLR: &str = "fund_bundlr";
 // Outputs
 const FILE_URL: &str = "file_url";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for ArweaveFileUpload {
     fn name(&self) -> Name {
         ARWEAVE_FILE_UPLOAD.into()

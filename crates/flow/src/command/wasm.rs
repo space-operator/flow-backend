@@ -19,7 +19,7 @@ pub struct WasmCommand {
     pub outputs: Vec<Description>,
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for WasmCommand {
     fn name(&self) -> Name {
         "Wasm".into()

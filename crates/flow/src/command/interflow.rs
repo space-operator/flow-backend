@@ -56,7 +56,7 @@ impl Interflow {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for Interflow {
     fn name(&self) -> Name {
         INTERFLOW.into()

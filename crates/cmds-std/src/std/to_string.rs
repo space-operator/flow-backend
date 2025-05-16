@@ -16,7 +16,7 @@ pub struct Output {
     pub result: String,
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for ToString {
     fn name(&self) -> Name {
         TO_STRING.into()

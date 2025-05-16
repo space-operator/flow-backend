@@ -21,7 +21,7 @@ impl FlowOutputCommand {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for FlowOutputCommand {
     fn name(&self) -> Name {
         FLOW_OUTPUT.into()

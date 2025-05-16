@@ -55,7 +55,7 @@ pub struct Output {
 
 const WALLET: &str = "wallet";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for WalletCmd {
     fn name(&self) -> Name {
         WALLET.into()

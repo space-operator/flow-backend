@@ -29,7 +29,7 @@ const FIELD: &str = "field";
 const RESULT_JSON: &str = "result_json";
 const RESULT_STRING: &str = "result_string";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for JsonGetField {
     fn name(&self) -> Name {
         JSON_GET_FIELD.into()

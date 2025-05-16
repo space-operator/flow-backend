@@ -12,7 +12,7 @@ pub const PRINT: &str = "print";
 // Outputs
 pub const PRINT_OUTPUT: &str = "__print_output";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for PrintCommand {
     fn name(&self) -> Name {
         PRINT_CMD.into()

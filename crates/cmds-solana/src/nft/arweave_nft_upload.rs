@@ -80,7 +80,7 @@ const FUND_BUNDLR: &str = "fund_bundlr";
 const METADATA_URL: &str = "metadata_url";
 const UPDATED_METADATA: &str = "updated_metadata";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for ArweaveNftUpload {
     fn name(&self) -> Name {
         ARWEAVE_NFT_UPLOAD.into()

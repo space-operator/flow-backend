@@ -35,7 +35,7 @@ impl ExplorerCommand {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for ExplorerCommand {
     fn name(&self) -> Name {
         FIRE_EXPLORER.into()

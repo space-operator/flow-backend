@@ -25,7 +25,7 @@ const SEED_5: &str = "seed_5";
 
 const PDA: &str = "pda";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for FindPDA {
     fn name(&self) -> Name {
         FIND_PDA.into()

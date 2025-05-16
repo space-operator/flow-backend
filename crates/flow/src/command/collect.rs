@@ -9,7 +9,7 @@ pub const ELEMENT: &str = "element";
 
 pub const ARRAY: &str = "array";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for Collect {
     fn name(&self) -> Name {
         COLLECT.into()

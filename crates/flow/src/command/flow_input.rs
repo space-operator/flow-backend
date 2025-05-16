@@ -21,7 +21,7 @@ impl FlowInputCommand {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for FlowInputCommand {
     fn name(&self) -> Name {
         FLOW_INPUT.into()

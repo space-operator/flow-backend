@@ -156,6 +156,7 @@ mod tests {
     use flow_lib::{
         CmdInputDescription, CmdOutputDescription, Name, ValueType,
         config::client::{Extra, Source, Target, TargetsForm},
+        utils::LocalBoxFuture,
         value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
     };
     use futures::{FutureExt, future::BoxFuture};
@@ -202,7 +203,7 @@ mod tests {
             &'life0 self,
             _: CommandContext,
             params: value::Map,
-        ) -> BoxFuture<'async_trait, Result<value::Map, CommandError>>
+        ) -> LocalBoxFuture<'async_trait, Result<value::Map, CommandError>>
         where
             'life0: 'async_trait,
             Self: 'async_trait,

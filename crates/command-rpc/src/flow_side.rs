@@ -5,6 +5,7 @@ use flow_lib::{
     command::{CommandError, CommandTrait},
     config::client::NodeData,
     context::CommandContext,
+    utils::LocalBoxFuture,
     value,
 };
 use std::future::ready;
@@ -81,7 +82,7 @@ impl AddressBook {
                 req.get().set_name(name);
                 req.get().set_nd(&simd_json::to_vec(nd)?);
                 let resp = req.send().promise.await?;
-                let cmd = resp.get()?.to_owned().get_cmd()?;
+                let _cmd = resp.get()?.to_owned().get_cmd()?;
             }
         }
         Err(CommandError::msg("not available"))
@@ -105,15 +106,9 @@ impl CommandTrait for RemoteCommand {
 
     fn run<'life0, 'async_trait>(
         &'life0 self,
-        ctx: CommandContext,
-        params: value::Map,
-    ) -> ::core::pin::Pin<
-        Box<
-            dyn ::core::future::Future<Output = Result<value::Map, CommandError>>
-                + ::core::marker::Send
-                + 'async_trait,
-        >,
-    >
+        _ctx: CommandContext,
+        _params: value::Map,
+    ) -> LocalBoxFuture<'async_trait, Result<value::Map, CommandError>>
     where
         'life0: 'async_trait,
         Self: 'async_trait,

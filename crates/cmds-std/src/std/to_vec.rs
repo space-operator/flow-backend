@@ -24,7 +24,7 @@ pub struct Output {
     pub result: Vec<Value>,
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for ToVec {
     fn name(&self) -> Name {
         TO_VEC.into()
