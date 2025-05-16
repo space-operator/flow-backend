@@ -41,11 +41,7 @@ impl CommandTrait for ToString {
         .to_vec()
     }
 
-    async fn run(
-        &self,
-        _: CommandContext,
-        mut inputs: ValueSet,
-    ) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContext, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let input = inputs.swap_remove(STRINGIFY).unwrap_or("".into());
 
         let result = match input {

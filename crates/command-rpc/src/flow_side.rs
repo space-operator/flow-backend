@@ -1,4 +1,4 @@
-use crate::command_capnp::{command_context, command_factory, command_trait};
+use crate::command_capnp::{command_context, command_factory};
 use capnp::capability::Promise;
 use flow_lib::{
     CmdInputDescription, CmdOutputDescription, CommandType, Name,
@@ -7,13 +7,8 @@ use flow_lib::{
     context::CommandContext,
     value,
 };
-use std::{
-    collections::BTreeSet,
-    future::ready,
-    sync::{Arc, Mutex},
-};
+use std::future::ready;
 use thiserror::Error as ThisError;
-use tokio::task::LocalSet;
 
 #[derive(ThisError, Debug)]
 enum Error {

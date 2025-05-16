@@ -240,10 +240,7 @@ mod tests {
             "passphrase" => Value::String(passphrase.to_owned()),
             "private_key" => Value::String(private_key.to_string()),
         };
-        let result = build()
-            .unwrap()
-            .run(CommandContext::default(), input)
-            .await;
+        let result = build().unwrap().run(CommandContext::default(), input).await;
         assert!(result.is_err());
     }
 }

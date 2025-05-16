@@ -126,7 +126,11 @@ impl CommandTrait for ArweaveNftUpload {
         .to_vec()
     }
 
-    async fn run(&self, mut ctx: CommandContext, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(
+        &self,
+        mut ctx: CommandContext,
+        inputs: ValueSet,
+    ) -> Result<ValueSet, CommandError> {
         let Input {
             fee_payer,
             mut metadata,

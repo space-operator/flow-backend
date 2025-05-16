@@ -22,10 +22,9 @@ use flow_lib::{
 use futures::channel::oneshot;
 use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
 use tokio::{
-    runtime::Handle,
     sync::{Semaphore, mpsc},
     task::spawn_local,
 };

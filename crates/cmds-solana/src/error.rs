@@ -52,10 +52,7 @@ pub enum Error {
     #[error("specified account: {0} isn't a token account")]
     NotTokenAccount(solana_program::pubkey::Pubkey),
     #[error("insufficient solana balance, needed={needed}; have={balance};")]
-    InsufficientSolanaBalance {
-        needed: u64,
-        balance: u64,
-    },
+    InsufficientSolanaBalance { needed: u64, balance: u64 },
     #[error("failed to snapshot mints: {0}")]
     ErrorSnapshottingMints(String),
     #[error("failed to fetch mint snapshot")]
