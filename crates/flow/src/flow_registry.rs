@@ -14,14 +14,21 @@ use flow_lib::{
     },
     context::{User, api_input, execute, get_jwt, signer},
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
-    utils::{TowerClient, tower_client::unimplemented_svc},
+    utils::{
+        TowerClient,
+        tower_client::{CommonErrorExt, unimplemented_svc},
+    },
 };
 use futures::channel::oneshot;
 use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
 use std::sync::{Arc, Mutex, OnceLock};
 use thiserror::Error as ThisError;
-use tokio::{runtime::Handle, sync::Semaphore};
+use tokio::{
+    runtime::Handle,
+    sync::{Semaphore, mpsc},
+    task::spawn_local,
+};
 use tokio_util::sync::CancellationToken;
 use tower::{Service, ServiceExt};
 use tracing::Instrument;
@@ -73,24 +80,6 @@ pub struct FlowRegistry {
     rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
 
     pub(crate) rpc_server: Option<actix::Addr<srpc::Server>>,
-
-    /// handle of local-thread runtime used to run flows
-    #[builder(default = init_rt())]
-    pub(crate) rt: Handle,
-}
-
-fn init_rt() -> Handle {
-    let handle_lock = Arc::new(OnceLock::new());
-    std::thread::spawn({
-        let handle_lock = handle_lock.clone();
-        move || {
-            let rt = tokio::runtime::LocalRuntime::new().expect("failed to initialize runtime");
-            handle_lock.set(rt.handle().clone()).unwrap();
-            rt.block_on(std::future::pending::<()>());
-        }
-    });
-    handle_lock.wait();
-    handle_lock.get().unwrap().clone()
 }
 
 impl Default for FlowRegistry {
@@ -118,7 +107,6 @@ impl Default for FlowRegistry {
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
             rpc_server: None, // TODO: try this
-            rt: init_rt(),
         }
     }
 }
@@ -286,6 +274,40 @@ fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) 
     });
 }
 
+pub struct StartReq {
+    flow_id: FlowId,
+    inputs: value::Map,
+    options: StartFlowOptions,
+    recv: oneshot::Sender<StartResp>,
+}
+
+type StartResp = Result<(FlowRunId, tokio::task::JoinHandle<FlowRunResult>), new_flow_run::Error>;
+
+pub struct FlowRegistryHandle {
+    tx: mpsc::Sender<StartReq>,
+}
+
+impl FlowRegistryHandle {
+    pub async fn start(
+        &self,
+        flow_id: FlowId,
+        inputs: ValueSet,
+        options: StartFlowOptions,
+    ) -> Result<(FlowRunId, tokio::task::JoinHandle<FlowRunResult>), new_flow_run::Error> {
+        let (tx, rx) = oneshot::channel();
+        self.tx
+            .send(StartReq {
+                flow_id,
+                inputs,
+                options,
+                recv: tx,
+            })
+            .await
+            .map_err(new_flow_run::Error::other)?;
+        rx.await.map_err(new_flow_run::Error::other)?
+    }
+}
+
 impl FlowRegistry {
     #[allow(clippy::too_many_arguments)]
     pub async fn new(
@@ -301,29 +323,43 @@ impl FlowRegistry {
         token: get_jwt::Svc,
         environment: HashMap<String, String>,
         endpoints: Endpoints,
-    ) -> crate::Result<Self> {
-        let flows = get_all_flows(entrypoint, flow_owner.id, get_flow, environment).await?;
-        Ok(Self {
-            depth: 0,
-            flow_owner,
-            started_by,
-            shared_with,
-            flows: Arc::new(flows),
-            signer,
-            signers_info,
-            new_flow_run,
-            api_input,
-            get_previous_values,
-            parent_flow_execute: None,
-            token,
-            endpoints,
-            rhai_permit: Arc::new(Semaphore::new(1)),
-            rhai_tx: <_>::default(),
-            rpc_server: srpc::Server::start_http_server()
-                .inspect_err(|error| tracing::error!("srpc error: {}", error))
-                .ok(),
-            rt: init_rt(),
-        })
+    ) -> crate::Result<FlowRegistryHandle> {
+        let (tx, mut rx) = mpsc::channel::<StartReq>(1);
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::LocalRuntime::new().unwrap();
+            rt.block_on(async move {
+                let flows = get_all_flows(entrypoint, flow_owner.id, get_flow, environment).await?;
+                let registry = Self {
+                    depth: 0,
+                    flow_owner,
+                    started_by,
+                    shared_with,
+                    flows: Arc::new(flows),
+                    signer,
+                    signers_info,
+                    new_flow_run,
+                    api_input,
+                    get_previous_values,
+                    parent_flow_execute: None,
+                    token,
+                    endpoints,
+                    rhai_permit: Arc::new(Semaphore::new(1)),
+                    rhai_tx: <_>::default(),
+                    rpc_server: srpc::Server::start_http_server()
+                        .inspect_err(|error| tracing::error!("srpc error: {}", error))
+                        .ok(),
+                };
+
+                while let Some(req) = rx.recv().await {
+                    req.recv
+                        .send(registry.start(req.flow_id, req.inputs, req.options).await)
+                        .ok();
+                }
+
+                Ok::<(), crate::Error>(())
+            })
+        });
+        Ok(FlowRegistryHandle { tx })
     }
 
     pub async fn run_rhai(
@@ -361,7 +397,7 @@ impl FlowRegistry {
         token: actix::Recipient<get_jwt::Request>,
         environment: HashMap<String, String>,
         endpoints: Endpoints,
-    ) -> crate::Result<Self> {
+    ) -> crate::Result<FlowRegistryHandle> {
         Self::new(
             flow_owner,
             started_by,
@@ -449,7 +485,6 @@ impl FlowRegistry {
         let flow_run_id = run.flow_run_id;
         let stop = run.stop_signal;
         let stop_shared = run.stop_shared_signal;
-        let rt = self.rt.clone();
 
         async move {
             this.flows.iter().for_each(|(id, flow)| {
@@ -505,7 +540,7 @@ impl FlowRegistry {
                 <_>::default()
             };
 
-            let join_handle = rt.spawn(
+            let join_handle = spawn_local(
                 async move {
                     flow.run(tx, flow_run_id, inputs, stop, stop_shared, previous_values)
                         .await
@@ -691,10 +726,5 @@ mod tests {
     #[test]
     fn test_default_registry() {
         FlowRegistry::default();
-    }
-
-    #[test]
-    fn test_init_rt() {
-        init_rt();
     }
 }
