@@ -1,4 +1,4 @@
-use crate::command_capnp::{command_context, command_factory};
+use crate::command_capnp::{command_context, command_factory, command_trait};
 use capnp::capability::Promise;
 use flow_lib::{
     CmdInputDescription, CmdOutputDescription, CommandType, Name,
@@ -82,14 +82,17 @@ impl AddressBook {
                 req.get().set_name(name);
                 req.get().set_nd(&simd_json::to_vec(nd)?);
                 let resp = req.send().promise.await?;
-                let _cmd = resp.get()?.to_owned().get_cmd()?;
+                let client = resp.get()?.to_owned().get_cmd()?;
+                return Ok(Box::new(RemoteCommand { client }));
             }
         }
         Err(CommandError::msg("not available"))
     }
 }
 
-pub struct RemoteCommand {}
+pub struct RemoteCommand {
+    client: command_trait::Client,
+}
 
 impl CommandTrait for RemoteCommand {
     fn name(&self) -> Name {
