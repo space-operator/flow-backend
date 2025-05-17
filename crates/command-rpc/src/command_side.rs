@@ -159,7 +159,7 @@ mod tests {
         utils::LocalBoxFuture,
         value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
     };
-    use futures::{FutureExt, future::BoxFuture};
+    use futures::FutureExt;
     use rust_decimal_macros::dec;
     use serde::Deserialize;
 
