@@ -1905,7 +1905,7 @@ mod tests {
         assert_eq!(error, "second");
     }
 
-    #[tokio::test]
+    #[actix::test]
     async fn test_foreach_nested() {
         let json = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -1940,7 +1940,7 @@ mod tests {
         );
     }
 
-    #[tokio::test]
+    #[actix::test]
     async fn test_uneven_loop() {
         let json = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
