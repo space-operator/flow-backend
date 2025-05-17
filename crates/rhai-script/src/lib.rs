@@ -57,7 +57,7 @@ impl Command {
     pub fn run(
         &self,
         engine: &mut Engine,
-        ctx: CommandContextX,
+        ctx: CommandContext,
         mut input: ValueSet,
     ) -> Result<ValueSet, CommandError> {
         let code = String::deserialize(

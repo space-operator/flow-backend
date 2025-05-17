@@ -22,7 +22,7 @@ struct Output {
     solana_net: SolanaNet,
 }
 
-async fn run(ctx: CommandContextX, _: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContext, _: Input) -> Result<Output, CommandError> {
     Ok(Output {
         flow_owner: ctx.flow_owner().id.to_string(),
         started_by: ctx.started_by().id.to_string(),

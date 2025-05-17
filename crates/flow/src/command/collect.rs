@@ -9,7 +9,7 @@ pub const ELEMENT: &str = "element";
 
 pub const ARRAY: &str = "array";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for Collect {
     fn name(&self) -> Name {
         COLLECT.into()
@@ -34,11 +34,7 @@ impl CommandTrait for Collect {
         .to_vec()
     }
 
-    async fn run(
-        &self,
-        _: CommandContextX,
-        mut inputs: ValueSet,
-    ) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContext, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let v = inputs
             .swap_remove(ELEMENT)
             .unwrap_or_else(|| Value::Array(Vec::new()));

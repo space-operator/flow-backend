@@ -29,7 +29,7 @@ pub struct Output {
     pub signature: Signature,
 }
 
-async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let signature = ctx
         .solana_client()
         .request_airdrop(&input.pubkey, input.amount)
@@ -51,7 +51,7 @@ mod tests {
         let pubkey = solana_program::pubkey!("DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY");
         let amount: u64 = 1_500_000_000;
 
-        let result = run(CommandContextX::default(), super::Input { amount, pubkey }).await;
+        let result = run(CommandContext::default(), super::Input { amount, pubkey }).await;
         dbg!(&result);
     }
 }

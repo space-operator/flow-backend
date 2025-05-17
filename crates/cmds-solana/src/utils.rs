@@ -63,7 +63,7 @@ pub fn tx_to_string(tx: &Transaction) -> Result<String, bincode::Error> {
 }
 
 pub async fn try_sign_wallet(
-    ctx: &mut CommandContextX,
+    ctx: &mut CommandContext,
     tx: &mut Transaction,
     wallet: &Wallet,
     recent_blockhash: Hash,

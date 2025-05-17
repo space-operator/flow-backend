@@ -45,7 +45,7 @@ fn build_error(r: &FlowRunResult) -> CommandError {
     CommandError::msg(msg)
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for Interflow {
     fn name(&self) -> Name {
         INTERFLOW_INSTRUCTIONS.into()
@@ -76,7 +76,7 @@ impl CommandTrait for Interflow {
         .into()
     }
 
-    async fn run(&self, ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContext, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let registry = ctx
             .get::<FlowRegistry>()
             .ok_or_else(|| anyhow::anyhow!("FlowRegistry not found"))?;

@@ -24,7 +24,7 @@ pub mod prelude {
             CommandDescription, CommandError, CommandTrait, InstructionInfo,
             builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
         },
-        context::CommandContextX,
+        context::CommandContext,
         solana::{Instructions, KeypairExt},
     };
     pub use rust_decimal::Decimal;

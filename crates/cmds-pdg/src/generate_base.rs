@@ -28,7 +28,7 @@ struct Output {
     attributes: RenderParams,
 }
 
-async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
     let mut rng = match input.seed {
         Some(seed) => ChaCha20Rng::seed_from_u64(seed),
         None => ChaCha20Rng::from_entropy(),

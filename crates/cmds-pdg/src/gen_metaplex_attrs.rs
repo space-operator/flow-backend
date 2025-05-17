@@ -28,7 +28,7 @@ struct Output {
     attributes: Vec<MetaplexAttribute>,
 }
 
-async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
     let traits = NftTraits::new(&input.attributes, &EffectsList::from(input.effects));
     Ok(Output {
         attributes: traits.gen_metaplex_attrs()?,

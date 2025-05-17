@@ -55,7 +55,7 @@ struct SuccessBody {
     Key: String,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let auth = ctx.get_jwt_header().await?;
 
     let content_type = input.content_type.unwrap_or_else(|| {

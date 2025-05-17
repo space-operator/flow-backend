@@ -35,7 +35,7 @@ pub struct Output {
     pub signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let ix = spl_token::instruction::set_authority(
         &spl_token::id(),
         &input.owned_pubkey,
