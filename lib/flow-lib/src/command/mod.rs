@@ -23,10 +23,10 @@ pub mod builder;
 /// Import common types for writing commands.
 pub mod prelude {
     pub use crate::{
-        CmdInputDescription as Input, CmdOutputDescription as Output, FlowId, Name, ValueSet,
-        ValueType,
+        CmdInputDescription, CmdInputDescription as Input, CmdOutputDescription,
+        CmdOutputDescription as Output, FlowId, Name, ValueSet, ValueType,
         command::{
-            CommandDescription, CommandError, CommandTrait,
+            CommandDescription, CommandError, CommandTrait, InstructionInfo,
             builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
         },
         config::{client::NodeData, node::Permissions},

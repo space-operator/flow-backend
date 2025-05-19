@@ -12,4 +12,14 @@ interface CommandFactory {
 
 interface CommandTrait {
     run @0 (ctx: CommandContext, inputs: Data) -> (output: Data);
+
+    name @1 () -> (name: Text);
+
+    inputs @2 () -> (inputs: Data);
+
+    outputs @3 () -> (outputs: Data);
+
+    instructionInfo @4 () -> (info: Data);
+
+    permissions @5 () -> (permissions: Data);
 }

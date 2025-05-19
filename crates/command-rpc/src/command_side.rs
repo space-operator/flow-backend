@@ -36,6 +36,8 @@ enum Error {
     NewCommand(CommandError),
     #[error(transparent)]
     Run(CommandError),
+    #[error(transparent)]
+    SimdJson(#[from] simd_json::Error),
 }
 
 impl From<Error> for capnp::Error {
@@ -78,7 +80,7 @@ impl command_factory::Server for CommandFactoryImpl {
         &mut self,
         params: command_factory::InitParams,
         results: command_factory::InitResults,
-    ) -> Promise<(), ::capnp::Error> {
+    ) -> Promise<(), capnp::Error> {
         Promise::from_future(std::future::ready(
             self.init_impl(params, results).map_err(Into::into),
         ))
@@ -148,6 +150,87 @@ impl command_trait::Server for CommandTraitImpl {
         results: command_trait::RunResults,
     ) -> Promise<(), capnp::Error> {
         Promise::from_future(self.run_impl(params, results).map_err(Into::into))
+    }
+
+    fn name(
+        &mut self,
+        _: command_trait::NameParams,
+        mut results: command_trait::NameResults,
+    ) -> Promise<(), capnp::Error> {
+        let cmd = self.cmd.clone();
+        Promise::from_future(async move {
+            let name = cmd.lock().await.name();
+            results.get().set_name(name);
+            Ok(())
+        })
+    }
+
+    fn inputs(
+        &mut self,
+        _: command_trait::InputsParams,
+        mut results: command_trait::InputsResults,
+    ) -> Promise<(), capnp::Error> {
+        let cmd = self.cmd.clone();
+        Promise::from_future(
+            async move {
+                let inputs = cmd.lock().await.inputs();
+                let inputs = simd_json::to_vec(&inputs)?;
+                results.get().set_inputs(&inputs);
+                Ok::<_, Error>(())
+            }
+            .map_err(Into::into),
+        )
+    }
+
+    fn outputs(
+        &mut self,
+        _: command_trait::OutputsParams,
+        mut results: command_trait::OutputsResults,
+    ) -> Promise<(), capnp::Error> {
+        let cmd = self.cmd.clone();
+        Promise::from_future(
+            async move {
+                let outputs = cmd.lock().await.outputs();
+                let outputs = simd_json::to_vec(&outputs)?;
+                results.get().set_outputs(&outputs);
+                Ok::<_, Error>(())
+            }
+            .map_err(Into::into),
+        )
+    }
+
+    fn instruction_info(
+        &mut self,
+        _: command_trait::InstructionInfoParams,
+        mut results: command_trait::InstructionInfoResults,
+    ) -> Promise<(), capnp::Error> {
+        let cmd = self.cmd.clone();
+        Promise::from_future(
+            async move {
+                let info = cmd.lock().await.instruction_info();
+                let info = simd_json::to_vec(&info)?;
+                results.get().set_info(&info);
+                Ok::<_, Error>(())
+            }
+            .map_err(Into::into),
+        )
+    }
+
+    fn permissions(
+        &mut self,
+        _: command_trait::PermissionsParams,
+        mut results: command_trait::PermissionsResults,
+    ) -> Promise<(), capnp::Error> {
+        let cmd = self.cmd.clone();
+        Promise::from_future(
+            async move {
+                let perm = cmd.lock().await.permissions();
+                let perm = simd_json::to_vec(&perm)?;
+                results.get().set_permissions(&perm);
+                Ok::<_, Error>(())
+            }
+            .map_err(Into::into),
+        )
     }
 }
 
