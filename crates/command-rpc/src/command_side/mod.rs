@@ -1,5 +1,7 @@
 use crate::command_capnp::{command_factory, command_trait, command_trait::run_params};
+use bincode::config::standard;
 use capnp::capability::Promise;
+use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 use flow_lib::{
     Value,
     command::{CommandDescription, CommandError, CommandTrait},
@@ -11,13 +13,20 @@ use flow_lib::{
         bincode_impl::{map_from_bincode, map_to_bincode},
     },
 };
-use futures::TryFutureExt;
-use std::{borrow::Cow, collections::BTreeMap, str::Utf8Error, sync::Arc};
+use futures::{
+    AsyncReadExt, TryFutureExt,
+    io::{BufReader, BufWriter},
+};
+use std::{borrow::Cow, collections::BTreeMap, net::SocketAddr, str::Utf8Error, sync::Arc};
 use thiserror::Error as ThisError;
-use tokio::sync::Mutex;
+use tokio::{
+    net::ToSocketAddrs,
+    sync::{Mutex, oneshot},
+    task::spawn_local,
+};
 
 #[derive(ThisError, Debug)]
-enum Error {
+pub enum Error {
     #[error(transparent)]
     Json(#[from] serde_json::Error),
     #[error(transparent)]
@@ -38,6 +47,8 @@ enum Error {
     Run(CommandError),
     #[error(transparent)]
     SimdJson(#[from] simd_json::Error),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
 }
 
 impl From<Error> for capnp::Error {
@@ -73,6 +84,16 @@ impl CommandFactoryImpl {
             Err(Error::NotAvailable(name.to_owned()))
         }
     }
+
+    fn all_availables_impl(
+        &self,
+        mut results: command_factory::AllAvailablesResults,
+    ) -> Result<(), Error> {
+        let names = self.availables.keys().collect::<Vec<_>>();
+        let names = bincode::encode_to_vec(&names, standard())?;
+        results.get().set_availables(&names);
+        Ok(())
+    }
 }
 
 impl command_factory::Server for CommandFactoryImpl {
@@ -81,9 +102,21 @@ impl command_factory::Server for CommandFactoryImpl {
         params: command_factory::InitParams,
         results: command_factory::InitResults,
     ) -> Promise<(), capnp::Error> {
-        Promise::from_future(std::future::ready(
-            self.init_impl(params, results).map_err(Into::into),
-        ))
+        match self.init_impl(params, results) {
+            Ok(_) => Promise::ok(()),
+            Err(error) => Promise::err(error.into()),
+        }
+    }
+
+    fn all_availables(
+        &mut self,
+        _: command_factory::AllAvailablesParams,
+        results: command_factory::AllAvailablesResults,
+    ) -> ::capnp::capability::Promise<(), ::capnp::Error> {
+        match self.all_availables_impl(results) {
+            Ok(_) => Promise::ok(()),
+            Err(error) => Promise::err(error.into()),
+        }
     }
 }
 
@@ -234,150 +267,50 @@ impl command_trait::Server for CommandTraitImpl {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use flow_lib::{
-        CmdInputDescription, CmdOutputDescription, Name, ValueType,
-        config::client::{Extra, Source, Target, TargetsForm},
-        utils::LocalBoxFuture,
-        value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
-    };
-    use futures::FutureExt;
-    use rust_decimal_macros::dec;
-    use serde::Deserialize;
-
-    use crate::{command_capnp, flow_side::CommandContextImpl};
-
-    use super::*;
-
-    struct Add;
-    impl CommandTrait for Add {
-        fn name(&self) -> Name {
-            "add".into()
-        }
-
-        fn inputs(&self) -> Vec<CmdInputDescription> {
-            [
-                CmdInputDescription {
-                    name: "a".into(),
-                    type_bounds: [ValueType::Decimal].into(),
-                    required: true,
-                    passthrough: false,
-                },
-                CmdInputDescription {
-                    name: "b".into(),
-                    type_bounds: [ValueType::Decimal].into(),
-                    required: true,
-                    passthrough: false,
-                },
-            ]
-            .into()
-        }
-
-        fn outputs(&self) -> Vec<CmdOutputDescription> {
-            [CmdOutputDescription {
-                name: "c".into(),
-                r#type: ValueType::Decimal,
-                optional: false,
-            }]
-            .into()
-        }
-        fn run<'life0, 'async_trait>(
-            &'life0 self,
-            _: CommandContext,
-            params: value::Map,
-        ) -> LocalBoxFuture<'async_trait, Result<value::Map, CommandError>>
-        where
-            'life0: 'async_trait,
-            Self: 'async_trait,
-        {
-            async move {
-                #[serde_with::serde_as]
-                #[derive(Deserialize)]
-                struct Input {
-                    #[serde_as(as = "AsDecimal")]
-                    a: Decimal,
-                    #[serde_as(as = "AsDecimal")]
-                    b: Decimal,
-                }
-
-                let x: Input = value::from_map(params)?;
-                Ok(value::map! {
-                    "c" => x.a + x.b,
-                })
-            }
-            .boxed()
-        }
+pub async fn serve(
+    addr: impl ToSocketAddrs,
+    factory: command_factory::Client,
+    local_addr: Option<oneshot::Sender<SocketAddr>>,
+) -> Result<(), std::io::Error> {
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    if let Some(tx) = local_addr {
+        let local = listener.local_addr()?;
+        tx.send(local).ok();
     }
-
-    #[tokio::test]
-    async fn test_call() {
-        let factory = CommandFactoryImpl {
-            availables: [(
-                Cow::Borrowed("add"),
-                CommandDescription {
-                    name: Cow::Borrowed("add"),
-                    fn_new: |_| Ok(Box::new(Add)),
-                },
-            )]
-            .into(),
+    loop {
+        let Ok((stream, _)) = listener.accept().await else {
+            tracing::error!("error accepting connection");
+            continue;
         };
-        let client = capnp_rpc::new_client::<command_capnp::command_factory::Client, _>(factory);
-        let mut req = client.init_request();
-        req.get().set_name("add");
-        let nd = NodeData {
-            r#type: flow_lib::CommandType::Native,
-            node_id: "add".to_owned(),
-            sources: [Source {
-                id: <_>::default(),
-                name: "c".to_owned(),
-                r#type: ValueType::Decimal,
-                optional: false,
-            }]
-            .into(),
-            targets: [
-                Target {
-                    id: <_>::default(),
-                    name: "a".to_owned(),
-                    type_bounds: [ValueType::Decimal].into(),
-                    required: true,
-                    passthrough: false,
-                },
-                Target {
-                    id: <_>::default(),
-                    name: "b".to_owned(),
-                    type_bounds: [ValueType::Decimal].into(),
-                    required: true,
-                    passthrough: false,
-                },
-            ]
-            .into(),
-            targets_form: TargetsForm {
-                form_data: serde_json::Value::Null,
-                extra: Extra {
-                    ..Default::default()
-                },
-                wasm_bytes: None,
-            },
-            instruction_info: None,
-        };
-        req.get().set_nd(&simd_json::to_vec(&nd).unwrap());
-        let result = req.send().promise.await.unwrap();
-        let cmd = result.get().unwrap().get_cmd().unwrap();
-        let mut req = cmd.run_request();
-        req.get().set_inputs(
-            map_to_bincode(&value::map! {
-                "a" => dec!(1.2888),
-                "b" => dec!(3.5541),
-            })
-            .unwrap()
-            .as_slice(),
+        let (read, write) = tokio_util::compat::TokioAsyncReadCompatExt::compat(stream).split();
+        let network = VatNetwork::new(
+            BufReader::new(read),
+            BufWriter::new(write),
+            Side::Server,
+            <_>::default(),
         );
-        req.get().set_ctx(capnp_rpc::new_client(CommandContextImpl {
-            context: CommandContext::test_context(),
-        }));
-        let result = req.send().promise.await.unwrap();
-        let output = map_from_bincode(result.get().unwrap().get_output().unwrap()).unwrap();
-        dbg!(output);
+        let rpc_system = RpcSystem::new(Box::new(network), Some(factory.clone().client));
+        spawn_local(rpc_system);
     }
 }
+
+pub async fn connect_command_factory(
+    addr: impl ToSocketAddrs,
+) -> Result<command_factory::Client, Error> {
+    let stream = tokio::net::TcpStream::connect(addr).await?;
+    let (reader, writer) = tokio_util::compat::TokioAsyncReadCompatExt::compat(stream).split();
+
+    let network = Box::new(VatNetwork::new(
+        futures::io::BufReader::new(reader),
+        futures::io::BufWriter::new(writer),
+        Side::Client,
+        Default::default(),
+    ));
+    let mut rpc_system = RpcSystem::new(network, None);
+    let client: command_factory::Client = rpc_system.bootstrap(Side::Server);
+    tokio::task::spawn_local(rpc_system);
+    Ok(client)
+}
+
+#[cfg(test)]
+mod tests;

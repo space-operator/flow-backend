@@ -15,7 +15,7 @@ use crate::{
     context::CommandContext,
 };
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::BTreeMap};
 use value::Value;
 
 pub mod builder;
@@ -190,3 +190,9 @@ impl CommandDescription {
 }
 
 inventory::collect!(CommandDescription);
+
+pub fn collect_commands() -> BTreeMap<Cow<'static, str>, CommandDescription> {
+    inventory::iter::<CommandDescription>()
+        .map(|c| (c.name.clone(), c.clone()))
+        .collect()
+}
