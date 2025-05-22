@@ -23,3 +23,7 @@ interface CommandTrait {
 
     permissions @5 () -> (permissions: Data);
 }
+
+interface FlowServer {
+    join @0 (factory: CommandFactory);
+}
