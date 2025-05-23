@@ -1,11 +1,13 @@
-use crate::command_capnp::{command_context, command_factory, command_trait};
+use crate::command_capnp::{command_context, command_factory, command_trait, flow_server};
+use bincode::config::standard;
 use capnp::capability::Promise;
 use flow_lib::{
     CommandType,
     command::prelude::*,
     value::bincode_impl::{map_from_bincode, map_to_bincode},
 };
-use std::future::ready;
+use futures::future::LocalBoxFuture;
+use std::{cell::RefCell, rc::Rc};
 use thiserror::Error as ThisError;
 
 #[derive(ThisError, Debug)]
@@ -46,12 +48,59 @@ impl command_context::Server for CommandContextImpl {
         result: command_context::DataResults,
     ) -> Promise<(), ::capnp::Error> {
         let result = self.data_impl(params, result).map_err(capnp::Error::from);
-        Promise::from_future(ready(result))
+        match result {
+            Ok(result) => Promise::ok(result),
+            Err(error) => Promise::err(error),
+        }
     }
 }
 
-pub struct AddressBook {
-    addresses: Vec<Address>,
+pub struct FactoryAddressBook {
+    addresses: Rc<RefCell<Vec<Address>>>,
+}
+
+impl FactoryAddressBook {
+    fn join_impl(
+        &mut self,
+        params: flow_server::JoinParams,
+        _: flow_server::JoinResults,
+    ) -> LocalBoxFuture<'static, Result<(), capnp::Error>> {
+        let addrs = self.addresses.clone();
+        Box::pin(async move {
+            let client = params.get()?.get_factory()?;
+            let names: Vec<String> = bincode::decode_from_slice(
+                client
+                    .all_availables_request()
+                    .send()
+                    .promise
+                    .await?
+                    .get()?
+                    .get_availables()?,
+                standard(),
+            )
+            .map_err(|e| capnp::Error::failed(e.to_string()))?
+            .0;
+            let availables = names
+                .into_iter()
+                .map(|name| Available {
+                    kind: CommandType::Native, // TODO: all native at the moment
+                    name,
+                })
+                .collect();
+            addrs.borrow_mut().push(Address { client, availables });
+            Ok(())
+        })
+    }
+}
+
+impl flow_server::Server for FactoryAddressBook {
+    fn join(
+        &mut self,
+        params: flow_server::JoinParams,
+        results: flow_server::JoinResults,
+    ) -> Promise<(), ::capnp::Error> {
+        Promise::from_future(self.join_impl(params, results))
+    }
 }
 
 pub struct Address {
@@ -65,25 +114,35 @@ struct Available {
     // version: semver::Version,
 }
 
-impl AddressBook {
-    pub async fn new_command(
+impl FactoryAddressBook {
+    pub fn new_command(
         &self,
         name: &str,
         nd: &NodeData,
-    ) -> Result<Box<dyn CommandTrait>, CommandError> {
-        for a in &self.addresses {
+    ) -> Result<LocalBoxFuture<'static, Result<Box<dyn CommandTrait>, CommandError>>, CommandError>
+    {
+        let mut client = None;
+        for a in self.addresses.borrow().iter() {
             if a.availables.iter().any(
                 |a| a.kind == nd.r#type && a.name == name, // TODO check version
             ) {
-                let mut req = a.client.init_request();
-                req.get().set_name(name);
-                req.get().set_nd(&simd_json::to_vec(nd)?);
-                let resp = req.send().promise.await?;
-                let client = resp.get()?.to_owned().get_cmd()?;
-                return Ok(Box::new(RemoteCommand::new(client).await?));
+                client = Some(a.client.clone());
+                break;
             }
         }
-        Err(CommandError::msg("not available"))
+        if let Some(client) = client {
+            let mut req = client.init_request();
+            req.get().set_name(name);
+            req.get().set_nd(&simd_json::to_vec(nd)?);
+            Ok(Box::pin(async move {
+                let resp = req.send().promise.await?;
+                let client = resp.get()?.to_owned().get_cmd()?;
+                let boxed: Box<dyn CommandTrait> = Box::new(RemoteCommand::new(client).await?);
+                Ok(boxed)
+            }))
+        } else {
+            Err(CommandError::msg("not available"))
+        }
     }
 }
 

@@ -191,8 +191,8 @@ impl CommandDescription {
 
 inventory::collect!(CommandDescription);
 
-pub fn collect_commands() -> BTreeMap<Cow<'static, str>, CommandDescription> {
+pub fn collect_commands() -> BTreeMap<Cow<'static, str>, &'static CommandDescription> {
     inventory::iter::<CommandDescription>()
-        .map(|c| (c.name.clone(), c.clone()))
+        .map(|c| (c.name.clone(), c))
         .collect()
 }

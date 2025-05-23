@@ -8,6 +8,8 @@ interface CommandFactory {
     init @0 (name: Text, nd: Data) -> (cmd: CommandTrait);
 
     allAvailables @1 () -> (availables: Data);
+
+    networkAddress @2 () -> (address: Data);
 }
 
 interface CommandTrait {
