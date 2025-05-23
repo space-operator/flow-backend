@@ -12,10 +12,10 @@ use crate::{
         CmdInputDescription, CmdOutputDescription, Name, ValueSet, client::NodeData,
         node::Permissions,
     },
-    context::CommandContextX,
+    context::CommandContext,
 };
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::BTreeMap};
 use value::Value;
 
 pub mod builder;
@@ -23,14 +23,14 @@ pub mod builder;
 /// Import common types for writing commands.
 pub mod prelude {
     pub use crate::{
-        CmdInputDescription as Input, CmdOutputDescription as Output, FlowId, Name, ValueSet,
-        ValueType,
+        CmdInputDescription, CmdInputDescription as Input, CmdOutputDescription,
+        CmdOutputDescription as Output, FlowId, Name, ValueSet, ValueType,
         command::{
-            CommandDescription, CommandError, CommandTrait,
+            CommandDescription, CommandError, CommandTrait, InstructionInfo,
             builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
         },
         config::{client::NodeData, node::Permissions},
-        context::CommandContextX,
+        context::CommandContext,
         solana::{Instructions, Keypair, Pubkey, Signature},
     };
     pub use async_trait::async_trait;
@@ -49,8 +49,8 @@ pub mod prelude {
 pub type CommandError = anyhow::Error;
 
 /// Generic trait for implementing commands.
-#[async_trait::async_trait]
-pub trait CommandTrait: Send + Sync + 'static {
+#[async_trait::async_trait(?Send)]
+pub trait CommandTrait: 'static {
     /// Unique name to identify the command.
     fn name(&self) -> Name;
 
@@ -61,7 +61,7 @@ pub trait CommandTrait: Send + Sync + 'static {
     fn outputs(&self) -> Vec<CmdOutputDescription>;
 
     /// Run the command.
-    async fn run(&self, ctx: CommandContextX, params: ValueSet) -> Result<ValueSet, CommandError>;
+    async fn run(&self, ctx: CommandContext, params: ValueSet) -> Result<ValueSet, CommandError>;
 
     /// Specify how [`form_data`][crate::config::NodeConfig::form_data] are read.
     fn read_form_data(&self, data: serde_json::Value) -> ValueSet {
@@ -190,3 +190,9 @@ impl CommandDescription {
 }
 
 inventory::collect!(CommandDescription);
+
+pub fn collect_commands() -> BTreeMap<Cow<'static, str>, &'static CommandDescription> {
+    inventory::iter::<CommandDescription>()
+        .map(|c| (c.name.clone(), c))
+        .collect()
+}

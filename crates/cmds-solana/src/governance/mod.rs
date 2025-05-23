@@ -481,10 +481,10 @@ pub enum GovernanceInstruction {
     ///       governing_token_owner]
     ///  3. `[writable]` GoverningTokenMint
     ///  4. `[signer]` Revoke authority which can be either of:
-    ///                1) GoverningTokenMint mint_authority to forcefully revoke
-    ///                   the membership tokens
-    ///                2) GoverningTokenOwner who voluntarily revokes their own
-    ///                   membership
+    ///     1) GoverningTokenMint mint_authority to forcefully revoke
+    ///        the membership tokens
+    ///     2) GoverningTokenOwner who voluntarily revokes their own
+    ///        membership
     ///  5. `[]` RealmConfig account.
     ///     * PDA seeds: ['realm-config', realm]
     ///  6. `[]` SPL Token program

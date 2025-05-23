@@ -93,7 +93,7 @@ impl ProxiedUserConn {
     }
 }
 
-#[async_trait::async_trait]
+#[async_trait::async_trait(?Send)]
 impl UserConnectionTrait for ProxiedUserConn {
     async fn get_wallet_by_pubkey(&self, _: &[u8; 32]) -> crate::Result<Wallet> {
         // TODO

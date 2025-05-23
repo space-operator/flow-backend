@@ -34,7 +34,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (collection_metadata_account, _) =
         mpl_token_metadata::pda::find_metadata_account(&input.collection_mint_account);
 

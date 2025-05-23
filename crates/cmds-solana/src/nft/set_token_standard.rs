@@ -33,7 +33,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (metadata_account, _) = mpl_token_metadata::pda::find_metadata_account(&input.mint_account);
 
     let minimum_balance_for_rent_exemption = ctx

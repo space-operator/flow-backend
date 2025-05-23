@@ -25,7 +25,7 @@ const SEED_5: &str = "seed_5";
 
 const PDA: &str = "pda";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for FindPDA {
     fn name(&self) -> Name {
         FIND_PDA.into()
@@ -82,11 +82,7 @@ impl CommandTrait for FindPDA {
         .to_vec()
     }
 
-    async fn run(
-        &self,
-        _: CommandContextX,
-        mut inputs: ValueSet,
-    ) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContext, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let Input { program_id } = value::from_map(inputs.clone())?;
 
         let seed_1: Option<Value> = inputs.swap_remove(SEED_1);

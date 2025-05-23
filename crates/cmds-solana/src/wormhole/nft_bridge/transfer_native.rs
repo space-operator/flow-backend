@@ -48,7 +48,7 @@ pub struct Output {
     sequence: String,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let wormhole_core_program_id =
         crate::wormhole::wormhole_core_program_id(ctx.solana_config().cluster);
 

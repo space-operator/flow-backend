@@ -44,7 +44,7 @@ pub struct Output {
     pub signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     // let mut additional_signers: Vec<Keypair> = Vec::new();
     let mut creators: Vec<Pubkey> = Vec::new();
 

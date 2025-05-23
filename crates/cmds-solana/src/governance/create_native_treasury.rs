@@ -61,7 +61,7 @@ pub fn create_native_treasury(
     (instructions, native_treasury_address)
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
     let (ix, native_treasury_address) =

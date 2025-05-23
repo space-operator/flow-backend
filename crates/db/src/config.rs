@@ -78,8 +78,14 @@ pub struct DbConfig {
     pub(crate) encryption_key: Option<EncryptionKey>,
 }
 
+const fn bool_true() -> bool {
+    true
+}
+
 #[derive(Deserialize, Clone, Default)]
 pub struct SslConfig {
+    #[serde(default = "bool_true")]
+    pub use_builtin_supabase_cert: bool,
     pub enabled: bool,
     pub cert: Option<std::path::PathBuf>,
 }

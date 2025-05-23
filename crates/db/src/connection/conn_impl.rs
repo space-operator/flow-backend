@@ -135,7 +135,7 @@ where
         .collect::<crate::Result<C>>()
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl UserConnectionTrait for UserConnection {
     async fn get_wallet_by_pubkey(&self, pubkey: &[u8; 32]) -> crate::Result<Wallet> {
         // TODO: caching

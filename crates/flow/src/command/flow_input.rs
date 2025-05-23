@@ -21,7 +21,7 @@ impl FlowInputCommand {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for FlowInputCommand {
     fn name(&self) -> Name {
         FLOW_INPUT.into()
@@ -40,7 +40,7 @@ impl CommandTrait for FlowInputCommand {
         .to_vec()
     }
 
-    async fn run(&self, _: CommandContextX, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContext, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let value = inputs.swap_remove(&self.label).unwrap_or(Value::Null);
         Ok(value::map! {
             &self.label => value,

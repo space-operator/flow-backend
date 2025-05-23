@@ -34,7 +34,7 @@ dependencies = [
  "pin-project-lite",
  "smallvec",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
 ]
 
 [[package]]
@@ -50,7 +50,7 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
  "tracing",
 ]
 
@@ -103,7 +103,7 @@ dependencies = [
  "sha1 0.10.6",
  "smallvec",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
  "tracing",
  "zstd",
 ]
@@ -238,7 +238,7 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
 ]
 
 [[package]]
@@ -1269,23 +1269,32 @@ dependencies = [
 ]
 
 [[package]]
-name = "capnp-futures"
-version = "0.20.1"
+name = "capnp"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b70b0d44372d42654e3efac38c1643c7b0f9d3a9e9b72b635f942ff3f17e891"
+checksum = "b1d1b4a00e80b7c4b1a49e845365f25c9d8fd0a19c9cd8d66f68afea47b1f020"
 dependencies = [
- "capnp",
+ "embedded-io",
+]
+
+[[package]]
+name = "capnp-futures"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d04478adeb234836f886ec554a0d96e3af3a939ba7b3962af5addddf7ab71231"
+dependencies = [
+ "capnp 0.21.0",
  "futures-channel",
  "futures-util",
 ]
 
 [[package]]
 name = "capnp-rpc"
-version = "0.20.3"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5a945dd7eac211c30763aa1dbf86ed8e58129d01442d4d2d516facfdb859a1e"
+checksum = "85e9c19ef52ff1b9c9822fb21bfa68a72bc58711676295ff06eb88e64c7877f7"
 dependencies = [
- "capnp",
+ "capnp 0.21.0",
  "capnp-futures",
  "futures",
 ]
@@ -1296,7 +1305,7 @@ version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aa3d5f01e69ed11656d2c7c47bf34327ea9bfb5c85c7de787fcd7b6c5e45b61"
 dependencies = [
- "capnp",
+ "capnp 0.20.6",
 ]
 
 [[package]]
@@ -1680,21 +1689,30 @@ version = "0.0.0"
 dependencies = [
  "actix",
  "async-trait",
- "capnp",
+ "bincode 2.0.1",
+ "capnp 0.21.0",
  "capnp-rpc",
  "capnpc",
+ "cmds-std",
+ "criterion",
  "features",
  "flow-lib",
  "futures",
  "inventory",
+ "reqwest 0.12.15",
+ "rust_decimal",
+ "rust_decimal_macros",
  "schemars 1.0.0-alpha.17",
+ "semver 1.0.26",
  "serde",
  "serde_json",
  "serde_with",
+ "simd-json",
  "srpc",
  "thiserror 1.0.69",
  "tokio",
  "tokio-tungstenite 0.24.0",
+ "tokio-util 0.7.15",
  "tower",
  "tracing",
  "url",
@@ -2839,6 +2857,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "float-cmp"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b09cf3155332e944990140d967ff5eceb70df778b34f77d8075db46e4704e6d8"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "flow"
 version = "0.0.0"
 dependencies = [
@@ -2880,7 +2907,7 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
  "tower",
  "tracing",
  "tracing-subscriber",
@@ -2992,7 +3019,7 @@ dependencies = [
  "space-wasm",
  "thiserror 1.0.69",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
  "toml",
  "tower",
  "tracing",
@@ -3008,6 +3035,7 @@ name = "flow-value"
 version = "0.1.0"
 dependencies = [
  "base64 0.13.1",
+ "bincode 2.0.1",
  "bs58 0.4.0",
  "bytes",
  "five8",
@@ -3287,7 +3315,7 @@ dependencies = [
  "indexmap 2.9.0",
  "slab",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
  "tracing",
 ]
 
@@ -3306,7 +3334,7 @@ dependencies = [
  "indexmap 2.9.0",
  "slab",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
  "tracing",
 ]
 
@@ -3318,6 +3346,16 @@ checksum = "7db2ff139bba50379da6aa0766b52fdcb62cb5b263009b09ed58ba604e14bbd1"
 dependencies = [
  "cfg-if",
  "crunchy",
+]
+
+[[package]]
+name = "halfbrown"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa2c385c6df70fd180bbb673d93039dbd2cd34e41d782600bdf6e1ca7bce39aa"
+dependencies = [
+ "hashbrown 0.15.2",
+ "serde",
 ]
 
 [[package]]
@@ -5183,7 +5221,7 @@ dependencies = [
  "ryu",
  "simdutf8",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
 ]
 
 [[package]]
@@ -6161,7 +6199,7 @@ dependencies = [
  "tokio",
  "tokio-native-tls",
  "tokio-rustls 0.24.1",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
  "tower-service",
  "url",
  "wasm-bindgen",
@@ -6213,7 +6251,7 @@ dependencies = [
  "tokio",
  "tokio-native-tls",
  "tokio-rustls 0.26.2",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
  "tower",
  "tower-service",
  "url",
@@ -6976,6 +7014,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77549399552de45a898a580c1b41d445bf730df867cc44e6c0233bbc4b8329de"
 dependencies = [
  "rand_core 0.6.4",
+]
+
+[[package]]
+name = "simd-json"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c962f626b54771990066e5435ec8331d1462576cd2d1e62f24076ae014f92112"
+dependencies = [
+ "getrandom 0.3.2",
+ "halfbrown",
+ "ref-cast",
+ "serde",
+ "serde_json",
+ "simdutf8",
+ "value-trait",
 ]
 
 [[package]]
@@ -9618,7 +9671,7 @@ dependencies = [
  "rand 0.9.0",
  "socket2",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
  "whoami",
 ]
 
@@ -9713,12 +9766,13 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.14"
+version = "0.7.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b9590b93e6fcc1739458317cccd391ad3955e2bde8913edf6f95f9e65a8f034"
+checksum = "66a539a9ad6d5d281510d5bd368c973d636c02dbf8a67300bfb6b950696ad7df"
 dependencies = [
  "bytes",
  "futures-core",
+ "futures-io",
  "futures-sink",
  "pin-project-lite",
  "tokio",
@@ -9761,7 +9815,7 @@ dependencies = [
  "pin-project-lite",
  "sync_wrapper 1.0.2",
  "tokio",
- "tokio-util 0.7.14",
+ "tokio-util 0.7.15",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -10127,6 +10181,18 @@ name = "valuable"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
+
+[[package]]
+name = "value-trait"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0508fce11ad19e0aab49ce20b6bec7f8f82902ded31df1c9fc61b90f0eb396b8"
+dependencies = [
+ "float-cmp",
+ "halfbrown",
+ "itoa",
+ "ryu",
+]
 
 [[package]]
 name = "vcpkg"

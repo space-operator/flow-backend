@@ -30,6 +30,9 @@ pub mod macros;
 
 pub mod with;
 
+#[cfg(feature = "bincode")]
+pub mod bincode_impl;
+
 // custom serialize and deserialize modules
 pub mod decimal;
 #[cfg(feature = "solana-keypair")]
@@ -234,6 +237,7 @@ pub type Map = self::HashMap<Key, Value>;
 /// assert_eq!(value1, value);
 /// ```
 #[derive(Clone, PartialEq, Default)]
+// #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 pub enum Value {
     /// JSON representation:
     /// ```json

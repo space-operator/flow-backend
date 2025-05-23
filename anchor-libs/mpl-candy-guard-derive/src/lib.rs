@@ -25,13 +25,8 @@ pub fn derive(input: TokenStream) -> TokenStream {
             if let syn::PathArguments::AngleBracketed(ref inner_ty) = p.path.segments[0].arguments {
                 if inner_ty.args.len() != 1 {
                     return false;
-                } else {
-                    match inner_ty.args.first().unwrap() {
-                        syn::GenericArgument::Type(_ty) => {
-                            return true;
-                        }
-                        _ => {}
-                    }
+                } else if let syn::GenericArgument::Type(_ty) = inner_ty.args.first().unwrap() {
+                    return true;
                 }
             }
         }
@@ -46,13 +41,8 @@ pub fn derive(input: TokenStream) -> TokenStream {
             if let syn::PathArguments::AngleBracketed(ref inner_ty) = p.path.segments[0].arguments {
                 if inner_ty.args.len() != 1 {
                     panic!("Option type was not Option<T>");
-                } else {
-                    match inner_ty.args.first().unwrap() {
-                        syn::GenericArgument::Type(ty) => {
-                            return ty.clone();
-                        }
-                        _ => {}
-                    }
+                } else if let syn::GenericArgument::Type(ty) = inner_ty.args.first().unwrap() {
+                    return ty.clone();
                 }
             }
         }

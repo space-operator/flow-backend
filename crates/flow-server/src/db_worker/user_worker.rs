@@ -284,10 +284,10 @@ impl actix::Handler<get_previous_values::Request> for UserWorker {
             let values = db
                 .get_user_conn(user_id)
                 .await
-                .map_err(|e| get_previous_values::Error::other(e))?
+                .map_err(get_previous_values::Error::other)?
                 .get_previous_values(&msg.nodes)
                 .await
-                .map_err(|e| get_previous_values::Error::other(e))?;
+                .map_err(get_previous_values::Error::other)?;
 
             Ok(get_previous_values::Response { values })
         };

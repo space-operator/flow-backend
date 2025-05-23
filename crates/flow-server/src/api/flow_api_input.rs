@@ -145,14 +145,16 @@ async fn submit_data(
     body: web::Json<Body>,
 ) -> Result<web::Json<()>, actix_web::Error> {
     let key = blake3::Hash::from_hex(path.into_inner()).map_err(|_| Error::NotFound)?;
-    if let Some(resp) = store.lock().unwrap().reqs.remove(&key) {
-        resp.oneshot
-            .send(Ok(api_input::Response {
-                value: body.into_inner().value,
-            }))
-            .map_err(|_| Error::NotFound)?;
-        Ok(web::Json(()))
-    } else {
-        return Err(Error::NotFound.into());
-    }
+    let resp = store
+        .lock()
+        .unwrap()
+        .reqs
+        .remove(&key)
+        .ok_or(Error::NotFound)?;
+    resp.oneshot
+        .send(Ok(api_input::Response {
+            value: body.into_inner().value,
+        }))
+        .map_err(|_| Error::NotFound)?;
+    Ok(web::Json(()))
 }

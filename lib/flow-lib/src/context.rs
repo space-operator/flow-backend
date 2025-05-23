@@ -431,7 +431,7 @@ pub struct CommandContextData {
     pub flow: FlowContextData,
 }
 
-#[derive(Clone)]
+#[derive(Clone, bon::Builder)]
 pub struct FlowSetServices {
     pub http: reqwest::Client,
     pub solana_client: Arc<SolanaClient>,
@@ -439,21 +439,21 @@ pub struct FlowSetServices {
     pub api_input: api_input::Svc,
 }
 
-#[derive(Clone)]
+#[derive(Clone, bon::Builder)]
 pub struct FlowServices {
     pub signer: signer::Svc,
     pub set: FlowSetServices,
 }
 
 #[derive(Clone, bon::Builder)]
-pub struct CommandContextX {
+pub struct CommandContext {
     data: CommandContextData,
     execute: execute::Svc,
     get_jwt: get_jwt::Svc,
     flow: FlowServices,
 }
 
-impl CommandContextX {
+impl CommandContext {
     pub fn test_context() -> Self {
         let config = ContextConfig::default();
         let solana_client = Arc::new(config.solana_client.build_client());
@@ -589,8 +589,7 @@ impl CommandContextX {
         message: Bytes,
         timeout: Duration,
     ) -> Result<signer::SignatureResponse, signer::Error> {
-        Ok(self
-            .flow
+        self.flow
             .signer
             .ready()
             .await?
@@ -603,7 +602,7 @@ impl CommandContextX {
                 flow_run_id: Some(self.data.flow.flow_run_id),
                 signatures: None,
             })
-            .await?)
+            .await
     }
 
     /// Get an extension by type.
@@ -636,7 +635,7 @@ pub struct RawContext<'a> {
     pub services: RawServices<'a>,
 }
 
-impl Default for CommandContextX {
+impl Default for CommandContext {
     fn default() -> Self {
         Self::test_context()
     }

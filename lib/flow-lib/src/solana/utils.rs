@@ -152,7 +152,7 @@ pub async fn get_and_parse_transaction(
     };
 
     let tx_bytes = BASE64_STANDARD.decode(&tx_base64).map_err(Error::other)?;
-    let tx: Transaction = bincode::deserialize(&tx_bytes).map_err(Error::other)?;
+    let tx: Transaction = bincode1::deserialize(&tx_bytes).map_err(Error::other)?;
 
     Ok(TransactionWithMeta {
         slot: result.slot,
