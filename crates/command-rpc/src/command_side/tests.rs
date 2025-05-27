@@ -9,6 +9,8 @@ use flow_lib::{
     value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
 };
 use futures::FutureExt;
+use iroh::SecretKey;
+use rand::rngs::OsRng;
 use rust_decimal_macros::dec;
 use serde::Deserialize;
 
@@ -76,6 +78,7 @@ impl CommandTrait for Add {
 async fn test_serve() {
     let factory = CommandFactoryImpl {
         availables: collect_commands(),
+        iroh_endpoint: None,
     };
     let (tx, rx) = oneshot::channel();
     spawn_local(serve(
@@ -102,16 +105,44 @@ async fn test_serve() {
 }
 
 #[actix::test]
+async fn test_serve_iroh() {
+    let factory = CommandFactoryImpl {
+        availables: collect_commands(),
+        iroh_endpoint: None,
+    };
+    let factory_key = SecretKey::generate(rand::rngs::OsRng);
+    let client = factory.serve_iroh(factory_key).await.unwrap().0;
+    let addr = client.iroh_address().await.unwrap();
+
+    let client = connect_iroh_command_factory(addr, SecretKey::generate(OsRng))
+        .await
+        .unwrap();
+    let resp = client
+        .all_availables_request()
+        .send()
+        .promise
+        .await
+        .unwrap();
+    let data = resp.get().unwrap().get_availables().unwrap();
+    let names: Vec<&str> = bincode::borrow_decode_from_slice(&data, standard())
+        .unwrap()
+        .0;
+    dbg!(&names);
+    assert!(!names.is_empty());
+}
+
+#[actix::test]
 async fn test_call() {
     let factory = CommandFactoryImpl {
         availables: [(
             Cow::Borrowed("add"),
-            CommandDescription {
+            &CommandDescription {
                 name: Cow::Borrowed("add"),
                 fn_new: |_| Ok(Box::new(Add)),
             },
         )]
         .into(),
+        iroh_endpoint: None,
     };
     let client = capnp_rpc::new_client::<command_capnp::command_factory::Client, _>(factory);
     let mut req = client.init_request();

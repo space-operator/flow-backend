@@ -31,11 +31,14 @@ schemars = { version = "1.0.0-alpha.17", features = ["uuid1", "rust_decimal1", "
 features = "0.10.0"
 uuid1 = "0.0.2"
 reqwest = { version = "0.12.15", default-features = false }
-bincode = "2"
+bincode = { version = "2", features = ["serde"] }
 simd-json = "0.15.1"
 serde_json = { workspace = true, features = ["preserve_order"] }
 semver = "1.0.26"
 tokio-util = { version = "0.7.15", features = ["compat"] }
+iroh = { version = "0.35.0", features = ["discovery-pkarr-dht"] }
+iroh-quinn = { version = "0.13", features = ["futures-io"] }
+anyhow.workspace = true
 
 [dev-dependencies]
 criterion = "0.5.1"
@@ -43,3 +46,4 @@ rust_decimal = "1.37.1"
 rust_decimal_macros = "1.37.1"
 tokio = { version = "1", features = ["macros"] }
 cmds-std.workspace = true
+rand = "0.8"

@@ -9,7 +9,7 @@ interface CommandFactory {
 
     allAvailables @1 () -> (availables: Data);
 
-    networkAddress @2 () -> (address: Data);
+    irohAddress @2 () -> (address: Data);
 }
 
 interface CommandTrait {

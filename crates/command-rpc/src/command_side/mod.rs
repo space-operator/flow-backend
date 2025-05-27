@@ -15,18 +15,33 @@ use flow_lib::{
 };
 use futures::{
     AsyncReadExt, TryFutureExt,
+    future::LocalBoxFuture,
     io::{BufReader, BufWriter},
 };
-use std::{borrow::Cow, collections::BTreeMap, net::SocketAddr, str::Utf8Error, sync::Arc};
+use iroh::{Endpoint, NodeAddr, RelayUrl, SecretKey, endpoint::Incoming};
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet},
+    net::SocketAddr,
+    str::Utf8Error,
+    sync::Arc,
+};
 use thiserror::Error as ThisError;
 use tokio::{
     net::ToSocketAddrs,
     sync::{Mutex, oneshot},
-    task::spawn_local,
+    task::{JoinHandle, spawn_local},
 };
+use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 
 #[derive(ThisError, Debug)]
 pub enum Error {
+    #[error(transparent)]
+    Any(#[from] anyhow::Error),
+    #[error(transparent)]
+    IrohWatch(#[from] iroh::watchable::Disconnected),
+    #[error(transparent)]
+    IrohConnection(#[from] iroh::endpoint::ConnectionError),
     #[error(transparent)]
     Json(#[from] serde_json::Error),
     #[error(transparent)]
@@ -51,6 +66,21 @@ pub enum Error {
     Io(#[from] std::io::Error),
 }
 
+pub trait CommandFactoryExt {
+    fn iroh_address(&self) -> impl Future<Output = Result<IrohAddress, capnp::Error>>;
+}
+
+impl CommandFactoryExt for command_factory::Client {
+    async fn iroh_address(&self) -> Result<IrohAddress, capnp::Error> {
+        let resp = self.iroh_address_request().send().promise.await?;
+        let data = resp.get()?.get_address()?;
+        let addr = bincode::serde::decode_from_slice(data, standard())
+            .map_err(Error::from)?
+            .0;
+        Ok(addr)
+    }
+}
+
 impl From<Error> for capnp::Error {
     fn from(value: Error) -> Self {
         match value {
@@ -61,7 +91,15 @@ impl From<Error> for capnp::Error {
 }
 
 pub struct CommandFactoryImpl {
-    availables: BTreeMap<Cow<'static, str>, CommandDescription>,
+    availables: BTreeMap<Cow<'static, str>, &'static CommandDescription>,
+    iroh_endpoint: Option<Endpoint>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct IrohAddress {
+    pub node_id: iroh::NodeId,
+    pub direct_addresses: BTreeSet<SocketAddr>,
+    pub relay_url: RelayUrl,
 }
 
 impl CommandFactoryImpl {
@@ -94,6 +132,109 @@ impl CommandFactoryImpl {
         results.get().set_availables(&names);
         Ok(())
     }
+
+    fn iroh_address_impl(
+        &self,
+        mut results: command_factory::IrohAddressResults,
+    ) -> LocalBoxFuture<'static, Result<(), capnp::Error>> {
+        let e = self.iroh_endpoint.clone();
+        Box::pin(async move {
+            if let Some(e) = e {
+                let node_id = e.node_id();
+                let direct_addresses = e
+                    .direct_addresses()
+                    .initialized()
+                    .await
+                    .map_err(Error::from)?
+                    .into_iter()
+                    .map(|addr| addr.addr)
+                    .collect::<BTreeSet<_>>();
+                let relay_url = e.home_relay().initialized().await.map_err(Error::from)?;
+                results.get().set_address(
+                    &bincode::serde::encode_to_vec(
+                        &IrohAddress {
+                            node_id,
+                            direct_addresses,
+                            relay_url,
+                        },
+                        standard(),
+                    )
+                    .map_err(Error::from)?,
+                );
+            }
+            Ok(())
+        })
+    }
+
+    pub async fn serve_iroh(
+        mut self,
+        key: SecretKey,
+    ) -> Result<(command_factory::Client, JoinHandle<()>), Error> {
+        if self.iroh_endpoint.is_none() {
+            self.iroh_endpoint = Some(
+                Endpoint::builder()
+                    .secret_key(key)
+                    .alpns([b"space-operator/capnp-rpc/command-factory/0".to_vec()].into())
+                    .bind()
+                    .await?,
+            );
+        }
+        let endpoint = self.iroh_endpoint.clone().unwrap();
+        let client: command_factory::Client = capnp_rpc::new_client(self);
+
+        let handle = spawn_local({
+            let client = client.clone();
+            async move {
+                while let Some(incoming) = endpoint.accept().await {
+                    if let Err(error) = spawn_rpc_system_handle(incoming, client.clone()).await {
+                        tracing::error!("accept error: {}", error);
+                    }
+                }
+            }
+        });
+
+        Ok((client, handle))
+    }
+}
+
+pub async fn connect_iroh_command_factory(
+    addr: IrohAddress,
+    key: SecretKey,
+) -> Result<command_factory::Client, Error> {
+    let endpoint = Endpoint::builder()
+        .secret_key(key)
+        .alpns([b"space-operator/capnp-rpc/command-factory/0".to_vec()].into())
+        .discovery_n0()
+        .bind()
+        .await?;
+    let connection = endpoint
+        .connect(
+            NodeAddr {
+                node_id: addr.node_id,
+                direct_addresses: addr.direct_addresses.into_iter().collect(),
+                relay_url: Some("https://aps1-1.relay.iroh.network./".parse().unwrap()),
+            },
+            b"space-operator/capnp-rpc/command-factory/0",
+        )
+        .await?;
+    let (writer, reader) = connection.open_bi().await?;
+    connect_generic_futures_io(reader, writer)
+}
+
+async fn spawn_rpc_system_handle(
+    incoming: Incoming,
+    factory: command_factory::Client,
+) -> Result<JoinHandle<Result<(), capnp::Error>>, Error> {
+    let connection = incoming.await?;
+    let (sink, stream) = connection.accept_bi().await?;
+    let network = VatNetwork::new(
+        BufReader::new(stream.compat()),
+        BufWriter::new(sink.compat_write()),
+        Side::Server,
+        <_>::default(),
+    );
+    let rpc_system = RpcSystem::new(Box::new(network), Some(factory.clone().client));
+    Ok(spawn_local(rpc_system))
 }
 
 impl command_factory::Server for CommandFactoryImpl {
@@ -117,6 +258,14 @@ impl command_factory::Server for CommandFactoryImpl {
             Ok(_) => Promise::ok(()),
             Err(error) => Promise::err(error.into()),
         }
+    }
+
+    fn iroh_address(
+        &mut self,
+        _: command_factory::IrohAddressParams,
+        results: command_factory::IrohAddressResults,
+    ) -> capnp::capability::Promise<(), capnp::Error> {
+        Promise::from_future(self.iroh_address_impl(results))
     }
 }
 
@@ -294,12 +443,23 @@ pub async fn serve(
     }
 }
 
-pub async fn connect_command_factory(
-    addr: impl ToSocketAddrs,
+fn connect_generic<
+    R: tokio::io::AsyncRead + Unpin + 'static,
+    W: tokio::io::AsyncWrite + Unpin + 'static,
+>(
+    reader: R,
+    writer: W,
 ) -> Result<command_factory::Client, Error> {
-    let stream = tokio::net::TcpStream::connect(addr).await?;
-    let (reader, writer) = tokio_util::compat::TokioAsyncReadCompatExt::compat(stream).split();
+    connect_generic_futures_io(reader.compat(), writer.compat_write())
+}
 
+fn connect_generic_futures_io<
+    R: futures::io::AsyncRead + Unpin + 'static,
+    W: futures::io::AsyncWrite + Unpin + 'static,
+>(
+    reader: R,
+    writer: W,
+) -> Result<command_factory::Client, Error> {
     let network = Box::new(VatNetwork::new(
         futures::io::BufReader::new(reader),
         futures::io::BufWriter::new(writer),
@@ -310,6 +470,14 @@ pub async fn connect_command_factory(
     let client: command_factory::Client = rpc_system.bootstrap(Side::Server);
     tokio::task::spawn_local(rpc_system);
     Ok(client)
+}
+
+pub async fn connect_command_factory(
+    addr: impl ToSocketAddrs,
+) -> Result<command_factory::Client, Error> {
+    let stream = tokio::net::TcpStream::connect(addr).await?;
+    let (reader, writer) = stream.into_split();
+    connect_generic(reader, writer)
 }
 
 #[cfg(test)]
