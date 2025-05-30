@@ -1,7 +1,11 @@
-use super::*;
-use crate::command_side::command_factory::CommandFactoryImpl;
-use crate::{command_capnp, flow_side::CommandContextImpl};
+use crate::command_side::command_factory::{self, CommandFactoryExt};
+use crate::flow_side::CommandContextImpl;
 use cmds_std as _;
+use flow_lib::command::{CommandDescription, CommandError, CommandTrait};
+use flow_lib::config::client::NodeData;
+use flow_lib::context::CommandContext;
+use flow_lib::value;
+use flow_lib::value::bincode_impl::map_from_bincode;
 use flow_lib::{
     CmdInputDescription, CmdOutputDescription, Name, ValueType,
     command::collect_commands,
@@ -10,10 +14,10 @@ use flow_lib::{
     value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
 };
 use futures::FutureExt;
-use iroh::SecretKey;
-use rand::rngs::OsRng;
+use iroh::Endpoint;
 use rust_decimal_macros::dec;
 use serde::Deserialize;
+use std::borrow::Cow;
 
 struct Add;
 impl CommandTrait for Add {
@@ -76,38 +80,17 @@ impl CommandTrait for Add {
 }
 
 #[actix::test]
-async fn test_serve() {
-    let factory = CommandFactoryImpl {
-        availables: collect_commands(),
-    };
-    let (tx, rx) = oneshot::channel();
-    spawn_local(serve(
-        "127.0.0.1:0",
-        capnp_rpc::new_client(factory),
-        Some(tx),
-    ));
-    let addr = rx.await.unwrap();
-    dbg!(addr);
-
-    let client = connect_command_factory(addr).await.unwrap();
-    let names = client.all_availables().await.unwrap();
-    dbg!(&names);
-    assert!(!names.is_empty());
-}
-
-#[actix::test]
 async fn test_serve_iroh() {
-    let factory = CommandFactoryImpl {
-        availables: collect_commands(),
-        iroh_endpoint: None,
+    let addr = {
+        let factory = command_factory::new_client(collect_commands());
+        let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
+        let addr = endpoint.node_addr().await.unwrap();
+        factory.bind_iroh(endpoint);
+        addr
     };
-    let factory_key = SecretKey::generate(rand::rngs::OsRng);
-    let client = factory.serve_iroh(factory_key).await.unwrap().0;
-    let addr = client.iroh_address().await.unwrap();
 
-    let client = connect_iroh_command_factory(addr, SecretKey::generate(OsRng))
-        .await
-        .unwrap();
+    let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
+    let client = command_factory::connect_iroh(endpoint, addr).await.unwrap();
     let names = client.all_availables().await.unwrap();
     dbg!(&names);
     assert!(!names.is_empty());
@@ -115,8 +98,8 @@ async fn test_serve_iroh() {
 
 #[actix::test]
 async fn test_call() {
-    let factory = CommandFactoryImpl {
-        availables: [(
+    let client = command_factory::new_client(
+        [(
             Cow::Borrowed("add"),
             &CommandDescription {
                 name: Cow::Borrowed("add"),
@@ -124,11 +107,18 @@ async fn test_call() {
             },
         )]
         .into(),
-        iroh_endpoint: None,
-    };
-    let client = capnp_rpc::new_client::<command_capnp::command_factory::Client, _>(factory);
-    let mut req = client.init_request();
-    req.get().set_name("add");
+    );
+    let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
+    dbg!("bind");
+    let addr = endpoint.node_addr().await.unwrap();
+    dbg!(&addr);
+    client.bind_iroh(endpoint);
+
+    let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
+    let client = command_factory::connect_iroh(endpoint, addr).await.unwrap();
+
+    dbg!("connected");
+
     let nd = NodeData {
         r#type: flow_lib::CommandType::Native,
         node_id: "add".to_owned(),
@@ -165,9 +155,9 @@ async fn test_call() {
         },
         instruction_info: None,
     };
-    req.get().set_nd(&simd_json::to_vec(&nd).unwrap());
-    let result = req.send().promise.await.unwrap();
-    let cmd = result.get().unwrap().get_cmd().unwrap();
+
+    let cmd = client.init("add", &nd).await.unwrap();
+
     let mut req = cmd.run_request();
     req.get().set_inputs(
         map_to_bincode(&value::map! {
@@ -182,5 +172,6 @@ async fn test_call() {
     }));
     let result = req.send().promise.await.unwrap();
     let output = map_from_bincode(result.get().unwrap().get_output().unwrap()).unwrap();
+    assert_eq!(output["c"], dec!(4.8429).into());
     dbg!(output);
 }

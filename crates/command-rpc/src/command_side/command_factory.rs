@@ -9,11 +9,8 @@ use futures::io::{BufReader, BufWriter};
 use iroh::{Endpoint, NodeAddr, endpoint::Incoming};
 use iroh_quinn::ConnectionError;
 use snafu::prelude::*;
-use std::{borrow::Cow, collections::BTreeMap, str::Utf8Error, sync::Arc};
-use tokio::{
-    sync::Mutex,
-    task::{JoinHandle, spawn_local},
-};
+use std::{borrow::Cow, collections::BTreeMap, str::Utf8Error};
+use tokio::task::{JoinHandle, spawn_local};
 
 pub use crate::command_capnp::command_factory::*;
 use crate::command_side::command_trait;
@@ -68,6 +65,10 @@ pub enum InitError {
 
 pub const ALPN: &[u8] = b"space-operator/capnp-rpc/command-factory/0";
 
+pub fn new_client(availables: BTreeMap<Cow<'static, str>, &'static CommandDescription>) -> Client {
+    capnp_rpc::new_client(CommandFactoryImpl { availables })
+}
+
 pub trait CommandFactoryExt {
     fn init(
         &self,
@@ -113,8 +114,16 @@ impl CommandFactoryExt for Client {
             .set_nd(&simd_json::to_vec(nd).context(SimdJsonSnafu {
                 context: "serialize NodeData",
             })?);
-
-        todo!();
+        let client = req
+            .send()
+            .promise
+            .await
+            .context(CapnpSnafu { context: "send" })?
+            .get()
+            .context(CapnpSnafu { context: "get" })?
+            .get_cmd()
+            .context(CapnpSnafu { context: "get_cmd" })?;
+        Ok(client)
     }
 
     async fn all_availables(&self) -> Result<Vec<String>, AllAvailablesError> {
