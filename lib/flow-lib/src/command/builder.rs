@@ -58,7 +58,7 @@
 //!     result: i64,
 //! }
 //!
-//! async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
+//! async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
 //!     Ok(Output { result: input.a + input.b })
 //! }
 //! ```
@@ -68,8 +68,8 @@ use crate::{
     Name,
     command::InstructionInfo,
     config::node::{Definition, Permissions},
-    context::CommandContextX,
-    utils::BoxFuture,
+    context::CommandContext,
+    utils::LocalBoxFuture,
 };
 use serde::{Serialize, de::DeserializeOwned};
 use std::{future::Future, sync::LazyLock};
@@ -148,7 +148,7 @@ impl CmdBuilder {
     /// - `Output` must implement [`Serialize`].
     pub fn build<T, U, Fut, F>(self, f: F) -> Box<dyn CommandTrait>
     where
-        F: Fn(CommandContextX, T) -> Fut + Send + Sync + 'static,
+        F: Fn(CommandContext, T) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<U, CommandError>> + Send + 'static,
         T: DeserializeOwned + 'static,
         U: Serialize,
@@ -159,7 +159,7 @@ impl CmdBuilder {
             outputs: Vec<crate::CmdOutputDescription>,
             instruction_info: Option<InstructionInfo>,
             permissions: Permissions,
-            run: Box<dyn Fn(CommandContextX, T) -> Fut + Send + Sync + 'static>,
+            run: Box<dyn Fn(CommandContext, T) -> Fut + Send + Sync + 'static>,
         }
 
         impl<T, U, Fut> CommandTrait for Command<T, Fut>
@@ -186,9 +186,9 @@ impl CmdBuilder {
 
             fn run<'a: 'b, 'b>(
                 &'a self,
-                ctx: CommandContextX,
+                ctx: CommandContext,
                 params: crate::ValueSet,
-            ) -> BoxFuture<'b, Result<crate::ValueSet, CommandError>> {
+            ) -> LocalBoxFuture<'b, Result<crate::ValueSet, CommandError>> {
                 match value::from_map(params) {
                     Ok(input) => {
                         let fut = (self.run)(ctx, input);

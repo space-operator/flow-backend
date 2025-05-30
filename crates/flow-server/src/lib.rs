@@ -422,7 +422,7 @@ mod tests {
         ));
     }
 
-    #[tokio::test]
+    #[actix::test]
     async fn test_generate_keypair() {
         tracing_subscriber::fmt::try_init().ok();
         let json = include_str!("../../../test_files/generate_keypair.json");
@@ -457,7 +457,7 @@ mod tests {
         );
     }
 
-    #[tokio::test]
+    #[actix::test]
     async fn test_const_form_data() {
         tracing_subscriber::fmt::try_init().ok();
         let json = include_str!("../../../test_files/const_form_data.json");
@@ -480,7 +480,7 @@ mod tests {
         // TODO: check output values
     }
 
-    #[tokio::test]
+    #[actix::test]
     async fn test_foreach() {
         tracing_subscriber::fmt::try_init().ok();
         let json = include_str!("../../../test_files/foreach.json");
@@ -506,7 +506,7 @@ mod tests {
         ].to_vec()));
     }
 
-    #[tokio::test]
+    #[actix::test]
     async fn test_file_upload() {
         tracing_subscriber::fmt::try_init().ok();
         let json = include_str!("../../../test_files/file_upload.json");
@@ -528,7 +528,7 @@ mod tests {
         dbg!(res);
     }
 
-    #[tokio::test]
+    #[actix::test]
     async fn test_flow_input() {
         tracing_subscriber::fmt::try_init().ok();
         let json = include_str!("../../../test_files/HTTP Request.json");

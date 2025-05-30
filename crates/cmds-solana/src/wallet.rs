@@ -55,7 +55,7 @@ pub struct Output {
 
 const WALLET: &str = "wallet";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for WalletCmd {
     fn name(&self) -> Name {
         WALLET.into()
@@ -81,7 +81,7 @@ impl CommandTrait for WalletCmd {
         .to_vec()
     }
 
-    async fn run(&self, _: CommandContextX, _: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContext, _: ValueSet) -> Result<ValueSet, CommandError> {
         match &self.form {
             Ok(output) => Ok(value::to_map(output)?),
             Err(e) => Err(CommandError::msg(e.to_string())),

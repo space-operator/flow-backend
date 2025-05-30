@@ -65,7 +65,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let token_metadata_program = mpl_token_metadata::ID;
     let candy_machine_program = mpl_candy_machine_core::id();
     let candy_guard_program = mpl_candy_guard::id();

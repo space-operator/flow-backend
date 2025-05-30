@@ -6,11 +6,11 @@ use std::collections::HashSet;
 
 pub struct BundlrSigner {
     keypair: Wallet,
-    ctx: CommandContextX,
+    ctx: CommandContext,
 }
 
 impl BundlrSigner {
-    pub fn new(keypair: Wallet, ctx: CommandContextX) -> Self {
+    pub fn new(keypair: Wallet, ctx: CommandContext) -> Self {
         Self { keypair, ctx }
     }
 }
@@ -80,7 +80,7 @@ const FUND_BUNDLR: &str = "fund_bundlr";
 const METADATA_URL: &str = "metadata_url";
 const UPDATED_METADATA: &str = "updated_metadata";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for ArweaveNftUpload {
     fn name(&self) -> Name {
         ARWEAVE_NFT_UPLOAD.into()
@@ -126,7 +126,11 @@ impl CommandTrait for ArweaveNftUpload {
         .to_vec()
     }
 
-    async fn run(&self, mut ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(
+        &self,
+        mut ctx: CommandContext,
+        inputs: ValueSet,
+    ) -> Result<ValueSet, CommandError> {
         let Input {
             fee_payer,
             mut metadata,
@@ -205,7 +209,7 @@ impl Uploader {
     pub async fn lazy_fund(
         &mut self,
         file_path: &str,
-        signer: &mut CommandContextX,
+        signer: &mut CommandContext,
     ) -> crate::Result<()> {
         let mut needed_size = self.get_file_size(file_path).await?;
         needed_size += 10_000;
@@ -225,7 +229,7 @@ impl Uploader {
     pub async fn lazy_fund_metadata(
         &mut self,
         metadata: &NftMetadata,
-        signer: &mut CommandContextX,
+        signer: &mut CommandContext,
     ) -> crate::Result<()> {
         let mut processed = HashSet::new();
         let mut needed_size = 0;
@@ -311,7 +315,7 @@ impl Uploader {
         }
     }
 
-    async fn fund(&self, amount: u64, signer: &mut CommandContextX) -> crate::Result<()> {
+    async fn fund(&self, amount: u64, signer: &mut CommandContext) -> crate::Result<()> {
         #[derive(Deserialize, Serialize)]
         struct Addresses {
             solana: String,
@@ -361,7 +365,7 @@ impl Uploader {
 
     pub async fn upload_file(
         &mut self,
-        ctx: CommandContextX,
+        ctx: CommandContext,
         file_path: &str,
     ) -> crate::Result<String> {
         if let Some(url) = self.cache.get(file_path) {
@@ -383,7 +387,7 @@ impl Uploader {
 
     pub async fn upload(
         &self,
-        ctx: CommandContextX,
+        ctx: CommandContext,
         data: bytes::Bytes,
         content_type: String,
     ) -> crate::Result<String> {

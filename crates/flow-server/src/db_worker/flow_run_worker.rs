@@ -13,7 +13,8 @@ use db::{FlowRunLogsRow, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
     flow_run_events::{
-        self, ApiInput, Event, FlowError, FlowFinish, FlowLog, FlowStart, NodeError, NodeFinish, NodeLog, NodeOutput, NodeStart
+        self, ApiInput, Event, FlowError, FlowFinish, FlowLog, FlowStart, NodeError, NodeFinish,
+        NodeLog, NodeOutput, NodeStart,
     },
 };
 use flow_lib::{FlowRunId, UserId};

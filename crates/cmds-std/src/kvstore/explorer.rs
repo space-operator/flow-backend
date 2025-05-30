@@ -75,7 +75,7 @@ async fn read_item(
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for ExplorerCommand {
     fn name(&self) -> Name {
         KV_EXPLORER.into()
@@ -93,13 +93,13 @@ impl CommandTrait for ExplorerCommand {
         Permissions { user_tokens: true }
     }
 
-    async fn run(&self, mut ctx: CommandContextX, _: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, mut ctx: CommandContext, _: ValueSet) -> Result<ValueSet, CommandError> {
         let auth = ctx.get_jwt_header().await?;
         let url = format!("{}/kv/read_item", ctx.endpoints().flow_server);
         let results = join_all(
             self.pinned
                 .iter()
-                .map(|k| read_item(&ctx.http(), &url, k, &auth)),
+                .map(|k| read_item(ctx.http(), &url, k, &auth)),
         )
         .await;
 

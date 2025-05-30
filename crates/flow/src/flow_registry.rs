@@ -21,7 +21,7 @@ use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
 use std::sync::{Arc, Mutex};
 use thiserror::Error as ThisError;
-use tokio::sync::Semaphore;
+use tokio::{sync::Semaphore, task::spawn_local};
 use tokio_util::sync::CancellationToken;
 use tower::{Service, ServiceExt};
 use tracing::Instrument;
@@ -82,6 +82,7 @@ impl Default for FlowRegistry {
         let get_previous_values = unimplemented_svc();
         let token = unimplemented_svc();
         let api_input = unimplemented_svc();
+
         Self {
             depth: 0,
             flow_owner: User::new(UserId::nil()),
@@ -483,7 +484,7 @@ impl FlowRegistry {
                 <_>::default()
             };
 
-            let join_handle = tokio::spawn(
+            let join_handle = spawn_local(
                 async move {
                     flow.run(tx, flow_run_id, inputs, stop, stop_shared, previous_values)
                         .await
@@ -499,7 +500,7 @@ impl FlowRegistry {
 }
 
 pub mod run_rhai {
-    use flow_lib::{ValueSet, command::CommandError, context::CommandContextX};
+    use flow_lib::{ValueSet, command::CommandError, context::CommandContext};
     use futures::channel::oneshot;
     use std::sync::Arc;
 
@@ -507,7 +508,7 @@ pub mod run_rhai {
 
     pub struct Request {
         pub command: Arc<rhai_script::Command>,
-        pub ctx: CommandContextX,
+        pub ctx: CommandContext,
         pub input: ValueSet,
     }
 
@@ -659,5 +660,15 @@ pub mod get_previous_values {
         fn from(value: actix::MailboxError) -> Self {
             CommonError::from(value).into()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_registry() {
+        FlowRegistry::default();
     }
 }

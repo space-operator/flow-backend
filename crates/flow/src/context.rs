@@ -11,7 +11,7 @@ use std::{borrow::Cow, collections::BTreeMap};
 use tokio::process::Child;
 
 pub struct CommandFactory {
-    pub natives: BTreeMap<Cow<'static, str>, CommandDescription>,
+    natives: BTreeMap<Cow<'static, str>, &'static CommandDescription>,
 }
 
 impl Default for CommandFactory {
@@ -25,12 +25,16 @@ impl CommandFactory {
         let mut natives = BTreeMap::new();
         for d in inventory::iter::<CommandDescription>() {
             let name = d.name.clone();
-            if natives.insert(name.clone(), d.clone()).is_some() {
+            if natives.insert(name.clone(), d).is_some() {
                 tracing::error!("duplicated command {:?}", name);
             }
         }
 
         Self { natives }
+    }
+
+    pub fn avaiables(&self) -> impl Iterator<Item = &str> {
+        self.natives.keys().map(|s| s.as_ref())
     }
 
     pub fn new_native_command(
