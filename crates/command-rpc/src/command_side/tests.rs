@@ -1,4 +1,5 @@
 use super::*;
+use crate::command_side::command_factory::CommandFactoryImpl;
 use crate::{command_capnp, flow_side::CommandContextImpl};
 use cmds_std as _;
 use flow_lib::{
@@ -78,7 +79,6 @@ impl CommandTrait for Add {
 async fn test_serve() {
     let factory = CommandFactoryImpl {
         availables: collect_commands(),
-        iroh_endpoint: None,
     };
     let (tx, rx) = oneshot::channel();
     spawn_local(serve(
@@ -90,16 +90,7 @@ async fn test_serve() {
     dbg!(addr);
 
     let client = connect_command_factory(addr).await.unwrap();
-    let resp = client
-        .all_availables_request()
-        .send()
-        .promise
-        .await
-        .unwrap();
-    let data = resp.get().unwrap().get_availables().unwrap();
-    let names: Vec<&str> = bincode::borrow_decode_from_slice(&data, standard())
-        .unwrap()
-        .0;
+    let names = client.all_availables().await.unwrap();
     dbg!(&names);
     assert!(!names.is_empty());
 }
@@ -117,16 +108,7 @@ async fn test_serve_iroh() {
     let client = connect_iroh_command_factory(addr, SecretKey::generate(OsRng))
         .await
         .unwrap();
-    let resp = client
-        .all_availables_request()
-        .send()
-        .promise
-        .await
-        .unwrap();
-    let data = resp.get().unwrap().get_availables().unwrap();
-    let names: Vec<&str> = bincode::borrow_decode_from_slice(&data, standard())
-        .unwrap()
-        .0;
+    let names = client.all_availables().await.unwrap();
     dbg!(&names);
     assert!(!names.is_empty());
 }

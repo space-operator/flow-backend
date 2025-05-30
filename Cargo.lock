@@ -1838,6 +1838,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "simd-json",
+ "snafu",
  "srpc",
  "thiserror 1.0.69",
  "tokio",
