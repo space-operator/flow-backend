@@ -1,4 +1,4 @@
-use crate::command_capnp::{command_context, command_factory, command_trait, flow_server};
+use crate::command_capnp::{command_context, command_factory, command_trait};
 use bincode::config::standard;
 use capnp::capability::Promise;
 use flow_lib::{
@@ -9,6 +9,8 @@ use flow_lib::{
 use futures::future::LocalBoxFuture;
 use std::{cell::RefCell, rc::Rc};
 use thiserror::Error as ThisError;
+
+pub mod address_book;
 
 #[derive(ThisError, Debug)]
 enum Error {
@@ -248,3 +250,6 @@ impl CommandTrait for RemoteCommand {
         self.permissions.clone()
     }
 }
+
+#[cfg(test)]
+mod tests;

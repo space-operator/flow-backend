@@ -24,6 +24,8 @@ interface CommandTrait {
     permissions @5 () -> (permissions: Data);
 }
 
-interface FlowServer {
-    join @0 (factory: CommandFactory);
+interface AddressBook {
+    join @0 (direct_addresses: Data, relay_url: Text);
+
+    leave @1 ();
 }
