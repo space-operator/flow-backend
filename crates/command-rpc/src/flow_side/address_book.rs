@@ -1,9 +1,9 @@
 use bincode::config::standard;
+use capnp::capability::Promise;
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 use futures::io::{BufReader, BufWriter};
 use iroh::{Endpoint, endpoint::Incoming};
 use serde::{Deserialize, Serialize};
-use snafu::Whatever;
 use std::{
     collections::{BTreeMap, BTreeSet},
     net::SocketAddr,
@@ -27,7 +27,7 @@ pub struct AddressBook {
 }
 
 impl AddressBook {
-    pub fn bind_iroh(self, endpoint: Endpoint) {
+    pub fn bind_iroh(self, endpoint: Endpoint) -> JoinHandle<()> {
         spawn_local(async move {
             while let Some(incoming) = endpoint.accept().await {
                 if let Err(error) = spawn_rpc_system_handle(incoming, self.clone()).await {
@@ -69,7 +69,7 @@ impl AddressBookConnection {
     fn join_impl(&mut self, params: JoinParams) -> Result<(), anyhow::Error> {
         let params = params.get()?;
         let direct_addresses: BTreeSet<SocketAddr> =
-            bincode::decode_from_slice(params.get_direct_addresses()?, standard())?;
+            bincode::decode_from_slice(params.get_direct_addresses()?, standard())?.0;
         let relay_url: Url = params.get_relay_url()?.to_str()?.parse()?;
         self.book.factories.lock().unwrap().insert(
             self.remote_node_id,
@@ -81,7 +81,7 @@ impl AddressBookConnection {
         Ok(())
     }
 
-    fn leave_impl(&mut self) -> capnp::capability::Promise<(), capnp::Error> {
+    fn leave_impl(&mut self) -> Result<(), capnp::Error> {
         self.book
             .factories
             .lock()
@@ -92,21 +92,13 @@ impl AddressBookConnection {
 }
 
 impl Server for AddressBookConnection {
-    fn join(
-        &mut self,
-        params: JoinParams,
-        _: JoinResults,
-    ) -> capnp::capability::Promise<(), capnp::Error> {
+    fn join(&mut self, params: JoinParams, _: JoinResults) -> Promise<(), capnp::Error> {
         r2p(self
             .join_impl(params)
             .map_err(|error| capnp::Error::failed(error.to_string())))
     }
 
-    fn leave(
-        &mut self,
-        _: LeaveParams,
-        _: LeaveResults,
-    ) -> capnp::capability::Promise<(), capnp::Error> {
+    fn leave(&mut self, _: LeaveParams, _: LeaveResults) -> Promise<(), capnp::Error> {
         r2p(self.leave_impl())
     }
 }

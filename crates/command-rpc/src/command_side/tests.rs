@@ -1,5 +1,5 @@
 use crate::command_side::command_factory::{self, CommandFactoryExt};
-use crate::flow_side::CommandContextImpl;
+use crate::flow_side::command_context::CommandContextImpl;
 use cmds_std as _;
 use flow_lib::command::{CommandDescription, CommandError, CommandTrait};
 use flow_lib::config::client::NodeData;
