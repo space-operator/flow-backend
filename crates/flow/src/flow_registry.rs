@@ -6,6 +6,7 @@ use crate::{
     flow_set::DeploymentId,
 };
 use chrono::Utc;
+use command_rpc::flow_side::address_book;
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
     config::{

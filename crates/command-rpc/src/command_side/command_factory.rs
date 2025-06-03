@@ -69,6 +69,13 @@ pub fn new_client(availables: BTreeMap<Cow<'static, str>, &'static CommandDescri
     capnp_rpc::new_client(CommandFactoryImpl { availables })
 }
 
+pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, ConnectError> {
+    use connect_error::*;
+    let connection = endpoint.connect(addr, ALPN).await.context(ConnectSnafu)?;
+    let (writer, reader) = connection.open_bi().await.context(OpenBiSnafu)?;
+    Ok(connect_generic_futures_io(reader, writer))
+}
+
 pub trait CommandFactoryExt {
     fn init(
         &self,
@@ -77,13 +84,6 @@ pub trait CommandFactoryExt {
     ) -> impl Future<Output = Result<command_trait::Client, InitError>>;
     fn all_availables(&self) -> impl Future<Output = Result<Vec<String>, AllAvailablesError>>;
     fn bind_iroh(&self, endpoint: Endpoint) -> JoinHandle<()>;
-}
-
-pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, ConnectError> {
-    use connect_error::*;
-    let connection = endpoint.connect(addr, ALPN).await.context(ConnectSnafu)?;
-    let (writer, reader) = connection.open_bi().await.context(OpenBiSnafu)?;
-    Ok(connect_generic_futures_io(reader, writer))
 }
 
 fn connect_generic_futures_io<

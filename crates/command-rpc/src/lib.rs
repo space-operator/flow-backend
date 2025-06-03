@@ -4,7 +4,7 @@ use capnp::capability::Promise;
 
 pub mod client;
 
-pub mod command_capnp {
+pub(crate) mod command_capnp {
     #![allow(clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/command_capnp.rs"));
 }

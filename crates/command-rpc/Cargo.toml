@@ -40,6 +40,7 @@ iroh = { version = "0.35.0", features = ["discovery-pkarr-dht"] }
 iroh-quinn = { version = "0.13", features = ["futures-io"] }
 anyhow.workspace = true
 snafu = { version = "0.8.5", features = ["rust_1_81"] }
+rand = "0.8"
 
 [dev-dependencies]
 criterion = "0.5.1"
@@ -47,4 +48,3 @@ rust_decimal = "1.37.1"
 rust_decimal_macros = "1.37.1"
 tokio = { version = "1", features = ["macros"] }
 cmds-std.workspace = true
-rand = "0.8"

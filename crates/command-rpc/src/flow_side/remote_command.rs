@@ -23,7 +23,7 @@ pub struct RemoteCommand {
 }
 
 impl RemoteCommand {
-    async fn new(client: command_trait::Client) -> Result<Self, CommandError> {
+    pub async fn new(client: command_trait::Client) -> Result<Self, CommandError> {
         let name = client
             .name_request()
             .send()

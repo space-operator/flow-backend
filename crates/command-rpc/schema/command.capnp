@@ -25,7 +25,7 @@ interface CommandTrait {
 }
 
 interface AddressBook {
-    join @0 (direct_addresses: Data, relay_url: Text);
+    join @0 (direct_addresses: Data, relay_url: Text, availables: Data);
 
     leave @1 ();
 }
