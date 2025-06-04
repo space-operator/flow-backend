@@ -80,7 +80,7 @@ pub struct FlowRegistry {
     rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,
 
     pub(crate) rpc_server: Option<actix::Addr<srpc::Server>>,
-    remotes: Option<AddressBook>,
+    pub(crate) remotes: Option<AddressBook>,
 }
 
 impl Default for FlowRegistry {

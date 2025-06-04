@@ -2,7 +2,7 @@ use flow_lib::command::prelude::*;
 use std::sync::Arc;
 use tower::{Service, ServiceExt};
 
-use crate::flow_registry::{FlowRegistry, run_rhai};
+use crate::flow_registry::run_rhai;
 
 struct Command {
     name: Name,

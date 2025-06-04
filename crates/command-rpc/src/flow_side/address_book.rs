@@ -177,7 +177,14 @@ impl AddressBookExt for Client {
         relay_url: Url,
         availables: Vec<String>,
     ) -> Result<(), anyhow::Error> {
-        todo!();
+        let mut req = self.join_request();
+        req.get().set_relay_url(relay_url.as_str());
+        req.get()
+            .set_availables(&bincode::encode_to_vec(&availables, standard())?);
+        req.get()
+            .set_direct_addresses(&bincode::encode_to_vec(&direct_addresses, standard())?);
+        req.send().promise.await?;
+        Ok(())
     }
     async fn leave(&self) -> Result<(), anyhow::Error> {
         self.leave_request().send().promise.await?;
