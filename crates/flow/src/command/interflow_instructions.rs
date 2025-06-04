@@ -2,9 +2,10 @@ use super::interflow::get_interflow_id;
 use crate::{
     command::prelude::*,
     flow_graph::FlowRunResult,
-    flow_registry::{FlowRegistry, StartFlowOptions},
+    flow_registry::{StartFlowOptions, start_flow},
 };
 use bytes::Bytes;
+use tower::{Service, ServiceExt};
 
 pub const INTERFLOW_INSTRUCTIONS: &str = "interflow_instructions";
 
@@ -77,21 +78,24 @@ impl CommandTrait for Interflow {
     }
 
     async fn run(&self, ctx: CommandContext, inputs: ValueSet) -> Result<ValueSet, CommandError> {
-        let registry = ctx
-            .get::<FlowRegistry>()
-            .ok_or_else(|| anyhow::anyhow!("FlowRegistry not found"))?;
+        let start = ctx
+            .get::<start_flow::Svc>()
+            .ok_or_else(|| anyhow::anyhow!("start_flow::Svc not found"))?
+            .clone();
 
-        let (_, handle) = registry
-            .start(
-                self.id,
+        let (_, handle) = start
+            .ready_oneshot()
+            .await?
+            .call(start_flow::Request {
+                flow_id: self.id,
                 inputs,
-                StartFlowOptions {
+                options: StartFlowOptions {
                     collect_instructions: true,
                     origin: ctx.new_interflow_origin(),
                     solana_client: Some(ctx.solana_config().clone()),
                     ..Default::default()
                 },
-            )
+            })
             .await?;
         let result = handle.await?;
 

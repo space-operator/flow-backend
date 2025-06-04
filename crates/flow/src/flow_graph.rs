@@ -407,7 +407,8 @@ impl FlowGraph {
                     if let Some(rpc) = registry.rpc_server.clone() {
                         ext.insert(rpc);
                     }
-                    ext.insert(registry);
+                    ext.insert(registry.run_rhai_svc());
+                    ext.insert(registry.start_flow_svc());
                     ext.insert(tokio::runtime::Handle::current());
                     ext
                 }),
