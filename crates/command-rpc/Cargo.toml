@@ -3,6 +3,10 @@ name = "command-rpc"
 version = "0.0.0"
 edition = "2024"
 
+[[bench]]
+name = "serialize"
+harness = false
+
 [build-dependencies]
 capnpc = "0.20"
 
@@ -21,12 +25,26 @@ tokio-tungstenite = { version = "0.24.0", features = ["__rustls-tls"] }
 tower = "0.5"
 tracing = "0.1.40"
 url = { version = "2.5.0", features = ["serde"] }
-capnp = "0.20"
-capnp-rpc = "0.20"
+capnp = "0.21"
+capnp-rpc = "0.21"
 schemars = { version = "1.0.0-alpha.17", features = ["uuid1", "rust_decimal1", "preserve_order", "indexmap2", "url2"] }
 features = "0.10.0"
 uuid1 = "0.0.2"
+reqwest = { version = "0.12.15", default-features = false }
+bincode = { version = "2", features = ["serde"] }
+simd-json = "0.15.1"
+serde_json = { workspace = true, features = ["preserve_order"] }
+semver = "1.0.26"
+tokio-util = { version = "0.7.15", features = ["compat"] }
+iroh = { version = "0.35.0", features = ["discovery-pkarr-dht"] }
+iroh-quinn = { version = "0.13", features = ["futures-io"] }
+anyhow.workspace = true
+snafu = { version = "0.8.5", features = ["rust_1_81"] }
+rand = "0.8"
 
 [dev-dependencies]
-serde_json = { workspace = true, features = ["preserve_order"] }
+criterion = "0.5.1"
+rust_decimal = "1.37.1"
+rust_decimal_macros = "1.37.1"
 tokio = { version = "1", features = ["macros"] }
+cmds-std.workspace = true

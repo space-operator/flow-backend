@@ -1,7 +1,5 @@
 use crate::WalletOrPubkey;
 use crate::prelude::*;
-use anyhow::anyhow;
-use anyhow::bail;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use solana_commitment_config::CommitmentConfig;
 use solana_keypair::{Keypair, keypair_from_seed};
@@ -72,7 +70,7 @@ async fn generate_keypair(
 
         match check.as_ref() {
             Some(rpc) => {
-                let exists = account_exists(&rpc, &keypair.pubkey()).await?;
+                let exists = account_exists(rpc, &keypair.pubkey()).await?;
                 if exists {
                     continue;
                 } else {
@@ -94,17 +92,17 @@ async fn account_exists(rpc: &RpcClient, pk: &Pubkey) -> Result<bool, CommandErr
         .is_some())
 }
 
-async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let keypair = match input.private_key {
         Some(either) => {
             let keypair = match either {
                 WalletOrPubkey::Wallet(keypair) => keypair,
                 WalletOrPubkey::Pubkey(public_key) => Wallet::Adapter { public_key },
             };
-            if input.check_new_account {
-                if account_exists(&ctx.solana_client(), &keypair.pubkey()).await? {
-                    bail!(anyhow!("account already exists"));
-                }
+            if input.check_new_account
+                && account_exists(ctx.solana_client(), &keypair.pubkey()).await?
+            {
+                return Err(CommandError::msg("account already exists"));
             }
             keypair
         }
@@ -136,7 +134,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_no_input() {
-        let ctx = CommandContextX::default();
+        let ctx = CommandContext::default();
         build().unwrap().run(ctx, ValueSet::new()).await.unwrap();
     }
 
@@ -144,7 +142,7 @@ mod tests {
     async fn test_no_password() {
         let seed_phrase =
             "letter advice cage absurd amount doctor acoustic avoid letter advice cage above";
-        let ctx = CommandContextX::default();
+        let ctx = CommandContext::default();
         build()
             .unwrap()
             .run(
@@ -165,7 +163,7 @@ mod tests {
         };
         let output = build()
             .unwrap()
-            .run(CommandContextX::default(), input)
+            .run(CommandContext::default(), input)
             .await
             .unwrap();
         let output = value::from_map::<Output>(output).unwrap();
@@ -186,7 +184,7 @@ mod tests {
         };
         let output = build()
             .unwrap()
-            .run(CommandContextX::default(), input)
+            .run(CommandContext::default(), input)
             .await
             .unwrap();
         let output = value::from_map::<Output>(output).unwrap();
@@ -214,7 +212,7 @@ mod tests {
         };
         let output = build()
             .unwrap()
-            .run(CommandContextX::default(), input)
+            .run(CommandContext::default(), input)
             .await
             .unwrap();
         let output = value::from_map::<Output>(output).unwrap();
@@ -242,10 +240,7 @@ mod tests {
             "passphrase" => Value::String(passphrase.to_owned()),
             "private_key" => Value::String(private_key.to_string()),
         };
-        let result = build()
-            .unwrap()
-            .run(CommandContextX::default(), input)
-            .await;
+        let result = build().unwrap().run(CommandContext::default(), input).await;
         assert!(result.is_err());
     }
 }

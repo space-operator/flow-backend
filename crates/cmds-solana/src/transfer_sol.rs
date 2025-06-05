@@ -34,7 +34,7 @@ pub struct Output {
     pub signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let amount = sol_to_lamports(input.amount)?;
 
     let instruction = solana_program::system_instruction::transfer(
@@ -80,7 +80,7 @@ mod tests {
     #[ignore]
     async fn test_valid() {
         tracing_subscriber::fmt::try_init().ok();
-        let ctx = CommandContextX::default();
+        let ctx = CommandContext::default();
 
         let sender: Wallet = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").into();
         let recipient = solana_program::pubkey!("GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9");

@@ -69,7 +69,7 @@ pub fn refund_proposal_deposit(
     (instruction, proposal_deposit_address)
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
     let (ix, proposal_deposit_address) =

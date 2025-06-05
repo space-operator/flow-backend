@@ -4,7 +4,7 @@ use crate::wormhole::ForeignAddress;
 use borsh::{BorshDeserialize, BorshSerialize};
 
 use byteorder::{ByteOrder, LittleEndian};
-use flow_lib::context::CommandContextX;
+use flow_lib::context::CommandContext;
 use serde::{Deserialize, Serialize};
 use solana_commitment_config::CommitmentConfig;
 use solana_program::pubkey::Pubkey;
@@ -163,7 +163,7 @@ pub struct TransferNativeData {
 pub struct CompleteNativeData {}
 
 pub async fn get_sequence_number(
-    ctx: &CommandContextX,
+    ctx: &CommandContext,
     sequence: Pubkey,
 ) -> Result<SequenceTracker, crate::Error> {
     let commitment = CommitmentConfig::confirmed();
@@ -198,7 +198,7 @@ pub async fn get_sequence_number(
 
 // https://github.com/wormhole-foundation/connect-sdk/blob/dc90598ecadea0319a83a983ae87667f44a3b5f2/platforms/solana/protocols/core/src/core.ts#L294C17-L294C17
 pub async fn get_sequence_number_from_message(
-    ctx: &CommandContextX,
+    ctx: &CommandContext,
     message: Pubkey,
 ) -> Result<String, crate::Error> {
     let commitment = CommitmentConfig::confirmed();

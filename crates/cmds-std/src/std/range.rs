@@ -28,7 +28,7 @@ pub struct Output {
     pub result: Vec<Value>,
 }
 
-async fn run(_: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
     const MAX_LENGTH: usize = 10_000_000;
     let mut start = input.start;
     let end = input.end;

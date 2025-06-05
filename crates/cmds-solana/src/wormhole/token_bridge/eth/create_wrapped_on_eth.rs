@@ -41,7 +41,7 @@ pub struct Output {
     address: Address,
 }
 
-async fn run(ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     #[derive(Serialize, Deserialize, Debug)]
     struct Payload {
         #[serde(rename = "networkName")]

@@ -14,7 +14,7 @@ use flow_lib::{
     command::{CommandError, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
     context::{
-        CommandContextData, CommandContextX, FlowContextData, FlowServices, FlowSetContextData,
+        CommandContext, CommandContextData, FlowContextData, FlowServices, FlowSetContextData,
         FlowSetServices, execute, get_jwt,
     },
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
@@ -53,7 +53,7 @@ use tokio::{
     task::{JoinError, JoinHandle},
 };
 use tokio_util::sync::CancellationToken;
-use tower::{Service, ServiceExt};
+use tower::{Service, ServiceExt, service_fn};
 use tracing::Instrument;
 use uuid::Uuid;
 use value::Value;
@@ -386,7 +386,6 @@ impl FlowGraph {
         tracing::debug!("execution config: {:?}", tx_exec_config);
         let get_jwt = registry.token.clone();
 
-        // let ctx = Context::from_cfg(&c.ctx, flow_owner, started_by, signer, token, ext);
         let ctx_data = FlowContextData {
             environment: c.ctx.environment,
             flow_run_id: FlowRunId::nil(),
@@ -408,7 +407,8 @@ impl FlowGraph {
                     if let Some(rpc) = registry.rpc_server.clone() {
                         ext.insert(rpc);
                     }
-                    ext.insert(registry);
+                    ext.insert(registry.run_rhai_svc());
+                    ext.insert(registry.start_flow_svc());
                     ext.insert(tokio::runtime::Handle::current());
                     ext
                 }),
@@ -1593,7 +1593,7 @@ impl FlowGraph {
             .tx_exec_config(self.tx_exec_config.clone())
             .get_jwt(self.get_jwt.clone())
             .call();
-        let handler = tokio::spawn(
+        let handler = tokio::task::spawn_local(
             async move {
                 if is_rhai_script {
                     let p = rhai_permit.acquire().await;
@@ -1721,7 +1721,7 @@ async fn run_command(
     inputs: value::Map,
     ctx_data: FlowContextData,
     ctx_svcs: FlowServices,
-    get_jwt: get_jwt::Svc,
+    mut get_jwt: get_jwt::Svc,
     event_tx: EventSender,
     stop: StopSignal,
     stop_shared: StopSignal,
@@ -1753,9 +1753,13 @@ async fn run_command(
             tx: tx.clone(),
         }),
     };
-    if !node.command.permissions().user_tokens {}
+    if !node.command.permissions().user_tokens {
+        get_jwt = get_jwt::Svc::new(service_fn(|_| {
+            std::future::ready(Err(get_jwt::Error::NotAllowed))
+        }));
+    }
 
-    let ctx = CommandContextX::builder()
+    let ctx = CommandContext::builder()
         .data(CommandContextData {
             flow: ctx_data,
             node_id: node.id,
@@ -1902,7 +1906,7 @@ mod tests {
         assert_eq!(error, "second");
     }
 
-    #[tokio::test]
+    #[actix::test]
     async fn test_foreach_nested() {
         let json = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -1937,7 +1941,7 @@ mod tests {
         );
     }
 
-    #[tokio::test]
+    #[actix::test]
     async fn test_uneven_loop() {
         let json = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),

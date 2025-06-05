@@ -41,7 +41,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = mpl_candy_machine_core::accounts::AddConfigLines {
         candy_machine: input.candy_machine,
         authority: input.authority.pubkey(),

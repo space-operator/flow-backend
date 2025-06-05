@@ -42,7 +42,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let bubble_gum_program_id = mpl_bubblegum::ID;
 
     // Allocate tree's account

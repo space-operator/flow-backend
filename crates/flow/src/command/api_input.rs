@@ -19,7 +19,7 @@ pub struct Input {
 pub struct Output {
     pub value: Value,
 }
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     Ok(Output {
         value: ctx
             .api_input(input.timeout.map(Duration::from_secs_f64))
@@ -36,7 +36,7 @@ mod tests {
     }
     #[tokio::test]
     async fn test_run() {
-        let ctx = CommandContextX::test_context();
+        let ctx = CommandContext::test_context();
         build()
             .unwrap()
             .run(ctx, ValueSet::new())

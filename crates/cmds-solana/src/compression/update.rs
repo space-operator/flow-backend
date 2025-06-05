@@ -58,7 +58,7 @@ pub struct Output {
     signature: Option<Signature>,
 }
 
-async fn run(mut ctx: CommandContextX, input: Input) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     // get from asset proof: merkle tree, root, index, proof
     // get from asset: data hash, creator hash, leaf id or nonce, metadata
 

@@ -117,7 +117,7 @@ impl tower::Service<get_flow_row::Request> for Box<dyn UserConnectionTrait> {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 pub trait UserConnectionTrait: Any + 'static {
     async fn get_wallet_by_pubkey(&self, pubkey: &[u8; 32]) -> crate::Result<Wallet>;
 

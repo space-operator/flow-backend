@@ -9,7 +9,7 @@ pub const ARRAY: &str = "array";
 
 pub const ELEMENT: &str = "element";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for Foreach {
     fn name(&self) -> Name {
         FOREACH.into()
@@ -34,7 +34,7 @@ impl CommandTrait for Foreach {
         .to_vec()
     }
 
-    async fn run(&self, _: CommandContextX, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContext, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let v = inputs
             .swap_remove(ARRAY)
             .ok_or_else(|| crate::Error::ValueNotFound(ARRAY.into()))?;

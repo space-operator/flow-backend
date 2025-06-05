@@ -5,7 +5,7 @@ pub struct NoteCommand {}
 
 const NOTE: &str = "note";
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for NoteCommand {
     fn name(&self) -> Name {
         NOTE.into()
@@ -19,11 +19,7 @@ impl CommandTrait for NoteCommand {
         [].to_vec()
     }
 
-    async fn run(
-        &self,
-        _ctx: CommandContextX,
-        _inputs: ValueSet,
-    ) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _ctx: CommandContext, _inputs: ValueSet) -> Result<ValueSet, CommandError> {
         Ok(ValueSet::new())
     }
 }

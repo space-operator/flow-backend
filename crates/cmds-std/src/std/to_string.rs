@@ -16,7 +16,7 @@ pub struct Output {
     pub result: String,
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for ToString {
     fn name(&self) -> Name {
         TO_STRING.into()
@@ -41,11 +41,7 @@ impl CommandTrait for ToString {
         .to_vec()
     }
 
-    async fn run(
-        &self,
-        _: CommandContextX,
-        mut inputs: ValueSet,
-    ) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContext, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let input = inputs.swap_remove(STRINGIFY).unwrap_or("".into());
 
         let result = match input {

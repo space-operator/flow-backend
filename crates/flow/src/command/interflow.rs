@@ -1,9 +1,10 @@
 use crate::{
     command::prelude::*,
-    flow_registry::{FlowRegistry, StartFlowOptions},
+    flow_registry::{StartFlowOptions, start_flow},
 };
 use anyhow::anyhow;
 use flow_lib::command::InstructionInfo;
+use tower::{Service, ServiceExt};
 
 pub const INTERFLOW: &str = "interflow";
 
@@ -56,7 +57,7 @@ impl Interflow {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for Interflow {
     fn name(&self) -> Name {
         INTERFLOW.into()
@@ -70,10 +71,11 @@ impl CommandTrait for Interflow {
         self.outputs.clone()
     }
 
-    async fn run(&self, ctx: CommandContextX, inputs: ValueSet) -> Result<ValueSet, CommandError> {
-        let registry = ctx
-            .get::<FlowRegistry>()
-            .ok_or_else(|| anyhow::anyhow!("FlowRegistry not found"))?;
+    async fn run(&self, ctx: CommandContext, inputs: ValueSet) -> Result<ValueSet, CommandError> {
+        let start = ctx
+            .get::<start_flow::Svc>()
+            .ok_or_else(|| anyhow::anyhow!("start_flow::Svc not found"))?
+            .clone();
 
         let parent_flow_execute = if self.instruction_info.is_some() {
             Some(ctx.raw().services.execute.clone())
@@ -81,17 +83,19 @@ impl CommandTrait for Interflow {
             None
         };
 
-        let (_, handle) = registry
-            .start(
-                self.id,
+        let (_, handle) = start
+            .ready_oneshot()
+            .await?
+            .call(start_flow::Request {
+                flow_id: self.id,
                 inputs,
-                StartFlowOptions {
+                options: StartFlowOptions {
                     origin: ctx.new_interflow_origin(),
                     solana_client: Some(ctx.solana_config().clone()),
                     parent_flow_execute,
                     ..Default::default()
                 },
-            )
+            })
             .await?;
         let result = handle.await?;
         if result.flow_errors.is_empty() {

@@ -14,7 +14,7 @@ struct Output {
     updated_json: Value,
 }
 
-async fn run(_: CommandContextX, mut input: Input) -> Result<Output, CommandError> {
+async fn run(_: CommandContext, mut input: Input) -> Result<Output, CommandError> {
     let path = value::crud::path::Path::parse(&input.path)?;
     value::crud::insert(&mut input.json_input, &path.segments, input.value)?;
 

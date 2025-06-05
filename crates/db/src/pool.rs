@@ -14,6 +14,8 @@ use std::time::{Duration, Instant};
 
 pub use deadpool_postgres::Object as Connection;
 
+static BUILTIN_SUPABASE_CERT: &str = include_str!("../../../certs/supabase-prod-ca-2021.crt");
+
 #[derive(Clone)]
 pub enum DbPool {
     Real(RealDbPool),
@@ -49,8 +51,11 @@ pub struct RealDbPool {
 
 fn read_cert(path: &std::path::Path) -> crate::Result<rustls::Certificate> {
     let cert = std::fs::read(path)?;
-    let mut buf = cert.as_slice();
-    let items = rustls_pemfile::read_all(&mut buf)?;
+    parse_cert(&cert)
+}
+
+fn parse_cert(mut cert: &[u8]) -> crate::Result<rustls::Certificate> {
+    let items = rustls_pemfile::read_all(&mut cert)?;
 
     let cert = items
         .iter()
@@ -113,6 +118,12 @@ impl RealDbPool {
                 let cert = read_cert(path)?;
                 roots
                     .add(&cert)
+                    .map_err(|e| Error::AddCert(e.to_string()))?;
+            }
+            if cfg.ssl.use_builtin_supabase_cert {
+                tracing::info!("adding certificate: supabase-prod-ca-2021.crt");
+                roots
+                    .add(&parse_cert(BUILTIN_SUPABASE_CERT.as_bytes())?)
                     .map_err(|e| Error::AddCert(e.to_string()))?;
             }
             let certs = rustls_native_certs::load_native_certs()

@@ -1,14 +1,15 @@
 use flow_lib::command::prelude::*;
 use std::sync::Arc;
+use tower::{Service, ServiceExt};
 
-use crate::flow_registry::{FlowRegistry, run_rhai};
+use crate::flow_registry::run_rhai;
 
 struct Command {
     name: Name,
     inner: Arc<rhai_script::Command>,
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl CommandTrait for Command {
     fn name(&self) -> Name {
         self.name.clone()
@@ -22,10 +23,13 @@ impl CommandTrait for Command {
         self.inner.outputs.clone()
     }
 
-    async fn run(&self, ctx: CommandContextX, input: ValueSet) -> Result<ValueSet, CommandError> {
-        ctx.get::<FlowRegistry>()
-            .ok_or_else(|| anyhow::anyhow!("FlowRegistry not found"))?
-            .run_rhai(run_rhai::Request {
+    async fn run(&self, ctx: CommandContext, input: ValueSet) -> Result<ValueSet, CommandError> {
+        ctx.get::<run_rhai::Svc>()
+            .ok_or_else(|| anyhow::anyhow!("run_rhai::Svc not found"))?
+            .clone()
+            .ready_oneshot()
+            .await?
+            .call(run_rhai::Request {
                 command: self.inner.clone(),
                 ctx: ctx.clone(),
                 input,

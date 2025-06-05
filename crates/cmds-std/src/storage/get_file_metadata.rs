@@ -30,7 +30,7 @@ struct Output {
     last_modified: String,
 }
 
-async fn run(mut ctx: CommandContextX, input: FileSpec) -> Result<Output, CommandError> {
+async fn run(mut ctx: CommandContext, input: FileSpec) -> Result<Output, CommandError> {
     let key = input.key(&ctx.flow_owner().id);
     let url = format!(
         "{}/storage/v1/object/info/authenticated/{}",

@@ -2,7 +2,7 @@ use cmds_std::postgrest::builder_select;
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use flow_lib::{
     Value,
-    context::CommandContextX,
+    context::CommandContext,
     value::{self, array, map},
 };
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -37,7 +37,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         "columns" => "*",
     };
     let cmd = builder_select::build().unwrap();
-    let ctx = CommandContextX::test_context();
+    let ctx = CommandContext::test_context();
     c.bench_function("run_command", |b| {
         b.iter(|| {
             let fut = cmd.run(black_box(ctx.clone()), black_box(params.clone()));

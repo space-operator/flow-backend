@@ -6,6 +6,7 @@ use crate::{
     flow_set::DeploymentId,
 };
 use chrono::Utc;
+use command_rpc::flow_side::address_book::AddressBook;
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
     config::{
@@ -14,16 +15,22 @@ use flow_lib::{
     },
     context::{User, api_input, execute, get_jwt, signer},
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
-    utils::{TowerClient, tower_client::unimplemented_svc},
+    utils::{
+        TowerClient,
+        tower_client::{CommonErrorExt, unimplemented_svc},
+    },
 };
 use futures::channel::oneshot;
 use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, OnceLock};
 use thiserror::Error as ThisError;
-use tokio::sync::Semaphore;
+use tokio::{
+    sync::{Semaphore, mpsc},
+    task::spawn_local,
+};
 use tokio_util::sync::CancellationToken;
-use tower::{Service, ServiceExt};
+use tower::{Service, ServiceExt, service_fn};
 use tracing::Instrument;
 use utils::actix_service::ActixService;
 
@@ -70,9 +77,10 @@ pub struct FlowRegistry {
     pub(crate) parent_flow_execute: Option<execute::Svc>,
 
     pub(crate) rhai_permit: Arc<Semaphore>,
-    rhai_tx: Arc<Mutex<Option<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>>,
+    rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,
 
     pub(crate) rpc_server: Option<actix::Addr<srpc::Server>>,
+    pub(crate) remotes: Option<AddressBook>,
 }
 
 impl Default for FlowRegistry {
@@ -82,6 +90,7 @@ impl Default for FlowRegistry {
         let get_previous_values = unimplemented_svc();
         let token = unimplemented_svc();
         let api_input = unimplemented_svc();
+
         Self {
             depth: 0,
             flow_owner: User::new(UserId::nil()),
@@ -99,6 +108,7 @@ impl Default for FlowRegistry {
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
             rpc_server: None, // TODO: try this
+            remotes: None,
         }
     }
 }
@@ -302,28 +312,55 @@ impl FlowRegistry {
             rpc_server: srpc::Server::start_http_server()
                 .inspect_err(|error| tracing::error!("srpc error: {}", error))
                 .ok(),
+            remotes: None,
         })
     }
 
-    pub async fn run_rhai(
-        &self,
-        req: run_rhai::Request,
-    ) -> Result<run_rhai::Response, run_rhai::Error> {
-        let worker = {
-            let mut tx = self.rhai_tx.lock().unwrap();
-            if tx.is_none() {
+    pub fn start_flow_svc(&self) -> start_flow::Svc {
+        let this = self.clone();
+        let (tx, mut rx) = mpsc::channel::<(
+            start_flow::Request,
+            oneshot::Sender<Result<start_flow::Response, start_flow::Error>>,
+        )>(1);
+        spawn_local(async move {
+            while let Some((req, tx)) = rx.recv().await {
+                let result = this.start(req.flow_id, req.inputs, req.options).await;
+                tx.send(result).ok();
+            }
+        });
+        start_flow::Svc::new(service_fn(move |req: start_flow::Request| {
+            let tx = tx.clone();
+            async move {
+                let (resp, rx) = oneshot::channel();
+                tx.send((req, resp))
+                    .await
+                    .map_err(new_flow_run::Error::other)?;
+                rx.await.map_err(new_flow_run::Error::other)?
+            }
+        }))
+    }
+
+    pub fn run_rhai_svc(&self) -> run_rhai::Svc {
+        let worker = self
+            .rhai_tx
+            .get_or_init(|| {
                 let (new_tx, rx) = crossbeam_channel::unbounded();
                 spawn_rhai_thread(rx);
-                *tx = Some(new_tx.clone());
-            }
-            tx.clone().unwrap()
+                new_tx
+            })
+            .clone();
+        let service = move |req: run_rhai::Request| {
+            let worker = worker.clone();
+            Box::pin(async move {
+                let (tx, rx) = oneshot::channel();
+                worker
+                    .send((req, tx))
+                    .map_err(|_| run_rhai::Error::msg("rhai worker stopped"))?;
+                rx.await
+                    .map_err(|_| run_rhai::Error::msg("rhai worker stopped"))?
+            })
         };
-        let (tx, rx) = oneshot::channel();
-        worker
-            .send((req, tx))
-            .map_err(|_| run_rhai::Error::msg("rhai worker stopped"))?;
-        rx.await
-            .map_err(|_| run_rhai::Error::msg("rhai worker stopped"))?
+        run_rhai::Svc::new(tower::service_fn(service))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -483,7 +520,7 @@ impl FlowRegistry {
                 <_>::default()
             };
 
-            let join_handle = tokio::spawn(
+            let join_handle = spawn_local(
                 async move {
                     flow.run(tx, flow_run_id, inputs, stop, stop_shared, previous_values)
                         .await
@@ -499,7 +536,7 @@ impl FlowRegistry {
 }
 
 pub mod run_rhai {
-    use flow_lib::{ValueSet, command::CommandError, context::CommandContextX};
+    use flow_lib::{ValueSet, command::CommandError, context::CommandContext, utils::TowerClient};
     use futures::channel::oneshot;
     use std::sync::Arc;
 
@@ -507,13 +544,15 @@ pub mod run_rhai {
 
     pub struct Request {
         pub command: Arc<rhai_script::Command>,
-        pub ctx: CommandContextX,
+        pub ctx: CommandContext,
         pub input: ValueSet,
     }
 
     pub type Response = ValueSet;
 
     pub type Error = CommandError;
+
+    pub type Svc = TowerClient<Request, Response, Error>;
 }
 
 pub mod new_flow_run {
@@ -659,5 +698,34 @@ pub mod get_previous_values {
         fn from(value: actix::MailboxError) -> Self {
             CommonError::from(value).into()
         }
+    }
+}
+
+pub mod start_flow {
+    use crate::flow_graph::FlowRunResult;
+
+    use super::{StartFlowOptions, new_flow_run};
+    use flow_lib::{FlowId, FlowRunId, utils::TowerClient};
+
+    pub type Svc = TowerClient<Request, Response, Error>;
+
+    pub struct Request {
+        pub flow_id: FlowId,
+        pub inputs: value::Map,
+        pub options: StartFlowOptions,
+    }
+
+    pub type Response = (FlowRunId, tokio::task::JoinHandle<FlowRunResult>);
+
+    pub type Error = new_flow_run::Error;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_registry() {
+        FlowRegistry::default();
     }
 }

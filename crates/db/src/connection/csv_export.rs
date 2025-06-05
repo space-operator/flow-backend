@@ -5,7 +5,7 @@ use polars::{
     prelude::{CsvParseOptions, CsvReadOptions, CsvWriter, NullValues, PlSmallStr},
     series::Series,
 };
-use std::{io::Cursor, iter::repeat};
+use std::{io::Cursor, iter::repeat_n};
 
 pub fn format_sql_columns(df: &DataFrame) -> String {
     df.get_column_names()
@@ -18,9 +18,7 @@ pub fn format_sql_columns(df: &DataFrame) -> String {
 /// Set column to null
 pub fn clear_column(df: &mut DataFrame, column: &str) -> Result<(), PolarsError> {
     df.apply(column, |c| {
-        repeat::<Option<String>>(None)
-            .take(c.len())
-            .collect::<Series>()
+        repeat_n::<Option<String>>(None, c.len()).collect::<Series>()
     })?;
     Ok(())
 }
