@@ -7,6 +7,8 @@ use url::Url;
 
 use crate::flow_side::address_book::{self, AddressBookExt};
 
+use super::command_factory::{self, CommandFactoryExt};
+
 pub struct Config {
     pub flow_server: Vec<FlowServerAddress>,
     pub secret_key: iroh::SecretKey,
@@ -55,6 +57,11 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
             .await?;
         clients.push(client);
     }
+
+    let client = command_factory::new_client(commands);
+    client.bind_iroh(endpoint);
+
+    tokio::signal::ctrl_c().await.ok();
 
     for client in clients {
         client.leave().await?;
