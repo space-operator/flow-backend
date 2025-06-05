@@ -1,3 +1,4 @@
+use crate::connect_generic_futures_io;
 use bincode::config::standard;
 use capnp::capability::Promise;
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
@@ -84,25 +85,6 @@ pub trait CommandFactoryExt {
     ) -> impl Future<Output = Result<command_trait::Client, InitError>>;
     fn all_availables(&self) -> impl Future<Output = Result<Vec<String>, AllAvailablesError>>;
     fn bind_iroh(&self, endpoint: Endpoint) -> JoinHandle<()>;
-}
-
-fn connect_generic_futures_io<
-    R: futures::io::AsyncRead + Unpin + 'static,
-    W: futures::io::AsyncWrite + Unpin + 'static,
->(
-    reader: R,
-    writer: W,
-) -> Client {
-    let network = Box::new(VatNetwork::new(
-        futures::io::BufReader::new(reader),
-        futures::io::BufWriter::new(writer),
-        Side::Client,
-        Default::default(),
-    ));
-    let mut rpc_system = RpcSystem::new(network, None);
-    let client: Client = rpc_system.bootstrap(Side::Server);
-    tokio::task::spawn_local(rpc_system);
-    client
 }
 
 impl CommandFactoryExt for Client {
