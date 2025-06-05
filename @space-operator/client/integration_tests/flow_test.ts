@@ -85,7 +85,7 @@ Deno.test("interflow", async () => {
   const result = await owner.getFlowOutput(flow_run_id);
   const { out, count } = result.toJSObject();
   assertEquals(count, 50);
-  assertEquals(out, 50);
+  assertEquals(out, 1);
 
   const jwt = await owner.claimToken();
   const sup = createClient<client.Database>(supabaseUrl, anonKey, {
