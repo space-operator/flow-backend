@@ -83,7 +83,7 @@ Deno.test("interflow", async () => {
   });
 
   const result = await owner.getFlowOutput(flow_run_id);
-  const { out, count } = result.toJSObject().c;
+  const { out, count } = result.toJSObject();
   assertEquals(count, 50);
   assertEquals(out, 50);
 
