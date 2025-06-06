@@ -57,15 +57,30 @@ pub struct StartFlowOptions {
     pub deployment_id: Option<DeploymentId>,
 }
 
+#[derive(bon::Builder, getset::Getters, Clone)]
+pub struct BackendServices {
+    #[get = "pub"]
+    api_input: api_input::Svc,
+    #[get = "pub"]
+    signer: signer::Svc,
+    #[get = "pub"]
+    token: get_jwt::Svc,
+    #[get = "pub"]
+    new_flow_run: new_flow_run::Svc,
+    #[get = "pub"]
+    get_previous_values: get_previous_values::Svc,
+}
+
 /// A collection of flows config to run together
 #[derive(Clone, bon::Builder)]
 pub struct FlowRegistry {
-    flows: Arc<HashMap<FlowId, ClientConfig>>,
     pub(crate) flow_owner: User,
     pub(crate) started_by: User,
     shared_with: Vec<UserId>,
     signers_info: JsonValue,
     endpoints: Endpoints,
+
+    flows: Arc<HashMap<FlowId, ClientConfig>>,
 
     depth: u32,
 
@@ -113,12 +128,15 @@ impl Default for FlowRegistry {
     }
 }
 
-async fn get_all_flows(
+async fn get_all_flows<S>(
     entrypoint: FlowId,
     user_id: UserId,
-    mut get_flow: get_flow::Svc,
+    mut get_flow: S,
     environment: HashMap<String, String>,
-) -> crate::Result<HashMap<FlowId, ClientConfig>> {
+) -> crate::Result<HashMap<FlowId, ClientConfig>>
+where
+    S: Service<get_flow::Request, Response = get_flow::Response, Error = get_flow::Error>,
+{
     let mut flows = HashMap::new();
 
     let mut queue = [entrypoint].to_vec();
@@ -577,7 +595,7 @@ pub mod new_flow_run {
         pub shared_with: Vec<UserId>,
         pub deployment_id: Option<DeploymentId>,
         pub inputs: ValueSet,
-        pub tx: EventSender,
+        pub tx: EventSender, // only used to send log
         pub stream: BoxStream<'static, Event>,
     }
 

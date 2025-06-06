@@ -1,3 +1,5 @@
+use crate::connect_generic_futures_io;
+use anyhow::Context;
 use bincode::config::standard;
 use capnp::capability::Promise;
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
@@ -27,6 +29,8 @@ use crate::{
 
 use super::remote_command::RemoteCommand;
 
+pub const ALPN: &[u8] = b"space-operator/capnp-rpc/address-book/0";
+
 #[derive(Clone)]
 struct Info {
     direct_addresses: BTreeSet<SocketAddr>,
@@ -41,8 +45,15 @@ pub struct AddressBook {
     endpoint: Endpoint,
 }
 
+pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, anyhow::Error> {
+    let connection = endpoint.connect(addr, ALPN).await.context("connect")?;
+    let (writer, reader) = connection.open_bi().await.context("open_bi")?;
+    Ok(connect_generic_futures_io(reader, writer))
+}
+
 impl AddressBook {
     pub fn bind_iroh(mut self, endpoint: Endpoint) -> JoinHandle<()> {
+        endpoint.set_alpns([ALPN.to_vec()].into());
         self.endpoint = endpoint.clone();
         spawn_local(async move {
             while let Some(incoming) = endpoint.accept().await {
