@@ -10,6 +10,7 @@ use middleware::{
     auth,
     req_fn::{self, Function, ReqFn},
 };
+use rand::thread_rng;
 use serde::Deserialize;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use std::{path::PathBuf, rc::Rc};
@@ -158,6 +159,7 @@ pub struct Config {
     pub shutdown_timeout_secs: u16,
     pub helius_api_key: Option<String>,
     pub solana: Option<SolanaConfig>,
+    pub secret_key: iroh::SecretKey,
 
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
@@ -183,6 +185,7 @@ impl Default for Config {
             blake3_key: rand::random(),
             solana: None,
             helius_api_key: None,
+            secret_key: iroh::SecretKey::generate(&mut thread_rng()),
         }
     }
 }
@@ -392,6 +395,7 @@ mod tests {
     use super::*;
     use flow::{FlowGraph, flow_run_events::event_channel};
     use flow_lib::{FlowConfig, command::CommandDescription, config::client::ClientConfig};
+    use rand::rngs::OsRng;
     use value::Value;
 
     use cmds_solana as _;
