@@ -12,6 +12,7 @@ use middleware::{
 };
 use rand::thread_rng;
 use serde::Deserialize;
+use serde_with::serde_as;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use std::{path::PathBuf, rc::Rc};
 use url::Url;
@@ -142,6 +143,7 @@ fn default_db_config() -> Either<DbConfig, ProxiedDbConfig> {
     })
 }
 
+#[serde_as]
 #[derive(Deserialize)]
 pub struct Config {
     #[serde(default = "Config::default_host")]
@@ -159,6 +161,8 @@ pub struct Config {
     pub shutdown_timeout_secs: u16,
     pub helius_api_key: Option<String>,
     pub solana: Option<SolanaConfig>,
+    #[serde_as(as = "serde_with::DisplayFromStr")]
+    #[serde(default = "Config::default_secret_key")]
     pub secret_key: iroh::SecretKey,
 
     #[serde(skip)]
@@ -205,6 +209,10 @@ impl Config {
 
     pub const fn default_shutdown_timeout_secs() -> u16 {
         1
+    }
+
+    pub fn default_secret_key() -> iroh::SecretKey {
+        iroh::SecretKey::generate(&mut thread_rng())
     }
 
     pub fn get_config() -> Self {
@@ -395,7 +403,6 @@ mod tests {
     use super::*;
     use flow::{FlowGraph, flow_run_events::event_channel};
     use flow_lib::{FlowConfig, command::CommandDescription, config::client::ClientConfig};
-    use rand::rngs::OsRng;
     use value::Value;
 
     use cmds_solana as _;
