@@ -11,6 +11,7 @@ use actix::{
 };
 use actix_web::{ResponseError, http::StatusCode};
 use bytes::Bytes;
+use command_rpc::flow_side::address_book::BaseAddressBook;
 use db::{Error as DbError, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
@@ -50,6 +51,7 @@ pub struct UserWorker {
     user_id: UserId,
     endpoints: Endpoints,
     new_flow_api_request: NewRequestService,
+    remote_command_address_book: BaseAddressBook,
 
     #[builder(default)]
     subs: HashMap<u64, Subscription>,

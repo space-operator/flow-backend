@@ -4,7 +4,7 @@ use actix_web::{
     middleware::{Compress, Logger},
     web,
 };
-use command_rpc::flow_side::address_book::{AddressBook as RpcAddressBook, BaseAddressBook};
+use command_rpc::flow_side::address_book::BaseAddressBook;
 use db::{
     LocalStorage, WasmStorage,
     pool::{DbPool, ProxiedDbPool, RealDbPool},

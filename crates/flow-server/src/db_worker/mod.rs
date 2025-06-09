@@ -189,8 +189,10 @@ impl actix::Handler<GetUserWorker> for DBWorker {
             let root = ctx.address();
             let endpoints = self.endpoints.clone();
             let new_flow_api_request = self.new_flow_api_request.clone();
+            let remote_command_address_book = self.remote_command_address_book.clone();
+            let arbiter = Arbiter::current();
             move || {
-                UserWorker::start_in_arbiter(&Arbiter::current(), move |_| {
+                UserWorker::start_in_arbiter(&arbiter, move |_| {
                     UserWorker::builder()
                         .user_id(id)
                         .endpoints(endpoints)
@@ -198,6 +200,7 @@ impl actix::Handler<GetUserWorker> for DBWorker {
                         .counter(counter)
                         .root(root)
                         .new_flow_api_request(new_flow_api_request)
+                        .remote_command_address_book(remote_command_address_book)
                         .build()
                 })
             }
