@@ -1,4 +1,4 @@
-use actix::{Actor, AsyncContext, SystemRegistry, SystemService};
+use actix::{Actor, AsyncContext, SystemRegistry};
 use actix_web::{
     App, HttpServer,
     middleware::{Compress, Logger},
@@ -153,19 +153,19 @@ async fn main() {
     tracing::info!("iroh node ID: {}", config.secret_key.public());
 
     let db_worker = DBWorker::create(|ctx| {
-        DBWorker::new(
-            db.clone(),
-            &config,
-            actors,
-            tracing_data,
-            NewRequestService {
+        DBWorker::builder()
+            .config(&config)
+            .db(db.clone())
+            .actors(actors)
+            .tracing_data(tracing_data)
+            .new_flow_api_request(NewRequestService {
                 store: store.clone(),
                 db_worker: ctx.address(),
                 endpoints: config.endpoints(),
-            },
-            base_book,
-            ctx,
-        )
+            })
+            .remote_command_address_book(base_book)
+            .ctx(ctx)
+            .build()
     });
 
     SystemRegistry::set(db_worker.clone());

@@ -63,7 +63,9 @@ pub struct DBWorker {
     remote_command_address_book: BaseAddressBook,
 }
 
+#[bon::bon]
 impl DBWorker {
+    #[builder]
     pub fn new(
         db: DbPool,
         config: &Config,
