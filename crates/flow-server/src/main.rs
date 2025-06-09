@@ -1,4 +1,4 @@
-use actix::{Actor, AsyncContext};
+use actix::{Actor, AsyncContext, SystemRegistry, SystemService};
 use actix_web::{
     App, HttpServer,
     middleware::{Compress, Logger},
@@ -167,6 +167,8 @@ async fn main() {
             ctx,
         )
     });
+
+    SystemRegistry::set(db_worker.clone());
 
     let sig_auth = config.signature_auth();
     let supabase_auth = match SupabaseAuth::new(&config.supabase, db.clone()) {

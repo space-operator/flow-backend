@@ -101,6 +101,17 @@ impl DBWorker {
     }
 }
 
+impl actix::SystemService for DBWorker {}
+
+impl actix::Supervised for DBWorker {}
+
+// required in Supervised trait
+impl Default for DBWorker {
+    fn default() -> Self {
+        unimplemented!();
+    }
+}
+
 impl Actor for DBWorker {
     type Context = actix::Context<Self>;
 
@@ -181,12 +192,11 @@ impl actix::Message for GetUserWorker {
 
 impl actix::Handler<GetUserWorker> for DBWorker {
     type Result = actix::Addr<UserWorker>;
-    fn handle(&mut self, msg: GetUserWorker, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: GetUserWorker, _: &mut Self::Context) -> Self::Result {
         let id = msg.user_id;
         self.actors.get_or_start(id, {
             let counter = self.counter.clone();
             let db = self.db.clone();
-            let root = ctx.address();
             let endpoints = self.endpoints.clone();
             let new_flow_api_request = self.new_flow_api_request.clone();
             let remote_command_address_book = self.remote_command_address_book.clone();
@@ -198,7 +208,6 @@ impl actix::Handler<GetUserWorker> for DBWorker {
                         .endpoints(endpoints)
                         .db(db)
                         .counter(counter)
-                        .root(root)
                         .new_flow_api_request(new_flow_api_request)
                         .remote_command_address_book(remote_command_address_book)
                         .build()

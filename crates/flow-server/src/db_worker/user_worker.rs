@@ -7,7 +7,7 @@ use super::{
 use crate::{api::flow_api_input::NewRequestService, error::ErrorBody};
 use actix::{
     Actor, ActorFutureExt, ActorTryFutureExt, AsyncContext, Response, ResponseActFuture,
-    ResponseFuture, WrapFuture, fut::wrap_future,
+    ResponseFuture, SystemService, WrapFuture, fut::wrap_future,
 };
 use actix_web::{ResponseError, http::StatusCode};
 use bytes::Bytes;
@@ -45,7 +45,6 @@ use utils::{actix_service::ActixService, address_book::ManagableActor};
 
 #[derive(bon::Builder)]
 pub struct UserWorker {
-    root: actix::Addr<DBWorker>,
     db: DbPool,
     counter: Counter,
     user_id: UserId,
@@ -143,7 +142,7 @@ impl UserWorker {
     ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static {
         let new_flow_run = TowerClient::new(ActixService::from(ctx.address().recipient()));
 
-        let root = self.root.clone();
+        let root = DBWorker::from_registry();
         let db = self.db.clone();
         let user_id = self.user_id;
         let addr = ctx.address().recipient();
@@ -215,9 +214,9 @@ impl UserWorker {
                 self.subs
                     .retain(|_, sub| sub.tx.unbounded_send(req.clone()).is_ok());
                 if let Some(flow_run_id) = req.flow_run_id {
+                    let root = DBWorker::from_registry();
                     actix::spawn(
-                        self.root
-                            .send(FindActor::<FlowRunWorker>::new(flow_run_id))
+                        root.send(FindActor::<FlowRunWorker>::new(flow_run_id))
                             .map_ok(move |res| {
                                 if let Some(addr) = res {
                                     addr.do_send(SigReqEvent(req.clone()));
@@ -317,7 +316,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
     fn handle(&mut self, msg: new_flow_run::Request, _: &mut Self::Context) -> Self::Result {
         let user_id = self.user_id;
         let db = self.db.clone();
-        let root = self.root.clone();
+        let root = DBWorker::from_registry();
         let counter = self.counter.clone();
         Box::pin(async move {
             if user_id != msg.user_id {
@@ -624,7 +623,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
         let user_id = self.user_id;
         let addr = ctx.address();
         let endpoints = self.endpoints.clone();
-        let root = self.root.clone();
+        let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
         Box::pin(async move {
@@ -714,7 +713,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let user_id = self.user_id;
         let addr = ctx.address();
         let endpoints = self.endpoints.clone();
-        let root = self.root.clone();
+        let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
         Box::pin(async move {
