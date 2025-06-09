@@ -42,15 +42,19 @@ use std::future::{Future, ready};
 use thiserror::Error as ThisError;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
 
+#[derive(bon::Builder)]
 pub struct UserWorker {
     root: actix::Addr<DBWorker>,
     db: DbPool,
     counter: Counter,
     user_id: UserId,
     endpoints: Endpoints,
-    sigreg: HashMap<i64, SigReq>,
-    subs: HashMap<u64, Subscription>,
     new_flow_api_request: NewRequestService,
+
+    #[builder(default)]
+    subs: HashMap<u64, Subscription>,
+    #[builder(default)]
+    sigreg: HashMap<i64, SigReq>,
 }
 
 pub struct SubscribeSigReq {}
@@ -129,26 +133,6 @@ pub enum MakeFlowSetContextError {
 }
 
 impl UserWorker {
-    pub fn new(
-        user_id: UserId,
-        endpoints: Endpoints,
-        db: DbPool,
-        counter: Counter,
-        root: actix::Addr<DBWorker>,
-        new_flow_api_request: NewRequestService,
-    ) -> Self {
-        Self {
-            user_id,
-            endpoints,
-            db,
-            counter,
-            root,
-            sigreg: <_>::default(),
-            subs: <_>::default(),
-            new_flow_api_request,
-        }
-    }
-
     fn make_flow_set_context(
         &mut self,
         d: &FlowDeployment,

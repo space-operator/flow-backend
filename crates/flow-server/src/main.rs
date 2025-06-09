@@ -144,6 +144,14 @@ async fn main() {
 
     let store = RequestStore::new_app_data();
 
+    let base_book = BaseAddressBook::new(command_rpc::flow_side::address_book::ServerConfig {
+        secret_key: config.secret_key.clone(),
+    })
+    .await
+    .unwrap();
+
+    tracing::info!("iroh node ID: {}", config.secret_key.public());
+
     let db_worker = DBWorker::create(|ctx| {
         DBWorker::new(
             db.clone(),
@@ -155,6 +163,7 @@ async fn main() {
                 db_worker: ctx.address(),
                 endpoints: config.endpoints(),
             },
+            base_book,
             ctx,
         )
     });
@@ -199,14 +208,6 @@ async fn main() {
             }
         }
     }
-
-    let base_book = BaseAddressBook::new(command_rpc::flow_side::address_book::ServerConfig {
-        secret_key: config.secret_key.clone(),
-    })
-    .await
-    .unwrap();
-
-    tracing::info!("iroh node ID: {}", config.secret_key.public());
 
     let config = Arc::new(config);
     let mut server = HttpServer::new(move || {
@@ -275,7 +276,6 @@ async fn main() {
         let mut app = App::new()
             .wrap(Compress::default())
             .wrap(Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#).exclude("/healthcheck"))
-            .app_data(web::Data::new(RpcAddressBook::new(base_book.clone())))
             .app_data(web::Data::new(db.clone()))
             .app_data(web::Data::new(db_worker.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
