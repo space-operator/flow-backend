@@ -497,20 +497,20 @@ impl FlowRegistry {
 
             previous_values
         };
-        let join_handle = spawn_local(
-            async move {
-                flow.run(
-                    tx,
-                    flow_run_id,
-                    inputs,
-                    stop_signal,
-                    stop_shared_signal,
-                    previous_values,
-                )
-                .await
-            }
-            .in_current_span(),
-        );
+
+        let task = async move {
+            flow.run(
+                tx,
+                flow_run_id,
+                inputs,
+                stop_signal,
+                stop_shared_signal,
+                previous_values,
+            )
+            .await
+        }
+        .in_current_span();
+        let join_handle = spawn_local(task);
 
         Ok((flow_run_id, join_handle))
     }
