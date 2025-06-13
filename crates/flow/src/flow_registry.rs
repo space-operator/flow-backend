@@ -294,6 +294,7 @@ impl FlowRegistry {
         environment: HashMap<String, String>,
         endpoints: Endpoints,
         signers_info: JsonValue,
+        remotes: Option<AddressBook>,
         backend: BackendServices,
         get_flow: S,
     ) -> crate::Result<Self>
@@ -316,7 +317,7 @@ impl FlowRegistry {
             rpc_server: srpc::Server::start_http_server()
                 .inspect_err(|error| tracing::error!("srpc error: {}", error))
                 .ok(),
-            remotes: None,
+            remotes,
         })
     }
 }

@@ -11,7 +11,7 @@ use actix::{
 };
 use actix_web::{ResponseError, http::StatusCode};
 use bytes::Bytes;
-use command_rpc::flow_side::address_book::BaseAddressBook;
+use command_rpc::flow_side::address_book::{AddressBook, BaseAddressBook};
 use db::{Error as DbError, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
@@ -644,6 +644,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
         let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
+        let remotes = AddressBook::new(self.remote_command_address_book.clone());
         Box::pin(async move {
             if msg.user.id != user_id {
                 return Err(StartError::Unauthorized);
@@ -671,6 +672,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     get_previous_values: addr_to_service(&addr),
                 })
                 .get_flow(addr_to_service(&addr))
+                .remotes(remotes)
                 .call()
                 .await?;
 
@@ -737,6 +739,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
+        let remotes = AddressBook::new(self.remote_command_address_book.clone());
         Box::pin(async move {
             let wrk = root.send(GetTokenWorker { user_id }).await??;
 
@@ -767,6 +770,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     get_previous_values: addr_to_service(&addr),
                 })
                 .get_flow(addr_to_service(&addr))
+                .remotes(remotes)
                 .call()
                 .await?;
 
