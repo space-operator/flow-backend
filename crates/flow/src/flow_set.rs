@@ -12,7 +12,10 @@ use getset::Getters;
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use std::sync::{Arc, OnceLock};
+use std::{
+    collections::BTreeSet,
+    sync::{Arc, OnceLock},
+};
 use tokio::{sync::Semaphore, task::JoinHandle};
 use tower::ServiceExt;
 use uuid::Uuid;
@@ -53,7 +56,7 @@ impl Flow {
         }
     }
 
-    pub fn wallets_id(&self) -> Vec<i64> {
+    pub fn wallets_id(&self) -> BTreeSet<i64> {
         self.row
             .nodes
             .iter()
@@ -91,7 +94,7 @@ pub type DeploymentId = Uuid;
 
 #[derive(bon::Builder, Debug, Clone)]
 pub struct FlowDeployment {
-    /// Deployment ID, NIL if not inserted yet
+    /// Deployment ID, NIL if not inserted yet, or is temporary
     pub id: DeploymentId,
     /// Owner of this deployment (and all flows belonging to it)
     pub user_id: UserId,
@@ -100,7 +103,7 @@ pub struct FlowDeployment {
     /// Flow configs
     pub flows: HashMap<FlowId, Flow>,
     /// Wallets are stored separately
-    pub wallets_id: Vec<i64>,
+    pub wallets_id: BTreeSet<i64>,
 
     /// Who can start the deployment
     pub start_permission: StartPermission,
@@ -166,14 +169,14 @@ impl FlowDeployment {
             dep.flows.insert(id, flow);
         }
 
-        let mut wallets_id = dep
-            .flows
-            .values()
-            .flat_map(|f| f.wallets_id())
-            .collect::<Vec<_>>();
-        wallets_id.sort_unstable();
-        wallets_id.dedup();
-        dep.wallets_id = wallets_id.clone();
+        let wallets_id = dep.flows.values().map(|f| f.wallets_id()).fold(
+            BTreeSet::new(),
+            |mut acc, mut item| {
+                acc.append(&mut item);
+                acc
+            },
+        );
+        dep.wallets_id = wallets_id;
 
         Ok(dep)
     }
