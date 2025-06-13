@@ -11,7 +11,7 @@ use flow::flow_set::{DeploymentId, Flow, FlowDeployment};
 use flow_lib::{SolanaClientConfig, config::client::NodeDataSkipWasm, solana::Pubkey};
 use futures_util::StreamExt;
 use polars::{error::PolarsError, frame::DataFrame, series::Series};
-use std::str::FromStr;
+use std::{collections::BTreeSet, str::FromStr};
 use tokio::task::spawn_blocking;
 use tokio_postgres::{binary_copy::BinaryCopyInWriter, types::Type};
 use utils::bs58_decode;
@@ -158,7 +158,7 @@ impl UserConnectionTrait for UserConnection {
         self.get_deployment_impl(id).await
     }
 
-    async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<Vec<i64>> {
+    async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<BTreeSet<i64>> {
         // TODO: caching
         self.get_deployment_wallets_impl(id).await
     }
@@ -621,7 +621,7 @@ impl UserConnection {
         Ok(d)
     }
 
-    async fn get_deployment_wallets_impl(&self, id: &DeploymentId) -> crate::Result<Vec<i64>> {
+    async fn get_deployment_wallets_impl(&self, id: &DeploymentId) -> crate::Result<BTreeSet<i64>> {
         let conn = self.pool.get_conn().await?;
         let ids = conn
             .do_query(
@@ -633,7 +633,7 @@ impl UserConnection {
             .map_err(Error::exec("select flow_deployments_wallets"))?
             .into_iter()
             .map(|r| r.try_get(0))
-            .collect::<Result<Vec<_>, _>>()
+            .collect::<Result<_, _>>()
             .map_err(Error::data("flow_deployments_wallets.wallet_id"))?;
         Ok(ids)
     }
