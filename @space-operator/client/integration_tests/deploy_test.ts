@@ -116,18 +116,7 @@ Deno.test("deploy and run", async () => {
     auth: { autoRefreshToken: false },
   });
   await sup.auth.setSession(jwt);
-  const nodeErrors = await sup
-    .from("node_run")
-    .select("errors")
-    .not("errors", "is", "null");
-  assert(nodeErrors.error == null);
-  assert(nodeErrors.data.length == 0);
-  const flowErrors = await sup
-    .from("flow_run")
-    .select("errors")
-    .not("errors", "is", "null");
-  assert(flowErrors.error == null);
-  assert(flowErrors.data.length == 0);
+  await checkNoErrors(sup, flow_run_id);
 });
 
 Deno.test("deploy and delete", async (t) => {
