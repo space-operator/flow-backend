@@ -1,8 +1,9 @@
 import { Value } from "../src/deps.ts";
 import * as client from "../src/mod.ts";
 import * as dotenv from "jsr:@std/dotenv";
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { assertEquals } from "jsr:@std/assert";
+import { checkNoErrors } from "./utils";
 
 dotenv.loadSync({
   export: true,
@@ -17,29 +18,6 @@ function getEnv(key: string): string {
 const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
 const supabaseUrl = "http://localhost:8000";
-
-async function checkNoErrors(
-  sup: SupabaseClient<client.Database>,
-  runId: client.FlowRunId,
-) {
-  const nodeErrors = await sup
-    .from("node_run")
-    .select("errors")
-    .eq("flow_run_id", runId)
-    .not("errors", "is", "null");
-  if (nodeErrors.error) throw new Error(JSON.stringify(nodeErrors.error));
-  const flowErrors = await sup
-    .from("flow_run")
-    .select("errors")
-    .eq("id", runId)
-    .not("errors", "is", "null");
-  if (flowErrors.error) throw new Error(JSON.stringify(flowErrors.error));
-  const errors = [
-    ...flowErrors.data.flatMap((row) => row.errors),
-    ...nodeErrors.data.flatMap((row) => row.errors),
-  ];
-  if (errors.length > 0) throw new Error(JSON.stringify(errors));
-}
 
 Deno.test("start flow", async () => {
   const owner = new client.Client({
