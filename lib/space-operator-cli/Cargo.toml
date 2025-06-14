@@ -15,15 +15,15 @@ path = "src/main.rs"
 name = "spo"
 
 [dependencies]
-bon = "2.3.0"
-cargo_metadata = "0.18.1"
+bon = "3.6.4"
+cargo_metadata = "0.20.0"
 chrono = { version = "0.4.38", features = ["serde"] }
 clap = { version = "=4.5.18", features = ["derive"] }
 console = "0.15.8"
-directories = "5.0.1"
+directories = "6.0.0"
 error-stack = "0.5.0"
 futures = "0.3.30"
-gix = { version = "0.66.0", default-features = false, features = ["status"] }
+gix = { version = "0.72.1", default-features = false, features = ["status"] }
 postgrest = { package = "spo-postgrest", version = "1.6.0" }
 prettyplease = "0.2.22"
 proc-macro2 = "1.0.87"
@@ -34,9 +34,9 @@ semver = "1.0.23"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = { version = "1.0.128", features = ["preserve_order"] }
 similar = { version = "2.6.0", features = ["inline"] }
-strum = { version = "0.26.3", features = ["derive"] }
+strum = { version = "0.27.1", features = ["derive"] }
 syn = "2.0.79"
-thiserror = "1.0.64"
+thiserror = "2.0.12"
 tokio = { version = "1.40.0", features = ["macros", "fs"] }
 toml = { version = "0.8.19", features = ["preserve_order"] }
 url = { version = "2.5.2", features = ["serde"] }
