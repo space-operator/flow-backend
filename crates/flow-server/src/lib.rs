@@ -163,7 +163,7 @@ pub struct Config {
     pub solana: Option<SolanaConfig>,
     #[serde_as(as = "serde_with::DisplayFromStr")]
     #[serde(default = "Config::default_secret_key")]
-    pub secret_key: iroh::SecretKey,
+    pub iroh_secret_key: iroh::SecretKey,
 
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
@@ -189,7 +189,7 @@ impl Default for Config {
             blake3_key: rand::random(),
             solana: None,
             helius_api_key: None,
-            secret_key: iroh::SecretKey::generate(&mut thread_rng()),
+            iroh_secret_key: iroh::SecretKey::generate(&mut thread_rng()),
         }
     }
 }

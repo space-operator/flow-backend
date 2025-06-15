@@ -1,6 +1,11 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write
 
-import { encodeBase58, encodeBase64, encodeBase64Url } from "@std/encoding";
+import {
+  encodeBase58,
+  encodeBase64,
+  encodeBase64Url,
+  encodeHex,
+} from "@std/encoding";
 import { load } from "@std/dotenv";
 import { crypto } from "@std/crypto/crypto";
 import * as toml from "@std/toml";
@@ -66,6 +71,8 @@ const dashboardPassword = encodeBase58(
   crypto.getRandomValues(new Uint8Array(8)),
 );
 
+const irohSecretKey = encodeHex(crypto.getRandomValues(new Uint8Array(32)));
+
 const env = await load({ envPath: ENV_TEMPLATE });
 env["POSTGRES_PASSWORD"] = postgresPassword;
 env["JWT_SECRET"] = jwtSecret;
@@ -74,6 +81,7 @@ env["SERVICE_ROLE_KEY"] = serviceRoleKey;
 env["DASHBOARD_PASSWORD"] = dashboardPassword;
 env["FLOW_RUNNER_PASSWORD"] = flowRunnerPassword;
 env["ENCRYPTION_KEY"] = encryptionKey;
+env["IROH_SECRET_KEY"] = irohSecretKey;
 const envContent = Object.entries(env)
   .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
   .join("\n") + "\n";
@@ -85,6 +93,7 @@ config.supabase.service_key = serviceRoleKey;
 config.supabase.anon_key = anonKey;
 config.db.password = flowRunnerPassword;
 config.db.encryption_key = encryptionKey;
+config.iroh_secret_key = irohSecretKey;
 const configContent = toml.stringify(config) + "\n";
 
 const fileExists: string[] = [];

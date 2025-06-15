@@ -145,12 +145,12 @@ async fn main() {
     let store = RequestStore::new_app_data();
 
     let base_book = BaseAddressBook::new(command_rpc::flow_side::address_book::ServerConfig {
-        secret_key: config.secret_key.clone(),
+        secret_key: config.iroh_secret_key.clone(),
     })
     .await
     .unwrap();
 
-    tracing::info!("iroh node ID: {}", config.secret_key.public());
+    tracing::info!("iroh node ID: {}", config.iroh_secret_key.public());
 
     let db_worker = DBWorker::create(|ctx| {
         DBWorker::builder()
