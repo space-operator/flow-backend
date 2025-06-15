@@ -384,7 +384,7 @@ impl FlowGraph {
             .unwrap_or_default();
         let parent_flow_execute = registry.parent_flow_execute.clone();
         tracing::debug!("execution config: {:?}", tx_exec_config);
-        let get_jwt = registry.token.clone();
+        let get_jwt = registry.backend.token.clone();
 
         let ctx_data = FlowContextData {
             environment: c.ctx.environment,
@@ -399,16 +399,16 @@ impl FlowGraph {
             },
         };
         let ctx_svcs = FlowServices {
-            signer: registry.signer.clone(),
+            signer: registry.backend.signer.clone(),
             set: FlowSetServices {
-                api_input: registry.api_input.clone(),
+                api_input: registry.backend.api_input.clone(),
                 extensions: Arc::new({
                     let mut ext = Extensions::new();
                     if let Some(rpc) = registry.rpc_server.clone() {
                         ext.insert(rpc);
                     }
-                    ext.insert(registry.run_rhai_svc());
-                    ext.insert(registry.start_flow_svc());
+                    ext.insert(registry.make_run_rhai_svc());
+                    ext.insert(registry.make_start_flow_svc());
                     ext.insert(tokio::runtime::Handle::current());
                     ext
                 }),

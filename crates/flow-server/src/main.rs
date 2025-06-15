@@ -1,9 +1,10 @@
-use actix::{Actor, AsyncContext};
+use actix::{Actor, AsyncContext, SystemRegistry};
 use actix_web::{
     App, HttpServer,
     middleware::{Compress, Logger},
     web,
 };
+use command_rpc::flow_side::address_book::BaseAddressBook;
 use db::{
     LocalStorage, WasmStorage,
     pool::{DbPool, ProxiedDbPool, RealDbPool},
@@ -143,20 +144,31 @@ async fn main() {
 
     let store = RequestStore::new_app_data();
 
+    let base_book = BaseAddressBook::new(command_rpc::flow_side::address_book::ServerConfig {
+        secret_key: config.iroh_secret_key.clone(),
+    })
+    .await
+    .unwrap();
+
+    tracing::info!("iroh node ID: {}", config.iroh_secret_key.public());
+
     let db_worker = DBWorker::create(|ctx| {
-        DBWorker::new(
-            db.clone(),
-            &config,
-            actors,
-            tracing_data,
-            NewRequestService {
+        DBWorker::builder()
+            .config(&config)
+            .db(db.clone())
+            .actors(actors)
+            .tracing_data(tracing_data)
+            .new_flow_api_request(NewRequestService {
                 store: store.clone(),
                 db_worker: ctx.address(),
                 endpoints: config.endpoints(),
-            },
-            ctx,
-        )
+            })
+            .remote_command_address_book(base_book)
+            .ctx(ctx)
+            .build()
     });
+
+    SystemRegistry::set(db_worker.clone());
 
     let sig_auth = config.signature_auth();
     let supabase_auth = match SupabaseAuth::new(&config.supabase, db.clone()) {

@@ -41,6 +41,7 @@ iroh-quinn = { version = "0.13", features = ["futures-io"] }
 anyhow.workspace = true
 snafu = { version = "0.8.5", features = ["rust_1_81"] }
 rand = "0.8"
+parking_lot = { version = "0.12.4", features = ["arc_lock"] }
 
 [dev-dependencies]
 criterion = "0.5.1"

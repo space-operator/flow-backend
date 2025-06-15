@@ -15,7 +15,7 @@ use hashbrown::{HashMap, HashSet};
 use polars::frame::DataFrame;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use std::{any::Any, future::Future, time::Duration};
+use std::{any::Any, collections::BTreeSet, future::Future, time::Duration};
 use tokio_postgres::{
     Error as PgError, Row,
     types::{Json, ToSql},
@@ -129,7 +129,7 @@ pub trait UserConnectionTrait: Any + 'static {
 
     async fn get_deployment(&self, id: &DeploymentId) -> crate::Result<FlowDeployment>;
 
-    async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<Vec<i64>>;
+    async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<BTreeSet<i64>>;
 
     async fn get_deployment_flows(&self, id: &DeploymentId)
     -> crate::Result<HashMap<FlowId, Flow>>;
