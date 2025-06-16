@@ -3,7 +3,7 @@ import * as client from "../src/mod.ts";
 import * as dotenv from "jsr:@std/dotenv";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { assertEquals } from "jsr:@std/assert";
-import { checkNoErrors } from "./utils";
+import { checkNoErrors } from "./utils.ts";
 
 dotenv.loadSync({
   export: true,

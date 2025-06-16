@@ -6,7 +6,7 @@ import { assert, assertEquals } from "jsr:@std/assert";
 import { LAMPORTS_PER_SOL } from "npm:@solana/web3.js@^1.91.4";
 import * as nacl from "npm:tweetnacl";
 import { decodeBase64 } from "jsr:@std/encoding@0.221/base64";
-import { checkNoErrors } from "./utils";
+import { checkNoErrors } from "./utils.ts";
 
 dotenv.loadSync({
   export: true,
