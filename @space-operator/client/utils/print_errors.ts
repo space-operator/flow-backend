@@ -9,7 +9,6 @@ function getEnv(key: string): string {
 const anonKey = getEnv("ANON_KEY");
 const c = new Client({
   host: "http://localhost:8080",
-  supabaseUrl: "http://localhost:8000",
   anonKey,
   token: getEnv("APIKEY"),
 });

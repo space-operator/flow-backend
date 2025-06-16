@@ -492,7 +492,7 @@ Deno.test("start authenticated by flow", async () => {
     .eq("deployment_id", id)
     .single();
   if (selectResult.error) throw new Error(JSON.stringify(selectResult.error));
-  assertEquals(Value.fromJSON(selectResult.data.output), result);
+  assertEquals(Value.fromJSON(selectResult.data.output as client.IValue), result);
 });
 
 Deno.test("start by flow + tag", async () => {
