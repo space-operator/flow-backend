@@ -8,17 +8,14 @@ use crate::{
 use chrono::Utc;
 use command_rpc::flow_side::address_book::AddressBook;
 use flow_lib::{
-    CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId, ValueSet,
+    CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId,
     config::{
         Endpoints,
         client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
     },
     context::{User, api_input, execute, get_jwt, signer},
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
-    utils::{
-        TowerClient,
-        tower_client::{CommonErrorExt, unimplemented_svc},
-    },
+    utils::tower_client::{CommonErrorExt, unimplemented_svc},
 };
 use futures::channel::oneshot;
 use hashbrown::HashMap;
@@ -32,7 +29,6 @@ use tokio::{
 use tokio_util::sync::CancellationToken;
 use tower::{Service, ServiceExt, service_fn};
 use tracing::Instrument;
-use utils::actix_service::ActixService;
 
 pub const MAX_CALL_DEPTH: u32 = 1024;
 
@@ -57,23 +53,41 @@ pub struct StartFlowOptions {
     pub deployment_id: Option<DeploymentId>,
 }
 
+#[derive(Clone)]
+pub struct BackendServices {
+    pub api_input: api_input::Svc,
+    pub signer: signer::Svc,
+    pub token: get_jwt::Svc,
+    pub new_flow_run: new_flow_run::Svc,
+    pub get_previous_values: get_previous_values::Svc,
+}
+
+impl BackendServices {
+    fn unimplemented() -> Self {
+        Self {
+            api_input: unimplemented_svc(),
+            signer: unimplemented_svc(),
+            token: unimplemented_svc(),
+            new_flow_run: unimplemented_svc(),
+            get_previous_values: unimplemented_svc(),
+        }
+    }
+}
+
 /// A collection of flows config to run together
 #[derive(Clone, bon::Builder)]
 pub struct FlowRegistry {
-    flows: Arc<HashMap<FlowId, ClientConfig>>,
     pub(crate) flow_owner: User,
     pub(crate) started_by: User,
     shared_with: Vec<UserId>,
     signers_info: JsonValue,
     endpoints: Endpoints,
 
+    flows: Arc<HashMap<FlowId, ClientConfig>>,
+
     depth: u32,
 
-    pub(crate) api_input: api_input::Svc,
-    pub(crate) signer: signer::Svc,
-    pub(crate) token: get_jwt::Svc,
-    new_flow_run: new_flow_run::Svc,
-    get_previous_values: get_previous_values::Svc,
+    pub(crate) backend: BackendServices,
     pub(crate) parent_flow_execute: Option<execute::Svc>,
 
     pub(crate) rhai_permit: Arc<Semaphore>,
@@ -85,12 +99,6 @@ pub struct FlowRegistry {
 
 impl Default for FlowRegistry {
     fn default() -> Self {
-        let signer = unimplemented_svc();
-        let new_flow_run = unimplemented_svc();
-        let get_previous_values = unimplemented_svc();
-        let token = unimplemented_svc();
-        let api_input = unimplemented_svc();
-
         Self {
             depth: 0,
             flow_owner: User::new(UserId::nil()),
@@ -99,12 +107,8 @@ impl Default for FlowRegistry {
             flows: <_>::default(),
             endpoints: <_>::default(),
             signers_info: <_>::default(),
-            api_input,
-            signer,
-            token,
-            new_flow_run,
-            get_previous_values,
             parent_flow_execute: None,
+            backend: BackendServices::unimplemented(),
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
             rpc_server: None, // TODO: try this
@@ -113,12 +117,15 @@ impl Default for FlowRegistry {
     }
 }
 
-async fn get_all_flows(
+async fn get_all_flows<S>(
     entrypoint: FlowId,
     user_id: UserId,
-    mut get_flow: get_flow::Svc,
+    mut get_flow: S,
     environment: HashMap<String, String>,
-) -> crate::Result<HashMap<FlowId, ClientConfig>> {
+) -> crate::Result<HashMap<FlowId, ClientConfig>>
+where
+    S: Service<get_flow::Request, Response = get_flow::Response, Error = get_flow::Error>,
+{
     let mut flows = HashMap::new();
 
     let mut queue = [entrypoint].to_vec();
@@ -276,22 +283,24 @@ fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) 
     });
 }
 
+#[bon::bon]
 impl FlowRegistry {
-    #[allow(clippy::too_many_arguments)]
-    pub async fn new(
+    #[builder]
+    pub async fn fetch<S>(
+        entrypoint: FlowId,
         flow_owner: User,
         started_by: User,
         shared_with: Vec<UserId>,
-        entrypoint: FlowId,
-        api_input: api_input::Svc,
-        (signer, signers_info): (signer::Svc, JsonValue),
-        new_flow_run: new_flow_run::Svc,
-        get_flow: get_flow::Svc,
-        get_previous_values: get_previous_values::Svc,
-        token: get_jwt::Svc,
         environment: HashMap<String, String>,
         endpoints: Endpoints,
-    ) -> crate::Result<Self> {
+        signers_info: JsonValue,
+        remotes: Option<AddressBook>,
+        backend: BackendServices,
+        get_flow: S,
+    ) -> crate::Result<Self>
+    where
+        S: Service<get_flow::Request, Response = get_flow::Response, Error = get_flow::Error>,
+    {
         let flows = get_all_flows(entrypoint, flow_owner.id, get_flow, environment).await?;
         Ok(Self {
             depth: 0,
@@ -299,25 +308,23 @@ impl FlowRegistry {
             started_by,
             shared_with,
             flows: Arc::new(flows),
-            signer,
             signers_info,
-            new_flow_run,
-            api_input,
-            get_previous_values,
             parent_flow_execute: None,
-            token,
             endpoints,
+            backend,
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
             rpc_server: srpc::Server::start_http_server()
                 .inspect_err(|error| tracing::error!("srpc error: {}", error))
                 .ok(),
-            remotes: None,
+            remotes,
         })
     }
+}
 
-    pub fn start_flow_svc(&self) -> start_flow::Svc {
-        let this = self.clone();
+impl FlowRegistry {
+    pub fn make_start_flow_svc(&self) -> start_flow::Svc {
+        let mut this = self.clone();
         let (tx, mut rx) = mpsc::channel::<(
             start_flow::Request,
             oneshot::Sender<Result<start_flow::Response, start_flow::Error>>,
@@ -340,7 +347,7 @@ impl FlowRegistry {
         }))
     }
 
-    pub fn run_rhai_svc(&self) -> run_rhai::Svc {
+    pub fn make_run_rhai_svc(&self) -> run_rhai::Svc {
         let worker = self
             .rhai_tx
             .get_or_init(|| {
@@ -363,98 +370,62 @@ impl FlowRegistry {
         run_rhai::Svc::new(tower::service_fn(service))
     }
 
-    #[allow(clippy::too_many_arguments)]
-    pub async fn from_actix(
-        flow_owner: User,
-        started_by: User,
-        shared_with: Vec<UserId>,
-        entrypoint: FlowId,
-        api_input: api_input::Svc,
-        (signer, signers_info): (actix::Recipient<signer::SignatureRequest>, JsonValue),
-        new_flow_run: actix::Recipient<new_flow_run::Request>,
-        get_flow: actix::Recipient<get_flow::Request>,
-        get_previous_values: actix::Recipient<get_previous_values::Request>,
-        token: actix::Recipient<get_jwt::Request>,
-        environment: HashMap<String, String>,
-        endpoints: Endpoints,
-    ) -> crate::Result<Self> {
-        Self::new(
-            flow_owner,
-            started_by,
-            shared_with,
-            entrypoint,
-            api_input,
-            (TowerClient::new(ActixService::from(signer)), signers_info),
-            TowerClient::new(ActixService::from(new_flow_run)),
-            TowerClient::new(ActixService::from(get_flow)),
-            TowerClient::new(ActixService::from(get_previous_values)),
-            TowerClient::new(tower::retry::Retry::new(
-                get_jwt::RetryPolicy::default(),
-                ActixService::from(token),
-            )),
-            environment,
-            endpoints,
-        )
-        .await
+    fn fork_interflow(&self, parent_flow_execute: Option<execute::Svc>) -> Self {
+        Self {
+            depth: self.depth + 1,
+            parent_flow_execute,
+            ..self.clone()
+        }
     }
 
-    pub async fn start(
-        &self,
+    async fn start_inner(
+        mut self,
         flow_id: FlowId,
-        inputs: ValueSet,
+        inputs: value::Map,
         options: StartFlowOptions,
     ) -> Result<(FlowRunId, tokio::task::JoinHandle<FlowRunResult>), new_flow_run::Error> {
-        let StartFlowOptions {
-            partial_config,
-            collect_instructions,
-            action_identity,
-            action_config,
-            fees,
-            origin,
-            solana_client,
-            parent_flow_execute,
-            deployment_id,
-        } = options;
-        let config = self
+        let flow = self
             .flows
             .get(&flow_id)
             .ok_or(new_flow_run::Error::NotFound)?;
-        let solana_client = solana_client.unwrap_or(config.sol_network.clone().into());
+        let solana_client = options
+            .solana_client
+            .unwrap_or_else(|| flow.sol_network.clone().into());
 
         if self.depth >= MAX_CALL_DEPTH {
             return Err(new_flow_run::Error::MaxDepthReached);
         }
-        let this = Self {
-            depth: self.depth + 1,
-            parent_flow_execute,
-            ..self.clone()
-        };
 
         let (tx, rx) = flow_run_events::channel();
-        let run = self
+        let new_flow_run::Response {
+            flow_run_id,
+            stop_signal,
+            stop_shared_signal,
+            span,
+        } = self
+            .backend
             .new_flow_run
-            .clone()
             .ready()
             .await?
             .call(new_flow_run::Request {
                 user_id: self.flow_owner.id,
                 shared_with: self.shared_with.clone(),
-                deployment_id,
+                deployment_id: options.deployment_id,
                 config: ClientConfig {
                     call_depth: self.depth,
-                    origin,
+                    origin: options.origin,
                     sol_network: solana_client.clone().into(),
-                    collect_instructions,
-                    partial_config: partial_config.clone(),
-                    instructions_bundling: if collect_instructions
-                        && matches!(config.instructions_bundling, BundlingMode::Off)
+                    collect_instructions: options.collect_instructions,
+                    partial_config: options.partial_config.clone(),
+                    instructions_bundling: if options.collect_instructions
+                        && matches!(flow.instructions_bundling, BundlingMode::Off)
                     {
                         BundlingMode::Automatic
                     } else {
-                        config.instructions_bundling.clone()
+                        flow.instructions_bundling.clone()
                     },
                     signers: self.signers_info.clone(),
-                    ..config.clone()
+                    ..flow.clone()
                 },
                 inputs: inputs.clone(),
                 tx: tx.clone(),
@@ -462,42 +433,42 @@ impl FlowRegistry {
             })
             .await?;
 
-        let flow_run_id = run.flow_run_id;
-        let stop = run.stop_signal;
-        let stop_shared = run.stop_shared_signal;
+        let _guard = span.enter();
 
-        async move {
-            this.flows.iter().for_each(|(id, flow)| {
-                if let Err(error) = &flow.interflow_instruction_info {
-                    tracing::debug!("flow {} no instruction_info: {}", id, error);
-                }
-            });
-
-            let mut get_previous_values_svc = this.get_previous_values.clone();
-            let user_id = this.flow_owner.id;
-            let mut flow_config = FlowConfig::new(config.clone());
-            flow_config.ctx.endpoints = this.endpoints.clone();
-            flow_config.ctx.solana_client = solana_client.clone();
-            let mut flow = FlowGraph::from_cfg(flow_config, this, partial_config.as_ref()).await?;
-
-            if let Some(config) = action_config {
-                flow.tx_exec_config.execute_on = ExecuteOn::SolanaAction(config);
+        /*
+        self.flows.iter().for_each(|(id, flow)| {
+            if let Err(error) = &flow.interflow_instruction_info {
+                tracing::debug!("flow {} no instruction_info: {}", id, error);
             }
-            flow.action_identity = action_identity;
-            flow.fees = fees;
+        });
+        */
 
-            if collect_instructions {
-                if let BundlingMode::Off = flow.mode {
-                    flow.mode = BundlingMode::Automatic;
-                }
-                flow.output_instructions = true;
+        let mut flow_config = FlowConfig::new(flow.clone());
+        flow_config.ctx.endpoints = self.endpoints.clone();
+        flow_config.ctx.solana_client = solana_client.clone();
+        let mut flow =
+            FlowGraph::from_cfg(flow_config, self.clone(), options.partial_config.as_ref()).await?;
+
+        if let Some(config) = options.action_config {
+            flow.tx_exec_config.execute_on = ExecuteOn::SolanaAction(config);
+        }
+        flow.action_identity = options.action_identity;
+        flow.fees = options.fees;
+
+        if options.collect_instructions {
+            if let BundlingMode::Off = flow.mode {
+                flow.mode = BundlingMode::Automatic;
             }
+            flow.output_instructions = true;
+        }
 
+        let previous_values = {
             let nodes = flow.need_previous_outputs();
             let nodes = nodes
                 .into_iter()
                 .filter_map(|id| {
-                    partial_config
+                    options
+                        .partial_config
                         .as_ref()
                         .and_then(|c| {
                             c.values_config
@@ -510,28 +481,49 @@ impl FlowRegistry {
                 })
                 .collect::<HashMap<NodeId, FlowRunId>>();
             let previous_values = if !nodes.is_empty() {
-                get_previous_values_svc
+                self.backend
+                    .get_previous_values
                     .ready()
                     .await?
-                    .call(get_previous_values::Request { user_id, nodes })
+                    .call(get_previous_values::Request {
+                        user_id: self.flow_owner.id,
+                        nodes,
+                    })
                     .await?
                     .values
             } else {
                 <_>::default()
             };
 
-            let join_handle = spawn_local(
-                async move {
-                    flow.run(tx, flow_run_id, inputs, stop, stop_shared, previous_values)
-                        .await
-                }
-                .in_current_span(),
-            );
+            previous_values
+        };
 
-            Ok((flow_run_id, join_handle))
+        let task = async move {
+            flow.run(
+                tx,
+                flow_run_id,
+                inputs,
+                stop_signal,
+                stop_shared_signal,
+                previous_values,
+            )
+            .await
         }
-        .instrument(run.span)
-        .await
+        .in_current_span();
+        let join_handle = spawn_local(task);
+
+        Ok((flow_run_id, join_handle))
+    }
+
+    pub async fn start(
+        &mut self,
+        flow_id: FlowId,
+        inputs: value::Map,
+        options: StartFlowOptions,
+    ) -> Result<(FlowRunId, tokio::task::JoinHandle<FlowRunResult>), new_flow_run::Error> {
+        self.fork_interflow(options.parent_flow_execute.clone())
+            .start_inner(flow_id, inputs, options)
+            .await
     }
 }
 
@@ -577,7 +569,7 @@ pub mod new_flow_run {
         pub shared_with: Vec<UserId>,
         pub deployment_id: Option<DeploymentId>,
         pub inputs: ValueSet,
-        pub tx: EventSender,
+        pub tx: EventSender, // only used to send log
         pub stream: BoxStream<'static, Event>,
     }
 

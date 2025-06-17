@@ -1,6 +1,7 @@
 //! RPC specification for calling a command on a remote node
 
-use capnp::capability::Promise;
+use capnp::capability::{FromClientHook, Promise};
+use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 
 pub mod client;
 
@@ -17,5 +18,34 @@ pub(crate) fn r2p<T, E>(r: Result<T, E>) -> Promise<T, E> {
     }
 }
 
+pub(crate) fn connect_generic_futures_io<
+    R: futures::io::AsyncRead + Unpin + 'static,
+    W: futures::io::AsyncWrite + Unpin + 'static,
+    C: FromClientHook,
+>(
+    reader: R,
+    writer: W,
+) -> C {
+    let network = Box::new(VatNetwork::new(
+        futures::io::BufReader::new(reader),
+        futures::io::BufWriter::new(writer),
+        Side::Client,
+        Default::default(),
+    ));
+    let mut rpc_system = RpcSystem::new(network, None);
+    let client: C = rpc_system.bootstrap(Side::Server);
+    tokio::task::spawn_local(rpc_system);
+    client
+}
+
 pub mod command_side;
 pub mod flow_side;
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn generate_iroh_secret_key() {
+        let key = iroh::SecretKey::generate(&mut rand::rngs::OsRng);
+        println!("{}", key);
+    }
+}

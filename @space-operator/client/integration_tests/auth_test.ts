@@ -3,7 +3,7 @@ import { web3, bs58 } from "../src/deps.ts";
 import * as dotenv from "jsr:@std/dotenv";
 import * as nacl from "npm:tweetnacl";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import type { UserResponse } from "npm:@supabase/auth-js@2.67.3";
+import type { UserResponse } from "npm:@supabase/auth-js@2";
 import { assert } from "jsr:@std/assert";
 
 function ed25519SignText(keypair: web3.Keypair, message: string): Uint8Array {

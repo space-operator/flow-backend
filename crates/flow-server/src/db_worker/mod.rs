@@ -3,6 +3,7 @@ use actix::{
     Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context, ResponseActFuture,
     ResponseFuture, WrapFuture, fut::wrap_future,
 };
+use command_rpc::flow_side::address_book::BaseAddressBook;
 use db::{
     FlowRunLogsRow,
     pool::{DbPool, ProxiedDbPool, RealDbPool},
@@ -59,15 +60,19 @@ pub struct DBWorker {
     tx: mpsc::UnboundedSender<Vec<FlowRunLogsRow>>,
     done_tx: broadcast::Sender<()>,
     new_flow_api_request: NewRequestService,
+    remote_command_address_book: BaseAddressBook,
 }
 
+#[bon::bon]
 impl DBWorker {
+    #[builder]
     pub fn new(
         db: DbPool,
         config: &Config,
         actors: AddressBook,
         tracing_data: flow_logs::Map,
         new_flow_api_request: NewRequestService,
+        remote_command_address_book: BaseAddressBook,
         ctx: &mut actix::Context<Self>,
     ) -> Self {
         let (tx, rx) = mpsc::unbounded();
@@ -93,7 +98,19 @@ impl DBWorker {
             tracing_data,
             done_tx: broadcast::channel(1).0,
             new_flow_api_request,
+            remote_command_address_book,
         }
+    }
+}
+
+impl actix::SystemService for DBWorker {}
+
+impl actix::Supervised for DBWorker {}
+
+// required in Supervised trait
+impl Default for DBWorker {
+    fn default() -> Self {
+        unimplemented!();
     }
 }
 
@@ -177,17 +194,25 @@ impl actix::Message for GetUserWorker {
 
 impl actix::Handler<GetUserWorker> for DBWorker {
     type Result = actix::Addr<UserWorker>;
-    fn handle(&mut self, msg: GetUserWorker, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: GetUserWorker, _: &mut Self::Context) -> Self::Result {
         let id = msg.user_id;
         self.actors.get_or_start(id, {
             let counter = self.counter.clone();
             let db = self.db.clone();
-            let root = ctx.address();
             let endpoints = self.endpoints.clone();
             let new_flow_api_request = self.new_flow_api_request.clone();
+            let remote_command_address_book = self.remote_command_address_book.clone();
+            let arbiter = Arbiter::current();
             move || {
-                UserWorker::start_in_arbiter(&Arbiter::current(), move |_| {
-                    UserWorker::new(id, endpoints, db, counter, root, new_flow_api_request)
+                UserWorker::start_in_arbiter(&arbiter, move |_| {
+                    UserWorker::builder()
+                        .user_id(id)
+                        .endpoints(endpoints)
+                        .db(db)
+                        .counter(counter)
+                        .new_flow_api_request(new_flow_api_request)
+                        .remote_command_address_book(remote_command_address_book)
+                        .build()
                 })
             }
         })

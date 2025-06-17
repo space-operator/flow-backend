@@ -297,7 +297,7 @@ export class Client {
     publicKey: web3.PublicKey,
     signTransaction: (
       tx: web3.VersionedTransaction,
-    ) => Promise<web3.VersionedTransaction>,
+    ) => web3.VersionedTransaction | Promise<web3.VersionedTransaction>,
   ) {
     const requestedPublicKey = new web3.PublicKey(req.pubkey);
     if (!publicKey.equals(requestedPublicKey)) {

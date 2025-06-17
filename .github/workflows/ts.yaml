@@ -20,5 +20,7 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: Type checking
-        run: bash -c 'deno check @space-operator/*/src/mod.ts'
+      - name: Check libraries
+        run: bash -c 'deno check -r @space-operator/*/src/mod.ts'
+      - name: Check all
+        run: bash -c 'deno check -r @space-operator/**/*.ts'

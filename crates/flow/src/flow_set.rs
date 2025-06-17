@@ -12,7 +12,10 @@ use getset::Getters;
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use std::sync::{Arc, OnceLock};
+use std::{
+    collections::BTreeSet,
+    sync::{Arc, OnceLock},
+};
 use tokio::{sync::Semaphore, task::JoinHandle};
 use tower::ServiceExt;
 use uuid::Uuid;
@@ -20,7 +23,7 @@ use uuid::Uuid;
 use crate::{
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
-    flow_registry::{FlowRegistry, StartFlowOptions, new_flow_run, run_rhai},
+    flow_registry::{BackendServices, FlowRegistry, StartFlowOptions, new_flow_run, run_rhai},
 };
 
 /// Who can start flows
@@ -53,7 +56,7 @@ impl Flow {
         }
     }
 
-    pub fn wallets_id(&self) -> Vec<i64> {
+    pub fn wallets_id(&self) -> BTreeSet<i64> {
         self.row
             .nodes
             .iter()
@@ -91,7 +94,7 @@ pub type DeploymentId = Uuid;
 
 #[derive(bon::Builder, Debug, Clone)]
 pub struct FlowDeployment {
-    /// Deployment ID, NIL if not inserted yet
+    /// Deployment ID, NIL if not inserted yet, or is temporary
     pub id: DeploymentId,
     /// Owner of this deployment (and all flows belonging to it)
     pub user_id: UserId,
@@ -100,7 +103,7 @@ pub struct FlowDeployment {
     /// Flow configs
     pub flows: HashMap<FlowId, Flow>,
     /// Wallets are stored separately
-    pub wallets_id: Vec<i64>,
+    pub wallets_id: BTreeSet<i64>,
 
     /// Who can start the deployment
     pub start_permission: StartPermission,
@@ -166,14 +169,14 @@ impl FlowDeployment {
             dep.flows.insert(id, flow);
         }
 
-        let mut wallets_id = dep
-            .flows
-            .values()
-            .flat_map(|f| f.wallets_id())
-            .collect::<Vec<_>>();
-        wallets_id.sort_unstable();
-        wallets_id.dedup();
-        dep.wallets_id = wallets_id.clone();
+        let wallets_id = dep.flows.values().map(|f| f.wallets_id()).fold(
+            BTreeSet::new(),
+            |mut acc, mut item| {
+                acc.append(&mut item);
+                acc
+            },
+        );
+        dep.wallets_id = wallets_id;
 
         Ok(dep)
     }
@@ -302,7 +305,7 @@ impl FlowSet {
         } else {
             Vec::new()
         };
-        let registry = FlowRegistry::builder()
+        let mut registry = FlowRegistry::builder()
             .flows(Arc::new(
                 self.deployment
                     .flows
@@ -320,15 +323,17 @@ impl FlowSet {
             .signers_info(JsonValue::Null)
             .endpoints(self.context.endpoints)
             .depth(self.context.depth)
-            .signer(self.context.signer)
-            .token(self.context.get_jwt)
-            .new_flow_run(self.context.new_flow_run)
-            .get_previous_values(unimplemented_svc())
             .rhai_permit(self.context.rhai_permit)
             .rhai_tx(self.context.rhai_tx)
             .maybe_parent_flow_execute(self.context.parent_flow_execute)
             .maybe_rpc_server(self.context.rpc_server)
-            .api_input(self.context.new_flow_api_request)
+            .backend(BackendServices {
+                api_input: self.context.new_flow_api_request,
+                signer: self.context.signer,
+                token: self.context.get_jwt,
+                new_flow_run: self.context.new_flow_run,
+                get_previous_values: unimplemented_svc(),
+            })
             .build();
         let action_config = if let (Some(action_identity), Some(action_signer)) = (
             self.deployment.action_identity,

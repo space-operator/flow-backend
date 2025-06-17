@@ -7,14 +7,18 @@ use super::{
 use crate::{api::flow_api_input::NewRequestService, error::ErrorBody};
 use actix::{
     Actor, ActorFutureExt, ActorTryFutureExt, AsyncContext, Response, ResponseActFuture,
-    ResponseFuture, WrapFuture, fut::wrap_future,
+    ResponseFuture, SystemService, WrapFuture, fut::wrap_future,
 };
 use actix_web::{ResponseError, http::StatusCode};
 use bytes::Bytes;
+use command_rpc::flow_side::address_book::{AddressBook, BaseAddressBook};
 use db::{Error as DbError, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
-    flow_registry::{FlowRegistry, StartFlowOptions, get_flow, get_previous_values, new_flow_run},
+    flow_registry::{
+        BackendServices, FlowRegistry, StartFlowOptions, get_flow, get_previous_values,
+        new_flow_run,
+    },
     flow_set::{FlowDeployment, FlowSet, FlowSetContext, StartFlowDeploymentOptions},
 };
 use flow_lib::{
@@ -42,15 +46,19 @@ use std::future::{Future, ready};
 use thiserror::Error as ThisError;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
 
+#[derive(bon::Builder)]
 pub struct UserWorker {
-    root: actix::Addr<DBWorker>,
     db: DbPool,
     counter: Counter,
     user_id: UserId,
     endpoints: Endpoints,
-    sigreg: HashMap<i64, SigReq>,
-    subs: HashMap<u64, Subscription>,
     new_flow_api_request: NewRequestService,
+    remote_command_address_book: BaseAddressBook,
+
+    #[builder(default)]
+    subs: HashMap<u64, Subscription>,
+    #[builder(default)]
+    sigreg: HashMap<i64, SigReq>,
 }
 
 pub struct SubscribeSigReq {}
@@ -129,26 +137,6 @@ pub enum MakeFlowSetContextError {
 }
 
 impl UserWorker {
-    pub fn new(
-        user_id: UserId,
-        endpoints: Endpoints,
-        db: DbPool,
-        counter: Counter,
-        root: actix::Addr<DBWorker>,
-        new_flow_api_request: NewRequestService,
-    ) -> Self {
-        Self {
-            user_id,
-            endpoints,
-            db,
-            counter,
-            root,
-            sigreg: <_>::default(),
-            subs: <_>::default(),
-            new_flow_api_request,
-        }
-    }
-
     fn make_flow_set_context(
         &mut self,
         d: &FlowDeployment,
@@ -157,7 +145,7 @@ impl UserWorker {
     ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static {
         let new_flow_run = TowerClient::new(ActixService::from(ctx.address().recipient()));
 
-        let root = self.root.clone();
+        let root = DBWorker::from_registry();
         let db = self.db.clone();
         let user_id = self.user_id;
         let addr = ctx.address().recipient();
@@ -170,9 +158,13 @@ impl UserWorker {
             let get_jwt = root.send(GetTokenWorker { user_id }).await??;
             let get_jwt = TowerClient::new(ActixService::from(get_jwt.recipient()));
 
-            let mut signer =
-                SignerWorker::fetch_wallets_from_ids(&db, user_id, addr.clone(), &wallets_id)
-                    .await?;
+            let mut signer = SignerWorker::fetch_wallets_from_ids(
+                &db,
+                user_id,
+                addr.clone(),
+                &wallets_id.iter().copied().collect::<Vec<_>>(),
+            )
+            .await?;
             if starter.user_id != user_id {
                 let addr = root
                     .send(GetUserWorker {
@@ -229,9 +221,9 @@ impl UserWorker {
                 self.subs
                     .retain(|_, sub| sub.tx.unbounded_send(req.clone()).is_ok());
                 if let Some(flow_run_id) = req.flow_run_id {
+                    let root = DBWorker::from_registry();
                     actix::spawn(
-                        self.root
-                            .send(FindActor::<FlowRunWorker>::new(flow_run_id))
+                        root.send(FindActor::<FlowRunWorker>::new(flow_run_id))
                             .map_ok(move |res| {
                                 if let Some(addr) = res {
                                     addr.do_send(SigReqEvent(req.clone()));
@@ -331,7 +323,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
     fn handle(&mut self, msg: new_flow_run::Request, _: &mut Self::Context) -> Self::Result {
         let user_id = self.user_id;
         let db = self.db.clone();
-        let root = self.root.clone();
+        let root = DBWorker::from_registry();
         let counter = self.counter.clone();
         Box::pin(async move {
             if user_id != msg.user_id {
@@ -631,6 +623,17 @@ impl actix::Message for StartFlowFresh {
     type Result = Result<FlowRunId, StartError>;
 }
 
+fn addr_to_service<A, T, U, E>(addr: &actix::Addr<A>) -> TowerClient<T, U, E>
+where
+    A: actix::Actor<Context = actix::Context<A>>,
+    T: actix::Message<Result = Result<U, E>> + Send + 'static,
+    E: From<actix::MailboxError> + Send + 'static,
+    U: Send + 'static,
+    A: actix::Handler<T>,
+{
+    TowerClient::new(ActixService::from(addr.clone().recipient()))
+}
+
 impl actix::Handler<StartFlowFresh> for UserWorker {
     type Result = ResponseFuture<Result<FlowRunId, StartError>>;
 
@@ -638,9 +641,10 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
         let user_id = self.user_id;
         let addr = ctx.address();
         let endpoints = self.endpoints.clone();
-        let root = self.root.clone();
+        let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
+        let remotes = AddressBook::new(self.remote_command_address_book.clone());
         Box::pin(async move {
             if msg.user.id != user_id {
                 return Err(StartError::Unauthorized);
@@ -652,21 +656,25 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 SignerWorker::fetch_all_and_start(db, &[(user_id, addr.clone().recipient())])
                     .await?;
 
-            let r = FlowRegistry::from_actix(
-                msg.user,
-                msg.user,
-                Vec::new(),
-                msg.flow_id,
-                TowerClient::new(new_flow_api_request),
-                (signer.recipient(), signers_info),
-                addr.clone().recipient(),
-                addr.clone().recipient(),
-                addr.clone().recipient(),
-                wrk.recipient(),
-                msg.environment,
-                endpoints,
-            )
-            .await?;
+            let mut r = FlowRegistry::fetch()
+                .flow_owner(msg.user)
+                .started_by(msg.user)
+                .shared_with(Vec::new())
+                .entrypoint(msg.flow_id)
+                .environment(msg.environment)
+                .endpoints(endpoints)
+                .signers_info(signers_info)
+                .backend(BackendServices {
+                    api_input: TowerClient::new(new_flow_api_request),
+                    signer: addr_to_service(&signer),
+                    token: addr_to_service(&wrk),
+                    new_flow_run: addr_to_service(&addr),
+                    get_previous_values: addr_to_service(&addr),
+                })
+                .get_flow(addr_to_service(&addr))
+                .remotes(remotes)
+                .call()
+                .await?;
 
             let run_id = r
                 .start(
@@ -728,9 +736,10 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let user_id = self.user_id;
         let addr = ctx.address();
         let endpoints = self.endpoints.clone();
-        let root = self.root.clone();
+        let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
+        let remotes = AddressBook::new(self.remote_command_address_book.clone());
         Box::pin(async move {
             let wrk = root.send(GetTokenWorker { user_id }).await??;
 
@@ -743,23 +752,27 @@ impl actix::Handler<StartFlowShared> for UserWorker {
             )
             .await?;
 
-            let r = FlowRegistry::from_actix(
-                User { id: user_id },
-                User {
+            let mut r = FlowRegistry::fetch()
+                .flow_owner(User { id: user_id })
+                .started_by(User {
                     id: msg.started_by.0,
-                },
-                [msg.started_by.0].into(),
-                msg.flow_id,
-                TowerClient::new(new_flow_api_request),
-                (signer.recipient(), signers_info),
-                addr.clone().recipient(),
-                addr.clone().recipient(),
-                addr.clone().recipient(),
-                wrk.recipient(),
-                <_>::default(),
-                endpoints,
-            )
-            .await?;
+                })
+                .shared_with([msg.started_by.0].into())
+                .entrypoint(msg.flow_id)
+                .environment(<_>::default())
+                .endpoints(endpoints)
+                .signers_info(signers_info)
+                .backend(BackendServices {
+                    api_input: TowerClient::new(new_flow_api_request),
+                    signer: addr_to_service(&signer),
+                    token: addr_to_service(&wrk),
+                    new_flow_run: addr_to_service(&addr),
+                    get_previous_values: addr_to_service(&addr),
+                })
+                .get_flow(addr_to_service(&addr))
+                .remotes(remotes)
+                .call()
+                .await?;
 
             let run_id = r
                 .start(

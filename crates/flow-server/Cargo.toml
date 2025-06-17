@@ -65,6 +65,9 @@ solana-signer = "2"
 solana-signature = "2"
 solana-rpc-client = { version = "2", default-features = false }
 ahash = "0.8.11"
+iroh = "0.35.0"
+command-rpc.workspace = true
+bon = "3.6.3"
 
 [dev-dependencies]
 criterion = "0.5"
