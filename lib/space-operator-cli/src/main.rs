@@ -6,18 +6,18 @@ use clap::{ColorChoice, CommandFactory, Parser, Subcommand, ValueEnum};
 use console::style;
 use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
-use futures::{io::AllowStdIo, AsyncBufReadExt, AsyncReadExt};
+use futures::{AsyncBufReadExt, AsyncReadExt, io::AllowStdIo};
 use postgrest::Postgrest;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use regex::Regex;
 use reqwest::{
-    header::{HeaderName, HeaderValue, AUTHORIZATION},
     StatusCode,
+    header::{AUTHORIZATION, HeaderName, HeaderValue},
 };
 use schema::{CommandDefinition, CommandId, ValueType};
 use semver::Version;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::{
     borrow::{Borrow, Cow},
     cmp::Ordering,
@@ -31,7 +31,7 @@ use thiserror::Error as ThisError;
 use tokio::task::spawn_blocking;
 use url::Url;
 use uuid::Uuid;
-use xshell::{cmd, Shell};
+use xshell::{Shell, cmd};
 
 static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| reqwest::Client::new());
 
@@ -168,6 +168,9 @@ enum Commands {
         /// Connect to local Docker instance
         #[arg(long)]
         docker: bool,
+        /// Use `--release` build
+        #[arg(long)]
+        release: bool,
     },
     /// Manage your nodes
     #[command(visible_alias = "n")]
@@ -655,7 +658,7 @@ impl std::fmt::Display for Line {
 }
 
 fn print_diff<T: Serialize>(local: &T, db: &T) -> bool {
-    use console::{style, Style};
+    use console::{Style, style};
     use similar::{ChangeTag, TextDiff};
 
     let local_json = serde_json::to_string_pretty(local).unwrap();
@@ -730,7 +733,7 @@ fn find_target_crate_by_name<'a>(
     let members = meta.workspace_packages();
     Ok(members
         .into_iter()
-        .find(|p| p.name == name)
+        .find(|p| p.name.as_ref() == name)
         .ok_or_else(|| Error::PackageNotFound(name.to_owned()))?)
 }
 
@@ -1412,7 +1415,7 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
         .targets
         .iter()
         .find(|p| p.is_lib())
-        .ok_or_else(|| Error::NotLib(member.name.clone()))?;
+        .ok_or_else(|| Error::NotLib(member.name.as_str().to_owned()))?;
     println!("using package: {}", member.name);
 
     println!("enter ? for help");
@@ -1666,6 +1669,7 @@ fn make_absolute(path: impl AsRef<Path>) -> Result<PathBuf, Report<Error>> {
 async fn start_flow_server(
     config: &Option<PathBuf>,
     mut docker: bool,
+    release: bool,
 ) -> Result<(), Report<Error>> {
     if docker && config.is_some() {
         eprintln!("both configuration file and --docker flag are set");
@@ -1737,7 +1741,8 @@ async fn start_flow_server(
 
     spawn_blocking(move || -> Result<(), Report<Error>> {
         let sh = Shell::new().change_context(Error::Shell)?;
-        cmd!(sh, "cargo build --bin flow-server")
+        let release = release.then_some("--release");
+        cmd!(sh, "cargo build --bin flow-server {release...}")
             .run()
             .change_context(Error::Subprocess)?;
         let flow_server = relative_to_pwd(meta.target_directory.join("debug/flow-server"));
@@ -1812,9 +1817,13 @@ async fn run() -> Result<(), Report<Error>> {
             println!("Logged in as {:?}", username);
             client.save_application_data().await?;
         }
-        Some(Commands::Start { config, docker }) => {
+        Some(Commands::Start {
+            config,
+            docker,
+            release,
+        }) => {
             check_latest_version().await?;
-            start_flow_server(config, *docker).await?;
+            start_flow_server(config, *docker, *release).await?;
         }
         Some(Commands::Node { command }) => match command {
             NodeCommands::New {
