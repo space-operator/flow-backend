@@ -1831,7 +1831,6 @@ dependencies = [
  "inventory",
  "iroh",
  "iroh-quinn",
- "parking_lot 0.12.4",
  "rand 0.8.5",
  "reqwest 0.12.20",
  "rust_decimal",

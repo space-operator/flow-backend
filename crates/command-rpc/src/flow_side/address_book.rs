@@ -9,12 +9,11 @@ use flow_lib::{
 };
 use futures::io::{BufReader, BufWriter};
 use iroh::{Endpoint, NodeAddr, endpoint::Incoming};
-use parking_lot::RwLock;
 use rand::{seq::SliceRandom, thread_rng};
 use std::{
     collections::{BTreeMap, BTreeSet},
     net::SocketAddr,
-    sync::Arc,
+    sync::{Arc, RwLock},
 };
 use tokio::task::{JoinHandle, spawn_local};
 use url::Url;
@@ -98,7 +97,7 @@ impl AddressBook {
         nd: &NodeData,
     ) -> Result<Box<dyn CommandTrait>, CommandError> {
         let (node_id, info) = {
-            let factories_lock = self.base.factories.read_arc();
+            let factories_lock = self.base.factories.read().unwrap();
             let factories = factories_lock
                 .iter()
                 .filter(|(_, v)| v.availables.iter().any(|c| c == name))
@@ -171,7 +170,7 @@ impl AddressBookConnection {
         let relay_url: Url = params.get_relay_url()?.to_str()?.parse()?;
         let availables: Vec<String> =
             bincode::decode_from_slice(params.get_availables()?, standard())?.0;
-        self.book.factories.write_arc().insert(
+        self.book.factories.write().unwrap().insert(
             self.remote_node_id,
             Info {
                 direct_addresses,
@@ -183,7 +182,11 @@ impl AddressBookConnection {
     }
 
     fn leave_impl(&mut self) -> Result<(), capnp::Error> {
-        self.book.factories.write_arc().remove(&self.remote_node_id);
+        self.book
+            .factories
+            .write()
+            .unwrap()
+            .remove(&self.remote_node_id);
         Ok(())
     }
 }
