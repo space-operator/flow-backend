@@ -1,0 +1,10 @@
+[package]
+name = "cmds-std-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cmds-std.workspace = true
+command-rpc.workspace = true
+iroh = "0.35.0"
+tokio = { version = "1.45.1", features = ["macros", "rt"] }

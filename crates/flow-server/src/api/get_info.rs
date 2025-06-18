@@ -1,4 +1,6 @@
 use super::prelude::*;
+use crate::db_worker::{GetIrohInfo, IrohInfo};
+use actix::SystemService;
 use actix_web::{HttpResponseBuilder, http::header::ContentType};
 use url::Url;
 
@@ -6,21 +8,28 @@ use url::Url;
 struct Output {
     supabase_url: Url,
     anon_key: String,
-    iroh_node_id: String,
+    iroh: IrohInfo,
 }
 
 pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
-    let output = Output {
-        supabase_url: config.supabase.endpoint.url.clone(),
-        anon_key: config.supabase.anon_key.clone(),
-        iroh_node_id: config.iroh_secret_key.public().to_string(),
-    };
-    let json: bytes::Bytes = serde_json::to_vec(&output).unwrap().into();
+    let supabase_url = config.supabase.endpoint.url.clone();
+    let anon_key = config.supabase.anon_key.clone();
     web::resource("/info").route(web::get().to(move || {
-        std::future::ready(
+        let supabase_url = supabase_url.clone();
+        let anon_key = anon_key.clone();
+
+        async move {
+            let db_worker = DBWorker::from_registry();
+            let iroh = db_worker.send(GetIrohInfo).await.unwrap().unwrap();
+            let output = Output {
+                supabase_url,
+                anon_key,
+                iroh,
+            };
+            let json: bytes::Bytes = serde_json::to_vec(&output).unwrap().into();
             HttpResponseBuilder::new(StatusCode::OK)
                 .insert_header(ContentType::json())
-                .body(json.clone()),
-        )
+                .body(json.clone())
+        }
     }))
 }
