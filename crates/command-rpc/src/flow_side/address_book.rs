@@ -81,6 +81,10 @@ impl BaseAddressBook {
 
         Ok(this)
     }
+
+    pub fn endpoint(&self) -> &Endpoint {
+        &self.endpoint
+    }
 }
 
 impl AddressBook {

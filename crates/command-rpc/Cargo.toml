@@ -30,7 +30,7 @@ capnp-rpc = "0.21"
 schemars = { version = "1.0.0-alpha.17", features = ["uuid1", "rust_decimal1", "preserve_order", "indexmap2", "url2"] }
 features = "0.10.0"
 uuid1 = "0.0.2"
-reqwest = { version = "0.12.15", default-features = false }
+reqwest = { version = "0.12", features = ["rustls-tls", "json"] }
 bincode = { version = "2", features = ["serde"] }
 simd-json = "0.15.1"
 serde_json = { workspace = true, features = ["preserve_order"] }
@@ -41,6 +41,8 @@ iroh-quinn = { version = "0.13", features = ["futures-io"] }
 anyhow.workspace = true
 snafu = { version = "0.8.5", features = ["rust_1_81"] }
 rand = "0.8"
+toml = "0.8.23"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
 [dev-dependencies]
 criterion = "0.5.1"

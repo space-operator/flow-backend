@@ -15,7 +15,10 @@ use flow_lib::{
 };
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
+use iroh::watchable::Disconnected;
+use serde::Serialize;
 use std::{
+    net::SocketAddr,
     sync::{Arc, atomic::AtomicU64},
     time::Duration,
 };
@@ -61,6 +64,44 @@ pub struct DBWorker {
     done_tx: broadcast::Sender<()>,
     new_flow_api_request: NewRequestService,
     remote_command_address_book: BaseAddressBook,
+}
+
+#[derive(Serialize)]
+pub struct IrohInfo {
+    pub node_id: String,
+    pub relay_url: String,
+    pub direct_addresses: Vec<SocketAddr>,
+}
+
+pub struct GetIrohInfo;
+
+impl actix::Message for GetIrohInfo {
+    type Result = Result<IrohInfo, Disconnected>;
+}
+
+impl actix::Handler<GetIrohInfo> for DBWorker {
+    type Result = ResponseFuture<<GetIrohInfo as actix::Message>::Result>;
+
+    fn handle(&mut self, _: GetIrohInfo, _: &mut Self::Context) -> Self::Result {
+        let endpoint = self.remote_command_address_book.endpoint().clone();
+        Box::pin(async move {
+            let node_id = endpoint.node_id().to_string();
+            let relay_url = endpoint.home_relay().initialized().await?.to_string();
+            let direct_addresses = endpoint
+                .direct_addresses()
+                .initialized()
+                .await?
+                .into_iter()
+                .map(|addr| addr.addr)
+                .collect();
+
+            Ok(IrohInfo {
+                node_id,
+                relay_url,
+                direct_addresses,
+            })
+        })
+    }
 }
 
 #[bon::bon]
