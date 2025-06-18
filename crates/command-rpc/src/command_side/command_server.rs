@@ -4,6 +4,7 @@ use iroh::{Endpoint, NodeAddr};
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
 use std::{collections::BTreeSet, net::SocketAddr};
+use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 use url::Url;
 
 use crate::flow_side::address_book::{self, AddressBookExt};
@@ -31,6 +32,10 @@ struct InfoResponse {
 }
 
 pub fn main() {
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        .with(EnvFilter::from_default_env())
+        .init();
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -87,6 +92,12 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
             )
             .await?;
         clients.push(client);
+        tracing::info!("joined {}", addr.node_id);
+        let conn_type = endpoint
+            .conn_type(addr.node_id)
+            .ok()
+            .and_then(|watcher| watcher.get().ok());
+        tracing::info!("connection type {:?}", conn_type);
     }
 
     let client = command_factory::new_client(commands);
@@ -96,6 +107,7 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
 
     for client in clients {
         client.leave().await?;
+        tracing::info!("left");
     }
 
     Ok(())
