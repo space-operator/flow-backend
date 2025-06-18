@@ -26,10 +26,10 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
                 anon_key,
                 iroh,
             };
-            let json: bytes::Bytes = serde_json::to_vec(&output).unwrap().into();
+            let json = simd_json::to_vec(&output).unwrap();
             HttpResponseBuilder::new(StatusCode::OK)
                 .insert_header(ContentType::json())
-                .body(json.clone())
+                .body(json)
         }
     }))
 }
