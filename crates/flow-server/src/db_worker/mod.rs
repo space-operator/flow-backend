@@ -69,7 +69,7 @@ pub struct DBWorker {
 #[derive(Serialize)]
 pub struct IrohInfo {
     pub node_id: String,
-    pub home_relay: String,
+    pub relay_url: String,
     pub direct_addresses: Vec<SocketAddr>,
 }
 
@@ -86,7 +86,7 @@ impl actix::Handler<GetIrohInfo> for DBWorker {
         let endpoint = self.remote_command_address_book.endpoint().clone();
         Box::pin(async move {
             let node_id = endpoint.node_id().to_string();
-            let home_relay = endpoint.home_relay().initialized().await?.to_string();
+            let relay_url = endpoint.home_relay().initialized().await?.to_string();
             let direct_addresses = endpoint
                 .direct_addresses()
                 .initialized()
@@ -97,7 +97,7 @@ impl actix::Handler<GetIrohInfo> for DBWorker {
 
             Ok(IrohInfo {
                 node_id,
-                home_relay,
+                relay_url,
                 direct_addresses,
             })
         })

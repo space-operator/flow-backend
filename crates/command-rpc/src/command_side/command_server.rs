@@ -2,6 +2,7 @@ use anyhow::Context;
 use flow_lib::command::collect_commands;
 use iroh::{Endpoint, NodeAddr};
 use serde::Deserialize;
+use serde_with::DisplayFromStr;
 use std::{collections::BTreeSet, net::SocketAddr};
 use url::Url;
 
@@ -9,9 +10,11 @@ use crate::flow_side::address_book::{self, AddressBookExt};
 
 use super::command_factory::{self, CommandFactoryExt};
 
+#[serde_with::serde_as]
 #[derive(Deserialize)]
 pub struct Config {
     pub flow_server_url: Url,
+    #[serde_as(as = "DisplayFromStr")]
     pub secret_key: iroh::SecretKey,
 }
 
@@ -25,6 +28,19 @@ pub struct FlowServerAddress {
 #[derive(Deserialize)]
 struct InfoResponse {
     iroh: FlowServerAddress,
+}
+
+pub fn main() {
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    rt.block_on(async {
+        let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
+        let config: Config = toml::from_str(&data).unwrap();
+        let local = tokio::task::LocalSet::new();
+        local.run_until(serve(config)).await.unwrap();
+    })
 }
 
 pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
