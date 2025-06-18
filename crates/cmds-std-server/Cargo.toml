@@ -7,4 +7,5 @@ edition = "2024"
 cmds-std.workspace = true
 command-rpc.workspace = true
 iroh = "0.35.0"
+simd-json = "0.15.1"
 tokio = { version = "1.45.1", features = ["macros", "rt"] }

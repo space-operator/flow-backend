@@ -1773,6 +1773,7 @@ dependencies = [
  "cmds-std",
  "command-rpc",
  "iroh",
+ "simd-json",
  "tokio",
 ]
 
