@@ -2,6 +2,7 @@ use crate::{
     Error,
     command::wasm::{Description, WasmCommand},
 };
+use command_rpc::flow_side::address_book::AddressBook;
 use flow_lib::{
     CommandType,
     command::{CommandDescription, CommandTrait},
@@ -12,16 +13,17 @@ use tokio::process::Child;
 
 pub struct CommandFactory {
     natives: BTreeMap<Cow<'static, str>, &'static CommandDescription>,
+    rpc: Option<AddressBook>,
 }
 
 impl Default for CommandFactory {
     fn default() -> Self {
-        Self::new()
+        Self::new(None)
     }
 }
 
 impl CommandFactory {
-    pub fn new() -> Self {
+    pub fn new(rpc: Option<AddressBook>) -> Self {
         let mut natives = BTreeMap::new();
         for d in inventory::iter::<CommandDescription>() {
             let name = d.name.clone();
@@ -30,7 +32,7 @@ impl CommandFactory {
             }
         }
 
-        Self { natives }
+        Self { natives, rpc }
     }
 
     pub fn avaiables(&self) -> impl Iterator<Item = &str> {

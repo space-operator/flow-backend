@@ -53,7 +53,7 @@ async fn main() {
         }
     }
 
-    let fac = flow::context::CommandFactory::new();
+    let fac = flow::context::CommandFactory::new(None);
     let natives = fac.avaiables().collect::<Vec<_>>();
     tracing::info!("native commands: {:?}", natives);
 
