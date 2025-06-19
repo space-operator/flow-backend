@@ -175,6 +175,11 @@ impl AddressBookConnection {
         let relay_url: Url = params.get_relay_url()?.to_str()?.parse()?;
         let availables: Vec<String> =
             bincode::decode_from_slice(params.get_availables()?, standard())?.0;
+        tracing::info!(
+            "node {} joined, availables: {:?}",
+            self.remote_node_id,
+            availables
+        );
         self.book.factories.write().unwrap().insert(
             self.remote_node_id,
             Info {
@@ -187,11 +192,16 @@ impl AddressBookConnection {
     }
 
     fn leave_impl(&mut self) -> Result<(), capnp::Error> {
-        self.book
+        if self
+            .book
             .factories
             .write()
             .unwrap()
-            .remove(&self.remote_node_id);
+            .remove(&self.remote_node_id)
+            .is_some()
+        {
+            tracing::info!("node {} left", self.remote_node_id);
+        }
         Ok(())
     }
 }

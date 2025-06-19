@@ -54,7 +54,7 @@ async fn main() {
     }
 
     let fac = flow::context::CommandFactory::new(None);
-    let natives = fac.avaiables().collect::<Vec<_>>();
+    let natives = fac.availables().collect::<Vec<_>>();
     tracing::info!("native commands: {:?}", natives);
 
     tracing::info!("allow CORS origins: {:?}", config.cors_origins);

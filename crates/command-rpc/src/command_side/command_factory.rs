@@ -164,6 +164,7 @@ pub struct CommandFactoryImpl {
 
 impl CommandFactoryImpl {
     fn init_impl(&mut self, params: InitParams, mut results: InitResults) -> Result<(), InitError> {
+        tracing::info!("init");
         use init_error::*;
         let params = params
             .get()

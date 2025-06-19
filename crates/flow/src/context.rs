@@ -35,7 +35,7 @@ impl CommandFactory {
         Self { natives, rpc }
     }
 
-    pub fn avaiables(&self) -> impl Iterator<Item = &str> {
+    pub fn availables(&self) -> impl Iterator<Item = &str> {
         self.natives.keys().map(|s| s.as_ref())
     }
 
