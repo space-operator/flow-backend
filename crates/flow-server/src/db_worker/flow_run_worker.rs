@@ -321,7 +321,11 @@ async fn save_to_db(
                     "could not get DB connection, dropping events. detail: {}",
                     error
                 );
-                continue;
+                if stop {
+                    break;
+                } else {
+                    continue;
+                }
             }
         };
         for event in events {

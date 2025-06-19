@@ -76,6 +76,7 @@ impl CommandTraitImpl {
     ) -> impl Future<Output = Result<(), Error>> + 'static {
         let cmd = self.cmd.clone();
         async move {
+            tracing::info!("building context");
             let params = params.get().context(CapnpSnafu { context: "get" })?;
             let inputs = parse_inputs(params)?;
             let context = params
@@ -114,6 +115,7 @@ impl CommandTraitImpl {
                 })
                 .data(data)
                 .build();
+            tracing::info!("run {}:{}", ctx.node_id(), ctx.times());
             let result = cmd.lock().await.run(ctx, inputs).await.context(RunSnafu)?;
             results
                 .get()
