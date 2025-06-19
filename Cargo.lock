@@ -407,6 +407,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "all-cmds-server"
+version = "0.1.0"
+dependencies = [
+ "cmds-pdg",
+ "cmds-solana",
+ "cmds-std",
+ "command-rpc",
+]
+
+[[package]]
 name = "alloc-no-stdlib"
 version = "2.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1764,14 +1774,6 @@ dependencies = [
  "tokio",
  "tracing",
  "url",
-]
-
-[[package]]
-name = "cmds-std-server"
-version = "0.1.0"
-dependencies = [
- "cmds-std",
- "command-rpc",
 ]
 
 [[package]]
