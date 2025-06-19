@@ -48,6 +48,7 @@ pub struct BaseAddressBook {
 #[derive(Clone)]
 pub struct AddressBook {
     base: BaseAddressBook,
+    // TODO: share this across cloned instances?
     clients: BTreeMap<iroh::PublicKey, command_factory::Client>,
 }
 

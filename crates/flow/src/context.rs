@@ -39,11 +39,17 @@ impl CommandFactory {
         self.natives.keys().map(|s| s.as_ref())
     }
 
-    pub fn new_native_command(
-        &self,
+    pub async fn new_native_command(
+        &mut self,
         name: &str,
         config: &NodeData,
     ) -> crate::Result<Box<dyn CommandTrait>> {
+        if let Some(rpc) = self.rpc.as_mut() {
+            match rpc.new_command(name, config).await {
+                Ok(cmd) => return Ok(cmd),
+                Err(error) => tracing::debug!("rpc error: {}", error),
+            }
+        }
         match self.natives.get(name) {
             Some(d) => (d.fn_new)(config).map_err(crate::Error::CreateCmd),
             None => {
@@ -67,14 +73,14 @@ impl CommandFactory {
     }
 
     pub async fn new_command(
-        &self,
+        &mut self,
         name: &str,
         config: &NodeData,
         spawned: &mut Vec<Child>,
     ) -> crate::Result<Box<dyn CommandTrait>> {
         match config.r#type {
             CommandType::Mock => Err(Error::custom("mock node")),
-            CommandType::Native => self.new_native_command(name, config),
+            CommandType::Native => self.new_native_command(name, config).await,
             CommandType::Deno => self.new_deno_command(config, spawned).await,
             CommandType::Wasm => {
                 let bytes = config

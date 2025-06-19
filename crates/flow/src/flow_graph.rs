@@ -417,7 +417,7 @@ impl FlowGraph {
             },
         };
 
-        let f = CommandFactory::new(registry.remotes);
+        let mut f = CommandFactory::new(registry.remotes);
 
         let mut g = StableGraph::new();
         let mut spawned = Vec::new();
