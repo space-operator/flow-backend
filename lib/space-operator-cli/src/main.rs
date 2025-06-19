@@ -1741,11 +1741,13 @@ async fn start_flow_server(
 
     spawn_blocking(move || -> Result<(), Report<Error>> {
         let sh = Shell::new().change_context(Error::Shell)?;
+        let build_dir = release.then_some("release/").unwrap_or("debug/");
         let release = release.then_some("--release");
         cmd!(sh, "cargo build --bin flow-server {release...}")
             .run()
             .change_context(Error::Subprocess)?;
-        let flow_server = relative_to_pwd(meta.target_directory.join("debug/flow-server"));
+        let flow_server =
+            relative_to_pwd(meta.target_directory.join(build_dir).join("flow-server"));
         let rust_log = std::env::var("RUST_LOG")
             .unwrap_or_else(|_| "info,actix_web=debug,flow_server=debug".to_owned());
         cmd!(sh, "{flow_server} {config_path}")
