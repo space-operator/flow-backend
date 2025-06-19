@@ -413,11 +413,12 @@ impl FlowGraph {
                     ext
                 }),
                 http: reqwest::Client::new(),
-                solana_client: Arc::new(ctx_data.set.solana.build_client()),
+                // TODO: re-use reqwest client
+                solana_client: Arc::new(ctx_data.set.solana.build_client(None)),
             },
         };
 
-        let f = CommandFactory::new();
+        let mut f = CommandFactory::new(registry.remotes);
 
         let mut g = StableGraph::new();
         let mut spawned = Vec::new();

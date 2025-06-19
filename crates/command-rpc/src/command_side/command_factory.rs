@@ -183,6 +183,7 @@ impl CommandFactoryImpl {
             let nd: NodeData = serde_json::from_slice(nd).context(JsonSnafu {
                 context: "parse NodeData",
             })?;
+            tracing::info!("init {}", name);
             let cmd = (description.fn_new)(&nd).context(NewCommandSnafu)?;
             results.get().set_cmd(command_trait::new_client(cmd));
             Ok(())

@@ -9,7 +9,10 @@ use url::Url;
 
 use crate::flow_side::address_book::{self, AddressBookExt};
 
-use super::command_factory::{self, CommandFactoryExt};
+use super::{
+    command_factory::{self, CommandFactoryExt},
+    command_trait::{HTTP_CLIENT, SOLANA_HTTP_CLIENT},
+};
 
 #[serde_with::serde_as]
 #[derive(Deserialize)]
@@ -40,6 +43,9 @@ pub fn main() {
         .enable_all()
         .build()
         .unwrap();
+    // initializing these clients take a long time
+    let _ = *HTTP_CLIENT;
+    let _ = *SOLANA_HTTP_CLIENT;
     rt.block_on(async {
         let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
         let config: Config = toml::from_str(&data).unwrap();
