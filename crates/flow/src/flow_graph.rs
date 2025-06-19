@@ -413,7 +413,8 @@ impl FlowGraph {
                     ext
                 }),
                 http: reqwest::Client::new(),
-                solana_client: Arc::new(ctx_data.set.solana.build_client()),
+                // TODO: re-use reqwest client
+                solana_client: Arc::new(ctx_data.set.solana.build_client(None)),
             },
         };
 

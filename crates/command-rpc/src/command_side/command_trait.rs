@@ -2,6 +2,7 @@ use capnp::capability::Promise;
 use flow_lib::{
     Value,
     command::{CommandError, CommandTrait},
+    config::SolanaReqwestClient,
     context::{CommandContext, CommandContextData, FlowServices, FlowSetServices},
     utils::tower_client::unimplemented_svc,
     value::{
@@ -11,7 +12,11 @@ use flow_lib::{
 };
 use futures::TryFutureExt;
 use snafu::{ResultExt, Snafu};
-use std::{rc::Rc, sync::Arc};
+use std::{
+    rc::Rc,
+    sync::{Arc, LazyLock},
+    time::{Duration, Instant},
+};
 use tokio::sync::Mutex;
 
 pub use crate::command_capnp::command_trait::*;
@@ -68,6 +73,11 @@ fn parse_inputs(params: run_params::Reader<'_>) -> Result<value::Map, Error> {
     })?)
 }
 
+// TODO: old flow-lib code use reqwest client with 30 secs timeout
+pub(crate) static SOLANA_HTTP_CLIENT: LazyLock<SolanaReqwestClient> =
+    LazyLock::new(|| Default::default());
+pub(crate) static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| Default::default());
+
 impl CommandTraitImpl {
     fn run_impl(
         &mut self,
@@ -76,7 +86,7 @@ impl CommandTraitImpl {
     ) -> impl Future<Output = Result<(), Error>> + 'static {
         let cmd = self.cmd.clone();
         async move {
-            tracing::info!("building context");
+            let now = Instant::now();
             let params = params.get().context(CapnpSnafu { context: "get" })?;
             let inputs = parse_inputs(params)?;
             let context = params
@@ -107,21 +117,28 @@ impl CommandTraitImpl {
                 .flow(FlowServices {
                     signer: unimplemented_svc(),
                     set: FlowSetServices {
-                        http: reqwest::Client::new(),
-                        solana_client: Arc::new(data.flow.set.solana.build_client()),
+                        http: HTTP_CLIENT.clone(),
+                        solana_client: Arc::new(
+                            data.flow
+                                .set
+                                .solana
+                                .build_client(Some(SOLANA_HTTP_CLIENT.clone())),
+                        ),
                         extensions: Arc::new(Default::default()),
                         api_input: unimplemented_svc(),
                     },
                 })
                 .data(data)
                 .build();
-            tracing::info!("run {}:{}", ctx.node_id(), ctx.times());
+            let id = *ctx.node_id();
+            let times = *ctx.times();
             let result = cmd.lock().await.run(ctx, inputs).await.context(RunSnafu)?;
             results
                 .get()
                 .set_output(&map_to_bincode(&result).context(BincodeEncodeSnafu {
                     context: "encode map",
                 })?);
+            tracing::info!("ran {}:{} {:?}", id, times, now.elapsed());
             Ok(())
         }
     }

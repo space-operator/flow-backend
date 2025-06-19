@@ -3290,6 +3290,7 @@ dependencies = [
  "inventory",
  "nom",
  "pin-project-lite",
+ "reqwest 0.11.27",
  "reqwest 0.12.20",
  "rmp-serde",
  "schemars 1.0.0-alpha.22",
