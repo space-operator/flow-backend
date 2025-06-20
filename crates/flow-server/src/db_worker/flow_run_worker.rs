@@ -311,7 +311,6 @@ async fn save_to_db(
     let mut log_index = 0i32;
     const CHUNK_SIZE: usize = 16;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
-    let mut stop = false;
     while let Some(events) = chunks.next().await {
         let mut logs: Vec<FlowRunLogsRow> = Vec::new();
         let conn = match db.get_user_conn(user_id).await {
@@ -321,11 +320,7 @@ async fn save_to_db(
                     "could not get DB connection, dropping events. detail: {}",
                     error
                 );
-                if stop {
-                    break;
-                } else {
-                    continue;
-                }
+                continue;
             }
         };
         for event in events {
@@ -351,7 +346,6 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
-                    stop = true;
                 }
                 Event::NodeStart(NodeStart {
                     time,
@@ -443,10 +437,6 @@ async fn save_to_db(
         drop(conn);
         if !logs.is_empty() && tx.send(CopyIn(logs)).await.is_err() {
             tracing::error!("failed to send to DBWorker, dropping event.")
-        }
-        if stop {
-            // TODO: worker doesn't stop naturally when there are remote commands
-            break;
         }
     }
 }
