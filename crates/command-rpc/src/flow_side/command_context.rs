@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use capnp::capability::Promise;
 use flow_lib::{context::CommandContext, value};
 

@@ -98,9 +98,9 @@ impl CommandTrait for RemoteCommand {
         ctx: CommandContext,
         params: value::Map,
     ) -> Result<value::Map, CommandError> {
+        let ctx_client = capnp_rpc::new_client(CommandContextImpl { context: ctx });
         let mut req = self.client.run_request();
-        req.get()
-            .set_ctx(capnp_rpc::new_client(CommandContextImpl { context: ctx }));
+        req.get().set_ctx(ctx_client);
         req.get().set_inputs(&map_to_bincode(&params)?);
         let resp = req.send().promise.await?;
         let outputs = resp.get()?.get_output()?;
