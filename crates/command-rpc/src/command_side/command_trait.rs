@@ -15,7 +15,7 @@ use snafu::{ResultExt, Snafu};
 use std::{
     rc::Rc,
     sync::{Arc, LazyLock},
-    time::{Duration, Instant},
+    time::Instant,
 };
 use tokio::sync::Mutex;
 
