@@ -1486,10 +1486,6 @@ impl FlowGraph {
             )
             .ok();
 
-        // TODO: have to manually close this channel because the flow_run span is still running
-        // somewhere (related to iroh connection).
-        s.event_tx.close_channel();
-
         self.g.remove_node(fake_node);
 
         s.result
