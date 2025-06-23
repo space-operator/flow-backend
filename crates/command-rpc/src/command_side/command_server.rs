@@ -3,7 +3,8 @@ use flow_lib::command::collect_commands;
 use iroh::{Endpoint, NodeAddr};
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
-use std::{collections::BTreeSet, net::SocketAddr};
+use std::{collections::BTreeSet, net::SocketAddr, time::Duration};
+use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 use url::Url;
 
@@ -37,7 +38,12 @@ struct InfoResponse {
 pub fn main() {
     tracing_subscriber::registry()
         .with(fmt::layer())
-        .with(EnvFilter::from_default_env())
+        .with(
+            EnvFilter::builder()
+                .with_env_var("RUST_LOG")
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
         .init();
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -111,10 +117,12 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
 
     tokio::signal::ctrl_c().await.ok();
 
-    for client in clients {
-        client.leave().await?;
-        tracing::info!("left");
-    }
-
-    Ok(())
+    tokio::time::timeout(Duration::from_secs(5), async {
+        for client in clients {
+            client.leave().await?;
+            tracing::info!("left");
+        }
+        Ok(())
+    })
+    .await?
 }
