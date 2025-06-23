@@ -1,6 +1,6 @@
 [package]
 name = "space-operator-cli"
-version = "0.8.1"
+version = "0.8.2"
 edition = "2024"
 description = "CLI for Space Operator"
 license = "AGPL-3.0-only"
@@ -37,7 +37,7 @@ similar = { version = "2.6.0", features = ["inline"] }
 strum = { version = "0.27.1", features = ["derive"] }
 syn = "2.0.79"
 thiserror = "2.0.12"
-tokio = { version = "1.40.0", features = ["macros", "fs"] }
+tokio = { version = "1.40.0", features = ["macros", "fs", "signal"] }
 toml = { version = "0.8.19", features = ["preserve_order"] }
 url = { version = "2.5.2", features = ["serde"] }
 uuid = { version = "1.10.0", features = ["serde"] }
