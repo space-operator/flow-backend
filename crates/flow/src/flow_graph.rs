@@ -412,9 +412,14 @@ impl FlowGraph {
                     ext.insert(tokio::runtime::Handle::current());
                     ext
                 }),
-                http: reqwest::Client::new(),
+                http: registry.http.clone(),
                 // TODO: re-use reqwest client
-                solana_client: Arc::new(ctx_data.set.solana.build_client(None)),
+                solana_client: Arc::new(
+                    ctx_data
+                        .set
+                        .solana
+                        .build_client(Some(registry.solana_http.clone())),
+                ),
             },
         };
 

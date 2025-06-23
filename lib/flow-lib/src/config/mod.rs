@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
+use solana_commitment_config::CommitmentConfig;
 use solana_rpc_client::{
     http_sender::HttpSender, nonblocking::rpc_client::RpcClient, rpc_client::RpcClientConfig,
 };

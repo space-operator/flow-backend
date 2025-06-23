@@ -12,7 +12,7 @@ use iroh_quinn::ConnectionError;
 use snafu::prelude::*;
 use std::{borrow::Cow, collections::BTreeMap, str::Utf8Error};
 use tokio::task::{JoinHandle, spawn_local};
-use tracing::{Instrument, Level, Span, span};
+use tracing::{Instrument, Level, span};
 
 pub use crate::command_capnp::command_factory::*;
 use crate::command_side::command_trait;
