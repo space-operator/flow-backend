@@ -300,6 +300,7 @@ impl FlowRegistry {
         signers_info: JsonValue,
         remotes: Option<AddressBook>,
         backend: BackendServices,
+        http: Option<reqwest::Client>,
         get_flow: S,
     ) -> crate::Result<Self>
     where
@@ -322,7 +323,7 @@ impl FlowRegistry {
                 .inspect_err(|error| tracing::error!("srpc error: {}", error))
                 .ok(),
             remotes,
-            http: <_>::default(),
+            http: http.unwrap_or_default(),
         })
     }
 }
