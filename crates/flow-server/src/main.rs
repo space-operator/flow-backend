@@ -29,8 +29,11 @@ use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
+#[cfg(feature = "commands")]
 use cmds_pdg as _;
+#[cfg(feature = "commands")]
 use cmds_solana as _;
+#[cfg(feature = "commands")]
 use cmds_std as _;
 
 #[actix::main]

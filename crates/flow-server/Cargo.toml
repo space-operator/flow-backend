@@ -4,9 +4,9 @@ version = "0.0.0"
 edition = "2024"
 
 [features]
-default = ["import", "commands"]
+default = ["import"]
 import = []
-comnands = ["dep:cmds-pdg", "dep:cmds-std", "dep:cmds-solana"]
+commands = ["dep:cmds-pdg", "dep:cmds-std", "dep:cmds-solana"]
 
 [dependencies]
 db = { workspace = true }
