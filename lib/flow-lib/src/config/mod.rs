@@ -184,10 +184,8 @@ pub struct SolanaClientConfig {
     pub cluster: SolanaNet,
 }
 
-pub use reqwest11::Client as SolanaReqwestClient;
-
 impl SolanaClientConfig {
-    pub fn build_client(&self, http: Option<SolanaReqwestClient>) -> RpcClient {
+    pub fn build_client(&self, http: Option<reqwest::Client>) -> RpcClient {
         RpcClient::new_sender(
             HttpSender::new_with_client(self.url.clone(), http.unwrap_or_default()),
             RpcClientConfig {

@@ -52,4 +52,3 @@ solana-clock = "2"
 solana-feature-set = "2"
 solana-precompiles = "2"
 bincode1 = { package = "bincode", version = "1" }
-reqwest11 = { package = "reqwest", version = "0.11", features = ["blocking", "brotli", "deflate", "gzip", "rustls-tls", "json"] }

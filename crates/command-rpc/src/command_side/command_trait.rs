@@ -2,7 +2,6 @@ use capnp::capability::Promise;
 use flow_lib::{
     Value,
     command::{CommandError, CommandTrait},
-    config::SolanaReqwestClient,
     context::{CommandContext, CommandContextData, FlowServices, FlowSetServices},
     utils::tower_client::unimplemented_svc,
     value::{
@@ -74,8 +73,6 @@ fn parse_inputs(params: run_params::Reader<'_>) -> Result<value::Map, Error> {
 }
 
 // TODO: old flow-lib code use reqwest client with 30 secs timeout
-pub(crate) static SOLANA_HTTP_CLIENT: LazyLock<SolanaReqwestClient> =
-    LazyLock::new(|| Default::default());
 pub(crate) static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| Default::default());
 
 impl CommandTraitImpl {
@@ -119,10 +116,7 @@ impl CommandTraitImpl {
                     set: FlowSetServices {
                         http: HTTP_CLIENT.clone(),
                         solana_client: Arc::new(
-                            data.flow
-                                .set
-                                .solana
-                                .build_client(Some(SOLANA_HTTP_CLIENT.clone())),
+                            data.flow.set.solana.build_client(Some(HTTP_CLIENT.clone())),
                         ),
                         extensions: Arc::new(Default::default()),
                         api_input: unimplemented_svc(),

@@ -418,7 +418,7 @@ impl FlowGraph {
                     ctx_data
                         .set
                         .solana
-                        .build_client(Some(registry.solana_http.clone())),
+                        .build_client(Some(registry.http.clone())),
                 ),
             },
         };

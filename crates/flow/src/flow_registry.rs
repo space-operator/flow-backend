@@ -10,7 +10,7 @@ use command_rpc::flow_side::address_book::AddressBook;
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId,
     config::{
-        Endpoints, SolanaReqwestClient,
+        Endpoints,
         client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
     },
     context::{User, api_input, execute, get_jwt, signer},
@@ -98,8 +98,6 @@ pub struct FlowRegistry {
 
     #[builder(default)]
     pub(crate) http: reqwest::Client,
-    #[builder(default)]
-    pub(crate) solana_http: SolanaReqwestClient,
 }
 
 impl Default for FlowRegistry {
@@ -119,7 +117,6 @@ impl Default for FlowRegistry {
             rpc_server: None, // TODO: try this
             remotes: None,
             http: <_>::default(),
-            solana_http: <_>::default(),
         }
     }
 }
@@ -326,7 +323,6 @@ impl FlowRegistry {
                 .ok(),
             remotes,
             http: <_>::default(),
-            solana_http: <_>::default(),
         })
     }
 }
