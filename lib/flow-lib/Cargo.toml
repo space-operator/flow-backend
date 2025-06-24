@@ -49,6 +49,6 @@ solana-transaction = "2"
 solana-presigner = "2"
 solana-address-lookup-table-interface = "2"
 solana-clock = "2"
-solana-feature-set = "2"
-solana-precompiles = "2"
+agave-feature-set = "2"
+agave-precompiles = "2"
 bincode1 = { package = "bincode", version = "1" }

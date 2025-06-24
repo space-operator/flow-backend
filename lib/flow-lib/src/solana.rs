@@ -218,11 +218,12 @@ impl KeypairExt for Keypair {
     fn from_str(s: &str) -> Result<Self, anyhow::Error> {
         let mut buf = [0u8; 64];
         five8::decode_64(s, &mut buf)?;
-        Ok(Keypair::from_bytes(&buf)?)
+        Ok(Keypair::try_from(&buf[..])?)
     }
 
+    // TODO: remove this function
     fn clone_keypair(&self) -> Self {
-        Self::from_bytes(&self.to_bytes()).unwrap()
+        self.insecure_clone()
     }
 }
 

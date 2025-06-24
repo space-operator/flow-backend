@@ -46,7 +46,7 @@ impl EncryptionKey {
     }
 
     pub(crate) fn encrypt_keypair(&self, keypair: &Keypair) -> Encrypted {
-        self.encrypt(keypair.secret().as_bytes())
+        self.encrypt(keypair.secret_bytes())
     }
 
     pub(crate) fn decrypt_keypair(
@@ -61,7 +61,7 @@ impl EncryptionKey {
                 .map_err(|_| chacha20poly1305::Error)?,
         );
         secret.zeroize();
-        Keypair::from_bytes(&signing_key.to_keypair_bytes()).map_err(|_| chacha20poly1305::Error)
+        Keypair::try_from(&signing_key.to_keypair_bytes()[..]).map_err(|_| chacha20poly1305::Error)
     }
 }
 
@@ -128,9 +128,10 @@ mod tests {
     fn test_encryption() {
         let mut rng = rand::thread_rng();
         let key = EncryptionKey(ChaCha20Poly1305::generate_key(&mut rng).into());
-        let keypair =
-            Keypair::from_bytes(&ed25519_dalek::SigningKey::generate(&mut rng).to_keypair_bytes())
-                .unwrap();
+        let keypair = Keypair::try_from(
+            &ed25519_dalek::SigningKey::generate(&mut rng).to_keypair_bytes()[..],
+        )
+        .unwrap();
         let decrypted = key.decrypt_keypair(&key.encrypt_keypair(&keypair)).unwrap();
         assert_eq!(keypair, decrypted);
     }
