@@ -56,13 +56,13 @@ Deno.test("interflow", async () => {
   const flowId = 3623;
   const { flow_run_id } = await owner.startFlow(flowId, {
     inputs: new Value({
-      n: 12345,
+      n: 54,
     }).M!,
   });
 
   const result = await owner.getFlowOutput(flow_run_id);
   const { out, count } = result.toJSObject();
-  assertEquals(count, 50);
+  assertEquals(count, 112);
   assertEquals(out, 1);
 
   const jwt = await owner.claimToken();

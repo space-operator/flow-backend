@@ -1,8 +1,10 @@
 [package]
-name = "cmds-std-server"
+name = "all-cmds-server"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 cmds-std.workspace = true
+cmds-pdg.workspace = true
+cmds-solana.workspace = true
 command-rpc.workspace = true

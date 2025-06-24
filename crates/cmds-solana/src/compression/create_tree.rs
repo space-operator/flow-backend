@@ -1,6 +1,6 @@
 use crate::prelude::*;
-use solana_program::pubkey::Pubkey;
-use solana_program::system_instruction;
+use solana_program::{pubkey::Pubkey, system_instruction::create_account};
+
 use spl_concurrent_merkle_tree::concurrent_merkle_tree::ConcurrentMerkleTree;
 use std::mem::size_of;
 
@@ -266,7 +266,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .get_minimum_balance_for_rent_exemption(merkle_tree_account_size)
         .await?;
 
-    let create_merkle_account_ix = system_instruction::create_account(
+    let create_merkle_account_ix = create_account(
         &input.payer.pubkey(),
         &input.merkle_tree.pubkey(),
         rent,

@@ -1,7 +1,8 @@
 use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_candy_guard::instruction::MintV2;
-use solana_program::{instruction::Instruction, system_program, sysvar};
+use solana_program::{instruction::Instruction,  sysvar};
+use solana_sdk_ids::system_program;
 use solana_program::{compute_budget::ComputeBudgetInstruction, pubkey::Pubkey};
 
 use mpl_token_metadata::{

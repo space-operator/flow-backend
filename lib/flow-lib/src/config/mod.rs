@@ -1,8 +1,10 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
-use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+use solana_commitment_config::CommitmentConfig;
+use solana_rpc_client::{
+    http_sender::HttpSender, nonblocking::rpc_client::RpcClient, rpc_client::RpcClientConfig,
+};
 use std::{collections::HashMap, num::NonZeroU64, str::FromStr, sync::LazyLock, time::Duration};
 use thiserror::Error as ThisError;
 use uuid::Uuid;
@@ -183,14 +185,13 @@ pub struct SolanaClientConfig {
 }
 
 impl SolanaClientConfig {
-    pub fn build_client(&self) -> RpcClient {
-        RpcClient::new_with_timeouts_and_commitment(
-            self.url.clone(),
-            Duration::from_secs(30),
-            CommitmentConfig {
-                commitment: CommitmentLevel::Finalized,
+    pub fn build_client(&self, http: Option<reqwest::Client>) -> RpcClient {
+        RpcClient::new_sender(
+            HttpSender::new_with_client(self.url.clone(), http.unwrap_or_default()),
+            RpcClientConfig {
+                commitment_config: CommitmentConfig::finalized(),
+                confirm_transaction_initial_timeout: Some(Duration::from_secs(180)),
             },
-            Duration::from_secs(180),
         )
     }
 }

@@ -11,8 +11,8 @@ use nom::{
 };
 use solana_address_lookup_table_interface::state::AddressLookupTable;
 use solana_clock::{Slot, UnixTimestamp};
-use solana_feature_set::FeatureSet;
-use solana_precompiles::verify_if_precompile;
+use agave_feature_set::FeatureSet;
+use agave_precompiles::verify_if_precompile;
 use solana_program::message::AddressLookupTableAccount;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::{

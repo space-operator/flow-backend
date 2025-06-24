@@ -55,6 +55,8 @@ solana-account = "2"
 solana-keypair = "2"
 solana-presigner = "2"
 solana-transaction = "2"
+solana-sdk-ids = "2"
+solana-system-interface = "1"
 
 anchor-libs.workspace = true
 
@@ -82,6 +84,8 @@ mpl-bubblegum = { path = "../../vendor/mpl-bubblegum" }
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
     "solana",
 ] }
+# bundlr-sdk doesn't have json feature in their Cargo.toml
+reqwest11 = { package = "reqwest", version = "0.11", features = ["json"] }
 
 # branch: vendor
 pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "c658146e28322ab89720cef94efb56b3c5c12f28" }

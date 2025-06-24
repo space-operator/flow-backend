@@ -42,9 +42,14 @@ use futures_channel::{mpsc, oneshot};
 use futures_util::{TryFutureExt, future::BoxFuture};
 use hashbrown::HashMap;
 use solana_signature::Signature;
-use std::future::{Future, ready};
+use std::{
+    future::{Future, ready},
+    sync::LazyLock,
+};
 use thiserror::Error as ThisError;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
+
+static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(Default::default);
 
 #[derive(bon::Builder)]
 pub struct UserWorker {
@@ -673,6 +678,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 })
                 .get_flow(addr_to_service(&addr))
                 .remotes(remotes)
+                .http(HTTP_CLIENT.clone())
                 .call()
                 .await?;
 
@@ -771,6 +777,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                 })
                 .get_flow(addr_to_service(&addr))
                 .remotes(remotes)
+                .http(HTTP_CLIENT.clone())
                 .call()
                 .await?;
 

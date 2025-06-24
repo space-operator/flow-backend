@@ -456,7 +456,7 @@ pub struct CommandContext {
 impl CommandContext {
     pub fn test_context() -> Self {
         let config = ContextConfig::default();
-        let solana_client = Arc::new(config.solana_client.build_client());
+        let solana_client = Arc::new(config.solana_client.build_client(None));
         Self {
             data: CommandContextData {
                 node_id: NodeId::nil(),

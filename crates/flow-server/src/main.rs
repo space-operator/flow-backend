@@ -29,8 +29,11 @@ use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
+#[cfg(feature = "commands")]
 use cmds_pdg as _;
+#[cfg(feature = "commands")]
 use cmds_solana as _;
+#[cfg(feature = "commands")]
 use cmds_std as _;
 
 #[actix::main]
@@ -53,8 +56,8 @@ async fn main() {
         }
     }
 
-    let fac = flow::context::CommandFactory::new();
-    let natives = fac.avaiables().collect::<Vec<_>>();
+    let fac = flow::context::CommandFactory::new(None);
+    let natives = fac.availables().collect::<Vec<_>>();
     tracing::info!("native commands: {:?}", natives);
 
     tracing::info!("allow CORS origins: {:?}", config.cors_origins);

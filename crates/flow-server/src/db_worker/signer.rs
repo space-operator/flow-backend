@@ -100,7 +100,7 @@ impl SignerWorker {
                             tracing::warn!("invalid keypair: mismatch; id={}", w.id);
                             continue;
                         }
-                        let keypair = match Keypair::from_bytes(&keypair) {
+                        let keypair = match Keypair::try_from(&keypair[..]) {
                             Ok(keypair) => keypair,
                             Err(error) => {
                                 tracing::warn!("invalid keypair: {}; id={}", error, w.id);
@@ -166,7 +166,7 @@ impl SignerWorker {
         }
         let s = if let Some(keypair) = w.keypair {
             let keypair =
-                Keypair::from_bytes(&keypair).map_err(|_| AddWalletError::InvalidKeypair)?;
+                Keypair::try_from(&keypair[..]).map_err(|_| AddWalletError::InvalidKeypair)?;
             SignerType::Keypair(Box::new(keypair))
         } else {
             SignerType::UserWallet {

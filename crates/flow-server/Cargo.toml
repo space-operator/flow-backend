@@ -4,8 +4,9 @@ version = "0.0.0"
 edition = "2024"
 
 [features]
-default = ["import"]
+default = ["import", "commands"]
 import = []
+commands = ["dep:cmds-pdg", "dep:cmds-std", "dep:cmds-solana"]
 
 [dependencies]
 db = { workspace = true }
@@ -14,9 +15,9 @@ flow-lib = { workspace = true }
 value = { workspace = true }
 space-wasm = { workspace = true }
 utils = { workspace = true }
-cmds-pdg = { workspace = true }
-cmds-std = { workspace = true }
-cmds-solana = { workspace = true }
+cmds-pdg = { workspace = true, optional = true }
+cmds-std = { workspace = true , optional = true}
+cmds-solana = { workspace = true, optional = true }
 rhai-script = { workspace = true }
 
 actix = "0.13"

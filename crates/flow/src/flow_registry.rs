@@ -95,6 +95,9 @@ pub struct FlowRegistry {
 
     pub(crate) rpc_server: Option<actix::Addr<srpc::Server>>,
     pub(crate) remotes: Option<AddressBook>,
+
+    #[builder(default)]
+    pub(crate) http: reqwest::Client,
 }
 
 impl Default for FlowRegistry {
@@ -113,6 +116,7 @@ impl Default for FlowRegistry {
             rhai_tx: <_>::default(),
             rpc_server: None, // TODO: try this
             remotes: None,
+            http: <_>::default(),
         }
     }
 }
@@ -296,6 +300,7 @@ impl FlowRegistry {
         signers_info: JsonValue,
         remotes: Option<AddressBook>,
         backend: BackendServices,
+        http: Option<reqwest::Client>,
         get_flow: S,
     ) -> crate::Result<Self>
     where
@@ -318,6 +323,7 @@ impl FlowRegistry {
                 .inspect_err(|error| tracing::error!("srpc error: {}", error))
                 .ok(),
             remotes,
+            http: http.unwrap_or_default(),
         })
     }
 }
@@ -387,7 +393,8 @@ impl FlowRegistry {
         let flow = self
             .flows
             .get(&flow_id)
-            .ok_or(new_flow_run::Error::NotFound)?;
+            .ok_or(new_flow_run::Error::NotFound)?
+            .clone();
         let solana_client = options
             .solana_client
             .unwrap_or_else(|| flow.sol_network.clone().into());
@@ -433,8 +440,6 @@ impl FlowRegistry {
             })
             .await?;
 
-        let _guard = span.enter();
-
         /*
         self.flows.iter().for_each(|(id, flow)| {
             if let Err(error) = &flow.interflow_instruction_info {
@@ -443,76 +448,81 @@ impl FlowRegistry {
         });
         */
 
-        let mut flow_config = FlowConfig::new(flow.clone());
-        flow_config.ctx.endpoints = self.endpoints.clone();
-        flow_config.ctx.solana_client = solana_client.clone();
-        let mut flow =
-            FlowGraph::from_cfg(flow_config, self.clone(), options.partial_config.as_ref()).await?;
+        async {
+            let mut flow_config = FlowConfig::new(flow.clone());
+            flow_config.ctx.endpoints = self.endpoints.clone();
+            flow_config.ctx.solana_client = solana_client.clone();
+            let mut flow =
+                FlowGraph::from_cfg(flow_config, self.clone(), options.partial_config.as_ref())
+                    .await?;
 
-        if let Some(config) = options.action_config {
-            flow.tx_exec_config.execute_on = ExecuteOn::SolanaAction(config);
-        }
-        flow.action_identity = options.action_identity;
-        flow.fees = options.fees;
-
-        if options.collect_instructions {
-            if let BundlingMode::Off = flow.mode {
-                flow.mode = BundlingMode::Automatic;
+            if let Some(config) = options.action_config {
+                flow.tx_exec_config.execute_on = ExecuteOn::SolanaAction(config);
             }
-            flow.output_instructions = true;
-        }
+            flow.action_identity = options.action_identity;
+            flow.fees = options.fees;
 
-        let previous_values = {
-            let nodes = flow.need_previous_outputs();
-            let nodes = nodes
-                .into_iter()
-                .filter_map(|id| {
-                    options
-                        .partial_config
-                        .as_ref()
-                        .and_then(|c| {
-                            c.values_config
-                                .nodes
-                                .get(&id)
-                                .copied()
-                                .or(c.values_config.default_run_id)
-                        })
-                        .map(|run_id| (id, run_id))
-                })
-                .collect::<HashMap<NodeId, FlowRunId>>();
-            let previous_values = if !nodes.is_empty() {
-                self.backend
-                    .get_previous_values
-                    .ready()
-                    .await?
-                    .call(get_previous_values::Request {
-                        user_id: self.flow_owner.id,
-                        nodes,
+            if options.collect_instructions {
+                if let BundlingMode::Off = flow.mode {
+                    flow.mode = BundlingMode::Automatic;
+                }
+                flow.output_instructions = true;
+            }
+
+            let previous_values = {
+                let nodes = flow.need_previous_outputs();
+                let nodes = nodes
+                    .into_iter()
+                    .filter_map(|id| {
+                        options
+                            .partial_config
+                            .as_ref()
+                            .and_then(|c| {
+                                c.values_config
+                                    .nodes
+                                    .get(&id)
+                                    .copied()
+                                    .or(c.values_config.default_run_id)
+                            })
+                            .map(|run_id| (id, run_id))
                     })
-                    .await?
-                    .values
-            } else {
-                <_>::default()
+                    .collect::<HashMap<NodeId, FlowRunId>>();
+                let previous_values = if !nodes.is_empty() {
+                    self.backend
+                        .get_previous_values
+                        .ready()
+                        .await?
+                        .call(get_previous_values::Request {
+                            user_id: self.flow_owner.id,
+                            nodes,
+                        })
+                        .await?
+                        .values
+                } else {
+                    <_>::default()
+                };
+
+                previous_values
             };
 
-            previous_values
-        };
+            let task = async move {
+                flow.run(
+                    tx,
+                    flow_run_id,
+                    inputs,
+                    stop_signal,
+                    stop_shared_signal,
+                    previous_values,
+                )
+                .await
+            }
+            .in_current_span();
+            let join_handle = spawn_local(task);
 
-        let task = async move {
-            flow.run(
-                tx,
-                flow_run_id,
-                inputs,
-                stop_signal,
-                stop_shared_signal,
-                previous_values,
-            )
-            .await
+            Ok((flow_run_id, join_handle))
         }
-        .in_current_span();
-        let join_handle = spawn_local(task);
-
-        Ok((flow_run_id, join_handle))
+        .instrument(span)
+        .await
     }
 
     pub async fn start(

@@ -412,12 +412,18 @@ impl FlowGraph {
                     ext.insert(tokio::runtime::Handle::current());
                     ext
                 }),
-                http: reqwest::Client::new(),
-                solana_client: Arc::new(ctx_data.set.solana.build_client()),
+                http: registry.http.clone(),
+                // TODO: re-use reqwest client
+                solana_client: Arc::new(
+                    ctx_data
+                        .set
+                        .solana
+                        .build_client(Some(registry.http.clone())),
+                ),
             },
         };
 
-        let f = CommandFactory::new();
+        let mut f = CommandFactory::new(registry.remotes);
 
         let mut g = StableGraph::new();
         let mut spawned = Vec::new();

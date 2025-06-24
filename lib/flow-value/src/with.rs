@@ -503,7 +503,7 @@ pub(crate) mod keypair {
         CustomKeypair(k.to_bytes())
     }
     fn from_custom_keypair(k: CustomKeypair) -> Result<Keypair, String> {
-        Keypair::from_bytes(&k.0).map_err(|error| error.to_string())
+        Keypair::try_from(&k.0[..]).map_err(|error| error.to_string())
     }
     serde_conv!(pub AsKeypair, Keypair, to_custom_keypair, from_custom_keypair);
 

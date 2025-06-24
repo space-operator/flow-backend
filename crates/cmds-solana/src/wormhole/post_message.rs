@@ -3,7 +3,8 @@ use crate::{prelude::*, wormhole::WormholeInstructions};
 use borsh::{BorshDeserialize, BorshSerialize};
 use rand::Rng;
 use solana_program::pubkey::Pubkey;
-use solana_program::{instruction::AccountMeta, system_instruction, sysvar};
+use solana_program::{instruction::AccountMeta, sysvar};
+use solana_system_interface::instruction::transfer;
 
 use super::{BridgeData, PostMessageData, token_bridge::get_sequence_number_from_message};
 
@@ -91,11 +92,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let message_pubkey = input.message.pubkey();
 
-    let instructions = [
-        system_instruction::transfer(&input.payer.pubkey(), &fee_collector, fee),
-        ix,
-    ]
-    .into();
+    let instructions = [transfer(&input.payer.pubkey(), &fee_collector, fee), ix].into();
 
     let ins = Instructions {
         lookup_tables: None,

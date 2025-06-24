@@ -2,8 +2,10 @@ use super::CandyMachineData as CandyMachineDataAlias;
 use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_core_candy_machine_core::{constants::HIDDEN_SECTION, types::CandyMachineData};
+use solana_program::instruction::Instruction;
 use solana_program::pubkey::Pubkey;
-use solana_program::{instruction::Instruction, system_instruction, system_program};
+use solana_sdk_ids::system_program;
+use solana_system_interface::instruction::create_account;
 
 const NAME: &str = "initialize_candy_machine_core";
 
@@ -99,7 +101,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .get_minimum_balance_for_rent_exemption(candy_account_size)
         .await?;
 
-    let create_ix = system_instruction::create_account(
+    let create_ix = create_account(
         &input.payer.pubkey(),
         &candy_pubkey,
         lamports,

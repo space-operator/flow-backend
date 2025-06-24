@@ -6,7 +6,7 @@ use clap::{ColorChoice, CommandFactory, Parser, Subcommand, ValueEnum};
 use console::style;
 use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
-use futures::{AsyncBufReadExt, AsyncReadExt, io::AllowStdIo};
+use futures::{AsyncBufReadExt, AsyncReadExt, future, io::AllowStdIo};
 use postgrest::Postgrest;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -28,7 +28,7 @@ use std::{
 };
 use strum::IntoEnumIterator;
 use thiserror::Error as ThisError;
-use tokio::task::spawn_blocking;
+use tokio::{signal::ctrl_c, task::spawn_blocking};
 use url::Url;
 use uuid::Uuid;
 use xshell::{Shell, cmd};
@@ -1739,23 +1739,30 @@ async fn start_flow_server(
     }
     let config_path = relative_to_pwd(config_path);
 
-    spawn_blocking(move || -> Result<(), Report<Error>> {
+    let handler = spawn_blocking(move || -> Result<(), Report<Error>> {
         let sh = Shell::new().change_context(Error::Shell)?;
+        let build_dir = release.then_some("release/").unwrap_or("debug/");
         let release = release.then_some("--release");
         cmd!(sh, "cargo build --bin flow-server {release...}")
             .run()
             .change_context(Error::Subprocess)?;
-        let flow_server = relative_to_pwd(meta.target_directory.join("debug/flow-server"));
+        let flow_server =
+            relative_to_pwd(meta.target_directory.join(build_dir).join("flow-server"));
         let rust_log = std::env::var("RUST_LOG")
-            .unwrap_or_else(|_| "info,actix_web=debug,flow_server=debug".to_owned());
+            .unwrap_or_else(|_| "info,actix_web=debug,flow_server=debug,iroh=warn".to_owned());
         cmd!(sh, "{flow_server} {config_path}")
             .env("RUST_LOG", rust_log)
             .run()
             .change_context(Error::Subprocess)?;
         Ok(())
-    })
-    .await
-    .change_context(Error::Thread)??;
+    });
+
+    let result = match future::select(std::pin::pin!(ctrl_c()), handler).await {
+        future::Either::Left((_, handler)) => handler.await,
+        future::Either::Right((result, _)) => result,
+    };
+
+    result.change_context(Error::Thread)??;
 
     Ok(())
 }

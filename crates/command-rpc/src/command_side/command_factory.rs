@@ -12,6 +12,7 @@ use iroh_quinn::ConnectionError;
 use snafu::prelude::*;
 use std::{borrow::Cow, collections::BTreeMap, str::Utf8Error};
 use tokio::task::{JoinHandle, spawn_local};
+use tracing::{Instrument, Level, span};
 
 pub use crate::command_capnp::command_factory::*;
 use crate::command_side::command_trait;
@@ -71,10 +72,14 @@ pub fn new_client(availables: BTreeMap<Cow<'static, str>, &'static CommandDescri
 }
 
 pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, ConnectError> {
-    use connect_error::*;
-    let connection = endpoint.connect(addr, ALPN).await.context(ConnectSnafu)?;
-    let (writer, reader) = connection.open_bi().await.context(OpenBiSnafu)?;
-    Ok(connect_generic_futures_io(reader, writer))
+    async move {
+        use connect_error::*;
+        let connection = endpoint.connect(addr, ALPN).await.context(ConnectSnafu)?;
+        let (writer, reader) = connection.open_bi().await.context(OpenBiSnafu)?;
+        Ok(connect_generic_futures_io(reader, writer))
+    }
+    .instrument(span!(parent: None, Level::INFO, "iroh_connection"))
+    .await
 }
 
 pub trait CommandFactoryExt {
@@ -183,6 +188,7 @@ impl CommandFactoryImpl {
             let nd: NodeData = serde_json::from_slice(nd).context(JsonSnafu {
                 context: "parse NodeData",
             })?;
+            tracing::info!("init {}", name);
             let cmd = (description.fn_new)(&nd).context(NewCommandSnafu)?;
             results.get().set_cmd(command_trait::new_client(cmd));
             Ok(())
