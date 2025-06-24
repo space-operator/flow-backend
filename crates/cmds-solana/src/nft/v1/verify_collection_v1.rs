@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use mpl_token_metadata::accounts::{MasterEdition, Metadata};
-use solana_program::{system_program, sysvar};
+use solana_program::sysvar;
+use solana_sdk_ids::system_program;
 
 // Command Name
 const NAME: &str = "verify_collection_v1";

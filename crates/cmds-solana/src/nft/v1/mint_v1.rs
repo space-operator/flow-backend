@@ -3,7 +3,8 @@ use mpl_token_metadata::{
     accounts::{MasterEdition, Metadata, TokenRecord},
     instructions::MintV1InstructionArgs,
 };
-use solana_program::{system_program, sysvar};
+use solana_program::sysvar;
+use solana_sdk_ids::system_program;
 
 use super::AuthorizationData;
 

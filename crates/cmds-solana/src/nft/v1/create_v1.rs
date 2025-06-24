@@ -4,7 +4,8 @@ use mpl_token_metadata::{
     instructions::CreateV1InstructionArgs,
     types::Collection,
 };
-use solana_program::{system_program, sysvar};
+use solana_program::sysvar;
+use solana_sdk_ids::system_program;
 
 use crate::nft::{
     CollectionDetails, NftCollection, NftCreator, NftDataV2, NftUses, PrintSupply, TokenStandard,

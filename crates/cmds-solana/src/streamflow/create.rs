@@ -4,7 +4,8 @@ use crate::prelude::*;
 use crate::utils::anchor_sighash;
 use borsh::BorshSerialize;
 use solana_program::instruction::AccountMeta;
-use solana_program::{system_program, sysvar};
+use solana_program::sysvar;
+use solana_sdk_ids::system_program;
 use spl_associated_token_account::get_associated_token_address;
 
 use super::{CreateData, CreateDataInput, FEE_ORACLE_ADDRESS, STRM_TREASURY, WITHDRAWOR_ADDRESS};
