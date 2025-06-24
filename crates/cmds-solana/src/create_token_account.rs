@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use solana_program::program_pack::Pack;
-use solana_program::{system_instruction, system_program};
+use solana_program::system_instruction;
+use solana_sdk_ids::system_program;
 
 const SOLANA_CREATE_TOKEN_ACCOUNT: &str = "create_token_account";
 

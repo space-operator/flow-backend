@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
-use solana_program::{instruction::Instruction, system_program};
+use solana_program::{instruction::Instruction, };
+use solana_sdk_ids::system_program;
 use solana_sdk::pubkey::Pubkey;
 use spl_associated_token_account::get_associated_token_address;
 

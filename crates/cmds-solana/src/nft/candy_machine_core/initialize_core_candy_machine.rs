@@ -3,7 +3,8 @@ use crate::prelude::*;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_core_candy_machine_core::{constants::HIDDEN_SECTION, types::CandyMachineData};
 use solana_program::pubkey::Pubkey;
-use solana_program::{instruction::Instruction, system_instruction, system_program};
+use solana_program::{instruction::Instruction, system_instruction};
+use solana_sdk_ids::system_program;
 
 const NAME: &str = "initialize_candy_machine_core";
 

@@ -8,7 +8,8 @@ use clockwork_client::thread::{
 
 use clockwork_utils::thread::SerializableInstruction as ClockWorkInstruction;
 use payments::state::Payment as ClockworkPayment;
-use solana_program::{instruction::Instruction, system_program};
+use solana_program::{instruction::Instruction, };
+use solana_sdk_ids::system_program;
 use solana_sdk::pubkey::Pubkey;
 use spl_associated_token_account::get_associated_token_address;
 
