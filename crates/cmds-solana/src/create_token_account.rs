@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use solana_program::program_pack::Pack;
-use solana_program::system_instruction;
+use solana_system_interface::instruction::create_account;
+
 use solana_sdk_ids::system_program;
 
 const SOLANA_CREATE_TOKEN_ACCOUNT: &str = "create_token_account";
@@ -47,7 +48,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let account = input.token_account.pubkey();
     let system_account_ok = false;
     let instructions = [
-        system_instruction::create_account(
+        create_account(
             &input.fee_payer.pubkey(),
             &account,
             minimum_balance_for_rent_exemption,

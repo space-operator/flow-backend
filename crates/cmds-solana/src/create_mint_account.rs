@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use solana_program::program_pack::Pack;
-use solana_program::system_instruction;
+use solana_system_interface::instruction::create_account;
+
 use spl_token::state::Mint;
 
 const NAME: &str = "create_mint_account";
@@ -45,7 +46,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .await?;
 
     let instructions = [
-        system_instruction::create_account(
+        create_account(
             &input.fee_payer.pubkey(),
             &input.mint_account.pubkey(),
             lamports,

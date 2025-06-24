@@ -55,6 +55,8 @@ solana-account = "2"
 solana-keypair = "2"
 solana-presigner = "2"
 solana-transaction = "2"
+solana-sdk-ids = "2"
+solana-system-interface = "1"
 
 anchor-libs.workspace = true
 
@@ -93,7 +95,6 @@ pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev =
 # anchor
 anchor-lang = "=0.31.0"
 anchor-spl = "=0.31.0"
-solana-sdk-ids = "2.2.1"
 
 
 # clockwork-client = "=2.0.1"
