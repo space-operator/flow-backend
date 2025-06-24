@@ -49,7 +49,7 @@ use std::{
 use thiserror::Error as ThisError;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
 
-static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| Default::default());
+static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(Default::default);
 
 #[derive(bon::Builder)]
 pub struct UserWorker {
