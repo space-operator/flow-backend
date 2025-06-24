@@ -44,19 +44,19 @@ impl CommandFactory {
         name: &str,
         config: &NodeData,
     ) -> crate::Result<Box<dyn CommandTrait>> {
+        if let Some(rpc) = self.rpc.as_mut() {
+            match rpc.new_command(name, config).await {
+                Ok(cmd) => return Ok(cmd),
+                Err(error) => {
+                    tracing::debug!("rpc error: {}", error);
+                }
+            }
+        }
         match self.natives.get(name) {
             Some(d) => (d.fn_new)(config).map_err(crate::Error::CreateCmd),
             None => {
                 if rhai_script::is_rhai_script(name) {
                     crate::command::rhai::build(config).map_err(crate::Error::CreateCmd)
-                } else if let Some(rpc) = self.rpc.as_mut() {
-                    match rpc.new_command(name, config).await {
-                        Ok(cmd) => return Ok(cmd),
-                        Err(error) => {
-                            tracing::debug!("rpc error: {}", error);
-                            return Err(Error::Any(format!("native not found: {}", name).into()));
-                        }
-                    }
                 } else {
                     Err(Error::Any(format!("native not found: {}", name).into()))
                 }
