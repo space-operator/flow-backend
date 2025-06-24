@@ -3,14 +3,11 @@ use anyhow::{Context, anyhow};
 use bincode::config::standard;
 use capnp::{ErrorKind, capability::Promise};
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
-use flow_lib::{
-    command::{CommandDescription, CommandError},
-    config::client::NodeData,
-};
+use flow_lib::{command::CommandDescription, config::client::NodeData};
 use futures::io::{BufReader, BufWriter};
 use iroh::{Endpoint, NodeAddr, endpoint::Incoming};
 use iroh_quinn::ConnectionError;
-use std::{borrow::Cow, collections::BTreeMap, str::Utf8Error};
+use std::{borrow::Cow, collections::BTreeMap};
 use tokio::task::{JoinHandle, spawn_local};
 use tracing::{Instrument, Level, span};
 
