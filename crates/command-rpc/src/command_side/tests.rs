@@ -156,7 +156,7 @@ async fn test_call() {
         instruction_info: None,
     };
 
-    let cmd = client.init("add", &nd).await.unwrap();
+    let cmd = client.init("add", &nd).await.unwrap().unwrap();
 
     let mut req = cmd.run_request();
     req.get().set_inputs(

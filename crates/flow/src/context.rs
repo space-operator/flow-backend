@@ -46,7 +46,8 @@ impl CommandFactory {
     ) -> crate::Result<Box<dyn CommandTrait>> {
         if let Some(rpc) = self.rpc.as_mut() {
             match rpc.new_command(name, config).await {
-                Ok(cmd) => return Ok(cmd),
+                Ok(Some(cmd)) => return Ok(cmd),
+                Ok(None) => {}
                 Err(error) => {
                     tracing::debug!("rpc error: {}", error);
                 }

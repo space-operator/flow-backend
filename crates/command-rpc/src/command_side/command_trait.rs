@@ -1,7 +1,8 @@
+use anyhow::Context;
 use capnp::capability::Promise;
 use flow_lib::{
     Value,
-    command::{CommandError, CommandTrait},
+    command::CommandTrait,
     context::{CommandContext, CommandContextData, FlowServices, FlowSetServices},
     utils::tower_client::unimplemented_svc,
     value::{
@@ -10,7 +11,6 @@ use flow_lib::{
     },
 };
 use futures::TryFutureExt;
-use snafu::{ResultExt, Snafu};
 use std::{
     rc::Rc,
     sync::{Arc, LazyLock},
@@ -19,33 +19,6 @@ use std::{
 use tokio::sync::Mutex;
 
 pub use crate::command_capnp::command_trait::*;
-
-#[derive(Debug, Snafu)]
-pub enum Error {
-    Capnp {
-        source: capnp::Error,
-        context: String,
-    },
-    BincodeDecode {
-        source: bincode::error::DecodeError,
-        context: String,
-    },
-    BincodeEncode {
-        source: bincode::error::EncodeError,
-        context: String,
-    },
-    Value {
-        source: value::Error,
-        context: String,
-    },
-    Run {
-        source: CommandError,
-    },
-    SimdJson {
-        source: simd_json::Error,
-        context: String,
-    },
-}
 
 pub fn new_client(cmd: Box<dyn CommandTrait>) -> Client {
     capnp_rpc::new_client(CommandTraitImpl {
@@ -57,57 +30,36 @@ struct CommandTraitImpl {
     cmd: Rc<Mutex<Box<dyn CommandTrait>>>,
 }
 
-impl From<Error> for capnp::Error {
-    fn from(value: Error) -> Self {
-        capnp::Error::failed(value.to_string())
-    }
-}
-
-fn parse_inputs(params: run_params::Reader<'_>) -> Result<value::Map, Error> {
-    let inputs = params.get_inputs().context(CapnpSnafu {
-        context: "get_inputs",
-    })?;
-    Ok(map_from_bincode(inputs).context(BincodeDecodeSnafu {
-        context: "decode map",
-    })?)
+fn parse_inputs(params: run_params::Reader<'_>) -> Result<value::Map, anyhow::Error> {
+    let inputs = params.get_inputs().context("get_inputs")?;
+    Ok(map_from_bincode(inputs).context("map_from_bincode")?)
 }
 
 // TODO: old flow-lib code use reqwest client with 30 secs timeout
-pub(crate) static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| Default::default());
+pub(crate) static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(Default::default);
 
 impl CommandTraitImpl {
     fn run_impl(
         &mut self,
         params: RunParams,
         mut results: RunResults,
-    ) -> impl Future<Output = Result<(), Error>> + 'static {
+    ) -> impl Future<Output = Result<(), anyhow::Error>> + 'static {
         let cmd = self.cmd.clone();
         async move {
             let now = Instant::now();
-            let params = params.get().context(CapnpSnafu { context: "get" })?;
+            let params = params.get().context("get")?;
             let inputs = parse_inputs(params)?;
-            let context = params
-                .get_ctx()
-                .context(CapnpSnafu { context: "get_ctx" })?;
+            let context = params.get_ctx().context("get_ctx")?;
             let resp = context
                 .data_request()
                 .send()
                 .promise
                 .await
-                .context(CapnpSnafu { context: "send" })?;
-            let data = resp
-                .get()
-                .context(CapnpSnafu { context: "get" })?
-                .get_data()
-                .context(CapnpSnafu {
-                    context: "get_data",
-                })?;
-            let value = Value::from_bincode(data).context(BincodeDecodeSnafu {
-                context: "decode value",
-            })?;
-            let data: CommandContextData = value::from_value(value).context(ValueSnafu {
-                context: "decode CommandContextData",
-            })?;
+                .context("send data_request")?;
+            let data = resp.get().context("get")?.get_data().context("get_data")?;
+            let value = Value::from_bincode(data).context("Value::from_bincode")?;
+            let data: CommandContextData =
+                value::from_value(value).context("decode CommandContextData")?;
             let ctx = CommandContext::builder()
                 .execute(unimplemented_svc())
                 .get_jwt(unimplemented_svc())
@@ -126,12 +78,15 @@ impl CommandTraitImpl {
                 .build();
             let id = *ctx.node_id();
             let times = *ctx.times();
-            let result = cmd.lock().await.run(ctx, inputs).await.context(RunSnafu)?;
+            let result = cmd
+                .lock()
+                .await
+                .run(ctx, inputs)
+                .await
+                .context("run command")?;
             results
                 .get()
-                .set_output(&map_to_bincode(&result).context(BincodeEncodeSnafu {
-                    context: "encode map",
-                })?);
+                .set_output(&map_to_bincode(&result).context("map_to_bincode")?);
             tracing::info!("ran {}:{} {:?}", id, times, now.elapsed());
             Ok(())
         }
@@ -140,7 +95,10 @@ impl CommandTraitImpl {
 
 impl Server for CommandTraitImpl {
     fn run(&mut self, params: RunParams, results: RunResults) -> Promise<(), capnp::Error> {
-        Promise::from_future(self.run_impl(params, results).map_err(Into::into))
+        Promise::from_future(
+            self.run_impl(params, results)
+                .map_err(|error| capnp::Error::failed(error.to_string())),
+        )
     }
 
     fn name(&mut self, _: NameParams, mut results: NameResults) -> Promise<(), capnp::Error> {
@@ -157,13 +115,11 @@ impl Server for CommandTraitImpl {
         Promise::from_future(
             async move {
                 let inputs = cmd.lock().await.inputs();
-                let inputs = simd_json::to_vec(&inputs).context(SimdJsonSnafu {
-                    context: "serialize inputs description",
-                })?;
+                let inputs = simd_json::to_vec(&inputs).context("serialize inputs description")?;
                 results.get().set_inputs(&inputs);
-                Ok::<_, Error>(())
+                Ok::<_, anyhow::Error>(())
             }
-            .map_err(Into::into),
+            .map_err(|error| capnp::Error::failed(error.to_string())),
         )
     }
 
@@ -176,13 +132,12 @@ impl Server for CommandTraitImpl {
         Promise::from_future(
             async move {
                 let outputs = cmd.lock().await.outputs();
-                let outputs = simd_json::to_vec(&outputs).context(SimdJsonSnafu {
-                    context: "serialize outputs description",
-                })?;
+                let outputs =
+                    simd_json::to_vec(&outputs).context("serialize outputs description")?;
                 results.get().set_outputs(&outputs);
-                Ok::<_, Error>(())
+                Ok::<_, anyhow::Error>(())
             }
-            .map_err(Into::into),
+            .map_err(|error| capnp::Error::failed(error.to_string())),
         )
     }
 
@@ -195,13 +150,11 @@ impl Server for CommandTraitImpl {
         Promise::from_future(
             async move {
                 let info = cmd.lock().await.instruction_info();
-                let info = simd_json::to_vec(&info).context(SimdJsonSnafu {
-                    context: "serialize instruction info",
-                })?;
+                let info = simd_json::to_vec(&info).context("serialize instruction info")?;
                 results.get().set_info(&info);
-                Ok::<_, Error>(())
+                Ok::<_, anyhow::Error>(())
             }
-            .map_err(Into::into),
+            .map_err(|error| capnp::Error::failed(error.to_string())),
         )
     }
 
@@ -214,13 +167,11 @@ impl Server for CommandTraitImpl {
         Promise::from_future(
             async move {
                 let perm = cmd.lock().await.permissions();
-                let perm = simd_json::to_vec(&perm).context(SimdJsonSnafu {
-                    context: "serialize permissions",
-                })?;
+                let perm = simd_json::to_vec(&perm).context("serialize permissions")?;
                 results.get().set_permissions(&perm);
-                Ok::<_, Error>(())
+                Ok::<_, anyhow::Error>(())
             }
-            .map_err(Into::into),
+            .map_err(|error| capnp::Error::failed(error.to_string())),
         )
     }
 }
