@@ -1,6 +1,7 @@
 use crate::connect_generic_futures_io;
+use anyhow::{Context, anyhow};
 use bincode::config::standard;
-use capnp::capability::Promise;
+use capnp::{ErrorKind, capability::Promise};
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 use flow_lib::{
     command::{CommandDescription, CommandError},
@@ -9,7 +10,6 @@ use flow_lib::{
 use futures::io::{BufReader, BufWriter};
 use iroh::{Endpoint, NodeAddr, endpoint::Incoming};
 use iroh_quinn::ConnectionError;
-use snafu::prelude::*;
 use std::{borrow::Cow, collections::BTreeMap, str::Utf8Error};
 use tokio::task::{JoinHandle, spawn_local};
 use tracing::{Instrument, Level, span};
@@ -17,65 +17,16 @@ use tracing::{Instrument, Level, span};
 pub use crate::command_capnp::command_factory::*;
 use crate::command_side::command_trait;
 
-#[derive(Debug, Snafu)]
-#[snafu(module)]
-pub enum AllAvailablesError {
-    Capnp {
-        source: capnp::Error,
-        context: String,
-    },
-    BincodeDecode {
-        source: bincode::error::DecodeError,
-    },
-    BincodeEncode {
-        source: bincode::error::EncodeError,
-    },
-}
-
-#[derive(Debug, Snafu)]
-#[snafu(module)]
-pub enum ConnectError {
-    Connect { source: anyhow::Error },
-    OpenBi { source: ConnectionError },
-}
-
-#[derive(Debug, Snafu)]
-#[snafu(module)]
-pub enum InitError {
-    Capnp {
-        source: capnp::Error,
-        context: String,
-    },
-    Utf8 {
-        source: Utf8Error,
-    },
-    Json {
-        source: serde_json::Error,
-        context: String,
-    },
-    SimdJson {
-        source: simd_json::Error,
-        context: String,
-    },
-    NewCommand {
-        source: CommandError,
-    },
-    NotAvailable {
-        name: String,
-    },
-}
-
 pub const ALPN: &[u8] = b"space-operator/capnp-rpc/command-factory/0";
 
 pub fn new_client(availables: BTreeMap<Cow<'static, str>, &'static CommandDescription>) -> Client {
     capnp_rpc::new_client(CommandFactoryImpl { availables })
 }
 
-pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, ConnectError> {
+pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, anyhow::Error> {
     async move {
-        use connect_error::*;
-        let connection = endpoint.connect(addr, ALPN).await.context(ConnectSnafu)?;
-        let (writer, reader) = connection.open_bi().await.context(OpenBiSnafu)?;
+        let connection = endpoint.connect(addr, ALPN).await.context("iroh connect")?;
+        let (writer, reader) = connection.open_bi().await.context("iron open_bi")?;
         Ok(connect_generic_futures_io(reader, writer))
     }
     .instrument(span!(parent: None, Level::INFO, "iroh_connection"))
@@ -87,49 +38,55 @@ pub trait CommandFactoryExt {
         &self,
         name: &str,
         nd: &NodeData,
-    ) -> impl Future<Output = Result<command_trait::Client, InitError>>;
-    fn all_availables(&self) -> impl Future<Output = Result<Vec<String>, AllAvailablesError>>;
+    ) -> impl Future<Output = Result<Option<command_trait::Client>, anyhow::Error>>;
+    fn all_availables(&self) -> impl Future<Output = Result<Vec<String>, anyhow::Error>>;
     fn bind_iroh(&self, endpoint: Endpoint) -> JoinHandle<()>;
 }
 
 impl CommandFactoryExt for Client {
-    async fn init(&self, name: &str, nd: &NodeData) -> Result<command_trait::Client, InitError> {
-        use init_error::*;
+    async fn init(
+        &self,
+        name: &str,
+        nd: &NodeData,
+    ) -> Result<Option<command_trait::Client>, anyhow::Error> {
         let mut req = self.init_request();
         req.get().set_name(name);
         req.get()
-            .set_nd(&simd_json::to_vec(nd).context(SimdJsonSnafu {
-                context: "serialize NodeData",
-            })?);
-        let client = req
+            .set_nd(&simd_json::to_vec(nd).context("simd_json serialize NodeData")?);
+        let result = req
             .send()
             .promise
             .await
-            .context(CapnpSnafu { context: "send" })?
+            .context("send init_request")?
             .get()
-            .context(CapnpSnafu { context: "get" })?
-            .get_cmd()
-            .context(CapnpSnafu { context: "get_cmd" })?;
-        Ok(client)
+            .context("get")?
+            .get_cmd();
+        match result {
+            Ok(cmd) => Ok(Some(cmd)),
+            Err(error) => {
+                if error.kind == ErrorKind::FieldNotFound {
+                    Ok(None)
+                } else {
+                    Err(anyhow!(error).context("get_cmd"))
+                }
+            }
+        }
     }
 
-    async fn all_availables(&self) -> Result<Vec<String>, AllAvailablesError> {
-        use all_availables_error::*;
+    async fn all_availables(&self) -> Result<Vec<String>, anyhow::Error> {
         let resp = self
             .all_availables_request()
             .send()
             .promise
             .await
-            .context(CapnpSnafu { context: "send" })?;
+            .context("send all_availables_request")?;
         let data = resp
             .get()
-            .context(CapnpSnafu { context: "get" })?
+            .context("get")?
             .get_availables()
-            .context(CapnpSnafu {
-                context: "get_availables",
-            })?;
+            .context("get_availables")?;
         let names = bincode::decode_from_slice(data, standard())
-            .context(BincodeDecodeSnafu)?
+            .context("bincode decode availables")?
             .0;
         Ok(names)
     }
@@ -168,45 +125,34 @@ pub struct CommandFactoryImpl {
 }
 
 impl CommandFactoryImpl {
-    fn init_impl(&mut self, params: InitParams, mut results: InitResults) -> Result<(), InitError> {
-        use init_error::*;
-        let params = params
-            .get()
-            .context(init_error::CapnpSnafu { context: "get" })?;
+    fn init_impl(
+        &mut self,
+        params: InitParams,
+        mut results: InitResults,
+    ) -> Result<(), anyhow::Error> {
+        let params = params.get().context("get")?;
 
         let name = params
             .get_name()
-            .context(init_error::CapnpSnafu {
-                context: "get_name",
-            })?
+            .context("get_name")?
             .to_str()
-            .context(init_error::Utf8Snafu)?;
+            .context("utf8 error")?;
         if let Some(description) = self.availables.get(name) {
-            let nd = params
-                .get_nd()
-                .context(init_error::CapnpSnafu { context: "get_nd" })?;
-            let nd: NodeData = serde_json::from_slice(nd).context(JsonSnafu {
-                context: "parse NodeData",
-            })?;
+            let nd = params.get_nd().context("get_nd")?;
+            let nd: NodeData =
+                serde_json::from_slice(nd).context("serde_json deserialize NodeData")?;
             tracing::info!("init {}", name);
-            let cmd = (description.fn_new)(&nd).context(NewCommandSnafu)?;
+            let cmd = (description.fn_new)(&nd).context("new command")?;
             results.get().set_cmd(command_trait::new_client(cmd));
             Ok(())
         } else {
-            init_error::NotAvailableSnafu {
-                name: name.to_owned(),
-            }
-            .fail()
+            Ok(())
         }
     }
 
-    fn all_availables_impl(
-        &self,
-        mut results: AllAvailablesResults,
-    ) -> Result<(), AllAvailablesError> {
+    fn all_availables_impl(&self, mut results: AllAvailablesResults) -> Result<(), anyhow::Error> {
         let names = self.availables.keys().collect::<Vec<_>>();
-        let names = bincode::encode_to_vec(&names, standard())
-            .context(all_availables_error::BincodeEncodeSnafu)?;
+        let names = bincode::encode_to_vec(&names, standard()).context("bincode encode names")?;
         results.get().set_availables(&names);
         Ok(())
     }

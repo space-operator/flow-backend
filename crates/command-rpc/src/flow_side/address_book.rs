@@ -100,7 +100,7 @@ impl AddressBook {
         &mut self,
         name: &str,
         nd: &NodeData,
-    ) -> Result<Box<dyn CommandTrait>, CommandError> {
+    ) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
         let (node_id, info) = {
             let factories_lock = self.base.factories.read().unwrap();
             let factories = factories_lock
@@ -133,10 +133,10 @@ impl AddressBook {
                 client.init(name, nd).await?
             }
         };
-
-        let cmd = RemoteCommand::new(cmd_client).await?;
-
-        Ok(Box::new(cmd))
+        match cmd_client {
+            Some(client) => Ok(Some(Box::new(RemoteCommand::new(client).await?))),
+            None => Ok(None),
+        }
     }
 }
 
