@@ -18,6 +18,10 @@ pub(crate) fn r2p<T, E>(r: Result<T, E>) -> Promise<T, E> {
     }
 }
 
+pub(crate) fn anyhow2capnp(error: anyhow::Error) -> capnp::Error {
+    capnp::Error::failed(format!("{:#}", error))
+}
+
 pub(crate) fn connect_generic_futures_io<
     R: futures::io::AsyncRead + Unpin + 'static,
     W: futures::io::AsyncWrite + Unpin + 'static,
