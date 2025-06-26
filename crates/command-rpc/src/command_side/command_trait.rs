@@ -1,16 +1,17 @@
 use anyhow::Context;
+use bincode::config::standard;
 use capnp::capability::Promise;
 use flow_lib::{
     Value,
     command::CommandTrait,
-    context::{CommandContext, CommandContextData, FlowServices, FlowSetServices},
-    utils::tower_client::unimplemented_svc,
+    context::{CommandContext, CommandContextData, FlowServices, FlowSetServices, execute},
+    utils::tower_client::{CommonErrorExt, unimplemented_svc},
     value::{
         self,
         bincode_impl::{map_from_bincode, map_to_bincode},
     },
 };
-use futures::TryFutureExt;
+use futures::{TryFutureExt, future::LocalBoxFuture};
 use std::{
     rc::Rc,
     sync::{Arc, LazyLock},
@@ -19,6 +20,8 @@ use std::{
 use tokio::sync::Mutex;
 
 pub use crate::command_capnp::command_trait::*;
+use crate::flow_side::command_context;
+use crate::make_sync::MakeSync;
 
 pub fn new_client(cmd: Box<dyn CommandTrait>) -> Client {
     capnp_rpc::new_client(CommandTraitImpl {
@@ -61,7 +64,7 @@ impl CommandTraitImpl {
             let data: CommandContextData =
                 value::from_value(value).context("decode CommandContextData")?;
             let ctx = CommandContext::builder()
-                .execute(unimplemented_svc())
+                .execute(execute::Svc::new(MakeSync::new(context)))
                 .get_jwt(unimplemented_svc())
                 .flow(FlowServices {
                     signer: unimplemented_svc(),

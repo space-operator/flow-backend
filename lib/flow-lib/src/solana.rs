@@ -290,6 +290,7 @@ pub struct Instructions {
     pub signers: Vec<Wallet>,
     #[serde_as(as = "Vec<AsInstruction>")]
     pub instructions: Vec<Instruction>,
+    #[serde_as(as = "Option<Vec<AsPubkey>>")]
     pub lookup_tables: Option<Vec<Pubkey>>,
 }
 

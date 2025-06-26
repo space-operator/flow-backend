@@ -38,6 +38,8 @@ pub(crate) fn connect_generic_futures_io<
     client
 }
 
+pub(crate) mod make_sync;
+
 pub mod command_side;
 pub mod flow_side;
 

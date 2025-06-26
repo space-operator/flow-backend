@@ -23,7 +23,7 @@ actix = "0.13"
 tokio = "1"
 futures = "0.3"
 reqwest = { version = "0.12", default-features = false }
-chrono = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
 borsh1 = { package = "borsh", version = "1" }
 rmp-serde = "1.1.2"
 base64 = "0.21"
@@ -52,3 +52,4 @@ solana-clock = "2"
 agave-feature-set = "2"
 agave-precompiles = "2"
 bincode1 = { package = "bincode", version = "1" }
+bincode = { version = "2.0.1", features = ["serde"] }

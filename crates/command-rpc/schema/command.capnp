@@ -1,13 +1,21 @@
 @0xea2e5dc9f8697f6c;
 
-interface CommandContext {
-    data @0 () -> (data: Data);
-}
-
 interface CommandFactory {
     init @0 (name: Text, nd: Data) -> (cmd: CommandTrait);
 
     allAvailables @1 () -> (availables: Data);
+}
+
+interface AddressBook {
+    join @0 (direct_addresses: Data, relay_url: Text, availables: Data);
+
+    leave @1 ();
+}
+
+interface CommandContext {
+    data @0 () -> (data: Data);
+
+    execute @1 (request: Data) -> (response: Data);
 }
 
 interface CommandTrait {
@@ -22,10 +30,4 @@ interface CommandTrait {
     instructionInfo @4 () -> (info: Data);
 
     permissions @5 () -> (permissions: Data);
-}
-
-interface AddressBook {
-    join @0 (direct_addresses: Data, relay_url: Text, availables: Data);
-
-    leave @1 ();
 }
