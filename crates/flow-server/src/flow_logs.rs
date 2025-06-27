@@ -34,7 +34,7 @@ struct LogMessage {
 impl tracing::field::Visit for LogMessage {
     fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
         if field.name() == "message" {
-            self.message = Some(format!("{:?}", value));
+            self.message = Some(format!("{value:?}"));
         }
     }
 
@@ -120,7 +120,7 @@ impl tracing::field::Visit for NodeLogSpanVisitor {
     }
 
     fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
-        self.record_str(field, &format!("{:?}", value));
+        self.record_str(field, &format!("{value:?}"));
     }
 }
 

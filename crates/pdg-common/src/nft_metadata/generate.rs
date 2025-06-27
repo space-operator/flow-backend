@@ -649,6 +649,6 @@ mod tests {
             * EnvLight::iter().count()
             * EnvReflection::iter().count()
             * LightReflectionMult::iter().count();
-        println!("{}", count);
+        println!("{count}");
     }
 }

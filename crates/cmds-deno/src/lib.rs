@@ -123,7 +123,7 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
             return Err(CommandError::msg(error));
         }
     };
-    let base_url = Url::parse(&format!("http://127.0.0.1:{}", port)).unwrap();
+    let base_url = Url::parse(&format!("http://127.0.0.1:{port}")).unwrap();
     let cmd = RpcCommandClient::new(base_url, String::new(), node_data.clone());
     tokio::spawn(async move {
         while let Ok(Some(line)) = stdout.next_line().await {

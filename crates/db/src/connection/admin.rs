@@ -527,10 +527,8 @@ async fn update_id_sequence(
     column: &str,
     sequence_name: &str,
 ) -> crate::Result<()> {
-    let query = format!(
-        "SELECT setval('{}', (SELECT max({}) FROM {}), TRUE)",
-        sequence_name, column, table
-    );
+    let query =
+        format!("SELECT setval('{sequence_name}', (SELECT max({column}) FROM {table}), TRUE)");
     let stmt = tx
         .prepare_cached(&query)
         .await
@@ -556,8 +554,7 @@ async fn copy_in(tx: &Transaction<'_>, table: &str, df: &mut DataFrame) -> crate
     };
 
     let query = format!(
-        "COPY {} ({}) FROM stdin WITH (FORMAT csv, DELIMITER ';', QUOTE '''', HEADER MATCH)",
-        table, header
+        "COPY {table} ({header}) FROM stdin WITH (FORMAT csv, DELIMITER ';', QUOTE '''', HEADER MATCH)"
     );
     let sink = tx
         .copy_in::<_, Bytes>(&query)

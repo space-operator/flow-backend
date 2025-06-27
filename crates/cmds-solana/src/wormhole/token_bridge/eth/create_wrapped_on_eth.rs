@@ -156,7 +156,7 @@ mod tests {
             if *b == 0 {
                 continue;
             }
-            write!(&mut s, "{:02x}", b).unwrap();
+            write!(&mut s, "{b:02x}").unwrap();
         }
         // dbg!(s);
         Ok(())

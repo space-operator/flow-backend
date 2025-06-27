@@ -59,7 +59,7 @@ impl CommandFactory {
                 if rhai_script::is_rhai_script(name) {
                     crate::command::rhai::build(config).map_err(crate::Error::CreateCmd)
                 } else {
-                    Err(Error::Any(format!("native not found: {}", name).into()))
+                    Err(Error::Any(format!("native not found: {name}").into()))
                 }
             }
         }

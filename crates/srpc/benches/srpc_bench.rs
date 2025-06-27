@@ -9,7 +9,7 @@ fn make_ws_url(url: &str) -> String {
         .unwrap()
         .strip_suffix("call")
         .unwrap();
-    format!("ws{}ws", url)
+    format!("ws{url}ws")
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {

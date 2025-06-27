@@ -337,7 +337,7 @@ fn success_response<T: Serialize>(ctx: &mut WebsocketContext<WsConn>, id: i64, v
         Err(error) => error_response(
             ctx,
             id,
-            &format!("InternalError: failed to serialize event, {}", error),
+            &format!("InternalError: failed to serialize event, {error}"),
         ),
     }
 }

@@ -54,10 +54,7 @@ impl TryFrom<u32> for Variant {
             Variant::Array,
             Variant::Map,
         ];
-        VALUES
-            .get(v as usize)
-            .copied()
-            .ok_or_else(|| InvalidVariant(v))
+        VALUES.get(v as usize).copied().ok_or(InvalidVariant(v))
     }
 }
 

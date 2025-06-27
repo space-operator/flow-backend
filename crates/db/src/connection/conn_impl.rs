@@ -553,7 +553,7 @@ impl UserConnection {
         )
         .await
         .map_err(Error::exec("get_deployment_id_from_tag"))?
-        .ok_or_else(|| Error::not_found("deployment", format!("{}:{}", entrypoint, tag)))?
+        .ok_or_else(|| Error::not_found("deployment", format!("{entrypoint}:{tag}")))?
         .try_get::<_, Uuid>(0)
         .map_err(Error::data("flow_deployments_tags.deployment_id"))
     }
@@ -1481,10 +1481,7 @@ impl UserConnection {
 
         let pubkey_whitelists = copy_out(
             &tx,
-            &format!(
-                "SELECT * FROM pubkey_whitelists WHERE pubkey = '{}'",
-                pubkey
-            ),
+            &format!("SELECT * FROM pubkey_whitelists WHERE pubkey = '{pubkey}'"),
         )
         .await?;
 
@@ -1601,10 +1598,8 @@ fn parse_encrypted_wallet(r: Row) -> Result<EncryptedWallet, Error> {
 }
 
 async fn copy_out(tx: &Transaction<'_>, query: &str) -> crate::Result<DataFrame> {
-    let query = format!(
-        r#"COPY ({}) TO stdout WITH (FORMAT csv, DELIMITER ';', QUOTE '''', HEADER)"#,
-        query
-    );
+    let query =
+        format!(r#"COPY ({query}) TO stdout WITH (FORMAT csv, DELIMITER ';', QUOTE '''', HEADER)"#);
     let stream = tx.copy_out(&query).await.map_err(Error::exec("copy-out"))?;
     futures_util::pin_mut!(stream);
 

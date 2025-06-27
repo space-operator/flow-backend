@@ -82,7 +82,7 @@ impl<T, U, E> Service<T> for MakeSync<T, U, E> {
             } else if error.is_disconnected() {
                 unreachable!("we don't close receiver manually");
             } else {
-                panic!("unknown error: {}", error);
+                panic!("unknown error: {error}");
             }
         }
         CallFuture { receiver }

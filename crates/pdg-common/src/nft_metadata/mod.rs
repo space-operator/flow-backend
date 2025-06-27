@@ -47,7 +47,7 @@ where
         self.get_str("PDGName").ok_or_else(|| PropertyNotFound {
             attr: "PDGName",
             ty: std::any::type_name::<T>(),
-            variant: format!("{:?}", self),
+            variant: format!("{self:?}"),
         })
     }
     fn metaplex_name(&self) -> Result<&'static str, PropertyNotFound> {
@@ -55,25 +55,25 @@ where
             .ok_or_else(|| PropertyNotFound {
                 attr: "MetaplexName",
                 ty: std::any::type_name::<T>(),
-                variant: format!("{:?}", self),
+                variant: format!("{self:?}"),
             })
     }
     fn effect_type(&self) -> Result<&'static str, PropertyNotFound> {
         self.get_str("EffectType").ok_or_else(|| PropertyNotFound {
             attr: "EffectType",
             ty: std::any::type_name::<T>(),
-            variant: format!("{:?}", self),
+            variant: format!("{self:?}"),
         })
     }
     fn weight(&self) -> Result<f64, WeightError> {
         let value = self.get_str("weight").ok_or_else(|| PropertyNotFound {
             attr: "weight",
             ty: std::any::type_name::<T>(),
-            variant: format!("{:?}", self),
+            variant: format!("{self:?}"),
         })?;
         value.parse().map_err(|_| WeightError::InvalidValue {
             value,
-            ty: format!("{:?}", self),
+            ty: format!("{self:?}"),
         })
     }
 }

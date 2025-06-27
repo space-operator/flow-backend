@@ -90,8 +90,7 @@ impl tower::Service<api_input::Request> for NewRequestService {
                 }
                 _ => {
                     return Err(api_input::Error::msg(format!(
-                        "flow is not running: {}",
-                        flow_run_id
+                        "flow is not running: {flow_run_id}"
                     )));
                 }
             };

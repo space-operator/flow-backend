@@ -19,7 +19,7 @@ pub(crate) fn r2p<T, E>(r: Result<T, E>) -> Promise<T, E> {
 }
 
 pub(crate) fn anyhow2capnp(error: anyhow::Error) -> capnp::Error {
-    capnp::Error::failed(format!("{:#}", error))
+    capnp::Error::failed(format!("{error:#}"))
 }
 
 pub(crate) fn connect_generic_futures_io<
@@ -52,6 +52,6 @@ mod tests {
     #[test]
     fn generate_iroh_secret_key() {
         let key = iroh::SecretKey::generate(&mut rand::rngs::OsRng);
-        println!("{}", key);
+        println!("{key}");
     }
 }

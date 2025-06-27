@@ -33,7 +33,7 @@ struct CommandTraitImpl {
 
 fn parse_inputs(params: run_params::Reader<'_>) -> Result<value::Map, anyhow::Error> {
     let inputs = params.get_inputs().context("get_inputs")?;
-    Ok(map_from_bincode(inputs).context("map_from_bincode")?)
+    map_from_bincode(inputs).context("map_from_bincode")
 }
 
 // TODO: old flow-lib code use reqwest client with 30 secs timeout

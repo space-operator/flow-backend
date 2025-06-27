@@ -10,7 +10,7 @@ use std::{io::Cursor, iter::repeat_n};
 pub fn format_sql_columns(df: &DataFrame) -> String {
     df.get_column_names()
         .iter()
-        .map(|name| format!("{:?}", name))
+        .map(|name| format!("{name:?}"))
         .collect::<Vec<String>>()
         .join(",")
 }

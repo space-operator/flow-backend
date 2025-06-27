@@ -681,10 +681,7 @@ async fn action_identity_memo(
         })
         .await?
         .signature;
-    Ok(format!(
-        "solana-action:{}:{}:{}",
-        identity, reference, signature
-    ))
+    Ok(format!("solana-action:{identity}:{reference}:{signature}"))
 }
 
 impl Instructions {
@@ -950,7 +947,7 @@ impl Instructions {
                 (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
                     .then(|| SdkPresigner::new(pk, &resp.signature))
                     .ok_or_else(|| {
-                        format!("{} signature failed: not allowed to change transaction", pk)
+                        format!("{pk} signature failed: not allowed to change transaction")
                     })
             })
             .collect::<Result<Vec<_>, String>>()
@@ -1070,7 +1067,7 @@ impl Instructions {
                     (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
                         .then(|| SdkPresigner::new(pk, &resp.signature))
                         .ok_or_else(|| {
-                            format!("{} signature failed: not allowed to change transaction", pk)
+                            format!("{pk} signature failed: not allowed to change transaction")
                         })
                 })
                 .collect::<Result<Vec<_>, String>>()

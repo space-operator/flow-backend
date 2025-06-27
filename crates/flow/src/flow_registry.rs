@@ -243,7 +243,7 @@ fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) 
                     .on_debug(move |s, _, pos| {
                         let module =
                             if let (Some(line), Some(position)) = (pos.line(), pos.position()) {
-                                Some(format!("script.rhai:{}:{}", line, position))
+                                Some(format!("script.rhai:{line}:{position}"))
                             } else {
                                 None
                             };
@@ -487,7 +487,8 @@ impl FlowRegistry {
                             .map(|run_id| (id, run_id))
                     })
                     .collect::<HashMap<NodeId, FlowRunId>>();
-                let previous_values = if !nodes.is_empty() {
+
+                if !nodes.is_empty() {
                     self.backend
                         .get_previous_values
                         .ready()
@@ -500,9 +501,7 @@ impl FlowRegistry {
                         .values
                 } else {
                     <_>::default()
-                };
-
-                previous_values
+                }
             };
 
             let task = async move {

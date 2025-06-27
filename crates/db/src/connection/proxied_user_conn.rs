@@ -51,7 +51,7 @@ impl ProxiedUserConn {
             .access_token;
         self.client
             .post(self.push_logs_url.clone())
-            .header(AUTHORIZATION, &format!("Bearer {}", jwt))
+            .header(AUTHORIZATION, &format!("Bearer {jwt}"))
             .json(&rows)
             .send()
             .await
@@ -81,7 +81,7 @@ impl ProxiedUserConn {
         let result = self
             .client
             .post(self.rpc_url.clone())
-            .header(AUTHORIZATION, &format!("Bearer {}", jwt))
+            .header(AUTHORIZATION, &format!("Bearer {jwt}"))
             .json(&RpcRequest { method, params })
             .send()
             .await
@@ -406,7 +406,7 @@ impl UserConnection {
                 let res = self.export_user_data().await?;
                 Ok(serde_json::value::to_raw_value(&res)?)
             }
-            name => Err(format!("unknown method: {}", name).into()),
+            name => Err(format!("unknown method: {name}").into()),
         }
     }
 }

@@ -336,7 +336,7 @@ pub mod execute {
         ) -> Result<Self, bincode::error::DecodeError> {
             let value = Option::<[u8; 64]>::decode(decoder)?;
             Ok(Self {
-                signature: value.map(|value| Signature::from(value)),
+                signature: value.map(Signature::from),
             })
         }
     }

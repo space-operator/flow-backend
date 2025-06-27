@@ -78,7 +78,7 @@ impl CommandContextImpl {
                 .context("get")?
                 .get_request()
                 .context("get_request")?;
-            let request = bincode::decode_from_slice::<execute::Request, _>(&data, standard())
+            let request = bincode::decode_from_slice::<execute::Request, _>(data, standard())
                 .context("decode execute::Request")?
                 .0;
             let response = svc
@@ -90,7 +90,7 @@ impl CommandContextImpl {
                 .context("execute")?;
 
             result.get().set_response(
-                &bincode::encode_to_vec(&response, standard())
+                &bincode::encode_to_vec(response, standard())
                     .context("encode execute::Response")?,
             );
             Ok(())

@@ -60,7 +60,7 @@ fn main() {
     if args.ecr_login {
         if let Ok(password) = cmd!(sh, "aws ecr-public get-login-password --region us-east-1")
             .read()
-            .inspect_err(|error| eprint!("{}", error))
+            .inspect_err(|error| eprint!("{error}"))
         {
             cmd!(
                 sh,
@@ -69,7 +69,7 @@ fn main() {
             .stdin(password.trim())
             .run()
             .inspect_err(|error| {
-                eprint!("{}", error);
+                eprint!("{error}");
                 args.ecr_login = false;
             })
             .ok();
@@ -88,7 +88,7 @@ fn main() {
     if result.is_err() {
         cmd!(sh, "deno -A utils/print_errors.ts")
             .run()
-            .inspect_err(|error| eprint!("{}", error))
+            .inspect_err(|error| eprint!("{error}"))
             .ok();
     }
 
@@ -98,7 +98,7 @@ fn main() {
     if result.is_err() {
         cmd!(sh, "docker compose logs flow-server")
             .run()
-            .inspect_err(|error| eprint!("{}", error))
+            .inspect_err(|error| eprint!("{error}"))
             .ok();
     }
 
@@ -106,22 +106,22 @@ fn main() {
         .ignore_stdout()
         .ignore_stderr()
         .run()
-        .inspect_err(|error| eprint!("{}", error))
+        .inspect_err(|error| eprint!("{error}"))
         .ok();
     cmd!(sh, "docker image prune -f")
         .run()
-        .inspect_err(|error| eprint!("{}", error))
+        .inspect_err(|error| eprint!("{error}"))
         .ok();
 
     if args.ecr_login {
         cmd!(sh, "docker logout public.ecr.aws/space-operator")
             .run()
-            .inspect_err(|error| eprint!("{}", error))
+            .inspect_err(|error| eprint!("{error}"))
             .ok();
     }
 
     if let Err(error) = result {
-        eprintln!("{:?}", error);
+        eprintln!("{error:?}");
         std::process::exit(1);
     }
 }

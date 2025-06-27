@@ -161,7 +161,7 @@ impl Server {
     pub fn base_url(&self) -> Option<Url> {
         self.transport.iter().find_map(|t| match t {
             Transport::Http { port, .. } => {
-                Some(Url::parse(&format!("http://127.0.0.1:{}", port)).unwrap())
+                Some(Url::parse(&format!("http://127.0.0.1:{port}")).unwrap())
             }
         })
     }
@@ -559,7 +559,7 @@ mod tests {
             .unwrap()
             .strip_suffix("call")
             .unwrap();
-        let url = format!("ws{}ws", url);
+        let url = format!("ws{url}ws");
         let body = r#"{"envelope":"","svc_name":"add","svc_id":"","input":[1, 2]}"#;
         let (mut conn, _) = tungstenite::connect(&url).unwrap();
         conn.send(Message::Text(body.to_owned())).unwrap();

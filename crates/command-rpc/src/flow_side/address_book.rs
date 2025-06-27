@@ -110,7 +110,7 @@ impl AddressBook {
             let (id, info) = factories
                 .choose(&mut thread_rng())
                 .ok_or_else(|| CommandError::msg("not found"))?;
-            let node_id = (*id).clone();
+            let node_id = *(*id);
             let info = (*info).clone();
             (node_id, info)
         };

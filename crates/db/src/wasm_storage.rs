@@ -34,14 +34,14 @@ impl WasmStorage {
         anon_key: &str,
         wasm_bucket: &str,
     ) -> Result<Self, StorageError> {
-        let anon_key = HeaderValue::from_str(&format!("Bearer {}", anon_key))
+        let anon_key = HeaderValue::from_str(&format!("Bearer {anon_key}"))
             .map_err(|_| StorageError::InvalidAnonKey)?;
         let client = reqwest::Client::builder()
             .default_headers([(AUTHORIZATION, anon_key)].into_iter().collect())
             .build()
             .map_err(StorageError::BuildClient)?;
         let base_url = supabase_endpoint
-            .join(&format!("storage/v1/object/{}/", wasm_bucket))
+            .join(&format!("storage/v1/object/{wasm_bucket}/"))
             .map_err(StorageError::BuildUrl)?;
 
         Ok(Self { client, base_url })

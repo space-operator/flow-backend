@@ -116,7 +116,7 @@ async fn ws_wait(
     request_uuid: Uuid,
 ) -> Result<BoxStream<'_, Result<String, WsError>>, CommandError> {
     let url = match render_url.strip_suffix("/render") {
-        Some(s) => format!("{}/wait", s),
+        Some(s) => format!("{s}/wait"),
         None => return Err(CommandError::msg("could not build URL for waiting")),
     };
     let (mut ws, _) = tokio_tungstenite::connect_async(&url).await?;
