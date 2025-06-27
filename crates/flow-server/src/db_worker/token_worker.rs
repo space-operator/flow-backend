@@ -369,7 +369,7 @@ pub async fn token_from_apikeys(
             k: String,
         ) -> Result<UserId, reqwest::Error> {
             let resp = client
-                .get(format!("{}/apikey/info", url))
+                .get(format!("{url}/apikey/info"))
                 .header(X_API_KEY.as_str(), k)
                 .send()
                 .await?;

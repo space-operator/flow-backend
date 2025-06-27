@@ -81,7 +81,7 @@ impl TryFrom<EndpointConfigUnchecked> for EndpointConfig {
         Ok(match value {
             EndpointConfigUnchecked::Endpoint { endpoint } => Self { url: endpoint },
             EndpointConfigUnchecked::ProjectId { project_id } => Self {
-                url: format!("https://{}.supabase.co", project_id).parse()?,
+                url: format!("https://{project_id}.supabase.co").parse()?,
             },
         })
     }
@@ -250,14 +250,14 @@ impl Config {
     pub async fn healthcheck(&self) -> Result<(), Vec<anyhow::Error>> {
         let mut errors = Vec::new();
         if let Some(key) = &self.helius_api_key {
-            let client = RpcClient::new(format!("https://mainnet.helius-rpc.com/?api-key={}", key));
+            let client = RpcClient::new(format!("https://mainnet.helius-rpc.com/?api-key={key}"));
             client
                 .get_version()
                 .await
                 .context("Helius mainnet failed")
                 .map_err(|error| errors.push(error))
                 .ok();
-            let client = RpcClient::new(format!("https://devnet.helius-rpc.com/?api-key={}", key));
+            let client = RpcClient::new(format!("https://devnet.helius-rpc.com/?api-key={key}"));
             client
                 .get_version()
                 .await
@@ -567,7 +567,7 @@ mod tests {
         let mut dup = false;
         for CommandDescription { name, .. } in inventory::iter::<CommandDescription>() {
             if !m.insert(name) {
-                println!("Dupicated: {}", name);
+                println!("Dupicated: {name}");
                 dup = true;
             }
         }

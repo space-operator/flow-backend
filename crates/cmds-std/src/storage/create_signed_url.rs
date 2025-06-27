@@ -115,7 +115,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             let body = resp.json::<SuccessBody>().await?;
             // https://github.com/supabase/storage-js/blob/fa44be8156295ba6320ffeff96bdf91016536a46/src/packages/StorageFileApi.ts#L395-L397
             let download = match input.download {
-                StringOrBool::String(s) => Cow::Owned(format!("&download={}", s)),
+                StringOrBool::String(s) => Cow::Owned(format!("&download={s}")),
                 StringOrBool::Bool(true) => Cow::Borrowed("&download="),
                 StringOrBool::Bool(false) => Cow::Borrowed(""),
             };

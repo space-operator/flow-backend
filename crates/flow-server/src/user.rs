@@ -244,7 +244,7 @@ impl SupabaseAuth {
         let login_url = base_url.join("token?grant_type=password")?;
         let create_user_url = base_url.join("admin/users")?;
         let upsert_wallet_url = config.endpoint.url.join("rest/v1/wallets")?;
-        let admin_token = HeaderValue::from_str(&format!("Bearer {}", service_key))?;
+        let admin_token = HeaderValue::from_str(&format!("Bearer {service_key}"))?;
 
         Ok(Self {
             client: reqwest::Client::new(),
@@ -283,7 +283,7 @@ impl SupabaseAuth {
             .header("apikey", &self.anon_key)
             .header("Prefer", "resolution=merge-duplicates")
             .header("Prefer", "return=representation")
-            .header(header::AUTHORIZATION, format!("Bearer {}", user_jwt))
+            .header(header::AUTHORIZATION, format!("Bearer {user_jwt}"))
             .json(&body)
             .send()
             .await?;

@@ -271,6 +271,30 @@ pub mod execute {
         pub output: value::Map,
     }
 
+    impl bincode::Encode for Request {
+        fn encode<E: bincode::enc::Encoder>(
+            &self,
+            encoder: &mut E,
+        ) -> Result<(), bincode::error::EncodeError> {
+            self.instructions.encode(encoder)?;
+            value::bincode_impl::MapBincode::from(&self.output).encode(encoder)?;
+            Ok(())
+        }
+    }
+
+    impl<C> bincode::Decode<C> for Request {
+        fn decode<D: bincode::de::Decoder<Context = C>>(
+            decoder: &mut D,
+        ) -> Result<Self, bincode::error::DecodeError> {
+            Ok(Self {
+                instructions: Instructions::decode(decoder)?,
+                output: value::bincode_impl::MapBincode::decode(decoder)?
+                    .0
+                    .into_owned(),
+            })
+        }
+    }
+
     #[serde_as]
     #[derive(Deserialize)]
     struct RequestRepr {
@@ -294,6 +318,27 @@ pub mod execute {
     pub struct Response {
         #[serde_as(as = "Option<DisplayFromStr>")]
         pub signature: Option<Signature>,
+    }
+
+    impl bincode::Encode for Response {
+        fn encode<E: bincode::enc::Encoder>(
+            &self,
+            encoder: &mut E,
+        ) -> Result<(), bincode::error::EncodeError> {
+            self.signature.map(|s| *s.as_array()).encode(encoder)?;
+            Ok(())
+        }
+    }
+
+    impl<C> bincode::Decode<C> for Response {
+        fn decode<D: bincode::de::Decoder<Context = C>>(
+            decoder: &mut D,
+        ) -> Result<Self, bincode::error::DecodeError> {
+            let value = Option::<[u8; 64]>::decode(decoder)?;
+            Ok(Self {
+                signature: value.map(Signature::from),
+            })
+        }
     }
 
     fn unwrap(s: &Option<String>) -> &str {

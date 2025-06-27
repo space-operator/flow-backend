@@ -129,7 +129,7 @@ where
 {
     let s = a.newtype_variant::<Cow<'_, str>>()?;
     s.parse::<T>()
-        .map_err(|_| serde::de::Error::custom(format!("invalid number: {}", s)))
+        .map_err(|_| serde::de::Error::custom(format!("invalid number: {s}")))
 }
 
 fn b58_str<'de, A, const N: usize>(a: A) -> Result<[u8; N], A::Error>

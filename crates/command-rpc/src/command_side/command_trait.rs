@@ -3,7 +3,7 @@ use capnp::capability::Promise;
 use flow_lib::{
     Value,
     command::CommandTrait,
-    context::{CommandContext, CommandContextData, FlowServices, FlowSetServices},
+    context::{CommandContext, CommandContextData, FlowServices, FlowSetServices, execute},
     utils::tower_client::unimplemented_svc,
     value::{
         self,
@@ -19,6 +19,7 @@ use std::{
 use tokio::sync::Mutex;
 
 pub use crate::command_capnp::command_trait::*;
+use crate::{anyhow2capnp, make_sync::MakeSync};
 
 pub fn new_client(cmd: Box<dyn CommandTrait>) -> Client {
     capnp_rpc::new_client(CommandTraitImpl {
@@ -32,7 +33,7 @@ struct CommandTraitImpl {
 
 fn parse_inputs(params: run_params::Reader<'_>) -> Result<value::Map, anyhow::Error> {
     let inputs = params.get_inputs().context("get_inputs")?;
-    Ok(map_from_bincode(inputs).context("map_from_bincode")?)
+    map_from_bincode(inputs).context("map_from_bincode")
 }
 
 // TODO: old flow-lib code use reqwest client with 30 secs timeout
@@ -61,7 +62,7 @@ impl CommandTraitImpl {
             let data: CommandContextData =
                 value::from_value(value).context("decode CommandContextData")?;
             let ctx = CommandContext::builder()
-                .execute(unimplemented_svc())
+                .execute(execute::Svc::new(MakeSync::new(context)))
                 .get_jwt(unimplemented_svc())
                 .flow(FlowServices {
                     signer: unimplemented_svc(),
@@ -95,10 +96,7 @@ impl CommandTraitImpl {
 
 impl Server for CommandTraitImpl {
     fn run(&mut self, params: RunParams, results: RunResults) -> Promise<(), capnp::Error> {
-        Promise::from_future(
-            self.run_impl(params, results)
-                .map_err(|error| capnp::Error::failed(error.to_string())),
-        )
+        Promise::from_future(self.run_impl(params, results).map_err(anyhow2capnp))
     }
 
     fn name(&mut self, _: NameParams, mut results: NameResults) -> Promise<(), capnp::Error> {
@@ -119,7 +117,7 @@ impl Server for CommandTraitImpl {
                 results.get().set_inputs(&inputs);
                 Ok::<_, anyhow::Error>(())
             }
-            .map_err(|error| capnp::Error::failed(error.to_string())),
+            .map_err(anyhow2capnp),
         )
     }
 
@@ -137,7 +135,7 @@ impl Server for CommandTraitImpl {
                 results.get().set_outputs(&outputs);
                 Ok::<_, anyhow::Error>(())
             }
-            .map_err(|error| capnp::Error::failed(error.to_string())),
+            .map_err(anyhow2capnp),
         )
     }
 
@@ -154,7 +152,7 @@ impl Server for CommandTraitImpl {
                 results.get().set_info(&info);
                 Ok::<_, anyhow::Error>(())
             }
-            .map_err(|error| capnp::Error::failed(error.to_string())),
+            .map_err(anyhow2capnp),
         )
     }
 
@@ -171,7 +169,7 @@ impl Server for CommandTraitImpl {
                 results.get().set_permissions(&perm);
                 Ok::<_, anyhow::Error>(())
             }
-            .map_err(|error| capnp::Error::failed(error.to_string())),
+            .map_err(anyhow2capnp),
         )
     }
 }

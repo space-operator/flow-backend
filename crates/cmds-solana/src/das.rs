@@ -83,7 +83,7 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
             let response = resp.json().await?;
             Ok(Output { response })
         }
-        code => Err(CommandError::msg(format!("{} {:?}", code, resp))),
+        code => Err(CommandError::msg(format!("{code} {resp:?}"))),
     }
 }
 

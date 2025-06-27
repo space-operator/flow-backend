@@ -18,6 +18,10 @@ pub(crate) fn r2p<T, E>(r: Result<T, E>) -> Promise<T, E> {
     }
 }
 
+pub(crate) fn anyhow2capnp(error: anyhow::Error) -> capnp::Error {
+    capnp::Error::failed(format!("{error:#}"))
+}
+
 pub(crate) fn connect_generic_futures_io<
     R: futures::io::AsyncRead + Unpin + 'static,
     W: futures::io::AsyncWrite + Unpin + 'static,
@@ -38,6 +42,8 @@ pub(crate) fn connect_generic_futures_io<
     client
 }
 
+pub(crate) mod make_sync;
+
 pub mod command_side;
 pub mod flow_side;
 
@@ -46,6 +52,6 @@ mod tests {
     #[test]
     fn generate_iroh_secret_key() {
         let key = iroh::SecretKey::generate(&mut rand::rngs::OsRng);
-        println!("{}", key);
+        println!("{key}");
     }
 }

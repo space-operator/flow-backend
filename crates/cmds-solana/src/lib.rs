@@ -95,7 +95,7 @@ pub mod tests {
         let mut dup = false;
         for CommandDescription { name, .. } in inventory::iter::<CommandDescription>() {
             if !m.insert(name) {
-                println!("Dupicated: {}", name);
+                println!("Dupicated: {name}");
                 dup = true;
             }
         }

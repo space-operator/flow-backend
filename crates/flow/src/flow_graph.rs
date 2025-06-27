@@ -1015,7 +1015,7 @@ impl FlowGraph {
                         &mut s.result,
                         node.id,
                         times,
-                        format!("output not found: {:?}", missing),
+                        format!("output not found: {missing:?}"),
                     );
                 }
 
@@ -1340,7 +1340,7 @@ impl FlowGraph {
                             .map(|id| {
                                 let name =
                                     self.nodes.get(id).expect("node not found").command.name();
-                                format!("{}:{}", id, name)
+                                format!("{id}:{name}")
                             })
                             .collect::<Vec<_>>()
                     })
@@ -1348,7 +1348,7 @@ impl FlowGraph {
                 tracing::trace!("transactions: {:?}", txs);
             }
             Err(error) => {
-                s.flow_error(format!("sort_transactions failed: {}", error));
+                s.flow_error(format!("sort_transactions failed: {error}"));
                 s.stop.token.cancel();
             }
         }
@@ -1370,7 +1370,7 @@ impl FlowGraph {
                         fake_node,
                         n.idx,
                         Edge {
-                            from: format!("{}/{}", node_id, output_name),
+                            from: format!("{node_id}/{output_name}"),
                             to: input_name.clone(),
                             values: <_>::default(),
                             is_required_input,
@@ -1379,7 +1379,7 @@ impl FlowGraph {
                     );
                 } else {
                     // TODO: more diagnostic info
-                    s.flow_error(format!("no value for port {:?}", input_name));
+                    s.flow_error(format!("no value for port {input_name:?}"));
                     s.stop.token.cancel();
                 }
             }
@@ -1477,7 +1477,7 @@ impl FlowGraph {
             .filter(|(_, e)| !e.is_empty())
             .count();
         if failed > 0 {
-            s.flow_error(format!("{} nodes failed", failed));
+            s.flow_error(format!("{failed} nodes failed"));
         }
 
         s.event_tx
