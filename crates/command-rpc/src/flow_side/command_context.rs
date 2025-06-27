@@ -73,16 +73,15 @@ impl CommandContextImpl {
     ) -> impl Future<Output = Result<(), anyhow::Error>> + 'static {
         let svc = self.context.raw().services.execute.clone();
         async move {
-            let request = bincode::decode_from_slice::<execute::Request, _>(
-                params
-                    .get()
-                    .context("get")?
-                    .get_request()
-                    .context("get_request")?,
-                standard(),
-            )
-            .context("decode execute::Request")?
-            .0;
+            let data = params
+                .get()
+                .context("get")?
+                .get_request()
+                .context("get_request")?;
+            dbg!(data);
+            let request = bincode::decode_from_slice::<execute::Request, _>(&data, standard())
+                .context("decode execute::Request")?
+                .0;
             let response = svc
                 .ready_oneshot()
                 .await

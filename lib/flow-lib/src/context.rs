@@ -276,7 +276,7 @@ pub mod execute {
             &self,
             encoder: &mut E,
         ) -> Result<(), bincode::error::EncodeError> {
-            bincode::serde::Compat(&self.instructions).encode(encoder)?;
+            self.instructions.encode(encoder)?;
             value::bincode_impl::MapBincode::from(&self.output).encode(encoder)?;
             Ok(())
         }
@@ -287,7 +287,7 @@ pub mod execute {
             decoder: &mut D,
         ) -> Result<Self, bincode::error::DecodeError> {
             Ok(Self {
-                instructions: bincode::serde::Compat::decode(decoder)?.0,
+                instructions: Instructions::decode(decoder)?,
                 output: value::bincode_impl::MapBincode::decode(decoder)?
                     .0
                     .into_owned(),

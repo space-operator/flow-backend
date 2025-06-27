@@ -1395,10 +1395,11 @@ mod tests {
                 },
             ]
             .into(),
-            instructions: [].into(),
+            instructions: [transfer(&Pubkey::new_unique(), &Pubkey::new_unique(), 1000)].into(),
             lookup_tables: Some([Pubkey::new_unique()].into()),
         };
         let data = bincode::encode_to_vec(&instructions, standard()).unwrap();
         let decoded: Instructions = bincode::decode_from_slice(&data, standard()).unwrap().0;
+        dbg!(decoded);
     }
 }
