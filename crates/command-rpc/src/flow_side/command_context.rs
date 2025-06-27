@@ -78,7 +78,6 @@ impl CommandContextImpl {
                 .context("get")?
                 .get_request()
                 .context("get_request")?;
-            dbg!(data);
             let request = bincode::decode_from_slice::<execute::Request, _>(&data, standard())
                 .context("decode execute::Request")?
                 .0;
