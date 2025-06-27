@@ -74,6 +74,57 @@ pub enum Wallet {
     },
 }
 
+impl bincode::Encode for Wallet {
+    fn encode<E: bincode::enc::Encoder>(
+        &self,
+        encoder: &mut E,
+    ) -> Result<(), bincode::error::EncodeError> {
+        WalletBincode::from(self).encode(encoder)
+    }
+}
+
+impl<C> bincode::Decode<C> for Wallet {
+    fn decode<D: bincode::de::Decoder<Context = C>>(
+        decoder: &mut D,
+    ) -> Result<Self, bincode::error::DecodeError> {
+        Ok(WalletBincode::decode(decoder)?.into())
+    }
+}
+
+impl<'de, C> bincode::BorrowDecode<'de, C> for Wallet {
+    fn borrow_decode<D: bincode::de::BorrowDecoder<'de, Context = C>>(
+        decoder: &mut D,
+    ) -> Result<Self, bincode::error::DecodeError> {
+        Ok(WalletBincode::borrow_decode(decoder)?.into())
+    }
+}
+
+#[derive(bincode::Encode, bincode::Decode)]
+enum WalletBincode {
+    Keypair([u8; 32]),
+    Adapter([u8; 32]),
+}
+
+impl From<WalletBincode> for Wallet {
+    fn from(value: WalletBincode) -> Self {
+        match value {
+            WalletBincode::Keypair(value) => Wallet::Keypair(Keypair::new_from_array(value)),
+            WalletBincode::Adapter(value) => Wallet::Adapter {
+                public_key: Pubkey::new_from_array(value),
+            },
+        }
+    }
+}
+
+impl From<&Wallet> for WalletBincode {
+    fn from(value: &Wallet) -> Self {
+        match value {
+            Wallet::Keypair(keypair) => WalletBincode::Keypair(*keypair.secret_bytes()),
+            Wallet::Adapter { public_key } => WalletBincode::Adapter(public_key.to_bytes()),
+        }
+    }
+}
+
 impl From<Keypair> for Wallet {
     fn from(value: Keypair) -> Self {
         Self::Keypair(value)
@@ -283,14 +334,19 @@ fn instruction_de(i: AsInstructionImpl) -> Result<Instruction, Infallible> {
 serde_conv!(AsInstruction, Instruction, instruction_ser, instruction_de);
 
 #[serde_as]
-#[derive(Serialize, Deserialize, Debug, Default, bon::Builder)]
+#[derive(
+    Serialize, Deserialize, Debug, Default, bon::Builder, bincode::Encode, bincode::Decode,
+)]
 pub struct Instructions {
     #[serde_as(as = "AsPubkey")]
+    #[bincode(with_serde)]
     pub fee_payer: Pubkey,
     pub signers: Vec<Wallet>,
     #[serde_as(as = "Vec<AsInstruction>")]
+    #[bincode(with_serde)]
     pub instructions: Vec<Instruction>,
     #[serde_as(as = "Option<Vec<AsPubkey>>")]
+    #[bincode(with_serde)]
     pub lookup_tables: Option<Vec<Pubkey>>,
 }
 
@@ -1166,6 +1222,7 @@ mod tests {
         COMPUTE_BUDGET, FALLBACK_COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE,
         SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
+    use bincode::config::standard;
     // use base64::prelude::*;
     use solana_program::{pubkey, system_instruction::transfer};
 
@@ -1325,5 +1382,23 @@ mod tests {
         const MEMO: &str = "solana-action:E5AdudXGT7ZexcHrtQqcr91mPxjTEQ1TiJajS55qq3wF:GKMj5wkxMfM1LGhyJCdBK2op7QNvCczwcFWNtH9EXirb:h7b89YXbZ7w6yx4wCsx5ZKJC6XXLxhymL3nQViSMaqj4sa6B9rykWBPGENt2hM1uiKWJA1w4bgswbu6och8jq7e";
         let parsed = parse_action_memo(MEMO).unwrap();
         dbg!(parsed);
+    }
+
+    #[test]
+    fn test_instructions_bincode() {
+        let instructions = Instructions {
+            fee_payer: Pubkey::new_unique(),
+            signers: [
+                Wallet::Keypair(Keypair::new()),
+                Wallet::Adapter {
+                    public_key: Pubkey::new_unique(),
+                },
+            ]
+            .into(),
+            instructions: [].into(),
+            lookup_tables: Some([Pubkey::new_unique()].into()),
+        };
+        let data = bincode::encode_to_vec(&instructions, standard()).unwrap();
+        let decoded: Instructions = bincode::decode_from_slice(&data, standard()).unwrap().0;
     }
 }
