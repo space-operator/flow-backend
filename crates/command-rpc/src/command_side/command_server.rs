@@ -1,6 +1,8 @@
 use anyhow::Context;
 use flow_lib::command::collect_commands;
+use iroh::Watcher;
 use iroh::{Endpoint, NodeAddr};
+use rand::rngs::OsRng;
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
 use std::{collections::BTreeSet, net::SocketAddr, time::Duration};
@@ -15,19 +17,26 @@ use super::{
     command_trait::HTTP_CLIENT,
 };
 
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum FlowServerConfig {
+    Info { url: Url },
+    Direct(FlowServerAddress),
+}
+
 #[serde_with::serde_as]
 #[derive(Deserialize)]
 pub struct Config {
-    pub flow_server_url: Url,
-    #[serde_as(as = "DisplayFromStr")]
-    pub secret_key: iroh::SecretKey,
+    pub flow_server: FlowServerConfig,
+    #[serde_as(as = "Option<DisplayFromStr>")]
+    pub secret_key: Option<iroh::SecretKey>,
 }
 
 #[derive(Deserialize)]
 pub struct FlowServerAddress {
     pub node_id: iroh::PublicKey,
-    pub direct_addresses: BTreeSet<SocketAddr>,
     pub relay_url: Url,
+    pub direct_addresses: BTreeSet<SocketAddr>,
 }
 
 #[derive(Deserialize)]
@@ -54,23 +63,35 @@ pub fn main() {
     rt.block_on(async {
         let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
         let config: Config = toml::from_str(&data).unwrap();
-        let local = tokio::task::LocalSet::new();
-        local.run_until(serve(config)).await.unwrap();
+        tokio::task::LocalSet::new()
+            .run_until(serve(config))
+            .await
+            .unwrap();
     })
 }
 
 pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
-    let info_url = config.flow_server_url.join("/info")?;
-    let server = reqwest::get(info_url)
-        .await?
-        .json::<InfoResponse>()
-        .await?
-        .iroh;
+    let server = match config.flow_server {
+        FlowServerConfig::Info { url } => {
+            let info_url = url.join("/info")?;
+            reqwest::get(info_url)
+                .await?
+                .json::<InfoResponse>()
+                .await?
+                .iroh
+        }
+        FlowServerConfig::Direct(server) => server,
+    };
+
     let servers = [server];
 
     let commands = collect_commands();
     let endpoint = Endpoint::builder()
-        .secret_key(config.secret_key)
+        .secret_key(
+            config
+                .secret_key
+                .unwrap_or_else(|| iroh::SecretKey::generate(&mut OsRng)),
+        )
         .discovery_n0()
         .bind()
         .await
@@ -106,7 +127,6 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
         tracing::info!("joined {}", addr.node_id);
         let conn_type = endpoint
             .conn_type(addr.node_id)
-            .ok()
             .and_then(|watcher| watcher.get().ok());
         tracing::info!("connection type {:?}", conn_type);
     }

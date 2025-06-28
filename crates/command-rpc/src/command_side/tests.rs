@@ -14,7 +14,7 @@ use flow_lib::{
     value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
 };
 use futures::FutureExt;
-use iroh::Endpoint;
+use iroh::{Endpoint, Watcher};
 use rust_decimal_macros::dec;
 use serde::Deserialize;
 use std::borrow::Cow;
@@ -84,7 +84,7 @@ async fn test_serve_iroh() {
     let addr = {
         let factory = command_factory::new_client(collect_commands());
         let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
-        let addr = endpoint.node_addr().await.unwrap();
+        let addr = endpoint.node_addr().initialized().await.unwrap();
         factory.bind_iroh(endpoint);
         addr
     };
@@ -110,7 +110,7 @@ async fn test_call() {
     );
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
     dbg!("bind");
-    let addr = endpoint.node_addr().await.unwrap();
+    let addr = endpoint.node_addr().initialized().await.unwrap();
     dbg!(&addr);
     client.bind_iroh(endpoint);
 

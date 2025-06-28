@@ -46,12 +46,3 @@ pub(crate) mod make_sync;
 
 pub mod command_side;
 pub mod flow_side;
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn generate_iroh_secret_key() {
-        let key = iroh::SecretKey::generate(&mut rand::rngs::OsRng);
-        println!("{key}");
-    }
-}

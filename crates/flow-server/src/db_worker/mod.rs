@@ -15,8 +15,8 @@ use flow_lib::{
 };
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
-use iroh::watchable::Disconnected;
 use serde::Serialize;
+use n0_watcher::Disconnected;
 use std::{
     net::SocketAddr,
     sync::{Arc, atomic::AtomicU64},
@@ -26,6 +26,7 @@ use tokio::sync::broadcast;
 use tracing::{Span, level_filters::LevelFilter};
 use tracing_subscriber::EnvFilter;
 use utils::address_book::{AddressBook, AlreadyStarted, ManagableActor};
+use iroh::Watcher;
 
 pub mod flow_run_worker;
 pub mod messages;
