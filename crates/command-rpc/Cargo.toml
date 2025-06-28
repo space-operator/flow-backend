@@ -36,8 +36,8 @@ simd-json = "0.15.1"
 serde_json = { workspace = true, features = ["preserve_order"] }
 semver = "1.0.26"
 tokio-util = { version = "0.7.15", features = ["compat"] }
-iroh = { version = "0.35.0", features = ["discovery-pkarr-dht"] }
-iroh-quinn = { version = "0.13", features = ["futures-io"] }
+iroh = { version = "0.90.0", features = ["discovery-pkarr-dht"] }
+iroh-quinn = { version = "0.14", features = ["futures-io"] }
 anyhow.workspace = true
 rand = "0.8"
 toml = "0.8.23"

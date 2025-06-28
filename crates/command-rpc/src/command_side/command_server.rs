@@ -1,5 +1,6 @@
 use anyhow::Context;
 use flow_lib::command::collect_commands;
+use iroh::Watcher;
 use iroh::{Endpoint, NodeAddr};
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
@@ -106,7 +107,6 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
         tracing::info!("joined {}", addr.node_id);
         let conn_type = endpoint
             .conn_type(addr.node_id)
-            .ok()
             .and_then(|watcher| watcher.get().ok());
         tracing::info!("connection type {:?}", conn_type);
     }
