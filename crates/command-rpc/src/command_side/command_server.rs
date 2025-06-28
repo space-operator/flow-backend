@@ -35,8 +35,8 @@ pub struct Config {
 #[derive(Deserialize)]
 pub struct FlowServerAddress {
     pub node_id: iroh::PublicKey,
-    pub direct_addresses: BTreeSet<SocketAddr>,
     pub relay_url: Url,
+    pub direct_addresses: BTreeSet<SocketAddr>,
 }
 
 #[derive(Deserialize)]
@@ -63,8 +63,10 @@ pub fn main() {
     rt.block_on(async {
         let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
         let config: Config = toml::from_str(&data).unwrap();
-        let local = tokio::task::LocalSet::new();
-        local.run_until(serve(config)).await.unwrap();
+        tokio::task::LocalSet::new()
+            .run_until(serve(config))
+            .await
+            .unwrap();
     })
 }
 
