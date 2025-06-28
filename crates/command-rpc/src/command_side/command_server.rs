@@ -2,6 +2,7 @@ use anyhow::Context;
 use flow_lib::command::collect_commands;
 use iroh::Watcher;
 use iroh::{Endpoint, NodeAddr};
+use rand::rngs::OsRng;
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
 use std::{collections::BTreeSet, net::SocketAddr, time::Duration};
@@ -16,12 +17,19 @@ use super::{
     command_trait::HTTP_CLIENT,
 };
 
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum FlowServerConfig {
+    Info { url: Url },
+    Direct(FlowServerAddress),
+}
+
 #[serde_with::serde_as]
 #[derive(Deserialize)]
 pub struct Config {
-    pub flow_server_url: Url,
-    #[serde_as(as = "DisplayFromStr")]
-    pub secret_key: iroh::SecretKey,
+    pub flow_server: FlowServerConfig,
+    #[serde_as(as = "Option<DisplayFromStr>")]
+    pub secret_key: Option<iroh::SecretKey>,
 }
 
 #[derive(Deserialize)]
@@ -61,17 +69,27 @@ pub fn main() {
 }
 
 pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
-    let info_url = config.flow_server_url.join("/info")?;
-    let server = reqwest::get(info_url)
-        .await?
-        .json::<InfoResponse>()
-        .await?
-        .iroh;
+    let server = match config.flow_server {
+        FlowServerConfig::Info { url } => {
+            let info_url = url.join("/info")?;
+            reqwest::get(info_url)
+                .await?
+                .json::<InfoResponse>()
+                .await?
+                .iroh
+        }
+        FlowServerConfig::Direct(server) => server,
+    };
+
     let servers = [server];
 
     let commands = collect_commands();
     let endpoint = Endpoint::builder()
-        .secret_key(config.secret_key)
+        .secret_key(
+            config
+                .secret_key
+                .unwrap_or_else(|| iroh::SecretKey::generate(&mut OsRng)),
+        )
         .discovery_n0()
         .bind()
         .await
