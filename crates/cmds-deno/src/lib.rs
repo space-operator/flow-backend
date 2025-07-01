@@ -227,7 +227,7 @@ mod tests {
         const SOURCE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/add.ts"));
         const JSON: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/add.json"));
         let nd = node_data(JSON, SOURCE);
-        let (cmd, child) = new(&nd).await.unwrap();
+        let cmd = new(&nd).await.unwrap();
         let mut ctx = CommandContext::test_context();
         ctx.extensions_mut()
             .unwrap()
@@ -238,6 +238,5 @@ mod tests {
             .unwrap();
         let c = value::from_value::<f64>(output["c"].clone()).unwrap();
         assert_eq!(c, 25.0);
-        drop(child);
     }
 }
