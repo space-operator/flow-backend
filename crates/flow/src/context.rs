@@ -9,7 +9,6 @@ use flow_lib::{
     config::client::NodeData,
 };
 use std::{borrow::Cow, collections::BTreeMap};
-use tokio::process::Child;
 
 pub struct CommandFactory {
     natives: BTreeMap<Cow<'static, str>, &'static CommandDescription>,
@@ -68,10 +67,8 @@ impl CommandFactory {
     pub async fn new_deno_command(
         &self,
         config: &NodeData,
-        spawned: &mut Vec<Child>,
     ) -> crate::Result<Box<dyn CommandTrait>> {
-        let (cmd, child) = cmds_deno::new(config).await.map_err(Error::custom)?;
-        spawned.push(child);
+        let cmd = cmds_deno::new(config).await.map_err(Error::custom)?;
         Ok(cmd)
     }
 
@@ -79,12 +76,11 @@ impl CommandFactory {
         &mut self,
         name: &str,
         config: &NodeData,
-        spawned: &mut Vec<Child>,
     ) -> crate::Result<Box<dyn CommandTrait>> {
         match config.r#type {
             CommandType::Mock => Err(Error::custom("mock node")),
             CommandType::Native => self.new_native_command(name, config).await,
-            CommandType::Deno => self.new_deno_command(config, spawned).await,
+            CommandType::Deno => self.new_deno_command(config).await,
             CommandType::Wasm => {
                 let bytes = config
                     .targets_form

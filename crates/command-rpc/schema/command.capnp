@@ -30,4 +30,6 @@ interface CommandTrait {
     instructionInfo @4 () -> (info: Data);
 
     permissions @5 () -> (permissions: Data);
+
+    destroy @6 ();
 }

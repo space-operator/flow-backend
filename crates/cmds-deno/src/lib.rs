@@ -1,7 +1,7 @@
 use anyhow::Context as _;
 use command_rpc::client::RpcCommandClient;
 use flow_lib::{
-    command::{CommandError, CommandTrait},
+    command::{CommandError, CommandTrait, prelude::async_trait},
     config::client::NodeData,
 };
 use serde::Deserialize;
@@ -45,7 +45,7 @@ macro_rules! include {
     };
 }
 
-pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), CommandError> {
+pub async fn new(nd: &NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
     let extra = &nd.targets_form.extra.rest;
     let source = Extra::deserialize(MapDeserializer::new(
         extra.iter().map(|(k, v)| (k.as_str(), v)),
@@ -125,13 +125,48 @@ pub async fn new(nd: &NodeData) -> Result<(Box<dyn CommandTrait>, Child), Comman
     };
     let base_url = Url::parse(&format!("http://127.0.0.1:{port}")).unwrap();
     let cmd = RpcCommandClient::new(base_url, String::new(), node_data.clone());
+    let cmd = DenoCommand {
+        inner: cmd,
+        spawned,
+    };
     tokio::spawn(async move {
         while let Ok(Some(line)) = stdout.next_line().await {
             tracing::debug!("{}", line);
         }
     });
 
-    Ok((Box::new(cmd), spawned))
+    Ok(Box::new(cmd))
+}
+
+pub struct DenoCommand {
+    inner: RpcCommandClient,
+    spawned: Child,
+}
+
+#[async_trait(?Send)]
+impl CommandTrait for DenoCommand {
+    fn name(&self) -> flow_lib::Name {
+        self.inner.name()
+    }
+    fn inputs(&self) -> Vec<flow_lib::CmdInputDescription> {
+        self.inner.inputs()
+    }
+    fn outputs(&self) -> Vec<flow_lib::CmdOutputDescription> {
+        self.inner.outputs()
+    }
+    fn permissions(&self) -> flow_lib::command::prelude::Permissions {
+        self.inner.permissions()
+    }
+    async fn run(
+        &self,
+        ctx: flow_lib::context::CommandContext,
+        params: flow_lib::ValueSet,
+    ) -> Result<flow_lib::value::Map, CommandError> {
+        self.inner.run(ctx, params).await
+    }
+    async fn destroy(&mut self) {
+        self.spawned.kill().await.ok();
+    }
 }
 
 #[cfg(test)]
@@ -192,7 +227,7 @@ mod tests {
         const SOURCE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/add.ts"));
         const JSON: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/add.json"));
         let nd = node_data(JSON, SOURCE);
-        let (cmd, child) = new(&nd).await.unwrap();
+        let cmd = new(&nd).await.unwrap();
         let mut ctx = CommandContext::test_context();
         ctx.extensions_mut()
             .unwrap()
@@ -203,6 +238,5 @@ mod tests {
             .unwrap();
         let c = value::from_value::<f64>(output["c"].clone()).unwrap();
         assert_eq!(c, 25.0);
-        drop(child);
     }
 }

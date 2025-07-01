@@ -48,7 +48,6 @@ use std::{
 };
 use thiserror::Error as ThisError;
 use tokio::{
-    process::Child,
     sync::Semaphore,
     task::{JoinError, JoinHandle},
 };
@@ -130,7 +129,6 @@ pub struct FlowGraph {
     pub action_identity: Option<Pubkey>,
     pub rhai_permit: Arc<Semaphore>,
     pub tx_exec_config: ExecutionConfig,
-    pub spawned: Vec<Child>,
     pub parent_flow_execute: Option<execute::Svc>,
     pub fees: Vec<(Pubkey, u64)>,
 }
@@ -426,7 +424,6 @@ impl FlowGraph {
         let mut f = CommandFactory::new(registry.remotes);
 
         let mut g = StableGraph::new();
-        let mut spawned = Vec::new();
 
         let mut mocks = HashSet::new();
         let mut nodes = HashMap::new();
@@ -452,9 +449,7 @@ impl FlowGraph {
                 }
                 continue;
             }
-            let command = f
-                .new_command(&n.command_name, &n.client_node_data, &mut spawned)
-                .await?;
+            let command = f.new_command(&n.command_name, &n.client_node_data).await?;
             let id = n.id;
             let idx = g.add_node(id);
             let node = Node {
@@ -553,7 +548,6 @@ impl FlowGraph {
             fees: Vec::new(),
             rhai_permit,
             tx_exec_config,
-            spawned,
             parent_flow_execute,
         })
     }
@@ -1492,6 +1486,10 @@ impl FlowGraph {
             .ok();
 
         self.g.remove_node(fake_node);
+
+        for n in self.nodes.values_mut() {
+            n.command.destroy().await;
+        }
 
         s.result
     }
