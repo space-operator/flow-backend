@@ -76,4 +76,4 @@ jobs:
           --err
           --adapter json
           --github-actions '${{ secrets.GITHUB_TOKEN }}'
-          bencher 'cargo bench'
+          bencher run 'cargo bench'
