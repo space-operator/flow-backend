@@ -62,7 +62,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
       - uses: bencherdev/bencher@main
-      - run: cargo install criterion -f
       - name: Track PR Benchmarks with Bencher
         run: |
           bencher run 'cargo bench' \
