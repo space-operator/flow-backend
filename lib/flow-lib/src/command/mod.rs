@@ -63,6 +63,19 @@ pub trait CommandTrait: 'static {
     /// Run the command.
     async fn run(&self, ctx: CommandContext, params: ValueSet) -> Result<ValueSet, CommandError>;
 
+    /// Specify if and how would this command output Solana instructions.
+    fn instruction_info(&self) -> Option<InstructionInfo> {
+        None
+    }
+
+    /// Specify requested permissions of this command.
+    fn permissions(&self) -> Permissions {
+        Permissions::default()
+    }
+
+    /// Async `Drop` method.
+    async fn destroy(&mut self) {}
+
     /// Specify how [`form_data`][crate::config::NodeConfig::form_data] are read.
     fn read_form_data(&self, data: serde_json::Value) -> ValueSet {
         let mut result = ValueSet::new();
@@ -102,16 +115,6 @@ pub trait CommandTrait: 'static {
             }
         }
         res
-    }
-
-    /// Specify if and how would this command output Solana instructions.
-    fn instruction_info(&self) -> Option<InstructionInfo> {
-        None
-    }
-
-    /// Specify requested permissions of this command.
-    fn permissions(&self) -> Permissions {
-        Permissions::default()
     }
 
     fn input_is_required(&self, name: &str) -> Option<bool> {
