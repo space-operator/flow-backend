@@ -46,8 +46,9 @@ jobs:
           deno-version: v2.x
       - name: Run tests
         run: cargo test -- --skip need_key_
-  benchmark_pr_branch:
-    name: Continuous Benchmarking PRs with Bencher
+  benchmark-pr:
+    name: Benchmark PR
+    needs: unit-test
     # DO NOT REMOVE: For handling Fork PRs see Pull Requests from Forks
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     permissions:
@@ -62,18 +63,51 @@ jobs:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
       - uses: bencherdev/bencher@main
-      - name: Track PR Benchmarks with Bencher
+      - name: Run benchmark 
         run: |
-          bencher run \
-          --project backend-e9b5559-25k6lbjiv95d0 \
-          --token '${{ secrets.BENCHER_API_TOKEN }}' \
-          --branch "$GITHUB_HEAD_REF" \
-          --start-point "$GITHUB_BASE_REF" \
-          --start-point-hash '${{ github.event.pull_request.base.sha }}' \
-          --start-point-clone-thresholds \
-          --start-point-reset \
-          --testbed hetzner-r3600 \
-          --err \
-          --adapter rust_criterion \
-          --github-actions '${{ secrets.GITHUB_TOKEN }}' \
+          bencher run
+          --project backend-e9b5559-25k6lbjiv95d0
+          --token '${{ secrets.BENCHER_API_TOKEN }}'
+          --branch "$GITHUB_HEAD_REF"
+          --start-point "$GITHUB_BASE_REF"
+          --start-point-hash '${{ github.event.pull_request.base.sha }}'
+          --start-point-clone-thresholds
+          --start-point-reset
+          --testbed hetzner-r3600
+          --err
+          --adapter rust_criterion
+          --github-actions '${{ secrets.GITHUB_TOKEN }}'
+          cargo bench
+  benchmark_main:
+    name: Benchmark main
+    needs: unit-test
+    # DO NOT REMOVE: For handling Fork PRs see Pull Requests from Forks
+    if: github.event_name == 'push'
+    permissions:
+      checks: write
+    runs-on: self-hosted
+    steps:
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: default
+          override: true
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - uses: bencherdev/bencher@main
+      - name: Run benchmark 
+        run: |
+          bencher run
+          --project backend-e9b5559-25k6lbjiv95d0
+          --token '${{ secrets.BENCHER_API_TOKEN }}'
+          --branch main
+          --testbed hetzner-r3600
+          --threshold-measure latency
+          --threshold-test t_test
+          --threshold-max-sample-size 64
+          --threshold-upper-boundary 0.99
+          --thresholds-reset
+          --err
+          --adapter rust_criterion
+          --github-actions '${{ secrets.GITHUB_TOKEN }}'
           cargo bench
