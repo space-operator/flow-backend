@@ -64,16 +64,15 @@ jobs:
       - uses: bencherdev/bencher@main
       - name: Track PR Benchmarks with Bencher
         run: |
-          bencher run
-          --project backend-e9b5559-25k6lbjiv95d0
-          --token '${{ secrets.BENCHER_API_TOKEN }}'
-          --branch "$GITHUB_HEAD_REF"
-          --start-point "$GITHUB_BASE_REF"
-          --start-point-hash '${{ github.event.pull_request.base.sha }}'
-          --start-point-clone-thresholds
-          --start-point-reset
-          --testbed hetzner-r3600
-          --err
-          --adapter json
+          bencher run 'cargo bench' \
+          --project backend-e9b5559-25k6lbjiv95d0 \
+          --token '${{ secrets.BENCHER_API_TOKEN }}' \
+          --branch "$GITHUB_HEAD_REF" \
+          --start-point "$GITHUB_BASE_REF" \
+          --start-point-hash '${{ github.event.pull_request.base.sha }}' \
+          --start-point-clone-thresholds \
+          --start-point-reset \
+          --testbed hetzner-r3600 \
+          --err \
+          --adapter json \
           --github-actions '${{ secrets.GITHUB_TOKEN }}'
-          cargo bench
