@@ -64,7 +64,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: bencherdev/bencher@main
       - name: Run benchmark 
-        run: |
+        run: >
           bencher run
           --project backend-e9b5559-25k6lbjiv95d0
           --token '${{ secrets.BENCHER_API_TOKEN }}'
@@ -96,7 +96,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: bencherdev/bencher@main
       - name: Run benchmark 
-        run: |
+        run: >
           bencher run
           --project backend-e9b5559-25k6lbjiv95d0
           --token '${{ secrets.BENCHER_API_TOKEN }}'
