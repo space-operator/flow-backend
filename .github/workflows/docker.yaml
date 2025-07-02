@@ -49,7 +49,7 @@ jobs:
       - name: Install deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          deno-version: v2.3
       - name: Build Integration Tests
         run: cargo build --bin integration-tests --quiet
       - uses: aws-actions/configure-aws-credentials@v4
