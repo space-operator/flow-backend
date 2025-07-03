@@ -40,9 +40,9 @@ impl CommandFactory {
 
     pub async fn new_native_command(
         &mut self,
-        name: &str,
         config: &NodeData,
     ) -> crate::Result<Box<dyn CommandTrait>> {
+        let name = config.node_id.as_str();
         if let Some(rpc) = self.rpc.as_mut() {
             match rpc.new_command(name, config).await {
                 Ok(Some(cmd)) => return Ok(cmd),
@@ -72,14 +72,10 @@ impl CommandFactory {
         Ok(cmd)
     }
 
-    pub async fn new_command(
-        &mut self,
-        name: &str,
-        config: &NodeData,
-    ) -> crate::Result<Box<dyn CommandTrait>> {
+    pub async fn new_command(&mut self, config: &NodeData) -> crate::Result<Box<dyn CommandTrait>> {
         match config.r#type {
             CommandType::Mock => Err(Error::custom("mock node")),
-            CommandType::Native => self.new_native_command(name, config).await,
+            CommandType::Native => self.new_native_command(&config).await,
             CommandType::Deno => self.new_deno_command(config).await,
             CommandType::Wasm => {
                 let bytes = config

@@ -449,7 +449,7 @@ impl FlowGraph {
                 }
                 continue;
             }
-            let command = f.new_command(&n.command_name, &n.client_node_data).await?;
+            let command = f.new_command(&n.client_node_data).await?;
             let id = n.id;
             let idx = g.add_node(id);
             let node = Node {
