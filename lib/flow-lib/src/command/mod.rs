@@ -7,7 +7,7 @@
 //! 2. Use [`inventory::submit`] with a [`CommandDescription`] to register the command at compile-time.
 
 use crate::{
-    ValueType,
+    CommandType, ValueType,
     config::{
         CmdInputDescription, CmdOutputDescription, Name, ValueSet, client::NodeData,
         node::Permissions,
@@ -174,6 +174,7 @@ impl InstructionInfo {
 /// Use [`inventory::submit`] to register commands at compile-time.
 #[derive(Clone)]
 pub struct CommandDescription {
+    pub r#type: CommandType,
     /// Name of the command, must be equal to the value returned by [`CommandTrait::name`].
     pub name: Cow<'static, str>,
     /// Function to initialize the command from a [`NodeData`].
@@ -186,6 +187,7 @@ impl CommandDescription {
         fn_new: fn(&NodeData) -> Result<Box<dyn CommandTrait>, CommandError>,
     ) -> Self {
         Self {
+            r#type: CommandType::Native,
             name: Cow::Borrowed(name),
             fn_new,
         }

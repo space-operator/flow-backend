@@ -102,6 +102,7 @@ async fn test_call() {
         [(
             Cow::Borrowed("add"),
             &CommandDescription {
+                r#type: flow_lib::CommandType::Native,
                 name: Cow::Borrowed("add"),
                 fn_new: |_| Ok(Box::new(Add)),
             },
