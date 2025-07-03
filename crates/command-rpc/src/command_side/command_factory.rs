@@ -3,7 +3,10 @@ use anyhow::{Context, anyhow};
 use bincode::config::standard;
 use capnp::{ErrorKind, capability::Promise};
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
-use flow_lib::{command::CommandDescription, config::client::NodeData};
+use flow_lib::{
+    command::{CommandDescription, MatchName},
+    config::client::NodeData,
+};
 use futures::io::{BufReader, BufWriter};
 use iroh::{Endpoint, NodeAddr, endpoint::Incoming};
 use iroh_quinn::ConnectionError;
@@ -16,7 +19,7 @@ use crate::command_side::command_trait;
 
 pub const ALPN: &[u8] = b"space-operator/capnp-rpc/command-factory/0";
 
-pub fn new_client(availables: BTreeMap<Cow<'static, str>, &'static CommandDescription>) -> Client {
+pub fn new_client(availables: BTreeMap<MatchName, &'static CommandDescription>) -> Client {
     capnp_rpc::new_client(CommandFactoryImpl { availables })
 }
 
@@ -118,7 +121,7 @@ async fn spawn_rpc_system_handle(
 }
 
 pub struct CommandFactoryImpl {
-    availables: BTreeMap<Cow<'static, str>, &'static CommandDescription>,
+    availables: BTreeMap<MatchName, &'static CommandDescription>,
 }
 
 impl CommandFactoryImpl {
