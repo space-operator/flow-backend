@@ -289,10 +289,7 @@ impl CommandFactory {
         this
     }
 
-    pub async fn init(
-        &mut self,
-        nd: &NodeData,
-    ) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
+    pub fn init(&mut self, nd: &NodeData) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
         let cmd = if let Some(d) = self
             .exact_match
             .get(&(nd.r#type, nd.node_id.clone().into()))
@@ -309,5 +306,19 @@ impl CommandFactory {
         };
 
         cmd.map(|cmd| (cmd.fn_new)(nd)).transpose()
+    }
+
+    pub fn availables(&self) -> impl Iterator<Item = MatchCommand> {
+        self.exact_match
+            .keys()
+            .cloned()
+            .map(|(r#type, name)| MatchCommand {
+                r#type,
+                name: MatchName::Exact(name),
+            })
+            .chain(self.regex.iter().map(|(ty, regex, _)| MatchCommand {
+                r#type: ty.clone(),
+                name: MatchName::Regex(regex.to_string().into()),
+            }))
     }
 }
