@@ -14,8 +14,13 @@ use crate::{
     },
     context::CommandContext,
 };
+use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, collections::BTreeMap, fmt::Display};
+use std::{
+    borrow::{Borrow, Cow},
+    collections::BTreeMap,
+    fmt::Display,
+};
 use value::Value;
 
 pub mod builder;
@@ -201,6 +206,14 @@ impl<__Context> ::bincode::Decode<__Context> for MatchName {
     }
 }
 
+impl<'de, C> bincode::BorrowDecode<'de, C> for MatchName {
+    fn borrow_decode<D: bincode::de::BorrowDecoder<'de, Context = C>>(
+        decoder: &mut D,
+    ) -> Result<Self, bincode::error::DecodeError> {
+        bincode::Decode::decode(decoder)
+    }
+}
+
 impl Display for MatchName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -210,12 +223,16 @@ impl Display for MatchName {
     }
 }
 
+#[derive(Clone, bincode::Encode, bincode::Decode, PartialEq, Eq, PartialOrd, Ord)]
+pub struct MatchCommand {
+    pub r#type: CommandType,
+    pub name: MatchName,
+}
+
 /// Use [`inventory::submit`] to register commands at compile-time.
 #[derive(Clone)]
 pub struct CommandDescription {
-    pub r#type: CommandType,
-    /// Name of the command, must be equal to the value returned by [`CommandTrait::name`].
-    pub name: MatchName,
+    pub matcher: MatchCommand,
     /// Function to initialize the command from a [`NodeData`].
     pub fn_new: fn(&NodeData) -> Result<Box<dyn CommandTrait>, CommandError>,
 }
@@ -226,8 +243,10 @@ impl CommandDescription {
         fn_new: fn(&NodeData) -> Result<Box<dyn CommandTrait>, CommandError>,
     ) -> Self {
         Self {
-            r#type: CommandType::Native,
-            name: MatchName::Exact(Cow::Borrowed(name)),
+            matcher: MatchCommand {
+                r#type: CommandType::Native,
+                name: MatchName::Exact(Cow::Borrowed(name)),
+            },
             fn_new,
         }
     }
@@ -235,8 +254,60 @@ impl CommandDescription {
 
 inventory::collect!(CommandDescription);
 
-pub fn collect_commands() -> BTreeMap<MatchName, &'static CommandDescription> {
+pub fn collect_commands() -> BTreeMap<&'static MatchCommand, &'static CommandDescription> {
     inventory::iter::<CommandDescription>()
-        .map(|c| (c.name.clone(), c))
+        .map(|c| (&c.matcher, c))
         .collect()
+}
+
+pub struct CommandFactory {
+    exact_match: BTreeMap<(CommandType, Cow<'static, str>), &'static CommandDescription>,
+    regex: Vec<(CommandType, regex::Regex, &'static CommandDescription)>,
+}
+
+impl CommandFactory {
+    pub fn collect() -> Self {
+        let mut this = Self {
+            exact_match: <_>::default(),
+            regex: <_>::default(),
+        };
+        for c in inventory::iter::<CommandDescription>() {
+            match &c.matcher.name {
+                MatchName::Exact(cow) => {
+                    this.exact_match.insert((c.matcher.r#type, cow.clone()), c);
+                }
+                MatchName::Regex(cow) => {
+                    this.regex.push((
+                        c.matcher.r#type,
+                        Regex::new(&cow).expect("invalid regex"),
+                        c,
+                    ));
+                }
+            }
+        }
+
+        this
+    }
+
+    pub async fn init(
+        &mut self,
+        nd: &NodeData,
+    ) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
+        let cmd = if let Some(d) = self
+            .exact_match
+            .get(&(nd.r#type, nd.node_id.clone().into()))
+        {
+            Some(*d)
+        } else {
+            let mut matched = None;
+            for r in &self.regex {
+                if r.0 == nd.r#type && r.1.is_match(&nd.node_id) {
+                    matched = Some(r.2);
+                }
+            }
+            matched
+        };
+
+        cmd.map(|cmd| (cmd.fn_new)(nd)).transpose()
+    }
 }

@@ -81,7 +81,19 @@ pub type Name = String;
 /// Inputs and outputs of commands
 pub type ValueSet = value::Map;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Serialize,
+    Deserialize,
+    bincode::Encode,
+    bincode::Decode,
+)]
 pub enum CommandType {
     #[serde(rename = "native")]
     Native,

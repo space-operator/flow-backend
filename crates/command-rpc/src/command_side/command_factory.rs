@@ -132,15 +132,11 @@ impl CommandFactoryImpl {
     ) -> Result<(), anyhow::Error> {
         let params = params.get().context("get")?;
 
-        let name = params
-            .get_name()
-            .context("get_name")?
-            .to_str()
-            .context("utf8 error")?;
+        let nd = params.get_nd().context("get_nd")?;
+        let nd: NodeData = serde_json::from_slice(nd).context("serde_json deserialize NodeData")?;
+        let name = &nd.node_id;
+
         if let Some(description) = self.availables.get(name) {
-            let nd = params.get_nd().context("get_nd")?;
-            let nd: NodeData =
-                serde_json::from_slice(nd).context("serde_json deserialize NodeData")?;
             tracing::info!("init {}", name);
             let cmd = (description.fn_new)(&nd).context("new command")?;
             results.get().set_cmd(command_trait::new_client(cmd));
