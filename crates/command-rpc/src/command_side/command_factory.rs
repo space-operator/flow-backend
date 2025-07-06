@@ -3,14 +3,10 @@ use anyhow::{Context, anyhow};
 use bincode::config::standard;
 use capnp::{ErrorKind, capability::Promise};
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
-use flow_lib::{
-    command::{CommandDescription, MatchName},
-    config::client::NodeData,
-};
+use flow_lib::{command::CommandFactory, config::client::NodeData};
 use futures::io::{BufReader, BufWriter};
 use iroh::{Endpoint, NodeAddr, endpoint::Incoming};
 use iroh_quinn::ConnectionError;
-use std::{borrow::Cow, collections::BTreeMap};
 use tokio::task::{JoinHandle, spawn_local};
 use tracing::{Instrument, Level, span};
 
@@ -19,8 +15,8 @@ use crate::command_side::command_trait;
 
 pub const ALPN: &[u8] = b"space-operator/capnp-rpc/command-factory/0";
 
-pub fn new_client(availables: BTreeMap<MatchName, &'static CommandDescription>) -> Client {
-    capnp_rpc::new_client(CommandFactoryImpl { availables })
+pub fn new_client(factory: CommandFactory) -> Client {
+    capnp_rpc::new_client(CommandFactoryImpl { factory })
 }
 
 pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, anyhow::Error> {
@@ -36,7 +32,6 @@ pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, 
 pub trait CommandFactoryExt {
     fn init(
         &self,
-        name: &str,
         nd: &NodeData,
     ) -> impl Future<Output = Result<Option<command_trait::Client>, anyhow::Error>>;
     fn all_availables(&self) -> impl Future<Output = Result<Vec<String>, anyhow::Error>>;
@@ -44,13 +39,8 @@ pub trait CommandFactoryExt {
 }
 
 impl CommandFactoryExt for Client {
-    async fn init(
-        &self,
-        name: &str,
-        nd: &NodeData,
-    ) -> Result<Option<command_trait::Client>, anyhow::Error> {
+    async fn init(&self, nd: &NodeData) -> Result<Option<command_trait::Client>, anyhow::Error> {
         let mut req = self.init_request();
-        req.get().set_name(name);
         req.get()
             .set_nd(&simd_json::to_vec(nd).context("simd_json serialize NodeData")?);
         let result = req
@@ -121,7 +111,7 @@ async fn spawn_rpc_system_handle(
 }
 
 pub struct CommandFactoryImpl {
-    availables: BTreeMap<MatchName, &'static CommandDescription>,
+    factory: CommandFactory,
 }
 
 impl CommandFactoryImpl {
@@ -134,22 +124,18 @@ impl CommandFactoryImpl {
 
         let nd = params.get_nd().context("get_nd")?;
         let nd: NodeData = serde_json::from_slice(nd).context("serde_json deserialize NodeData")?;
-        let name = &nd.node_id;
 
-        if let Some(description) = self.availables.get(name) {
-            tracing::info!("init {}", name);
-            let cmd = (description.fn_new)(&nd).context("new command")?;
+        if let Some(cmd) = self.factory.init(&nd)? {
             results.get().set_cmd(command_trait::new_client(cmd));
-            Ok(())
-        } else {
-            Ok(())
         }
+        Ok(())
     }
 
     fn all_availables_impl(&self, mut results: AllAvailablesResults) -> Result<(), anyhow::Error> {
-        let names = self.availables.keys().collect::<Vec<_>>();
-        let names = bincode::encode_to_vec(&names, standard()).context("bincode encode names")?;
-        results.get().set_availables(&names);
+        let vec = self.factory.availables().collect::<Vec<_>>();
+        let data =
+            bincode::encode_to_vec(&vec, standard()).context("bincode::Encode availables")?;
+        results.get().set_availables(&data);
         Ok(())
     }
 }

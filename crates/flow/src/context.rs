@@ -23,15 +23,12 @@ impl Default for CommandFactory {
 
 impl CommandFactory {
     pub fn new(rpc: Option<AddressBook>) -> Self {
-        let mut natives = BTreeMap::new();
-        for d in inventory::iter::<CommandDescription>() {
-            let name = d.name.clone();
-            if natives.insert(name.clone(), d).is_some() {
-                tracing::error!("duplicated command {:?}", name);
-            }
-        }
+        // TODO
 
-        Self { natives, rpc }
+        Self {
+            natives: <_>::default(),
+            rpc,
+        }
     }
 
     pub fn availables(&self) -> impl Iterator<Item = &str> {
@@ -44,7 +41,7 @@ impl CommandFactory {
     ) -> crate::Result<Box<dyn CommandTrait>> {
         let name = config.node_id.as_str();
         if let Some(rpc) = self.rpc.as_mut() {
-            match rpc.new_command(name, config).await {
+            match rpc.new_command(config).await {
                 Ok(Some(cmd)) => return Ok(cmd),
                 Ok(None) => {}
                 Err(error) => {

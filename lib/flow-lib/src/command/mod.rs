@@ -16,11 +16,7 @@ use crate::{
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::{
-    borrow::{Borrow, Cow},
-    collections::BTreeMap,
-    fmt::Display,
-};
+use std::{borrow::Cow, collections::BTreeMap, fmt::Display};
 use value::Value;
 
 pub mod builder;
@@ -223,10 +219,23 @@ impl Display for MatchName {
     }
 }
 
-#[derive(Clone, bincode::Encode, bincode::Decode, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, bincode::Encode, bincode::Decode, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MatchCommand {
     pub r#type: CommandType,
     pub name: MatchName,
+}
+
+impl MatchCommand {
+    pub fn is_match(&self, ty: CommandType, name: &str) -> bool {
+        self.r#type == ty
+            && match &self.name {
+                MatchName::Exact(cow) => cow == name,
+                MatchName::Regex(cow) => Regex::new(&cow) // TODO: slow
+                    .map(|re| re.is_match(name))
+                    .ok()
+                    .unwrap_or(false),
+            }
+    }
 }
 
 /// Use [`inventory::submit`] to register commands at compile-time.
