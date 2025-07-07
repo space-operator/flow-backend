@@ -63,7 +63,7 @@
 //! }
 //! ```
 
-use super::{CommandError, CommandTrait};
+use super::{CommandError, CommandTrait, InitResult};
 use crate::{
     Name,
     command::InstructionInfo,
@@ -71,12 +71,20 @@ use crate::{
     context::CommandContext,
     utils::LocalBoxFuture,
 };
+use futures::future::Either;
 use serde::{Serialize, de::DeserializeOwned};
-use std::{future::Future, sync::LazyLock};
+use std::{
+    future::{Future, Ready, ready},
+    sync::LazyLock,
+};
 use thiserror::Error as ThisError;
 
+pub fn build_sync(cmd: Box<dyn CommandTrait>) -> BuildResult {
+    Either::Left(ready(Ok(cmd)))
+}
+
 /// `fn build() -> BuildResult`.
-pub type BuildResult = Result<Box<dyn CommandTrait>, CommandError>;
+pub type BuildResult = Either<Ready<InitResult>, LocalBoxFuture<'static, InitResult>>;
 
 /// Use this to cache computation such as parsing JSON node-definition.
 pub type BuilderCache = LazyLock<Result<CmdBuilder, BuilderError>>;

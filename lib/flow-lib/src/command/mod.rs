@@ -14,9 +14,10 @@ use crate::{
     },
     context::CommandContext,
 };
+use futures::future::{Either, LocalBoxFuture, OptionFuture};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, collections::BTreeMap, fmt::Display};
+use std::{borrow::Cow, collections::BTreeMap, fmt::Display, future::Ready};
 use value::Value;
 
 pub mod builder;
@@ -28,7 +29,7 @@ pub mod prelude {
         CmdOutputDescription as Output, FlowId, Name, ValueSet, ValueType,
         command::{
             CommandDescription, CommandError, CommandTrait, InstructionInfo,
-            builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
+            builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder, build_sync},
         },
         config::{client::NodeData, node::Permissions},
         context::CommandContext,
@@ -238,18 +239,20 @@ impl MatchCommand {
     }
 }
 
+pub type InitResult = Result<Box<dyn CommandTrait>, CommandError>;
+
 /// Use [`inventory::submit`] to register commands at compile-time.
 #[derive(Clone)]
 pub struct CommandDescription {
     pub matcher: MatchCommand,
     /// Function to initialize the command from a [`NodeData`].
-    pub fn_new: fn(&NodeData) -> Result<Box<dyn CommandTrait>, CommandError>,
+    pub fn_new: fn(&NodeData) -> Either<Ready<InitResult>, LocalBoxFuture<'static, InitResult>>,
 }
 
 impl CommandDescription {
     pub const fn new(
         name: &'static str,
-        fn_new: fn(&NodeData) -> Result<Box<dyn CommandTrait>, CommandError>,
+        fn_new: fn(&NodeData) -> Either<Ready<InitResult>, LocalBoxFuture<'static, InitResult>>,
     ) -> Self {
         Self {
             matcher: MatchCommand {
@@ -298,7 +301,10 @@ impl CommandFactory {
         this
     }
 
-    pub fn init(&mut self, nd: &NodeData) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
+    pub async fn init(
+        &mut self,
+        nd: &NodeData,
+    ) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
         let cmd = if let Some(d) = self
             .exact_match
             .get(&(nd.r#type, nd.node_id.clone().into()))
@@ -314,7 +320,9 @@ impl CommandFactory {
             matched
         };
 
-        cmd.map(|cmd| (cmd.fn_new)(nd)).transpose()
+        OptionFuture::from(cmd.map(|cmd| (cmd.fn_new)(nd)))
+            .await
+            .transpose()
     }
 
     pub fn availables(&self) -> impl Iterator<Item = MatchCommand> {
