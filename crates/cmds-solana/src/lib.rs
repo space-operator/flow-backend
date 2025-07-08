@@ -94,8 +94,12 @@ pub mod tests {
     fn test_name_unique() {
         let mut m = BTreeSet::new();
         let mut dup = false;
-        for CommandDescription { name, .. } in inventory::iter::<CommandDescription>() {
-            if !m.insert(name) {
+        for CommandDescription { matcher, .. } in inventory::iter::<CommandDescription>() {
+            let name = match matcher.name.clone() {
+                flow_lib::command::MatchName::Exact(cow) => cow,
+                flow_lib::command::MatchName::Regex(cow) => cow,
+            };
+            if !m.insert(name.clone()) {
                 println!("Dupicated: {name}");
                 dup = true;
             }
