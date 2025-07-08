@@ -24,8 +24,8 @@ use flow_server::{
     user::SupabaseAuth,
     ws,
 };
-use futures_util::{TryFutureExt, future::ok};
-use std::{collections::BTreeSet, convert::Infallible, sync::Arc, time::Duration};
+use futures_util::future::ok;
+use std::{convert::Infallible, sync::Arc, time::Duration};
 use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 use utils::address_book::AddressBook;
 

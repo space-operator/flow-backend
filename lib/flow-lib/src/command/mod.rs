@@ -17,12 +17,7 @@ use crate::{
 use futures::future::{Either, LocalBoxFuture, OptionFuture};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::{
-    borrow::Cow,
-    collections::BTreeMap,
-    fmt::Display,
-    future::{Ready, ready},
-};
+use std::{borrow::Cow, collections::BTreeMap, fmt::Display, future::ready};
 use value::Value;
 
 pub mod builder;
