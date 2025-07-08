@@ -40,7 +40,7 @@ fn copy_dir_all(
 }
 
 macro_rules! include {
-    ($path:expr_2021) => {
+    ($path:expr) => {
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), $path))
     };
 }
