@@ -4,7 +4,7 @@ use bincode::config::standard;
 use capnp::capability::Promise;
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 use flow_lib::{
-    command::{CommandError, CommandTrait, MatchCommand},
+    command::{CommandError, CommandIndex, CommandTrait, MatchCommand},
     config::client::NodeData,
 };
 use futures::io::{BufReader, BufWriter};
@@ -36,7 +36,7 @@ pub struct ServerConfig {
 struct Info {
     direct_addresses: BTreeSet<SocketAddr>,
     relay_url: Url,
-    availables: Vec<MatchCommand>,
+    availables: CommandIndex<()>,
 }
 
 #[derive(Clone)]
@@ -96,7 +96,7 @@ impl AddressBook {
         }
     }
 
-    pub async fn new_command(
+    pub async fn init(
         &mut self,
         nd: &NodeData,
     ) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
@@ -104,11 +104,7 @@ impl AddressBook {
             let factories_lock = self.base.factories.read().unwrap();
             let factories = factories_lock
                 .iter()
-                .filter(|(_, v)| {
-                    v.availables
-                        .iter()
-                        .any(|m| m.is_match(nd.r#type, &nd.node_id))
-                })
+                .filter(|(_, v)| v.availables.get(nd.r#type, &nd.node_id).is_some())
                 .collect::<Vec<_>>();
             let (id, info) = factories
                 .choose(&mut thread_rng())
@@ -140,6 +136,15 @@ impl AddressBook {
             Some(client) => Ok(Some(Box::new(RemoteCommand::new(client).await?))),
             None => Ok(None),
         }
+    }
+
+    pub fn availables(&self) -> impl Iterator<Item = MatchCommand> {
+        let factories = self.base.factories.read().unwrap();
+        factories
+            .values()
+            .flat_map(|i| i.availables.availables())
+            .collect::<Vec<_>>()
+            .into_iter()
     }
 }
 
@@ -188,7 +193,7 @@ impl AddressBookConnection {
             Info {
                 direct_addresses,
                 relay_url,
-                availables,
+                availables: availables.into_iter().map(|m| (m, ())).collect(),
             },
         );
         Ok(())

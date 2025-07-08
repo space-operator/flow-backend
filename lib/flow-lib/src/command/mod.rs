@@ -17,7 +17,12 @@ use crate::{
 use futures::future::{Either, LocalBoxFuture, OptionFuture};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, collections::BTreeMap, fmt::Display, future::Ready};
+use std::{
+    borrow::Cow,
+    collections::BTreeMap,
+    fmt::Display,
+    future::{Ready, ready},
+};
 use value::Value;
 
 pub mod builder;
@@ -29,7 +34,7 @@ pub mod prelude {
         CmdOutputDescription as Output, FlowId, Name, ValueSet, ValueType,
         command::{
             CommandDescription, CommandError, CommandTrait, InstructionInfo,
-            builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder, build_sync},
+            builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
         },
         config::{client::NodeData, node::Permissions},
         context::CommandContext,
@@ -239,27 +244,25 @@ impl MatchCommand {
     }
 }
 
-pub type InitResult = Result<Box<dyn CommandTrait>, CommandError>;
+pub type FnNewResult = Result<Box<dyn CommandTrait>, CommandError>;
 
 /// Use [`inventory::submit`] to register commands at compile-time.
 #[derive(Clone)]
 pub struct CommandDescription {
     pub matcher: MatchCommand,
     /// Function to initialize the command from a [`NodeData`].
-    pub fn_new: fn(&NodeData) -> Either<Ready<InitResult>, LocalBoxFuture<'static, InitResult>>,
+    pub fn_new:
+        Either<fn(&NodeData) -> FnNewResult, fn(&NodeData) -> LocalBoxFuture<'static, FnNewResult>>,
 }
 
 impl CommandDescription {
-    pub const fn new(
-        name: &'static str,
-        fn_new: fn(&NodeData) -> Either<Ready<InitResult>, LocalBoxFuture<'static, InitResult>>,
-    ) -> Self {
+    pub const fn new(name: &'static str, fn_new: fn(&NodeData) -> FnNewResult) -> Self {
         Self {
             matcher: MatchCommand {
                 r#type: CommandType::Native,
                 name: MatchName::Exact(Cow::Borrowed(name)),
             },
-            fn_new,
+            fn_new: Either::Left(fn_new),
         }
     }
 }
@@ -272,57 +275,53 @@ pub fn collect_commands() -> BTreeMap<&'static MatchCommand, &'static CommandDes
         .collect()
 }
 
-pub struct CommandFactory {
-    exact_match: BTreeMap<(CommandType, Cow<'static, str>), &'static CommandDescription>,
-    regex: Vec<(CommandType, regex::Regex, &'static CommandDescription)>,
+#[derive(Debug, Clone)]
+pub struct CommandIndex<T> {
+    pub exact_match: BTreeMap<(CommandType, Cow<'static, str>), T>,
+    pub regex: Vec<(CommandType, regex::Regex, T)>,
 }
 
-impl CommandFactory {
-    pub fn collect() -> Self {
-        let mut this = Self {
+impl<T> Default for CommandIndex<T> {
+    fn default() -> Self {
+        Self {
             exact_match: <_>::default(),
             regex: <_>::default(),
-        };
-        for c in inventory::iter::<CommandDescription>() {
-            match &c.matcher.name {
+        }
+    }
+}
+
+impl<T> FromIterator<(MatchCommand, T)> for CommandIndex<T> {
+    fn from_iter<I: IntoIterator<Item = (MatchCommand, T)>>(iter: I) -> Self {
+        let mut this = Self::default();
+        for (matcher, t) in iter {
+            match &matcher.name {
                 MatchName::Exact(cow) => {
-                    this.exact_match.insert((c.matcher.r#type, cow.clone()), c);
+                    this.exact_match.insert((matcher.r#type, cow.clone()), t);
                 }
                 MatchName::Regex(cow) => {
-                    this.regex.push((
-                        c.matcher.r#type,
-                        Regex::new(&cow).expect("invalid regex"),
-                        c,
-                    ));
+                    this.regex
+                        .push((matcher.r#type, Regex::new(&cow).expect("invalid regex"), t));
                 }
             }
         }
-
         this
     }
+}
 
-    pub async fn init(
-        &mut self,
-        nd: &NodeData,
-    ) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
-        let cmd = if let Some(d) = self
-            .exact_match
-            .get(&(nd.r#type, nd.node_id.clone().into()))
-        {
-            Some(*d)
+impl<T> CommandIndex<T> {
+    pub fn get(&self, ty: CommandType, name: &str) -> Option<&T> {
+        let cmd = if let Some(d) = self.exact_match.get(&(ty, name.to_owned().into())) {
+            Some(d)
         } else {
             let mut matched = None;
             for r in &self.regex {
-                if r.0 == nd.r#type && r.1.is_match(&nd.node_id) {
-                    matched = Some(r.2);
+                if r.0 == ty && r.1.is_match(&name) {
+                    matched = Some(&r.2);
                 }
             }
             matched
         };
-
-        OptionFuture::from(cmd.map(|cmd| (cmd.fn_new)(nd)))
-            .await
-            .transpose()
+        cmd
     }
 
     pub fn availables(&self) -> impl Iterator<Item = MatchCommand> {
@@ -337,5 +336,36 @@ impl CommandFactory {
                 r#type: ty.clone(),
                 name: MatchName::Regex(regex.to_string().into()),
             }))
+    }
+}
+
+pub struct CommandFactory {
+    index: CommandIndex<&'static CommandDescription>,
+}
+
+impl CommandFactory {
+    pub fn collect() -> Self {
+        Self {
+            index: inventory::iter::<CommandDescription>()
+                .map(|c| (c.matcher.clone(), c))
+                .collect(),
+        }
+    }
+
+    pub fn init(
+        &self,
+        nd: &NodeData,
+    ) -> impl Future<Output = Result<Option<Box<dyn CommandTrait>>, CommandError>> + 'static {
+        let cmd = self.index.get(nd.r#type, &nd.node_id);
+
+        let either = cmd.map(|cmd| match cmd.fn_new {
+            Either::Left(fn_new) => Either::Left(ready(fn_new(nd))),
+            Either::Right(async_fn_new) => Either::Right(async_fn_new(nd)),
+        });
+        async move { OptionFuture::from(either).await.transpose() }
+    }
+
+    pub fn availables(&self) -> impl Iterator<Item = MatchCommand> {
+        self.index.availables()
     }
 }

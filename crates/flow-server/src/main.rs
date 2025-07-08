@@ -10,6 +10,7 @@ use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
 };
 use either::Either;
+use flow_lib::command::CommandFactory;
 use flow_server::{
     Config,
     api::{
@@ -56,8 +57,7 @@ async fn main() {
         }
     }
 
-    let fac = flow::context::CommandFactory::new(None);
-    let natives = fac.availables().collect::<Vec<_>>();
+    let natives = CommandFactory::collect().availables().collect::<Vec<_>>();
     tracing::info!("native commands: {:?}", natives);
 
     tracing::info!("allow CORS origins: {:?}", config.cors_origins);
@@ -119,6 +119,8 @@ async fn main() {
         }
     };
 
+    /*
+     * TODO: add this back
     if let DbPool::Real(db) = &db {
         let res = db
             .get_admin_conn()
@@ -144,6 +146,7 @@ async fn main() {
             }
         }
     }
+    */
 
     let store = RequestStore::new_app_data();
 

@@ -1,10 +1,16 @@
-use crate::connect_generic_futures_io;
+use std::future::ready;
+
+use crate::{anyhow2capnp, connect_generic_futures_io};
 use anyhow::{Context, anyhow};
 use bincode::config::standard;
 use capnp::{ErrorKind, capability::Promise};
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 use flow_lib::{command::CommandFactory, config::client::NodeData};
-use futures::io::{BufReader, BufWriter};
+use futures::{
+    TryFutureExt,
+    future::LocalBoxFuture,
+    io::{BufReader, BufWriter},
+};
 use iroh::{Endpoint, NodeAddr, endpoint::Incoming};
 use iroh_quinn::ConnectionError;
 use tokio::task::{JoinHandle, spawn_local};
@@ -119,16 +125,26 @@ impl CommandFactoryImpl {
         &mut self,
         params: InitParams,
         mut results: InitResults,
-    ) -> Result<(), anyhow::Error> {
-        let params = params.get().context("get")?;
+    ) -> LocalBoxFuture<'static, Result<(), anyhow::Error>> {
+        let nd = (move || {
+            let nd = params.get().context("get")?.get_nd().context("get_nd")?;
+            let nd: NodeData =
+                serde_json::from_slice(nd).context("serde_json deserialize NodeData")?;
+            Ok(nd)
+        })();
 
-        let nd = params.get_nd().context("get_nd")?;
-        let nd: NodeData = serde_json::from_slice(nd).context("serde_json deserialize NodeData")?;
-
-        if let Some(cmd) = self.factory.init(&nd)? {
-            results.get().set_cmd(command_trait::new_client(cmd));
+        match nd {
+            Ok(nd) => {
+                let fut = self.factory.init(&nd);
+                Box::pin(async move {
+                    if let Some(cmd) = fut.await? {
+                        results.get().set_cmd(command_trait::new_client(cmd));
+                    }
+                    Ok(())
+                })
+            }
+            Err(error) => return Box::pin(ready(Err(error))),
         }
-        Ok(())
     }
 
     fn all_availables_impl(&self, mut results: AllAvailablesResults) -> Result<(), anyhow::Error> {
@@ -142,10 +158,7 @@ impl CommandFactoryImpl {
 
 impl Server for CommandFactoryImpl {
     fn init(&mut self, params: InitParams, results: InitResults) -> Promise<(), capnp::Error> {
-        match self.init_impl(params, results) {
-            Ok(_) => Promise::ok(()),
-            Err(error) => Promise::err(capnp::Error::failed(error.to_string())),
-        }
+        Promise::from_future(self.init_impl(params, results).map_err(anyhow2capnp))
     }
 
     fn all_availables(
@@ -155,7 +168,7 @@ impl Server for CommandFactoryImpl {
     ) -> Promise<(), capnp::Error> {
         match self.all_availables_impl(results) {
             Ok(_) => Promise::ok(()),
-            Err(error) => Promise::err(capnp::Error::failed(error.to_string())),
+            Err(error) => Promise::err(anyhow2capnp(error)),
         }
     }
 }
