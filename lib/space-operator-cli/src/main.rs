@@ -33,7 +33,7 @@ use url::Url;
 use uuid::Uuid;
 use xshell::{Shell, cmd};
 
-static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| reqwest::Client::new());
+static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(Default::default);
 
 pub mod schema;
 
