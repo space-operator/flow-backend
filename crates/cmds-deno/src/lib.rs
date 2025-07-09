@@ -1,8 +1,12 @@
 use anyhow::Context as _;
 use command_rpc::client::RpcCommandClient;
 use flow_lib::{
-    command::{CommandError, CommandTrait, prelude::async_trait},
+    command::{
+        CommandDescription, CommandError, CommandTrait, MatchCommand,
+        prelude::{Either, async_trait},
+    },
     config::client::NodeData,
+    utils::LocalBoxFuture,
 };
 use serde::Deserialize;
 use serde::de::value::MapDeserializer;
@@ -45,7 +49,7 @@ macro_rules! include {
     };
 }
 
-pub async fn new(nd: &NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
+async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
     let extra = &nd.targets_form.extra.rest;
     let source = Extra::deserialize(MapDeserializer::new(
         extra.iter().map(|(k, v)| (k.as_str(), v)),
@@ -137,6 +141,19 @@ pub async fn new(nd: &NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
 
     Ok(Box::new(cmd))
 }
+
+pub fn new(nd: &NodeData) -> LocalBoxFuture<'static, Result<Box<dyn CommandTrait>, CommandError>> {
+    let nd = nd.clone();
+    Box::pin(new_owned(nd))
+}
+
+flow_lib::submit!(CommandDescription {
+    matcher: MatchCommand {
+        r#type: flow_lib::CommandType::Deno,
+        name: flow_lib::command::MatchName::Regex(std::borrow::Cow::Borrowed("")),
+    },
+    fn_new: Either::Right(new),
+});
 
 pub struct DenoCommand {
     inner: RpcCommandClient,

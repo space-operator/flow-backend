@@ -37,6 +37,7 @@ pub mod prelude {
     };
     pub use async_trait::async_trait;
     pub use bytes::Bytes;
+    pub use futures::future::Either;
     pub use serde::{Deserialize, Serialize};
     pub use serde_json::Value as JsonValue;
     pub use serde_with::serde_as;
