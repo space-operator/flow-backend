@@ -88,13 +88,18 @@ pub async fn get_decimals(client: &RpcClient, mint_account: Pubkey) -> crate::Re
 #[cfg(test)]
 pub mod tests {
     use crate::prelude::*;
+    use std::collections::BTreeSet;
 
     #[test]
     fn test_name_unique() {
-        let mut m = ::std::collections::HashSet::new();
+        let mut m = BTreeSet::new();
         let mut dup = false;
-        for CommandDescription { name, .. } in inventory::iter::<CommandDescription>() {
-            if !m.insert(name) {
+        for CommandDescription { matcher, .. } in inventory::iter::<CommandDescription>() {
+            let name = match matcher.name.clone() {
+                flow_lib::command::MatchName::Exact(cow) => cow,
+                flow_lib::command::MatchName::Regex(cow) => cow,
+            };
+            if !m.insert(name.clone()) {
                 println!("Dupicated: {name}");
                 dup = true;
             }

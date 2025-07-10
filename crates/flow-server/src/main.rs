@@ -10,6 +10,7 @@ use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
 };
 use either::Either;
+use flow_lib::command::CommandFactory;
 use flow_server::{
     Config,
     api::{
@@ -23,8 +24,8 @@ use flow_server::{
     user::SupabaseAuth,
     ws,
 };
-use futures_util::{TryFutureExt, future::ok};
-use std::{collections::BTreeSet, convert::Infallible, sync::Arc, time::Duration};
+use futures_util::future::ok;
+use std::{convert::Infallible, sync::Arc, time::Duration};
 use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 use utils::address_book::AddressBook;
 
@@ -35,6 +36,8 @@ use cmds_pdg as _;
 use cmds_solana as _;
 #[cfg(feature = "commands")]
 use cmds_std as _;
+#[cfg(feature = "commands")]
+use cmds_deno as _;
 
 #[actix::main]
 async fn main() {
@@ -56,8 +59,7 @@ async fn main() {
         }
     }
 
-    let fac = flow::context::CommandFactory::new(None);
-    let natives = fac.availables().collect::<Vec<_>>();
+    let natives = CommandFactory::collect().availables().collect::<Vec<_>>();
     tracing::info!("native commands: {:?}", natives);
 
     tracing::info!("allow CORS origins: {:?}", config.cors_origins);
@@ -119,6 +121,8 @@ async fn main() {
         }
     };
 
+    /*
+     * TODO: add this back
     if let DbPool::Real(db) = &db {
         let res = db
             .get_admin_conn()
@@ -144,6 +148,7 @@ async fn main() {
             }
         }
     }
+    */
 
     let store = RequestStore::new_app_data();
 

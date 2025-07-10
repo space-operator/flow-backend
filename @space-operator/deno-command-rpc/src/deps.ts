@@ -12,4 +12,4 @@ export {
   type ListenOptions,
   Router,
   Status,
-} from "jsr:@oak/oak@14.2.0";
+} from "jsr:@oak/oak@17.1.5";

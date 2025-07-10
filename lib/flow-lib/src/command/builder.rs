@@ -63,7 +63,7 @@
 //! }
 //! ```
 
-use super::{CommandError, CommandTrait};
+use super::{CommandError, CommandTrait, FnNewResult};
 use crate::{
     Name,
     command::InstructionInfo,
@@ -76,7 +76,7 @@ use std::{future::Future, sync::LazyLock};
 use thiserror::Error as ThisError;
 
 /// `fn build() -> BuildResult`.
-pub type BuildResult = Result<Box<dyn CommandTrait>, CommandError>;
+pub type BuildResult = FnNewResult;
 
 /// Use this to cache computation such as parsing JSON node-definition.
 pub type BuilderCache = LazyLock<Result<CmdBuilder, BuilderError>>;

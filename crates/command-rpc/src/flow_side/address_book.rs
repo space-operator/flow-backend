@@ -4,7 +4,7 @@ use bincode::config::standard;
 use capnp::capability::Promise;
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 use flow_lib::{
-    command::{CommandError, CommandTrait},
+    command::{CommandError, CommandIndex, CommandTrait, MatchCommand},
     config::client::NodeData,
 };
 use futures::io::{BufReader, BufWriter};
@@ -36,7 +36,7 @@ pub struct ServerConfig {
 struct Info {
     direct_addresses: BTreeSet<SocketAddr>,
     relay_url: Url,
-    availables: Vec<String>,
+    availables: CommandIndex<()>,
 }
 
 #[derive(Clone)]
@@ -96,16 +96,15 @@ impl AddressBook {
         }
     }
 
-    pub async fn new_command(
+    pub async fn init(
         &mut self,
-        name: &str,
         nd: &NodeData,
     ) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
         let (node_id, info) = {
             let factories_lock = self.base.factories.read().unwrap();
             let factories = factories_lock
                 .iter()
-                .filter(|(_, v)| v.availables.iter().any(|c| c == name))
+                .filter(|(_, v)| v.availables.get(nd.r#type, &nd.node_id).is_some())
                 .collect::<Vec<_>>();
             let (id, info) = factories
                 .choose(&mut thread_rng())
@@ -124,19 +123,28 @@ impl AddressBook {
                 };
                 let client =
                     command_factory::connect_iroh(self.base.endpoint.clone(), addr).await?;
-                let cmd_client = client.init(name, nd).await?;
+                let cmd_client = client.init(nd).await?;
                 vacant_entry.insert(client);
                 cmd_client
             }
             std::collections::btree_map::Entry::Occupied(occupied_entry) => {
                 let client = occupied_entry.get();
-                client.init(name, nd).await?
+                client.init(nd).await?
             }
         };
         match cmd_client {
             Some(client) => Ok(Some(Box::new(RemoteCommand::new(client).await?))),
             None => Ok(None),
         }
+    }
+
+    pub fn availables(&self) -> impl Iterator<Item = MatchCommand> {
+        let factories = self.base.factories.read().unwrap();
+        factories
+            .values()
+            .flat_map(|i| i.availables.availables())
+            .collect::<Vec<_>>()
+            .into_iter()
     }
 }
 
@@ -173,7 +181,7 @@ impl AddressBookConnection {
         let direct_addresses: BTreeSet<SocketAddr> =
             bincode::decode_from_slice(params.get_direct_addresses()?, standard())?.0;
         let relay_url: Url = params.get_relay_url()?.to_str()?.parse()?;
-        let availables: Vec<String> =
+        let availables: Vec<MatchCommand> =
             bincode::decode_from_slice(params.get_availables()?, standard())?.0;
         tracing::info!(
             "node {} joined, availables: {:?}",
@@ -185,7 +193,7 @@ impl AddressBookConnection {
             Info {
                 direct_addresses,
                 relay_url,
-                availables,
+                availables: availables.into_iter().map(|m| (m, ())).collect(),
             },
         );
         Ok(())
@@ -223,7 +231,7 @@ pub trait AddressBookExt {
         &self,
         direct_addresses: BTreeSet<SocketAddr>,
         relay_url: Url,
-        availables: Vec<String>,
+        availables: &[MatchCommand],
     ) -> impl Future<Output = Result<(), anyhow::Error>>;
 
     fn leave(&self) -> impl Future<Output = Result<(), anyhow::Error>>;
@@ -234,7 +242,7 @@ impl AddressBookExt for Client {
         &self,
         direct_addresses: BTreeSet<SocketAddr>,
         relay_url: Url,
-        availables: Vec<String>,
+        availables: &[MatchCommand],
     ) -> Result<(), anyhow::Error> {
         let mut req = self.join_request();
         req.get().set_relay_url(relay_url.as_str());

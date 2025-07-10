@@ -1,6 +1,5 @@
 use crate::{
     command::flow_output::FLOW_OUTPUT,
-    context::CommandFactory,
     flow_registry::FlowRegistry,
     flow_run_events::{
         EventSender, FlowError, FlowFinish, FlowStart, NODE_SPAN_NAME, NodeError, NodeFinish,
@@ -9,9 +8,10 @@ use crate::{
 };
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
+use command_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
-    command::{CommandError, CommandTrait, InstructionInfo},
+    command::{CommandError, CommandFactory, CommandTrait, InstructionInfo},
     config::client::{self, PartialConfig},
     context::{
         CommandContext, CommandContextData, FlowContextData, FlowServices, FlowSetContextData,
@@ -421,7 +421,10 @@ impl FlowGraph {
             },
         };
 
-        let mut f = CommandFactory::new(registry.remotes);
+        let mut f = CommandFactoryWithRemotes {
+            factory: CommandFactory::collect(),
+            remotes: registry.remotes,
+        };
 
         let mut g = StableGraph::new();
 
@@ -449,7 +452,16 @@ impl FlowGraph {
                 }
                 continue;
             }
-            let command = f.new_command(&n.command_name, &n.client_node_data).await?;
+            let command = f
+                .init(&n.client_node_data)
+                .await
+                .map_err(crate::Error::CreateCmd)?
+                .ok_or_else(|| {
+                    crate::Error::CreateCmd(CommandError::msg(format!(
+                        "not found: {}",
+                        n.client_node_data.node_id
+                    )))
+                })?;
             let id = n.id;
             let idx = g.add_node(id);
             let node = Node {

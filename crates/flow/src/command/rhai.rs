@@ -1,4 +1,4 @@
-use flow_lib::command::prelude::*;
+use flow_lib::command::{MatchCommand, prelude::*};
 use std::sync::Arc;
 use tower::{Service, ServiceExt};
 
@@ -66,3 +66,11 @@ pub fn build(nd: &NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
         inner: cmd,
     }))
 }
+
+inventory::submit!(CommandDescription {
+    matcher: MatchCommand {
+        r#type: flow_lib::CommandType::Native,
+        name: flow_lib::command::MatchName::Regex(std::borrow::Cow::Borrowed("^rhai_script_"))
+    },
+    fn_new: futures::future::Either::Left(build)
+});

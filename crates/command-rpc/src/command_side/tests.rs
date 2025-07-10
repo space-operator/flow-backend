@@ -1,14 +1,13 @@
 use crate::command_side::command_factory::{self, CommandFactoryExt};
 use crate::flow_side::command_context::CommandContextImpl;
 use cmds_std as _;
-use flow_lib::command::{CommandDescription, CommandError, CommandTrait};
+use flow_lib::command::{CommandDescription, CommandError, CommandFactory, CommandTrait};
 use flow_lib::config::client::NodeData;
 use flow_lib::context::CommandContext;
 use flow_lib::value;
 use flow_lib::value::bincode_impl::map_from_bincode;
 use flow_lib::{
     CmdInputDescription, CmdOutputDescription, Name, ValueType,
-    command::collect_commands,
     config::client::{Extra, Source, Target, TargetsForm},
     utils::LocalBoxFuture,
     value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
@@ -17,7 +16,6 @@ use futures::FutureExt;
 use iroh::{Endpoint, Watcher};
 use rust_decimal_macros::dec;
 use serde::Deserialize;
-use std::borrow::Cow;
 
 struct Add;
 impl CommandTrait for Add {
@@ -82,7 +80,7 @@ impl CommandTrait for Add {
 #[actix::test]
 async fn test_serve_iroh() {
     let addr = {
-        let factory = command_factory::new_client(collect_commands());
+        let factory = command_factory::new_client(CommandFactory::collect());
         let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
         let addr = endpoint.node_addr().initialized().await.unwrap();
         factory.bind_iroh(endpoint);
@@ -96,18 +94,11 @@ async fn test_serve_iroh() {
     assert!(!names.is_empty());
 }
 
+inventory::submit!(CommandDescription::new("add", |_| Ok(Box::new(Add))));
+
 #[actix::test]
 async fn test_call() {
-    let client = command_factory::new_client(
-        [(
-            Cow::Borrowed("add"),
-            &CommandDescription {
-                name: Cow::Borrowed("add"),
-                fn_new: |_| Ok(Box::new(Add)),
-            },
-        )]
-        .into(),
-    );
+    let client = command_factory::new_client(CommandFactory::collect());
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
     dbg!("bind");
     let addr = endpoint.node_addr().initialized().await.unwrap();
@@ -156,7 +147,7 @@ async fn test_call() {
         instruction_info: None,
     };
 
-    let cmd = client.init("add", &nd).await.unwrap().unwrap();
+    let cmd = client.init(&nd).await.unwrap().unwrap();
 
     let mut req = cmd.run_request();
     req.get().set_inputs(

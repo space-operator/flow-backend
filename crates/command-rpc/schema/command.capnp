@@ -1,7 +1,7 @@
 @0xea2e5dc9f8697f6c;
 
 interface CommandFactory {
-    init @0 (name: Text, nd: Data) -> (cmd: CommandTrait);
+    init @0 (nd: Data) -> (cmd: CommandTrait);
 
     allAvailables @1 () -> (availables: Data);
 }

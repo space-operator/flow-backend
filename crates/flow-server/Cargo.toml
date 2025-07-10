@@ -6,20 +6,20 @@ edition = "2024"
 [features]
 default = ["import", "commands"]
 import = []
-commands = ["dep:cmds-pdg", "dep:cmds-std", "dep:cmds-solana"]
+commands = ["dep:cmds-pdg", "dep:cmds-std", "dep:cmds-solana", "dep:cmds-deno"]
 
 [dependencies]
 db = { workspace = true }
 flow = { workspace = true }
 flow-lib = { workspace = true }
 value = { workspace = true }
-space-wasm = { workspace = true }
 utils = { workspace = true }
 cmds-pdg = { workspace = true, optional = true }
 cmds-std = { workspace = true , optional = true}
 cmds-solana = { workspace = true, optional = true }
+cmds-deno = { workspace = true, optional = true }
 rhai-script = { workspace = true }
-command-rpc.workspace = true
+command-rpc = { workspace = true }
 
 actix = "0.13"
 actix-web = "4"

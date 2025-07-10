@@ -46,6 +46,28 @@ Deno.test("start flow", async () => {
   await checkNoErrors(sup, flow_run_id);
 });
 
+Deno.test("test deno node", async () => {
+  const owner = new client.Client({
+    host: "http://localhost:8080",
+    anonKey,
+    token: apiKey,
+  });
+
+  const flowId = 3743;
+  const { flow_run_id } = await owner.startFlow(flowId, {});
+
+  const result = await owner.getFlowOutput(flow_run_id);
+  const c = result.toJSObject().pi;
+  assertEquals(c, 3.14);
+
+  const jwt = await owner.claimToken();
+  const sup = createClient<client.Database>(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false },
+  });
+  await sup.auth.setSession(jwt);
+  await checkNoErrors(sup, flow_run_id);
+});
+
 Deno.test("interflow", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",

@@ -53,3 +53,5 @@ agave-feature-set = "2"
 agave-precompiles = "2"
 bincode1 = { package = "bincode", version = "1" }
 bincode = { version = "2.0.1", features = ["serde"] }
+semver = { version = "1.0.26", features = ["serde"] }
+regex = "1.11.1"

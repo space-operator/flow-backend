@@ -26,7 +26,7 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 ARG PROFILE=release
 RUN cargo build --profile=$PROFILE --bin flow-server --quiet
 
-FROM docker.io/denoland/deno:debian-2.3.7 AS deno
+FROM docker.io/denoland/deno:debian AS deno
 
 # Step 4:
 # Create a tiny output image.

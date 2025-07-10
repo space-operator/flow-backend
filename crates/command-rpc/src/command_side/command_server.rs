@@ -1,5 +1,5 @@
 use anyhow::Context;
-use flow_lib::command::collect_commands;
+use flow_lib::command::CommandFactory;
 use iroh::Watcher;
 use iroh::{Endpoint, NodeAddr};
 use rand::rngs::OsRng;
@@ -85,7 +85,9 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
 
     let servers = [server];
 
-    let commands = collect_commands();
+    let factory = CommandFactory::collect();
+    let availables = factory.availables().collect::<Vec<_>>();
+
     let endpoint = Endpoint::builder()
         .secret_key(
             config
@@ -104,7 +106,6 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
         .map(|addr| addr.addr)
         .collect();
     let relay_url: Url = endpoint.home_relay().initialized().await?.into();
-    let availables: Vec<String> = commands.keys().map(|name| name.to_string()).collect();
     let mut clients = Vec::new();
     for addr in &servers {
         let client = address_book::connect_iroh(
@@ -117,11 +118,7 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
         )
         .await?;
         client
-            .join(
-                direct_addresses.clone(),
-                relay_url.clone(),
-                availables.clone(),
-            )
+            .join(direct_addresses.clone(), relay_url.clone(), &availables)
             .await?;
         clients.push(client);
         tracing::info!("joined {}", addr.node_id);
@@ -131,7 +128,7 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
         tracing::info!("connection type {:?}", conn_type);
     }
 
-    let client = command_factory::new_client(commands);
+    let client = command_factory::new_client(factory);
     client.bind_iroh(endpoint);
 
     tokio::signal::ctrl_c().await.ok();
