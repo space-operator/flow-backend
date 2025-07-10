@@ -36,6 +36,8 @@ use cmds_pdg as _;
 use cmds_solana as _;
 #[cfg(feature = "commands")]
 use cmds_std as _;
+#[cfg(feature = "commands")]
+use cmds_deno as _;
 
 #[actix::main]
 async fn main() {

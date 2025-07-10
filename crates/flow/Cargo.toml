@@ -7,11 +7,9 @@ edition = "2024"
 flow-lib = { workspace = true }
 value = { workspace = true }
 utils = { workspace = true }
-space-wasm = { workspace = true }
 rhai-script.workspace = true
 command-rpc.workspace = true
 srpc.workspace = true
-cmds-deno.workspace = true
 
 anyhow = "1.0"
 bs58 = "0.4"
