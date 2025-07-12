@@ -2,7 +2,8 @@ use anyhow::Context;
 use bincode::config::standard;
 use capnp::capability::Promise;
 use flow_lib::{
-    context::{CommandContext, execute},
+    UserId,
+    context::{CommandContext, execute, get_jwt},
     utils::tower_client::CommonErrorExt,
     value,
 };
@@ -10,7 +11,7 @@ use futures::{TryFutureExt, future::LocalBoxFuture};
 use tower::{Service, ServiceExt};
 
 pub use crate::command_capnp::command_context::*;
-use crate::r2p;
+use crate::{anyhow2capnp, r2p};
 
 impl tower::Service<execute::Request> for Client {
     type Response = execute::Response;
@@ -51,6 +52,43 @@ impl tower::Service<execute::Request> for Client {
             .0;
             Ok(resp)
         })
+    }
+}
+
+impl tower::Service<get_jwt::Request> for Client {
+    type Response = get_jwt::Response;
+
+    type Error = get_jwt::Error;
+
+    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
+
+    fn poll_ready(
+        &mut self,
+        _: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        std::task::Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: get_jwt::Request) -> Self::Future {
+        let client = self.clone();
+        Box::pin(
+            async move {
+                let mut request = client.get_jwt_request();
+                request.get().set_user_id(&req.user_id.to_string());
+                let response = request.send().promise.await.context("send")?;
+                let access_token = response
+                    .get()
+                    .context("get")?
+                    .get_access_token()
+                    .context("get_access_token")?
+                    .to_str()
+                    .context("utf8")?;
+                Ok::<_, anyhow::Error>(get_jwt::Response {
+                    access_token: access_token.to_owned(),
+                })
+            }
+            .map_err(get_jwt::Error::from_anyhow),
+        )
     }
 }
 
@@ -96,13 +134,39 @@ impl CommandContextImpl {
             Ok(())
         }
     }
+
+    fn get_jwt_impl(
+        &mut self,
+        params: GetJwtParams,
+        mut results: GetJwtResults,
+    ) -> impl Future<Output = Result<(), anyhow::Error>> + 'static {
+        let svc = self.context.raw().services.get_jwt.clone();
+        async move {
+            let user_id: UserId = params
+                .get()
+                .context("get")?
+                .get_user_id()
+                .context("get_user_id")?
+                .to_str()
+                .context("utf8")?
+                .parse()
+                .context("parse user_id")?;
+            let token = svc
+                .ready_oneshot()
+                .await
+                .context("ready")?
+                .call(get_jwt::Request { user_id })
+                .await?
+                .access_token;
+            results.get().set_access_token(token);
+            Ok(())
+        }
+    }
 }
 
 impl Server for CommandContextImpl {
     fn data(&mut self, params: DataParams, result: DataResults) -> Promise<(), capnp::Error> {
-        r2p(self
-            .data_impl(params, result)
-            .map_err(|error| capnp::Error::failed(error.to_string())))
+        r2p(self.data_impl(params, result).map_err(anyhow2capnp))
     }
 
     fn execute(
@@ -110,9 +174,14 @@ impl Server for CommandContextImpl {
         params: ExecuteParams,
         result: ExecuteResults,
     ) -> Promise<(), capnp::Error> {
-        Promise::from_future(
-            self.execute_impl(params, result)
-                .map_err(|error| capnp::Error::failed(error.to_string())),
-        )
+        Promise::from_future(self.execute_impl(params, result).map_err(anyhow2capnp))
+    }
+
+    fn get_jwt(
+        &mut self,
+        params: GetJwtParams,
+        results: GetJwtResults,
+    ) -> Promise<(), capnp::Error> {
+        Promise::from_future(self.get_jwt_impl(params, results).map_err(anyhow2capnp))
     }
 }

@@ -3,7 +3,9 @@ use capnp::capability::Promise;
 use flow_lib::{
     Value,
     command::CommandTrait,
-    context::{CommandContext, CommandContextData, FlowServices, FlowSetServices, execute},
+    context::{
+        CommandContext, CommandContextData, FlowServices, FlowSetServices, execute, get_jwt,
+    },
     utils::tower_client::unimplemented_svc,
     value::{
         self,
@@ -62,8 +64,8 @@ impl CommandTraitImpl {
             let data: CommandContextData =
                 value::from_value(value).context("decode CommandContextData")?;
             let ctx = CommandContext::builder()
-                .execute(execute::Svc::new(MakeSync::new(context)))
-                .get_jwt(unimplemented_svc())
+                .execute(execute::Svc::new(MakeSync::new(context.clone())))
+                .get_jwt(get_jwt::Svc::new(MakeSync::new(context.clone())))
                 .flow(FlowServices {
                     signer: unimplemented_svc(),
                     set: FlowSetServices {
