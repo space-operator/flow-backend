@@ -665,6 +665,7 @@ impl CommandContext {
             services: RawServices {
                 signer: &self.flow.signer,
                 execute: &self.execute,
+                get_jwt: &self.get_jwt,
             },
         }
     }
@@ -673,6 +674,7 @@ impl CommandContext {
 pub struct RawServices<'a> {
     pub signer: &'a signer::Svc,
     pub execute: &'a execute::Svc,
+    pub get_jwt: &'a get_jwt::Svc,
 }
 
 pub struct RawContext<'a> {
