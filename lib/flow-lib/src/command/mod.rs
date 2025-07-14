@@ -17,7 +17,7 @@ use crate::{
 use futures::future::{Either, LocalBoxFuture, OptionFuture};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, collections::BTreeMap, fmt::Display, future::ready};
+use std::{borrow::Cow, collections::BTreeMap, future::ready};
 use value::Value;
 
 pub mod builder;
@@ -174,7 +174,7 @@ impl InstructionInfo {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, bincode::Encode)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, bincode::Encode)]
 pub enum MatchName {
     Exact(Cow<'static, str>),
     Regex(Cow<'static, str>),
@@ -212,7 +212,20 @@ impl<'de, C> bincode::BorrowDecode<'de, C> for MatchName {
     }
 }
 
-impl Display for MatchName {
+impl std::fmt::Debug for MatchName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Exact(arg0) => arg0.fmt(f),
+            Self::Regex(arg0) => {
+                f.write_str("/")?;
+                f.write_str(&arg0)?;
+                f.write_str("/")
+            }
+        }
+    }
+}
+
+impl std::fmt::Display for MatchName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             MatchName::Exact(cow) => cow.fmt(f),
@@ -221,10 +234,18 @@ impl Display for MatchName {
     }
 }
 
-#[derive(Debug, Clone, bincode::Encode, bincode::Decode, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, bincode::Encode, bincode::Decode, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MatchCommand {
     pub r#type: CommandType,
     pub name: MatchName,
+}
+
+impl std::fmt::Debug for MatchCommand {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.r#type.fmt(f)?;
+        f.write_str(":")?;
+        self.name.fmt(f)
+    }
 }
 
 impl MatchCommand {
