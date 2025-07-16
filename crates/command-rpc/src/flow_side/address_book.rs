@@ -19,10 +19,7 @@ use tokio::task::{JoinHandle, spawn_local};
 use url::Url;
 
 pub use crate::command_capnp::address_book::*;
-use crate::{
-    command_side::command_factory::{self, CommandFactoryExt},
-    r2p,
-};
+use crate::command_side::command_factory::{self, CommandFactoryExt};
 
 use super::remote_command::RemoteCommand;
 
@@ -216,13 +213,13 @@ impl AddressBookConnection {
 
 impl Server for AddressBookConnection {
     fn join(&mut self, params: JoinParams, _: JoinResults) -> Promise<(), capnp::Error> {
-        r2p(self
-            .join_impl(params)
-            .map_err(|error| capnp::Error::failed(error.to_string())))
+        self.join_impl(params)
+            .map_err(|error| capnp::Error::failed(error.to_string()))
+            .into()
     }
 
     fn leave(&mut self, _: LeaveParams, _: LeaveResults) -> Promise<(), capnp::Error> {
-        r2p(self.leave_impl())
+        self.leave_impl().into()
     }
 }
 

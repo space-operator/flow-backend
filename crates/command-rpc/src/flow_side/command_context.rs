@@ -10,8 +10,8 @@ use flow_lib::{
 use futures::{TryFutureExt, future::LocalBoxFuture};
 use tower::{Service, ServiceExt};
 
+use crate::anyhow2capnp;
 pub use crate::command_capnp::command_context::*;
-use crate::{anyhow2capnp, r2p};
 
 impl tower::Service<execute::Request> for Client {
     type Response = execute::Response;
@@ -162,11 +162,35 @@ impl CommandContextImpl {
             Ok(())
         }
     }
+
+    fn log_impl(&mut self, params: LogParams, _: LogResults) -> Result<(), anyhow::Error> {
+        let logs = params
+            .get()
+            .context("get")?
+            .get_logs()
+            .context("get_logs")?;
+        for log in logs {
+            let level = log.get_level().context("get_level")?;
+            let content = log
+                .get_content()
+                .context("get_content")?
+                .to_str()
+                .context("utf8")?;
+            match level {
+                log::LogLevel::Trace => tracing::trace!("{}", content),
+                log::LogLevel::Debug => tracing::debug!("{}", content),
+                log::LogLevel::Info => tracing::info!("{}", content),
+                log::LogLevel::Warn => tracing::warn!("{}", content),
+                log::LogLevel::Error => tracing::error!("{}", content),
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Server for CommandContextImpl {
     fn data(&mut self, params: DataParams, result: DataResults) -> Promise<(), capnp::Error> {
-        r2p(self.data_impl(params, result).map_err(anyhow2capnp))
+        self.data_impl(params, result).map_err(anyhow2capnp).into()
     }
 
     fn execute(
@@ -183,5 +207,9 @@ impl Server for CommandContextImpl {
         results: GetJwtResults,
     ) -> Promise<(), capnp::Error> {
         Promise::from_future(self.get_jwt_impl(params, results).map_err(anyhow2capnp))
+    }
+
+    fn log(&mut self, params: LogParams, results: LogResults) -> Promise<(), capnp::Error> {
+        self.log_impl(params, results).map_err(anyhow2capnp).into()
     }
 }

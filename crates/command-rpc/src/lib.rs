@@ -1,6 +1,6 @@
 //! RPC specification for calling a command on a remote node
 
-use capnp::capability::{FromClientHook, Promise};
+use capnp::capability::FromClientHook;
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 
 pub mod client;
@@ -8,14 +8,6 @@ pub mod client;
 pub(crate) mod command_capnp {
     #![allow(clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/command_capnp.rs"));
-}
-
-// https://github.com/capnproto/capnproto-rust/pull/564
-pub(crate) fn r2p<T, E>(r: Result<T, E>) -> Promise<T, E> {
-    match r {
-        Ok(t) => Promise::ok(t),
-        Err(e) => Promise::err(e),
-    }
 }
 
 pub(crate) fn anyhow2capnp(error: anyhow::Error) -> capnp::Error {
