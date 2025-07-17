@@ -1,4 +1,4 @@
-use crate::{Config, api::flow_api_input::NewRequestService, flow_logs};
+use crate::{Config, api::flow_api_input::NewRequestService};
 use actix::{
     Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context, ResponseActFuture,
     ResponseFuture, WrapFuture, fut::wrap_future,
@@ -8,25 +8,24 @@ use db::{
     FlowRunLogsRow,
     pool::{DbPool, ProxiedDbPool, RealDbPool},
 };
-use flow::flow_run_events::{DEFAULT_LOG_FILTER, EventSender, FLOW_SPAN_NAME};
+use flow::flow_run_events::{DEFAULT_LOG_FILTER, EventSender};
 use flow_lib::{
     BoxError, FlowRunId, UserId, config::Endpoints, context::get_jwt,
     utils::tower_client::CommonErrorExt,
 };
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
-use serde::Serialize;
+use iroh::Watcher;
 use n0_watcher::Disconnected;
+use serde::Serialize;
 use std::{
     net::SocketAddr,
     sync::{Arc, atomic::AtomicU64},
     time::Duration,
 };
 use tokio::sync::broadcast;
-use tracing::{Span, level_filters::LevelFilter};
-use tracing_subscriber::EnvFilter;
+use tracing::Span;
 use utils::address_book::{AddressBook, AlreadyStarted, ManagableActor};
-use iroh::Watcher;
 
 pub mod flow_run_worker;
 pub mod messages;
@@ -60,7 +59,7 @@ pub struct DBWorker {
     /// All actors in the system
     actors: AddressBook,
     counter: Counter,
-    tracing_data: flow_logs::Map,
+    tracing_data: flow_tracing::FlowLogs,
     tx: mpsc::UnboundedSender<Vec<FlowRunLogsRow>>,
     done_tx: broadcast::Sender<()>,
     new_flow_api_request: NewRequestService,
@@ -112,7 +111,7 @@ impl DBWorker {
         db: DbPool,
         config: &Config,
         actors: AddressBook,
-        tracing_data: flow_logs::Map,
+        tracing_data: flow_tracing::FlowLogs,
         new_flow_api_request: NewRequestService,
         remote_command_address_book: BaseAddressBook,
         ctx: &mut actix::Context<Self>,
@@ -316,14 +315,13 @@ impl actix::Message for RegisterLogs {
 impl actix::Handler<RegisterLogs> for DBWorker {
     type Result = <RegisterLogs as actix::Message>::Result;
     fn handle(&mut self, msg: RegisterLogs, _: &mut Self::Context) -> Self::Result {
-        let span = tracing::error_span!(FLOW_SPAN_NAME, flow_run_id = msg.flow_run_id.to_string());
-        let id = span.id().ok_or("span ID is None")?;
-        let filter = EnvFilter::builder()
-            .with_default_directive(LevelFilter::ERROR.into())
-            .parse_lossy(msg.filter.as_deref().unwrap_or(DEFAULT_LOG_FILTER));
-        let mut map = self.tracing_data.write().unwrap();
-        map.insert(id, flow_logs::Data { tx: msg.tx, filter });
-        Ok(span)
+        self.tracing_data
+            .register_flow_logs(
+                msg.flow_run_id,
+                msg.filter.as_deref().unwrap_or(DEFAULT_LOG_FILTER),
+                msg.tx,
+            )
+            .map_err(Into::into)
     }
 }
 

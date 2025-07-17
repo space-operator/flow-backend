@@ -43,6 +43,7 @@ rand = "0.8"
 toml = "0.8.23"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 pin-project-lite = "0.2.16"
+flow-tracing = { version = "0.1.0", path = "../flow-tracing" }
 
 [dev-dependencies]
 criterion = "0.5.1"

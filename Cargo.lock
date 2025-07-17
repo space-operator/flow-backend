@@ -3032,6 +3032,7 @@ dependencies = [
  "five8",
  "flow",
  "flow-lib",
+ "flow-tracing",
  "flow-value",
  "futures-channel",
  "futures-util",
@@ -3068,6 +3069,19 @@ dependencies = [
  "url",
  "utils",
  "uuid 1.17.0",
+]
+
+[[package]]
+name = "flow-tracing"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.12",
+ "chrono",
+ "flow",
+ "flow-lib",
+ "tracing",
+ "tracing-log",
+ "tracing-subscriber",
 ]
 
 [[package]]

@@ -21,7 +21,6 @@ use user::SignatureAuth;
 pub mod api;
 pub mod db_worker;
 pub mod error;
-pub mod flow_logs;
 pub mod middleware;
 pub mod user;
 pub mod ws;
