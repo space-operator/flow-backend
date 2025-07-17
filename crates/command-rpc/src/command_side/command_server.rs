@@ -45,14 +45,17 @@ struct InfoResponse {
 }
 
 pub fn main() {
+    let (logs, ignore) = flow_tracing::new();
     tracing_subscriber::registry()
         .with(fmt::layer())
         .with(
             EnvFilter::builder()
                 .with_env_var("RUST_LOG")
                 .with_default_directive(LevelFilter::INFO.into())
-                .from_env_lossy(),
+                .from_env_lossy()
+                .with_filter(ignore),
         )
+        .with(logs)
         .init();
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
