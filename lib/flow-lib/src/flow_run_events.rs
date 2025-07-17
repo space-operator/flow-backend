@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use flow_lib::{NodeId, context::signer::SignatureRequest};
+use crate::{NodeId, context::signer::SignatureRequest};
 use serde::Serialize;
 use value::Value;
 

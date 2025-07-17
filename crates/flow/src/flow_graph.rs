@@ -1,11 +1,4 @@
-use crate::{
-    command::flow_output::FLOW_OUTPUT,
-    flow_registry::FlowRegistry,
-    flow_run_events::{
-        EventSender, FlowError, FlowFinish, FlowStart, NODE_SPAN_NAME, NodeError, NodeFinish,
-        NodeOutput, NodeStart,
-    },
-};
+use crate::{command::flow_output::FLOW_OUTPUT, flow_registry::FlowRegistry};
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
 use command_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
@@ -16,6 +9,10 @@ use flow_lib::{
     context::{
         CommandContext, CommandContextData, FlowContextData, FlowServices, FlowSetContextData,
         FlowSetServices, execute, get_jwt,
+    },
+    flow_run_events::{
+        EventSender, FlowError, FlowFinish, FlowStart, NODE_SPAN_NAME, NodeError, NodeFinish,
+        NodeOutput, NodeStart,
     },
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
     utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
@@ -1882,9 +1879,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::flow_run_events::event_channel;
     use anyhow::anyhow;
     use flow_lib::config::client::ClientConfig;
+    use flow_lib::flow_run_events::event_channel;
 
     use cmds_solana as _;
     use cmds_std as _;

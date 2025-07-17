@@ -1,7 +1,9 @@
 use ahash::AHashMap;
 use chrono::Utc;
-use flow::flow_run_events::{Event, EventSender, FLOW_SPAN_NAME, FlowLog, NODE_SPAN_NAME, NodeLog};
-use flow_lib::{FlowRunId, NodeId};
+use flow_lib::{
+    FlowRunId, NodeId,
+    flow_run_events::{Event, EventSender, FLOW_SPAN_NAME, FlowLog, NODE_SPAN_NAME, NodeLog},
+};
 use std::sync::{Arc, RwLock};
 use tracing::{Subscriber, level_filters::LevelFilter, span};
 use tracing_log::NormalizeEvent;

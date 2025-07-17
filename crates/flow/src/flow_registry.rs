@@ -2,7 +2,6 @@ use crate::{
     FlowGraph,
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
-    flow_run_events::{self, EventSender, NodeLog},
     flow_set::DeploymentId,
 };
 use chrono::Utc;
@@ -14,6 +13,7 @@ use flow_lib::{
         client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
     },
     context::{User, api_input, execute, get_jwt, signer},
+    flow_run_events::{self, EventSender, NodeLog},
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
     utils::tower_client::{CommonErrorExt, unimplemented_svc},
 };
@@ -557,14 +557,11 @@ pub mod run_rhai {
 }
 
 pub mod new_flow_run {
-    use crate::{
-        flow_graph::StopSignal,
-        flow_run_events::{Event, EventSender},
-        flow_set::DeploymentId,
-    };
+    use crate::{flow_graph::StopSignal, flow_set::DeploymentId};
     use flow_lib::{
         FlowRunId, UserId, ValueSet,
         config::client::ClientConfig,
+        flow_run_events::{Event, EventSender},
         utils::{TowerClient, tower_client::CommonError},
     };
     use futures::stream::BoxStream;

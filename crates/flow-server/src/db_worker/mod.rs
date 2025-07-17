@@ -8,9 +8,11 @@ use db::{
     FlowRunLogsRow,
     pool::{DbPool, ProxiedDbPool, RealDbPool},
 };
-use flow::flow_run_events::{DEFAULT_LOG_FILTER, EventSender};
 use flow_lib::{
-    BoxError, FlowRunId, UserId, config::Endpoints, context::get_jwt,
+    BoxError, FlowRunId, UserId,
+    config::Endpoints,
+    context::get_jwt,
+    flow_run_events::{DEFAULT_LOG_FILTER, EventSender},
     utils::tower_client::CommonErrorExt,
 };
 use futures_channel::mpsc;

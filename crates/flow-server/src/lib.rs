@@ -402,8 +402,11 @@ mod tests {
     use std::collections::BTreeSet;
 
     use super::*;
-    use flow::{FlowGraph, flow_run_events::event_channel};
-    use flow_lib::{FlowConfig, command::CommandDescription, config::client::ClientConfig};
+    use flow::FlowGraph;
+    use flow_lib::{
+        FlowConfig, command::CommandDescription, config::client::ClientConfig,
+        flow_run_events::event_channel,
+    };
     use value::Value;
 
     use cmds_solana as _;
@@ -578,5 +581,4 @@ mod tests {
         }
         assert!(!dup);
     }
-
 }
