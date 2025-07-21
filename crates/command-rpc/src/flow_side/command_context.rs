@@ -4,6 +4,7 @@ use capnp::capability::Promise;
 use flow_lib::{
     UserId,
     context::{CommandContext, execute, get_jwt},
+    flow_run_events::NodeLogContent,
     utils::tower_client::CommonErrorExt,
     value,
 };
@@ -163,27 +164,10 @@ impl CommandContextImpl {
         }
     }
 
-    fn log_impl(&mut self, params: LogParams, _: LogResults) -> Result<(), anyhow::Error> {
-        let logs = params
-            .get()
-            .context("get")?
-            .get_logs()
-            .context("get_logs")?;
-        for log in logs {
-            let level = log.get_level().context("get_level")?;
-            let content = log
-                .get_content()
-                .context("get_content")?
-                .to_str()
-                .context("utf8")?;
-            match level {
-                log::LogLevel::Trace => tracing::trace!("{}", content),
-                log::LogLevel::Debug => tracing::debug!("{}", content),
-                log::LogLevel::Info => tracing::info!("{}", content),
-                log::LogLevel::Warn => tracing::warn!("{}", content),
-                log::LogLevel::Error => tracing::error!("{}", content),
-            }
-        }
+    fn logs_impl(&mut self, params: LogParams, _: LogResults) -> Result<(), anyhow::Error> {
+        let data = params.get()?.get_log()?;
+        let log: NodeLogContent = bincode::decode_from_slice(&data, standard())?.0;
+        self.context.log(log)?;
         Ok(())
     }
 }
@@ -210,6 +194,6 @@ impl Server for CommandContextImpl {
     }
 
     fn log(&mut self, params: LogParams, results: LogResults) -> Promise<(), capnp::Error> {
-        self.log_impl(params, results).map_err(anyhow2capnp).into()
+        self.logs_impl(params, results).map_err(anyhow2capnp).into()
     }
 }

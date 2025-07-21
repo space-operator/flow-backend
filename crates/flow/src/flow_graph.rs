@@ -12,7 +12,7 @@ use flow_lib::{
     },
     flow_run_events::{
         EventSender, FlowError, FlowFinish, FlowStart, NODE_SPAN_NAME, NodeError, NodeFinish,
-        NodeOutput, NodeStart,
+        NodeLogSender, NodeOutput, NodeStart,
     },
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
     utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
@@ -1781,6 +1781,7 @@ async fn run_command(
         .execute(execute)
         .get_jwt(get_jwt)
         .flow(ctx_svcs)
+        .node_log(NodeLogSender::new(event_tx.clone(), node.id, times))
         .build();
 
     event_tx

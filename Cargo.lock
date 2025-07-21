@@ -1792,6 +1792,7 @@ name = "command-rpc"
 version = "0.0.0"
 dependencies = [
  "actix",
+ "ahash 0.8.12",
  "anyhow",
  "async-trait",
  "bincode 2.0.1",

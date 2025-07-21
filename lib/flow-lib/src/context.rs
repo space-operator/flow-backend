@@ -9,13 +9,11 @@
 //! - [`signer`]
 
 use crate::{
-    ContextConfig, FlowRunId, HttpClientConfig, NodeId, SolanaClientConfig, UserId, ValueSet,
-    config::{Endpoints, client::FlowRunOrigin},
-    solana::Instructions,
-    utils::{Extensions, tower_client::unimplemented_svc},
+    config::{client::FlowRunOrigin, Endpoints}, flow_run_events::{self, Event, NodeLogContent, NodeLogSender}, solana::Instructions, utils::{tower_client::unimplemented_svc, Extensions}, ContextConfig, FlowRunId, HttpClientConfig, NodeId, SolanaClientConfig, UserId, ValueSet
 };
 use bytes::Bytes;
 use chrono::Utc;
+use futures::channel::mpsc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use solana_pubkey::Pubkey;
@@ -495,6 +493,7 @@ pub struct CommandContext {
     data: CommandContextData,
     execute: execute::Svc,
     get_jwt: get_jwt::Svc,
+    node_log: NodeLogSender,
     flow: FlowServices,
 }
 
@@ -502,10 +501,13 @@ impl CommandContext {
     pub fn test_context() -> Self {
         let config = ContextConfig::default();
         let solana_client = Arc::new(config.solana_client.build_client(None));
+        let node_id = NodeId::nil();
+        let times = 0;
+        let (tx, _) = flow_run_events::channel();
         Self {
             data: CommandContextData {
-                node_id: NodeId::nil(),
-                times: 0,
+                node_id,
+                times,
                 flow: FlowContextData {
                     flow_run_id: FlowRunId::nil(),
                     environment: HashMap::new(),
@@ -521,6 +523,7 @@ impl CommandContext {
             },
             execute: unimplemented_svc(),
             get_jwt: unimplemented_svc(),
+            node_log: NodeLogSender::new(tx, node_id, times),
             flow: FlowServices {
                 signer: unimplemented_svc(),
                 set: FlowSetServices {
@@ -531,6 +534,10 @@ impl CommandContext {
                 },
             },
         }
+    }
+
+    pub fn log(&self, log: NodeLogContent) -> Result<(), mpsc::TrySendError<Event>> {
+        self.node_log.send(log)
     }
 
     pub fn flow_inputs(&self) -> &value::Map {

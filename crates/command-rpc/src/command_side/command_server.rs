@@ -1,5 +1,6 @@
 use anyhow::Context;
 use flow_lib::command::CommandFactory;
+use flow_tracing::FlowLogs;
 use iroh::Watcher;
 use iroh::{Endpoint, NodeAddr};
 use rand::rngs::OsRng;
@@ -11,6 +12,7 @@ use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 use url::Url;
 
 use crate::flow_side::address_book::{self, AddressBookExt};
+use crate::tracing::TrackFlowRun;
 
 use super::{
     command_factory::{self, CommandFactoryExt},
@@ -55,7 +57,7 @@ pub fn main() {
                 .from_env_lossy()
                 .with_filter(ignore),
         )
-        .with(logs)
+        .with(logs.clone())
         .init();
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -67,13 +69,13 @@ pub fn main() {
         let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
         let config: Config = toml::from_str(&data).unwrap();
         tokio::task::LocalSet::new()
-            .run_until(serve(config))
+            .run_until(serve(config, TrackFlowRun::new(logs)))
             .await
             .unwrap();
     })
 }
 
-pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
+pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Error> {
     let server = match config.flow_server {
         FlowServerConfig::Info { url } => {
             let info_url = url.join("/info")?;
@@ -131,7 +133,7 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
         tracing::info!("connection type {:?}", conn_type);
     }
 
-    let client = command_factory::new_client(factory);
+    let client = command_factory::new_client(factory, logs);
     client.bind_iroh(endpoint);
 
     tokio::signal::ctrl_c().await.ok();

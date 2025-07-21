@@ -21,6 +21,7 @@ use iroh::Watcher;
 use n0_watcher::Disconnected;
 use serde::Serialize;
 use std::{
+    convert::Infallible,
     net::SocketAddr,
     sync::{Arc, atomic::AtomicU64},
     time::Duration,
@@ -311,19 +312,17 @@ pub struct RegisterLogs {
 }
 
 impl actix::Message for RegisterLogs {
-    type Result = Result<Span, BoxError>;
+    type Result = Result<Span, Infallible>;
 }
 
 impl actix::Handler<RegisterLogs> for DBWorker {
     type Result = <RegisterLogs as actix::Message>::Result;
     fn handle(&mut self, msg: RegisterLogs, _: &mut Self::Context) -> Self::Result {
-        self.tracing_data
-            .register_flow_logs(
-                msg.flow_run_id,
-                msg.filter.as_deref().unwrap_or(DEFAULT_LOG_FILTER),
-                msg.tx,
-            )
-            .map_err(Into::into)
+        Ok(self.tracing_data.register_flow_logs(
+            msg.flow_run_id,
+            msg.filter.as_deref().unwrap_or(DEFAULT_LOG_FILTER),
+            msg.tx,
+        ))
     }
 }
 

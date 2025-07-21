@@ -12,8 +12,6 @@ interface AddressBook {
     leave @1 ();
 }
 
-
-
 interface CommandContext {
     data @0 () -> (data: Data);
 
@@ -21,20 +19,7 @@ interface CommandContext {
 
     getJwt @2 (user_id: Text) -> (access_token: Text);
 
-    log @3 (logs: List(Log));
-
-    struct Log {
-        level @0 : LogLevel;
-        content @1 : Text;
-
-        enum LogLevel {
-            trace @0;
-            debug @1;
-            info @2;
-            warn @3;
-            error @4;
-        }
-    }
+    log @3 (log: Data);
 }
 
 interface CommandTrait {

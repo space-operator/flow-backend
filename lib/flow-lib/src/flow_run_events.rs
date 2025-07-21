@@ -1,5 +1,9 @@
-use chrono::{DateTime, Utc};
+use std::{convert::Infallible, future::ready, pin::Pin};
+
 use crate::{NodeId, context::signer::SignatureRequest};
+use bincode::{Decode, Encode};
+use chrono::{DateTime, Utc};
+use futures::{SinkExt, channel::mpsc};
 use serde::Serialize;
 use value::Value;
 
@@ -38,7 +42,7 @@ impl Event {
     }
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Default)]
+#[derive(Clone, Copy, Debug, Serialize, Default, Encode, Decode)]
 pub enum LogLevel {
     Trace,
     Debug,
@@ -139,6 +143,47 @@ pub struct NodeLog {
     pub level: LogLevel,
     pub module: Option<String>,
     pub content: String,
+}
+
+#[derive(Encode, Decode, Debug)]
+pub struct NodeLogContent {
+    #[bincode(with_serde)]
+    pub time: DateTime<Utc>,
+    pub level: LogLevel,
+    pub module: Option<String>,
+    pub content: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct NodeLogSender {
+    node_id: NodeId,
+    times: u32,
+    tx: EventSender,
+}
+
+impl NodeLogSender {
+    pub fn new(tx: EventSender, node_id: NodeId, times: u32) -> Self {
+        Self { node_id, times, tx }
+    }
+
+    pub fn send(
+        &self,
+        NodeLogContent {
+            time,
+            level,
+            module,
+            content,
+        }: NodeLogContent,
+    ) -> Result<(), mpsc::TrySendError<Event>> {
+        self.tx.unbounded_send(Event::NodeLog(NodeLog {
+            time,
+            node_id: self.node_id,
+            times: self.times,
+            level,
+            module,
+            content,
+        }))
+    }
 }
 
 #[derive(actix::Message, Default, Clone, Debug, Serialize)]

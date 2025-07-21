@@ -50,9 +50,12 @@ impl FlowLogs {
         id: FlowRunId,
         filter: &str,
         tx: EventSender,
-    ) -> Result<tracing::Span, NoSpanId> {
+    ) -> tracing::Span {
         let span = tracing::error_span!(FLOW_SPAN_NAME, flow_run_id = id.to_string());
-        let id = span.id().ok_or(NoSpanId)?;
+        let id = match span.id() {
+            Some(id) => id,
+            None => return span,
+        };
         let filter = EnvFilter::builder()
             .with_default_directive(LevelFilter::ERROR.into())
             .parse_lossy(filter);
@@ -60,7 +63,7 @@ impl FlowLogs {
             .write()
             .unwrap()
             .insert(id, Data { tx: tx, filter });
-        Ok(span)
+        span
     }
 }
 
