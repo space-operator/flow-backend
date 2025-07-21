@@ -1,6 +1,5 @@
 use anyhow::Context;
 use flow_lib::command::CommandFactory;
-use flow_tracing::FlowLogs;
 use iroh::Watcher;
 use iroh::{Endpoint, NodeAddr};
 use rand::rngs::OsRng;

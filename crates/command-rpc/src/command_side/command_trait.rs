@@ -6,20 +6,20 @@ use flow_lib::{
     context::{
         CommandContext, CommandContextData, FlowServices, FlowSetServices, execute, get_jwt,
     },
-    flow_run_events::{self, DEFAULT_LOG_FILTER},
+    flow_run_events::DEFAULT_LOG_FILTER,
     utils::tower_client::unimplemented_svc,
     value::{
         self,
         bincode_impl::{map_from_bincode, map_to_bincode},
     },
 };
-use futures::{StreamExt, TryFutureExt};
+use futures::TryFutureExt;
 use std::{
     rc::Rc,
     sync::{Arc, LazyLock},
     time::Instant,
 };
-use tokio::{sync::Mutex, task::spawn_local};
+use tokio::sync::Mutex;
 use tracing::{Instrument, Span};
 
 pub use crate::command_capnp::command_trait::*;

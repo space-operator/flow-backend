@@ -9,7 +9,7 @@ use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
 };
 use flow_lib::{
-    BoxError, FlowRunId, UserId,
+    FlowRunId, UserId,
     config::Endpoints,
     context::get_jwt,
     flow_run_events::{DEFAULT_LOG_FILTER, EventSender},

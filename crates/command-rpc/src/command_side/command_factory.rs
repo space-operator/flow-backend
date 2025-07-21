@@ -140,7 +140,9 @@ impl CommandFactoryImpl {
                 let tracker = self.tracker.clone();
                 Box::pin(async move {
                     if let Some(cmd) = fut.await? {
-                        results.get().set_cmd(command_trait::new_client(cmd, tracker));
+                        results
+                            .get()
+                            .set_cmd(command_trait::new_client(cmd, tracker));
                     }
                     Ok(())
                 })

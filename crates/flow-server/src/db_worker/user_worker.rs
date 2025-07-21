@@ -33,10 +33,7 @@ use flow_lib::{
         signer::{self, SignatureRequest},
     },
     solana::{Pubkey, SolanaActionConfig, is_same_message_logic},
-    utils::{
-        TowerClient,
-        tower_client::{CommonError, CommonErrorExt},
-    },
+    utils::{TowerClient, tower_client::CommonErrorExt},
 };
 use futures_channel::{mpsc, oneshot};
 use futures_util::{TryFutureExt, future::BoxFuture};

@@ -1,9 +1,7 @@
-use std::{convert::Infallible, future::ready, pin::Pin};
-
 use crate::{NodeId, context::signer::SignatureRequest};
 use bincode::{Decode, Encode};
 use chrono::{DateTime, Utc};
-use futures::{SinkExt, channel::mpsc};
+use futures::channel::mpsc;
 use serde::Serialize;
 use value::Value;
 
