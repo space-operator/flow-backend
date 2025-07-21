@@ -20,7 +20,7 @@ use std::{
     time::Instant,
 };
 use tokio::sync::Mutex;
-use tracing::{Instrument, Span};
+use tracing::Instrument;
 
 pub use crate::command_capnp::command_trait::*;
 use crate::{anyhow2capnp, make_sync::MakeSync, tracing::TrackFlowRun};
