@@ -7,8 +7,6 @@ use rand::rngs::OsRng;
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
 use std::{collections::BTreeSet, net::SocketAddr, time::Duration};
-use tracing::level_filters::LevelFilter;
-use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 use url::Url;
 
 use crate::flow_side::address_book::{self, AddressBookExt};
@@ -47,18 +45,7 @@ struct InfoResponse {
 }
 
 pub fn main() {
-    let (logs, ignore) = flow_tracing::new();
-    tracing_subscriber::registry()
-        .with(fmt::layer())
-        .with(
-            EnvFilter::builder()
-                .with_env_var("RUST_LOG")
-                .with_default_directive(LevelFilter::INFO.into())
-                .from_env_lossy()
-                .with_filter(ignore),
-        )
-        .with(logs.clone())
-        .init();
+    let tracker = TrackFlowRun::init_tracing();
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -69,7 +56,7 @@ pub fn main() {
         let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
         let config: Config = toml::from_str(&data).unwrap();
         tokio::task::LocalSet::new()
-            .run_until(serve(config, TrackFlowRun::new(logs)))
+            .run_until(serve(config, tracker))
             .await
             .unwrap();
     })

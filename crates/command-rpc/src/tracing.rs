@@ -1,5 +1,3 @@
-use std::{cell::RefCell, collections::hash_map::Entry, rc::Rc};
-
 use ahash::AHashMap;
 use bincode::config::standard;
 use flow_lib::{
@@ -10,8 +8,10 @@ use flow_lib::{
 };
 use flow_tracing::FlowLogs;
 use futures::StreamExt;
+use std::{cell::RefCell, collections::hash_map::Entry, rc::Rc};
 use tokio::task::spawn_local;
-use tracing::Span;
+use tracing::{Span, level_filters::LevelFilter};
+use tracing_subscriber::{EnvFilter, prelude::*};
 
 use crate::flow_side::command_context;
 
@@ -68,6 +68,22 @@ async fn drive(mut rx: EventReceiver, clients: ClientsMap) {
 }
 
 impl TrackFlowRun {
+    pub fn init_tracing() -> Self {
+        let (logs, ignore) = flow_tracing::new();
+        tracing_subscriber::registry()
+            .with(tracing_subscriber::fmt::layer())
+            .with(
+                EnvFilter::builder()
+                    .with_env_var("RUST_LOG")
+                    .with_default_directive(LevelFilter::INFO.into())
+                    .from_env_lossy()
+                    .with_filter(ignore),
+            )
+            .with(logs.clone())
+            .init();
+        Self::new(logs)
+    }
+
     pub fn new(flow_logs: FlowLogs) -> Self {
         Self {
             flow_logs,
