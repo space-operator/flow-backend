@@ -1,10 +1,9 @@
 use ahash::AHashMap;
 use bincode::config::standard;
 use flow_lib::{
-    FlowRunId, NodeId,
     flow_run_events::{
-        self, Event, EventReceiver, EventSender, NodeLog, NodeLogContent, NodeLogSender,
-    },
+        self, Event, EventReceiver, EventSender, NodeLog, NodeLogContent, NodeLogSender, NODE_SPAN_NAME,
+    }, FlowRunId, NodeId
 };
 use flow_tracing::FlowLogs;
 use futures::StreamExt;
@@ -113,10 +112,10 @@ impl TrackFlowRun {
             .clients
             .borrow_mut()
             .insert((node_id, times), client);
-        (
-            tracker.span.clone(),
-            NodeLogSender::new(tracker.tx.clone(), node_id, times),
-        )
+        let flow_span = tracker.span.clone();
+        let node_span = tracing::error_span!(parent: flow_span, NODE_SPAN_NAME, node_id = node_id.to_string(), times = times);
+        let sender = NodeLogSender::new(tracker.tx.clone(), node_id, times);
+        (node_span, sender)
     }
 
     pub fn exit(&self, run_id: FlowRunId, node_id: NodeId, times: u32) {
