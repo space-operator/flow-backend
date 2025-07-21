@@ -32,11 +32,6 @@ pub fn new_client(cmd: Box<dyn CommandTrait>, tracker: TrackFlowRun) -> Client {
     })
 }
 
-struct Tracker {
-    span: Span,
-    count: usize,
-}
-
 struct CommandTraitImpl {
     cmd: Rc<Mutex<Box<dyn CommandTrait>>>,
     tracker: TrackFlowRun,
