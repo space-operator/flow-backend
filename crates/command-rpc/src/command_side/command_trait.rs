@@ -6,6 +6,7 @@ use flow_lib::{
     context::{
         CommandContext, CommandContextData, FlowServices, FlowSetServices, execute, get_jwt,
     },
+    flow_run_events::DEFAULT_LOG_FILTER,
     utils::tower_client::unimplemented_svc,
     value::{
         self,
@@ -19,18 +20,21 @@ use std::{
     time::Instant,
 };
 use tokio::sync::Mutex;
+use tracing::Instrument;
 
 pub use crate::command_capnp::command_trait::*;
-use crate::{anyhow2capnp, make_sync::MakeSync};
+use crate::{anyhow2capnp, make_sync::MakeSync, tracing::TrackFlowRun};
 
-pub fn new_client(cmd: Box<dyn CommandTrait>) -> Client {
+pub fn new_client(cmd: Box<dyn CommandTrait>, tracker: TrackFlowRun) -> Client {
     capnp_rpc::new_client(CommandTraitImpl {
         cmd: Rc::new(Mutex::new(cmd)),
+        tracker,
     })
 }
 
 struct CommandTraitImpl {
     cmd: Rc<Mutex<Box<dyn CommandTrait>>>,
+    tracker: TrackFlowRun,
 }
 
 fn parse_inputs(params: run_params::Reader<'_>) -> Result<value::Map, anyhow::Error> {
@@ -48,6 +52,7 @@ impl CommandTraitImpl {
         mut results: RunResults,
     ) -> impl Future<Output = Result<(), anyhow::Error>> + 'static {
         let cmd = self.cmd.clone();
+        let tracker = self.tracker.clone();
         async move {
             let now = Instant::now();
             let params = params.get().context("get")?;
@@ -63,6 +68,16 @@ impl CommandTraitImpl {
             let value = Value::from_bincode(data).context("Value::from_bincode")?;
             let data: CommandContextData =
                 value::from_value(value).context("decode CommandContextData")?;
+            let run_id = data.flow.flow_run_id;
+            let node_id = data.node_id;
+            let times = data.times;
+            let filter = data
+                .flow
+                .environment
+                .get("RUST_LOG")
+                .cloned()
+                .unwrap_or_else(|| DEFAULT_LOG_FILTER.to_owned());
+            let (span, node_log) = tracker.enter(run_id, &filter, node_id, times, context.clone());
             let ctx = CommandContext::builder()
                 .execute(execute::Svc::new(MakeSync::new(context.clone())))
                 .get_jwt(get_jwt::Svc::new(MakeSync::new(context.clone())))
@@ -78,15 +93,17 @@ impl CommandTraitImpl {
                     },
                 })
                 .data(data)
+                .node_log(node_log)
                 .build();
             let id = *ctx.node_id();
             let times = *ctx.times();
-            let result = cmd
-                .lock()
-                .await
+            let cmd_lock = cmd.lock().await;
+            let result = cmd_lock
                 .run(ctx, inputs)
+                .instrument(span)
                 .await
                 .context("run command")?;
+            tracker.exit(run_id, node_id, times);
             results
                 .get()
                 .set_output(&map_to_bincode(&result).context("map_to_bincode")?);

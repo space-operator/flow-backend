@@ -5,8 +5,7 @@ use crate::db_worker::{
     user_worker::SigReqExists,
 };
 use db::connection::FlowRunInfo;
-use flow::flow_run_events::Event;
-use flow_lib::context::signer::SignatureRequest;
+use flow_lib::{context::signer::SignatureRequest, flow_run_events::Event};
 use futures_util::StreamExt;
 
 pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {

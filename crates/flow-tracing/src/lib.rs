@@ -1,9 +1,11 @@
+use ahash::AHashMap;
 use chrono::Utc;
-use flow::flow_run_events::{Event, EventSender, FLOW_SPAN_NAME, FlowLog, NODE_SPAN_NAME, NodeLog};
-use flow_lib::NodeId;
-use hashbrown::HashMap;
+use flow_lib::{
+    FlowRunId, NodeId,
+    flow_run_events::{Event, EventSender, FLOW_SPAN_NAME, FlowLog, NODE_SPAN_NAME, NodeLog},
+};
 use std::sync::{Arc, RwLock};
-use tracing::{Subscriber, span};
+use tracing::{Subscriber, level_filters::LevelFilter, span};
 use tracing_log::NormalizeEvent;
 use tracing_subscriber::{EnvFilter, Layer, layer::Filter, registry::LookupSpan};
 
@@ -13,16 +15,59 @@ pub struct Data {
     pub filter: EnvFilter,
 }
 
-pub type Map = Arc<RwLock<HashMap<tracing::span::Id, Data>>>;
+pub type Map = Arc<RwLock<AHashMap<tracing::span::Id, Data>>>;
 
+#[derive(Clone)]
 pub struct FlowLogs {
     map: Map,
 }
 
+#[derive(Debug)]
+pub struct NoSpanId;
+
+impl std::fmt::Display for NoSpanId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("no span id")
+    }
+}
+
+impl std::error::Error for NoSpanId {}
+
+pub fn new() -> (FlowLogs, IgnoreFlowLogs) {
+    let logs = FlowLogs::new();
+    let ignore = IgnoreFlowLogs::new(logs.clone());
+    (logs, ignore)
+}
+
+impl Default for FlowLogs {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FlowLogs {
-    pub fn new() -> (Self, Map) {
-        let map = Map::default();
-        (Self { map: map.clone() }, map)
+    pub fn new() -> Self {
+        Self {
+            map: Map::default(),
+        }
+    }
+
+    pub fn register_flow_logs(
+        &self,
+        id: FlowRunId,
+        filter: &str,
+        tx: EventSender,
+    ) -> tracing::Span {
+        let span = tracing::error_span!(FLOW_SPAN_NAME, flow_run_id = id.to_string());
+        let id = match span.id() {
+            Some(id) => id,
+            None => return span,
+        };
+        let filter = EnvFilter::builder()
+            .with_default_directive(LevelFilter::ERROR.into())
+            .parse_lossy(filter);
+        self.map.write().unwrap().insert(id, Data { tx, filter });
+        span
     }
 }
 
@@ -216,8 +261,8 @@ pub struct IgnoreFlowLogs {
 }
 
 impl IgnoreFlowLogs {
-    pub fn new(map: Map) -> Self {
-        Self { map }
+    pub fn new(logs: FlowLogs) -> Self {
+        Self { map: logs.map }
     }
 }
 

@@ -18,6 +18,8 @@ interface CommandContext {
     execute @1 (request: Data) -> (response: Data);
 
     getJwt @2 (user_id: Text) -> (access_token: Text);
+
+    log @3 (log: Data);
 }
 
 interface CommandTrait {

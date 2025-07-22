@@ -187,12 +187,12 @@ impl<__Context> ::bincode::Decode<__Context> for MatchName {
     ) -> core::result::Result<Self, ::bincode::error::DecodeError> {
         let variant_index = <u32 as ::bincode::Decode<__D::Context>>::decode(decoder)?;
         match variant_index {
-            0u32 => core::result::Result::Ok(Self::Exact {
-                0: ::bincode::Decode::<__D::Context>::decode(decoder)?,
-            }),
-            1u32 => core::result::Result::Ok(Self::Regex {
-                0: ::bincode::Decode::<__D::Context>::decode(decoder)?,
-            }),
+            0u32 => core::result::Result::Ok(Self::Exact(
+                ::bincode::Decode::<__D::Context>::decode(decoder)?,
+            )),
+            1u32 => core::result::Result::Ok(Self::Regex(
+                ::bincode::Decode::<__D::Context>::decode(decoder)?,
+            )),
             variant => {
                 core::result::Result::Err(::bincode::error::DecodeError::UnexpectedVariant {
                     found: variant,
@@ -218,7 +218,7 @@ impl std::fmt::Debug for MatchName {
             Self::Exact(arg0) => arg0.fmt(f),
             Self::Regex(arg0) => {
                 f.write_str("/")?;
-                f.write_str(&arg0)?;
+                f.write_str(arg0)?;
                 f.write_str("/")
             }
         }
@@ -253,7 +253,7 @@ impl MatchCommand {
         self.r#type == ty
             && match &self.name {
                 MatchName::Exact(cow) => cow == name,
-                MatchName::Regex(cow) => Regex::new(&cow) // TODO: slow
+                MatchName::Regex(cow) => Regex::new(cow) // TODO: slow
                     .map(|re| re.is_match(name))
                     .ok()
                     .unwrap_or(false),
@@ -317,7 +317,7 @@ impl<T> FromIterator<(MatchCommand, T)> for CommandIndex<T> {
                 }
                 MatchName::Regex(cow) => {
                     this.regex
-                        .push((matcher.r#type, Regex::new(&cow).expect("invalid regex"), t));
+                        .push((matcher.r#type, Regex::new(cow).expect("invalid regex"), t));
                 }
             }
         }
@@ -327,18 +327,17 @@ impl<T> FromIterator<(MatchCommand, T)> for CommandIndex<T> {
 
 impl<T> CommandIndex<T> {
     pub fn get(&self, ty: CommandType, name: &str) -> Option<&T> {
-        let cmd = if let Some(d) = self.exact_match.get(&(ty, name.to_owned().into())) {
+        if let Some(d) = self.exact_match.get(&(ty, name.to_owned().into())) {
             Some(d)
         } else {
             let mut matched = None;
             for r in &self.regex {
-                if r.0 == ty && r.1.is_match(&name) {
+                if r.0 == ty && r.1.is_match(name) {
                     matched = Some(&r.2);
                 }
             }
             matched
-        };
-        cmd
+        }
     }
 
     pub fn availables(&self) -> impl Iterator<Item = MatchCommand> {
@@ -350,7 +349,7 @@ impl<T> CommandIndex<T> {
                 name: MatchName::Exact(name),
             })
             .chain(self.regex.iter().map(|(ty, regex, _)| MatchCommand {
-                r#type: ty.clone(),
+                r#type: *ty,
                 name: MatchName::Regex(regex.to_string().into()),
             }))
     }

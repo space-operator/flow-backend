@@ -4,14 +4,15 @@ use capnp::capability::Promise;
 use flow_lib::{
     UserId,
     context::{CommandContext, execute, get_jwt},
+    flow_run_events::NodeLogContent,
     utils::tower_client::CommonErrorExt,
     value,
 };
 use futures::{TryFutureExt, future::LocalBoxFuture};
 use tower::{Service, ServiceExt};
 
+use crate::anyhow2capnp;
 pub use crate::command_capnp::command_context::*;
-use crate::{anyhow2capnp, r2p};
 
 impl tower::Service<execute::Request> for Client {
     type Response = execute::Response;
@@ -74,7 +75,7 @@ impl tower::Service<get_jwt::Request> for Client {
         Box::pin(
             async move {
                 let mut request = client.get_jwt_request();
-                request.get().set_user_id(&req.user_id.to_string());
+                request.get().set_user_id(req.user_id.to_string());
                 let response = request.send().promise.await.context("send")?;
                 let access_token = response
                     .get()
@@ -162,11 +163,18 @@ impl CommandContextImpl {
             Ok(())
         }
     }
+
+    fn logs_impl(&mut self, params: LogParams, _: LogResults) -> Result<(), anyhow::Error> {
+        let data = params.get()?.get_log()?;
+        let log: NodeLogContent = bincode::decode_from_slice(data, standard())?.0;
+        self.context.log(log)?;
+        Ok(())
+    }
 }
 
 impl Server for CommandContextImpl {
     fn data(&mut self, params: DataParams, result: DataResults) -> Promise<(), capnp::Error> {
-        r2p(self.data_impl(params, result).map_err(anyhow2capnp))
+        self.data_impl(params, result).map_err(anyhow2capnp).into()
     }
 
     fn execute(
@@ -183,5 +191,9 @@ impl Server for CommandContextImpl {
         results: GetJwtResults,
     ) -> Promise<(), capnp::Error> {
         Promise::from_future(self.get_jwt_impl(params, results).map_err(anyhow2capnp))
+    }
+
+    fn log(&mut self, params: LogParams, results: LogResults) -> Promise<(), capnp::Error> {
+        self.logs_impl(params, results).map_err(anyhow2capnp).into()
     }
 }

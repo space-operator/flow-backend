@@ -1,6 +1,6 @@
 use std::future::ready;
 
-use crate::{anyhow2capnp, connect_generic_futures_io};
+use crate::{anyhow2capnp, connect_generic_futures_io, tracing::TrackFlowRun};
 use anyhow::{Context, anyhow};
 use bincode::config::standard;
 use capnp::{ErrorKind, capability::Promise};
@@ -21,8 +21,8 @@ use crate::command_side::command_trait;
 
 pub const ALPN: &[u8] = b"space-operator/capnp-rpc/command-factory/0";
 
-pub fn new_client(factory: CommandFactory) -> Client {
-    capnp_rpc::new_client(CommandFactoryImpl { factory })
+pub fn new_client(factory: CommandFactory, tracker: TrackFlowRun) -> Client {
+    capnp_rpc::new_client(CommandFactoryImpl { factory, tracker })
 }
 
 pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, anyhow::Error> {
@@ -118,6 +118,7 @@ async fn spawn_rpc_system_handle(
 
 pub struct CommandFactoryImpl {
     factory: CommandFactory,
+    tracker: TrackFlowRun,
 }
 
 impl CommandFactoryImpl {
@@ -136,14 +137,17 @@ impl CommandFactoryImpl {
         match nd {
             Ok(nd) => {
                 let fut = self.factory.init(&nd);
+                let tracker = self.tracker.clone();
                 Box::pin(async move {
                     if let Some(cmd) = fut.await? {
-                        results.get().set_cmd(command_trait::new_client(cmd));
+                        results
+                            .get()
+                            .set_cmd(command_trait::new_client(cmd, tracker));
                     }
                     Ok(())
                 })
             }
-            Err(error) => return Box::pin(ready(Err(error))),
+            Err(error) => Box::pin(ready(Err(error))),
         }
     }
 

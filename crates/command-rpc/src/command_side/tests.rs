@@ -1,5 +1,9 @@
+use std::cell::LazyCell;
+use std::sync::LazyLock;
+
 use crate::command_side::command_factory::{self, CommandFactoryExt};
 use crate::flow_side::command_context::CommandContextImpl;
+use crate::tracing::TrackFlowRun;
 use cmds_std as _;
 use flow_lib::command::{CommandDescription, CommandError, CommandFactory, CommandTrait};
 use flow_lib::config::client::NodeData;
@@ -79,8 +83,9 @@ impl CommandTrait for Add {
 
 #[actix::test]
 async fn test_serve_iroh() {
+    let tracker = TrackFlowRun::init_tracing_once();
     let addr = {
-        let factory = command_factory::new_client(CommandFactory::collect());
+        let factory = command_factory::new_client(CommandFactory::collect(), tracker);
         let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
         let addr = endpoint.node_addr().initialized().await.unwrap();
         factory.bind_iroh(endpoint);
@@ -98,7 +103,8 @@ inventory::submit!(CommandDescription::new("add", |_| Ok(Box::new(Add))));
 
 #[actix::test]
 async fn test_call() {
-    let client = command_factory::new_client(CommandFactory::collect());
+    let tracker = TrackFlowRun::init_tracing_once();
+    let client = command_factory::new_client(CommandFactory::collect(), tracker);
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
     dbg!("bind");
     let addr = endpoint.node_addr().initialized().await.unwrap();

@@ -6,11 +6,10 @@ use rand::rngs::OsRng;
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
 use std::{collections::BTreeSet, net::SocketAddr, time::Duration};
-use tracing::level_filters::LevelFilter;
-use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 use url::Url;
 
 use crate::flow_side::address_book::{self, AddressBookExt};
+use crate::tracing::TrackFlowRun;
 
 use super::{
     command_factory::{self, CommandFactoryExt},
@@ -45,15 +44,7 @@ struct InfoResponse {
 }
 
 pub fn main() {
-    tracing_subscriber::registry()
-        .with(fmt::layer())
-        .with(
-            EnvFilter::builder()
-                .with_env_var("RUST_LOG")
-                .with_default_directive(LevelFilter::INFO.into())
-                .from_env_lossy(),
-        )
-        .init();
+    let tracker = TrackFlowRun::init_tracing();
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -64,13 +55,13 @@ pub fn main() {
         let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
         let config: Config = toml::from_str(&data).unwrap();
         tokio::task::LocalSet::new()
-            .run_until(serve(config))
+            .run_until(serve(config, tracker))
             .await
             .unwrap();
     })
 }
 
-pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
+pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Error> {
     let server = match config.flow_server {
         FlowServerConfig::Info { url } => {
             let info_url = url.join("/info")?;
@@ -128,7 +119,7 @@ pub async fn serve(config: Config) -> Result<(), anyhow::Error> {
         tracing::info!("connection type {:?}", conn_type);
     }
 
-    let client = command_factory::new_client(factory);
+    let client = command_factory::new_client(factory, logs);
     client.bind_iroh(endpoint);
 
     tokio::signal::ctrl_c().await.ok();

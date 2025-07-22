@@ -1351,9 +1351,9 @@ dependencies = [
 
 [[package]]
 name = "capnp"
-version = "0.21.1"
+version = "0.21.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64b3560604b407fe0ab6f89b81ac11887b4ae07f8d31486581dee5b353e48f06"
+checksum = "168e28337bd0c923cea658afbc1f612bade6fedb616414db89bbd965869b66e7"
 dependencies = [
  "embedded-io 0.6.1",
 ]
@@ -1364,7 +1364,7 @@ version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d04478adeb234836f886ec554a0d96e3af3a939ba7b3962af5addddf7ab71231"
 dependencies = [
- "capnp 0.21.1",
+ "capnp 0.21.2",
  "futures-channel",
  "futures-util",
 ]
@@ -1375,7 +1375,7 @@ version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85e9c19ef52ff1b9c9822fb21bfa68a72bc58711676295ff06eb88e64c7877f7"
 dependencies = [
- "capnp 0.21.1",
+ "capnp 0.21.2",
  "capnp-futures",
  "futures",
 ]
@@ -1792,16 +1792,18 @@ name = "command-rpc"
 version = "0.0.0"
 dependencies = [
  "actix",
+ "ahash 0.8.12",
  "anyhow",
  "async-trait",
  "bincode 2.0.1",
- "capnp 0.21.1",
+ "capnp 0.21.2",
  "capnp-rpc",
  "capnpc",
  "cmds-std",
  "criterion",
  "features",
  "flow-lib",
+ "flow-tracing",
  "futures",
  "inventory",
  "iroh",
@@ -2965,6 +2967,7 @@ dependencies = [
  "bs58 0.5.1",
  "bytes",
  "chrono",
+ "derive_more 2.0.1",
  "ed25519-dalek 2.1.1",
  "five8",
  "flow-value",
@@ -3032,6 +3035,7 @@ dependencies = [
  "five8",
  "flow",
  "flow-lib",
+ "flow-tracing",
  "flow-value",
  "futures-channel",
  "futures-util",
@@ -3068,6 +3072,18 @@ dependencies = [
  "url",
  "utils",
  "uuid 1.17.0",
+]
+
+[[package]]
+name = "flow-tracing"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.12",
+ "chrono",
+ "flow-lib",
+ "tracing",
+ "tracing-log",
+ "tracing-subscriber",
 ]
 
 [[package]]

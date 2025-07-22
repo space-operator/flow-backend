@@ -17,10 +17,11 @@ impl CommandFactoryWithRemotes {
     ) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
         if let Some(remotes) = self.remotes.as_mut() {
             match remotes.init(nd).await {
-                Ok(cmd) => match cmd {
-                    Some(cmd) => return Ok(Some(cmd)),
-                    None => {}
-                },
+                Ok(cmd) => {
+                    if let Some(cmd) = cmd {
+                        return Ok(Some(cmd));
+                    }
+                }
                 Err(error) => {
                     tracing::debug!("remote rpc error: {}", error);
                 }

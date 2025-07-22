@@ -33,10 +33,7 @@ use flow_lib::{
         signer::{self, SignatureRequest},
     },
     solana::{Pubkey, SolanaActionConfig, is_same_message_logic},
-    utils::{
-        TowerClient,
-        tower_client::{CommonError, CommonErrorExt},
-    },
+    utils::{TowerClient, tower_client::CommonErrorExt},
 };
 use futures_channel::{mpsc, oneshot};
 use futures_util::{TryFutureExt, future::BoxFuture};
@@ -387,7 +384,7 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                     filter: msg.config.environment.get(RUST_LOG).cloned(),
                 })
                 .await?
-                .map_err(|error| new_flow_run::Error::Common(CommonError::from_boxed(error)))?;
+                .unwrap();
 
             Ok(new_flow_run::Response {
                 flow_run_id: run_id,

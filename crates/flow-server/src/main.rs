@@ -19,7 +19,6 @@ use flow_server::{
         prelude::Success,
     },
     db_worker::{DBWorker, SystemShutdown, token_worker::token_from_apikeys},
-    flow_logs,
     middleware::auth_v1,
     user::SupabaseAuth,
     ws,
@@ -31,24 +30,24 @@ use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
 #[cfg(feature = "commands")]
+use cmds_deno as _;
+#[cfg(feature = "commands")]
 use cmds_pdg as _;
 #[cfg(feature = "commands")]
 use cmds_solana as _;
 #[cfg(feature = "commands")]
 use cmds_std as _;
-#[cfg(feature = "commands")]
-use cmds_deno as _;
 
 #[actix::main]
 async fn main() {
-    let (flow_logs, tracing_data) = flow_logs::FlowLogs::new();
+    let (flow_logs, ignore) = flow_tracing::new();
     tracing_subscriber::Registry::default()
         .with(
             tracing_subscriber::fmt::layer()
                 .with_filter(tracing_subscriber::EnvFilter::from_default_env())
-                .with_filter(flow_logs::IgnoreFlowLogs::new(tracing_data.clone())),
+                .with_filter(ignore),
         )
-        .with(flow_logs)
+        .with(flow_logs.clone())
         .init();
 
     let config = Config::get_config();
@@ -165,7 +164,7 @@ async fn main() {
             .config(&config)
             .db(db.clone())
             .actors(actors)
-            .tracing_data(tracing_data)
+            .tracing_data(flow_logs)
             .new_flow_api_request(NewRequestService {
                 store: store.clone(),
                 db_worker: ctx.address(),
