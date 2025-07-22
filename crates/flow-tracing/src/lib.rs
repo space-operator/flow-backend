@@ -39,6 +39,12 @@ pub fn new() -> (FlowLogs, IgnoreFlowLogs) {
     (logs, ignore)
 }
 
+impl Default for FlowLogs {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FlowLogs {
     pub fn new() -> Self {
         Self {
@@ -60,10 +66,7 @@ impl FlowLogs {
         let filter = EnvFilter::builder()
             .with_default_directive(LevelFilter::ERROR.into())
             .parse_lossy(filter);
-        self.map
-            .write()
-            .unwrap()
-            .insert(id, Data { tx: tx, filter });
+        self.map.write().unwrap().insert(id, Data { tx, filter });
         span
     }
 }

@@ -131,6 +131,5 @@ impl TrackFlowRun {
                 tracker.remove_entry();
             }
         }
-        dbg!(runs.len());
     }
 }

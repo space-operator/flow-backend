@@ -147,7 +147,7 @@ impl CommandFactoryImpl {
                     Ok(())
                 })
             }
-            Err(error) => return Box::pin(ready(Err(error))),
+            Err(error) => Box::pin(ready(Err(error))),
         }
     }
 

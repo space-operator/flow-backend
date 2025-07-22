@@ -75,7 +75,7 @@ impl tower::Service<get_jwt::Request> for Client {
         Box::pin(
             async move {
                 let mut request = client.get_jwt_request();
-                request.get().set_user_id(&req.user_id.to_string());
+                request.get().set_user_id(req.user_id.to_string());
                 let response = request.send().promise.await.context("send")?;
                 let access_token = response
                     .get()
@@ -166,7 +166,7 @@ impl CommandContextImpl {
 
     fn logs_impl(&mut self, params: LogParams, _: LogResults) -> Result<(), anyhow::Error> {
         let data = params.get()?.get_log()?;
-        let log: NodeLogContent = bincode::decode_from_slice(&data, standard())?.0;
+        let log: NodeLogContent = bincode::decode_from_slice(data, standard())?.0;
         self.context.log(log)?;
         Ok(())
     }
