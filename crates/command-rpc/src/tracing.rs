@@ -9,7 +9,12 @@ use flow_lib::{
 };
 use flow_tracing::FlowLogs;
 use futures::StreamExt;
-use std::{cell::RefCell, collections::hash_map::Entry, rc::Rc};
+use std::{
+    cell::RefCell,
+    collections::hash_map::Entry,
+    rc::Rc,
+    sync::{LazyLock, OnceLock},
+};
 use tokio::task::spawn_local;
 use tracing::Span;
 use tracing_subscriber::prelude::*;
@@ -72,6 +77,26 @@ async fn drive(mut rx: EventReceiver, clients: ClientsMap) {
 }
 
 impl TrackFlowRun {
+    pub fn init_tracing_once() -> Self {
+        static LOGS: OnceLock<FlowLogs> = OnceLock::new();
+
+        let logs = LOGS
+            .get_or_init(|| {
+                let (logs, ignore) = flow_tracing::new();
+                let fmt = tracing_subscriber::fmt::layer()
+                    .with_filter(tracing_subscriber::EnvFilter::from_default_env())
+                    .with_filter(ignore);
+                tracing_subscriber::registry()
+                    .with(fmt)
+                    .with(logs.clone())
+                    .init();
+                logs
+            })
+            .clone();
+
+        Self::new(logs)
+    }
+
     pub fn init_tracing() -> Self {
         let (logs, ignore) = flow_tracing::new();
         let fmt = tracing_subscriber::fmt::layer()

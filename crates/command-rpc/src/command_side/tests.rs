@@ -81,13 +81,9 @@ impl CommandTrait for Add {
     }
 }
 
-thread_local! {
-    static TRACKER: TrackFlowRun = TrackFlowRun::init_tracing();
-}
-
 #[actix::test]
 async fn test_serve_iroh() {
-    let tracker = TRACKER.with(Clone::clone);
+    let tracker = TrackFlowRun::init_tracing_once();
     let addr = {
         let factory = command_factory::new_client(CommandFactory::collect(), tracker);
         let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
@@ -107,7 +103,7 @@ inventory::submit!(CommandDescription::new("add", |_| Ok(Box::new(Add))));
 
 #[actix::test]
 async fn test_call() {
-    let tracker = TRACKER.with(Clone::clone);
+    let tracker = TrackFlowRun::init_tracing_once();
     let client = command_factory::new_client(CommandFactory::collect(), tracker);
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
     dbg!("bind");
