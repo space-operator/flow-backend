@@ -41,8 +41,9 @@ pub fn new() -> (FlowLogs, IgnoreFlowLogs) {
 
 impl FlowLogs {
     pub fn new() -> Self {
-        let map = Map::default();
-        Self { map: map.clone() }
+        Self {
+            map: Map::default(),
+        }
     }
 
     pub fn register_flow_logs(

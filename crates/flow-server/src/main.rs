@@ -40,12 +40,12 @@ use cmds_std as _;
 
 #[actix::main]
 async fn main() {
-    let flow_logs = flow_tracing::FlowLogs::new();
+    let (flow_logs, ignore) = flow_tracing::new();
     tracing_subscriber::Registry::default()
         .with(
             tracing_subscriber::fmt::layer()
                 .with_filter(tracing_subscriber::EnvFilter::from_default_env())
-                .with_filter(flow_tracing::IgnoreFlowLogs::new(flow_logs.clone())),
+                .with_filter(ignore),
         )
         .with(flow_logs.clone())
         .init();

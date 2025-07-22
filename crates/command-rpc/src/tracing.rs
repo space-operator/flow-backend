@@ -1,9 +1,11 @@
 use ahash::AHashMap;
 use bincode::config::standard;
 use flow_lib::{
+    FlowRunId, NodeId,
     flow_run_events::{
-        self, Event, EventReceiver, EventSender, NodeLog, NodeLogContent, NodeLogSender, NODE_SPAN_NAME,
-    }, FlowRunId, NodeId
+        self, Event, EventReceiver, EventSender, NODE_SPAN_NAME, NodeLog, NodeLogContent,
+        NodeLogSender,
+    },
 };
 use flow_tracing::FlowLogs;
 use futures::StreamExt;
@@ -33,6 +35,7 @@ async fn send_log(
     let mut req = client.log_request();
     let data = bincode::encode_to_vec(&log, standard())?;
     req.get().set_log(&data);
+    req.send().promise.await?;
     Ok(())
 }
 
@@ -62,6 +65,8 @@ async fn drive(mut rx: EventReceiver, clients: ClientsMap) {
             {
                 tracing::error!("send_log error: {}", error);
             }
+        } else {
+            tracing::error!("no client registered {}:{}", node_id, times)
         }
     }
 }
@@ -69,15 +74,11 @@ async fn drive(mut rx: EventReceiver, clients: ClientsMap) {
 impl TrackFlowRun {
     pub fn init_tracing() -> Self {
         let (logs, ignore) = flow_tracing::new();
+        let fmt = tracing_subscriber::fmt::layer()
+            .with_filter(tracing_subscriber::EnvFilter::from_default_env())
+            .with_filter(ignore);
         tracing_subscriber::registry()
-            .with(tracing_subscriber::fmt::layer())
-            .with(
-                EnvFilter::builder()
-                    .with_env_var("RUST_LOG")
-                    .with_default_directive(LevelFilter::INFO.into())
-                    .from_env_lossy()
-                    .with_filter(ignore),
-            )
+            .with(fmt)
             .with(logs.clone())
             .init();
         Self::new(logs)
