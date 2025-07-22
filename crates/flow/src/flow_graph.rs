@@ -1500,9 +1500,6 @@ impl FlowGraph {
             n.command.destroy().await;
         }
 
-        // TODO: not closing automatically because of alive command_context::Client or CommandContext
-        s.event_tx.close_channel();
-
         s.result
     }
 

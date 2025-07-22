@@ -103,6 +103,7 @@ impl CommandTraitImpl {
                 .instrument(span)
                 .await
                 .context("run command")?;
+            tracker.exit(run_id, node_id, times);
             results
                 .get()
                 .set_output(&map_to_bincode(&result).context("map_to_bincode")?);
