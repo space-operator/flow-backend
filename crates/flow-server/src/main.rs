@@ -151,9 +151,12 @@ async fn main() {
 
     let store = RequestStore::new_app_data();
 
-    let base_book = BaseAddressBook::new(command_rpc::flow_side::address_book::ServerConfig {
-        secret_key: config.iroh_secret_key.clone(),
-    })
+    let base_book = BaseAddressBook::new(
+        command_rpc::flow_side::address_book::ServerConfig {
+            secret_key: config.iroh_secret_key.clone(),
+        },
+        command_rpc::flow_side::address_book::authenticate::allow_all(),
+    )
     .await
     .unwrap();
 
