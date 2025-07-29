@@ -1,0 +1,141 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://schema.spaceoperator.com/value.schema.json",
+    "type": "object",
+    "description": "JSON flow definition",
+    "properties": {
+        "nodes": {
+            "type": "array",
+            "description": "List of nodes",
+            "items": {
+                "$ref": "#/definitions/node"
+            }
+        },
+        "edges": {
+            "type": "array",
+            "description": "List of edge",
+            "items": {
+                "$ref": "#/definitions/edge"
+            }
+        }
+    },
+    "definitions": {
+        "node": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Unique ID of node, randomly generated UUIDv4"
+                },
+                "type": {
+                    "title": "Node type",
+                    "type": "string",
+                    "enum": [
+                        "native",
+                        "WASM",
+                        "deno",
+                        "mock"
+                    ]
+                },
+                "name": {
+                    "title": "Name of node",
+                    "type": "string"
+                },
+                "inputs": {
+                    "title": "Inputs",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/input"
+                    }
+                },
+                "outputs": {
+                    "title": "Outputs",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/output"
+                    }
+                }
+            }
+        },
+        "input": {
+            "title": "Input port",
+            "type": "object",
+            "required": [
+                "name",
+                "type_bounds"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of this input port"
+                },
+                "type_bounds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "required": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "passthrough": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "defaultValue": {
+                    "$ref": "https://schema.spaceoperator.com/value.schema.json",
+                    "description": "Default value to use when this port is not connected to any edge"
+                },
+                "tooltip": {
+                    "type": "string"
+                }
+            }
+        },
+        "output": {
+            "title": "Output port",
+            "type": "object",
+            "required": [
+                "name",
+                "type"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "tooltip": {
+                    "type": "string"
+                }
+            }
+        },
+        "edge": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "type": "string",
+                    "description": "ID of source node"
+                },
+                "sourceHandle": {
+                    "type": "string",
+                    "description": "Name of output port in source node"
+                },
+                "target": {
+                    "type": "string",
+                    "description": "ID of target node"
+                },
+                "targetHandle": {
+                    "type": "string",
+                    "description": "Name of input port in target node"
+                }
+            }
+        }
+    }
+}
