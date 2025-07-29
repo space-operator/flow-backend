@@ -19,7 +19,7 @@
             "title": "Name of node",
             "type": "string"
         },
-        "tooltip": {
+        "description": {
             "type": "string"
         },
         "inputs": {
