@@ -1,9 +1,13 @@
 import { default as hb } from "npm:handlebars";
 
 function include(path: string) {
+  let text = Deno.readTextFileSync(path);
+  if (!text.endsWith("\n")) {
+    text += "\n";
+  }
   hb.registerPartial(
     path,
-    hb.compile(Deno.readTextFileSync(path)),
+    hb.compile(text),
   );
 }
 

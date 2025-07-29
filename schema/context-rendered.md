@@ -407,7 +407,8 @@ flow are defined by JSON and follows below schema:
             }
         }
     }
-}```
+}
+```
 
 JSON schema for node definitions:
 
@@ -515,7 +516,8 @@ JSON schema for node definitions:
             }
         }
     }
-}```
+}
+```
 
 List of available nodes:
 
