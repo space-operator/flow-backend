@@ -16,6 +16,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 use tokio::task::{JoinHandle, spawn_local};
+use tower::{Service, ServiceExt};
 use url::Url;
 
 pub use crate::command_capnp::address_book::*;
@@ -24,6 +25,24 @@ use crate::command_side::command_factory::{self, CommandFactoryExt};
 use super::remote_command::RemoteCommand;
 
 pub const ALPN: &[u8] = b"space-operator/capnp-rpc/address-book/0";
+
+/// For command factory authentication
+pub mod authenticate {
+    use flow_lib::utils::TowerClient;
+    use tower::service_fn;
+
+    pub type Request = iroh::PublicKey;
+
+    pub struct Response {}
+
+    pub type Error = anyhow::Error;
+
+    pub type Svc = TowerClient<Request, Response, Error>;
+
+    pub fn allow_all() -> Svc {
+        TowerClient::new(service_fn(async |_| Ok(Response {})))
+    }
+}
 
 pub struct ServerConfig {
     pub secret_key: iroh::SecretKey,
@@ -40,6 +59,7 @@ struct Info {
 pub struct BaseAddressBook {
     factories: Arc<RwLock<BTreeMap<iroh::PublicKey, Info>>>,
     endpoint: Endpoint,
+    auth: authenticate::Svc,
 }
 
 #[derive(Clone)]
@@ -56,7 +76,7 @@ pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, 
 }
 
 impl BaseAddressBook {
-    pub async fn new(config: ServerConfig) -> Result<Self, anyhow::Error> {
+    pub async fn new(config: ServerConfig, auth: authenticate::Svc) -> Result<Self, anyhow::Error> {
         let endpoint = Endpoint::builder()
             .secret_key(config.secret_key)
             .discovery_n0()
@@ -67,6 +87,7 @@ impl BaseAddressBook {
         let this = Self {
             factories: Default::default(),
             endpoint: endpoint.clone(),
+            auth,
         };
         let book = this.clone();
         spawn_local(async move {
@@ -147,10 +168,11 @@ impl AddressBook {
 
 async fn spawn_rpc_system_handle(
     incoming: Incoming,
-    book: BaseAddressBook,
+    mut book: BaseAddressBook,
 ) -> Result<JoinHandle<Result<(), capnp::Error>>, anyhow::Error> {
     let conn = incoming.await?;
     let remote_node_id = conn.remote_node_id()?;
+    book.auth.ready().await?.call(remote_node_id).await?;
     let client: Client = capnp_rpc::new_client(AddressBookConnection {
         book,
         remote_node_id,

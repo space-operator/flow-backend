@@ -10,7 +10,7 @@ use db::{
     pool::{DbPool, ProxiedDbPool, RealDbPool},
 };
 use either::Either;
-use flow_lib::command::CommandFactory;
+use flow_lib::{command::CommandFactory, utils::TowerClient};
 use flow_server::{
     Config,
     api::{
@@ -18,6 +18,7 @@ use flow_server::{
         flow_api_input::{NewRequestService, RequestStore},
         prelude::Success,
     },
+    cmd_workers::WorkerAuthenticate,
     db_worker::{DBWorker, SystemShutdown, token_worker::token_from_apikeys},
     middleware::auth_v1,
     user::SupabaseAuth,
@@ -151,9 +152,12 @@ async fn main() {
 
     let store = RequestStore::new_app_data();
 
-    let base_book = BaseAddressBook::new(command_rpc::flow_side::address_book::ServerConfig {
-        secret_key: config.iroh_secret_key.clone(),
-    })
+    let base_book = BaseAddressBook::new(
+        command_rpc::flow_side::address_book::ServerConfig {
+            secret_key: config.iroh_secret_key.clone(),
+        },
+        TowerClient::new(WorkerAuthenticate::builder().trusted([].into()).build()),
+    )
     .await
     .unwrap();
 

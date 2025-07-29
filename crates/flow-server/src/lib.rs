@@ -19,6 +19,7 @@ use url::Url;
 use user::SignatureAuth;
 
 pub mod api;
+pub mod cmd_workers;
 pub mod db_worker;
 pub mod error;
 pub mod middleware;

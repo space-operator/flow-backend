@@ -9,12 +9,7 @@ use flow_lib::{
 };
 use flow_tracing::FlowLogs;
 use futures::StreamExt;
-use std::{
-    cell::RefCell,
-    collections::hash_map::Entry,
-    rc::Rc,
-    sync::{LazyLock, OnceLock},
-};
+use std::{cell::RefCell, collections::hash_map::Entry, rc::Rc, sync::OnceLock};
 use tokio::task::spawn_local;
 use tracing::Span;
 use tracing_subscriber::prelude::*;
