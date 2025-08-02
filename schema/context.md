@@ -26,51 +26,23 @@ List of available nodes:
 1. "flow_input"
 
 ```jsonc
+{{> nodes/flow_input.jsonc }}
 ```
 
-2. "addition"
+2. "flow_output"
 
 ```jsonc
-{
-    "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
-    "type": "native",
-    "name": "addition",
-    "outputs": [
-        {
-            "name": "output",
-            "type": "free",
-            "required": true,            
-            "tooltip": "result of a + b"
-        }
-    ],
-    "inputs": [
-        {
-            "name": "a",
-            "type_bounds": ["number"]
-        },
-        {
-            "name": "b",
-            "type_bounds": ["number"]
-        }
-    ]
-}
+{{> nodes/flow_output.jsonc }}
 ```
 
 3. "const"
 
 ```jsonc
-{
-    "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
-    "type": "native",
-    "name": "const",
-    "outputs": [
-        {
-            "name": "output",
-            "type": "free",
-            "required": true,
-            "value": "${constant value}"
-        }
-    ],
-    "inputs": []
-}
+{{> nodes/const.jsonc }}
+```
+
+4. "transfer_sol"
+
+```jsonc
+{{> nodes/transfer_sol.jsonc }}
 ```

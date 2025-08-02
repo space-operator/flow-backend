@@ -363,6 +363,7 @@ JSON schema for node definitions:
                 "native",
                 "WASM",
                 "deno",
+                "rhai",
                 "mock"
             ]
         },
@@ -495,67 +496,126 @@ List of available nodes:
 
 1. "flow_input"
 
-```json
+```jsonc
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
     "type": "native",
     "name": "flow_input",
+    "display_name": "Flow Input",
+    "description": "Use this node to receive inputs when starting a flow",
     "outputs": [
         {
-            "name": "${flow input's name}",
+            // flow's input name, change as needed
+            "name": "input",
             "type": "free",
             "required": true,
             "tooltip": "Input of flow, change the \"name\" value to change input's name",
-            "value": "${ default value to use when user doesn't provide an input value when calling flow }"
+            // default value to use when user doesn't provide an input value when calling flow
+            "value": {
+                "S": ""
+            }
         }
     ],
     "inputs": []
 }
 ```
 
-2. "addition"
+2. "flow_output"
 
-```json
+```jsonc
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
     "type": "native",
-    "name": "addition",
-    "outputs": [
-        {
-            "name": "output",
-            "type": "free",
-            "required": true,
-            "tooltip": "result of a + b"
-        }
-    ],
+    "name": "flow_output",
+    "display_name": "Flow Output",
+    "description": "Use this node to return output for flow",
     "inputs": [
         {
-            "name": "a",
-            "type_bounds": ["number"]
-        },
-        {
-            "name": "b",
-            "type_bounds": ["number"]
+            // flow's output name, change as needed
+            "name": "output",
+            "type_bounds": [
+                "free"
+            ],
+            "required": true,
+            "passthrough": true,
+            "tooltip": "Output of flow, change the \"name\" value to change output's name"
         }
-    ]
+    ],
+    "outputs": []
 }
 ```
 
 3. "const"
 
-```json
+```jsonc
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
     "type": "native",
     "name": "const",
+    "display_name": "Cosnt",
+    "description": "Constant value",
     "outputs": [
         {
             "name": "output",
             "type": "free",
             "required": true,
-            "value": "${constant value}"
+            "value": {
+                "S": ""
+            }
         }
     ],
     "inputs": []
+}
+```
+
+4. "transfer_sol"
+
+```jsonc
+{
+    "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+    "type": "native",
+    "name": "transfer_sol",
+    "display_name": "Transfer SOLs",
+    "description": "Transfer SOLs",
+    "inputs": [
+        {
+            "name": "fee_payer",
+            "type_bounds": [
+                "keypair"
+            ],
+            "required": false,
+            "tooltip": "Transaction fee payer, default is sender"
+        },
+        {
+            "name": "sender",
+            "type_bounds": [
+                "keypair"
+            ]
+        },
+        {
+            "name": "recipient",
+            "type_bounds": [
+                "pubkey"
+            ]
+        },
+        {
+            "name": "amount",
+            "type_bounds": [
+                "decimal"
+            ],
+            "tooltip": "Amount in SOLs"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "signature",
+            "type": "signature",
+            "tooltip": "Signature of the transaction"
+        }
+    ],
+    "instruction_info": {
+        "signature": "signature",
+        "after": []
+    }
 }
 ```

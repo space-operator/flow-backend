@@ -2,9 +2,11 @@
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
     "type": "native",
     "name": "flow_input",
+    "display_name": "Flow Input",
+    "description": "Use this node to receive inputs when starting a flow",
     "outputs": [
         {
-            // flow's input name
+            // flow's input name, change as needed
             "name": "input",
             "type": "free",
             "required": true,
