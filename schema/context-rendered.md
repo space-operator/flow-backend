@@ -273,6 +273,14 @@ flow are defined by JSON and follows below schema:
     "type": "object",
     "description": "JSON flow definition",
     "properties": {
+        "name": {
+            "type": "string",
+            "description": "Display name of the flow"
+        },
+        "description": {
+            "type": "string",
+            "description": "Flow's description"
+        },
         "nodes": {
             "type": "array",
             "description": "List of nodes",
@@ -282,12 +290,17 @@ flow are defined by JSON and follows below schema:
         },
         "edges": {
             "type": "array",
-            "description": "List of edge",
+            "description": "List of edges",
             "items": {
                 "$ref": "#/definitions/edge"
             }
         }
     },
+    "required": [
+        "name",
+        "nodes",
+        "edges"
+    ],
     "definitions": {
         "node": {
             "type": "object",
@@ -295,93 +308,11 @@ flow are defined by JSON and follows below schema:
                 "id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "Unique ID of node, randomly generated UUIDv4"
+                    "description": "Unique ID of this node, randomly generated UUIDv4"
                 },
-                "type": {
-                    "title": "Node type",
-                    "type": "string",
-                    "enum": [
-                        "native",
-                        "WASM",
-                        "deno",
-                        "mock"
-                    ]
-                },
-                "name": {
-                    "title": "Name of node",
-                    "type": "string"
-                },
-                "inputs": {
-                    "title": "Inputs",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/input"
-                    }
-                },
-                "outputs": {
-                    "title": "Outputs",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/output"
-                    }
-                }
-            }
-        },
-        "input": {
-            "title": "Input port",
-            "type": "object",
-            "required": [
-                "name",
-                "type_bounds"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Name of this input port"
-                },
-                "type_bounds": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "required": {
-                    "type": "boolean",
-                    "default": true
-                },
-                "passthrough": {
-                    "type": "boolean",
-                    "default": false
-                },
-                "defaultValue": {
-                    "$ref": "https://schema.spaceoperator.com/value.schema.json",
-                    "description": "Default value to use when this port is not connected to any edge"
-                },
-                "tooltip": {
-                    "type": "string"
-                }
-            }
-        },
-        "output": {
-            "title": "Output port",
-            "type": "object",
-            "required": [
-                "name",
-                "type"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "required": {
-                    "type": "boolean",
-                    "default": true
-                },
-                "tooltip": {
-                    "type": "string"
+                "definition": {
+                    "$ref": "https://schema.spaceoperator.com/node-v2.schema.json",
+                    "description": "Node's definition"
                 }
             }
         },
@@ -418,7 +349,12 @@ JSON schema for node definitions:
     "$id": "https://schema.spaceoperator.com/node-v2.schema.json",
     "title": "Node Definition",
     "type": "object",
-    "required": [],
+    "required": [
+        "type",
+        "name",
+        "inputs",
+        "outputs"
+    ],
     "properties": {
         "type": {
             "title": "Node type",
@@ -427,15 +363,28 @@ JSON schema for node definitions:
                 "native",
                 "WASM",
                 "deno",
+                "rhai",
                 "mock"
             ]
         },
         "name": {
-            "title": "Name of node",
+            "title": "Unique name of node, name will be used to identify the node",
+            "type": "string"
+        },
+        "display_name": {
+            "title": "Display name of node",
             "type": "string"
         },
         "description": {
+            "title": "Description",
             "type": "string"
+        },
+        "tags": {
+            "title": "List of tags",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
         },
         "inputs": {
             "title": "Inputs",
@@ -449,6 +398,29 @@ JSON schema for node definitions:
             "type": "array",
             "items": {
                 "$ref": "#/definitions/output"
+            }
+        },
+        "instruction_info": {
+            "description": "Tell the flow graph this node will emit Solana instructions, and specify the order of outputs:\n- 'before': list of output names returned before instructions are sent.\n- 'signature': name of the signature output port.\n- 'after': list of output names returned after instructions are sent.\nNode only have to declare 'signature' and 'after', 'before' is the rest of the output.",
+            "type": "object",
+            "required": [
+                "signature",
+                "after"
+            ],
+            "properties": {
+                "signature": {
+                    "title": "Name of signature output",
+                    "type": "string",
+                    "default": "signature"
+                },
+                "after": {
+                    "title": "Name of outputs that will be available after the signature output",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                }
             }
         }
     },
@@ -477,6 +449,7 @@ JSON schema for node definitions:
                 },
                 "passthrough": {
                     "type": "boolean",
+                    "description": "Passthrough input will also be available as output of the node",
                     "default": false
                 },
                 "defaultValue": {
@@ -511,7 +484,7 @@ JSON schema for node definitions:
                 },
                 "value": {
                     "$ref": "https://schema.spaceoperator.com/value.schema.json",
-                    "description": "Hardcoded value (if applicable)"
+                    "description": "Hard-coded output value"
                 }
             }
         }
@@ -523,67 +496,126 @@ List of available nodes:
 
 1. "flow_input"
 
-```json
+```jsonc
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
     "type": "native",
     "name": "flow_input",
+    "display_name": "Flow Input",
+    "description": "Use this node to receive inputs when starting a flow",
     "outputs": [
         {
-            "name": "${flow input's name}",
+            // flow's input name, change as needed
+            "name": "input",
             "type": "free",
             "required": true,
             "tooltip": "Input of flow, change the \"name\" value to change input's name",
-            "value": "${ default value to use when user doesn't provide an input value when calling flow }"
+            // default value to use when user doesn't provide an input value when calling flow
+            "value": {
+                "S": ""
+            }
         }
     ],
     "inputs": []
 }
 ```
 
-2. "addition"
+2. "flow_output"
 
-```json
+```jsonc
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
     "type": "native",
-    "name": "addition",
-    "outputs": [
-        {
-            "name": "output",
-            "type": "free",
-            "required": true,
-            "tooltip": "result of a + b"
-        }
-    ],
+    "name": "flow_output",
+    "display_name": "Flow Output",
+    "description": "Use this node to return output for flow",
     "inputs": [
         {
-            "name": "a",
-            "type_bounds": ["number"]
-        },
-        {
-            "name": "b",
-            "type_bounds": ["number"]
+            // flow's output name, change as needed
+            "name": "output",
+            "type_bounds": [
+                "free"
+            ],
+            "required": true,
+            "passthrough": true,
+            "tooltip": "Output of flow, change the \"name\" value to change output's name"
         }
-    ]
+    ],
+    "outputs": []
 }
 ```
 
 3. "const"
 
-```json
+```jsonc
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
     "type": "native",
     "name": "const",
+    "display_name": "Cosnt",
+    "description": "Constant value",
     "outputs": [
         {
             "name": "output",
             "type": "free",
             "required": true,
-            "value": "${constant value}"
+            "value": {
+                "S": ""
+            }
         }
     ],
     "inputs": []
+}
+```
+
+4. "transfer_sol"
+
+```jsonc
+{
+    "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+    "type": "native",
+    "name": "transfer_sol",
+    "display_name": "Transfer SOLs",
+    "description": "Transfer SOLs",
+    "inputs": [
+        {
+            "name": "fee_payer",
+            "type_bounds": [
+                "keypair"
+            ],
+            "required": false,
+            "tooltip": "Transaction fee payer, default is sender"
+        },
+        {
+            "name": "sender",
+            "type_bounds": [
+                "keypair"
+            ]
+        },
+        {
+            "name": "recipient",
+            "type_bounds": [
+                "pubkey"
+            ]
+        },
+        {
+            "name": "amount",
+            "type_bounds": [
+                "decimal"
+            ],
+            "tooltip": "Amount in SOLs"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "signature",
+            "type": "signature",
+            "tooltip": "Signature of the transaction"
+        }
+    ],
+    "instruction_info": {
+        "signature": "signature",
+        "after": []
+    }
 }
 ```

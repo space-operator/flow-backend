@@ -15,6 +15,8 @@ include("flow.schema.json");
 include("value.schema.json");
 include("node-v2.schema.json");
 
+Deno.readDirSync("nodes").forEach((entry) => include(`nodes/${entry.name}`));
+
 const template = hb.compile(
   Deno.readTextFileSync("context.md"),
 );

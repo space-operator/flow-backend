@@ -3,7 +3,12 @@
     "$id": "https://schema.spaceoperator.com/node-v2.schema.json",
     "title": "Node Definition",
     "type": "object",
-    "required": [],
+    "required": [
+        "type",
+        "name",
+        "inputs",
+        "outputs"
+    ],
     "properties": {
         "type": {
             "title": "Node type",
@@ -12,15 +17,28 @@
                 "native",
                 "WASM",
                 "deno",
+                "rhai",
                 "mock"
             ]
         },
         "name": {
-            "title": "Name of node",
+            "title": "Unique name of node, name will be used to identify the node",
+            "type": "string"
+        },
+        "display_name": {
+            "title": "Display name of node",
             "type": "string"
         },
         "description": {
+            "title": "Description",
             "type": "string"
+        },
+        "tags": {
+            "title": "List of tags",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
         },
         "inputs": {
             "title": "Inputs",
@@ -34,6 +52,29 @@
             "type": "array",
             "items": {
                 "$ref": "#/definitions/output"
+            }
+        },
+        "instruction_info": {
+            "description": "Tell the flow graph this node will emit Solana instructions, and specify the order of outputs:\n- 'before': list of output names returned before instructions are sent.\n- 'signature': name of the signature output port.\n- 'after': list of output names returned after instructions are sent.\nNode only have to declare 'signature' and 'after', 'before' is the rest of the output.",
+            "type": "object",
+            "required": [
+                "signature",
+                "after"
+            ],
+            "properties": {
+                "signature": {
+                    "title": "Name of signature output",
+                    "type": "string",
+                    "default": "signature"
+                },
+                "after": {
+                    "title": "Name of outputs that will be available after the signature output",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                }
             }
         }
     },
@@ -62,6 +103,7 @@
                 },
                 "passthrough": {
                     "type": "boolean",
+                    "description": "Passthrough input will also be available as output of the node",
                     "default": false
                 },
                 "defaultValue": {
@@ -96,7 +138,7 @@
                 },
                 "value": {
                     "$ref": "https://schema.spaceoperator.com/value.schema.json",
-                    "description": "Hardcoded value (if applicable)"
+                    "description": "Hard-coded output value"
                 }
             }
         }

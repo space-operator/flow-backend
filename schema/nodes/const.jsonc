@@ -1,0 +1,18 @@
+{
+    "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+    "type": "native",
+    "name": "const",
+    "display_name": "Cosnt",
+    "description": "Constant value",
+    "outputs": [
+        {
+            "name": "output",
+            "type": "free",
+            "required": true,
+            "value": {
+                "S": ""
+            }
+        }
+    ],
+    "inputs": []
+}
