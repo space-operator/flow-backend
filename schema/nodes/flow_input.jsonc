@@ -1,0 +1,19 @@
+{
+    "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+    "type": "native",
+    "name": "flow_input",
+    "outputs": [
+        {
+            // flow's input name
+            "name": "input",
+            "type": "free",
+            "required": true,
+            "tooltip": "Input of flow, change the \"name\" value to change input's name",
+            // default value to use when user doesn't provide an input value when calling flow
+            "value": {
+                "S": ""
+            }
+        }
+    ],
+    "inputs": []
+}

@@ -25,27 +25,12 @@ List of available nodes:
 
 1. "flow_input"
 
-```json
-{
-    "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
-    "type": "native",
-    "name": "flow_input",
-    "outputs": [
-        {
-            "name": "${flow input's name}",
-            "type": "free",
-            "required": true,
-            "tooltip": "Input of flow, change the \"name\" value to change input's name",
-            "value": "${ default value to use when user doesn't provide an input value when calling flow }"
-        }
-    ],
-    "inputs": []
-}
+```jsonc
 ```
 
 2. "addition"
 
-```json
+```jsonc
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
     "type": "native",
@@ -54,7 +39,7 @@ List of available nodes:
         {
             "name": "output",
             "type": "free",
-            "required": true,
+            "required": true,            
             "tooltip": "result of a + b"
         }
     ],
@@ -73,7 +58,7 @@ List of available nodes:
 
 3. "const"
 
-```json
+```jsonc
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
     "type": "native",
