@@ -21,6 +21,8 @@ JSON schema for node definitions:
 {{> node-v2.schema.json }}
 ```
 
+Prefer using "value" field in "inputs" for constant value over "const" node.
+
 List of available nodes:
 
 1. "flow_input"
