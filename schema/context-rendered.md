@@ -452,9 +452,9 @@ JSON schema for node definitions:
                     "description": "Passthrough input will also be available as output of the node",
                     "default": false
                 },
-                "defaultValue": {
+                "value": {
                     "$ref": "https://schema.spaceoperator.com/value.schema.json",
-                    "description": "Default value to use when this port is not connected to any edge"
+                    "description": "Constant value to use as input for this port"
                 },
                 "tooltip": {
                     "type": "string"
