@@ -1,3 +1,5 @@
+#!/usr/bin/env -S deno run --allow-read --allow-write=llm-context.txt
+
 import { default as hb } from "npm:handlebars";
 
 function include(path: string) {
@@ -20,4 +22,4 @@ Deno.readDirSync("nodes").forEach((entry) => include(`nodes/${entry.name}`));
 const template = hb.compile(
   Deno.readTextFileSync("context.md"),
 );
-Deno.writeTextFileSync("context-rendered.md", template({}));
+Deno.writeTextFileSync("llm-context.txt", template({}));
