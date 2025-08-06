@@ -51,7 +51,8 @@ async fn drive(mut rx: EventReceiver, clients: ClientsMap) {
         content,
     })) = rx.next().await
     {
-        if let Some(client) = clients.borrow().get(&(node_id, times)).cloned() {
+        let client = clients.borrow().get(&(node_id, times)).cloned();
+        if let Some(client) = client {
             if let Err(error) = send_log(
                 &client,
                 NodeLogContent {
