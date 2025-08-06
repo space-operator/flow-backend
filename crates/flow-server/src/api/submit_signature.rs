@@ -19,12 +19,10 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
         .route(web::post().to(submit_signature))
 }
 
-async fn submit_signature(
-    params: web::Json<Params>,
-    db_worker: web::Data<actix::Addr<DBWorker>>,
-) -> Result<web::Json<Success>, SubmitError> {
+async fn submit_signature(params: web::Json<Params>) -> Result<web::Json<Success>, SubmitError> {
     let params = params.into_inner();
 
+    let db_worker = DBWorker::from_registry();
     db_worker
         .send(SubmitSignature {
             id: params.id,

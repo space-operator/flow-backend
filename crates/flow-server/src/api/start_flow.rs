@@ -32,7 +32,6 @@ async fn start_flow(
     flow_id: web::Path<FlowId>,
     params: Option<web::Json<Params>>,
     user: web::ReqData<auth::JWTPayload>,
-    db_worker: web::Data<actix::Addr<DBWorker>>,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let user = user.into_inner();
@@ -52,6 +51,7 @@ async fn start_flow(
         tracing::debug!("partial config: {:?}", partial_config);
     }
 
+    let db_worker = DBWorker::from_registry();
     let flow_run_id = db_worker
         .send(GetUserWorker {
             user_id: user.user_id,

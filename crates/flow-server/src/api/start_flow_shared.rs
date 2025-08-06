@@ -28,7 +28,6 @@ async fn start_flow_shared(
     flow_id: web::Path<FlowId>,
     params: Option<web::Json<Params>>,
     user: web::ReqData<auth::JWTPayload>,
-    db_worker: web::Data<actix::Addr<DBWorker>>,
     db: web::Data<DbPool>,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
@@ -51,6 +50,8 @@ async fn start_flow_shared(
     if !flow.start_shared {
         return Err(Error::custom(StatusCode::FORBIDDEN, "not allowed"));
     }
+
+    let db_worker = DBWorker::from_registry();
 
     let starter = db_worker
         .send(GetUserWorker {

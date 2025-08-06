@@ -22,7 +22,6 @@ async fn stop_flow(
     id: web::Path<FlowRunId>,
     params: Option<web::Json<Params>>,
     user: web::ReqData<auth::JWTPayload>,
-    db_worker: web::Data<actix::Addr<DBWorker>>,
 ) -> Result<web::Json<Success>, StopError> {
     let id = id.into_inner();
     let user = user.into_inner();
@@ -30,6 +29,7 @@ async fn stop_flow(
         .map(|p| (p.0.timeout_millies, p.0.reason))
         .unwrap_or_default();
 
+    let db_worker = DBWorker::from_registry();
     db_worker
         .send(FindActor::<FlowRunWorker>::new(id))
         .await?
