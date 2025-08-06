@@ -28,16 +28,23 @@ jobs:
           override: true
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --quiet --tests --
-            -D clippy::dbg_macro
-            -D clippy::print_stdout
-            -D clippy::print_stderr
-            -D clippy::await_holding_refcell_ref
-            -D clippy::await_holding_lock
-            -A clippy::too_many_arguments
+#      - uses: actions-rs/clippy-check@v1
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          args: --quiet --tests --
+#            -D clippy::dbg_macro
+#            -D clippy::print_stdout
+#            -D clippy::print_stderr
+#            -D clippy::await_holding_refcell_ref
+#            -D clippy::await_holding_lock
+#            -A clippy::too_many_arguments
+      - run: >
+          cargo clippy --quiet --tests --
+          -D clippy::dbg_macro
+          -D clippy::print_stdout
+          -D clippy::print_stderr
+          -D clippy::await_holding_refcell_ref
+          -D clippy::await_holding_lock
       - name: Assert Cargo.lock unchanged
         run: .github/assert_cargo_lock_unchanged.bash
       - name: Build tests
