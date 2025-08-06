@@ -1,0 +1,47 @@
+{
+    "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+    "type": "native",
+    "name": "transfer_sol",
+    "display_name": "Transfer SOLs",
+    "description": "Transfer SOLs",
+    "inputs": [
+        {
+            "name": "fee_payer",
+            "type_bounds": [
+                "keypair"
+            ],
+            "required": false,
+            "tooltip": "Transaction fee payer, default is sender"
+        },
+        {
+            "name": "sender",
+            "type_bounds": [
+                "keypair"
+            ]
+        },
+        {
+            "name": "recipient",
+            "type_bounds": [
+                "pubkey"
+            ]
+        },
+        {
+            "name": "amount",
+            "type_bounds": [
+                "decimal"
+            ],
+            "tooltip": "Amount in SOLs"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "signature",
+            "type": "signature",
+            "tooltip": "Signature of the transaction"
+        }
+    ],
+    "instruction_info": {
+        "signature": "signature",
+        "after": []
+    }
+}

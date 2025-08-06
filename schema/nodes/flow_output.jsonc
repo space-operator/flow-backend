@@ -1,0 +1,20 @@
+{
+    "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+    "type": "native",
+    "name": "flow_output",
+    "display_name": "Flow Output",
+    "description": "Use this node to return output for flow",
+    "inputs": [
+        {
+            // flow's output name, change as needed
+            "name": "output",
+            "type_bounds": [
+                "free"
+            ],
+            "required": true,
+            "passthrough": true,
+            "tooltip": "Output of flow, change the \"name\" value to change output's name"
+        }
+    ],
+    "outputs": []
+}

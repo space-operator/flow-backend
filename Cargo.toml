@@ -1,7 +1,6 @@
 [workspace]
 members = ["lib/*", "crates/*", "anchor-libs/*"]
 exclude = [
-    "crates/space-wasm/tests",
     "lib/space-operator-cli",
     "vendor/mpl-bubblegum",
     "vendor/mpl-core-candy-guard",
@@ -32,7 +31,6 @@ codegen-units = 256
 # crates/
 flow = { path = "crates/flow", version = "0.0.0" }
 utils = { path = "crates/utils", version = "0.0.0" }
-space-wasm = { path = "crates/space-wasm", version = "0.0.0" }
 db = { path = "crates/db", version = "0.0.0" }
 pdg-common = { path = "crates/pdg-common", version = "0.0.0" }
 cmds-std = { path = "crates/cmds-std", version = "0.0.0" }
