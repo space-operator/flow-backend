@@ -9,12 +9,7 @@ use flow_lib::{
 };
 use flow_tracing::FlowLogs;
 use futures::StreamExt;
-use std::{
-    cell::RefCell,
-    collections::hash_map::Entry,
-    rc::Rc,
-    sync::{LazyLock, OnceLock},
-};
+use std::{cell::RefCell, collections::hash_map::Entry, rc::Rc, sync::OnceLock};
 use tokio::task::spawn_local;
 use tracing::Span;
 use tracing_subscriber::prelude::*;
@@ -56,9 +51,10 @@ async fn drive(mut rx: EventReceiver, clients: ClientsMap) {
         content,
     })) = rx.next().await
     {
-        if let Some(client) = clients.borrow_mut().get(&(node_id, times)) {
+        let client = clients.borrow().get(&(node_id, times)).cloned();
+        if let Some(client) = client {
             if let Err(error) = send_log(
-                client,
+                &client,
                 NodeLogContent {
                     time,
                     level,
