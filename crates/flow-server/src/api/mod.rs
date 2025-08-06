@@ -38,6 +38,7 @@ pub mod start_deployment;
 
 pub mod prelude {
     pub use crate::{Config, db_worker::DBWorker, error::Error, middleware::auth};
+    pub use actix::SystemService;
     pub use actix_web::{dev::HttpServiceFactory, http::StatusCode, web};
     pub use db::{
         Error as DbError,

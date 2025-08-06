@@ -15,7 +15,6 @@ async fn get_flow_output(
     run_id: web::Path<FlowRunId>,
     auth: web::ReqData<auth::TokenType>,
     db: web::Data<RealDbPool>,
-    db_worker: web::Data<actix::Addr<DBWorker>>,
 ) -> Result<web::Json<value::Value>, Error> {
     let run_id = run_id.into_inner();
     let conn = db.get_admin_conn().await?;
@@ -28,6 +27,7 @@ async fn get_flow_output(
     {
         return Err(Error::custom(StatusCode::NOT_FOUND, "unauthorized"));
     }
+    let db_worker = DBWorker::from_registry();
     if let Some(addr) = db_worker
         .send(FindActor::<FlowRunWorker>::new(run_id))
         .await?

@@ -10,7 +10,8 @@ use crate::{
     },
 };
 use actix::{
-    Actor, ActorContext, ActorFutureExt, ActorStreamExt, AsyncContext, WrapFuture, WrapStream,
+    Actor, ActorContext, ActorFutureExt, ActorStreamExt, AsyncContext, SystemService, WrapFuture,
+    WrapStream,
 };
 use actix_web::{HttpRequest, dev::HttpServiceFactory, guard, web};
 use actix_web_actors::ws::{self, CloseCode, WebsocketContext};
@@ -75,7 +76,6 @@ pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static
 
 async fn ws_handler(
     auth: web::Data<ApiAuth>,
-    db_worker: web::Data<actix::Addr<DBWorker>>,
     req: HttpRequest,
     stream: web::Payload,
 ) -> Result<actix_web::HttpResponse, crate::error::Error> {
@@ -85,7 +85,7 @@ async fn ws_handler(
             subscribing: <_>::default(),
 
             auth_service: auth.into_inner(),
-            db_worker: (**db_worker).clone(),
+            db_worker: DBWorker::from_registry(),
         },
         &req,
         stream,

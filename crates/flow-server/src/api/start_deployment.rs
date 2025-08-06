@@ -77,7 +77,7 @@ async fn start_deployment(
     params: actix_web::Result<web::Json<Params>>,
     user: Auth2<AuthenticatedUser, Unverified>,
     db: web::Data<RealDbPool>,
-    db_worker: web::Data<actix::Addr<DBWorker>>,
+
     sup: web::Data<SupabaseAuth>,
     sig: web::Data<SignatureAuth>,
 ) -> actix_web::Result<web::Json<Output>> {
@@ -118,6 +118,7 @@ async fn start_deployment(
     let options = StartFlowDeploymentOptions { inputs, starter };
 
     let owner = deployment.user_id;
+    let db_worker = DBWorker::from_registry();
     let owner_worker = db_worker
         .send(GetUserWorker { user_id: owner })
         .await

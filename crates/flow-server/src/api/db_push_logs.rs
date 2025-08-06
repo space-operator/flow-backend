@@ -12,7 +12,6 @@ pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static
 async fn db_push_logs(
     params: web::Json<Vec<FlowRunLogsRow>>,
     user: web::ReqData<auth::JWTPayload>,
-    db_worker: web::Data<actix::Addr<DBWorker>>,
 ) -> Result<web::Json<Success>, Error> {
     let user_id = user.into_inner().user_id;
     let rows = params
@@ -20,6 +19,7 @@ async fn db_push_logs(
         .into_iter()
         .filter(|row| row.user_id == user_id)
         .collect::<Vec<_>>();
+    let db_worker = DBWorker::from_registry();
     db_worker.send(CopyIn(rows)).await?;
     Ok(web::Json(Success))
 }

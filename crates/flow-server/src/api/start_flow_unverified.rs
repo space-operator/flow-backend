@@ -47,7 +47,7 @@ async fn start_flow_unverified(
     flow_id: web::Path<FlowId>,
     params: Option<web::Json<Params>>,
     user: web::ReqData<auth::Unverified>,
-    db_worker: web::Data<actix::Addr<DBWorker>>,
+
     sup: web::Data<SupabaseAuth>,
     db: web::Data<RealDbPool>,
     sig: web::Data<SignatureAuth>,
@@ -67,6 +67,8 @@ async fn start_flow_unverified(
     }
 
     let user_id = sup.get_or_create_user(&user.pubkey).await?.0;
+
+    let db_worker = DBWorker::from_registry();
 
     let starter = db_worker.send(GetUserWorker { user_id }).await?;
     let owner = db_worker

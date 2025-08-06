@@ -290,7 +290,6 @@ async fn main() {
             .wrap(Compress::default())
             .wrap(Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#).exclude("/healthcheck"))
             .app_data(web::Data::new(db.clone()))
-            .app_data(web::Data::new(db_worker.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
             .app_data(web::Data::new(sig_auth));
         if let Some(auth) = supabase_auth.clone() {

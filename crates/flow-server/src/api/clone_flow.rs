@@ -19,10 +19,11 @@ pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static
 async fn clone_flow(
     flow_id: web::Path<FlowId>,
     user: web::ReqData<auth::JWTPayload>,
-    db_worker: web::Data<actix::Addr<DBWorker>>,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let user = user.into_inner();
+
+    let db_worker = DBWorker::from_registry();
 
     let id_map = db_worker
         .send(GetUserWorker {
