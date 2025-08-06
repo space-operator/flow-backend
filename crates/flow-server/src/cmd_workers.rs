@@ -1,15 +1,11 @@
-use std::{
-    collections::BTreeSet,
-    future::{Ready, ready},
-};
+use std::future::{Ready, ready};
 
-use anyhow::anyhow;
 use command_rpc::flow_side::address_book::authenticate;
 use tower::Service;
 
 #[derive(Debug, Clone, bon::Builder)]
 pub struct WorkerAuthenticate {
-    trusted: BTreeSet<iroh::PublicKey>,
+    // trusted: BTreeSet<iroh::PublicKey>,
 }
 
 impl Service<authenticate::Request> for WorkerAuthenticate {
@@ -27,10 +23,13 @@ impl Service<authenticate::Request> for WorkerAuthenticate {
     }
 
     fn call(&mut self, req: authenticate::Request) -> Self::Future {
+        ready(Ok(authenticate::Response {}))
+        /*
         if self.trusted.contains(&req) {
             ready(Ok(authenticate::Response {}))
         } else {
             ready(Err(anyhow!("failed")))
         }
+        */
     }
 }
