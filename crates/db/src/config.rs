@@ -1,6 +1,6 @@
 use chacha20poly1305::{AeadCore, ChaCha20Poly1305, KeyInit, aead::Aead};
 use flow_lib::solana::Keypair;
-use rand::Rng;
+use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use serde_with::{base64::Base64, serde_as};
 use std::fmt::Display;
@@ -12,7 +12,7 @@ pub struct EncryptionKey(#[serde_as(as = "Base64")] [u8; 32]);
 
 impl EncryptionKey {
     pub fn random() -> Self {
-        Self(rand::rngs::OsRng.r#gen())
+        Self(ChaCha20Poly1305::generate_key(&mut OsRng).into())
     }
 }
 
@@ -121,19 +121,13 @@ impl Default for DbConfig {
     }
 }
 
-#[derive(Deserialize, Clone)]
-pub struct ProxiedDbConfig {
-    pub upstream_url: String,
-    pub api_keys: Vec<String>,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_encryption() {
-        let mut rng = rand::thread_rng();
+        let mut rng = OsRng;
         let key = EncryptionKey(ChaCha20Poly1305::generate_key(&mut rng).into());
         let keypair = Keypair::try_from(
             &ed25519_dalek::SigningKey::generate(&mut rng).to_keypair_bytes()[..],

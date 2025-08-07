@@ -28,8 +28,6 @@ pub mod csv_export;
 mod admin;
 pub use admin::*;
 
-pub mod proxied_user_conn;
-
 #[derive(Clone)]
 pub struct UserConnection {
     pub local: LocalStorage,

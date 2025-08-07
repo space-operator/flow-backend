@@ -253,18 +253,6 @@ async fn main() {
             .service(api::kvstore::delete_item::service(&config, db.clone()))
             .service(api::kvstore::read_item::service(&config, db.clone()));
 
-        let db_proxy = if matches!(db, DbPool::Real(_)) {
-            Some(
-                web::scope("/proxy")
-                    .service(api::db_rpc::service(&config, db.clone()))
-                    .service(api::db_push_logs::service(&config, db.clone()))
-                    .service(api::auth_proxy::service(&config, db.clone()))
-                    .service(api::ws_auth_proxy::service(&config, db.clone())),
-            )
-        } else {
-            None
-        };
-
         let deployment = web::scope("/deployment").service(api::start_deployment::service(&config));
 
         let mut app = App::new()
@@ -287,10 +275,6 @@ async fn main() {
 
         if let Some(auth) = auth {
             app = app.service(auth);
-        }
-
-        if let Some(db_proxy) = db_proxy {
-            app = app.service(db_proxy);
         }
 
         let data = {

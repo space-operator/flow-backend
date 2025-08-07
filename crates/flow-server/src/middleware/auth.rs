@@ -1,5 +1,4 @@
 use crate::{
-    api::{auth_proxy, ws_auth_proxy},
     error::ErrorBody,
     user::{FLOW_RUN_TOKEN_PREFIX, SignatureAuth},
 };
@@ -19,7 +18,6 @@ use db::{apikey, pool::RealDbPool};
 use flow_lib::{FlowRunId, UserId};
 use futures_util::{FutureExt, future::LocalBoxFuture};
 use hmac::{Hmac, Mac};
-use reqwest::header as req;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use std::{convert::Infallible, future::Ready, panic::Location, rc::Rc, str::FromStr, sync::Arc};
@@ -210,7 +208,6 @@ fn decode_payload(payload: &[u8], now: i64) -> Result<JWTPayload, Unauthorized> 
 #[derive(Clone)]
 pub enum ApiAuth {
     Real(RealApiAuth),
-    Proxied(ProxiedApiAuth),
 }
 
 #[derive(Clone)]
@@ -349,62 +346,6 @@ impl RealApiAuth {
     }
 }
 
-#[derive(Clone)]
-pub struct ProxiedApiAuth {
-    client: reqwest::Client,
-    upstream_url: String,
-    sig: SignatureAuth,
-}
-
-impl ProxiedApiAuth {
-    async fn run(&self, r: &ServiceRequest) -> Result<(), Unauthorized> {
-        let mut req = self
-            .client
-            .post(format!("{}/proxy/auth", self.upstream_url));
-        if let Some(value) = r.headers().get(AUTHORIZATION) {
-            if let Ok(pubkey) = decode_base58_pubkey(value) {
-                let mut ext = r.extensions_mut();
-                ext.insert(Unverified { pubkey });
-                return Ok(());
-            }
-            req = req.header(req::AUTHORIZATION, value.as_bytes());
-        }
-        if let Some(value) = r.headers().get(&X_API_KEY) {
-            req = req.header(X_API_KEY.as_str(), value.as_bytes());
-        }
-        let output = req
-            .send()
-            .await
-            .map_err(|_| unauthorized())?
-            .json::<auth_proxy::Output>()
-            .await
-            .map_err(|_| unauthorized())?;
-        let mut ext = r.extensions_mut();
-        ext.insert(output.payload);
-        ext.insert(output.token);
-        Ok(())
-    }
-
-    pub async fn ws_authenticate(&self, token: String) -> Result<TokenType, Unauthorized> {
-        if let Some(token) = token.strip_prefix(FLOW_RUN_TOKEN_PREFIX) {
-            let id = verify_flow_run_token(token.as_bytes(), self.sig)?;
-            Ok(TokenType::FlowRun(FlowRunToken { id }))
-        } else {
-            Ok(self
-                .client
-                .post(format!("{}/proxy/ws_auth", self.upstream_url))
-                .json(&ws_auth_proxy::Params { token })
-                .send()
-                .await
-                .map_err(|_| unauthorized())?
-                .json::<ws_auth_proxy::Output>()
-                .await
-                .map_err(|_| unauthorized())?
-                .payload)
-        }
-    }
-}
-
 impl ApiAuth {
     pub fn real(secret: &[u8], anon_key: String, pool: RealDbPool, sig: SignatureAuth) -> Self {
         let hmac = Hmac::new_from_slice(secret).unwrap();
@@ -419,7 +360,6 @@ impl ApiAuth {
     async fn run(&self, r: &ServiceRequest) -> Result<(), Unauthorized> {
         match self {
             ApiAuth::Real(x) => x.run(r).await,
-            ApiAuth::Proxied(x) => x.run(r).await,
         }
     }
 
@@ -429,7 +369,6 @@ impl ApiAuth {
     ) -> Result<TokenType, Unauthorized> {
         match self.as_ref() {
             ApiAuth::Real(x) => x.ws_authenticate(token).await,
-            ApiAuth::Proxied(x) => x.ws_authenticate(token).await,
         }
     }
 }
