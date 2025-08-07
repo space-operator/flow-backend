@@ -140,7 +140,7 @@ pub fn configure(cfg: &mut ServiceConfig, server_config: &crate::Config, db: &Db
         return;
     };
     let hmac = Hmac::new_from_slice(jwt_key.as_bytes()).unwrap();
-    let DbPool::Real(pool) = db else { return };
+    let DbPool::Real(pool) = db;
     let sig = SignatureAuth::new(server_config.blake3_key);
     let state = AuthState {
         hmac,

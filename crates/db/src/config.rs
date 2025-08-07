@@ -1,5 +1,6 @@
 use chacha20poly1305::{AeadCore, ChaCha20Poly1305, KeyInit, aead::Aead};
 use flow_lib::solana::Keypair;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_with::{base64::Base64, serde_as};
 use std::fmt::Display;
@@ -7,7 +8,13 @@ use zeroize::Zeroize;
 
 #[serde_as]
 #[derive(Deserialize, Clone)]
-pub(crate) struct EncryptionKey(#[serde_as(as = "Base64")] [u8; 32]);
+pub struct EncryptionKey(#[serde_as(as = "Base64")] [u8; 32]);
+
+impl EncryptionKey {
+    pub fn random() -> Self {
+        Self(rand::rngs::OsRng.r#gen())
+    }
+}
 
 impl Drop for EncryptionKey {
     fn drop(&mut self) {
@@ -75,16 +82,16 @@ pub struct DbConfig {
     #[serde(default)]
     pub ssl: SslConfig,
     pub max_pool_size: Option<usize>,
-    pub(crate) encryption_key: Option<EncryptionKey>,
+    pub encryption_key: Option<EncryptionKey>,
 }
 
-const fn bool_true() -> bool {
-    true
+const fn bool<const B: bool>() -> bool {
+    B
 }
 
 #[derive(Deserialize, Clone, Default)]
 pub struct SslConfig {
-    #[serde(default = "bool_true")]
+    #[serde(default = "bool::<true>")]
     pub use_builtin_supabase_cert: bool,
     pub enabled: bool,
     pub cert: Option<std::path::PathBuf>,

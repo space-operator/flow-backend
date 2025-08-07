@@ -7,9 +7,8 @@ use actix_web::{
 use command_rpc::flow_side::address_book::BaseAddressBook;
 use db::{
     LocalStorage, WasmStorage,
-    pool::{DbPool, ProxiedDbPool, RealDbPool},
+    pool::{DbPool, RealDbPool},
 };
-use either::Either;
 use flow_lib::{command::CommandFactory, utils::TowerClient};
 use flow_server::{
     Config,
@@ -19,7 +18,7 @@ use flow_server::{
         prelude::Success,
     },
     cmd_workers::WorkerAuthenticate,
-    db_worker::{DBWorker, SystemShutdown, token_worker::token_from_apikeys},
+    db_worker::{DBWorker, SystemShutdown},
     middleware::auth_v1,
     user::SupabaseAuth,
     ws,
@@ -88,32 +87,14 @@ async fn main() {
         }
     };
 
-    let mut actors = AddressBook::new();
+    let actors = AddressBook::new();
 
-    let pool_size = if let Either::Left(cfg) = &config.db {
-        cfg.max_pool_size
-    } else {
-        None
-    };
+    let pool_size = config.db.max_pool_size;
 
-    let db = match match &config.db {
-        Either::Left(cfg) => RealDbPool::new(cfg, wasm_storage.clone(), local)
-            .await
-            .map(DbPool::Real),
-        Either::Right(cfg) => {
-            let (services, new_actors) = token_from_apikeys(
-                cfg.api_keys.clone(),
-                local.clone(),
-                config.endpoints(),
-                cfg.upstream_url.to_string(),
-            )
-            .await;
-            for (id, addr) in new_actors {
-                assert!(actors.insert(id, addr.downgrade()));
-            }
-            ProxiedDbPool::new(cfg.clone(), local, services).map(DbPool::Proxied)
-        }
-    } {
+    let db = match RealDbPool::new(&config.db, wasm_storage.clone(), local)
+        .await
+        .map(DbPool::Real)
+    {
         Ok(db) => db,
         Err(e) => {
             tracing::error!("failed to start database connection pool: {}", e);
@@ -298,7 +279,6 @@ async fn main() {
 
         let mut app = match &db {
             DbPool::Real(db) => app.app_data(web::Data::new(db.clone())),
-            DbPool::Proxied(db) => app.app_data(web::Data::new(db.clone())),
         };
 
         if let Some(wallets) = wallets {

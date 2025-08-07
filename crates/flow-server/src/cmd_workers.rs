@@ -3,7 +3,6 @@ use std::{
     future::{Ready, ready},
 };
 
-use anyhow::anyhow;
 use command_rpc::flow_side::address_book::authenticate;
 use tower::Service;
 

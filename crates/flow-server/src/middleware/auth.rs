@@ -15,10 +15,7 @@ use actix_web::{
         },
     },
 };
-use db::{
-    apikey,
-    pool::{ProxiedDbPool, RealDbPool},
-};
+use db::{apikey, pool::RealDbPool};
 use flow_lib::{FlowRunId, UserId};
 use futures_util::{FutureExt, future::LocalBoxFuture};
 use hmac::{Hmac, Mac};
@@ -415,14 +412,6 @@ impl ApiAuth {
             hmac,
             anon_key,
             pool,
-            sig,
-        })
-    }
-
-    pub fn proxied(pool: ProxiedDbPool, sig: SignatureAuth) -> Self {
-        ApiAuth::Proxied(ProxiedApiAuth {
-            client: pool.client,
-            upstream_url: pool.config.upstream_url,
             sig,
         })
     }
