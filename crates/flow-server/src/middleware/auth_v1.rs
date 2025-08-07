@@ -330,7 +330,7 @@ where
     }
 }
 
-pub enum Auth2<One, Two> {
+pub enum AuthEither<One, Two> {
     One(One),
     Two(Two),
 }
@@ -343,7 +343,7 @@ fn control_flow<T>(r: Result<T, AuthError>) -> ControlFlow<Result<T, AuthError>>
     }
 }
 
-impl<One: Identity, Two: Identity> FromRequest for Auth2<One, Two> {
+impl<One: Identity, Two: Identity> FromRequest for AuthEither<One, Two> {
     type Error = AuthError;
     type Future = LocalBoxFuture<'static, Result<Self, AuthError>>;
 
@@ -353,9 +353,9 @@ impl<One: Identity, Two: Identity> FromRequest for Auth2<One, Two> {
             let auth = req
                 .app_data::<web::ThinData<AuthState>>()
                 .ok_or_else(|| AuthError::NotConfigured)?;
-            let result = One::verify(&req, auth).await.map(Auth2::One);
+            let result = One::verify(&req, auth).await.map(AuthEither::One);
             early_return!(control_flow(result));
-            Two::verify(&req, auth).await.map(Auth2::Two)
+            Two::verify(&req, auth).await.map(AuthEither::Two)
         }
         .boxed_local()
     }

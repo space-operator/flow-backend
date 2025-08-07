@@ -2,7 +2,7 @@ use super::prelude::*;
 use crate::{
     db_worker::{GetUserWorker, user_worker::StartDeployment},
     middleware::{
-        auth_v1::{Auth2, AuthenticatedUser, Unverified},
+        auth_v1::{AuthEither, AuthenticatedUser, Unverified},
         optional,
     },
     user::{SignatureAuth, SupabaseAuth},
@@ -75,7 +75,7 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
 async fn start_deployment(
     query: web::Query<Query>,
     params: actix_web::Result<web::Json<Params>>,
-    user: Auth2<AuthenticatedUser, Unverified>,
+    user: AuthEither<AuthenticatedUser, Unverified>,
     db: web::Data<RealDbPool>,
 
     sup: web::Data<SupabaseAuth>,
@@ -87,13 +87,13 @@ async fn start_deployment(
         None => (None, Default::default()),
     };
     let mut starter = match &user {
-        Auth2::One(user) => FlowStarter {
+        AuthEither::One(user) => FlowStarter {
             user_id: *user.user_id(),
             pubkey: Pubkey::new_from_array(*user.pubkey()),
             authenticated: true,
             action_signer,
         },
-        Auth2::Two(unverified) => FlowStarter {
+        AuthEither::Two(unverified) => FlowStarter {
             user_id: UserId::nil(),
             pubkey: Pubkey::new_from_array(*unverified.pubkey()),
             authenticated: false,
