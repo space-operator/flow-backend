@@ -120,7 +120,6 @@ fn convert_error(error: Error) -> Error<NameConflict> {
             context,
             location,
         },
-        Error::ProxyError(e) => Error::ProxyError(e),
         Error::Parsing {
             error,
             context,

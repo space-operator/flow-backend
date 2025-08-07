@@ -237,7 +237,6 @@ impl SupabaseAuth {
     pub fn new(config: &SupabaseConfig, pool: DbPool) -> Result<Self, BoxedError> {
         let pool = match pool {
             DbPool::Real(pool) => pool,
-            _ => return Err("need database credentials".into()),
         };
         let base_url = config.endpoint.url.join("auth/v1/")?;
         let service_key = config.service_key.as_ref().ok_or("need service_key")?;

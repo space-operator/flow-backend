@@ -6,14 +6,13 @@ use actix::{
 use command_rpc::flow_side::address_book::BaseAddressBook;
 use db::{
     FlowRunLogsRow,
-    pool::{DbPool, ProxiedDbPool, RealDbPool},
+    pool::{DbPool, RealDbPool},
 };
 use flow_lib::{
     FlowRunId, UserId,
     config::Endpoints,
     context::get_jwt,
     flow_run_events::{DEFAULT_LOG_FILTER, EventSender},
-    utils::tower_client::CommonErrorExt,
 };
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
@@ -126,11 +125,6 @@ impl DBWorker {
                     act.done_tx.send(()).ok();
                 },
             )),
-            DbPool::Proxied(db) => ctx.spawn(
-                wrap_future::<_, Self>(db_copy_in_proxied(rx, db.clone())).map(|_, act, _| {
-                    act.done_tx.send(()).ok();
-                }),
-            ),
         };
 
         Self {
@@ -295,12 +289,6 @@ impl actix::Handler<GetTokenWorker> for DBWorker {
                 });
                 Ok(addr)
             }
-            DbPool::Proxied(_) => self
-                .actors
-                .get::<TokenWorker>(id)
-                .ok_or(get_jwt::Error::NotAllowed)?
-                .upgrade()
-                .ok_or(get_jwt::Error::msg("TokenWorker stopped")),
         }
     }
 }
@@ -421,37 +409,6 @@ async fn db_copy_in(rx: mpsc::UnboundedReceiver<Vec<FlowRunLogsRow>>, db: RealDb
             .await;
         match res {
             Ok(count) => tracing::debug!("inserted {} rows", count),
-            Err(error) => tracing::error!("{}, dropping events.", error),
-        }
-    }
-}
-
-async fn db_copy_in_proxied(rx: mpsc::UnboundedReceiver<Vec<FlowRunLogsRow>>, db: ProxiedDbPool) {
-    const CHUNK_SIZE: usize = 16;
-    let mut chunks = rx.ready_chunks(CHUNK_SIZE);
-    while let Some(events) = chunks.next().await {
-        let rows = events
-            .into_iter()
-            .flat_map(|vec| vec.into_iter())
-            .collect::<Vec<_>>();
-        if rows.is_empty() {
-            continue;
-        }
-        let user_id = rows[0].user_id;
-        let conn = match db.get_user_conn(user_id).await {
-            Ok(conn) => conn,
-            Err(error) => {
-                tracing::error!(
-                    "could not get DB connection, dropping events. detail: {}",
-                    error
-                );
-                continue;
-            }
-        };
-        let count = rows.len();
-        let res = conn.push_logs(&rows).await;
-        match res {
-            Ok(_) => tracing::debug!("inserted {} rows", count),
             Err(error) => tracing::error!("{}, dropping events.", error),
         }
     }

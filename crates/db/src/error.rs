@@ -1,4 +1,4 @@
-use crate::{StorageError, connection::proxied_user_conn};
+use crate::StorageError;
 use actix_web::{ResponseError, http::StatusCode};
 use serde::Serialize;
 use std::{
@@ -46,7 +46,6 @@ impl<E: Debug + Display> ResponseError for Error<E> {
             Error::Base58 => StatusCode::INTERNAL_SERVER_ERROR,
             Error::LogicError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Error::LocalStorage { .. } => todo!(),
-            Error::ProxyError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Error::PolarsError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -134,8 +133,6 @@ pub enum Error<E = anyhow::Error> {
         location: &'static Location<'static>,
     },
     #[error(transparent)]
-    ProxyError(#[from] proxied_user_conn::Error),
-    #[error(transparent)]
     PolarsError(#[from] polars::error::PolarsError),
 }
 
@@ -213,7 +210,6 @@ impl<E: Into<anyhow::Error>> Error<E> {
                 context,
                 location,
             },
-            Error::ProxyError(e) => Error::ProxyError(e),
             Error::Parsing {
                 error,
                 context,

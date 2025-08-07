@@ -1,16 +1,15 @@
 use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
 use anyhow::Context;
 use db::{
-    config::{DbConfig, ProxiedDbConfig},
+    config::{DbConfig, EncryptionKey, SslConfig},
     pool::DbPool,
 };
-use either::Either;
 use flow_lib::config::Endpoints;
 use middleware::{
     auth,
     req_fn::{self, Function, ReqFn},
 };
-use rand::thread_rng;
+use rand::{Rng, thread_rng};
 use serde::Deserialize;
 use serde_with::serde_as;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
@@ -136,11 +135,21 @@ impl Default for SupabaseConfig {
     }
 }
 
-fn default_db_config() -> Either<DbConfig, ProxiedDbConfig> {
-    either::Right(ProxiedDbConfig {
-        upstream_url: "https://dev-api.spaceoperator.com".parse().unwrap(),
-        api_keys: Vec::new(),
-    })
+fn default_db_config() -> DbConfig {
+    DbConfig {
+        user: "flow_runner".to_owned(),
+        password: "flow_runner".to_owned(),
+        dbname: "postgres".to_owned(),
+        host: "localhost".to_owned(),
+        port: 5432,
+        ssl: SslConfig {
+            use_builtin_supabase_cert: false,
+            enabled: false,
+            cert: None,
+        },
+        max_pool_size: None,
+        encryption_key: Some(EncryptionKey::random()),
+    }
 }
 
 #[serde_as]
@@ -150,8 +159,8 @@ pub struct Config {
     pub host: String,
     #[serde(default = "Config::default_port")]
     pub port: u16,
-    #[serde(default = "default_db_config", with = "either::serde_untagged")]
-    pub db: Either<DbConfig, ProxiedDbConfig>,
+    #[serde(default = "default_db_config")]
+    pub db: DbConfig,
     #[serde(default)]
     pub cors_origins: Vec<String>,
     pub supabase: SupabaseConfig,
@@ -186,10 +195,10 @@ impl Default for Config {
             supabase: SupabaseConfig::default(),
             local_storage: Self::default_local_storage(),
             shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
-            blake3_key: rand::random(),
+            blake3_key: rand::rngs::OsRng.r#gen(),
             solana: None,
             helius_api_key: None,
-            iroh_secret_key: iroh::SecretKey::generate(&mut thread_rng()),
+            iroh_secret_key: iroh::SecretKey::generate(&mut rand::rngs::OsRng),
         }
     }
 }
@@ -302,7 +311,6 @@ impl Config {
     pub fn endpoints(&self) -> Endpoints {
         Endpoints {
             flow_server: match &self.db {
-                Either::Right(cfg) => cfg.upstream_url.to_string(),
                 _ => format!("http://localhost:{}", self.port),
             },
             supabase: self.supabase_endpoint(),
@@ -364,7 +372,6 @@ impl Config {
                     self.signature_auth(),
                 )
             }
-            (_, DbPool::Proxied(pool)) => auth::ApiAuth::proxied(pool, self.signature_auth()),
         }
     }
 
