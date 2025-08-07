@@ -69,33 +69,6 @@ enum Role {
     Authenticated,
 }
 
-pub fn verify_jwt(mut hmac: Hmac<Sha256>, http_header: &[u8], now: i64) -> Result<Jwt, AuthError> {
-    let token = http_header
-        .strip_prefix(b"Bearer ")
-        .ok_or(AuthError::InvalidFormat)?;
-    let (header_payload, signature) = rsplit(token).ok_or(AuthError::InvalidFormat)?;
-    let (_, payload) = rsplit(header_payload).ok_or(AuthError::InvalidFormat)?;
-
-    let signature = base64::decode_config(signature, base64::URL_SAFE_NO_PAD)
-        .map_err(|_| AuthError::InvalidFormat)?;
-    hmac.update(header_payload);
-    hmac.verify_slice(&signature)
-        .map_err(|_| AuthError::HmacFailed)?;
-
-    let bytes = base64::decode_config(payload, base64::URL_SAFE_NO_PAD)
-        .map_err(|_| AuthError::InvalidPayload)?;
-    let payload =
-        serde_json::from_slice::<Payload>(&bytes).map_err(|_| AuthError::InvalidPayload)?;
-    if payload.exp <= now {
-        return Err(AuthError::Expired);
-    }
-    let mut pubkey = [0u8; 32];
-    five8::decode_32(payload.user_metadata.pub_key, &mut pubkey)
-        .map_err(|_| AuthError::InvalidPayload)?;
-
-    Err(AuthError::NotConfigured)
-}
-
 #[derive(ThisError, Debug)]
 #[error("unauthenticated")]
 pub enum AuthError {
