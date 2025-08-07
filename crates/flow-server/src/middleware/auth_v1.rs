@@ -36,6 +36,14 @@ macro_rules! early_return {
     }};
 }
 
+fn control_flow<T>(r: Result<T, AuthError>) -> ControlFlow<Result<T, AuthError>> {
+    if matches!(&r, Err(e) if e.try_again()) {
+        ControlFlow::Continue(())
+    } else {
+        ControlFlow::Break(r)
+    }
+}
+
 fn rsplit(b: &[u8]) -> Option<(&[u8], &[u8])> {
     let dot = b.iter().rposition(|c| *c == b'.')?;
     Some((&b[..dot], &b[dot + 1..]))
@@ -333,14 +341,6 @@ where
 pub enum AuthEither<One, Two> {
     One(One),
     Two(Two),
-}
-
-fn control_flow<T>(r: Result<T, AuthError>) -> ControlFlow<Result<T, AuthError>> {
-    if matches!(&r, Err(e) if e.try_again()) {
-        ControlFlow::Continue(())
-    } else {
-        ControlFlow::Break(r)
-    }
 }
 
 impl<One: Identity, Two: Identity> FromRequest for AuthEither<One, Two> {
