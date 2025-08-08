@@ -52,7 +52,7 @@ fn rsplit(b: &[u8]) -> Option<(&[u8], &[u8])> {
 trait Identity: Sized {
     fn verify<'a>(
         req: &'a HttpRequest,
-        auth: &'a web::ThinData<AuthState>,
+        auth: &'a web::ThinData<AuthV1>,
     ) -> impl Future<Output = Result<Self, AuthError>> + 'a;
 }
 
@@ -123,7 +123,7 @@ pub fn configure(cfg: &mut ServiceConfig, server_config: &crate::Config, db: &Db
     let hmac = Hmac::new_from_slice(jwt_key.as_bytes()).unwrap();
     let DbPool::Real(pool) = db;
     let sig = SignatureAuth::new(server_config.blake3_key);
-    let state = AuthState {
+    let state = AuthV1 {
         hmac,
         pool: pool.clone(),
         sig,
@@ -132,23 +132,26 @@ pub fn configure(cfg: &mut ServiceConfig, server_config: &crate::Config, db: &Db
 }
 
 #[derive(Clone)]
-struct AuthState {
+pub struct AuthV1 {
     hmac: Hmac<Sha256>,
     pool: RealDbPool,
     sig: SignatureAuth,
 }
 
+#[derive(Getters)]
 pub struct Jwt {
-    #[allow(dead_code)]
+    #[get = "pub"]
     token: String,
+    #[get = "pub"]
     user_id: UserId,
+    #[get = "pub"]
     pubkey: [u8; 32],
 }
 
 impl Identity for Jwt {
     async fn verify<'a>(
         req: &'a HttpRequest,
-        auth: &'a web::ThinData<AuthState>,
+        auth: &'a web::ThinData<AuthV1>,
     ) -> Result<Self, AuthError> {
         let http_header = req
             .headers()
@@ -190,10 +193,13 @@ impl Identity for Jwt {
     }
 }
 
+#[derive(Getters)]
 pub struct ApiKey {
-    #[allow(dead_code)]
+    #[get = "pub"]
     key: String,
+    #[get = "pub"]
     user_id: UserId,
+    #[get = "pub"]
     pubkey: [u8; 32],
 }
 
@@ -202,7 +208,7 @@ static X_API_KEY: HeaderName = HeaderName::from_static("x-api-key");
 impl Identity for ApiKey {
     async fn verify<'a>(
         req: &'a HttpRequest,
-        auth: &'a web::ThinData<AuthState>,
+        auth: &'a web::ThinData<AuthV1>,
     ) -> Result<Self, AuthError> {
         let key = req
             .headers()
@@ -225,14 +231,14 @@ impl Identity for ApiKey {
 
 #[derive(Getters)]
 pub struct Unverified {
-    #[getset(get = "pub")]
+    #[get = "pub"]
     pubkey: [u8; 32],
 }
 
 impl Identity for Unverified {
     async fn verify<'a>(
         req: &'a HttpRequest,
-        _: &'a web::ThinData<AuthState>,
+        _: &'a web::ThinData<AuthV1>,
     ) -> Result<Self, AuthError> {
         let key = req
             .headers()
@@ -247,15 +253,16 @@ impl Identity for Unverified {
     }
 }
 
+#[derive(Getters)]
 pub struct FlowRunToken {
-    #[allow(dead_code)]
+    #[get = "pub"]
     id: FlowRunId,
 }
 
 impl Identity for FlowRunToken {
     async fn verify<'a>(
         req: &'a HttpRequest,
-        auth: &'a web::ThinData<AuthState>,
+        auth: &'a web::ThinData<AuthV1>,
     ) -> Result<Self, AuthError> {
         let key = req
             .headers()
@@ -286,16 +293,16 @@ impl Identity for FlowRunToken {
 
 #[derive(Getters)]
 pub struct AuthenticatedUser {
-    #[getset(get = "pub")]
+    #[get = "pub"]
     user_id: UserId,
-    #[getset(get = "pub")]
+    #[get = "pub"]
     pubkey: [u8; 32],
 }
 
 impl Identity for AuthenticatedUser {
     async fn verify<'a>(
         req: &'a HttpRequest,
-        auth: &'a web::ThinData<AuthState>,
+        auth: &'a web::ThinData<AuthV1>,
     ) -> Result<Self, AuthError> {
         let result = Jwt::verify(req, auth).await.map(|x| Self {
             user_id: x.user_id,
@@ -330,7 +337,7 @@ where
         let req = req.clone();
         async move {
             let auth = req
-                .app_data::<web::ThinData<AuthState>>()
+                .app_data::<web::ThinData<AuthV1>>()
                 .ok_or_else(|| AuthError::NotConfigured)?;
             T::verify(&req, auth).await.map(Auth)
         }
@@ -351,12 +358,29 @@ impl<One: Identity, Two: Identity> FromRequest for AuthEither<One, Two> {
         let req = req.clone();
         async move {
             let auth = req
-                .app_data::<web::ThinData<AuthState>>()
+                .app_data::<web::ThinData<AuthV1>>()
                 .ok_or_else(|| AuthError::NotConfigured)?;
             let result = One::verify(&req, auth).await.map(AuthEither::One);
             early_return!(control_flow(result));
             Two::verify(&req, auth).await.map(AuthEither::Two)
         }
         .boxed_local()
+    }
+}
+
+impl AuthEither<AuthenticatedUser, FlowRunToken> {
+    pub async fn can_access_flow_run(
+        &self,
+        id: FlowRunId,
+        pool: &RealDbPool,
+    ) -> Result<bool, db::Error> {
+        match self {
+            AuthEither::One(user) => {
+                let user_id = user.user_id();
+                let info = pool.get_admin_conn().await?.get_flow_run_info(id).await?;
+                Ok(info.user_id == *user_id || info.shared_with.contains(user_id))
+            }
+            AuthEither::Two(run) => Ok(*run.id() == id),
+        }
     }
 }

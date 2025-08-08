@@ -1,6 +1,5 @@
 use super::prelude::*;
 use crate::db_worker::{GetUserWorker, user_worker::StartFlowFresh};
-use db::pool::DbPool;
 use flow_lib::config::client::PartialConfig;
 use hashbrown::HashMap;
 use value::Value;
@@ -21,9 +20,8 @@ pub struct Output {
     pub flow_run_id: FlowRunId,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/start/{id}")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(start_flow))
 }
@@ -31,10 +29,10 @@ pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static
 async fn start_flow(
     flow_id: web::Path<FlowId>,
     params: Option<web::Json<Params>>,
-    user: web::ReqData<auth::JWTPayload>,
+    user: Auth<auth_v1::AuthenticatedUser>,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
-    let user = user.into_inner();
+    let user_id = *user.user_id();
     let (inputs, partial_config, environment, output_instructions) = params
         .map(
             |web::Json(Params {
@@ -53,12 +51,10 @@ async fn start_flow(
 
     let db_worker = DBWorker::from_registry();
     let flow_run_id = db_worker
-        .send(GetUserWorker {
-            user_id: user.user_id,
-        })
+        .send(GetUserWorker { user_id })
         .await?
         .send(StartFlowFresh {
-            user: flow_lib::User { id: user.user_id },
+            user: flow_lib::User { id: user_id },
             flow_id,
             input: inputs,
             partial_config,

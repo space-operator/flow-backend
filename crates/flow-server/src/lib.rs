@@ -1,14 +1,8 @@
 use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
 use anyhow::Context;
-use db::{
-    config::{DbConfig, EncryptionKey, SslConfig},
-    pool::DbPool,
-};
+use db::config::{DbConfig, EncryptionKey, SslConfig};
 use flow_lib::config::Endpoints;
-use middleware::{
-    auth,
-    req_fn::{self, Function, ReqFn},
-};
+use middleware::req_fn::{self, Function, ReqFn};
 use rand::{Rng, thread_rng};
 use serde::Deserialize;
 use serde_with::serde_as;
@@ -24,6 +18,8 @@ pub mod error;
 pub mod middleware;
 pub mod user;
 pub mod ws;
+
+pub static X_API_KEY: HeaderName = HeaderName::from_static("x-api-key");
 
 pub fn match_wildcard(pat: &str, origin: &HeaderValue) -> bool {
     let Ok(mut origin_str) = origin.to_str() else {
@@ -353,27 +349,27 @@ impl Config {
         SignatureAuth::new(self.blake3_key)
     }
 
-    /// Build a middleware to validate `Authorization` header
-    /// with Supabase's JWT secret and API key.
-    pub fn all_auth(&self, pool: DbPool) -> auth::ApiAuth {
-        match (self.supabase.jwt_key.as_ref(), pool) {
-            (Some(key), DbPool::Real(pool)) => auth::ApiAuth::real(
-                key.as_bytes(),
-                self.supabase.anon_key.clone(),
-                pool,
-                self.signature_auth(),
-            ),
-            (None, DbPool::Real(pool)) => {
-                // TODO: print error
-                auth::ApiAuth::real(
-                    &[],
-                    self.supabase.anon_key.clone(),
-                    pool,
-                    self.signature_auth(),
-                )
-            }
-        }
-    }
+    // /// Build a middleware to validate `Authorization` header
+    // /// with Supabase's JWT secret and API key.
+    // pub fn all_auth(&self, pool: DbPool) -> auth::ApiAuth {
+    //     match (self.supabase.jwt_key.as_ref(), pool) {
+    //         (Some(key), DbPool::Real(pool)) => auth::ApiAuth::real(
+    //             key.as_bytes(),
+    //             self.supabase.anon_key.clone(),
+    //             pool,
+    //             self.signature_auth(),
+    //         ),
+    //         (None, DbPool::Real(pool)) => {
+    //             // TODO: print error
+    //             auth::ApiAuth::real(
+    //                 &[],
+    //                 self.supabase.anon_key.clone(),
+    //                 pool,
+    //                 self.signature_auth(),
+    //             )
+    //         }
+    //     }
+    // }
 
     /// Build a middleware to validate `apikey` header
     /// with Supabase's anon key.

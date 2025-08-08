@@ -32,7 +32,12 @@ pub mod deploy_flow;
 pub mod start_deployment;
 
 pub mod prelude {
-    pub use crate::{Config, db_worker::DBWorker, error::Error, middleware::auth};
+    pub use crate::{
+        Config,
+        db_worker::DBWorker,
+        error::Error,
+        middleware::auth_v1::{self, Auth, AuthEither},
+    };
     pub use actix::SystemService;
     pub use actix_web::{dev::HttpServiceFactory, http::StatusCode, web};
     pub use db::{

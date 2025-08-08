@@ -4,28 +4,20 @@ use crate::db_worker::{
     flow_run_worker::{FlowRunWorker, WaitFinish},
 };
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/output/{run_id}")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::get().to(get_flow_output))
 }
 
 async fn get_flow_output(
     run_id: web::Path<FlowRunId>,
-    auth: web::ReqData<auth::TokenType>,
+    auth: AuthEither<auth_v1::AuthenticatedUser, auth_v1::FlowRunToken>,
     db: web::Data<RealDbPool>,
 ) -> Result<web::Json<value::Value>, Error> {
     let run_id = run_id.into_inner();
-    let conn = db.get_admin_conn().await?;
-    let run_info = conn.get_flow_run_info(run_id).await?;
-    let auth = auth.into_inner();
-    if !(auth.flow_run_id() == Some(run_id)
-        || auth.user_id().is_some_and(|user_id| {
-            run_info.user_id == user_id || run_info.shared_with.contains(&user_id)
-        }))
-    {
-        return Err(Error::custom(StatusCode::NOT_FOUND, "unauthorized"));
+    if !auth.can_access_flow_run(run_id, &db).await? {
+        return Err(Error::custom(StatusCode::UNAUTHORIZED, "unauthorized"));
     }
     let db_worker = DBWorker::from_registry();
     if let Some(addr) = db_worker
@@ -36,6 +28,7 @@ async fn get_flow_output(
             .await?
             .map_err(|_| Error::custom(StatusCode::INTERNAL_SERVER_ERROR, "channel closed"))?;
     }
+    let conn = db.get_admin_conn().await?;
     let output = conn.get_flow_run_output(run_id).await?;
     Ok(web::Json(output))
 }

@@ -3,7 +3,6 @@ use crate::{
     db_worker::{GetUserWorker, user_worker::StartFlowShared},
     user::{SignatureAuth, SupabaseAuth},
 };
-use db::pool::DbPool;
 use flow_lib::solana::{Pubkey, SolanaActionConfig};
 use hashbrown::HashMap;
 use serde_with::{DisplayFromStr, serde_as};
@@ -30,15 +29,10 @@ pub struct Output {
     pub token: String,
 }
 
-pub fn service(
-    config: &Config,
-    db: DbPool,
-    sup: web::Data<SupabaseAuth>,
-) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config, sup: web::Data<SupabaseAuth>) -> impl HttpServiceFactory + 'static {
     web::resource("/start_unverified/{id}")
         .app_data(sup)
         .app_data(web::Data::new(config.signature_auth()))
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(start_flow_unverified))
 }
@@ -46,14 +40,12 @@ pub fn service(
 async fn start_flow_unverified(
     flow_id: web::Path<FlowId>,
     params: Option<web::Json<Params>>,
-    user: web::ReqData<auth::Unverified>,
-
+    user: Auth<auth_v1::Unverified>,
     sup: web::Data<SupabaseAuth>,
     db: web::Data<RealDbPool>,
     sig: web::Data<SignatureAuth>,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
-    let user = user.into_inner();
     let params = params.map(|params| params.0).unwrap_or_default();
     let inputs = params.inputs.into_iter().collect::<ValueSet>();
 
@@ -66,7 +58,7 @@ async fn start_flow_unverified(
         return Err(Error::custom(StatusCode::FORBIDDEN, "not allowed"));
     }
 
-    let user_id = sup.get_or_create_user(&user.pubkey).await?.0;
+    let user_id = sup.get_or_create_user(user.pubkey()).await?.0;
 
     let db_worker = DBWorker::from_registry();
 

@@ -13,23 +13,21 @@ pub struct Output {
     pub expires_at: DateTime<Utc>,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/claim_token")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .app_data(web::Data::new(config.endpoints()))
         .route(web::post().to(claim_token))
 }
 
 async fn claim_token(
-    user: web::ReqData<auth::JWTPayload>,
+    user: Auth<auth_v1::AuthenticatedUser>,
     db: web::Data<RealDbPool>,
     endpoints: web::Data<Endpoints>,
 ) -> Result<web::Json<Output>, Error> {
-    let user = user.into_inner();
     let result = LoginWithAdminCred {
         client: reqwest::Client::new(),
-        user_id: user.user_id,
+        user_id: *user.user_id(),
         db: (**db).clone(),
         endpoints: (**endpoints).clone(),
     }
@@ -42,7 +40,7 @@ async fn claim_token(
             refresh_token,
             expires_at,
         }) => Ok(web::Json(Output {
-            user_id: user.user_id,
+            user_id: *user.user_id(),
             access_token,
             refresh_token,
             expires_at,

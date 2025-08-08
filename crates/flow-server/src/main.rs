@@ -247,11 +247,11 @@ async fn main() {
             .service(api::delete_apikey::service(&config, db.clone()))
             .service(api::apikey_info::service(&config));
         let kvstore = web::scope("/kv")
-            .service(api::kvstore::create_store::service(&config, db.clone()))
-            .service(api::kvstore::delete_store::service(&config, db.clone()))
-            .service(api::kvstore::write_item::service(&config, db.clone()))
-            .service(api::kvstore::delete_item::service(&config, db.clone()))
-            .service(api::kvstore::read_item::service(&config, db.clone()));
+            .service(api::kvstore::create_store::service(&config))
+            .service(api::kvstore::delete_store::service(&config))
+            .service(api::kvstore::write_item::service(&config))
+            .service(api::kvstore::delete_item::service(&config))
+            .service(api::kvstore::read_item::service(&config));
 
         let deployment = web::scope("/deployment").service(api::start_deployment::service(&config));
 

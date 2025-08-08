@@ -1,9 +1,8 @@
 use super::super::prelude::*;
 use value::Value;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/read_item")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(read_item))
 }
@@ -21,11 +20,11 @@ struct Output {
 
 async fn read_item(
     params: web::Json<Params>,
-    user: web::ReqData<auth::JWTPayload>,
+    user: Auth<auth_v1::AuthenticatedUser>,
     db: web::Data<DbPool>,
 ) -> Result<web::Json<Output>, Error> {
     let opt = db
-        .get_user_conn(user.user_id)
+        .get_user_conn(*user.user_id())
         .await?
         .read_item(&params.store, &params.key)
         .await?;
