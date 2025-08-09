@@ -1,9 +1,6 @@
 use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
 use anyhow::Context;
-use db::{
-    config::{DbConfig, EncryptionKey, SslConfig},
-    pool::DbPool,
-};
+use db::config::{DbConfig, EncryptionKey, SslConfig};
 use flow_lib::config::Endpoints;
 use middleware::req_fn::{self, Function, ReqFn};
 use rand::{Rng, thread_rng};

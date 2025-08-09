@@ -15,7 +15,6 @@ use actix::{
 };
 use actix_web::{HttpRequest, dev::HttpServiceFactory, guard, web};
 use actix_web_actors::ws::{self, CloseCode, WebsocketContext};
-use db::pool::DbPool;
 use flow_lib::{BoxError, FlowRunId, UserId, flow_run_events::Event};
 use hashbrown::HashSet;
 use serde::{Deserialize, Serialize};
