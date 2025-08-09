@@ -1,8 +1,7 @@
 use super::super::prelude::*;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/delete_store")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(delete_store))
 }
@@ -14,14 +13,14 @@ struct Params {
 
 async fn delete_store(
     params: web::Json<Params>,
-    user: web::ReqData<auth::JWTPayload>,
+    user: Auth<auth_v1::AuthenticatedUser>,
     db: web::Data<RealDbPool>,
 ) -> Result<web::Json<Success>, Error> {
     let params = params.into_inner();
     let success = db
         .get_admin_conn()
         .await?
-        .delete_store(&user.user_id, &params.store)
+        .delete_store(user.user_id(), &params.store)
         .await?;
     if success {
         Ok(web::Json(Success))

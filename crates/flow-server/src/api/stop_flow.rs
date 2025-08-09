@@ -11,9 +11,8 @@ pub struct Params {
     pub reason: Option<String>,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/stop/{id}")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(stop_flow))
 }
@@ -21,10 +20,10 @@ pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static
 async fn stop_flow(
     id: web::Path<FlowRunId>,
     params: Option<web::Json<Params>>,
-    user: web::ReqData<auth::JWTPayload>,
+    user: Auth<auth_v1::AuthenticatedUser>,
 ) -> Result<web::Json<Success>, StopError> {
     let id = id.into_inner();
-    let user = user.into_inner();
+    let user_id = *user.user_id();
     let (timeout_millies, reason) = params
         .map(|p| (p.0.timeout_millies, p.0.reason))
         .unwrap_or_default();
@@ -35,7 +34,7 @@ async fn stop_flow(
         .await?
         .ok_or(StopError::NotFound)?
         .send(StopFlow {
-            user_id: user.user_id,
+            user_id,
             run_id: id,
             timeout_millies,
             reason,

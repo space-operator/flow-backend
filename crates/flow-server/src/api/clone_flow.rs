@@ -1,6 +1,5 @@
 use super::prelude::*;
 use crate::db_worker::{GetUserWorker, user_worker::CloneFlow};
-use db::pool::DbPool;
 use hashbrown::HashMap;
 
 #[derive(Serialize)]
@@ -9,29 +8,27 @@ pub struct Output {
     pub id_map: HashMap<FlowId, FlowId>,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/clone/{id}")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(clone_flow))
 }
 
 async fn clone_flow(
     flow_id: web::Path<FlowId>,
-    user: web::ReqData<auth::JWTPayload>,
+    user: Auth<auth_v1::AuthenticatedUser>,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
-    let user = user.into_inner();
 
     let db_worker = DBWorker::from_registry();
 
     let id_map = db_worker
         .send(GetUserWorker {
-            user_id: user.user_id,
+            user_id: *user.user_id(),
         })
         .await?
         .send(CloneFlow {
-            user_id: user.user_id,
+            user_id: *user.user_id(),
             flow_id,
         })
         .await??;

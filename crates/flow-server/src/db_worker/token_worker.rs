@@ -1,6 +1,6 @@
 use crate::{
+    X_API_KEY,
     api::{apikey_info, claim_token},
-    auth::X_API_KEY,
     user::PasswordLogin,
 };
 use actix::{Actor, ActorFutureExt, Addr, AsyncContext, ResponseFuture, WrapFuture};

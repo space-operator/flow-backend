@@ -208,50 +208,49 @@ async fn main() {
         let wallets = supabase_auth.as_ref().map(|supabase_auth| {
             web::scope("/wallets")
                 .app_data(web::Data::new(supabase_auth.clone()))
-                .service(api::upsert_wallet::service(&config, db.clone()))
+                .service(api::upsert_wallet::service(&config))
         });
 
         let auth = supabase_auth.as_ref().map(|supabase_auth| {
             web::scope("/auth")
                 .app_data(web::Data::new(sig_auth))
                 .app_data(web::Data::new(supabase_auth.clone()))
-                .service(api::claim_token::service(&config, db.clone()))
+                .service(api::claim_token::service(&config))
                 .service(api::init_auth::service(&config))
                 .service(api::confirm_auth::service(&config))
         });
 
         let mut flow = web::scope("/flow")
-            .service(api::start_flow::service(&config, db.clone()))
-            .service(api::stop_flow::service(&config, db.clone()))
-            .service(api::start_flow_shared::service(&config, db.clone()))
-            .service(api::clone_flow::service(&config, db.clone()))
-            .service(api::get_flow_output::service(&config, db.clone()))
-            .service(api::get_signature_request::service(&config, db.clone()))
+            .service(api::start_flow::service(&config))
+            .service(api::stop_flow::service(&config))
+            .service(api::start_flow_shared::service(&config))
+            .service(api::clone_flow::service(&config))
+            .service(api::get_flow_output::service(&config))
+            .service(api::get_signature_request::service(&config))
             .service(api::deploy_flow::service(&config))
             .configure(api::flow_api_input::configure(store.clone()));
         if let Some(supabase_auth) = &supabase_auth {
             flow = flow.service(api::start_flow_unverified::service(
                 &config,
-                db.clone(),
                 web::Data::new(supabase_auth.clone()),
             ))
         }
 
-        let websocket = web::scope("/ws").service(ws::service(&config, db.clone()));
+        let websocket = web::scope("/ws").service(ws::service(&config));
         let signature = web::scope("/signature").service(api::submit_signature::service(&config));
 
         let healthcheck = web::resource("/healthcheck")
             .route(web::get().to(|()| ok::<_, Infallible>(web::Json(Success))));
         let apikeys = web::scope("/apikey")
-            .service(api::create_apikey::service(&config, db.clone()))
-            .service(api::delete_apikey::service(&config, db.clone()))
+            .service(api::create_apikey::service(&config))
+            .service(api::delete_apikey::service(&config))
             .service(api::apikey_info::service(&config));
         let kvstore = web::scope("/kv")
-            .service(api::kvstore::create_store::service(&config, db.clone()))
-            .service(api::kvstore::delete_store::service(&config, db.clone()))
-            .service(api::kvstore::write_item::service(&config, db.clone()))
-            .service(api::kvstore::delete_item::service(&config, db.clone()))
-            .service(api::kvstore::read_item::service(&config, db.clone()));
+            .service(api::kvstore::create_store::service(&config))
+            .service(api::kvstore::delete_store::service(&config))
+            .service(api::kvstore::write_item::service(&config))
+            .service(api::kvstore::delete_item::service(&config))
+            .service(api::kvstore::read_item::service(&config));
 
         let deployment = web::scope("/deployment").service(api::start_deployment::service(&config));
 
@@ -278,8 +277,7 @@ async fn main() {
         }
 
         let data = {
-            let mut svc =
-                web::scope("/data").service(api::data_export::service(&config, db.clone()));
+            let mut svc = web::scope("/data").service(api::data_export::service(&config));
             #[cfg(feature = "import")]
             if let Some(import) = api::data_import::service(&config) {
                 svc = svc.service(import);

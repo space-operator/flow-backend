@@ -1,9 +1,8 @@
 use super::super::prelude::*;
 use value::Value;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/write_item")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(write_item))
 }
@@ -36,13 +35,13 @@ fn parse_error(e: DbError) -> Error {
 
 async fn write_item(
     params: web::Json<Params>,
-    user: web::ReqData<auth::JWTPayload>,
+    user: Auth<auth_v1::AuthenticatedUser>,
     db: web::Data<RealDbPool>,
 ) -> Result<web::Json<Output>, Error> {
     let old_value = db
         .get_admin_conn()
         .await?
-        .insert_or_replace_item(&user.user_id, &params.store, &params.key, &params.value)
+        .insert_or_replace_item(user.user_id(), &params.store, &params.key, &params.value)
         .await
         .map_err(parse_error)?;
     Ok(web::Json(Output { old_value }))

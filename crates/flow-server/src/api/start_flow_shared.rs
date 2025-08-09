@@ -17,9 +17,8 @@ pub struct Output {
     pub flow_run_id: FlowRunId,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/start_shared/{id}")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(start_flow_shared))
 }
@@ -27,11 +26,10 @@ pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static
 async fn start_flow_shared(
     flow_id: web::Path<FlowId>,
     params: Option<web::Json<Params>>,
-    user: web::ReqData<auth::JWTPayload>,
+    user: Auth<auth_v1::AuthenticatedUser>,
     db: web::Data<DbPool>,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
-    let user = user.into_inner();
     let (inputs, output_instructions) = params
         .map(
             |web::Json(Params {
@@ -41,9 +39,9 @@ async fn start_flow_shared(
         )
         .unwrap_or_default();
     let inputs = inputs.into_iter().collect::<ValueSet>();
-
+    let user_id = *user.user_id();
     let flow = db
-        .get_user_conn(user.user_id)
+        .get_user_conn(user_id)
         .await?
         .get_flow_info(flow_id)
         .await?;
@@ -53,11 +51,7 @@ async fn start_flow_shared(
 
     let db_worker = DBWorker::from_registry();
 
-    let starter = db_worker
-        .send(GetUserWorker {
-            user_id: user.user_id,
-        })
-        .await?;
+    let starter = db_worker.send(GetUserWorker { user_id }).await?;
     let owner = db_worker
         .send(GetUserWorker {
             user_id: flow.user_id,
@@ -72,7 +66,7 @@ async fn start_flow_shared(
             action_identity: None,
             action_config: None,
             fees: Vec::new(),
-            started_by: (user.user_id, starter),
+            started_by: (user_id, starter),
         })
         .await??;
 

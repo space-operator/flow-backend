@@ -3,9 +3,8 @@ use db::SqlState;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/create_store")
-        .wrap(config.all_auth(db))
         .wrap(config.cors())
         .route(web::post().to(create_store))
 }
@@ -29,10 +28,9 @@ fn check_store_name(s: &str) -> Result<(), StoreNameError> {
         return Err(StoreNameError::MaxLength { max: MAX_LEN });
     }
 
-    const RE_STR: &str = r#"^[a-zA-Z][a-zA-Z0-9_-]*$"#;
-    static RE: Lazy<Regex> = Lazy::new(|| Regex::new(RE_STR).unwrap());
+    static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^[a-zA-Z][a-zA-Z0-9_-]*$"#).unwrap());
     if !RE.is_match(s) {
-        return Err(StoreNameError::WrongFormat { regex: RE_STR });
+        return Err(StoreNameError::WrongFormat { regex: RE.as_str() });
     }
     Ok(())
 }
@@ -57,14 +55,14 @@ fn process_error(e: DbError) -> Error {
 
 async fn create_store(
     params: web::Json<Params>,
-    user: web::ReqData<auth::JWTPayload>,
+    user: Auth<auth_v1::AuthenticatedUser>,
     db: web::Data<RealDbPool>,
 ) -> Result<web::Json<Success>, Error> {
     let params = params.into_inner();
     check_store_name(&params.store).map_err(|e| Error::custom(StatusCode::BAD_REQUEST, e))?;
     db.get_admin_conn()
         .await?
-        .create_store(&user.user_id, &params.store)
+        .create_store(user.user_id(), &params.store)
         .await
         .map_err(process_error)?;
     Ok(web::Json(Success))

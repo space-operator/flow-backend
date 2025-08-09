@@ -1,13 +1,13 @@
 use crate::{
     Config,
-    api::prelude::auth::TokenType,
-    auth::ApiAuth,
+    api::prelude::AuthEither,
     db_worker::{
         DBWorker, FindActor, GetUserWorker,
         flow_run_worker::{FlowRunWorker, SubscribeEvents},
         messages::SubscriptionID,
         user_worker::SubscribeSigReq,
     },
+    middleware::auth_v1::{AuthV1, AuthenticatedUser, FlowRunToken},
 };
 use actix::{
     Actor, ActorContext, ActorFutureExt, ActorStreamExt, AsyncContext, SystemService, WrapFuture,
@@ -15,12 +15,10 @@ use actix::{
 };
 use actix_web::{HttpRequest, dev::HttpServiceFactory, guard, web};
 use actix_web_actors::ws::{self, CloseCode, WebsocketContext};
-use db::pool::DbPool;
-use flow_lib::{BoxError, FlowRunId, flow_run_events::Event};
+use flow_lib::{BoxError, FlowRunId, UserId, flow_run_events::Event};
 use hashbrown::HashSet;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::sync::Arc;
 
 #[derive(Deserialize)]
 struct Request {
@@ -66,16 +64,14 @@ pub struct WsEvent<T> {
     event: T,
 }
 
-pub fn service(config: &Config, db: DbPool) -> impl HttpServiceFactory + 'static {
-    let auth = web::Data::new(config.all_auth(db));
+pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("")
-        .app_data(auth)
         .wrap(config.cors())
         .route(web::route().guard(guard::Get()).to(ws_handler))
 }
 
 async fn ws_handler(
-    auth: web::Data<ApiAuth>,
+    auth_service: web::ThinData<AuthV1>,
     req: HttpRequest,
     stream: web::Payload,
 ) -> Result<actix_web::HttpResponse, crate::error::Error> {
@@ -84,7 +80,7 @@ async fn ws_handler(
             tokens: <_>::default(),
             subscribing: <_>::default(),
 
-            auth_service: auth.into_inner(),
+            auth_service,
             db_worker: DBWorker::from_registry(),
         },
         &req,
@@ -95,10 +91,10 @@ async fn ws_handler(
 
 /// Actor holding a user's websocket connection
 pub struct WsConn {
-    tokens: HashSet<TokenType>,
+    tokens: Vec<AuthEither<AuthenticatedUser, FlowRunToken>>,
     subscribing: HashSet<SubscriptionID>,
 
-    auth_service: Arc<ApiAuth>,
+    auth_service: web::ThinData<AuthV1>,
     db_worker: actix::Addr<DBWorker>,
 }
 
@@ -173,18 +169,42 @@ fn inject_run_id(event: &Event, id: FlowRunId) -> serde_json::Value {
     json
 }
 
+#[derive(Serialize, Deserialize)]
+struct Identity {
+    user_id: Option<UserId>,
+    #[serde(with = "utils::serde_bs58::opt")]
+    pubkey: Option<[u8; 32]>,
+    flow_run_id: Option<FlowRunId>,
+}
+
+impl From<&AuthEither<AuthenticatedUser, FlowRunToken>> for Identity {
+    fn from(value: &AuthEither<AuthenticatedUser, FlowRunToken>) -> Self {
+        match value {
+            AuthEither::One(user) => Self {
+                user_id: Some(*user.user_id()),
+                pubkey: Some(*user.pubkey()),
+                flow_run_id: None,
+            },
+            AuthEither::Two(run) => Self {
+                user_id: None,
+                pubkey: None,
+                flow_run_id: Some(*run.id()),
+            },
+        }
+    }
+}
+
 impl WsConn {
     fn authenticate(&mut self, id: i64, params: Authenticate, ctx: &mut WebsocketContext<WsConn>) {
         let token = params.token;
-        let fut = self
-            .auth_service
-            .clone()
-            .ws_authenticate(token)
+        let auth = self.auth_service.clone();
+        let fut = async move { auth.ws_authenticate(&token).await }
             .into_actor(&*self)
             .map(move |res, act, ctx| match res {
                 Ok(token) => {
-                    act.tokens.insert(token.clone());
-                    success_response(ctx, id, token)
+                    let identity = Identity::from(&token);
+                    act.tokens.push(token);
+                    success_response(ctx, id, identity)
                 }
                 Err(error) => error_response(ctx, id, &error),
             });
@@ -200,14 +220,12 @@ impl WsConn {
         // TODO: implement token for interflow
         let flow_run_id = params.flow_run_id;
         if let Some(token) = params.token {
-            let fut = self
-                .auth_service
-                .clone()
-                .ws_authenticate(token)
+            let auth = self.auth_service.clone();
+            let fut = async move { auth.ws_authenticate(&token).await }
                 .into_actor(&*self)
                 .map(move |res, act, ctx| match res {
                     Ok(token) => {
-                        act.tokens.insert(token.clone());
+                        act.tokens.push(token);
                         act.subscribe_run(
                             id,
                             SubscribeFlowRunEvents {
