@@ -21,7 +21,7 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
 }
 
 async fn claim_token(
-    user: Auth<auth_v1::AuthenticatedUser>,
+    user: Auth<auth_v1::ApiKey>,
     db: web::Data<RealDbPool>,
     endpoints: web::Data<Endpoints>,
 ) -> Result<web::Json<Output>, Error> {
