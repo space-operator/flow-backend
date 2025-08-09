@@ -172,6 +172,7 @@ fn inject_run_id(event: &Event, id: FlowRunId) -> serde_json::Value {
 #[derive(Serialize, Deserialize)]
 struct Identity {
     user_id: Option<UserId>,
+    #[serde(with = "utils::serde_bs58::opt")]
     pubkey: Option<[u8; 32]>,
     flow_run_id: Option<FlowRunId>,
 }
