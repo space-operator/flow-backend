@@ -5,10 +5,7 @@ use db::{
     pool::DbPool,
 };
 use flow_lib::config::Endpoints;
-use middleware::{
-    auth,
-    req_fn::{self, Function, ReqFn},
-};
+use middleware::req_fn::{self, Function, ReqFn};
 use rand::{Rng, thread_rng};
 use serde::Deserialize;
 use serde_with::serde_as;
@@ -353,28 +350,6 @@ impl Config {
 
     pub fn signature_auth(&self) -> SignatureAuth {
         SignatureAuth::new(self.blake3_key)
-    }
-
-    /// Build a middleware to validate `Authorization` header
-    /// with Supabase's JWT secret and API key.
-    pub fn all_auth(&self, pool: DbPool) -> auth::ApiAuth {
-        match (self.supabase.jwt_key.as_ref(), pool) {
-            (Some(key), DbPool::Real(pool)) => auth::ApiAuth::real(
-                key.as_bytes(),
-                self.supabase.anon_key.clone(),
-                pool,
-                self.signature_auth(),
-            ),
-            (None, DbPool::Real(pool)) => {
-                // TODO: print error
-                auth::ApiAuth::real(
-                    &[],
-                    self.supabase.anon_key.clone(),
-                    pool,
-                    self.signature_auth(),
-                )
-            }
-        }
     }
 
     /// Build a middleware to validate `apikey` header

@@ -26,7 +26,7 @@ export interface AuthenticateResponse {
   Ok?: {
     user_id?: string;
     pubkey?: string;
-    flow_run_id: string;
+    flow_run_id?: string;
   };
   Err?: string;
 }

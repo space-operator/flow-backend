@@ -3,7 +3,11 @@ use super::{
     messages::{SubscribeError, SubscriptionID},
     user_worker::SigReqEvent,
 };
-use crate::{error::ErrorBody, middleware::auth::TokenType};
+use crate::{
+    api::prelude::AuthEither,
+    error::ErrorBody,
+    middleware::auth_v1::{AuthenticatedUser, FlowRunToken},
+};
 use actix::{
     Actor, ActorContext, ActorFutureExt, AsyncContext, ResponseActFuture, ResponseFuture,
     StreamHandler, WrapFuture, fut::wrap_future,
@@ -20,7 +24,7 @@ use flow_lib::{
 };
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt, stream::BoxStream};
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast::{self, error::RecvError};
 use utils::address_book::ManagableActor;
@@ -115,7 +119,7 @@ struct Subscription {
 }
 
 pub struct SubscribeEvents {
-    pub tokens: HashSet<TokenType>,
+    pub tokens: Vec<AuthEither<AuthenticatedUser, FlowRunToken>>,
 }
 
 impl actix::Message for SubscribeEvents {
@@ -129,7 +133,7 @@ impl actix::Handler<SubscribeEvents> for FlowRunWorker {
         let can_read = msg
             .tokens
             .iter()
-            .any(|token| token.is_user(self.user_id) || token.is_flow_run(self.run_id));
+            .any(|token| token.is_user(&self.user_id) || token.is_flow_run(&self.run_id));
         if !can_read {
             return Err(SubscribeError::Unauthorized);
         }

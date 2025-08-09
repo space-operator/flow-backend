@@ -1,4 +1,3 @@
-pub mod auth;
 pub mod auth_v1;
 pub mod req_fn;
 

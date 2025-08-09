@@ -29,6 +29,7 @@ Deno.test("submit", async () => {
   const flowId = 3730;
   const ws = owner.ws();
   await ws.authenticate();
+  console.log(ws.getIdentity());
   const { flow_run_id } = await owner.startFlow(flowId, {});
   ws.subscribeFlowRunEvents(
     async (ev) => {

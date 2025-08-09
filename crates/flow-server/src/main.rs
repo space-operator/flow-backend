@@ -236,7 +236,7 @@ async fn main() {
             ))
         }
 
-        let websocket = web::scope("/ws").service(ws::service(&config, db.clone()));
+        let websocket = web::scope("/ws").service(ws::service(&config));
         let signature = web::scope("/signature").service(api::submit_signature::service(&config));
 
         let healthcheck = web::resource("/healthcheck")

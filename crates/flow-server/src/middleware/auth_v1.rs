@@ -138,6 +138,31 @@ pub struct AuthV1 {
     sig: SignatureAuth,
 }
 
+impl AuthV1 {
+    pub async fn ws_authenticate(
+        &self,
+        token: &str,
+    ) -> Result<AuthEither<AuthenticatedUser, FlowRunToken>, AuthError> {
+        if token.starts_with(apikey::KEY_PREFIX) {
+            let key = apikey_verify_inner(token, self).await?;
+            Ok(AuthEither::One(AuthenticatedUser {
+                user_id: key.user_id,
+                pubkey: key.pubkey,
+            }))
+        } else if token.starts_with(FLOW_RUN_TOKEN_PREFIX) {
+            Ok(AuthEither::Two(FlowRunToken {
+                id: flow_run_token_verify_inner(token, self)?.id,
+            }))
+        } else {
+            let jwt = jwt_verify_inner(token.as_bytes(), self)?;
+            Ok(AuthEither::One(AuthenticatedUser {
+                user_id: jwt.user_id,
+                pubkey: jwt.pubkey,
+            }))
+        }
+    }
+}
+
 #[derive(Getters)]
 pub struct Jwt {
     #[get = "pub"]
@@ -146,6 +171,37 @@ pub struct Jwt {
     user_id: UserId,
     #[get = "pub"]
     pubkey: [u8; 32],
+}
+
+fn jwt_verify_inner(token: &[u8], auth: &AuthV1) -> Result<Jwt, AuthError> {
+    let token_str = String::from_utf8(token.to_owned()).map_err(|_| AuthError::InvalidFormat)?;
+    let now = Utc::now().timestamp();
+    let (header_payload, signature) = rsplit(token).ok_or(AuthError::InvalidFormat)?;
+    let (_, payload) = rsplit(header_payload).ok_or(AuthError::InvalidFormat)?;
+
+    let signature = base64::decode_config(signature, base64::URL_SAFE_NO_PAD)
+        .map_err(|_| AuthError::InvalidFormat)?;
+    let mut hmac = auth.hmac.clone();
+    hmac.update(header_payload);
+    hmac.verify_slice(&signature)
+        .map_err(|_| AuthError::HmacFailed)?;
+
+    let bytes = base64::decode_config(payload, base64::URL_SAFE_NO_PAD)
+        .map_err(|_| AuthError::InvalidPayload)?;
+    let payload =
+        serde_json::from_slice::<Payload>(&bytes).map_err(|_| AuthError::InvalidPayload)?;
+    if payload.exp <= now {
+        return Err(AuthError::Expired);
+    }
+    let mut pubkey = [0u8; 32];
+    five8::decode_32(payload.user_metadata.pub_key, &mut pubkey)
+        .map_err(|_| AuthError::InvalidPayload)?;
+
+    Ok(Jwt {
+        token: token_str,
+        user_id: payload.sub,
+        pubkey,
+    })
 }
 
 impl Identity for Jwt {
@@ -158,38 +214,10 @@ impl Identity for Jwt {
             .get(AUTHORIZATION)
             .ok_or_else(|| AuthError::NoHeader(AUTHORIZATION))?
             .as_bytes();
-        let now = Utc::now().timestamp();
         let token = http_header
             .strip_prefix(b"Bearer ")
             .ok_or(AuthError::InvalidFormat)?;
-        let token_str =
-            String::from_utf8(token.to_owned()).map_err(|_| AuthError::InvalidFormat)?;
-        let (header_payload, signature) = rsplit(token).ok_or(AuthError::InvalidFormat)?;
-        let (_, payload) = rsplit(header_payload).ok_or(AuthError::InvalidFormat)?;
-
-        let signature = base64::decode_config(signature, base64::URL_SAFE_NO_PAD)
-            .map_err(|_| AuthError::InvalidFormat)?;
-        let mut hmac = auth.hmac.clone();
-        hmac.update(header_payload);
-        hmac.verify_slice(&signature)
-            .map_err(|_| AuthError::HmacFailed)?;
-
-        let bytes = base64::decode_config(payload, base64::URL_SAFE_NO_PAD)
-            .map_err(|_| AuthError::InvalidPayload)?;
-        let payload =
-            serde_json::from_slice::<Payload>(&bytes).map_err(|_| AuthError::InvalidPayload)?;
-        if payload.exp <= now {
-            return Err(AuthError::Expired);
-        }
-        let mut pubkey = [0u8; 32];
-        five8::decode_32(payload.user_metadata.pub_key, &mut pubkey)
-            .map_err(|_| AuthError::InvalidPayload)?;
-
-        Ok(Self {
-            token: token_str,
-            user_id: payload.sub,
-            pubkey,
-        })
+        jwt_verify_inner(token, auth)
     }
 }
 
@@ -205,6 +233,16 @@ pub struct ApiKey {
 
 static X_API_KEY: HeaderName = HeaderName::from_static("x-api-key");
 
+async fn apikey_verify_inner(key: &str, auth: &AuthV1) -> Result<ApiKey, AuthError> {
+    let conn = auth.pool.get_admin_conn().await?;
+    let user = conn.get_user_from_apikey(key).await?;
+    Ok(ApiKey {
+        key: key.to_owned(),
+        user_id: user.user_id,
+        pubkey: user.pubkey,
+    })
+}
+
 impl Identity for ApiKey {
     async fn verify<'a>(
         req: &'a HttpRequest,
@@ -219,13 +257,7 @@ impl Identity for ApiKey {
             return Err(AuthError::InvalidFormat);
         }
 
-        let conn = auth.pool.get_admin_conn().await?;
-        let user = conn.get_user_from_apikey(key).await?;
-        Ok(ApiKey {
-            key: key.to_owned(),
-            user_id: user.user_id,
-            pubkey: user.pubkey,
-        })
+        apikey_verify_inner(key, auth).await
     }
 }
 
@@ -253,10 +285,30 @@ impl Identity for Unverified {
     }
 }
 
-#[derive(Getters)]
+#[derive(Getters, Clone)]
 pub struct FlowRunToken {
     #[get = "pub"]
     id: FlowRunId,
+}
+
+fn flow_run_token_verify_inner(key: &str, auth: &AuthV1) -> Result<FlowRunToken, AuthError> {
+    let key = key
+        .strip_prefix(FLOW_RUN_TOKEN_PREFIX)
+        .ok_or(AuthError::InvalidFormat)?;
+    let mut bytes = [0u8; 48];
+    let written = base64::decode_config_slice(key, base64::URL_SAFE_NO_PAD, &mut bytes)
+        .map_err(|_| AuthError::InvalidPayload)?;
+    if written != bytes.len() {
+        return Err(AuthError::InvalidPayload);
+    }
+    let hash = auth.sig.hash(&bytes[..16]);
+    if hash == blake3::Hash::from_bytes(bytes[16..].try_into().unwrap()) {
+        Ok(FlowRunToken {
+            id: FlowRunId::from_bytes(bytes[..16].try_into().unwrap()),
+        })
+    } else {
+        Err(AuthError::InvalidPayload)
+    }
 }
 
 impl Identity for FlowRunToken {
@@ -271,27 +323,12 @@ impl Identity for FlowRunToken {
             .to_str()
             .map_err(|_| AuthError::InvalidFormat)?;
         let key = key.strip_prefix("Bearer ").unwrap_or(key);
-        let key = key
-            .strip_prefix(FLOW_RUN_TOKEN_PREFIX)
-            .ok_or(AuthError::InvalidFormat)?;
-        let mut bytes = [0u8; 48];
-        let written = base64::decode_config_slice(key, base64::URL_SAFE_NO_PAD, &mut bytes)
-            .map_err(|_| AuthError::InvalidPayload)?;
-        if written != bytes.len() {
-            return Err(AuthError::InvalidPayload);
-        }
-        let hash = auth.sig.hash(&bytes[..16]);
-        if hash == blake3::Hash::from_bytes(bytes[16..].try_into().unwrap()) {
-            Ok(FlowRunToken {
-                id: FlowRunId::from_bytes(bytes[..16].try_into().unwrap()),
-            })
-        } else {
-            Err(AuthError::InvalidPayload)
-        }
+
+        flow_run_token_verify_inner(key, auth)
     }
 }
 
-#[derive(Getters)]
+#[derive(Getters, Clone)]
 pub struct AuthenticatedUser {
     #[get = "pub"]
     user_id: UserId,
@@ -345,6 +382,7 @@ where
     }
 }
 
+#[derive(Clone)]
 pub enum AuthEither<One, Two> {
     One(One),
     Two(Two),
@@ -381,6 +419,21 @@ impl AuthEither<AuthenticatedUser, FlowRunToken> {
                 Ok(info.user_id == *user_id || info.shared_with.contains(user_id))
             }
             AuthEither::Two(run) => Ok(*run.id() == id),
+        }
+    }
+
+    pub fn is_user(&self, id: &UserId) -> bool {
+        matches!(self, AuthEither::One(user) if user.user_id == *id)
+    }
+
+    pub fn is_flow_run(&self, id: &FlowRunId) -> bool {
+        matches!(self, AuthEither::Two(run) if run.id == *id)
+    }
+
+    pub fn user_id(&self) -> Option<UserId> {
+        match self {
+            AuthEither::One(user) => Some(user.user_id),
+            _ => None,
         }
     }
 }
