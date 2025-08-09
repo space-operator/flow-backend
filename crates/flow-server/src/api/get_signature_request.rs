@@ -61,7 +61,7 @@ async fn get_signature_request(
     {
         let (_, mut events) = flow_run
             .send(SubscribeEvents {
-                tokens: <_>::from([auth]),
+                tokens: todo!(), // <_>::from([auth]),
             })
             .await?
             .map_err(|_| Error::custom(StatusCode::INTERNAL_SERVER_ERROR, "channel closed"))?;

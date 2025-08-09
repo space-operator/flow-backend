@@ -1,13 +1,12 @@
 use crate::{
     Config,
-    api::prelude::auth::TokenType,
-    auth::ApiAuth,
     db_worker::{
         DBWorker, FindActor, GetUserWorker,
         flow_run_worker::{FlowRunWorker, SubscribeEvents},
         messages::SubscriptionID,
         user_worker::SubscribeSigReq,
     },
+    middleware::auth::{ApiAuth, TokenType},
 };
 use actix::{
     Actor, ActorContext, ActorFutureExt, ActorStreamExt, AsyncContext, SystemService, WrapFuture,

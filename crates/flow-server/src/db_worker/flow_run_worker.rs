@@ -3,7 +3,7 @@ use super::{
     messages::{SubscribeError, SubscriptionID},
     user_worker::SigReqEvent,
 };
-use crate::{api::prelude::auth::TokenType, error::ErrorBody};
+use crate::{error::ErrorBody, middleware::auth::TokenType};
 use actix::{
     Actor, ActorContext, ActorFutureExt, AsyncContext, ResponseActFuture, ResponseFuture,
     StreamHandler, WrapFuture, fut::wrap_future,

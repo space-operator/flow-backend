@@ -1,8 +1,14 @@
 use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
 use anyhow::Context;
-use db::config::{DbConfig, EncryptionKey, SslConfig};
+use db::{
+    config::{DbConfig, EncryptionKey, SslConfig},
+    pool::DbPool,
+};
 use flow_lib::config::Endpoints;
-use middleware::req_fn::{self, Function, ReqFn};
+use middleware::{
+    auth,
+    req_fn::{self, Function, ReqFn},
+};
 use rand::{Rng, thread_rng};
 use serde::Deserialize;
 use serde_with::serde_as;
@@ -349,27 +355,27 @@ impl Config {
         SignatureAuth::new(self.blake3_key)
     }
 
-    // /// Build a middleware to validate `Authorization` header
-    // /// with Supabase's JWT secret and API key.
-    // pub fn all_auth(&self, pool: DbPool) -> auth::ApiAuth {
-    //     match (self.supabase.jwt_key.as_ref(), pool) {
-    //         (Some(key), DbPool::Real(pool)) => auth::ApiAuth::real(
-    //             key.as_bytes(),
-    //             self.supabase.anon_key.clone(),
-    //             pool,
-    //             self.signature_auth(),
-    //         ),
-    //         (None, DbPool::Real(pool)) => {
-    //             // TODO: print error
-    //             auth::ApiAuth::real(
-    //                 &[],
-    //                 self.supabase.anon_key.clone(),
-    //                 pool,
-    //                 self.signature_auth(),
-    //             )
-    //         }
-    //     }
-    // }
+    /// Build a middleware to validate `Authorization` header
+    /// with Supabase's JWT secret and API key.
+    pub fn all_auth(&self, pool: DbPool) -> auth::ApiAuth {
+        match (self.supabase.jwt_key.as_ref(), pool) {
+            (Some(key), DbPool::Real(pool)) => auth::ApiAuth::real(
+                key.as_bytes(),
+                self.supabase.anon_key.clone(),
+                pool,
+                self.signature_auth(),
+            ),
+            (None, DbPool::Real(pool)) => {
+                // TODO: print error
+                auth::ApiAuth::real(
+                    &[],
+                    self.supabase.anon_key.clone(),
+                    pool,
+                    self.signature_auth(),
+                )
+            }
+        }
+    }
 
     /// Build a middleware to validate `apikey` header
     /// with Supabase's anon key.
