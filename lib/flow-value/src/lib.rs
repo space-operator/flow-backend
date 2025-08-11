@@ -353,7 +353,7 @@ impl JsonSchema for Value {
     }
 
     fn schema_id() -> std::borrow::Cow<'static, str> {
-        concat!(module_path!(), "::Value").into()
+        "https://schema.spaceoperator.com/value.schema.json".into()
     }
 
     fn json_schema(_: &mut schemars::SchemaGenerator) -> schemars::Schema {
