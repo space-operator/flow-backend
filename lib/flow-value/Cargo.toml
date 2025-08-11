@@ -2,6 +2,10 @@
 name = "flow-value"
 version = "0.1.0"
 edition = "2024"
+description = "Value type for flow inputs and outputs."
+license = "AGPL-3.0-only"
+repository = "https://github.com/space-operator/flow-backend"
+homepage = "https://spaceoperator.com/"
 
 [features]
 default = ["solana", "json", "bincode"]
