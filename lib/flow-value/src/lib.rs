@@ -357,7 +357,7 @@ impl JsonSchema for Value {
     }
 
     fn json_schema(_: &mut schemars::SchemaGenerator) -> schemars::Schema {
-        serde_json::from_str(include_str!("../../../schema/value.schema.json")).unwrap()
+        serde_json::from_str(include_str!("../value.schema.json")).unwrap()
     }
 }
 
