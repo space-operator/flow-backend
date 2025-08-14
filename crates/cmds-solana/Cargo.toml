@@ -69,7 +69,7 @@ spl-associated-token-account = { version = "=6.0.0", features = ["no-entrypoint"
 spl-concurrent-merkle-tree = { git = "https://github.com/space-operator/solana-program-library", rev = "9595801a5" }
 
 # metaplex
-mpl-token-metadata = "5.1.0"
+mpl-token-metadata = { path = "../../vendor/mpl-token-metadata" }
 
 # mpl-candy-machine-core = { version = "=3.0.1", features = ["no-entrypoint"] }
 # mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
@@ -77,7 +77,7 @@ mpl-token-metadata = "5.1.0"
 mpl-core-candy-machine-core.workspace = true
 mpl-core-candy-guard.workspace = true
 
-mpl-core = { version = "=0.9.1", features = ["serde"] }
+mpl-core = { path = "../../vendor/mpl-core", features = ["serde"] }
 mpl-bubblegum = { path = "../../vendor/mpl-bubblegum" }
 
 # bundlr

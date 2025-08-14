@@ -2,6 +2,10 @@
 name = "flow-value"
 version = "0.1.0"
 edition = "2024"
+description = "Value type for flow inputs and outputs."
+license = "AGPL-3.0-only"
+repository = "https://github.com/space-operator/flow-backend"
+homepage = "https://spaceoperator.com/"
 
 [features]
 default = ["solana", "json", "bincode"]
@@ -21,15 +25,15 @@ thiserror = "1"
 bytes = { version = "1", features = ["serde"] }
 itoa = "1"
 ryu = "1"
+serde_with = "3.11.0"
+five8 = { version = "0.2.1", features = ["std"] }
+schemars = { version = "1.0.4", default-features = false }
 
 serde_json = { version = "1", optional = true }
+bincode = { version = "2", optional = true }
 solana-pubkey = { version = "2", optional = true }
 solana-keypair = { version = "2", optional = true }
 solana-signature = { version = "2", optional = true }
-serde_with = "3.11.0"
-five8 = { version = "0.2.1", features = ["std"] }
-schemars = { version = "1.0.0-alpha.17", default-features = false }
-bincode = { version = "2", optional = true }
 
 [dev-dependencies]
 rust_decimal_macros = "1.26"

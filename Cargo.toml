@@ -3,7 +3,8 @@ members = ["lib/*", "crates/*", "anchor-libs/*"]
 exclude = [
     "lib/space-operator-cli",
     "vendor/mpl-bubblegum",
-    "vendor/mpl-core-candy-guard",
+    "vendor/mpl-core",
+    "vendor/mpl-token-metadata",
 ]
 resolver = "2"
 
