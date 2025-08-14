@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use value::Value;
 use strum::EnumIter;
+use value::Value;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum NodeType {
@@ -10,7 +10,6 @@ pub enum NodeType {
     Rhai,
     Interflow,
 }
-
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumIter)]
 pub enum TypeBound {
@@ -105,7 +104,7 @@ mod tests {
     use super::*;
     use strum::IntoEnumIterator;
 
-    #[test]    
+    #[test]
     fn print_types() {
         let list = TypeBound::iter().collect::<Vec<_>>();
         let s = serde_json::to_string_pretty(&list).unwrap();
