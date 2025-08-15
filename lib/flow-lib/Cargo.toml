@@ -33,6 +33,11 @@ ed25519-dalek = "2.1.1"
 five8 = { version = "0.2.1", features = ["std"] }
 bon = "3.0.2"
 schemars = { version = "1.0.4", features = ["indexmap2", "preserve_order", "rust_decimal1", "url2", "uuid1"] }
+bincode1 = { package = "bincode", version = "1" }
+bincode = { version = "2.0.1", features = ["serde"] }
+semver = { version = "1.0.26", features = ["serde"] }
+regex = "1.11.1"
+derive_more = { version = "2.0.1", features = ["from"] }
 
 # solana libs
 solana-rpc-client = "2"
@@ -51,8 +56,3 @@ solana-address-lookup-table-interface = "2"
 solana-clock = "2"
 agave-feature-set = "2"
 agave-precompiles = "2"
-bincode1 = { package = "bincode", version = "1" }
-bincode = { version = "2.0.1", features = ["serde"] }
-semver = { version = "1.0.26", features = ["serde"] }
-regex = "1.11.1"
-derive_more = { version = "2.0.1", features = ["from"] }
