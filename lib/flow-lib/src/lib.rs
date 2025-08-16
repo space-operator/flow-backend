@@ -11,8 +11,8 @@ pub mod command;
 pub mod config;
 pub mod context;
 pub mod flow_run_events;
-pub mod utils;
 pub mod solana;
+pub mod utils;
 
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 

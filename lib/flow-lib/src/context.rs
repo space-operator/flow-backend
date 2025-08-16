@@ -244,8 +244,7 @@ pub mod signer {
 /// Output values and Solana instructions to be executed.
 pub mod execute {
     use crate::{
-        FlowRunId, SolanaNet,
-        solana::{ExecutionConfig, Instructions},
+        solana::Instructions,
         utils::{
             TowerClient,
             tower_client::{CommonError, CommonErrorExt},
@@ -257,7 +256,7 @@ pub mod execute {
     use solana_program::{
         instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
     };
-    use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
+
     use solana_rpc_client_api::client_error::Error as ClientError;
     use solana_signature::Signature;
     use solana_signer::SignerError;
