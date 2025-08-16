@@ -3034,6 +3034,50 @@ dependencies = [
 ]
 
 [[package]]
+name = "flow-lib-solana"
+version = "0.1.0"
+dependencies = [
+ "agave-feature-set",
+ "agave-precompiles",
+ "anyhow",
+ "base64 0.21.7",
+ "bincode 1.3.3",
+ "bincode 2.0.1",
+ "bon",
+ "borsh 1.5.7",
+ "bs58 0.5.1",
+ "bytes",
+ "chrono",
+ "five8",
+ "flow-lib",
+ "flow-value",
+ "futures",
+ "nom",
+ "reqwest 0.12.23",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "solana-address-lookup-table-interface",
+ "solana-clock",
+ "solana-commitment-config",
+ "solana-compute-budget-interface",
+ "solana-keypair",
+ "solana-presigner",
+ "solana-program",
+ "solana-pubkey",
+ "solana-rpc-client",
+ "solana-rpc-client-api",
+ "solana-signature",
+ "solana-signer",
+ "solana-transaction",
+ "solana-transaction-status",
+ "spo-helius",
+ "tokio",
+ "tower",
+ "tracing",
+]
+
+[[package]]
 name = "flow-server"
 version = "0.0.0"
 dependencies = [

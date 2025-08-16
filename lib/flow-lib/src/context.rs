@@ -164,13 +164,15 @@ pub mod get_jwt {
 pub mod signer {
     use crate::{
         FlowRunId,
-        solana::{Pubkey, SdkPresigner, Signature},
         utils::{TowerClient, tower_client::CommonError},
     };
     use actix::MailboxError;
     use chrono::{DateTime, Utc};
     use serde::{Deserialize, Serialize};
     use serde_with::{DisplayFromStr, DurationSecondsWithFrac, base64::Base64, serde_as};
+    use solana_presigner::Presigner as SdkPresigner;
+    use solana_pubkey::Pubkey;
+    use solana_signature::Signature;
     use std::time::Duration;
     use thiserror::Error as ThisError;
 
@@ -359,7 +361,7 @@ pub mod execute {
         InsufficientSolanaBalance { needed: u64, balance: u64 },
         #[error("transaction simulation failed")]
         TxSimFailed,
-        #[error("{}", crate::solana::verbose_solana_error(.error))]
+        #[error("{}", crate::utils::verbose_solana_error(.error))]
         Solana {
             #[source]
             error: Arc<ClientError>,
@@ -429,6 +431,7 @@ pub mod execute {
         }
     }
 
+    /*
     pub fn simple(
         rpc: Arc<SolanaClient>,
         network: SolanaNet,
@@ -452,6 +455,7 @@ pub mod execute {
         };
         Svc::new(tower::service_fn(handle))
     }
+    */
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
