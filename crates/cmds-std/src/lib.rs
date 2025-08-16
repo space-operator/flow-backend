@@ -25,7 +25,7 @@ pub mod prelude {
             builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
         },
         context::CommandContext,
-        solana::{Instructions, KeypairExt},
+        solana::Instructions,
     };
     pub use rust_decimal::Decimal;
     pub use serde::{Deserialize, Serialize};

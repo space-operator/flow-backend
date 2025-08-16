@@ -2,9 +2,7 @@ use crate::SolanaNet;
 use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as, serde_conv};
 use solana_commitment_config::CommitmentLevel;
-use solana_keypair::Keypair;
 use solana_program::instruction::{AccountMeta, Instruction};
-use solana_pubkey::Pubkey;
 use solana_signer::Signer;
 use std::{
     borrow::Cow, collections::HashMap, convert::Infallible, fmt::Display, num::ParseIntError,
@@ -14,6 +12,10 @@ use value::{
     Value,
     with::{AsKeypair, AsPubkey},
 };
+
+pub use solana_keypair::Keypair;
+pub use solana_pubkey::Pubkey;
+pub use solana_signature::Signature;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
