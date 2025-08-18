@@ -367,7 +367,6 @@ mod tests {
         SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
     use bincode::config::standard;
-    // use base64::prelude::*;
     use solana_program::{pubkey, system_instruction::transfer};
 
     #[test]
