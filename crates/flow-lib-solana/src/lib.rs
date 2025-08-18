@@ -7,13 +7,10 @@ use flow_lib::{
     context::{execute::Error, signer},
     solana::{
         ExecuteOn, ExecutionConfig, InsertionBehavior, Instructions, SolanaActionConfig, Wallet,
-        WalletOrPubkey,
     },
     utils::tower_client::CommonErrorExt,
 };
 use futures::{FutureExt, TryStreamExt, future::Either};
-use serde::{Deserialize, Serialize};
-use serde_with::{DisplayFromStr, serde_as, serde_conv};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_compute_budget_interface::ComputeBudgetInstruction;
 use solana_keypair::Keypair;
@@ -31,22 +28,10 @@ use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
 };
-use std::{
-    borrow::Cow,
-    collections::{BTreeSet, HashMap},
-    convert::Infallible,
-    fmt::Display,
-    num::ParseIntError,
-    str::FromStr,
-    sync::LazyLock,
-    time::Duration,
-};
+use std::{collections::BTreeSet, sync::LazyLock, time::Duration};
 use tower::Service;
 use tower::ServiceExt;
-use value::{
-    Value,
-    with::{AsKeypair, AsPubkey},
-};
+use value::Value;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
@@ -213,18 +198,6 @@ async fn get_priority_fee(accounts: &BTreeSet<Pubkey>) -> Result<u64, anyhow::Er
     } else {
         bail!("no HELIUS_API_KEY env");
     }
-}
-
-const fn default_simulation_level() -> CommitmentLevel {
-    CommitmentLevel::Finalized
-}
-
-const fn default_tx_level() -> CommitmentLevel {
-    CommitmentLevel::Confirmed
-}
-
-const fn default_wait_level() -> CommitmentLevel {
-    CommitmentLevel::Confirmed
 }
 
 pub fn build_action_reference(timestamp: i64, run_id: FlowRunId) -> Vec<u8> {
@@ -905,8 +878,10 @@ mod tests {
         COMPUTE_BUDGET, FALLBACK_COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE,
         SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
+    use flow_lib::solana::WalletOrPubkey;
     // use base64::prelude::*;
     use solana_program::{pubkey, system_instruction::transfer};
+    use std::collections::HashMap;
 
     #[test]
     fn test_wallet_serde() {

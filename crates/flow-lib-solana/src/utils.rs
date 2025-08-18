@@ -1,11 +1,11 @@
 use super::Error;
 use super::{Pubkey, Signature};
-use flow_lib::context::signer::Presigner;
-use flow_lib::utils::tower_client::CommonErrorExt;
 use agave_feature_set::FeatureSet;
 use agave_precompiles::verify_if_precompile;
 use anyhow::{anyhow, bail};
 use base64::prelude::*;
+use flow_lib::context::signer::Presigner;
+use flow_lib::utils::tower_client::CommonErrorExt;
 use nom::{
     IResult,
     bytes::complete::take,
@@ -17,8 +17,7 @@ use solana_program::message::AddressLookupTableAccount;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::{
     client_error::{Error as ClientError, ErrorKind as ClientErrorKind},
-    request::{RpcError, RpcResponseErrorData},
-    response::RpcSimulateTransactionResult,
+    request::RpcError,
 };
 use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
