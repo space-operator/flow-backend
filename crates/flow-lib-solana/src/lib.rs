@@ -1,23 +1,31 @@
-use flow_lib::{
-    FlowRunId, SolanaNet,
-    context::{execute::Error, signer},
-    utils::tower_client::CommonErrorExt,
-};
 use anyhow::{anyhow, bail, ensure};
 use borsh1::BorshDeserialize;
 use bytes::Bytes;
 use chrono::Utc;
+use flow_lib::{
+    FlowRunId, SolanaNet,
+    context::{execute::Error, signer},
+    solana::{
+        ExecuteOn, ExecutionConfig, InsertionBehavior, Instructions, SolanaActionConfig, Wallet,
+        WalletOrPubkey,
+    },
+    utils::tower_client::CommonErrorExt,
+};
 use futures::{FutureExt, TryStreamExt, future::Either};
 use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as, serde_conv};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_compute_budget_interface::ComputeBudgetInstruction;
+use solana_keypair::Keypair;
+use solana_presigner::Presigner as SdkPresigner;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     message::{VersionedMessage, v0},
 };
+use solana_pubkey::Pubkey;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::config::RpcSendTransactionConfig;
+use solana_signature::Signature;
 use solana_signer::{Signer, SignerError, signers::Signers};
 use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use spo_helius::{
@@ -42,11 +50,6 @@ use value::{
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
-pub use solana_keypair::Keypair;
-pub use solana_presigner::Presigner as SdkPresigner;
-pub use solana_pubkey::Pubkey;
-pub use solana_signature::Signature;
-
 pub mod utils;
 pub use utils::*;
 
@@ -60,105 +63,6 @@ pub mod spl_memo {
     pub mod v1 {
         pub const ID: solana_pubkey::Pubkey =
             solana_pubkey::pubkey!("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo");
-    }
-}
-
-#[serde_as]
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(untagged)]
-pub enum Wallet {
-    Keypair(#[serde_as(as = "AsKeypair")] Keypair),
-    Adapter {
-        #[serde_as(as = "AsPubkey")]
-        public_key: Pubkey,
-    },
-}
-
-impl bincode::Encode for Wallet {
-    fn encode<E: bincode::enc::Encoder>(
-        &self,
-        encoder: &mut E,
-    ) -> Result<(), bincode::error::EncodeError> {
-        WalletBincode::from(self).encode(encoder)
-    }
-}
-
-impl<C> bincode::Decode<C> for Wallet {
-    fn decode<D: bincode::de::Decoder<Context = C>>(
-        decoder: &mut D,
-    ) -> Result<Self, bincode::error::DecodeError> {
-        Ok(WalletBincode::decode(decoder)?.into())
-    }
-}
-
-impl<'de, C> bincode::BorrowDecode<'de, C> for Wallet {
-    fn borrow_decode<D: bincode::de::BorrowDecoder<'de, Context = C>>(
-        decoder: &mut D,
-    ) -> Result<Self, bincode::error::DecodeError> {
-        Ok(WalletBincode::borrow_decode(decoder)?.into())
-    }
-}
-
-#[derive(bincode::Encode, bincode::Decode)]
-enum WalletBincode {
-    Keypair([u8; 32]),
-    Adapter([u8; 32]),
-}
-
-impl From<WalletBincode> for Wallet {
-    fn from(value: WalletBincode) -> Self {
-        match value {
-            WalletBincode::Keypair(value) => Wallet::Keypair(Keypair::new_from_array(value)),
-            WalletBincode::Adapter(value) => Wallet::Adapter {
-                public_key: Pubkey::new_from_array(value),
-            },
-        }
-    }
-}
-
-impl From<&Wallet> for WalletBincode {
-    fn from(value: &Wallet) -> Self {
-        match value {
-            Wallet::Keypair(keypair) => WalletBincode::Keypair(*keypair.secret_bytes()),
-            Wallet::Adapter { public_key } => WalletBincode::Adapter(public_key.to_bytes()),
-        }
-    }
-}
-
-impl From<Keypair> for Wallet {
-    fn from(value: Keypair) -> Self {
-        Self::Keypair(value)
-    }
-}
-
-impl Clone for Wallet {
-    fn clone(&self) -> Self {
-        match self {
-            Wallet::Keypair(keypair) => Wallet::Keypair(keypair.clone_keypair()),
-            Wallet::Adapter { public_key } => Wallet::Adapter {
-                public_key: *public_key,
-            },
-        }
-    }
-}
-
-impl Wallet {
-    pub fn is_adapter_wallet(&self) -> bool {
-        matches!(self, Wallet::Adapter { .. })
-    }
-
-    pub fn pubkey(&self) -> Pubkey {
-        match self {
-            Wallet::Keypair(keypair) => keypair.pubkey(),
-            Wallet::Adapter { public_key, .. } => *public_key,
-        }
-    }
-
-    pub fn keypair(&self) -> Option<&Keypair> {
-        match self {
-            Wallet::Keypair(keypair) => Some(keypair),
-            Wallet::Adapter { .. } => None,
-        }
     }
 }
 
@@ -260,96 +164,6 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<v0::Message, anyhow::
     Ok(r)
 }
 
-pub trait KeypairExt: Sized {
-    fn from_str(s: &str) -> Result<Self, anyhow::Error>;
-    fn clone_keypair(&self) -> Self;
-}
-
-impl KeypairExt for Keypair {
-    fn from_str(s: &str) -> Result<Self, anyhow::Error> {
-        let mut buf = [0u8; 64];
-        five8::decode_64(s, &mut buf)?;
-        Ok(Keypair::try_from(&buf[..])?)
-    }
-
-    // TODO: remove this function
-    fn clone_keypair(&self) -> Self {
-        self.insecure_clone()
-    }
-}
-
-#[serde_as]
-#[derive(Serialize, Deserialize, Debug, Default)]
-struct AsAccountMetaImpl {
-    #[serde_as(as = "AsPubkey")]
-    pubkey: Pubkey,
-    is_signer: bool,
-    is_writable: bool,
-}
-fn account_meta_ser(i: &AccountMeta) -> AsAccountMetaImpl {
-    AsAccountMetaImpl {
-        pubkey: i.pubkey,
-        is_signer: i.is_signer,
-        is_writable: i.is_writable,
-    }
-}
-fn account_meta_de(i: AsAccountMetaImpl) -> Result<AccountMeta, Infallible> {
-    Ok(AccountMeta {
-        pubkey: i.pubkey,
-        is_signer: i.is_signer,
-        is_writable: i.is_writable,
-    })
-}
-serde_conv!(
-    AsAccountMeta,
-    AccountMeta,
-    account_meta_ser,
-    account_meta_de
-);
-
-#[serde_as]
-#[derive(Serialize, Deserialize, Debug, Default)]
-struct AsInstructionImpl {
-    #[serde_as(as = "AsPubkey")]
-    program_id: Pubkey,
-    #[serde_as(as = "Vec<AsAccountMeta>")]
-    accounts: Vec<AccountMeta>,
-    #[serde_as(as = "serde_with::Bytes")]
-    data: Vec<u8>,
-}
-fn instruction_ser(i: &Instruction) -> AsInstructionImpl {
-    AsInstructionImpl {
-        program_id: i.program_id,
-        accounts: i.accounts.clone(),
-        data: i.data.clone(),
-    }
-}
-fn instruction_de(i: AsInstructionImpl) -> Result<Instruction, Infallible> {
-    Ok(Instruction {
-        program_id: i.program_id,
-        accounts: i.accounts,
-        data: i.data,
-    })
-}
-serde_conv!(AsInstruction, Instruction, instruction_ser, instruction_de);
-
-#[serde_as]
-#[derive(
-    Serialize, Deserialize, Debug, Default, bon::Builder, bincode::Encode, bincode::Decode,
-)]
-pub struct Instructions {
-    #[serde_as(as = "AsPubkey")]
-    #[bincode(with_serde)]
-    pub fee_payer: Pubkey,
-    pub signers: Vec<Wallet>,
-    #[serde_as(as = "Vec<AsInstruction>")]
-    #[bincode(with_serde)]
-    pub instructions: Vec<Instruction>,
-    #[serde_as(as = "Option<Vec<AsPubkey>>")]
-    #[bincode(with_serde)]
-    pub lookup_tables: Option<Vec<Pubkey>>,
-}
-
 fn is_set_compute_unit_limit(ix: &Instruction) -> Option<()> {
     if solana_compute_budget_interface::check_id(&ix.program_id) {
         let data = ComputeBudgetInstruction::try_from_slice(&ix.data)
@@ -401,57 +215,6 @@ async fn get_priority_fee(accounts: &BTreeSet<Pubkey>) -> Result<u64, anyhow::Er
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
-pub enum InsertionBehavior {
-    #[default]
-    Auto,
-    No,
-    Value(u64),
-}
-
-impl FromStr for InsertionBehavior {
-    type Err = ParseIntError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "auto" => InsertionBehavior::Auto,
-            "no" => InsertionBehavior::No,
-            s => InsertionBehavior::Value(s.parse()?),
-        })
-    }
-}
-
-impl Display for InsertionBehavior {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            InsertionBehavior::Auto => f.write_str("auto"),
-            InsertionBehavior::No => f.write_str("no"),
-            InsertionBehavior::Value(v) => v.fmt(f),
-        }
-    }
-}
-
-impl Serialize for InsertionBehavior {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.to_string().serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for InsertionBehavior {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        use serde::de::Error;
-        <Cow<'de, str> as Deserialize>::deserialize(deserializer)?
-            .parse()
-            .map_err(D::Error::custom)
-    }
-}
-
 const fn default_simulation_level() -> CommitmentLevel {
     CommitmentLevel::Finalized
 }
@@ -462,104 +225,6 @@ const fn default_tx_level() -> CommitmentLevel {
 
 const fn default_wait_level() -> CommitmentLevel {
     CommitmentLevel::Confirmed
-}
-
-#[serde_as]
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum WalletOrPubkey {
-    Wallet(Wallet),
-    Pubkey(#[serde_as(as = "AsPubkey")] Pubkey),
-}
-
-impl WalletOrPubkey {
-    pub fn to_keypair(self) -> Wallet {
-        match self {
-            WalletOrPubkey::Wallet(k) => k,
-            WalletOrPubkey::Pubkey(public_key) => Wallet::Adapter { public_key },
-        }
-    }
-}
-
-#[serde_with::serde_as]
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub struct ExecutionConfig {
-    pub overwrite_feepayer: Option<WalletOrPubkey>,
-
-    pub devnet_lookup_table: Option<Pubkey>,
-    pub mainnet_lookup_table: Option<Pubkey>,
-
-    #[serde(default)]
-    pub compute_budget: InsertionBehavior,
-    #[serde_as(as = "Option<DisplayFromStr>")]
-    pub fallback_compute_budget: Option<u64>,
-    #[serde(default)]
-    pub priority_fee: InsertionBehavior,
-
-    #[serde(default = "default_simulation_level")]
-    pub simulation_commitment_level: CommitmentLevel,
-    #[serde(default = "default_tx_level")]
-    pub tx_commitment_level: CommitmentLevel,
-    #[serde(default = "default_wait_level")]
-    pub wait_commitment_level: CommitmentLevel,
-
-    #[serde(skip)]
-    pub execute_on: ExecuteOn,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SolanaActionConfig {
-    #[serde(with = "value::pubkey")]
-    pub action_signer: Pubkey,
-    #[serde(with = "value::pubkey")]
-    pub action_identity: Pubkey,
-}
-
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub enum ExecuteOn {
-    SolanaAction(SolanaActionConfig),
-    #[default]
-    CurrentMachine,
-}
-
-impl ExecutionConfig {
-    pub fn from_env(map: &HashMap<String, String>) -> Result<Self, value::Error> {
-        let map = map
-            .iter()
-            .map(|(k, v)| (k.clone(), Value::String(v.clone())))
-            .collect::<value::Map>();
-        value::from_map(map)
-    }
-
-    pub fn lookup_table(&self, network: SolanaNet) -> Option<Pubkey> {
-        match network {
-            SolanaNet::Devnet => self.devnet_lookup_table,
-            SolanaNet::Testnet => None,
-            SolanaNet::Mainnet => self.mainnet_lookup_table,
-        }
-    }
-}
-
-impl Default for ExecutionConfig {
-    fn default() -> Self {
-        Self {
-            overwrite_feepayer: None,
-            devnet_lookup_table: None,
-            mainnet_lookup_table: None,
-            compute_budget: InsertionBehavior::default(),
-            fallback_compute_budget: None,
-            priority_fee: InsertionBehavior::default(),
-            simulation_commitment_level: default_simulation_level(),
-            tx_commitment_level: default_tx_level(),
-            wait_commitment_level: default_wait_level(),
-            execute_on: ExecuteOn::default(),
-        }
-    }
-}
-
-fn commitment(commitment: CommitmentLevel) -> CommitmentConfig {
-    CommitmentConfig { commitment }
 }
 
 pub fn build_action_reference(timestamp: i64, run_id: FlowRunId) -> Vec<u8> {
@@ -684,7 +349,373 @@ async fn action_identity_memo(
     Ok(format!("solana-action:{identity}:{reference}:{signature}"))
 }
 
-impl Instructions {
+fn contains_set_compute_unit_limit(i: &Instructions) -> bool {
+    i.instructions
+        .iter()
+        .any(|ix| is_set_compute_unit_limit(ix).is_some())
+}
+
+fn contains_set_compute_unit_price(i: &Instructions) -> bool {
+    i.instructions
+        .iter()
+        .any(|ix| is_set_compute_unit_price(ix).is_some())
+}
+
+fn unique_accounts(i: &Instructions) -> BTreeSet<Pubkey> {
+    std::iter::once(i.fee_payer)
+        .chain(i.signers.iter().map(|s| s.pubkey()))
+        .chain(
+            i.instructions.iter().flat_map(|i| {
+                std::iter::once(i.program_id).chain(i.accounts.iter().map(|a| a.pubkey))
+            }),
+        )
+        .collect()
+}
+
+async fn insert_priority_fee(
+    i: &mut Instructions,
+    rpc: &RpcClient,
+    network: SolanaNet,
+    config: &ExecutionConfig,
+) -> Result<usize, Error> {
+    let message =
+        build_message(i, rpc, network, config, config.simulation_commitment_level).await?;
+    let count = i.instructions.len();
+
+    let mut inserted = 0;
+
+    if config.compute_budget != InsertionBehavior::No && contains_set_compute_unit_limit(i) {
+        let compute_units = if let InsertionBehavior::Value(x) = config.compute_budget {
+            x
+        } else {
+            match rpc
+                .simulate_transaction(&VersionedTransaction {
+                    message: VersionedMessage::V0(message.clone()),
+                    signatures: Vec::new(),
+                })
+                .await
+            {
+                Err(error) => {
+                    tracing::warn!("simulation failed: {}", error);
+                    None
+                }
+                Ok(result) => {
+                    if let Some(error) = result.value.err {
+                        tracing::warn!("simulation error: {}", error);
+                        for log in result.value.logs.unwrap_or_default() {
+                            tracing::info!("{}", log);
+                        }
+                    } else {
+                        for log in result.value.logs.unwrap_or_default() {
+                            tracing::debug!("{}", log);
+                        }
+                    }
+                    let consumed = result.value.units_consumed;
+                    if consumed.is_none() || consumed == Some(0) {
+                        None
+                    } else {
+                        consumed.map(|x| 1000 + x * 3 / 2)
+                    }
+                }
+            }
+            .or(config.fallback_compute_budget)
+            .unwrap_or(200_000 * count as u64)
+        }
+        .min(1_400_000) as u32;
+        tracing::info!("setting compute unit limit {}", compute_units);
+        i.instructions.insert(
+            0,
+            ComputeBudgetInstruction::set_compute_unit_limit(compute_units),
+        );
+        inserted += 1;
+    }
+
+    if config.priority_fee != InsertionBehavior::No && !contains_set_compute_unit_price(i) {
+        let fee = if let InsertionBehavior::Value(x) = config.priority_fee {
+            x
+        } else {
+            get_priority_fee(&unique_accounts(i))
+                .await
+                .map_err(|error| {
+                    tracing::warn!("get_priority_fee error: {}", error);
+                })
+                .unwrap_or(100)
+        };
+        tracing::info!("adding priority fee {}", fee);
+        i.instructions
+            .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
+        inserted += 1;
+    }
+
+    Ok(inserted)
+}
+
+fn commitment(commitment: CommitmentLevel) -> CommitmentConfig {
+    CommitmentConfig { commitment }
+}
+
+async fn build_message(
+    i: &Instructions,
+    rpc: &RpcClient,
+    network: SolanaNet,
+    config: &ExecutionConfig,
+    commitment_level: CommitmentLevel,
+) -> Result<v0::Message, Error> {
+    let mut lookups = Vec::new();
+    for pubkey in i.lookup_tables.iter().flatten() {
+        let table = fetch_address_lookup_table(rpc, pubkey).await?;
+        lookups.push(table);
+    }
+    if let Some(pubkey) = config.lookup_table(network).as_ref() {
+        if !i.lookup_tables.iter().flatten().any(|pk| pk == pubkey) {
+            let table = fetch_address_lookup_table(rpc, pubkey).await?;
+            lookups.push(table);
+        }
+    }
+
+    let blockhash = rpc
+        .get_latest_blockhash_with_commitment(commitment(commitment_level))
+        .await
+        .map_err(|error| Error::solana(error, 0))? // TODO: better handling of "inserted"
+        .0;
+
+    let message = v0::Message::try_compile(&i.fee_payer, &i.instructions, &lookups, blockhash)?;
+
+    Ok(message)
+}
+
+async fn build_and_sign_tx(
+    mut i: Instructions,
+    rpc: &RpcClient,
+    network: SolanaNet,
+    mut signer: signer::Svc,
+    flow_run_id: Option<FlowRunId>,
+    config: &ExecutionConfig,
+) -> Result<(VersionedTransaction, usize), Error> {
+    let inserted = insert_priority_fee(&mut i, rpc, network, config).await?;
+    let mut message = build_message(&i, rpc, network, config, config.tx_commitment_level).await?;
+    let mut data: Bytes = message.serialize().into();
+    let fee_payer_signature = {
+        let keypair = i
+            .signers
+            .iter()
+            .find(|w| w.pubkey() == i.fee_payer)
+            .ok_or_else(|| Error::msg("fee payer is not in signers"))?;
+
+        tracing::info!("{} signing", keypair.pubkey());
+        if let Some(keypair) = keypair.keypair() {
+            keypair.sign_message(&data)
+        } else {
+            let fut = signer.ready().await?.call(signer::SignatureRequest {
+                id: None,
+                time: Utc::now(),
+                pubkey: keypair.pubkey(),
+                message: data.clone(),
+                timeout: SIGNATURE_TIMEOUT,
+                flow_run_id,
+                signatures: None,
+            });
+            let resp = tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
+                .await
+                .map_err(|_| Error::Timeout)??;
+            if let Some(new) = resp.new_message {
+                let new_message = is_same_message_logic(&data, &new).map_err(Error::from_anyhow)?;
+                tracing::info!("updating transaction");
+                message = new_message;
+                data = new;
+            }
+            resp.signature
+        }
+    };
+
+    let wallets = i
+        .signers
+        .iter()
+        .filter_map(|k| {
+            if k.is_adapter_wallet() && k.pubkey() != i.fee_payer {
+                Some(k.pubkey())
+            } else {
+                None
+            }
+        })
+        .collect::<BTreeSet<_>>();
+
+    let reqs = wallets
+        .iter()
+        .map(|&pubkey| signer::SignatureRequest {
+            id: None,
+            time: Utc::now(),
+            pubkey,
+            message: data.clone(),
+            timeout: SIGNATURE_TIMEOUT,
+            flow_run_id,
+            signatures: Some(
+                [signer::Presigner {
+                    pubkey: i.fee_payer,
+                    signature: fee_payer_signature,
+                }]
+                .into(),
+            ),
+        })
+        .collect::<Vec<_>>();
+
+    let signature_results = tokio::time::timeout(
+        SIGNATURE_TIMEOUT,
+        signer
+            .call_all(futures::stream::iter(reqs))
+            .try_collect::<Vec<_>>(),
+    )
+    .await
+    .map_err(|_| Error::Timeout)??;
+
+    let tx = {
+        let mut presigners = wallets
+            .iter()
+            .zip(signature_results.iter())
+            .map(|(pk, resp)| {
+                (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
+                    .then(|| SdkPresigner::new(pk, &resp.signature))
+                    .ok_or_else(|| {
+                        format!("{pk} signature failed: not allowed to change transaction")
+                    })
+            })
+            .collect::<Result<Vec<_>, String>>()
+            .map_err(Error::msg)?;
+        presigners.push(SdkPresigner::new(&i.fee_payer, &fee_payer_signature));
+
+        let mut signers = Vec::<&dyn Signer>::with_capacity(i.signers.len());
+
+        for p in &presigners {
+            signers.push(p);
+        }
+
+        for k in i.signers.iter().filter_map(|w| w.keypair()) {
+            if k.pubkey() != i.fee_payer {
+                signers.push(k);
+            }
+        }
+
+        VersionedTransaction::try_new(VersionedMessage::V0(message), &signers)?
+    };
+
+    Ok((tx, inserted))
+}
+
+async fn execute_current_machine(
+    i: Instructions,
+    rpc: &RpcClient,
+    network: SolanaNet,
+    signer: signer::Svc,
+    flow_run_id: Option<FlowRunId>,
+    config: &ExecutionConfig,
+) -> Result<Signature, Error> {
+    let (tx, inserted) = build_and_sign_tx(i, rpc, network, signer, flow_run_id, config).await?;
+
+    let signature = rpc
+        .send_transaction_with_config(
+            &tx,
+            RpcSendTransactionConfig {
+                preflight_commitment: Some(config.tx_commitment_level),
+                ..<_>::default()
+            },
+        )
+        .await
+        .map_err(move |error| Error::solana(error, inserted))?;
+    tracing::info!("submitted {}", signature);
+
+    confirm_transaction(
+        rpc,
+        &signature,
+        tx.message.recent_blockhash(),
+        commitment(config.wait_commitment_level),
+    )
+    .await
+    .map_err(move |error| Error::solana(error, inserted))?;
+
+    Ok(signature)
+}
+
+async fn execute_solana_action(
+    i: Instructions,
+    rpc: &RpcClient,
+    network: SolanaNet,
+    mut signer: signer::Svc,
+    flow_run_id: Option<FlowRunId>,
+    config: &ExecutionConfig,
+    action_config: &SolanaActionConfig,
+) -> Result<Signature, Error> {
+    let (tx, _, memo) = i
+        .build_for_solana_action(
+            action_config.action_signer,
+            Some(action_config.action_identity),
+            rpc,
+            network,
+            signer.clone(),
+            flow_run_id,
+            config,
+        )
+        .await?;
+    let memo = memo.expect("action_identity != None");
+    let req = signer::SignatureRequest {
+        id: None,
+        time: Utc::now(),
+        pubkey: action_config.action_signer,
+        message: tx.message.serialize().into(),
+        timeout: SIGNATURE_TIMEOUT,
+        flow_run_id,
+        signatures: if tx.signatures.is_empty() {
+            None
+        } else {
+            Some(tx.signatures.clone())
+        },
+    };
+    let request_signature = signer.ready().await?.call(req).boxed();
+    let confirm = confirm_action_transaction(
+        rpc,
+        action_config.action_identity,
+        memo,
+        config.wait_commitment_level,
+    )
+    .boxed();
+    let task = futures::future::select(request_signature, confirm);
+    match task.await {
+        Either::Left((result, task)) => {
+            if let Err(error) = result {
+                if !matches!(error, signer::Error::Timeout) {
+                    return Err(Error::other(error));
+                }
+            }
+            task.await.map_err(Error::from_anyhow)
+        }
+        Either::Right((result, _)) => result.map_err(Error::from_anyhow),
+    }
+}
+
+pub trait InstructionsExt: Sized {
+    fn push_signer(&mut self, new: Wallet);
+    fn set_feepayer(&mut self, signer: Wallet);
+    fn combine(&mut self, next: Self) -> Result<(), Self>;
+    fn build_for_solana_action(
+        self,
+        action_signer: Pubkey,
+        action_identity: Option<Pubkey>,
+        rpc: &RpcClient,
+        network: SolanaNet,
+        signer: signer::Svc,
+        flow_run_id: Option<FlowRunId>,
+        config: &ExecutionConfig,
+    ) -> impl Future<Output = Result<(PartialVersionedTransaction, usize, Option<String>), Error>>;
+    fn execute(
+        self,
+        rpc: &RpcClient,
+        network: SolanaNet,
+        signer: signer::Svc,
+        flow_run_id: Option<FlowRunId>,
+        config: ExecutionConfig,
+    ) -> impl Future<Output = Result<Signature, Error>>;
+}
+
+impl InstructionsExt for Instructions {
     fn push_signer(&mut self, new: Wallet) {
         let old = self.signers.iter_mut().find(|k| k.pubkey() == new.pubkey());
         if let Some(old) = old {
@@ -697,12 +728,12 @@ impl Instructions {
         }
     }
 
-    pub fn set_feepayer(&mut self, signer: Wallet) {
+    fn set_feepayer(&mut self, signer: Wallet) {
         self.fee_payer = signer.pubkey();
         self.push_signer(signer);
     }
 
-    pub fn combine(&mut self, next: Self) -> Result<(), Self> {
+    fn combine(&mut self, next: Self) -> Result<(), Self> {
         if next.fee_payer != self.fee_payer {
             return Err(next);
         }
@@ -725,141 +756,8 @@ impl Instructions {
 
         Ok(())
     }
-
-    fn contains_set_compute_unit_limit(&self) -> bool {
-        self.instructions
-            .iter()
-            .any(|ix| is_set_compute_unit_limit(ix).is_some())
-    }
-
-    fn contains_set_compute_unit_price(&self) -> bool {
-        self.instructions
-            .iter()
-            .any(|ix| is_set_compute_unit_price(ix).is_some())
-    }
-
-    fn unique_accounts(&self) -> BTreeSet<Pubkey> {
-        std::iter::once(self.fee_payer)
-            .chain(self.signers.iter().map(|s| s.pubkey()))
-            .chain(self.instructions.iter().flat_map(|i| {
-                std::iter::once(i.program_id).chain(i.accounts.iter().map(|a| a.pubkey))
-            }))
-            .collect()
-    }
-
-    async fn insert_priority_fee(
-        &mut self,
-        rpc: &RpcClient,
-        network: SolanaNet,
-        config: &ExecutionConfig,
-    ) -> Result<usize, Error> {
-        let message = self
-            .build_message(rpc, network, config, config.simulation_commitment_level)
-            .await?;
-        let count = self.instructions.len();
-
-        let mut inserted = 0;
-
-        if config.compute_budget != InsertionBehavior::No && !self.contains_set_compute_unit_limit()
-        {
-            let compute_units = if let InsertionBehavior::Value(x) = config.compute_budget {
-                x
-            } else {
-                match rpc
-                    .simulate_transaction(&VersionedTransaction {
-                        message: VersionedMessage::V0(message.clone()),
-                        signatures: Vec::new(),
-                    })
-                    .await
-                {
-                    Err(error) => {
-                        tracing::warn!("simulation failed: {}", error);
-                        None
-                    }
-                    Ok(result) => {
-                        if let Some(error) = result.value.err {
-                            tracing::warn!("simulation error: {}", error);
-                            for log in result.value.logs.unwrap_or_default() {
-                                tracing::info!("{}", log);
-                            }
-                        } else {
-                            for log in result.value.logs.unwrap_or_default() {
-                                tracing::debug!("{}", log);
-                            }
-                        }
-                        let consumed = result.value.units_consumed;
-                        if consumed.is_none() || consumed == Some(0) {
-                            None
-                        } else {
-                            consumed.map(|x| 1000 + x * 3 / 2)
-                        }
-                    }
-                }
-                .or(config.fallback_compute_budget)
-                .unwrap_or(200_000 * count as u64)
-            }
-            .min(1_400_000) as u32;
-            tracing::info!("setting compute unit limit {}", compute_units);
-            self.instructions.insert(
-                0,
-                ComputeBudgetInstruction::set_compute_unit_limit(compute_units),
-            );
-            inserted += 1;
-        }
-
-        if config.priority_fee != InsertionBehavior::No && !self.contains_set_compute_unit_price() {
-            let fee = if let InsertionBehavior::Value(x) = config.priority_fee {
-                x
-            } else {
-                get_priority_fee(&self.unique_accounts())
-                    .await
-                    .map_err(|error| {
-                        tracing::warn!("get_priority_fee error: {}", error);
-                    })
-                    .unwrap_or(100)
-            };
-            tracing::info!("adding priority fee {}", fee);
-            self.instructions
-                .insert(0, ComputeBudgetInstruction::set_compute_unit_price(fee));
-            inserted += 1;
-        }
-
-        Ok(inserted)
-    }
-
-    async fn build_message(
-        &self,
-        rpc: &RpcClient,
-        network: SolanaNet,
-        config: &ExecutionConfig,
-        commitment_level: CommitmentLevel,
-    ) -> Result<v0::Message, Error> {
-        let mut lookups = Vec::new();
-        for pubkey in self.lookup_tables.iter().flatten() {
-            let table = fetch_address_lookup_table(rpc, pubkey).await?;
-            lookups.push(table);
-        }
-        if let Some(pubkey) = config.lookup_table(network).as_ref() {
-            if !self.lookup_tables.iter().flatten().any(|pk| pk == pubkey) {
-                let table = fetch_address_lookup_table(rpc, pubkey).await?;
-                lookups.push(table);
-            }
-        }
-
-        let blockhash = rpc
-            .get_latest_blockhash_with_commitment(commitment(commitment_level))
-            .await
-            .map_err(|error| Error::solana(error, 0))? // TODO: better handling of "inserted"
-            .0;
-
-        let message =
-            v0::Message::try_compile(&self.fee_payer, &self.instructions, &lookups, blockhash)?;
-
-        Ok(message)
-    }
-
     #[allow(clippy::too_many_arguments)]
-    pub async fn build_for_solana_action(
+    async fn build_for_solana_action(
         mut self,
         action_signer: Pubkey,
         action_identity: Option<Pubkey>,
@@ -869,7 +767,7 @@ impl Instructions {
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<(PartialVersionedTransaction, usize, Option<String>), Error> {
-        let inserted = self.insert_priority_fee(rpc, network, config).await?;
+        let inserted = insert_priority_fee(&mut self, rpc, network, config).await?;
         let memo = if let Some(action_identity) = action_identity {
             if !self
                 .instructions
@@ -906,8 +804,7 @@ impl Instructions {
         };
 
         let message = VersionedMessage::V0(
-            self.build_message(rpc, network, config, config.tx_commitment_level)
-                .await?,
+            build_message(&self, rpc, network, config, config.tx_commitment_level).await?,
         );
 
         // Sign all signatures except for action_signer
@@ -972,219 +869,7 @@ impl Instructions {
         Ok((tx, inserted, memo))
     }
 
-    async fn build_and_sign_tx(
-        mut self,
-        rpc: &RpcClient,
-        network: SolanaNet,
-        mut signer: signer::Svc,
-        flow_run_id: Option<FlowRunId>,
-        config: &ExecutionConfig,
-    ) -> Result<(VersionedTransaction, usize), Error> {
-        let inserted = self.insert_priority_fee(rpc, network, config).await?;
-        let mut message = self
-            .build_message(rpc, network, config, config.tx_commitment_level)
-            .await?;
-        let mut data: Bytes = message.serialize().into();
-        let fee_payer_signature = {
-            let keypair = self
-                .signers
-                .iter()
-                .find(|w| w.pubkey() == self.fee_payer)
-                .ok_or_else(|| Error::msg("fee payer is not in signers"))?;
-
-            tracing::info!("{} signing", keypair.pubkey());
-            if let Some(keypair) = keypair.keypair() {
-                keypair.sign_message(&data)
-            } else {
-                let fut = signer.ready().await?.call(signer::SignatureRequest {
-                    id: None,
-                    time: Utc::now(),
-                    pubkey: keypair.pubkey(),
-                    message: data.clone(),
-                    timeout: SIGNATURE_TIMEOUT,
-                    flow_run_id,
-                    signatures: None,
-                });
-                let resp = tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
-                    .await
-                    .map_err(|_| Error::Timeout)??;
-                if let Some(new) = resp.new_message {
-                    let new_message =
-                        is_same_message_logic(&data, &new).map_err(Error::from_anyhow)?;
-                    tracing::info!("updating transaction");
-                    message = new_message;
-                    data = new;
-                }
-                resp.signature
-            }
-        };
-
-        let wallets = self
-            .signers
-            .iter()
-            .filter_map(|k| {
-                if k.is_adapter_wallet() && k.pubkey() != self.fee_payer {
-                    Some(k.pubkey())
-                } else {
-                    None
-                }
-            })
-            .collect::<BTreeSet<_>>();
-
-        let reqs = wallets
-            .iter()
-            .map(|&pubkey| signer::SignatureRequest {
-                id: None,
-                time: Utc::now(),
-                pubkey,
-                message: data.clone(),
-                timeout: SIGNATURE_TIMEOUT,
-                flow_run_id,
-                signatures: Some(
-                    [signer::Presigner {
-                        pubkey: self.fee_payer,
-                        signature: fee_payer_signature,
-                    }]
-                    .into(),
-                ),
-            })
-            .collect::<Vec<_>>();
-
-        let signature_results = tokio::time::timeout(
-            SIGNATURE_TIMEOUT,
-            signer
-                .call_all(futures::stream::iter(reqs))
-                .try_collect::<Vec<_>>(),
-        )
-        .await
-        .map_err(|_| Error::Timeout)??;
-
-        let tx = {
-            let mut presigners = wallets
-                .iter()
-                .zip(signature_results.iter())
-                .map(|(pk, resp)| {
-                    (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
-                        .then(|| SdkPresigner::new(pk, &resp.signature))
-                        .ok_or_else(|| {
-                            format!("{pk} signature failed: not allowed to change transaction")
-                        })
-                })
-                .collect::<Result<Vec<_>, String>>()
-                .map_err(Error::msg)?;
-            presigners.push(SdkPresigner::new(&self.fee_payer, &fee_payer_signature));
-
-            let mut signers = Vec::<&dyn Signer>::with_capacity(self.signers.len());
-
-            for p in &presigners {
-                signers.push(p);
-            }
-
-            for k in self.signers.iter().filter_map(|w| w.keypair()) {
-                if k.pubkey() != self.fee_payer {
-                    signers.push(k);
-                }
-            }
-
-            VersionedTransaction::try_new(VersionedMessage::V0(message), &signers)?
-        };
-
-        Ok((tx, inserted))
-    }
-
-    async fn execute_current_machine(
-        self,
-        rpc: &RpcClient,
-        network: SolanaNet,
-        signer: signer::Svc,
-        flow_run_id: Option<FlowRunId>,
-        config: &ExecutionConfig,
-    ) -> Result<Signature, Error> {
-        let (tx, inserted) = self
-            .build_and_sign_tx(rpc, network, signer, flow_run_id, config)
-            .await?;
-
-        let signature = rpc
-            .send_transaction_with_config(
-                &tx,
-                RpcSendTransactionConfig {
-                    preflight_commitment: Some(config.tx_commitment_level),
-                    ..<_>::default()
-                },
-            )
-            .await
-            .map_err(move |error| Error::solana(error, inserted))?;
-        tracing::info!("submitted {}", signature);
-
-        confirm_transaction(
-            rpc,
-            &signature,
-            tx.message.recent_blockhash(),
-            commitment(config.wait_commitment_level),
-        )
-        .await
-        .map_err(move |error| Error::solana(error, inserted))?;
-
-        Ok(signature)
-    }
-
-    async fn execute_solana_action(
-        self,
-        rpc: &RpcClient,
-        network: SolanaNet,
-        mut signer: signer::Svc,
-        flow_run_id: Option<FlowRunId>,
-        config: &ExecutionConfig,
-        action_config: &SolanaActionConfig,
-    ) -> Result<Signature, Error> {
-        let (tx, _, memo) = self
-            .build_for_solana_action(
-                action_config.action_signer,
-                Some(action_config.action_identity),
-                rpc,
-                network,
-                signer.clone(),
-                flow_run_id,
-                config,
-            )
-            .await?;
-        let memo = memo.expect("action_identity != None");
-        let req = signer::SignatureRequest {
-            id: None,
-            time: Utc::now(),
-            pubkey: action_config.action_signer,
-            message: tx.message.serialize().into(),
-            timeout: SIGNATURE_TIMEOUT,
-            flow_run_id,
-            signatures: if tx.signatures.is_empty() {
-                None
-            } else {
-                Some(tx.signatures.clone())
-            },
-        };
-        let request_signature = signer.ready().await?.call(req).boxed();
-        let confirm = confirm_action_transaction(
-            rpc,
-            action_config.action_identity,
-            memo,
-            config.wait_commitment_level,
-        )
-        .boxed();
-        let task = futures::future::select(request_signature, confirm);
-        match task.await {
-            Either::Left((result, task)) => {
-                if let Err(error) = result {
-                    if !matches!(error, signer::Error::Timeout) {
-                        return Err(Error::other(error));
-                    }
-                }
-                task.await.map_err(Error::from_anyhow)
-            }
-            Either::Right((result, _)) => result.map_err(Error::from_anyhow),
-        }
-    }
-
-    pub async fn execute(
+    async fn execute(
         self,
         rpc: &RpcClient,
         network: SolanaNet,
@@ -1194,11 +879,11 @@ impl Instructions {
     ) -> Result<Signature, Error> {
         match &config.execute_on {
             ExecuteOn::CurrentMachine => {
-                self.execute_current_machine(rpc, network, signer, flow_run_id, &config)
-                    .await
+                execute_current_machine(self, rpc, network, signer, flow_run_id, &config).await
             }
             ExecuteOn::SolanaAction(action_config) => {
-                self.execute_solana_action(
+                execute_solana_action(
+                    self,
                     rpc,
                     network,
                     signer,
@@ -1215,11 +900,11 @@ impl Instructions {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bincode::config::standard;
     use flow_lib::context::env::{
         COMPUTE_BUDGET, FALLBACK_COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE,
         SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
-    use bincode::config::standard;
     // use base64::prelude::*;
     use solana_program::{pubkey, system_instruction::transfer};
 
@@ -1300,15 +985,15 @@ mod tests {
         let rpc = RpcClient::new(SolanaNet::Devnet.url().to_owned());
         let mut ins = Instructions {
             fee_payer: from.pubkey(),
-            signers: [from.clone_keypair().into()].into(),
+            signers: [from.insecure_clone().into()].into(),
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
             lookup_tables: None,
         };
-        let inserted = ins
-            .insert_priority_fee(&rpc, SolanaNet::Devnet, &<_>::default())
+        let inserted = insert_priority_fee(&mut ins, &rpc, SolanaNet::Devnet, &<_>::default())
             .await
             .unwrap();
-        ins.build_message(
+        build_message(
+            &ins,
             &rpc,
             SolanaNet::Devnet,
             &<_>::default(),
@@ -1322,7 +1007,7 @@ mod tests {
     #[test]
     fn test_keypair_or_pubkey_keypair() {
         let keypair = Keypair::new();
-        let x = WalletOrPubkey::Wallet(Wallet::Keypair(keypair.clone_keypair()));
+        let x = WalletOrPubkey::Wallet(Wallet::Keypair(keypair.insecure_clone()));
         let value = value::to_value(&x).unwrap();
         assert_eq!(value, Value::B64(keypair.to_bytes()));
         assert_eq!(value::from_value::<WalletOrPubkey>(value).unwrap(), x);
@@ -1354,7 +1039,7 @@ mod tests {
     #[test]
     fn test_wallet_keypair() {
         let keypair = Keypair::new();
-        let x = Wallet::Keypair(keypair.clone_keypair());
+        let x = Wallet::Keypair(keypair.insecure_clone());
         let value = value::to_value(&x).unwrap();
         assert_eq!(value, Value::B64(keypair.to_bytes()));
         assert_eq!(value::from_value::<Wallet>(value).unwrap(), x);

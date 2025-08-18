@@ -103,32 +103,6 @@ pub fn parse_rpc_memo_field(s: &str) -> Result<Vec<String>, anyhow::Error> {
     }
 }
 
-pub fn verbose_solana_error(err: &ClientError) -> String {
-    use std::fmt::Write;
-    if let ClientErrorKind::RpcError(RpcError::RpcResponseError {
-        code,
-        message,
-        data,
-    }) = &err.kind
-    {
-        let mut s = String::new();
-        writeln!(s, "{message} ({code})").unwrap();
-        if let RpcResponseErrorData::SendTransactionPreflightFailure(
-            RpcSimulateTransactionResult {
-                logs: Some(logs), ..
-            },
-        ) = data
-        {
-            for (i, log) in logs.iter().enumerate() {
-                writeln!(s, "{}: {}", i + 1, log).unwrap();
-            }
-        }
-        s
-    } else {
-        err.to_string()
-    }
-}
-
 pub struct TransactionWithMeta {
     pub slot: Slot,
     pub transaction: Transaction,
