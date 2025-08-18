@@ -2974,8 +2974,6 @@ name = "flow-lib"
 version = "0.1.0"
 dependencies = [
  "actix",
- "agave-feature-set",
- "agave-precompiles",
  "anyhow",
  "async-trait",
  "base64 0.21.7",
@@ -3002,10 +3000,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "solana-address-lookup-table-interface",
- "solana-clock",
  "solana-commitment-config",
- "solana-compute-budget-interface",
  "solana-keypair",
  "solana-presigner",
  "solana-program",
@@ -3014,7 +3009,6 @@ dependencies = [
  "solana-rpc-client-api",
  "solana-signature",
  "solana-signer",
- "solana-transaction",
  "spo-helius",
  "thiserror 1.0.69",
  "tokio",
