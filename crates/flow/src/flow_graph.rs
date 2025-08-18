@@ -14,9 +14,10 @@ use flow_lib::{
         EventSender, FlowError, FlowFinish, FlowStart, NODE_SPAN_NAME, NodeError, NodeFinish,
         NodeLogSender, NodeOutput, NodeStart,
     },
-    solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
+    solana::{ExecutionConfig, Instructions, Pubkey, Wallet},
     utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
 };
+use flow_lib_solana::{find_failed_instruction, simple_execute_svc, InstructionsExt};
 use futures::{
     FutureExt, StreamExt,
     channel::{mpsc, oneshot},
@@ -1747,7 +1748,7 @@ async fn run_command(
             node_id: node.id,
             times,
             tx: tx.clone(),
-            simple_svc: execute::simple(
+            simple_svc: simple_execute_svc(
                 ctx_svcs.set.solana_client.clone(),
                 ctx_data.set.solana.cluster,
                 ctx_svcs.signer.clone(),

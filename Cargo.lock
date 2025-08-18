@@ -2939,6 +2939,7 @@ dependencies = [
  "crossbeam-channel",
  "derive_more 0.99.20",
  "flow-lib",
+ "flow-lib-solana",
  "flow-value",
  "futures",
  "getset",
@@ -3025,7 +3026,7 @@ dependencies = [
 
 [[package]]
 name = "flow-lib-solana"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "agave-feature-set",
  "agave-precompiles",
@@ -3097,6 +3098,7 @@ dependencies = [
  "five8",
  "flow",
  "flow-lib",
+ "flow-lib-solana",
  "flow-tracing",
  "flow-value",
  "futures-channel",

@@ -4,7 +4,10 @@ use bytes::Bytes;
 use chrono::Utc;
 use flow_lib::{
     FlowRunId, SolanaNet,
-    context::{execute::Error, signer},
+    context::{
+        execute::{self, Error},
+        signer,
+    },
     solana::{
         ExecuteOn, ExecutionConfig, InsertionBehavior, Instructions, SolanaActionConfig, Wallet,
     },
@@ -13,7 +16,6 @@ use flow_lib::{
 use futures::{FutureExt, TryStreamExt, future::Either};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_compute_budget_interface::ComputeBudgetInstruction;
-use solana_keypair::Keypair;
 use solana_presigner::Presigner as SdkPresigner;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
@@ -21,6 +23,7 @@ use solana_program::{
 };
 use solana_pubkey::Pubkey;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use solana_rpc_client_api::config::RpcSendTransactionConfig;
 use solana_signature::Signature;
 use solana_signer::{Signer, SignerError, signers::Signers};
@@ -28,10 +31,13 @@ use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
 };
-use std::{collections::BTreeSet, sync::LazyLock, time::Duration};
+use std::{
+    collections::BTreeSet,
+    sync::{Arc, LazyLock},
+    time::Duration,
+};
 use tower::Service;
 use tower::ServiceExt;
-use value::Value;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
@@ -49,6 +55,30 @@ pub mod spl_memo {
         pub const ID: solana_pubkey::Pubkey =
             solana_pubkey::pubkey!("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo");
     }
+}
+
+pub fn simple_execute_svc(
+    rpc: Arc<SolanaClient>,
+    network: SolanaNet,
+    signer: signer::Svc,
+    flow_run_id: Option<FlowRunId>,
+    config: ExecutionConfig,
+) -> execute::Svc {
+    let handle = move |req: execute::Request| {
+        let rpc = rpc.clone();
+        let signer = signer.clone();
+        let config = config.clone();
+        async move {
+            Ok(execute::Response {
+                signature: Some(
+                    req.instructions
+                        .execute(&rpc, network, signer, flow_run_id, config)
+                        .await?,
+                ),
+            })
+        }
+    };
+    execute::Svc::new(tower::service_fn(handle))
 }
 
 /// `l` is old, `r` is new
@@ -882,6 +912,8 @@ mod tests {
     // use base64::prelude::*;
     use solana_program::{pubkey, system_instruction::transfer};
     use std::collections::HashMap;
+    use solana_keypair::Keypair;
+    use value::Value;
 
     #[test]
     fn test_wallet_serde() {

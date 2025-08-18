@@ -429,32 +429,6 @@ pub mod execute {
             Error::SanitizeError(Arc::new(value))
         }
     }
-
-    /*
-    pub fn simple(
-        rpc: Arc<SolanaClient>,
-        network: SolanaNet,
-        signer: signer::Svc,
-        flow_run_id: Option<FlowRunId>,
-        config: ExecutionConfig,
-    ) -> Svc {
-        let handle = move |req: Request| {
-            let rpc = rpc.clone();
-            let signer = signer.clone();
-            let config = config.clone();
-            async move {
-                Ok(Response {
-                    signature: Some(
-                        req.instructions
-                            .execute(&rpc, network, signer, flow_run_id, config)
-                            .await?,
-                    ),
-                })
-            }
-        };
-        Svc::new(tower::service_fn(handle))
-    }
-    */
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]

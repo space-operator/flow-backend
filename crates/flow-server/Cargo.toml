@@ -72,6 +72,7 @@ solana-signer = "2"
 solana-signature = "2"
 solana-rpc-client = { version = "2", default-features = false }
 flow-tracing = { version = "0.1.0", path = "../flow-tracing" }
+flow-lib-solana.workspace = true
 
 
 [dev-dependencies]

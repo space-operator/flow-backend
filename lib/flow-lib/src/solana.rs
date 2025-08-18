@@ -19,6 +19,18 @@ pub use solana_signature::Signature;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
 
+pub trait KeypairExt: Sized {
+    fn from_str(s: &str) -> Result<Self, anyhow::Error>;
+}
+
+impl KeypairExt for Keypair {
+    fn from_str(s: &str) -> Result<Self, anyhow::Error> {
+        let mut buf = [0u8; 64];
+        five8::decode_64(s, &mut buf)?;
+        Ok(Keypair::try_from(&buf[..])?)
+    }
+}
+
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(untagged)]

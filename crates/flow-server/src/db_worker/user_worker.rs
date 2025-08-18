@@ -32,9 +32,10 @@ use flow_lib::{
         get_jwt,
         signer::{self, SignatureRequest},
     },
-    solana::{Pubkey, SolanaActionConfig, is_same_message_logic},
+    solana::{Pubkey, SolanaActionConfig},
     utils::{TowerClient, tower_client::CommonErrorExt},
 };
+use flow_lib_solana::is_same_message_logic;
 use futures_channel::{mpsc, oneshot};
 use futures_util::{TryFutureExt, future::BoxFuture};
 use hashbrown::HashMap;
