@@ -3015,7 +3015,6 @@ dependencies = [
  "solana-signature",
  "solana-signer",
  "solana-transaction",
- "solana-transaction-status",
  "spo-helius",
  "thiserror 1.0.69",
  "tokio",
