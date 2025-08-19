@@ -3002,7 +3002,6 @@ dependencies = [
  "solana-rpc-client-api",
  "solana-signature",
  "solana-signer",
- "spo-helius",
  "thiserror 1.0.69",
  "tokio",
  "tower",

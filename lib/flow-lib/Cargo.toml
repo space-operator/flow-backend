@@ -5,7 +5,6 @@ edition = "2024"
 
 [dependencies]
 value.workspace = true
-spo-helius.workspace = true
 
 anyhow = "1.0"
 inventory = "0.3"
