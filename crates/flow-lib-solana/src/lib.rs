@@ -387,7 +387,7 @@ async fn insert_priority_fee(
 
     let mut inserted = 0;
 
-    if config.compute_budget != InsertionBehavior::No && contains_set_compute_unit_limit(i) {
+    if config.compute_budget != InsertionBehavior::No && !contains_set_compute_unit_limit(i) {
         let compute_units = if let InsertionBehavior::Value(x) = config.compute_budget {
             x
         } else {
@@ -910,9 +910,9 @@ mod tests {
     };
     use flow_lib::solana::WalletOrPubkey;
     // use base64::prelude::*;
+    use solana_keypair::Keypair;
     use solana_program::{pubkey, system_instruction::transfer};
     use std::collections::HashMap;
-    use solana_keypair::Keypair;
     use value::Value;
 
     #[test]
@@ -986,6 +986,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_build_message() {
+        tracing_subscriber::fmt::try_init().ok();
+
         let from = Keypair::new();
         let to = Pubkey::new_unique();
 
