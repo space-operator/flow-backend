@@ -164,13 +164,15 @@ pub mod get_jwt {
 pub mod signer {
     use crate::{
         FlowRunId,
-        solana::{Pubkey, SdkPresigner, Signature},
         utils::{TowerClient, tower_client::CommonError},
     };
     use actix::MailboxError;
     use chrono::{DateTime, Utc};
     use serde::{Deserialize, Serialize};
     use serde_with::{DisplayFromStr, DurationSecondsWithFrac, base64::Base64, serde_as};
+    use solana_presigner::Presigner as SdkPresigner;
+    use solana_pubkey::Pubkey;
+    use solana_signature::Signature;
     use std::time::Duration;
     use thiserror::Error as ThisError;
 
@@ -242,8 +244,7 @@ pub mod signer {
 /// Output values and Solana instructions to be executed.
 pub mod execute {
     use crate::{
-        FlowRunId, SolanaNet,
-        solana::{ExecutionConfig, Instructions},
+        solana::Instructions,
         utils::{
             TowerClient,
             tower_client::{CommonError, CommonErrorExt},
@@ -255,7 +256,7 @@ pub mod execute {
     use solana_program::{
         instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
     };
-    use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
+
     use solana_rpc_client_api::client_error::Error as ClientError;
     use solana_signature::Signature;
     use solana_signer::SignerError;
@@ -359,7 +360,7 @@ pub mod execute {
         InsufficientSolanaBalance { needed: u64, balance: u64 },
         #[error("transaction simulation failed")]
         TxSimFailed,
-        #[error("{}", crate::solana::verbose_solana_error(.error))]
+        #[error("{}", crate::utils::verbose_solana_error(.error))]
         Solana {
             #[source]
             error: Arc<ClientError>,
@@ -427,30 +428,6 @@ pub mod execute {
         fn from(value: SanitizeError) -> Self {
             Error::SanitizeError(Arc::new(value))
         }
-    }
-
-    pub fn simple(
-        rpc: Arc<SolanaClient>,
-        network: SolanaNet,
-        signer: signer::Svc,
-        flow_run_id: Option<FlowRunId>,
-        config: ExecutionConfig,
-    ) -> Svc {
-        let handle = move |req: Request| {
-            let rpc = rpc.clone();
-            let signer = signer.clone();
-            let config = config.clone();
-            async move {
-                Ok(Response {
-                    signature: Some(
-                        req.instructions
-                            .execute(&rpc, network, signer, flow_run_id, config)
-                            .await?,
-                    ),
-                })
-            }
-        };
-        Svc::new(tower::service_fn(handle))
     }
 }
 

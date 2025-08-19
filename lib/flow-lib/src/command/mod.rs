@@ -33,7 +33,7 @@ pub mod prelude {
         },
         config::{client::NodeData, node::Permissions},
         context::CommandContext,
-        solana::{Instructions, Keypair, Pubkey, Signature},
+        solana::Instructions,
     };
     pub use async_trait::async_trait;
     pub use bytes::Bytes;
@@ -41,6 +41,9 @@ pub mod prelude {
     pub use serde::{Deserialize, Serialize};
     pub use serde_json::Value as JsonValue;
     pub use serde_with::serde_as;
+    pub use solana_keypair::Keypair;
+    pub use solana_pubkey::Pubkey;
+    pub use solana_signature::Signature;
     pub use thiserror::Error as ThisError;
     pub use value::{
         self, Decimal, Value,

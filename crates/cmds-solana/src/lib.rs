@@ -48,7 +48,7 @@ pub mod prelude {
     pub use flow_lib::{
         CmdInputDescription as CmdInput, CmdOutputDescription as CmdOutput, SolanaNet,
         command::prelude::*,
-        solana::{Instructions, KeypairExt, Wallet},
+        solana::{Instructions, Wallet},
     };
     pub use solana_program::instruction::Instruction;
     pub use solana_rpc_client::nonblocking::rpc_client::RpcClient;

@@ -1,11 +1,11 @@
 use super::Error;
 use super::{Pubkey, Signature};
-use crate::context::signer::Presigner;
-use crate::utils::tower_client::CommonErrorExt;
 use agave_feature_set::FeatureSet;
 use agave_precompiles::verify_if_precompile;
 use anyhow::{anyhow, bail};
 use base64::prelude::*;
+use flow_lib::context::signer::Presigner;
+use flow_lib::utils::tower_client::CommonErrorExt;
 use nom::{
     IResult,
     bytes::complete::take,
@@ -17,8 +17,7 @@ use solana_program::message::AddressLookupTableAccount;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::{
     client_error::{Error as ClientError, ErrorKind as ClientErrorKind},
-    request::{RpcError, RpcResponseErrorData},
-    response::RpcSimulateTransactionResult,
+    request::RpcError,
 };
 use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
@@ -100,32 +99,6 @@ pub fn parse_rpc_memo_field(s: &str) -> Result<Vec<String>, anyhow::Error> {
     match parse_rpc_memo_field_impl(s) {
         Ok((_, vec)) => Ok(vec),
         Err(err) => Err(err.to_owned().into()),
-    }
-}
-
-pub fn verbose_solana_error(err: &ClientError) -> String {
-    use std::fmt::Write;
-    if let ClientErrorKind::RpcError(RpcError::RpcResponseError {
-        code,
-        message,
-        data,
-    }) = &err.kind
-    {
-        let mut s = String::new();
-        writeln!(s, "{message} ({code})").unwrap();
-        if let RpcResponseErrorData::SendTransactionPreflightFailure(
-            RpcSimulateTransactionResult {
-                logs: Some(logs), ..
-            },
-        ) = data
-        {
-            for (i, log) in logs.iter().enumerate() {
-                writeln!(s, "{}: {}", i + 1, log).unwrap();
-            }
-        }
-        s
-    } else {
-        err.to_string()
     }
 }
 
