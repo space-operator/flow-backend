@@ -187,7 +187,7 @@ serde_conv!(AsInstruction, Instruction, instruction_ser, instruction_de);
 
 #[serde_as]
 #[derive(
-    Serialize, Deserialize, Debug, Default, bon::Builder, bincode::Encode, bincode::Decode,
+    Serialize, Deserialize, Debug, Clone, Default, bon::Builder, bincode::Encode, bincode::Decode,
 )]
 pub struct Instructions {
     #[serde_as(as = "AsPubkey")]

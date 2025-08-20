@@ -17,7 +17,7 @@ use flow_lib::{
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet},
     utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
 };
-use flow_lib_solana::{find_failed_instruction, simple_execute_svc, InstructionsExt};
+use flow_lib_solana::{InstructionsExt, find_failed_instruction, simple_execute_svc};
 use futures::{
     FutureExt, StreamExt,
     channel::{mpsc, oneshot},
@@ -1447,7 +1447,10 @@ impl FlowGraph {
                             s.flow_error(error);
                         }
                     }
-                    s.stop.token.cancel();
+                    // all currently running nodes are in "waiting" State
+                    // in `collect_and_execute_instructions`, we sent an error response
+                    // so we can wait for them to stop manually
+                    // s.stop.token.cancel();
                     continue;
                 }
             }
@@ -1525,7 +1528,7 @@ impl FlowGraph {
                 s.result.output.insert(name.clone(), value);
             }
         }
-        if let Some(ins) = s.result.instructions.take() {
+        if let Some(ins) = s.result.instructions.clone() {
             let fee_payer = ins.fee_payer;
             if !s.result.output.contains_key("transaction") {
                 match ins
