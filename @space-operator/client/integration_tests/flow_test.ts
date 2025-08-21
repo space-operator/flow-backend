@@ -107,6 +107,7 @@ Deno.test("interflow_instructions", async () => {
 
   const result = await owner.getFlowOutput(flow_run_id);
   const { ins } = result.toJSObject();
+  console.log(ins);
   assert(ins != null);
 
   const jwt = await owner.claimToken();
