@@ -19,8 +19,8 @@ export async function checkNoErrors(
     .not("errors", "is", "null");
   if (flowErrors.error) throw new Error(JSON.stringify(flowErrors.error));
   const errors = [
-    ...flowErrors.data.flatMap((row) => row.errors),
-    ...nodeErrors.data.flatMap((row) => row.errors),
+    ...flowErrors.data.flatMap((row) => ({ errors: row.errors, id: runId })),
+    ...nodeErrors.data.flatMap((row) => ({ errors: row.errors, id: runId })),
   ];
   if (errors.length > 0) throw new Error(JSON.stringify(errors));
 }
