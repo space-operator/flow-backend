@@ -3,7 +3,7 @@ import * as client from "../src/mod.ts";
 import * as dotenv from "jsr:@std/dotenv";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { assert, assertEquals } from "jsr:@std/assert";
-import { checkNoErrors, checkNoFlowErrors } from "./utils.ts";
+import { checkNoErrors } from "./utils.ts";
 
 dotenv.loadSync({
   export: true,
@@ -115,5 +115,5 @@ Deno.test("interflow_instructions", async () => {
     auth: { autoRefreshToken: false },
   });
   await sup.auth.setSession(jwt);
-  await checkNoFlowErrors(sup, flow_run_id); // there are node errors
+  await checkNoErrors(sup, flow_run_id); // there are node errors
 });

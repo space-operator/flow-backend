@@ -240,6 +240,7 @@ pub struct EdgeValue {
 
 #[derive(Debug)]
 struct State {
+    early_return: bool,
     flow_run_id: FlowRunId,
     previous_values: HashMap<NodeId, Vec<Value>>,
     flow_inputs: value::Map,
@@ -972,6 +973,11 @@ impl FlowGraph {
                 }
             }
             Err(error) => {
+                if let Some(execute_error) = error.downcast_ref::<execute::Error>() {
+                    if matches!(execute_error, execute::Error::Collected) {
+                        return;
+                    }
+                }
                 let err_str = error.to_string();
                 o.resp.send(Err(execute::Error::from_anyhow(error))).ok();
                 node_error(&s.event_tx, &mut s.result, info.id, info.times, err_str);
@@ -1013,7 +1019,7 @@ impl FlowGraph {
                         (!o.optional && !output.contains_key(&o.name)).then_some(o.name)
                     })
                     .collect::<Vec<String>>();
-                if !missing.is_empty() {
+                if !missing.is_empty() && !s.early_return {
                     node_error(
                         &s.event_tx,
                         &mut s.result,
@@ -1149,8 +1155,9 @@ impl FlowGraph {
                     // this flow is an "Interflow instructions"
                     if self.output_instructions {
                         for resp in resp {
-                            resp.sender.send(Err(execute::Error::Canceled(None))).ok();
+                            resp.sender.send(Err(execute::Error::Collected)).ok();
                         }
+                        s.early_return = true;
                         return ControlFlow::Break(Ok(ins));
                     }
                     let res = if s.stop.token.is_cancelled() {
@@ -1319,6 +1326,7 @@ impl FlowGraph {
 
         let (out_tx, out_rx) = mpsc::unbounded::<PartialOutput>();
         let mut s = State {
+            early_return: false,
             flow_run_id,
             previous_values,
             flow_inputs,
@@ -1483,7 +1491,7 @@ impl FlowGraph {
             .iter()
             .filter(|(_, e)| !e.is_empty())
             .count();
-        if failed > 0 {
+        if failed > 0 && !s.early_return {
             s.flow_error(format!("{failed} nodes failed"));
         }
 
