@@ -32,7 +32,7 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
         .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
         .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
-    cmd!(sh, "./import-data.ts").run()?;
+    cmd!(sh, "./import-data.ts --file=export.json").run()?;
 
     sh.change_dir(&meta.workspace_root);
     sh.change_dir("@space-operator/client");
