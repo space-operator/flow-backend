@@ -1149,7 +1149,7 @@ impl FlowGraph {
                     // this flow is an "Interflow instructions"
                     if self.output_instructions {
                         for resp in resp {
-                            resp.sender.send(Err(execute::Error::Canceled(None))).ok();
+                            resp.sender.send(Err(execute::Error::Collected)).ok();
                         }
                         return ControlFlow::Break(Ok(ins));
                     }

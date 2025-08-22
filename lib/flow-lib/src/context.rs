@@ -352,6 +352,8 @@ pub mod execute {
     pub enum Error {
         #[error("canceled {}", unwrap(.0))]
         Canceled(Option<String>),
+        #[error("collected")]
+        Collected,
         #[error("some node failed to provide instructions")]
         TxIncomplete,
         #[error("time out")]
