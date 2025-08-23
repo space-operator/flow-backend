@@ -12,7 +12,7 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
 }
 
 async fn key_info(
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
     apikey: Auth<auth_v1::ApiKey>,
 ) -> Result<web::Json<Output>, Error> {
     let user_id = db

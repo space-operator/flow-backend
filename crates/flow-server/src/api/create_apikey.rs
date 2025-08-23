@@ -25,7 +25,7 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
 async fn create_key(
     params: web::Json<Params>,
     user: Auth<auth_v1::Jwt>,
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
 ) -> Result<web::Json<Output>, Error> {
     let Params { name } = params.into_inner();
     let r = db

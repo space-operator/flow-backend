@@ -56,7 +56,7 @@ fn process_error(e: DbError) -> Error {
 async fn create_store(
     params: web::Json<Params>,
     user: Auth<auth_v1::AuthenticatedUser>,
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
 ) -> Result<web::Json<Success>, Error> {
     let params = params.into_inner();
     check_store_name(&params.store).map_err(|e| Error::custom(StatusCode::BAD_REQUEST, e))?;

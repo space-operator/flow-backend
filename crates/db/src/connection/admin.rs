@@ -1,6 +1,6 @@
 use crate::{
     Error, FlowRunLogsRow, LocalStorage, config::EncryptionKey, connection::csv_export::write_df,
-    local_storage::CacheBucket, pool::RealDbPool,
+    local_storage::CacheBucket, pool::DbPool,
 };
 use anyhow::anyhow;
 use bytes::Bytes;
@@ -22,7 +22,7 @@ use value::Value;
 use super::{DbClient, ExportedUserData};
 
 pub struct AdminConn {
-    pub(crate) pool: RealDbPool,
+    pub(crate) pool: DbPool,
     pub(crate) local: LocalStorage,
 }
 
@@ -59,7 +59,7 @@ impl CacheBucket for UserIdCache {
 }
 
 impl AdminConn {
-    pub fn new(pool: RealDbPool, local: LocalStorage) -> AdminConn {
+    pub fn new(pool: DbPool, local: LocalStorage) -> AdminConn {
         Self { pool, local }
     }
 

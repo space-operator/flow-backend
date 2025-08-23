@@ -392,7 +392,7 @@ fn row_to_flow_row(r: tokio_postgres::Row) -> crate::Result<FlowRow> {
 
 impl UserConnection {
     pub fn new(
-        pool: RealDbPool,
+        pool: DbPool,
         wasm_storage: WasmStorage,
         user_id: Uuid,
         local: LocalStorage,

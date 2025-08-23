@@ -36,7 +36,7 @@ fn parse_error(e: DbError) -> Error {
 async fn write_item(
     params: web::Json<Params>,
     user: Auth<auth_v1::AuthenticatedUser>,
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
 ) -> Result<web::Json<Output>, Error> {
     let old_value = db
         .get_admin_conn()

@@ -7,7 +7,7 @@ use actix_web::{
 use command_rpc::flow_side::address_book::BaseAddressBook;
 use db::{
     LocalStorage, WasmStorage,
-    pool::{DbPool, RealDbPool},
+    pool::DbPool,
 };
 use flow_lib::{command::CommandFactory, utils::TowerClient};
 use flow_server::{
@@ -91,7 +91,7 @@ async fn main() {
 
     let pool_size = config.db.max_pool_size;
 
-    let db = match RealDbPool::new(&config.db, wasm_storage.clone(), local)
+    let db = match DbPool::new(&config.db, wasm_storage.clone(), local)
         .await
         .map(DbPool::Real)
     {

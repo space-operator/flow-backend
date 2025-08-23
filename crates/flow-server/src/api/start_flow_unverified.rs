@@ -42,7 +42,7 @@ async fn start_flow_unverified(
     params: Option<web::Json<Params>>,
     user: Auth<auth_v1::Unverified>,
     sup: web::Data<SupabaseAuth>,
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
     sig: web::Data<SignatureAuth>,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
