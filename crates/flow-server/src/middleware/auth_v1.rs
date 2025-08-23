@@ -149,6 +149,15 @@ impl AuthV1 {
         })
     }
 
+    pub async fn apikey_authenticate(&self, key: &str) -> Result<ApiKey, AuthError> {
+        if key.starts_with(apikey::KEY_PREFIX) {
+            let key = apikey_verify_inner(key, self).await?;
+            Ok(key)
+        } else {
+            Err(AuthError::InvalidFormat)
+        }
+    }
+
     pub async fn ws_authenticate(
         &self,
         token: &str,
@@ -233,8 +242,10 @@ impl Identity for Jwt {
 
 #[derive(Getters)]
 pub struct ApiKey {
-    #[get = "pub"]
-    key: String,
+    // don't store the key if not needed
+    // prevent accidental leak
+    // #[get = "pub"]
+    // key: String,
     #[get = "pub"]
     user_id: UserId,
     #[get = "pub"]
@@ -247,7 +258,7 @@ async fn apikey_verify_inner(key: &str, auth: &AuthV1) -> Result<ApiKey, AuthErr
     let conn = auth.pool.get_admin_conn().await?;
     let user = conn.get_user_from_apikey(key).await?;
     Ok(ApiKey {
-        key: key.to_owned(),
+        // key: key.to_owned(),
         user_id: user.user_id,
         pubkey: user.pubkey,
     })
