@@ -6,9 +6,12 @@ use std::{
 use command_rpc::flow_side::address_book::authenticate;
 use tower::Service;
 
-#[derive(Debug, Clone, bon::Builder)]
+use crate::middleware::auth_v1;
+
+#[derive(Clone, bon::Builder)]
 pub struct WorkerAuthenticate {
     trusted: BTreeSet<iroh::PublicKey>,
+    auth: auth_v1::AuthV1,
 }
 
 impl Service<authenticate::Request> for WorkerAuthenticate {
@@ -27,9 +30,8 @@ impl Service<authenticate::Request> for WorkerAuthenticate {
 
     fn call(&mut self, req: authenticate::Request) -> Self::Future {
         if self.trusted.contains(&req) {
-            ready(Ok(authenticate::Response {}))
-        } else {
-            ready(Err(anyhow::anyhow!("failed")))
+            return ready(Ok(authenticate::Response {}));
         }
+        ready(Err(anyhow::anyhow!("failed")))
     }
 }

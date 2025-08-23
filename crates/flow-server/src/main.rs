@@ -127,14 +127,22 @@ async fn main() {
 
     let store = RequestStore::new_app_data();
 
-    let base_book = BaseAddressBook::new(
-        command_rpc::flow_side::address_book::ServerConfig {
-            secret_key: config.iroh_secret_key.clone(),
-        },
-        TowerClient::new(WorkerAuthenticate::builder().trusted([].into()).build()),
-    )
-    .await
-    .unwrap();
+    let base_book = {
+        let auth = auth_v1::AuthV1::new(&config, &db).unwrap();
+        BaseAddressBook::new(
+            command_rpc::flow_side::address_book::ServerConfig {
+                secret_key: config.iroh_secret_key.clone(),
+            },
+            TowerClient::new(
+                WorkerAuthenticate::builder()
+                    .trusted([].into())
+                    .auth(auth)
+                    .build(),
+            ),
+        )
+        .await
+        .unwrap()
+    };
 
     tracing::info!("iroh node ID: {}", config.iroh_secret_key.public());
 

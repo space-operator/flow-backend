@@ -114,15 +114,12 @@ impl ResponseError for AuthError {
 }
 
 pub fn configure(cfg: &mut ServiceConfig, server_config: &crate::Config, db: &DbPool) {
-    let Some(ref jwt_key) = server_config.supabase.jwt_key else {
-        return;
-    };
-    let hmac = Hmac::new_from_slice(jwt_key.as_bytes()).unwrap();
-    let sig = SignatureAuth::new(server_config.blake3_key);
-    let state = AuthV1 {
-        hmac,
-        pool: db.clone(),
-        sig,
+    let state = match AuthV1::new(server_config, db) {
+        Ok(state) => state,
+        Err(error) => {
+            tracing::error!("could not build auth_v1 middleware: {}", error);
+            return;
+        }
     };
     cfg.app_data(web::ThinData(state));
 }
@@ -134,7 +131,24 @@ pub struct AuthV1 {
     sig: SignatureAuth,
 }
 
+#[derive(ThisError, Debug)]
+#[error("supabase.jwt_key not found in config")]
+pub struct ConfigError;
+
 impl AuthV1 {
+    pub fn new(server_config: &crate::Config, db: &DbPool) -> Result<Self, ConfigError> {
+        let Some(ref jwt_key) = server_config.supabase.jwt_key else {
+            return Err(ConfigError);
+        };
+        let hmac = Hmac::new_from_slice(jwt_key.as_bytes()).unwrap();
+        let sig = SignatureAuth::new(server_config.blake3_key);
+        Ok(AuthV1 {
+            hmac,
+            pool: db.clone(),
+            sig,
+        })
+    }
+
     pub async fn ws_authenticate(
         &self,
         token: &str,
