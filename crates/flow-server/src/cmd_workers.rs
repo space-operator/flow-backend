@@ -26,13 +26,10 @@ impl Service<authenticate::Request> for WorkerAuthenticate {
     }
 
     fn call(&mut self, req: authenticate::Request) -> Self::Future {
-        ready(Ok(authenticate::Response {}))
-        /*
         if self.trusted.contains(&req) {
             ready(Ok(authenticate::Response {}))
         } else {
             ready(Err(anyhow::anyhow!("failed")))
         }
-        */
     }
 }
