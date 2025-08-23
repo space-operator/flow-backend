@@ -43,7 +43,7 @@ pub mod prelude {
     pub use db::{
         Error as DbError,
         connection::{UserConnection, UserConnectionTrait},
-        pool::{DbPool, RealDbPool},
+        pool::DbPool,
     };
     pub use flow_lib::{FlowId, FlowRunId, UserId, ValueSet};
     pub use serde::{Deserialize, Serialize};

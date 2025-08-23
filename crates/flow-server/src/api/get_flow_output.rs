@@ -13,7 +13,7 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
 async fn get_flow_output(
     run_id: web::Path<FlowRunId>,
     auth: AuthEither<auth_v1::AuthenticatedUser, auth_v1::FlowRunToken>,
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
 ) -> Result<web::Json<value::Value>, Error> {
     let run_id = run_id.into_inner();
     if !auth.can_access_flow_run(run_id, &db).await? {

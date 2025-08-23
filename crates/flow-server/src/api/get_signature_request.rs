@@ -48,7 +48,7 @@ async fn exists(
 async fn get_signature_request(
     run_id: web::Path<FlowRunId>,
     auth: AuthEither<auth_v1::AuthenticatedUser, auth_v1::FlowRunToken>,
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
 ) -> Result<web::Json<SignatureRequest>, Error> {
     let run_id = run_id.into_inner();
     if !auth.can_access_flow_run(run_id, &db).await? {

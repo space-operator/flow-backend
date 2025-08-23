@@ -137,6 +137,14 @@ where
 
 #[async_trait(?Send)]
 impl UserConnectionTrait for UserConnection {
+    async fn create_apikey(&self, name: &str) -> Result<(APIKey, String), Error<NameConflict>> {
+        self.create_apikey_impl(name).await
+    }
+
+    async fn delete_apikey(&self, key_hash: &str) -> crate::Result<()> {
+        self.delete_apikey_impl(key_hash).await
+    }
+
     async fn get_wallet_by_pubkey(&self, pubkey: &[u8; 32]) -> crate::Result<Wallet> {
         // TODO: caching
         let w = self.get_encrypted_wallet_by_pubkey(pubkey).await?;
@@ -392,7 +400,7 @@ fn row_to_flow_row(r: tokio_postgres::Row) -> crate::Result<FlowRow> {
 
 impl UserConnection {
     pub fn new(
-        pool: RealDbPool,
+        pool: DbPool,
         wasm_storage: WasmStorage,
         user_id: Uuid,
         local: LocalStorage,

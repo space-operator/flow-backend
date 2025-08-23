@@ -11,10 +11,7 @@ use actix_web::{
     web::{self, ServiceConfig},
 };
 use chrono::Utc;
-use db::{
-    apikey,
-    pool::{DbPool, RealDbPool},
-};
+use db::{apikey, pool::DbPool};
 use flow_lib::{FlowRunId, UserId};
 use futures_util::{FutureExt, future::LocalBoxFuture};
 use getset::Getters;
@@ -121,11 +118,10 @@ pub fn configure(cfg: &mut ServiceConfig, server_config: &crate::Config, db: &Db
         return;
     };
     let hmac = Hmac::new_from_slice(jwt_key.as_bytes()).unwrap();
-    let DbPool::Real(pool) = db;
     let sig = SignatureAuth::new(server_config.blake3_key);
     let state = AuthV1 {
         hmac,
-        pool: pool.clone(),
+        pool: db.clone(),
         sig,
     };
     cfg.app_data(web::ThinData(state));
@@ -134,7 +130,7 @@ pub fn configure(cfg: &mut ServiceConfig, server_config: &crate::Config, db: &Db
 #[derive(Clone)]
 pub struct AuthV1 {
     hmac: Hmac<Sha256>,
-    pool: RealDbPool,
+    pool: DbPool,
     sig: SignatureAuth,
 }
 
@@ -410,7 +406,7 @@ impl AuthEither<AuthenticatedUser, FlowRunToken> {
     pub async fn can_access_flow_run(
         &self,
         id: FlowRunId,
-        pool: &RealDbPool,
+        pool: &DbPool,
     ) -> Result<bool, db::Error> {
         match self {
             AuthEither::One(user) => {

@@ -11,7 +11,7 @@ pub fn service(config: &Config) -> Option<impl HttpServiceFactory + 'static> {
 }
 
 async fn import(
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
     data: web::Json<ExportedUserData>,
 ) -> Result<web::Json<Success>, Error> {
     let data = data.into_inner();

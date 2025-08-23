@@ -5,7 +5,7 @@ use crate::{
 };
 use actix::{Actor, ActorFutureExt, Addr, AsyncContext, ResponseFuture, WrapFuture};
 use chrono::{Duration, Utc};
-use db::{LocalStorage, local_storage::Jwt, pool::RealDbPool};
+use db::{LocalStorage, local_storage::Jwt, pool::DbPool};
 use flow_lib::{UserId, config::Endpoints, context::get_jwt, utils::tower_client::CommonErrorExt};
 use futures_channel::oneshot;
 use futures_util::{FutureExt, future::BoxFuture};
@@ -23,7 +23,7 @@ pub trait ClaimToken: Unpin + 'static {
 pub struct LoginWithAdminCred {
     pub client: reqwest::Client,
     pub user_id: UserId,
-    pub db: RealDbPool,
+    pub db: DbPool,
     pub endpoints: Endpoints,
 }
 

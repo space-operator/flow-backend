@@ -76,7 +76,7 @@ async fn start_deployment(
     query: web::Query<Query>,
     params: actix_web::Result<web::Json<Params>>,
     user: AuthEither<AuthenticatedUser, Unverified>,
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
 
     sup: web::Data<SupabaseAuth>,
     sig: web::Data<SignatureAuth>,

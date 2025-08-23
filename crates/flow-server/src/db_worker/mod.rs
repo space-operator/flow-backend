@@ -4,10 +4,7 @@ use actix::{
     ResponseFuture, WrapFuture, fut::wrap_future,
 };
 use command_rpc::flow_side::address_book::BaseAddressBook;
-use db::{
-    FlowRunLogsRow,
-    pool::{DbPool, RealDbPool},
-};
+use db::{FlowRunLogsRow, pool::DbPool};
 use flow_lib::{
     FlowRunId, UserId,
     config::Endpoints,
@@ -22,7 +19,7 @@ use serde::Serialize;
 use std::{
     convert::Infallible,
     net::SocketAddr,
-    sync::{Arc, atomic::AtomicU64},
+    sync::{Arc, LazyLock, atomic::AtomicU64},
     time::Duration,
 };
 use tokio::sync::broadcast;
@@ -119,13 +116,11 @@ impl DBWorker {
         ctx: &mut actix::Context<Self>,
     ) -> Self {
         let (tx, rx) = mpsc::unbounded();
-        match &db {
-            DbPool::Real(db) => ctx.spawn(wrap_future::<_, Self>(db_copy_in(rx, db.clone())).map(
-                |_, act, _| {
-                    act.done_tx.send(()).ok();
-                },
-            )),
-        };
+        ctx.spawn(
+            wrap_future::<_, Self>(db_copy_in(rx, db.clone())).map(|_, act, _| {
+                act.done_tx.send(()).ok();
+            }),
+        );
 
         Self {
             db,
@@ -268,28 +263,26 @@ impl actix::Message for GetTokenWorker {
 impl actix::Handler<GetTokenWorker> for DBWorker {
     type Result = Result<actix::Addr<TokenWorker>, get_jwt::Error>;
     fn handle(&mut self, msg: GetTokenWorker, _: &mut Self::Context) -> Self::Result {
+        static HTTP: LazyLock<reqwest::Client> = LazyLock::new(Default::default);
+
         let id = msg.user_id;
-        match &self.db {
-            DbPool::Real(db) => {
-                let addr = self.actors.get_or_start(id, {
-                    let user_id = msg.user_id;
-                    let local_db = self.db.get_local().clone();
-                    let endpoints = self.endpoints.clone();
-                    let claim = LoginWithAdminCred {
-                        client: reqwest::Client::new(),
-                        user_id,
-                        db: db.clone(),
-                        endpoints: endpoints.clone(),
-                    };
-                    move || {
-                        TokenWorker::start_in_arbiter(&Arbiter::current(), move |_| {
-                            TokenWorker::new(user_id, local_db, endpoints, claim)
-                        })
-                    }
-                });
-                Ok(addr)
+        let addr = self.actors.get_or_start(id, {
+            let user_id = msg.user_id;
+            let local_db = self.db.get_local().clone();
+            let endpoints = self.endpoints.clone();
+            let claim = LoginWithAdminCred {
+                client: HTTP.clone(),
+                user_id,
+                db: self.db.clone(),
+                endpoints: endpoints.clone(),
+            };
+            move || {
+                TokenWorker::start_in_arbiter(&Arbiter::current(), move |_| {
+                    TokenWorker::new(user_id, local_db, endpoints, claim)
+                })
             }
-        }
+        });
+        Ok(addr)
     }
 }
 
@@ -389,7 +382,7 @@ impl actix::Handler<CopyIn<Vec<FlowRunLogsRow>>> for DBWorker {
     }
 }
 
-async fn db_copy_in(rx: mpsc::UnboundedReceiver<Vec<FlowRunLogsRow>>, db: RealDbPool) {
+async fn db_copy_in(rx: mpsc::UnboundedReceiver<Vec<FlowRunLogsRow>>, db: DbPool) {
     const CHUNK_SIZE: usize = 16;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
 

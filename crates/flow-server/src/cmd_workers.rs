@@ -31,7 +31,7 @@ impl Service<authenticate::Request> for WorkerAuthenticate {
         if self.trusted.contains(&req) {
             ready(Ok(authenticate::Response {}))
         } else {
-            ready(Err(anyhow!("failed")))
+            ready(Err(anyhow::anyhow!("failed")))
         }
         */
     }
