@@ -5,10 +5,7 @@ use actix_web::{
     web,
 };
 use command_rpc::flow_side::address_book::BaseAddressBook;
-use db::{
-    LocalStorage, WasmStorage,
-    pool::DbPool,
-};
+use db::{LocalStorage, WasmStorage, pool::DbPool};
 use flow_lib::{command::CommandFactory, utils::TowerClient};
 use flow_server::{
     Config,
@@ -91,10 +88,7 @@ async fn main() {
 
     let pool_size = config.db.max_pool_size;
 
-    let db = match DbPool::new(&config.db, wasm_storage.clone(), local)
-        .await
-        .map(DbPool::Real)
-    {
+    let db = match DbPool::new(&config.db, wasm_storage.clone(), local).await {
         Ok(db) => db,
         Err(e) => {
             tracing::error!("failed to start database connection pool: {}", e);
@@ -259,14 +253,11 @@ async fn main() {
             .wrap(Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#).exclude("/healthcheck"))
             .app_data(web::Data::new(db.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
-            .app_data(web::Data::new(sig_auth));
+            .app_data(web::Data::new(sig_auth))
+            .app_data(web::Data::new(db.clone()));
         if let Some(auth) = supabase_auth.clone() {
             app = app.app_data(web::Data::new(auth));
         }
-
-        let mut app = match &db {
-            DbPool::Real(db) => app.app_data(web::Data::new(db.clone())),
-        };
 
         if let Some(wallets) = wallets {
             app = app.service(wallets);

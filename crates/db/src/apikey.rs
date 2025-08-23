@@ -133,7 +133,7 @@ fn convert_error(error: Error) -> Error<NameConflict> {
 }
 
 impl UserConnection {
-    pub async fn create_apikey(&self, name: &str) -> Result<(APIKey, String), Error<NameConflict>> {
+    pub(crate) async fn create_apikey_impl(&self, name: &str) -> Result<(APIKey, String), Error<NameConflict>> {
         let mut rng = rand::thread_rng();
         let info = KeyInfo::new(name, self.user_id);
 
@@ -189,7 +189,7 @@ impl UserConnection {
         Ok((key, full_key))
     }
 
-    pub async fn delete_apikey(&self, key_hash: &str) -> crate::Result<()> {
+    pub(crate) async fn delete_apikey_impl(&self, key_hash: &str) -> crate::Result<()> {
         let conn = self.pool.get_conn().await?;
         let affected = conn
             .do_execute(
