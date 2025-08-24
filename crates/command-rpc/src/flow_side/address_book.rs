@@ -31,7 +31,10 @@ pub mod authenticate {
     use flow_lib::utils::TowerClient;
     use tower::service_fn;
 
-    pub type Request = iroh::PublicKey;
+    pub struct Request {
+        pub pubkey: iroh::PublicKey,
+        pub apikey: Option<String>,
+    }
 
     pub struct Response {}
 
@@ -172,7 +175,14 @@ async fn spawn_rpc_system_handle(
 ) -> Result<JoinHandle<Result<(), capnp::Error>>, anyhow::Error> {
     let conn = incoming.await?;
     let remote_node_id = conn.remote_node_id()?;
-    book.auth.ready().await?.call(remote_node_id).await?;
+    book.auth
+        .ready()
+        .await?
+        .call(authenticate::Request {
+            pubkey: remote_node_id,
+            apikey: None,
+        })
+        .await?;
     let client: Client = capnp_rpc::new_client(AddressBookConnection {
         book,
         remote_node_id,
