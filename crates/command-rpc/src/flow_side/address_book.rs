@@ -36,6 +36,7 @@ pub mod authenticate {
         pub apikey: Option<String>,
     }
 
+    #[derive(Clone)]
     pub enum Permission {
         All,
         User(UserId),
@@ -67,6 +68,7 @@ struct Info {
     direct_addresses: BTreeSet<SocketAddr>,
     relay_url: Url,
     availables: CommandIndex<()>,
+    permission: authenticate::Permission,
 }
 
 #[derive(Clone)]
@@ -221,7 +223,8 @@ impl AddressBookConnection {
             .ok()
             .and_then(|key| key.to_str().ok())
             .map(|key| key.to_owned());
-        self.book
+        let permission = self
+            .book
             .auth
             .ready()
             .await?
@@ -229,7 +232,8 @@ impl AddressBookConnection {
                 pubkey: self.remote_node_id,
                 apikey,
             })
-            .await?;
+            .await?
+            .permission;
         tracing::info!(
             "node {} joined, availables: {:?}",
             self.remote_node_id,
@@ -241,6 +245,7 @@ impl AddressBookConnection {
                 direct_addresses,
                 relay_url,
                 availables: availables.into_iter().map(|m| (m, ())).collect(),
+                permission,
             },
         );
         Ok(())
