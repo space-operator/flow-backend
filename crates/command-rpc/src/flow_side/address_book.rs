@@ -28,7 +28,7 @@ pub const ALPN: &[u8] = b"space-operator/capnp-rpc/address-book/0";
 
 /// For command factory authentication
 pub mod authenticate {
-    use flow_lib::utils::TowerClient;
+    use flow_lib::{UserId, utils::TowerClient};
     use tower::service_fn;
 
     pub struct Request {
@@ -36,14 +36,25 @@ pub mod authenticate {
         pub apikey: Option<String>,
     }
 
-    pub struct Response {}
+    pub enum Permission {
+        All,
+        User(UserId),
+    }
+
+    pub struct Response {
+        pub permission: Permission,
+    }
 
     pub type Error = anyhow::Error;
 
     pub type Svc = TowerClient<Request, Response, Error>;
 
     pub fn allow_all() -> Svc {
-        TowerClient::new(service_fn(async |_| Ok(Response {})))
+        TowerClient::new(service_fn(async |_| {
+            Ok(Response {
+                permission: Permission::All,
+            })
+        }))
     }
 }
 
