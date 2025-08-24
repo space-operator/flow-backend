@@ -171,18 +171,10 @@ impl AddressBook {
 
 async fn spawn_rpc_system_handle(
     incoming: Incoming,
-    mut book: BaseAddressBook,
+    book: BaseAddressBook,
 ) -> Result<JoinHandle<Result<(), capnp::Error>>, anyhow::Error> {
     let conn = incoming.await?;
     let remote_node_id = conn.remote_node_id()?;
-    book.auth
-        .ready()
-        .await?
-        .call(authenticate::Request {
-            pubkey: remote_node_id,
-            apikey: None,
-        })
-        .await?;
     let client: Client = capnp_rpc::new_client(AddressBookConnection {
         book,
         remote_node_id,
@@ -205,13 +197,27 @@ struct AddressBookConnection {
 }
 
 impl AddressBookConnection {
-    fn join_impl(&mut self, params: JoinParams) -> Result<(), anyhow::Error> {
+    async fn join_impl(&mut self, params: JoinParams) -> Result<(), anyhow::Error> {
         let params = params.get()?;
         let direct_addresses: BTreeSet<SocketAddr> =
             bincode::decode_from_slice(params.get_direct_addresses()?, standard())?.0;
         let relay_url: Url = params.get_relay_url()?.to_str()?.parse()?;
         let availables: Vec<MatchCommand> =
             bincode::decode_from_slice(params.get_availables()?, standard())?.0;
+        let apikey = params
+            .get_apikey()
+            .ok()
+            .and_then(|key| key.to_str().ok())
+            .map(|key| key.to_owned());
+        self.book
+            .auth
+            .ready()
+            .await?
+            .call(authenticate::Request {
+                pubkey: self.remote_node_id,
+                apikey,
+            })
+            .await?;
         tracing::info!(
             "node {} joined, availables: {:?}",
             self.remote_node_id,
