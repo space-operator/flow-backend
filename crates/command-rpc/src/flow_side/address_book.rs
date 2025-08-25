@@ -4,6 +4,7 @@ use bincode::config::standard;
 use capnp::capability::Promise;
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 use flow_lib::{
+    UserId,
     command::{CommandError, CommandIndex, CommandTrait, MatchCommand},
     config::client::NodeData,
 };
@@ -81,6 +82,7 @@ pub struct BaseAddressBook {
 #[derive(Clone)]
 pub struct AddressBook {
     base: BaseAddressBook,
+    user_id: Option<UserId>,
     // TODO: share this across cloned instances?
     clients: BTreeMap<iroh::PublicKey, command_factory::Client>,
 }
@@ -123,9 +125,10 @@ impl BaseAddressBook {
 }
 
 impl AddressBook {
-    pub fn new(base: BaseAddressBook) -> Self {
+    pub fn new(base: BaseAddressBook, user_id: Option<UserId>) -> Self {
         Self {
             base,
+            user_id,
             clients: Default::default(),
         }
     }
@@ -138,7 +141,14 @@ impl AddressBook {
             let factories_lock = self.base.factories.read().unwrap();
             let factories = factories_lock
                 .iter()
-                .filter(|(_, v)| v.availables.get(nd.r#type, &nd.node_id).is_some())
+                .filter(|(_, v)| {
+                    let can_use = match v.permission {
+                        authenticate::Permission::All => true,
+                        authenticate::Permission::User(id) => Some(id) == self.user_id,
+                    };
+                    let contain = v.availables.get(nd.r#type, &nd.node_id).is_some();
+                    can_use && contain
+                })
                 .collect::<Vec<_>>();
             let (id, info) = factories
                 .choose(&mut thread_rng())

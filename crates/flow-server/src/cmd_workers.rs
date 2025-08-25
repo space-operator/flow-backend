@@ -7,12 +7,12 @@ use command_rpc::flow_side::address_book::authenticate;
 use futures_util::future::{self, BoxFuture};
 use tower::Service;
 
-use crate::{api, middleware::auth_v1};
+use crate::middleware::auth_v1::AuthV1;
 
 #[derive(Clone, bon::Builder)]
 pub struct WorkerAuthenticate {
     trusted: BTreeSet<iroh::PublicKey>,
-    auth: auth_v1::AuthV1,
+    auth: AuthV1,
 }
 
 impl Service<authenticate::Request> for WorkerAuthenticate {
