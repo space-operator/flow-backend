@@ -647,7 +647,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
         let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
-        let remotes = AddressBook::new(self.remote_command_address_book.clone());
+        let remotes = AddressBook::new(self.remote_command_address_book.clone(), Some(user_id));
         Box::pin(async move {
             if msg.user.id != user_id {
                 return Err(StartError::Unauthorized);
@@ -743,7 +743,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
-        let remotes = AddressBook::new(self.remote_command_address_book.clone());
+        let remotes = AddressBook::new(self.remote_command_address_book.clone(), Some(user_id));
         Box::pin(async move {
             let wrk = root.send(GetTokenWorker { user_id }).await??;
 

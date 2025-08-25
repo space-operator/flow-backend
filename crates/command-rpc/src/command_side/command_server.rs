@@ -29,6 +29,7 @@ pub struct Config {
     pub flow_server: FlowServerConfig,
     #[serde_as(as = "Option<DisplayFromStr>")]
     pub secret_key: Option<iroh::SecretKey>,
+    pub apikey: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -109,7 +110,12 @@ pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Err
         )
         .await?;
         client
-            .join(direct_addresses.clone(), relay_url.clone(), &availables)
+            .join(
+                direct_addresses.clone(),
+                relay_url.clone(),
+                &availables,
+                config.apikey.clone(),
+            )
             .await?;
         clients.push(client);
         tracing::info!("joined {}", addr.node_id);

@@ -1,9 +1,10 @@
-use crate::connect_generic_futures_io;
+use crate::{anyhow2capnp, connect_generic_futures_io};
 use anyhow::Context;
 use bincode::config::standard;
 use capnp::capability::Promise;
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 use flow_lib::{
+    UserId,
     command::{CommandError, CommandIndex, CommandTrait, MatchCommand},
     config::client::NodeData,
 };
@@ -28,19 +29,34 @@ pub const ALPN: &[u8] = b"space-operator/capnp-rpc/address-book/0";
 
 /// For command factory authentication
 pub mod authenticate {
-    use flow_lib::utils::TowerClient;
+    use flow_lib::{UserId, utils::TowerClient};
     use tower::service_fn;
 
-    pub type Request = iroh::PublicKey;
+    pub struct Request {
+        pub pubkey: iroh::PublicKey,
+        pub apikey: Option<String>,
+    }
 
-    pub struct Response {}
+    #[derive(Clone)]
+    pub enum Permission {
+        All,
+        User(UserId),
+    }
+
+    pub struct Response {
+        pub permission: Permission,
+    }
 
     pub type Error = anyhow::Error;
 
     pub type Svc = TowerClient<Request, Response, Error>;
 
     pub fn allow_all() -> Svc {
-        TowerClient::new(service_fn(async |_| Ok(Response {})))
+        TowerClient::new(service_fn(async |_| {
+            Ok(Response {
+                permission: Permission::All,
+            })
+        }))
     }
 }
 
@@ -53,6 +69,7 @@ struct Info {
     direct_addresses: BTreeSet<SocketAddr>,
     relay_url: Url,
     availables: CommandIndex<()>,
+    permission: authenticate::Permission,
 }
 
 #[derive(Clone)]
@@ -65,6 +82,7 @@ pub struct BaseAddressBook {
 #[derive(Clone)]
 pub struct AddressBook {
     base: BaseAddressBook,
+    user_id: Option<UserId>,
     // TODO: share this across cloned instances?
     clients: BTreeMap<iroh::PublicKey, command_factory::Client>,
 }
@@ -107,9 +125,10 @@ impl BaseAddressBook {
 }
 
 impl AddressBook {
-    pub fn new(base: BaseAddressBook) -> Self {
+    pub fn new(base: BaseAddressBook, user_id: Option<UserId>) -> Self {
         Self {
             base,
+            user_id,
             clients: Default::default(),
         }
     }
@@ -122,7 +141,14 @@ impl AddressBook {
             let factories_lock = self.base.factories.read().unwrap();
             let factories = factories_lock
                 .iter()
-                .filter(|(_, v)| v.availables.get(nd.r#type, &nd.node_id).is_some())
+                .filter(|(_, v)| {
+                    let can_use = match v.permission {
+                        authenticate::Permission::All => true,
+                        authenticate::Permission::User(id) => Some(id) == self.user_id,
+                    };
+                    let contain = v.availables.get(nd.r#type, &nd.node_id).is_some();
+                    can_use && contain
+                })
                 .collect::<Vec<_>>();
             let (id, info) = factories
                 .choose(&mut thread_rng())
@@ -168,11 +194,10 @@ impl AddressBook {
 
 async fn spawn_rpc_system_handle(
     incoming: Incoming,
-    mut book: BaseAddressBook,
+    book: BaseAddressBook,
 ) -> Result<JoinHandle<Result<(), capnp::Error>>, anyhow::Error> {
     let conn = incoming.await?;
     let remote_node_id = conn.remote_node_id()?;
-    book.auth.ready().await?.call(remote_node_id).await?;
     let client: Client = capnp_rpc::new_client(AddressBookConnection {
         book,
         remote_node_id,
@@ -189,19 +214,36 @@ async fn spawn_rpc_system_handle(
     Ok(spawn_local(rpc_system))
 }
 
+#[derive(Clone)]
 struct AddressBookConnection {
     book: BaseAddressBook,
     remote_node_id: iroh::PublicKey,
 }
 
 impl AddressBookConnection {
-    fn join_impl(&mut self, params: JoinParams) -> Result<(), anyhow::Error> {
+    async fn join_impl(&mut self, params: JoinParams) -> Result<(), anyhow::Error> {
         let params = params.get()?;
         let direct_addresses: BTreeSet<SocketAddr> =
             bincode::decode_from_slice(params.get_direct_addresses()?, standard())?.0;
         let relay_url: Url = params.get_relay_url()?.to_str()?.parse()?;
         let availables: Vec<MatchCommand> =
             bincode::decode_from_slice(params.get_availables()?, standard())?.0;
+        let apikey = params
+            .get_apikey()
+            .ok()
+            .and_then(|key| key.to_str().ok())
+            .map(|key| key.to_owned());
+        let permission = self
+            .book
+            .auth
+            .ready()
+            .await?
+            .call(authenticate::Request {
+                pubkey: self.remote_node_id,
+                apikey,
+            })
+            .await?
+            .permission;
         tracing::info!(
             "node {} joined, availables: {:?}",
             self.remote_node_id,
@@ -213,6 +255,7 @@ impl AddressBookConnection {
                 direct_addresses,
                 relay_url,
                 availables: availables.into_iter().map(|m| (m, ())).collect(),
+                permission,
             },
         );
         Ok(())
@@ -235,9 +278,8 @@ impl AddressBookConnection {
 
 impl Server for AddressBookConnection {
     fn join(&mut self, params: JoinParams, _: JoinResults) -> Promise<(), capnp::Error> {
-        self.join_impl(params)
-            .map_err(|error| capnp::Error::failed(error.to_string()))
-            .into()
+        let mut this = self.clone();
+        Promise::from_future(async move { this.join_impl(params).await.map_err(anyhow2capnp) })
     }
 
     fn leave(&mut self, _: LeaveParams, _: LeaveResults) -> Promise<(), capnp::Error> {
@@ -251,6 +293,7 @@ pub trait AddressBookExt {
         direct_addresses: BTreeSet<SocketAddr>,
         relay_url: Url,
         availables: &[MatchCommand],
+        apikey: Option<String>,
     ) -> impl Future<Output = Result<(), anyhow::Error>>;
 
     fn leave(&self) -> impl Future<Output = Result<(), anyhow::Error>>;
@@ -262,6 +305,7 @@ impl AddressBookExt for Client {
         direct_addresses: BTreeSet<SocketAddr>,
         relay_url: Url,
         availables: &[MatchCommand],
+        apikey: Option<String>,
     ) -> Result<(), anyhow::Error> {
         let mut req = self.join_request();
         req.get().set_relay_url(relay_url.as_str());
@@ -269,6 +313,9 @@ impl AddressBookExt for Client {
             .set_availables(&bincode::encode_to_vec(availables, standard())?);
         req.get()
             .set_direct_addresses(&bincode::encode_to_vec(&direct_addresses, standard())?);
+        if let Some(key) = apikey {
+            req.get().set_apikey(&key);
+        }
         req.send().promise.await?;
         Ok(())
     }
