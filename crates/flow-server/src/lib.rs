@@ -187,6 +187,7 @@ pub struct Config {
     pub shutdown_timeout_secs: u16,
     pub helius_api_key: Option<String>,
     pub solana: Option<SolanaConfig>,
+    #[serde(default = "IrohConfig::default")]
     pub iroh: IrohConfig,
 
     #[serde(skip)]
