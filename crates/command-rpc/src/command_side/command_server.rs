@@ -23,9 +23,16 @@ pub enum FlowServerConfig {
     Direct(FlowServerAddress),
 }
 
+fn default_flow_server() -> FlowServerConfig {
+    FlowServerConfig::Info {
+        url: "https://dev-api.spaceoperator.com".parse().unwrap(),
+    }
+}
+
 #[serde_with::serde_as]
 #[derive(Deserialize)]
 pub struct Config {
+    #[serde(default = "default_flow_server")]
     pub flow_server: FlowServerConfig,
     #[serde_as(as = "Option<DisplayFromStr>")]
     pub secret_key: Option<iroh::SecretKey>,
