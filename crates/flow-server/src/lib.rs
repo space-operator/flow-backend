@@ -3,11 +3,11 @@ use anyhow::Context;
 use db::config::{DbConfig, EncryptionKey, SslConfig};
 use flow_lib::config::Endpoints;
 use middleware::req_fn::{self, Function, ReqFn};
-use rand::{Rng, thread_rng};
+use rand::{Rng, rngs::OsRng, thread_rng};
 use serde::Deserialize;
 use serde_with::serde_as;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use std::{path::PathBuf, rc::Rc};
+use std::{collections::BTreeSet, path::PathBuf, rc::Rc};
 use url::Url;
 use user::SignatureAuth;
 
@@ -150,6 +150,27 @@ fn default_db_config() -> DbConfig {
 
 #[serde_as]
 #[derive(Deserialize)]
+pub struct IrohConfig {
+    #[serde_as(as = "serde_with::DisplayFromStr")]
+    #[serde(default = "Config::default_secret_key")]
+    pub secret_key: iroh::SecretKey,
+    #[serde_as(as = "BTreeSet<serde_with::DisplayFromStr>")]
+    #[serde(default)]
+    pub trusted: BTreeSet<iroh::PublicKey>,
+}
+
+impl Default for IrohConfig {
+    fn default() -> Self {
+        Self {
+            secret_key: iroh::SecretKey::generate(&mut OsRng),
+            trusted: BTreeSet::new(),
+        }
+    }
+}
+
+#[serde_as]
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
     #[serde(default = "Config::default_host")]
     pub host: String,
@@ -166,9 +187,7 @@ pub struct Config {
     pub shutdown_timeout_secs: u16,
     pub helius_api_key: Option<String>,
     pub solana: Option<SolanaConfig>,
-    #[serde_as(as = "serde_with::DisplayFromStr")]
-    #[serde(default = "Config::default_secret_key")]
-    pub iroh_secret_key: iroh::SecretKey,
+    pub iroh: IrohConfig,
 
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
@@ -191,10 +210,10 @@ impl Default for Config {
             supabase: SupabaseConfig::default(),
             local_storage: Self::default_local_storage(),
             shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
-            blake3_key: rand::rngs::OsRng.r#gen(),
+            blake3_key: OsRng.r#gen(),
             solana: None,
             helius_api_key: None,
-            iroh_secret_key: iroh::SecretKey::generate(&mut rand::rngs::OsRng),
+            iroh: IrohConfig::default(),
         }
     }
 }
