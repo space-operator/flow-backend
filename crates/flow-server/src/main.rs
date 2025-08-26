@@ -131,11 +131,11 @@ async fn main() {
         let auth = auth_v1::AuthV1::new(&config, &db).unwrap();
         BaseAddressBook::new(
             command_rpc::flow_side::address_book::ServerConfig {
-                secret_key: config.iroh_secret_key.clone(),
+                secret_key: config.iroh.secret_key.clone(),
             },
             TowerClient::new(
                 WorkerAuthenticate::builder()
-                    .trusted([].into())
+                    .trusted(config.iroh.trusted.clone())
                     .auth(auth)
                     .build(),
             ),
@@ -144,7 +144,7 @@ async fn main() {
         .unwrap()
     };
 
-    tracing::info!("iroh node ID: {}", config.iroh_secret_key.public());
+    tracing::info!("iroh node ID: {}", config.iroh.secret_key.public());
 
     let db_worker = DBWorker::create(|ctx| {
         DBWorker::builder()
