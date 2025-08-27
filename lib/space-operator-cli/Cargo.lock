@@ -2669,7 +2669,7 @@ dependencies = [
 
 [[package]]
 name = "space-operator-cli"
-version = "0.8.3"
+version = "0.8.4"
 dependencies = [
  "bon",
  "cargo_metadata",
