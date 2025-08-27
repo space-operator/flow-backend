@@ -37,7 +37,7 @@ pub mod authenticate {
         pub apikey: Option<String>,
     }
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     pub enum Permission {
         All,
         User(UserId),
@@ -245,8 +245,9 @@ impl AddressBookConnection {
             .await?
             .permission;
         tracing::info!(
-            "node {} joined, availables: {:?}",
+            "node {} joined, permission: {:?}, availables: {:?}",
             self.remote_node_id,
+            permission,
             availables
         );
         self.book.factories.write().unwrap().insert(
