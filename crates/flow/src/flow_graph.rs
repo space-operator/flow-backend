@@ -1512,6 +1512,8 @@ impl FlowGraph {
             n.command.destroy().await;
         }
 
+        s.event_tx.close_channel();
+
         s.result
     }
 
