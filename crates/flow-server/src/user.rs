@@ -243,7 +243,7 @@ impl SupabaseAuth {
         let admin_token = HeaderValue::from_str(&format!("Bearer {service_key}"))?;
 
         Ok(Self {
-            client: reqwest::Client::new(),
+            client: crate::HTTP.clone(),
             anon_key: config.anon_key.clone(),
             login_url,
             create_user_url,
