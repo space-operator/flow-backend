@@ -316,7 +316,7 @@ async fn save_to_db(
     const CHUNK_SIZE: usize = 16;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
     let mut stop = false;
-    'LOOP: while let Some(events) = chunks.next().await {
+    while let Some(events) = chunks.next().await {
         let mut logs: Vec<FlowRunLogsRow> = Vec::new();
         let conn = match db.get_user_conn(user_id).await {
             Ok(conn) => conn,

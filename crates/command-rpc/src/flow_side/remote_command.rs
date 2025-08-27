@@ -24,49 +24,12 @@ pub struct RemoteCommand {
 
 impl RemoteCommand {
     pub async fn new(client: command_trait::Client) -> Result<Self, CommandError> {
-        let name = client
-            .name_request()
-            .send()
-            .promise
-            .await?
-            .get()?
-            .get_name()?
-            .to_string()?;
-        let inputs = serde_json::from_slice(
-            client
-                .inputs_request()
-                .send()
-                .promise
-                .await?
-                .get()?
-                .get_inputs()?,
-        )?;
-        let outputs = serde_json::from_slice(
-            client
-                .outputs_request()
-                .send()
-                .promise
-                .await?
-                .get()?
-                .get_outputs()?,
-        )?;
-        let instruction_info = serde_json::from_slice(
-            client
-                .instruction_info_request()
-                .send()
-                .promise
-                .await?
-                .get()?
-                .get_info()?,
-        )?;
-        let permissions = serde_json::from_slice(
-            client
-                .permissions_request()
-                .send()
-                .promise
-                .await?
-                .get()?
-                .get_permissions()?,
+        let (name, inputs, outputs, instruction_info, permissions) = tokio::try_join!(
+            get_name(&client),
+            get_inputs(&client),
+            get_outputs(&client),
+            get_instruction_info(&client),
+            get_permissions(&client)
         )?;
         Ok(RemoteCommand {
             client,
@@ -77,6 +40,76 @@ impl RemoteCommand {
             permissions,
         })
     }
+}
+
+async fn get_permissions(client: &command_trait::Client) -> Result<Permissions, anyhow::Error> {
+    let permissions = serde_json::from_slice(
+        client
+            .permissions_request()
+            .send()
+            .promise
+            .await?
+            .get()?
+            .get_permissions()?,
+    )?;
+    Ok(permissions)
+}
+
+async fn get_outputs(
+    client: &command_trait::Client,
+) -> Result<Vec<CmdOutputDescription>, anyhow::Error> {
+    let outputs = serde_json::from_slice(
+        client
+            .outputs_request()
+            .send()
+            .promise
+            .await?
+            .get()?
+            .get_outputs()?,
+    )?;
+    Ok(outputs)
+}
+
+async fn get_instruction_info(
+    client: &command_trait::Client,
+) -> Result<Option<InstructionInfo>, anyhow::Error> {
+    let instruction_info = serde_json::from_slice(
+        client
+            .instruction_info_request()
+            .send()
+            .promise
+            .await?
+            .get()?
+            .get_info()?,
+    )?;
+    Ok(instruction_info)
+}
+
+async fn get_inputs(
+    client: &command_trait::Client,
+) -> Result<Vec<CmdInputDescription>, anyhow::Error> {
+    let inputs = serde_json::from_slice(
+        client
+            .inputs_request()
+            .send()
+            .promise
+            .await?
+            .get()?
+            .get_inputs()?,
+    )?;
+    Ok(inputs)
+}
+
+async fn get_name(client: &command_trait::Client) -> Result<String, anyhow::Error> {
+    let name = client
+        .name_request()
+        .send()
+        .promise
+        .await?
+        .get()?
+        .get_name()?
+        .to_string()?;
+    Ok(name)
 }
 
 #[async_trait(?Send)]
