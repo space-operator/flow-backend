@@ -43,7 +43,7 @@ pub struct Config {
 pub struct FlowServerAddress {
     pub node_id: iroh::PublicKey,
     pub relay_url: Url,
-    pub direct_addresses: BTreeSet<SocketAddr>,
+    pub direct_addresses: Option<BTreeSet<SocketAddr>>,
 }
 
 #[derive(Deserialize)]
@@ -112,7 +112,7 @@ pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Err
             NodeAddr {
                 node_id: addr.node_id,
                 relay_url: Some(addr.relay_url.clone().into()),
-                direct_addresses: addr.direct_addresses.clone(),
+                direct_addresses: addr.direct_addresses.clone().unwrap_or_default(),
             },
         )
         .await?;

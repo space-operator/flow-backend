@@ -93,7 +93,7 @@ config.supabase.service_key = serviceRoleKey;
 config.supabase.anon_key = anonKey;
 config.db.password = flowRunnerPassword;
 config.db.encryption_key = encryptionKey;
-config.iroh_secret_key = irohSecretKey;
+config.iroh.secret_key = irohSecretKey;
 const configContent = toml.stringify(config) + "\n";
 
 const fileExists: string[] = [];

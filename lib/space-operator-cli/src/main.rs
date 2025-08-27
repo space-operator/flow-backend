@@ -1749,7 +1749,8 @@ async fn start_flow_server(
         let flow_server =
             relative_to_pwd(meta.target_directory.join(build_dir).join("flow-server"));
         let rust_log = std::env::var("RUST_LOG")
-            .unwrap_or_else(|_| "info,actix_web=debug,flow_server=debug,iroh=warn".to_owned());
+            .unwrap_or_else(|_| "info,actix_web=debug,flow_server=debug,iroh=warn,iroh::net_report=error,iroh_quinn_udp=error".to_owned());
+        println!("RUST_LOG={rust_log}");
         cmd!(sh, "{flow_server} {config_path}")
             .env("RUST_LOG", rust_log)
             .run()
