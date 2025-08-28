@@ -26,7 +26,7 @@ async fn claim_token(
     endpoints: web::Data<Endpoints>,
 ) -> Result<web::Json<Output>, Error> {
     let result = LoginWithAdminCred {
-        client: reqwest::Client::new(),
+        client: crate::HTTP.clone(),
         user_id: *user.user_id(),
         db: (**db).clone(),
         endpoints: (**endpoints).clone(),

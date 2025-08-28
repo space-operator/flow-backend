@@ -7,7 +7,7 @@ use rand::{Rng, rngs::OsRng, thread_rng};
 use serde::Deserialize;
 use serde_with::serde_as;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use std::{collections::BTreeSet, path::PathBuf, rc::Rc};
+use std::{collections::BTreeSet, path::PathBuf, rc::Rc, sync::LazyLock};
 use url::Url;
 use user::SignatureAuth;
 
@@ -18,6 +18,8 @@ pub mod error;
 pub mod middleware;
 pub mod user;
 pub mod ws;
+
+pub(crate) static HTTP: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 pub static X_API_KEY: HeaderName = HeaderName::from_static("x-api-key");
 
