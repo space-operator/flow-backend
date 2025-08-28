@@ -1,12 +1,13 @@
 use anyhow::Context;
-use flow_lib::command::CommandFactory;
-use futures::future;
+use flow_lib::command::{CommandFactory, MatchCommand};
 use iroh::Watcher;
 use iroh::{Endpoint, NodeAddr};
 use rand::rngs::OsRng;
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
 use std::{collections::BTreeSet, net::SocketAddr, time::Duration};
+use tokio::task::JoinSet;
+use tokio_util::sync::CancellationToken;
 use url::Url;
 
 use crate::flow_side::address_book::{self, AddressBookExt};
@@ -18,17 +19,32 @@ use super::{
 };
 
 #[derive(Deserialize)]
+pub struct FlowServerConfig {
+    apikey: Option<String>,
+    #[serde(flatten)]
+    address: FlowServerAddressConfig,
+}
+
+impl Default for FlowServerConfig {
+    fn default() -> Self {
+        Self {
+            apikey: None,
+            address: FlowServerAddressConfig::Info {
+                url: "https://dev-api.spaceoperator.com".parse().unwrap(),
+            },
+        }
+    }
+}
+
+#[derive(Deserialize)]
 #[serde(untagged)]
-pub enum FlowServerConfig {
+pub enum FlowServerAddressConfig {
     Info { url: Url },
     Direct(FlowServerAddress),
 }
 
 fn default_flow_server() -> Vec<FlowServerConfig> {
-    [FlowServerConfig::Info {
-        url: "https://dev-api.spaceoperator.com".parse().unwrap(),
-    }]
-    .into()
+    [FlowServerConfig::default()].into()
 }
 
 #[serde_with::serde_as]
@@ -71,31 +87,66 @@ pub fn main() {
     })
 }
 
-pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Error> {
-    let servers =
-        future::try_join_all(
-            config
-                .flow_server
-                .into_iter()
-                .map(async |server| match server {
-                    FlowServerConfig::Info { url } => {
-                        let info_url = url.join("/info")?;
-                        Ok::<_, anyhow::Error>(
-                            reqwest::get(info_url)
-                                .await?
-                                .json::<InfoResponse>()
-                                .await?
-                                .iroh,
-                        )
-                    }
-                    FlowServerConfig::Direct(server) => Ok(server),
-                }),
+pub async fn serve_server(
+    endpoint: Endpoint,
+    config: FlowServerConfig,
+    availables: Vec<MatchCommand>,
+    cancel: CancellationToken,
+) -> Result<(), anyhow::Error> {
+    let server_addr = match config.address {
+        FlowServerAddressConfig::Info { url } => {
+            let info_url = url.join("/info")?;
+            reqwest::get(info_url)
+                .await?
+                .json::<InfoResponse>()
+                .await?
+                .iroh
+        }
+        FlowServerAddressConfig::Direct(server) => server,
+    };
+
+    let direct_addresses: BTreeSet<SocketAddr> = endpoint
+        .direct_addresses()
+        .initialized()
+        .await?
+        .into_iter()
+        .map(|addr| addr.addr)
+        .collect();
+    let relay_url: Url = endpoint.home_relay().initialized().await?.into();
+
+    let client = address_book::connect_iroh(
+        endpoint.clone(),
+        NodeAddr {
+            node_id: server_addr.node_id,
+            relay_url: Some(server_addr.relay_url.clone().into()),
+            direct_addresses: server_addr.direct_addresses.clone().unwrap_or_default(),
+        },
+    )
+    .await?;
+    client
+        .join(
+            direct_addresses.clone(),
+            relay_url.clone(),
+            &availables,
+            config.apikey,
         )
         .await?;
+    tracing::info!("joined {}", server_addr.node_id);
+    let conn_type = endpoint
+        .conn_type(server_addr.node_id)
+        .and_then(|watcher| watcher.get().ok());
+    tracing::info!("connection type {:?}", conn_type);
 
-    let factory = CommandFactory::collect();
-    let availables = factory.availables().collect::<Vec<_>>();
+    cancel.cancelled().await;
 
+    const LEAVE_TIMEOUT: Duration = Duration::from_secs(3);
+    let _ = tokio::time::timeout(LEAVE_TIMEOUT, client.leave()).await;
+    tracing::info!("left {}", server_addr.node_id);
+
+    Ok(())
+}
+
+pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Error> {
     let endpoint = Endpoint::builder()
         .secret_key(
             config
@@ -106,53 +157,24 @@ pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Err
         .bind()
         .await
         .context("bind iroh endpoint")?;
-    let direct_addresses: BTreeSet<SocketAddr> = endpoint
-        .direct_addresses()
-        .initialized()
-        .await?
-        .into_iter()
-        .map(|addr| addr.addr)
-        .collect();
-    let relay_url: Url = endpoint.home_relay().initialized().await?.into();
+    let factory = CommandFactory::collect();
+    let availables = factory.availables().collect::<Vec<_>>();
+    command_factory::new_client(factory, logs).bind_iroh(endpoint.clone());
 
-    let mut clients = Vec::new();
-    for addr in &servers {
-        let client = address_book::connect_iroh(
+    let cancel = CancellationToken::new();
+
+    let mut join_set = JoinSet::new();
+    for config in config.flow_server {
+        join_set.spawn_local(serve_server(
             endpoint.clone(),
-            NodeAddr {
-                node_id: addr.node_id,
-                relay_url: Some(addr.relay_url.clone().into()),
-                direct_addresses: addr.direct_addresses.clone().unwrap_or_default(),
-            },
-        )
-        .await?;
-        client
-            .join(
-                direct_addresses.clone(),
-                relay_url.clone(),
-                &availables,
-                config.apikey.clone(),
-            )
-            .await?;
-        clients.push(client);
-        tracing::info!("joined {}", addr.node_id);
-        let conn_type = endpoint
-            .conn_type(addr.node_id)
-            .and_then(|watcher| watcher.get().ok());
-        tracing::info!("connection type {:?}", conn_type);
+            config,
+            availables.clone(),
+            cancel.clone(),
+        ));
     }
 
-    let client = command_factory::new_client(factory, logs);
-    client.bind_iroh(endpoint);
-
     tokio::signal::ctrl_c().await.ok();
+    cancel.cancel();
 
-    tokio::time::timeout(Duration::from_secs(5), async {
-        for client in clients {
-            client.leave().await?;
-            tracing::info!("left");
-        }
-        Ok(())
-    })
-    .await?
+    Ok(())
 }
