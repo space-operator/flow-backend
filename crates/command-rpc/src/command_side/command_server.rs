@@ -1,5 +1,6 @@
 use anyhow::Context;
 use flow_lib::command::CommandFactory;
+use futures::future;
 use iroh::Watcher;
 use iroh::{Endpoint, NodeAddr};
 use rand::rngs::OsRng;
@@ -23,17 +24,18 @@ pub enum FlowServerConfig {
     Direct(FlowServerAddress),
 }
 
-fn default_flow_server() -> FlowServerConfig {
-    FlowServerConfig::Info {
+fn default_flow_server() -> Vec<FlowServerConfig> {
+    [FlowServerConfig::Info {
         url: "https://dev-api.spaceoperator.com".parse().unwrap(),
-    }
+    }]
+    .into()
 }
 
 #[serde_with::serde_as]
 #[derive(Deserialize)]
 pub struct Config {
     #[serde(default = "default_flow_server")]
-    pub flow_server: FlowServerConfig,
+    pub flow_server: Vec<FlowServerConfig>,
     #[serde_as(as = "Option<DisplayFromStr>")]
     pub secret_key: Option<iroh::SecretKey>,
     pub apikey: Option<String>,
@@ -70,19 +72,26 @@ pub fn main() {
 }
 
 pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Error> {
-    let server = match config.flow_server {
-        FlowServerConfig::Info { url } => {
-            let info_url = url.join("/info")?;
-            reqwest::get(info_url)
-                .await?
-                .json::<InfoResponse>()
-                .await?
-                .iroh
-        }
-        FlowServerConfig::Direct(server) => server,
-    };
-
-    let servers = [server];
+    let servers =
+        future::try_join_all(
+            config
+                .flow_server
+                .into_iter()
+                .map(async |server| match server {
+                    FlowServerConfig::Info { url } => {
+                        let info_url = url.join("/info")?;
+                        Ok::<_, anyhow::Error>(
+                            reqwest::get(info_url)
+                                .await?
+                                .json::<InfoResponse>()
+                                .await?
+                                .iroh,
+                        )
+                    }
+                    FlowServerConfig::Direct(server) => Ok(server),
+                }),
+        )
+        .await?;
 
     let factory = CommandFactory::collect();
     let availables = factory.availables().collect::<Vec<_>>();
@@ -105,6 +114,7 @@ pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Err
         .map(|addr| addr.addr)
         .collect();
     let relay_url: Url = endpoint.home_relay().initialized().await?.into();
+
     let mut clients = Vec::new();
     for addr in &servers {
         let client = address_book::connect_iroh(
