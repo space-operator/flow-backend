@@ -1,5 +1,6 @@
 use anyhow::Context;
 use flow_lib::command::{CommandFactory, MatchCommand};
+use futures::TryFutureExt;
 use iroh::Watcher;
 use iroh::{Endpoint, NodeAddr};
 use rand::rngs::OsRng;
@@ -164,17 +165,23 @@ pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Err
     let cancel = CancellationToken::new();
 
     let mut join_set = JoinSet::new();
-    for config in config.flow_server {
-        join_set.spawn_local(serve_server(
-            endpoint.clone(),
-            config,
-            availables.clone(),
-            cancel.clone(),
-        ));
+    for mut server_config in config.flow_server {
+        server_config.apikey = server_config.apikey.or_else(|| config.apikey.clone());
+        join_set.spawn_local(
+            serve_server(
+                endpoint.clone(),
+                server_config,
+                availables.clone(),
+                cancel.clone(),
+            )
+            .inspect_err(|error| tracing::error!("error: {error}")),
+        );
     }
 
     tokio::signal::ctrl_c().await.ok();
     cancel.cancel();
+
+    join_set.join_all().await;
 
     Ok(())
 }
