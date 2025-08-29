@@ -1,3 +1,5 @@
+#![allow(warnings)]
+
 mod generated;
 mod hooked;
 mod indexable_asset;

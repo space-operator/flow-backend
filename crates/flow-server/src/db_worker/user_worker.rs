@@ -40,10 +40,7 @@ use futures_channel::{mpsc, oneshot};
 use futures_util::{TryFutureExt, future::BoxFuture};
 use hashbrown::HashMap;
 use solana_signature::Signature;
-use std::{
-    future::{Future, ready},
-    sync::LazyLock,
-};
+use std::future::{Future, ready};
 use thiserror::Error as ThisError;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
 
