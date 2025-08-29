@@ -149,11 +149,11 @@ impl CommandTrait for ArweaveNftUpload {
 
         metadata.image = uploader.upload_file(ctx.clone(), &metadata.image).await?;
 
-        if let Some(properties) = metadata.properties.as_mut() {
-            if let Some(files) = properties.files.as_mut() {
-                for file in files.iter_mut() {
-                    file.uri = uploader.upload_file(ctx.clone(), &file.uri).await?;
-                }
+        if let Some(properties) = metadata.properties.as_mut()
+            && let Some(files) = properties.files.as_mut()
+        {
+            for file in files.iter_mut() {
+                file.uri = uploader.upload_file(ctx.clone(), &file.uri).await?;
             }
         }
 
@@ -240,16 +240,16 @@ impl Uploader {
         needed_size += self.get_file_size(&metadata.image).await?;
         processed.insert(metadata.image.clone());
 
-        if let Some(properties) = metadata.properties.as_ref() {
-            if let Some(files) = properties.files.as_ref() {
-                for file in files.iter() {
-                    if processed.contains(&file.uri) {
-                        continue;
-                    }
-
-                    needed_size += self.get_file_size(&file.uri).await?;
-                    processed.insert(file.uri.clone());
+        if let Some(properties) = metadata.properties.as_ref()
+            && let Some(files) = properties.files.as_ref()
+        {
+            for file in files.iter() {
+                if processed.contains(&file.uri) {
+                    continue;
                 }
+
+                needed_size += self.get_file_size(&file.uri).await?;
+                processed.insert(file.uri.clone());
             }
         }
 

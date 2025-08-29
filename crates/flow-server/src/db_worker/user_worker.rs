@@ -176,12 +176,12 @@ impl UserWorker {
                     .await?;
                 signer.add_wallet(&starter.user_id, &addr.recipient(), wallet)?;
             }
-            if let Some(pk) = action_identity {
-                if !signer.signers.contains_key(&pk) {
-                    let conn = db.get_user_conn(user_id).await?;
-                    let wallet = conn.get_wallet_by_pubkey(&pk.to_bytes()).await?;
-                    signer.add_wallet(&starter.user_id, &addr, wallet)?;
-                }
+            if let Some(pk) = action_identity
+                && !signer.signers.contains_key(&pk)
+            {
+                let conn = db.get_user_conn(user_id).await?;
+                let wallet = conn.get_wallet_by_pubkey(&pk.to_bytes()).await?;
+                signer.add_wallet(&starter.user_id, &addr, wallet)?;
             }
             let signer = signer.start();
             let signer = TowerClient::new(ActixService::from(signer.recipient()));

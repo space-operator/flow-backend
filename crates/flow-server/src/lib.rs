@@ -328,9 +328,7 @@ impl Config {
 
     pub fn endpoints(&self) -> Endpoints {
         Endpoints {
-            flow_server: match &self.db {
-                _ => format!("http://localhost:{}", self.port),
-            },
+            flow_server: format!("http://localhost:{}", self.port),
             supabase: self.supabase_endpoint(),
             supabase_anon_key: self.supabase.anon_key.clone(),
         }

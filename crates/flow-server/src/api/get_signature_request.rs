@@ -68,12 +68,11 @@ async fn get_signature_request(
         let conn = db.get_admin_conn().await?;
         let run_info = conn.get_flow_run_info(run_id).await?;
         while let Some(event) = events.next().await {
-            if let Event::SignatureRequest(req) = event {
-                if let Some(req_id) = req.id {
-                    if exists(&db_worker, req_id, &run_info).await? {
-                        return Ok(web::Json(req));
-                    }
-                }
+            if let Event::SignatureRequest(req) = event
+                && let Some(req_id) = req.id
+                && exists(&db_worker, req_id, &run_info).await?
+            {
+                return Ok(web::Json(req));
             }
         }
     }

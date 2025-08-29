@@ -35,9 +35,6 @@ pub mod bincode_impl;
 
 // custom serialize and deserialize modules
 pub mod decimal;
-#[cfg(feature = "solana-keypair")]
-#[deprecated]
-pub mod keypair;
 #[cfg(feature = "solana-pubkey")]
 pub mod pubkey;
 #[cfg(feature = "solana-signature")]

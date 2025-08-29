@@ -303,10 +303,10 @@ impl SupabaseAuth {
 
     fn cleanup_semaphore(&self, pubkey: &[u8; 32]) {
         let mut limits = self.limits.lock().unwrap();
-        if let Some(semaphore) = limits.get(pubkey) {
-            if Arc::strong_count(semaphore) == 1 {
-                limits.remove(pubkey).unwrap();
-            }
+        if let Some(semaphore) = limits.get(pubkey)
+            && Arc::strong_count(semaphore) == 1
+        {
+            limits.remove(pubkey).unwrap();
         }
         tracing::debug!("semaphore counts: {}", limits.len());
     }

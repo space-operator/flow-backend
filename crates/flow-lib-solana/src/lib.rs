@@ -469,11 +469,11 @@ async fn build_message(
         let table = fetch_address_lookup_table(rpc, pubkey).await?;
         lookups.push(table);
     }
-    if let Some(pubkey) = config.lookup_table(network).as_ref() {
-        if !i.lookup_tables.iter().flatten().any(|pk| pk == pubkey) {
-            let table = fetch_address_lookup_table(rpc, pubkey).await?;
-            lookups.push(table);
-        }
+    if let Some(pubkey) = config.lookup_table(network).as_ref()
+        && !i.lookup_tables.iter().flatten().any(|pk| pk == pubkey)
+    {
+        let table = fetch_address_lookup_table(rpc, pubkey).await?;
+        lookups.push(table);
     }
 
     let blockhash = rpc
@@ -683,10 +683,10 @@ async fn execute_solana_action(
     let task = futures::future::select(request_signature, confirm);
     match task.await {
         Either::Left((result, task)) => {
-            if let Err(error) = result {
-                if !matches!(error, signer::Error::Timeout) {
-                    return Err(Error::other(error));
-                }
+            if let Err(error) = result
+                && !matches!(error, signer::Error::Timeout)
+            {
+                return Err(Error::other(error));
             }
             task.await.map_err(Error::from_anyhow)
         }

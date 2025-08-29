@@ -87,11 +87,10 @@ fn run_ws(
                             Some(Ok(msg)) => {
                                 tracing::trace!("received message: {:?}", msg);
                                 pong_deadline = pending::<()>().boxed();
-                                if let Message::Text(text) = msg {
-                                    if text_tx.unbounded_send(Ok(text)).is_err() {
+                                if let Message::Text(text) = msg
+                                    && text_tx.unbounded_send(Ok(text)).is_err() {
                                         break;
                                     }
-                                }
                             }
                             Some(Err(error)) => {
                                 text_tx.unbounded_send(Err(error)).ok();

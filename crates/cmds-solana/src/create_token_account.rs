@@ -70,14 +70,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .get_account_with_commitment(&account, ctx.solana_client().commitment())
         .await?
         .value
+        && !(account_data.owner == system_program::id() && system_account_ok)
     {
-        if !(account_data.owner == system_program::id() && system_account_ok) {
-            return Err(crate::Error::custom(anyhow::anyhow!(
-                "Error: Account already exists: {}",
-                account
-            ))
-            .into());
-        }
+        return Err(crate::Error::custom(anyhow::anyhow!(
+            "Error: Account already exists: {}",
+            account
+        ))
+        .into());
     }
 
     let instructions = if input.submit {
