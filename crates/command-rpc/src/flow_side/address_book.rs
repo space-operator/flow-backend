@@ -14,9 +14,13 @@ use rand::{seq::SliceRandom, thread_rng};
 use std::{
     collections::{BTreeMap, BTreeSet},
     net::SocketAddr,
+    rc::Rc,
     sync::{Arc, RwLock},
 };
-use tokio::task::{JoinHandle, spawn_local};
+use tokio::{
+    sync::Mutex as AsyncMutex,
+    task::{JoinHandle, spawn_local},
+};
 use tower::{Service, ServiceExt};
 use url::Url;
 
@@ -83,8 +87,7 @@ pub struct BaseAddressBook {
 pub struct AddressBook {
     base: BaseAddressBook,
     user_id: Option<UserId>,
-    // TODO: share this across cloned instances?
-    clients: BTreeMap<iroh::PublicKey, command_factory::Client>,
+    clients: Rc<AsyncMutex<BTreeMap<iroh::PublicKey, command_factory::Client>>>,
 }
 
 pub async fn connect_iroh(endpoint: Endpoint, addr: NodeAddr) -> Result<Client, anyhow::Error> {
@@ -133,11 +136,41 @@ impl AddressBook {
         }
     }
 
+    async fn get_or_connect(
+        &self,
+        node_id: iroh::PublicKey,
+    ) -> Result<command_factory::Client, CommandError> {
+        let mut clients = self.clients.lock().await;
+        let client = match clients.get(&node_id) {
+            Some(client) => client.clone(),
+            None => {
+                let info = self
+                    .base
+                    .factories
+                    .read()
+                    .unwrap()
+                    .get(&node_id)
+                    .unwrap()
+                    .clone();
+                let addr = NodeAddr {
+                    node_id,
+                    direct_addresses: info.direct_addresses,
+                    relay_url: Some(info.relay_url.into()),
+                };
+                let client =
+                    command_factory::connect_iroh(self.base.endpoint.clone(), addr).await?;
+                clients.insert(node_id, client.clone());
+                client
+            }
+        };
+        Ok(client)
+    }
+
     pub async fn init(
         &mut self,
         nd: &NodeData,
     ) -> Result<Option<Box<dyn CommandTrait>>, CommandError> {
-        let (node_id, info) = {
+        let node_id = {
             let factories_lock = self.base.factories.read().unwrap();
             let factories = factories_lock
                 .iter()
@@ -149,33 +182,16 @@ impl AddressBook {
                     let contain = v.availables.get(nd.r#type, &nd.node_id).is_some();
                     can_use && contain
                 })
+                .map(|(k, _)| k)
                 .collect::<Vec<_>>();
-            let (id, info) = factories
+            **factories
                 .choose(&mut thread_rng())
-                .ok_or_else(|| CommandError::msg("not found"))?;
-            let node_id = *(*id);
-            let info = (*info).clone();
-            (node_id, info)
+                .ok_or_else(|| CommandError::msg("not found"))?
         };
 
-        let cmd_client = match self.clients.entry(node_id) {
-            std::collections::btree_map::Entry::Vacant(vacant_entry) => {
-                let addr = NodeAddr {
-                    node_id,
-                    direct_addresses: info.direct_addresses,
-                    relay_url: Some(info.relay_url.into()),
-                };
-                let client =
-                    command_factory::connect_iroh(self.base.endpoint.clone(), addr).await?;
-                let cmd_client = client.init(nd).await?;
-                vacant_entry.insert(client);
-                cmd_client
-            }
-            std::collections::btree_map::Entry::Occupied(occupied_entry) => {
-                let client = occupied_entry.get();
-                client.init(nd).await?
-            }
-        };
+        let factory_client = self.get_or_connect(node_id).await?;
+        let cmd_client = factory_client.init(nd).await?;
+
         match cmd_client {
             Some(client) => Ok(Some(Box::new(RemoteCommand::new(client).await?))),
             None => Ok(None),

@@ -358,6 +358,7 @@ impl<T> CommandIndex<T> {
     }
 }
 
+#[derive(Clone)]
 pub struct CommandFactory {
     index: CommandIndex<&'static CommandDescription>,
 }
