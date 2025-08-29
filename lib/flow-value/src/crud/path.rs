@@ -30,7 +30,7 @@ impl<'a> Path<'a> {
         }
     }
 
-    pub fn iter(&self) -> std::slice::Iter<'_, Cow<str>> {
+    pub fn iter<'b>(&'b self) -> std::slice::Iter<'b, Cow<'b, str>> {
         self.segments.iter()
     }
 }
