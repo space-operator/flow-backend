@@ -983,10 +983,10 @@ impl FlowGraph {
                 }
             }
             Err(error) => {
-                if let Some(execute_error) = error.downcast_ref::<execute::Error>() {
-                    if matches!(execute_error, execute::Error::Collected) {
-                        return;
-                    }
+                if let Some(execute_error) = error.downcast_ref::<execute::Error>()
+                    && matches!(execute_error, execute::Error::Collected)
+                {
+                    return;
                 }
                 let err_str = error.to_string();
                 o.resp.send(Err(execute::Error::from_anyhow(error))).ok();

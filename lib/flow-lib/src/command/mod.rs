@@ -98,26 +98,26 @@ pub trait CommandTrait: 'static {
     fn passthrough_outputs(&self, inputs: &ValueSet) -> ValueSet {
         let mut res = ValueSet::new();
         for i in self.inputs() {
-            if i.passthrough {
-                if let Some(value) = inputs.get(&i.name) {
-                    if !i.required && matches!(value, Value::Null) {
-                        continue;
-                    }
-
-                    let value = match i.type_bounds.first() {
-                        Some(ValueType::Pubkey) => {
-                            // keypair could be automatically converted into pubkey
-                            // we don't want to passthrough the keypair here, only pubkey
-                            value::pubkey::deserialize(value.clone()).map(Into::into)
-                        }
-                        _ => Ok(value.clone()),
-                    }
-                    .unwrap_or_else(|error| {
-                        tracing::warn!("error reading passthrough: {}", error);
-                        value.clone()
-                    });
-                    res.insert(i.name, value);
+            if i.passthrough
+                && let Some(value) = inputs.get(&i.name)
+            {
+                if !i.required && matches!(value, Value::Null) {
+                    continue;
                 }
+
+                let value = match i.type_bounds.first() {
+                    Some(ValueType::Pubkey) => {
+                        // keypair could be automatically converted into pubkey
+                        // we don't want to passthrough the keypair here, only pubkey
+                        value::pubkey::deserialize(value.clone()).map(Into::into)
+                    }
+                    _ => Ok(value.clone()),
+                }
+                .unwrap_or_else(|error| {
+                    tracing::warn!("error reading passthrough: {}", error);
+                    value.clone()
+                });
+                res.insert(i.name, value);
             }
         }
         res

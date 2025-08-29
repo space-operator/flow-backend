@@ -133,7 +133,10 @@ fn convert_error(error: Error) -> Error<NameConflict> {
 }
 
 impl UserConnection {
-    pub(crate) async fn create_apikey_impl(&self, name: &str) -> Result<(APIKey, String), Error<NameConflict>> {
+    pub(crate) async fn create_apikey_impl(
+        &self,
+        name: &str,
+    ) -> Result<(APIKey, String), Error<NameConflict>> {
         let mut rng = rand::thread_rng();
         let info = KeyInfo::new(name, self.user_id);
 
@@ -168,17 +171,17 @@ impl UserConnection {
             match result {
                 Ok(_) => break (key, full_key),
                 Err(error) => {
-                    if let Some(db_error) = error.as_db_error() {
-                        if *db_error.code() == SqlState::UNIQUE_VIOLATION {
-                            match db_error.constraint() {
-                                Some("uc-user_id-name") => {
-                                    return Err(Error::LogicError(NameConflict));
-                                }
-                                Some("apikeys_pkey") => {
-                                    continue;
-                                }
-                                _ => {}
+                    if let Some(db_error) = error.as_db_error()
+                        && *db_error.code() == SqlState::UNIQUE_VIOLATION
+                    {
+                        match db_error.constraint() {
+                            Some("uc-user_id-name") => {
+                                return Err(Error::LogicError(NameConflict));
                             }
+                            Some("apikeys_pkey") => {
+                                continue;
+                            }
+                            _ => {}
                         }
                     }
                     return Err(Error::exec("insert_apikey")(error));

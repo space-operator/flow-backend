@@ -192,10 +192,10 @@ impl UserConnectionTrait for UserConnection {
             return Ok(cached);
         }
         let result = self.get_flow(id).await;
-        if let Ok(result) = &result {
-            if let Err(error) = self.local.set_cache::<FlowRowCache>(&id, result.clone()) {
-                tracing::error!("set_cache error: {}", error);
-            }
+        if let Ok(result) = &result
+            && let Err(error) = self.local.set_cache::<FlowRowCache>(&id, result.clone())
+        {
+            tracing::error!("set_cache error: {}", error);
         }
         result
     }
@@ -212,13 +212,12 @@ impl UserConnectionTrait for UserConnection {
             return Ok(cached);
         }
         let result = self.get_flow_info(flow_id).await;
-        if let Ok(result) = &result {
-            if let Err(error) = self
+        if let Ok(result) = &result
+            && let Err(error) = self
                 .local
                 .set_cache::<FlowInfoCache>(&flow_id, result.clone())
-            {
-                tracing::error!("set_cache error: {}", error);
-            }
+        {
+            tracing::error!("set_cache error: {}", error);
         }
         result
     }
@@ -261,10 +260,10 @@ impl UserConnectionTrait for UserConnection {
             return Ok(cached);
         }
         let result = self.get_flow_config(id).await;
-        if let Ok(result) = &result {
-            if let Err(error) = self.local.set_cache::<FlowConfigCache>(&id, result.clone()) {
-                tracing::error!("set_cache error: {}", error);
-            }
+        if let Ok(result) = &result
+            && let Err(error) = self.local.set_cache::<FlowConfigCache>(&id, result.clone())
+        {
+            tracing::error!("set_cache error: {}", error);
         }
         result
     }
@@ -709,13 +708,12 @@ impl UserConnection {
             return Ok(cached);
         }
         let result = self.get_encrypted_wallets_query().await;
-        if let Ok(result) = &result {
-            if let Err(error) = self
+        if let Ok(result) = &result
+            && let Err(error) = self
                 .local
                 .set_cache::<EncryptedWalletCache>(&self.user_id, result.clone())
-            {
-                tracing::error!("set_cache error: {}", error);
-            }
+        {
+            tracing::error!("set_cache error: {}", error);
         }
         result
     }
@@ -1183,13 +1181,12 @@ impl UserConnection {
             serde_json::from_value::<client::ClientConfig>(config).map_err(Error::Deserialize)?;
 
         for node in &mut config.nodes {
-            if node.data.r#type == CommandType::Wasm {
-                if let Err(error) = self
+            if node.data.r#type == CommandType::Wasm
+                && let Err(error) = self
                     .fetch_wasm_bytes(&mut node.data.targets_form, &conn)
                     .await
-                {
-                    tracing::warn!("{}", error);
-                }
+            {
+                tracing::warn!("{}", error);
             }
         }
 

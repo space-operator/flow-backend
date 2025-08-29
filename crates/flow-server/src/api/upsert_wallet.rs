@@ -14,7 +14,7 @@ async fn upsert_wallet(
     sup: web::Data<SupabaseAuth>,
 ) -> Result<(web::Json<Box<RawValue>>, StatusCode), Error> {
     let (status, result) = sup
-        .upsert_wallet(&token.token(), params.0)
+        .upsert_wallet(token.token(), params.0)
         .await
         .map_err(|error| Error::custom(StatusCode::INTERNAL_SERVER_ERROR, error))?;
     let status = actix_web::http::StatusCode::from_u16(status.as_u16()).unwrap();

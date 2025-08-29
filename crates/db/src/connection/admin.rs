@@ -68,10 +68,10 @@ impl AdminConn {
             return Ok(Some(cached));
         }
         let result = self.get_user_id_by_pubkey_impl(pk_bs58).await;
-        if let Ok(Some(id)) = &result {
-            if let Err(error) = self.local.set_cache::<UserIdCache>(pk_bs58, *id) {
-                tracing::error!("set_cache error: {}", error);
-            }
+        if let Ok(Some(id)) = &result
+            && let Err(error) = self.local.set_cache::<UserIdCache>(pk_bs58, *id)
+        {
+            tracing::error!("set_cache error: {}", error);
         }
         result
     }

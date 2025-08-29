@@ -57,23 +57,22 @@ fn main() {
 
     let sh = Shell::new().unwrap();
 
-    if args.ecr_login {
-        if let Ok(password) = cmd!(sh, "aws ecr-public get-login-password --region us-east-1")
+    if args.ecr_login
+        && let Ok(password) = cmd!(sh, "aws ecr-public get-login-password --region us-east-1")
             .read()
             .inspect_err(|error| eprint!("{error}"))
-        {
-            cmd!(
-                sh,
-                "docker login --username AWS --password-stdin public.ecr.aws/space-operator"
-            )
-            .stdin(password.trim())
-            .run()
-            .inspect_err(|error| {
-                eprint!("{error}");
-                args.ecr_login = false;
-            })
-            .ok();
-        }
+    {
+        cmd!(
+            sh,
+            "docker login --username AWS --password-stdin public.ecr.aws/space-operator"
+        )
+        .stdin(password.trim())
+        .run()
+        .inspect_err(|error| {
+            eprint!("{error}");
+            args.ecr_login = false;
+        })
+        .ok();
     }
 
     dotenv::dotenv().ok();
