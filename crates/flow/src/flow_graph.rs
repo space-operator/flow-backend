@@ -47,7 +47,7 @@ use std::{
 use thiserror::Error as ThisError;
 use tokio::{
     sync::Semaphore,
-    task::{JoinError, JoinHandle},
+    task::{JoinError, JoinHandle, JoinSet},
 };
 use tokio_util::sync::CancellationToken;
 use tower::{Service, ServiceExt, service_fn};
@@ -410,7 +410,6 @@ impl FlowGraph {
                     ext
                 }),
                 http: registry.http.clone(),
-                // TODO: re-use reqwest client
                 solana_client: Arc::new(
                     ctx_data
                         .set
@@ -420,7 +419,7 @@ impl FlowGraph {
             },
         };
 
-        let mut f = CommandFactoryWithRemotes {
+        let f = CommandFactoryWithRemotes {
             factory: CommandFactory::collect(),
             remotes: registry.remotes,
         };
@@ -439,6 +438,7 @@ impl FlowGraph {
             }
         }
         let mut excluded_foreach = HashSet::new();
+        let mut join_set = JoinSet::new();
         for n in c.nodes {
             if n.client_node_data.r#type == CommandType::Mock {
                 mocks.insert(n.id);
@@ -451,16 +451,26 @@ impl FlowGraph {
                 }
                 continue;
             }
-            let command = f
-                .init(&n.client_node_data)
-                .await
-                .map_err(crate::Error::CreateCmd)?
-                .ok_or_else(|| {
-                    crate::Error::CreateCmd(CommandError::msg(format!(
-                        "not found: {}",
-                        n.client_node_data.node_id
-                    )))
-                })?;
+
+            let mut f = f.clone();
+            join_set.spawn_local(async move {
+                let command = f
+                    .init(&n.client_node_data)
+                    .await
+                    .map_err(crate::Error::CreateCmd)?
+                    .ok_or_else(|| {
+                        crate::Error::CreateCmd(CommandError::msg(format!(
+                            "not found: {}",
+                            n.client_node_data.node_id
+                        )))
+                    })?;
+                Ok::<_, crate::Error>((n, command))
+            });
+        }
+
+        let results = join_set.join_all().await;
+        for result in results {
+            let (n, command) = result?;
             let id = n.id;
             let idx = g.add_node(id);
             let node = Node {
