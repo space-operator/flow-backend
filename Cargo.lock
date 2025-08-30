@@ -1781,6 +1781,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bincode 2.0.1",
+ "bytes",
  "capnp 0.21.4",
  "capnp-rpc",
  "capnpc",
@@ -3161,7 +3162,7 @@ dependencies = [
 
 [[package]]
 name = "flow-value"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "base64 0.13.1",
  "bincode 2.0.1",

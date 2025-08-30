@@ -1,6 +1,6 @@
 [package]
 name = "flow-value"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "Value type for flow inputs and outputs."
 license = "AGPL-3.0-only"
