@@ -239,6 +239,41 @@ pub mod signer {
         #[serde_as(as = "Option<Base64>")]
         pub new_message: Option<bytes::Bytes>,
     }
+
+    impl bincode::Encode for SignatureResponse {
+        fn encode<E: bincode::enc::Encoder>(
+            &self,
+            encoder: &mut E,
+        ) -> Result<(), bincode::error::EncodeError> {
+            self.signature.as_array().encode(encoder)?;
+            self.new_message
+                .as_ref()
+                .map(|m| m.as_ref())
+                .encode(encoder)?;
+            Ok(())
+        }
+    }
+
+    impl<C> bincode::Decode<C> for SignatureResponse {
+        fn decode<D: bincode::de::Decoder<Context = C>>(
+            decoder: &mut D,
+        ) -> Result<Self, bincode::error::DecodeError> {
+            let signature = Signature::from(<[u8; 64]>::decode(decoder)?);
+            let new_message = Option::<Vec<u8>>::decode(decoder)?.map(Into::into);
+            Ok(Self {
+                signature,
+                new_message,
+            })
+        }
+    }
+
+    impl<'de, C> bincode::BorrowDecode<'de, C> for SignatureResponse {
+        fn borrow_decode<D: bincode::de::BorrowDecoder<'de, Context = C>>(
+            decoder: &mut D,
+        ) -> Result<Self, bincode::error::DecodeError> {
+            bincode::Decode::decode(decoder)
+        }
+    }
 }
 
 /// Output values and Solana instructions to be executed.

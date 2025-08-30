@@ -20,6 +20,8 @@ interface CommandContext {
     getJwt @2 (user_id: Text) -> (access_token: Text);
 
     log @3 (log: Data);
+
+    requestSignature @4 (request: Data) -> (response: Data);
 }
 
 interface CommandTrait {
