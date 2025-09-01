@@ -453,7 +453,7 @@ impl FlowGraph {
             }
 
             let mut f = f.clone();
-            join_set.spawn_local(async move {
+            let task = async move {
                 let command = f
                     .init(&n.client_node_data)
                     .await
@@ -465,7 +465,8 @@ impl FlowGraph {
                         )))
                     })?;
                 Ok::<_, crate::Error>((n, command))
-            });
+            };
+            join_set.spawn_local(task);
         }
 
         let results = join_set.join_all().await;
