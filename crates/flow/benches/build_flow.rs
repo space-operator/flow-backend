@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use flow::FlowGraph;
+use flow::{FlowGraph, flow_registry::FlowRegistry};
 use flow_lib::{FlowConfig, config::client::ClientConfig};
 use tokio::task::LocalSet;
 
@@ -12,8 +12,8 @@ struct TestFile {
     flow: ClientConfig,
 }
 
-async fn new(config: &FlowConfig) {
-    FlowGraph::from_cfg(config.clone(), <_>::default(), None)
+async fn new(config: &FlowConfig, registry: &FlowRegistry) {
+    FlowGraph::from_cfg(config.clone(), registry.clone(), None)
         .await
         .unwrap();
 }
@@ -21,6 +21,7 @@ async fn new(config: &FlowConfig) {
 pub fn criterion_benchmark(c: &mut Criterion) {
     const JSON: &str = include_str!("../../../test_files/const_form_data.json");
     let flow_config = FlowConfig::new(serde_json::from_str::<TestFile>(JSON).unwrap().flow);
+    let registry = FlowRegistry::default();
 
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -31,11 +32,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         b.iter_custom(|iters| {
             let start = Instant::now();
             for _i in 0..iters {
-                std::hint::black_box(local.block_on(&rt, new(&flow_config)));
+                std::hint::black_box(local.block_on(&rt, new(&flow_config, &registry)));
             }
             start.elapsed()
         });
     });
+    rt.shutdown_background();
 }
 
 criterion_group!(benches, criterion_benchmark);
