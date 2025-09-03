@@ -313,10 +313,11 @@ async fn save_to_db(
     tx: actix::Recipient<CopyIn<Vec<FlowRunLogsRow>>>,
 ) {
     let mut log_index = 0i32;
-    const CHUNK_SIZE: usize = 16;
+    const CHUNK_SIZE: usize = 64;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
     let mut stop = false;
     while let Some(events) = chunks.next().await {
+        tracing::trace!("events count: {}", events.len());
         let mut logs: Vec<FlowRunLogsRow> = Vec::new();
         let conn = match db.get_user_conn(user_id).await {
             Ok(conn) => conn,

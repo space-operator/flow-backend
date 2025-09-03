@@ -5,7 +5,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use bytes::Bytes;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use csv_export::df_serde;
 use deadpool_postgres::{Object as Connection, Transaction};
 use flow::flow_set::{DeploymentId, Flow, FlowDeployment, get_flow_row};
@@ -117,6 +117,18 @@ impl tower::Service<get_flow_row::Request> for Box<dyn UserConnectionTrait> {
             }
         })
     }
+}
+
+pub struct PartialNodeRunRow {
+    pub user_id: UserId,
+    pub flow_run_id: FlowRunId,
+    pub node_id: NodeId,
+    pub times: u32,
+    pub start_time: Option<NaiveDateTime>,
+    pub end_time: Option<NaiveDateTime>,
+    pub input: Option<Value>,
+    pub output: Option<Value>,
+    pub errors: Option<Vec<String>>,
 }
 
 #[async_trait(?Send)]
