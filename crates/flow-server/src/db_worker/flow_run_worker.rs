@@ -13,6 +13,7 @@ use actix::{
     StreamHandler, WrapFuture, fut::wrap_future,
 };
 use actix_web::http::StatusCode;
+use chrono::{DateTime, Utc};
 use db::{FlowRunLogsRow, pool::DbPool};
 use flow::flow_graph::StopSignal;
 use flow_lib::{
@@ -305,6 +306,11 @@ fn strip(value: Value) -> Value {
     }
 }
 
+fn report(time: DateTime<Utc>, ty: &'static str) {
+    let lag = Utc::now() - time;
+    metrics::histogram!("event_lag", "type" => ty).record(lag.as_seconds_f64());
+}
+
 async fn save_to_db(
     user_id: UserId,
     run_id: FlowRunId,
@@ -316,6 +322,7 @@ async fn save_to_db(
     const CHUNK_SIZE: usize = 64;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
     let mut stop = false;
+    let mut flow_finish_time = None;
     while let Some(events) = chunks.next().await {
         tracing::trace!("events count: {}", events.len());
         let mut logs: Vec<FlowRunLogsRow> = Vec::new();
@@ -336,12 +343,14 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
+                    report(time, "flow_start");
                 }
-                Event::FlowError(FlowError { error, .. }) => {
+                Event::FlowError(FlowError { time, error, .. }) => {
                     conn.push_flow_error(&run_id, error.as_str())
                         .await
                         .map_err(log_error)
                         .ok();
+                    report(time, "flow_error");
                 }
                 Event::FlowFinish(FlowFinish {
                     time,
@@ -354,6 +363,7 @@ async fn save_to_db(
                         .ok();
                     // FlowFinish is the final message
                     stop = true;
+                    flow_finish_time = Some(time);
                 }
                 Event::NodeStart(NodeStart {
                     time,
@@ -365,8 +375,10 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
+                    report(time, "node_start");
                 }
                 Event::NodeOutput(NodeOutput {
+                    time,
                     node_id,
                     times,
                     output,
@@ -376,8 +388,10 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
+                    report(time, "node_output");
                 }
                 Event::NodeError(NodeError {
+                    time,
                     node_id,
                     times,
                     error,
@@ -387,6 +401,7 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
+                    report(time, "node_error");
                 }
                 Event::NodeFinish(NodeFinish {
                     time,
@@ -397,6 +412,7 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
+                    report(time, "node_finish");
                 }
                 Event::NodeLog(NodeLog {
                     time,
@@ -446,7 +462,11 @@ async fn save_to_db(
         if !logs.is_empty() && tx.send(CopyIn(logs)).await.is_err() {
             tracing::error!("failed to send to DBWorker, dropping event.")
         }
+
         if stop {
+            if let Some(time) = flow_finish_time {
+                report(time, "flow_finish");
+            }
             break;
         }
     }
