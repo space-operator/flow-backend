@@ -21,6 +21,9 @@ use flow_server::{
     ws,
 };
 use futures_util::future::ok;
+use metrics_rs_dashboard_actix::{
+    DashboardInput, create_metrics_actx_scope, metrics_exporter_prometheus::Matcher,
+};
 use std::{convert::Infallible, sync::Arc, time::Duration};
 use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 use utils::address_book::AddressBook;
@@ -207,6 +210,14 @@ async fn main() {
 
     let config = Arc::new(config);
     let mut server = HttpServer::new(move || {
+        let dashboard_input = DashboardInput {
+            buckets_for_metrics: vec![(
+                Matcher::Full("event_lag".to_owned()),
+                &[0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0],
+            )],
+        };
+        let metrics_scope = create_metrics_actx_scope(&dashboard_input).unwrap();
+
         let wallets = supabase_auth.as_ref().map(|supabase_auth| {
             web::scope("/wallets")
                 .app_data(web::Data::new(supabase_auth.clone()))
@@ -256,13 +267,18 @@ async fn main() {
 
         let deployment = web::scope("/deployment").service(api::start_deployment::service(&config));
 
+        let logger = Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#)
+            .exclude("/healthcheck")
+            .exclude_regex("/metrics/");
+
         let mut app = App::new()
             .wrap(Compress::default())
-            .wrap(Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#).exclude("/healthcheck"))
+            .wrap(logger)
             .app_data(web::Data::new(db.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
             .app_data(web::Data::new(sig_auth))
-            .app_data(web::Data::new(db.clone()));
+            .app_data(web::Data::new(db.clone()))
+            .service(metrics_scope);
         if let Some(auth) = supabase_auth.clone() {
             app = app.app_data(web::Data::new(auth));
         }

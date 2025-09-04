@@ -13,6 +13,7 @@ use actix::{
     StreamHandler, WrapFuture, fut::wrap_future,
 };
 use actix_web::http::StatusCode;
+use chrono::{DateTime, Utc};
 use db::{FlowRunLogsRow, pool::DbPool};
 use flow::flow_graph::StopSignal;
 use flow_lib::{
@@ -305,6 +306,11 @@ fn strip(value: Value) -> Value {
     }
 }
 
+fn report(time: DateTime<Utc>, ty: &'static str) {
+    let lag = Utc::now() - time;
+    metrics::histogram!("event_lag", "type" => ty).record(lag.as_seconds_f64());
+}
+
 async fn save_to_db(
     user_id: UserId,
     run_id: FlowRunId,
@@ -313,10 +319,12 @@ async fn save_to_db(
     tx: actix::Recipient<CopyIn<Vec<FlowRunLogsRow>>>,
 ) {
     let mut log_index = 0i32;
-    const CHUNK_SIZE: usize = 16;
+    const CHUNK_SIZE: usize = 64;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
     let mut stop = false;
+    let mut flow_finish_time = None;
     while let Some(events) = chunks.next().await {
+        tracing::trace!("events count: {}", events.len());
         let mut logs: Vec<FlowRunLogsRow> = Vec::new();
         let conn = match db.get_user_conn(user_id).await {
             Ok(conn) => conn,
@@ -353,6 +361,7 @@ async fn save_to_db(
                         .ok();
                     // FlowFinish is the final message
                     stop = true;
+                    flow_finish_time = Some(time);
                 }
                 Event::NodeStart(NodeStart {
                     time,
@@ -396,6 +405,7 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
+                    report(time, "node_finish");
                 }
                 Event::NodeLog(NodeLog {
                     time,
@@ -445,7 +455,11 @@ async fn save_to_db(
         if !logs.is_empty() && tx.send(CopyIn(logs)).await.is_err() {
             tracing::error!("failed to send to DBWorker, dropping event.")
         }
+
         if stop {
+            if let Some(time) = flow_finish_time {
+                report(time, "flow_finish");
+            }
             break;
         }
     }
