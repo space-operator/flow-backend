@@ -343,14 +343,12 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
-                    report(time, "flow_start");
                 }
-                Event::FlowError(FlowError { time, error, .. }) => {
+                Event::FlowError(FlowError { error, .. }) => {
                     conn.push_flow_error(&run_id, error.as_str())
                         .await
                         .map_err(log_error)
                         .ok();
-                    report(time, "flow_error");
                 }
                 Event::FlowFinish(FlowFinish {
                     time,
@@ -375,10 +373,8 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
-                    report(time, "node_start");
                 }
                 Event::NodeOutput(NodeOutput {
-                    time,
                     node_id,
                     times,
                     output,
@@ -388,10 +384,8 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
-                    report(time, "node_output");
                 }
                 Event::NodeError(NodeError {
-                    time,
                     node_id,
                     times,
                     error,
@@ -401,7 +395,6 @@ async fn save_to_db(
                         .await
                         .map_err(log_error)
                         .ok();
-                    report(time, "node_error");
                 }
                 Event::NodeFinish(NodeFinish {
                     time,
