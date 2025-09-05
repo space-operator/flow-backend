@@ -137,6 +137,10 @@ where
 
 #[async_trait(?Send)]
 impl UserConnectionTrait for UserConnection {
+    async fn copy_in_node_run(&self, rows: Vec<PartialNodeRunRow>) -> crate::Result<()> {
+        self.copy_in_node_run_impl(rows).await
+    }
+
     async fn create_apikey(&self, name: &str) -> Result<(APIKey, String), Error<NameConflict>> {
         self.create_apikey_impl(name).await
     }
@@ -412,6 +416,88 @@ impl UserConnection {
         }
     }
 
+    async fn copy_in_node_run_impl(&self, rows: Vec<PartialNodeRunRow>) -> crate::Result<()> {
+        let conn = self.pool.get_conn().await?;
+        let stmt = conn
+            .prepare_cached(
+                "copy node_run (
+                    user_id,
+                    flow_run_id,
+                    node_id,
+                    times,
+                    start_time,
+                    end_time,
+                    input,
+                    output,
+                    errors
+                ) from stdin with (format binary)",
+            )
+            .await
+            .map_err(Error::exec("prepare"))?;
+        let sink = conn
+            .copy_in::<_, Bytes>(&stmt)
+            .await
+            .map_err(Error::exec("copy in"))?;
+        let writer = BinaryCopyInWriter::new(
+            sink,
+            &[
+                Type::UUID,
+                Type::UUID,
+                Type::UUID,
+                Type::INT4,
+                Type::TIMESTAMP,
+                Type::TIMESTAMP,
+                Type::JSONB,
+                Type::JSONB,
+                Type::TEXT_ARRAY,
+            ],
+        );
+        futures_util::pin_mut!(writer);
+        let len = rows.len();
+        for row in rows {
+            let PartialNodeRunRow {
+                user_id,
+                flow_run_id,
+                node_id,
+                times,
+                start_time,
+                end_time,
+                input,
+                output,
+                errors,
+            } = row;
+            let start_time = start_time.map(|t| t.naive_utc());
+            let end_time = end_time.map(|t| t.naive_utc());
+            writer
+                .as_mut()
+                .write(&[
+                    &user_id,
+                    &flow_run_id,
+                    &node_id,
+                    &(times as i32),
+                    &start_time,
+                    &end_time,
+                    &Json(input),
+                    &Json(output),
+                    &errors,
+                ])
+                .await
+                .map_err(Error::exec("write copy in"))?;
+        }
+        let written = writer
+            .finish()
+            .await
+            .map_err(Error::exec("finish copy in"))?;
+        if written as usize != len {
+            return Err(Error::LogicError(anyhow!(
+                "size={}; written={}",
+                len,
+                written
+            )));
+        }
+        Ok(())
+    }
+
     async fn get_encrypted_wallet_by_pubkey(
         &self,
         pubkey: &[u8; 32],
@@ -421,7 +507,7 @@ impl UserConnection {
         parse_encrypted_wallet(
             conn.do_query_one(
                 "select public_key, encrypted_keypair, id
-            from wallets where user_id = $1 and public_key = $2",
+                from wallets where user_id = $1 and public_key = $2",
                 &[&self.user_id, &pubkey_str],
             )
             .await
