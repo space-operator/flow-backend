@@ -472,7 +472,7 @@ impl UserConnection {
                     &user_id,
                     &flow_run_id,
                     &node_id,
-                    &times,
+                    &(times as i32),
                     &start_time,
                     &end_time,
                     &Json(input),
