@@ -5,7 +5,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use bytes::Bytes;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use csv_export::df_serde;
 use deadpool_postgres::{Object as Connection, Transaction};
 use flow::flow_set::{DeploymentId, Flow, FlowDeployment, get_flow_row};
@@ -133,6 +133,8 @@ pub struct PartialNodeRunRow {
 
 #[async_trait(?Send)]
 pub trait UserConnectionTrait: Any + 'static {
+    async fn copy_in_node_run(&self, rows: Vec<PartialNodeRunRow>) -> crate::Result<()>;
+
     async fn create_apikey(&self, name: &str) -> Result<(APIKey, String), Error<NameConflict>>;
 
     async fn delete_apikey(&self, key_hash: &str) -> crate::Result<()>;

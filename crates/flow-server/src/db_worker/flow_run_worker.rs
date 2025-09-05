@@ -13,15 +13,15 @@ use actix::{
     StreamHandler, WrapFuture, fut::wrap_future,
 };
 use actix_web::http::StatusCode;
-use ahash::{HashMap, HashMapExt, HashSet, HashSetExt};
+use ahash::{HashMap, HashMapExt};
 use chrono::{DateTime, Utc};
 use db::{FlowRunLogsRow, connection::PartialNodeRunRow, pool::DbPool};
 use flow::flow_graph::StopSignal;
 use flow_lib::{
-    FlowRunId, NodeId, UserId,
+    FlowRunId, UserId,
     flow_run_events::{
-        self, ApiInput, Event, FlowError, FlowFinish, FlowLog, FlowStart, NodeError, NodeFinish,
-        NodeLog, NodeOutput, NodeStart,
+        self, ApiInput, Event, FlowError, FlowFinish, FlowLog, NodeError, NodeFinish, NodeLog,
+        NodeOutput, NodeStart,
     },
 };
 use futures_channel::mpsc;
@@ -472,7 +472,12 @@ async fn save_to_db(
                 .map_err(log_error)
                 .ok();
         }
-        
+
+        conn.copy_in_node_run(new_nodes.into_values().collect())
+            .await
+            .map_err(log_error)
+            .ok();
+
         for event in after {
             match event {
                 Event::FlowError(FlowError { error, .. }) => {
