@@ -466,6 +466,8 @@ impl UserConnection {
                 output,
                 errors,
             } = row;
+            let start_time = start_time.map(|t| t.naive_utc());
+            let end_time = end_time.map(|t| t.naive_utc());
             writer
                 .as_mut()
                 .write(&[
