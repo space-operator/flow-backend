@@ -209,9 +209,6 @@ async fn main() {
         }
     }
 
-    describe_histogram!("batch_nodes_insert_size", metrics::Unit::Count, "");
-    describe_histogram!("after_insert_size", metrics::Unit::Count, "");
-
     let config = Arc::new(config);
     let mut server = HttpServer::new(move || {
         let dashboard_input = DashboardInput {
