@@ -322,8 +322,7 @@ async fn save_to_db(
     let mut log_index = 0i32;
     const CHUNK_SIZE: usize = 64;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
-    let mut stop = false;
-    let mut flow_finish_time = None;
+    let mut finished = None;
     while let Some(events) = chunks.next().await {
         tracing::trace!("events count: {}", events.len());
         let mut logs: Vec<FlowRunLogsRow> = Vec::new();
@@ -500,8 +499,7 @@ async fn save_to_db(
                         .map_err(log_error)
                         .ok();
                     // FlowFinish is the final message
-                    stop = true;
-                    flow_finish_time = Some(time);
+                    finished = Some(time);
                 }
 
                 Event::NodeOutput(NodeOutput {
@@ -550,11 +548,8 @@ async fn save_to_db(
         if !logs.is_empty() && tx.send(CopyIn(logs)).await.is_err() {
             tracing::error!("failed to send to DBWorker, dropping events.")
         }
-
-        if stop {
-            if let Some(time) = flow_finish_time {
-                report(time, "flow_finish");
-            }
+        if let Some(time) = finished {
+            report(time, "flow_finish");
             break;
         }
     }
