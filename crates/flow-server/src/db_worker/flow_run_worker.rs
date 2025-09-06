@@ -26,6 +26,7 @@ use flow_lib::{
 };
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt, stream::BoxStream};
+use metrics::{Unit, describe_histogram, histogram};
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast::{self, error::RecvError};
 use utils::address_book::ManagableActor;
@@ -465,6 +466,9 @@ async fn save_to_db(
                 Event::ApiInput(_) => {}
             }
         }
+
+        histogram!("batch_nodes_insert_size").record(new_nodes.len() as f64);
+        histogram!("after_insert_size").record(after.len() as f64);
 
         for event in before {
             conn.set_start_time(&run_id, &event.time)
