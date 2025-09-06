@@ -26,7 +26,7 @@ use flow_lib::{
 };
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt, stream::BoxStream};
-use metrics::{Unit, describe_histogram, histogram};
+use metrics::histogram;
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast::{self, error::RecvError};
 use utils::address_book::ManagableActor;
