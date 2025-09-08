@@ -21,7 +21,6 @@ use flow_server::{
     ws,
 };
 use futures_util::future::ok;
-use metrics::describe_histogram;
 use metrics_rs_dashboard_actix::{
     DashboardInput, create_metrics_actx_scope, metrics_exporter_prometheus::Matcher,
 };
@@ -224,6 +223,10 @@ async fn main() {
                 (
                     Matcher::Full("after_insert_size".to_owned()),
                     &[0.0, 8.0, 16.0, 24.0, 32.0, 40.0, 48.0, 56.0, 64.0],
+                ),
+                (
+                    Matcher::Full("new_flow_run".to_owned()),
+                    &[0.05, 0.1, 0.2, 0.5, 1.0],
                 ),
             ],
         };
