@@ -37,8 +37,10 @@ use flow_lib::{
 };
 use flow_lib_solana::is_same_message_logic;
 use futures_channel::{mpsc, oneshot};
+use futures_metrics::FutureExt;
 use futures_util::{TryFutureExt, future::BoxFuture};
 use hashbrown::HashMap;
+use metrics::histogram;
 use solana_signature::Signature;
 use std::future::{Future, ready};
 use thiserror::Error as ThisError;
@@ -323,72 +325,75 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
         let db = self.db.clone();
         let root = DBWorker::from_registry();
         let counter = self.counter.clone();
-        Box::pin(async move {
-            if user_id != msg.user_id {
-                return Err(new_flow_run::Error::Unauthorized);
-            }
-
-            let conn = db
-                .get_user_conn(user_id)
-                .await
-                .map_err(new_flow_run::Error::other)?;
-            let run_id = conn
-                .new_flow_run(&msg.config, &msg.inputs, &msg.deployment_id)
-                .await
-                .map_err(new_flow_run::Error::other)?;
-
-            for id in &msg.shared_with {
-                if *id != user_id {
-                    conn.share_flow_run(run_id, *id)
-                        .await
-                        .map_err(new_flow_run::Error::other)?;
+        Box::pin(
+            async move {
+                if user_id != msg.user_id {
+                    return Err(new_flow_run::Error::Unauthorized);
                 }
-            }
 
-            let stop_signal = StopSignal::new();
-            let stop_shared_signal = StopSignal::new();
+                let conn = db
+                    .get_user_conn(user_id)
+                    .await
+                    .map_err(new_flow_run::Error::other)?;
+                let run_id = conn
+                    .new_flow_run(&msg.config, &msg.inputs, &msg.deployment_id)
+                    .await
+                    .map_err(new_flow_run::Error::other)?;
 
-            root.send(StartFlowRunWorker {
-                id: run_id,
-                make_actor: {
-                    let stop_signal = stop_signal.clone();
-                    let stop_shared_signal = stop_shared_signal.clone();
-                    let root = root.clone();
-                    move |ctx| {
-                        FlowRunWorker::new(
-                            run_id,
-                            user_id,
-                            msg.shared_with,
-                            counter,
-                            msg.stream,
-                            db,
-                            root.clone(),
-                            stop_signal.clone(),
-                            stop_shared_signal.clone(),
-                            ctx,
-                        )
+                for id in &msg.shared_with {
+                    if *id != user_id {
+                        conn.share_flow_run(run_id, *id)
+                            .await
+                            .map_err(new_flow_run::Error::other)?;
                     }
-                },
-            })
-            .await?
-            .map_err(|_| new_flow_run::Error::msg("could not start worker"))?;
+                }
 
-            let span = root
-                .send(RegisterLogs {
-                    flow_run_id: run_id,
-                    tx: msg.tx,
-                    filter: msg.config.environment.get(RUST_LOG).cloned(),
+                let stop_signal = StopSignal::new();
+                let stop_shared_signal = StopSignal::new();
+
+                root.send(StartFlowRunWorker {
+                    id: run_id,
+                    make_actor: {
+                        let stop_signal = stop_signal.clone();
+                        let stop_shared_signal = stop_shared_signal.clone();
+                        let root = root.clone();
+                        move |ctx| {
+                            FlowRunWorker::new(
+                                run_id,
+                                user_id,
+                                msg.shared_with,
+                                counter,
+                                msg.stream,
+                                db,
+                                root.clone(),
+                                stop_signal.clone(),
+                                stop_shared_signal.clone(),
+                                ctx,
+                            )
+                        }
+                    },
                 })
                 .await?
-                .unwrap();
+                .map_err(|_| new_flow_run::Error::msg("could not start worker"))?;
 
-            Ok(new_flow_run::Response {
-                flow_run_id: run_id,
-                stop_signal,
-                stop_shared_signal,
-                span,
-            })
-        })
+                let span = root
+                    .send(RegisterLogs {
+                        flow_run_id: run_id,
+                        tx: msg.tx,
+                        filter: msg.config.environment.get(RUST_LOG).cloned(),
+                    })
+                    .await?
+                    .unwrap();
+
+                Ok(new_flow_run::Response {
+                    flow_run_id: run_id,
+                    stop_signal,
+                    stop_shared_signal,
+                    span,
+                })
+            }
+            .histogram(histogram!("new_flow_run")),
+        )
     }
 }
 

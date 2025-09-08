@@ -75,6 +75,7 @@ flow-tracing = { version = "0.1.0", path = "../flow-tracing" }
 flow-lib-solana.workspace = true
 metrics-rs-dashboard-actix = "0.1.6"
 metrics = "0.24.2"
+futures-metrics.workspace = true
 
 
 [dev-dependencies]

@@ -3257,6 +3257,7 @@ dependencies = [
  "flow-tracing",
  "flow-value",
  "futures-channel",
+ "futures-metrics",
  "futures-util",
  "getset",
  "hashbrown 0.14.5",
@@ -3485,6 +3486,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.106",
+]
+
+[[package]]
+name = "futures-metrics"
+version = "0.1.0"
+dependencies = [
+ "metrics",
+ "pin-project-lite",
 ]
 
 [[package]]

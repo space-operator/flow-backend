@@ -26,6 +26,7 @@ use flow_lib::{
 };
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt, stream::BoxStream};
+use metrics::{describe_histogram, histogram};
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast::{self, error::RecvError};
 use utils::address_book::ManagableActor;
@@ -321,8 +322,7 @@ async fn save_to_db(
     let mut log_index = 0i32;
     const CHUNK_SIZE: usize = 64;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
-    let mut stop = false;
-    let mut flow_finish_time = None;
+    let mut finished = None;
     while let Some(events) = chunks.next().await {
         tracing::trace!("events count: {}", events.len());
         let mut logs: Vec<FlowRunLogsRow> = Vec::new();
@@ -466,6 +466,9 @@ async fn save_to_db(
             }
         }
 
+        histogram!("batch_nodes_insert_size").record(new_nodes.len() as f64);
+        histogram!("after_insert_size").record(after.len() as f64);
+
         for event in before {
             conn.set_start_time(&run_id, &event.time)
                 .await
@@ -496,8 +499,7 @@ async fn save_to_db(
                         .map_err(log_error)
                         .ok();
                     // FlowFinish is the final message
-                    stop = true;
-                    flow_finish_time = Some(time);
+                    finished = Some(time);
                 }
 
                 Event::NodeOutput(NodeOutput {
@@ -546,11 +548,8 @@ async fn save_to_db(
         if !logs.is_empty() && tx.send(CopyIn(logs)).await.is_err() {
             tracing::error!("failed to send to DBWorker, dropping events.")
         }
-
-        if stop {
-            if let Some(time) = flow_finish_time {
-                report(time, "flow_finish");
-            }
+        if let Some(time) = finished {
+            report(time, "flow_finish");
             break;
         }
     }
