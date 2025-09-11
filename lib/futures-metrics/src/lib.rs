@@ -51,7 +51,7 @@ where
     fn histogram(self, histogram: Histogram) -> HistogramFuture<Self> {
         HistogramFuture {
             future: self,
-            histogram: histogram,
+            histogram,
             start_time: None,
         }
     }
