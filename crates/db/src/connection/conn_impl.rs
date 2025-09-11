@@ -168,21 +168,10 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_deployment(&self, id: &DeploymentId) -> crate::Result<FlowDeployment> {
-        if let Some(cached) = self
-            .local
-            .get_cache::<FlowDeploymentCache>(&self.user_id, id)
-        {
-            return Ok(cached);
-        }
-        let result = self.get_deployment_impl(id).await;
-        if let Ok(result) = &result
-            && let Err(error) = self
-                .local
-                .set_cache::<FlowDeploymentCache>(&id, result.clone())
-        {
-            tracing::error!("set_cache error: {}", error);
-        }
-        result
+        self.run_auto_cache::<FlowDeploymentCache>(&id, async |this| {
+            this.get_deployment_impl(id).await
+        })
+        .await
     }
 
     async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<BTreeSet<i64>> {
@@ -207,16 +196,8 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow> {
-        if let Some(cached) = self.local.get_cache::<FlowRowCache>(&self.user_id, &id) {
-            return Ok(cached);
-        }
-        let result = self.get_flow_impl(id).await;
-        if let Ok(result) = &result
-            && let Err(error) = self.local.set_cache::<FlowRowCache>(&id, result.clone())
-        {
-            tracing::error!("set_cache error: {}", error);
-        }
-        result
+        self.run_auto_cache::<FlowRowCache>(&id, async |this| this.get_flow_impl(id).await)
+            .await
     }
 
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
@@ -224,21 +205,10 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
-        if let Some(cached) = self
-            .local
-            .get_cache::<FlowInfoCache>(&self.user_id, &flow_id)
-        {
-            return Ok(cached);
-        }
-        let result = self.get_flow_info_impl(flow_id).await;
-        if let Ok(result) = &result
-            && let Err(error) = self
-                .local
-                .set_cache::<FlowInfoCache>(&flow_id, result.clone())
-        {
-            tracing::error!("set_cache error: {}", error);
-        }
-        result
+        self.run_auto_cache::<FlowInfoCache>(&flow_id, async |this| {
+            this.get_flow_info_impl(flow_id).await
+        })
+        .await
     }
 
     async fn get_some_wallets(&self, ids: &[i64]) -> crate::Result<Vec<Wallet>> {
@@ -275,16 +245,10 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_flow_config(&self, id: FlowId) -> crate::Result<client::ClientConfig> {
-        if let Some(cached) = self.local.get_cache::<FlowConfigCache>(&self.user_id, &id) {
-            return Ok(cached);
-        }
-        let result = self.get_flow_config_impl(id).await;
-        if let Ok(result) = &result
-            && let Err(error) = self.local.set_cache::<FlowConfigCache>(&id, result.clone())
-        {
-            tracing::error!("set_cache error: {}", error);
-        }
-        result
+        self.run_auto_cache::<FlowConfigCache>(&id, async |this| {
+            this.get_flow_config_impl(id).await
+        })
+        .await
     }
 
     async fn set_start_time(&self, id: &FlowRunId, time: &DateTime<Utc>) -> crate::Result<()> {
@@ -389,6 +353,26 @@ impl UserConnection {
             wasm_storage,
             local,
         }
+    }
+
+    pub(crate) async fn run_auto_cache<C>(
+        &self,
+        key: &C::Key,
+        run: impl AsyncFnOnce(&Self) -> crate::Result<C::Object>,
+    ) -> crate::Result<C::Object>
+    where
+        C: CacheBucket,
+    {
+        if let Some(cached) = self.local.get_cache::<C>(&self.user_id, &key) {
+            return Ok(cached);
+        }
+        let result = run(self).await;
+        if let Ok(result) = &result
+            && let Err(error) = self.local.set_cache::<C>(&key, result.clone())
+        {
+            tracing::error!("set_cache error: {}", error);
+        }
+        result
     }
 
     async fn read_item(&self, store: &str, key: &str) -> crate::Result<Option<Value>> {
