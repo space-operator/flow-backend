@@ -116,6 +116,54 @@ impl CacheBucket for FlowDeploymentCache {
     }
 }
 
+struct DeploymentWalletsCache;
+
+impl CacheBucket for DeploymentWalletsCache {
+    type Key = DeploymentId;
+    type EncodedKey = kv::Raw;
+    type Object = BTreeSet<i64>;
+
+    fn name() -> &'static str {
+        "DeploymentWalletsCache"
+    }
+
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+        key.as_bytes().into()
+    }
+
+    fn cache_time() -> Duration {
+        Duration::from_secs(60 * 24 * 7)
+    }
+
+    fn can_read(_: &Self::Object, _: &UserId) -> bool {
+        true
+    }
+}
+
+struct DeploymentFlowsCache;
+
+impl CacheBucket for DeploymentFlowsCache {
+    type Key = DeploymentId;
+    type EncodedKey = kv::Raw;
+    type Object = HashMap<FlowId, Flow>;
+
+    fn name() -> &'static str {
+        "DeploymentFlowsCache"
+    }
+
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+        key.as_bytes().into()
+    }
+
+    fn cache_time() -> Duration {
+        Duration::from_secs(60 * 24 * 7)
+    }
+
+    fn can_read(_: &Self::Object, _: &UserId) -> bool {
+        true
+    }
+}
+
 fn decrypt<I, C>(key: &EncryptionKey, encrypted: I) -> crate::Result<C>
 where
     I: IntoIterator<Item = EncryptedWallet>,
@@ -175,16 +223,20 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<BTreeSet<i64>> {
-        // TODO: caching
-        self.get_deployment_wallets_impl(id).await
+        self.run_auto_cache::<DeploymentWalletsCache>(id, async |this| {
+            this.get_deployment_wallets_impl(id).await
+        })
+        .await
     }
 
     async fn get_deployment_flows(
         &self,
         id: &DeploymentId,
     ) -> crate::Result<HashMap<FlowId, Flow>> {
-        // TODO: caching
-        self.get_deployment_flows_impl(id).await
+        self.run_auto_cache::<DeploymentFlowsCache>(id, async |this| {
+            this.get_deployment_flows_impl(id).await
+        })
+        .await
     }
 
     fn clone_connection(&self) -> Box<dyn UserConnectionTrait> {
