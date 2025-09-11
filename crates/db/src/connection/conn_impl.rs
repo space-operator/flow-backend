@@ -92,6 +92,30 @@ impl CacheBucket for FlowConfigCache {
     }
 }
 
+struct FlowDeploymentCache;
+
+impl CacheBucket for FlowDeploymentCache {
+    type Key = DeploymentId;
+    type EncodedKey = kv::Raw;
+    type Object = FlowDeployment;
+
+    fn name() -> &'static str {
+        "FlowDeploymentCache"
+    }
+
+    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+        key.as_bytes().into()
+    }
+
+    fn cache_time() -> Duration {
+        Duration::from_secs(60 * 24 * 7)
+    }
+
+    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+        obj.user_can_read(user_id)
+    }
+}
+
 fn decrypt<I, C>(key: &EncryptionKey, encrypted: I) -> crate::Result<C>
 where
     I: IntoIterator<Item = EncryptedWallet>,
@@ -144,8 +168,21 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_deployment(&self, id: &DeploymentId) -> crate::Result<FlowDeployment> {
-        // TODO: caching
-        self.get_deployment_impl(id).await
+        if let Some(cached) = self
+            .local
+            .get_cache::<FlowDeploymentCache>(&self.user_id, id)
+        {
+            return Ok(cached);
+        }
+        let result = self.get_deployment_impl(id).await;
+        if let Ok(result) = &result
+            && let Err(error) = self
+                .local
+                .set_cache::<FlowDeploymentCache>(&id, result.clone())
+        {
+            tracing::error!("set_cache error: {}", error);
+        }
+        result
     }
 
     async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<BTreeSet<i64>> {
