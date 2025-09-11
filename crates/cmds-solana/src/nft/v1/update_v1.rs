@@ -537,17 +537,6 @@ impl UpdateAsUpdateAuthorityV2InstructionData {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct UpdateMetadataAccountV2InstructionData {
-    discriminator: u8,
-}
-
-impl Default for UpdateMetadataAccountV2InstructionData {
-    fn default() -> Self {
-        Self { discriminator: 15 }
-    }
-}
-
-#[derive(BorshDeserialize, BorshSerialize)]
 struct UpdateV1InstructionData {
     discriminator: u8,
     update_v1_discriminator: u8,
