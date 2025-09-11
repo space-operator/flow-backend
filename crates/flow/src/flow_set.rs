@@ -37,7 +37,7 @@ pub enum StartPermission {
     Anonymous,
 }
 
-#[derive(bon::Builder, Clone, Debug)]
+#[derive(bon::Builder, Clone, Debug, Serialize, Deserialize)]
 pub struct Flow {
     pub row: FlowRow,
 }
@@ -92,7 +92,7 @@ impl Flow {
 
 pub type DeploymentId = Uuid;
 
-#[derive(bon::Builder, Debug, Clone)]
+#[derive(bon::Builder, Debug, Clone, Serialize, Deserialize)]
 pub struct FlowDeployment {
     /// Deployment ID, NIL if not inserted yet, or is temporary
     pub id: DeploymentId,
@@ -134,6 +134,14 @@ impl FlowDeployment {
             .output_instructions(false)
             .fees(Vec::new())
             .build()
+    }
+
+    pub fn user_can_read(&self, user_id: &UserId) -> bool {
+        match self.start_permission {
+            StartPermission::Owner => self.user_id == *user_id,
+            StartPermission::Authenticated => true,
+            StartPermission::Anonymous => true,
+        }
     }
 
     pub async fn from_entrypoint<S>(flow_id: FlowId, get_flow_row: &mut S) -> Result<Self, S::Error>
