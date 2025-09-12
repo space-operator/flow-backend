@@ -96,8 +96,8 @@ impl UserConnectionTrait for UserConnection {
             return Ok(wallet);
         }
 
-        let w = self.get_encrypted_wallet_by_pubkey(pubkey).await?;
         let key = self.pool.encryption_key()?;
+        let w = self.get_encrypted_wallet_by_pubkey(pubkey).await?;
         let wallet = decrypt::<_, Vec<Wallet>>(key, [w.clone()])?.pop().unwrap();
 
         if let Err(error) = self.local.set_cache::<WalletByPubkeyCache>(
@@ -286,9 +286,61 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_some_wallets(&self, ids: &[i64]) -> crate::Result<Vec<Wallet>> {
-        // TODO: caching
+        struct GetSomeWalletsCache;
+        impl CacheBucket for GetSomeWalletsCache {
+            type Key = i64;
+            type EncodedKey = kv::Integer;
+            type Object = WithUser<EncryptedWallet>;
+
+            fn name() -> &'static str {
+                "GetSomeWalletsCache"
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                (*key as u64).into()
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(60 * 24)
+            }
+
+            fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+                obj.user_id == *user_id
+            }
+        }
+
+        let cached = ids
+            .iter()
+            .filter_map(|id| {
+                self.local
+                    .get_cache::<GetSomeWalletsCache>(&self.user_id, id)
+                    .map(|w| w.value)
+            })
+            .collect::<Vec<_>>();
+
+        let ids = ids
+            .iter()
+            .copied()
+            .filter(|id| !cached.iter().any(|w| w.id == *id))
+            .collect::<Vec<_>>();
+
         let key = self.pool.encryption_key()?.clone();
-        let encrypted = self.get_some_wallets_impl(ids).await?;
+        let mut encrypted = self.get_some_wallets_impl(&ids).await?;
+
+        for w in &encrypted {
+            if let Err(error) = self.local.set_cache::<GetSomeWalletsCache>(
+                &w.id,
+                WithUser {
+                    user_id: self.user_id,
+                    value: w.clone(),
+                },
+            ) {
+                tracing::error!("set_cache error: {}", error);
+            }
+        }
+
+        encrypted.extend(cached);
+
         Ok(spawn_blocking(move || decrypt(&key, encrypted)).await??)
     }
 
