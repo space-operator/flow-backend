@@ -20,150 +20,6 @@ mod flow_run_states;
 mod flows;
 mod wallets;
 
-struct FlowRowCache;
-
-impl CacheBucket for FlowRowCache {
-    type Key = FlowId;
-    type EncodedKey = kv::Integer;
-    type Object = FlowRow;
-
-    fn name() -> &'static str {
-        "FlowRowCache"
-    }
-
-    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
-        obj.user_id == *user_id
-    }
-
-    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
-        kv::Integer::from(*key)
-    }
-
-    fn cache_time() -> Duration {
-        Duration::from_secs(10)
-    }
-}
-
-struct FlowInfoCache;
-
-impl CacheBucket for FlowInfoCache {
-    type Key = FlowId;
-    type EncodedKey = kv::Integer;
-    type Object = FlowInfo;
-
-    fn name() -> &'static str {
-        "FlowInfoCache"
-    }
-
-    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
-        obj.is_public || obj.user_id == *user_id
-    }
-
-    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
-        kv::Integer::from(*key)
-    }
-
-    fn cache_time() -> Duration {
-        Duration::from_secs(10)
-    }
-}
-
-struct FlowConfigCache;
-
-impl CacheBucket for FlowConfigCache {
-    type Key = FlowId;
-    type EncodedKey = kv::Integer;
-    type Object = ClientConfig;
-
-    fn name() -> &'static str {
-        "FlowConfigCache"
-    }
-
-    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
-        obj.user_id == *user_id
-    }
-
-    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
-        kv::Integer::from(*key)
-    }
-
-    fn cache_time() -> Duration {
-        Duration::from_secs(10)
-    }
-}
-
-struct FlowDeploymentCache;
-
-impl CacheBucket for FlowDeploymentCache {
-    type Key = DeploymentId;
-    type EncodedKey = kv::Raw;
-    type Object = FlowDeployment;
-
-    fn name() -> &'static str {
-        "FlowDeploymentCache"
-    }
-
-    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
-        key.as_bytes().into()
-    }
-
-    fn cache_time() -> Duration {
-        Duration::from_secs(60 * 24 * 7)
-    }
-
-    fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
-        obj.user_can_read(user_id)
-    }
-}
-
-struct DeploymentWalletsCache;
-
-impl CacheBucket for DeploymentWalletsCache {
-    type Key = DeploymentId;
-    type EncodedKey = kv::Raw;
-    type Object = BTreeSet<i64>;
-
-    fn name() -> &'static str {
-        "DeploymentWalletsCache"
-    }
-
-    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
-        key.as_bytes().into()
-    }
-
-    fn cache_time() -> Duration {
-        Duration::from_secs(60 * 24 * 7)
-    }
-
-    fn can_read(_: &Self::Object, _: &UserId) -> bool {
-        true
-    }
-}
-
-struct DeploymentFlowsCache;
-
-impl CacheBucket for DeploymentFlowsCache {
-    type Key = DeploymentId;
-    type EncodedKey = kv::Raw;
-    type Object = HashMap<FlowId, Flow>;
-
-    fn name() -> &'static str {
-        "DeploymentFlowsCache"
-    }
-
-    fn encode_key(key: &Self::Key) -> Self::EncodedKey {
-        key.as_bytes().into()
-    }
-
-    fn cache_time() -> Duration {
-        Duration::from_secs(60 * 24 * 7)
-    }
-
-    fn can_read(_: &Self::Object, _: &UserId) -> bool {
-        true
-    }
-}
-
 fn decrypt<I, C>(key: &EncryptionKey, encrypted: I) -> crate::Result<C>
 where
     I: IntoIterator<Item = EncryptedWallet>,
@@ -185,6 +41,12 @@ where
         .collect::<crate::Result<C>>()
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub(crate) struct WithUser<T> {
+    pub(crate) user_id: UserId,
+    pub(crate) value: T,
+}
+
 #[async_trait(?Send)]
 impl UserConnectionTrait for UserConnection {
     async fn copy_in_node_run(&self, rows: Vec<PartialNodeRunRow>) -> crate::Result<()> {
@@ -200,10 +62,55 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_wallet_by_pubkey(&self, pubkey: &[u8; 32]) -> crate::Result<Wallet> {
-        // TODO: caching
-        let w = self.get_encrypted_wallet_by_pubkey(pubkey).await?;
+        struct WalletByPubkeyCache;
+        impl CacheBucket for WalletByPubkeyCache {
+            type Key = [u8; 32];
+            type EncodedKey = kv::Raw;
+            type Object = WithUser<EncryptedWallet>;
+
+            fn name() -> &'static str {
+                "WalletByPubkeyCache"
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                key.into()
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(60 * 24)
+            }
+
+            fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+                obj.user_id == *user_id
+            }
+        }
+
+        if let Some(cached) = self
+            .local
+            .get_cache::<WalletByPubkeyCache>(&self.user_id, pubkey)
+        {
+            let key = self.pool.encryption_key()?;
+            let wallet = decrypt::<_, Vec<Wallet>>(key, [cached.value])?
+                .pop()
+                .unwrap();
+            return Ok(wallet);
+        }
+
         let key = self.pool.encryption_key()?;
-        Ok(decrypt::<_, Vec<Wallet>>(key, [w])?.pop().unwrap())
+        let w = self.get_encrypted_wallet_by_pubkey(pubkey).await?;
+        let wallet = decrypt::<_, Vec<Wallet>>(key, [w.clone()])?.pop().unwrap();
+
+        if let Err(error) = self.local.set_cache::<WalletByPubkeyCache>(
+            pubkey,
+            WithUser {
+                user_id: self.user_id,
+                value: w,
+            },
+        ) {
+            tracing::error!("set_cache error: {}", error);
+        }
+
+        Ok(wallet)
     }
 
     async fn get_deployment_id_from_tag(
@@ -211,11 +118,61 @@ impl UserConnectionTrait for UserConnection {
         entrypoint: &FlowId,
         tag: &str,
     ) -> crate::Result<DeploymentId> {
-        // TODO: caching
-        self.get_deployment_id_from_tag_impl(entrypoint, tag).await
+        struct GetDeploymentIdFromTagCache;
+        impl CacheBucket for GetDeploymentIdFromTagCache {
+            type Key = String;
+            type EncodedKey = String;
+            type Object = DeploymentId;
+
+            fn name() -> &'static str {
+                "GetDeploymentIdFromTagCache"
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                key.clone()
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(5)
+            }
+
+            fn can_read(_: &Self::Object, _: &UserId) -> bool {
+                true
+            }
+        }
+
+        let key = format!("{entrypoint}/{tag}");
+
+        self.run_auto_cache::<GetDeploymentIdFromTagCache>(&key, async |this| {
+            this.get_deployment_id_from_tag_impl(entrypoint, tag).await
+        })
+        .await
     }
 
     async fn get_deployment(&self, id: &DeploymentId) -> crate::Result<FlowDeployment> {
+        struct FlowDeploymentCache;
+        impl CacheBucket for FlowDeploymentCache {
+            type Key = DeploymentId;
+            type EncodedKey = kv::Raw;
+            type Object = FlowDeployment;
+
+            fn name() -> &'static str {
+                "FlowDeploymentCache"
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                key.as_bytes().into()
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(60 * 24 * 7)
+            }
+
+            fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+                obj.user_can_read(user_id)
+            }
+        }
+
         self.run_auto_cache::<FlowDeploymentCache>(&id, async |this| {
             this.get_deployment_impl(id).await
         })
@@ -223,6 +180,29 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_deployment_wallets(&self, id: &DeploymentId) -> crate::Result<BTreeSet<i64>> {
+        struct DeploymentWalletsCache;
+        impl CacheBucket for DeploymentWalletsCache {
+            type Key = DeploymentId;
+            type EncodedKey = kv::Raw;
+            type Object = BTreeSet<i64>;
+
+            fn name() -> &'static str {
+                "DeploymentWalletsCache"
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                key.as_bytes().into()
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(60 * 24 * 7)
+            }
+
+            fn can_read(_: &Self::Object, _: &UserId) -> bool {
+                true
+            }
+        }
+
         self.run_auto_cache::<DeploymentWalletsCache>(id, async |this| {
             this.get_deployment_wallets_impl(id).await
         })
@@ -233,6 +213,29 @@ impl UserConnectionTrait for UserConnection {
         &self,
         id: &DeploymentId,
     ) -> crate::Result<HashMap<FlowId, Flow>> {
+        struct DeploymentFlowsCache;
+        impl CacheBucket for DeploymentFlowsCache {
+            type Key = DeploymentId;
+            type EncodedKey = kv::Raw;
+            type Object = HashMap<FlowId, Flow>;
+
+            fn name() -> &'static str {
+                "DeploymentFlowsCache"
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                key.as_bytes().into()
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(60 * 24 * 7)
+            }
+
+            fn can_read(_: &Self::Object, _: &UserId) -> bool {
+                true
+            }
+        }
+
         self.run_auto_cache::<DeploymentFlowsCache>(id, async |this| {
             this.get_deployment_flows_impl(id).await
         })
@@ -248,6 +251,29 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow> {
+        struct FlowRowCache;
+        impl CacheBucket for FlowRowCache {
+            type Key = FlowId;
+            type EncodedKey = kv::Integer;
+            type Object = FlowRow;
+
+            fn name() -> &'static str {
+                "FlowRowCache"
+            }
+
+            fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+                obj.user_id == *user_id
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                kv::Integer::from(*key)
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(10)
+            }
+        }
+
         self.run_auto_cache::<FlowRowCache>(&id, async |this| this.get_flow_impl(id).await)
             .await
     }
@@ -257,6 +283,29 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_flow_info(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
+        struct FlowInfoCache;
+        impl CacheBucket for FlowInfoCache {
+            type Key = FlowId;
+            type EncodedKey = kv::Integer;
+            type Object = FlowInfo;
+
+            fn name() -> &'static str {
+                "FlowInfoCache"
+            }
+
+            fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+                obj.is_public || obj.user_id == *user_id
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                kv::Integer::from(*key)
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(10)
+            }
+        }
+
         self.run_auto_cache::<FlowInfoCache>(&flow_id, async |this| {
             this.get_flow_info_impl(flow_id).await
         })
@@ -264,9 +313,61 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_some_wallets(&self, ids: &[i64]) -> crate::Result<Vec<Wallet>> {
-        // TODO: caching
+        struct GetSomeWalletsCache;
+        impl CacheBucket for GetSomeWalletsCache {
+            type Key = i64;
+            type EncodedKey = kv::Integer;
+            type Object = WithUser<EncryptedWallet>;
+
+            fn name() -> &'static str {
+                "GetSomeWalletsCache"
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                (*key as u64).into()
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(60 * 24)
+            }
+
+            fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+                obj.user_id == *user_id
+            }
+        }
+
+        let cached = ids
+            .iter()
+            .filter_map(|id| {
+                self.local
+                    .get_cache::<GetSomeWalletsCache>(&self.user_id, id)
+                    .map(|w| w.value)
+            })
+            .collect::<Vec<_>>();
+
+        let ids = ids
+            .iter()
+            .copied()
+            .filter(|id| !cached.iter().any(|w| w.id == *id))
+            .collect::<Vec<_>>();
+
         let key = self.pool.encryption_key()?.clone();
-        let encrypted = self.get_some_wallets_impl(ids).await?;
+        let mut encrypted = self.get_some_wallets_impl(&ids).await?;
+
+        for w in &encrypted {
+            if let Err(error) = self.local.set_cache::<GetSomeWalletsCache>(
+                &w.id,
+                WithUser {
+                    user_id: self.user_id,
+                    value: w.clone(),
+                },
+            ) {
+                tracing::error!("set_cache error: {}", error);
+            }
+        }
+
+        encrypted.extend(cached);
+
         Ok(spawn_blocking(move || decrypt(&key, encrypted)).await??)
     }
 
@@ -297,6 +398,29 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_flow_config(&self, id: FlowId) -> crate::Result<client::ClientConfig> {
+        struct FlowConfigCache;
+        impl CacheBucket for FlowConfigCache {
+            type Key = FlowId;
+            type EncodedKey = kv::Integer;
+            type Object = ClientConfig;
+
+            fn name() -> &'static str {
+                "FlowConfigCache"
+            }
+
+            fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+                obj.user_id == *user_id
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                kv::Integer::from(*key)
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(10)
+            }
+        }
+
         self.run_auto_cache::<FlowConfigCache>(&id, async |this| {
             this.get_flow_config_impl(id).await
         })
