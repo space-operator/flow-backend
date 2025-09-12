@@ -41,6 +41,12 @@ where
         .collect::<crate::Result<C>>()
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub(crate) struct WithUser<T> {
+    pub(crate) user_id: UserId,
+    pub(crate) value: T,
+}
+
 #[async_trait(?Send)]
 impl UserConnectionTrait for UserConnection {
     async fn copy_in_node_run(&self, rows: Vec<PartialNodeRunRow>) -> crate::Result<()> {
@@ -56,10 +62,55 @@ impl UserConnectionTrait for UserConnection {
     }
 
     async fn get_wallet_by_pubkey(&self, pubkey: &[u8; 32]) -> crate::Result<Wallet> {
-        // TODO: caching
+        struct WalletByPubkeyCache;
+        impl CacheBucket for WalletByPubkeyCache {
+            type Key = [u8; 32];
+            type EncodedKey = kv::Raw;
+            type Object = WithUser<EncryptedWallet>;
+
+            fn name() -> &'static str {
+                "WalletByPubkeyCache"
+            }
+
+            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
+                key.into()
+            }
+
+            fn cache_time() -> Duration {
+                Duration::from_secs(60 * 24)
+            }
+
+            fn can_read(obj: &Self::Object, user_id: &UserId) -> bool {
+                obj.user_id == *user_id
+            }
+        }
+
+        if let Some(cached) = self
+            .local
+            .get_cache::<WalletByPubkeyCache>(&self.user_id, pubkey)
+        {
+            let key = self.pool.encryption_key()?;
+            let wallet = decrypt::<_, Vec<Wallet>>(key, [cached.value])?
+                .pop()
+                .unwrap();
+            return Ok(wallet);
+        }
+
         let w = self.get_encrypted_wallet_by_pubkey(pubkey).await?;
         let key = self.pool.encryption_key()?;
-        Ok(decrypt::<_, Vec<Wallet>>(key, [w])?.pop().unwrap())
+        let wallet = decrypt::<_, Vec<Wallet>>(key, [w.clone()])?.pop().unwrap();
+
+        if let Err(error) = self.local.set_cache::<WalletByPubkeyCache>(
+            pubkey,
+            WithUser {
+                user_id: self.user_id,
+                value: w,
+            },
+        ) {
+            tracing::error!("set_cache error: {}", error);
+        }
+
+        Ok(wallet)
     }
 
     async fn get_deployment_id_from_tag(
