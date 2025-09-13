@@ -118,35 +118,7 @@ impl UserConnectionTrait for UserConnection {
         entrypoint: &FlowId,
         tag: &str,
     ) -> crate::Result<DeploymentId> {
-        struct GetDeploymentIdFromTagCache;
-        impl CacheBucket for GetDeploymentIdFromTagCache {
-            type Key = String;
-            type EncodedKey = String;
-            type Object = DeploymentId;
-
-            fn name() -> &'static str {
-                "GetDeploymentIdFromTagCache"
-            }
-
-            fn encode_key(key: &Self::Key) -> Self::EncodedKey {
-                key.clone()
-            }
-
-            fn cache_time() -> Duration {
-                Duration::from_secs(5)
-            }
-
-            fn can_read(_: &Self::Object, _: &UserId) -> bool {
-                true
-            }
-        }
-
-        let key = format!("{entrypoint}/{tag}");
-
-        self.run_auto_cache::<GetDeploymentIdFromTagCache>(&key, async |this| {
-            this.get_deployment_id_from_tag_impl(entrypoint, tag).await
-        })
-        .await
+        self.get_deployment_id_from_tag_impl(entrypoint, tag).await
     }
 
     async fn get_deployment(&self, id: &DeploymentId) -> crate::Result<FlowDeployment> {
