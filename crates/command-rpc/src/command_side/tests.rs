@@ -2,21 +2,20 @@ use crate::command_side::command_factory::{self, CommandFactoryExt};
 use crate::flow_side::command_context::CommandContextImpl;
 use crate::tracing::TrackFlowRun;
 use cmds_std as _;
-use flow_lib::command::{CommandDescription, CommandError, CommandFactory, CommandTrait};
-use flow_lib::config::client::NodeData;
-use flow_lib::context::CommandContext;
-use flow_lib::value;
-use flow_lib::value::bincode_impl::map_from_bincode;
 use flow_lib::{
     CmdInputDescription, CmdOutputDescription, Name, ValueType,
-    config::client::{Extra, Source, Target, TargetsForm},
+    command::{CommandDescription, CommandError, CommandFactory, CommandTrait},
+    context::CommandContext,
     utils::LocalBoxFuture,
-    value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
+    value::{
+        self, Decimal, bincode_impl::map_from_bincode, bincode_impl::map_to_bincode,
+        with::AsDecimal,
+    },
 };
 use futures::FutureExt;
 use iroh::{Endpoint, Watcher};
 use rust_decimal_macros::dec;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 struct Add;
 impl CommandTrait for Add {
@@ -69,10 +68,15 @@ impl CommandTrait for Add {
                 b: Decimal,
             }
 
-            let x: Input = value::from_map(params)?;
-            Ok(value::map! {
-                "c" => x.a + x.b,
-            })
+            #[serde_with::serde_as]
+            #[derive(Serialize)]
+            struct Output {
+                #[serde_as(as = "AsDecimal")]
+                c: Decimal,
+            }
+
+            let Input { a, b } = value::from_map(params)?;
+            Ok(value::to_map(&Output { c: a + b })?)
         }
         .boxed()
     }
