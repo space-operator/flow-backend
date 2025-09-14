@@ -100,81 +100,105 @@ pub trait CommandTrait: 'static {
         result
     }
 
-    /// Specify how to convert inputs into passthrough outputs.
-    fn passthrough_outputs(&self, inputs: &ValueSet) -> ValueSet {
-        let mut res = ValueSet::new();
-        for i in self.inputs() {
-            if i.passthrough
-                && let Some(value) = inputs.get(&i.name)
-            {
-                if !i.required && matches!(value, Value::Null) {
-                    continue;
-                }
-
-                let value = match i.type_bounds.first() {
-                    Some(ValueType::Pubkey) => {
-                        // keypair could be automatically converted into pubkey
-                        // we don't want to passthrough the keypair here, only pubkey
-                        value::pubkey::deserialize(value.clone()).map(Into::into)
-                    }
-                    _ => Ok(value.clone()),
-                }
-                .unwrap_or_else(|error| {
-                    tracing::warn!("error reading passthrough: {}", error);
-                    value.clone()
-                });
-                res.insert(i.name, value);
-            }
-        }
-        res
-    }
-
-    fn input_is_required(&self, name: &str) -> Option<bool> {
-        self.inputs()
-            .into_iter()
-            .find_map(|i| (i.name == name).then_some(i.required))
-    }
-
-    fn output_is_optional(&self, name: &str) -> Option<bool> {
-        self.outputs()
-            .into_iter()
-            .find_map(|o| (o.name == name).then_some(o.optional))
-            .or_else(|| {
-                self.inputs()
-                    .into_iter()
-                    .find_map(|i| (i.name == name && i.passthrough).then_some(!i.required))
-            })
-    }
-
     fn node_data(&self) -> NodeData {
-        NodeData {
-            r#type: self.r#type(),
-            node_id: self.name(),
-            sources: self
-                .outputs()
-                .into_iter()
-                .map(|output| client::Source {
-                    id: Uuid::nil(),
-                    name: output.name,
-                    r#type: output.r#type,
-                    optional: output.optional,
-                })
-                .collect(),
-            targets: self
-                .inputs()
-                .into_iter()
-                .map(|input| client::Target {
-                    id: Uuid::nil(),
-                    name: input.name,
-                    type_bounds: input.type_bounds,
-                    required: input.required,
-                    passthrough: input.passthrough,
-                })
-                .collect(),
-            targets_form: client::TargetsForm::default(),
-            instruction_info: self.instruction_info(),
+        default_node_data(self)
+    }
+}
+
+/// Specify how to convert inputs into passthrough outputs.
+pub fn passthrough_outputs<T: CommandTrait + ?Sized>(cmd: &T, inputs: &ValueSet) -> ValueSet {
+    let mut res = ValueSet::new();
+    for i in cmd.inputs() {
+        if i.passthrough
+            && let Some(value) = inputs.get(&i.name)
+        {
+            if !i.required && matches!(value, Value::Null) {
+                continue;
+            }
+
+            let value = match i.type_bounds.first() {
+                Some(ValueType::Pubkey) => {
+                    // keypair could be automatically converted into pubkey
+                    // we don't want to passthrough the keypair here, only pubkey
+                    value::pubkey::deserialize(value.clone()).map(Into::into)
+                }
+                _ => Ok(value.clone()),
+            }
+            .unwrap_or_else(|error| {
+                tracing::warn!("error reading passthrough: {}", error);
+                value.clone()
+            });
+            res.insert(i.name, value);
         }
     }
+    res
+}
+
+/// Specify how [`form_data`][crate::config::NodeConfig::form_data] are read.
+pub fn default_read_form_data<T: CommandTrait + ?Sized>(
+    cmd: &T,
+    data: serde_json::Value,
+) -> ValueSet {
+    let mut result = ValueSet::new();
+    for i in cmd.inputs() {
+        if let Some(json) = data.get(&i.name) {
+            let value = Value::from(json.clone());
+            result.insert(i.name.clone(), value);
+        }
+    }
+    result
+}
+
+pub fn default_node_data<T: CommandTrait + ?Sized>(cmd: &T) -> NodeData {
+    NodeData {
+        r#type: cmd.r#type(),
+        node_id: cmd.name(),
+        sources: cmd
+            .outputs()
+            .into_iter()
+            .map(|output| client::Source {
+                id: Uuid::nil(),
+                name: output.name,
+                r#type: output.r#type,
+                optional: output.optional,
+            })
+            .collect(),
+        targets: cmd
+            .inputs()
+            .into_iter()
+            .map(|input| client::Target {
+                id: Uuid::nil(),
+                name: input.name,
+                type_bounds: input.type_bounds,
+                required: input.required,
+                passthrough: input.passthrough,
+            })
+            .collect(),
+        targets_form: client::TargetsForm::default(),
+        instruction_info: cmd.instruction_info(),
+    }
+}
+
+pub fn input_is_required<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Option<bool> {
+    cmd.outputs()
+        .into_iter()
+        .find_map(|o| (o.name == name).then_some(o.optional))
+        .or_else(|| {
+            cmd.inputs()
+                .into_iter()
+                .find_map(|i| (i.name == name && i.passthrough).then_some(!i.required))
+        })
+}
+
+pub fn output_is_optional<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Option<bool> {
+    cmd.outputs()
+        .into_iter()
+        .find_map(|o| (o.name == name).then_some(o.optional))
+        .or_else(|| {
+            cmd.inputs()
+                .into_iter()
+                .find_map(|i| (i.name == name && i.passthrough).then_some(!i.required))
+        })
 }
 
 /// Specify the order with which a command will return its output:
