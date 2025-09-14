@@ -9,7 +9,8 @@
 use crate::{
     CommandType, ValueType,
     config::{
-        CmdInputDescription, CmdOutputDescription, Name, ValueSet, client::NodeData,
+        CmdInputDescription, CmdOutputDescription, Name, ValueSet,
+        client::{self, NodeData},
         node::Permissions,
     },
     context::CommandContext,
@@ -18,6 +19,7 @@ use futures::future::{Either, LocalBoxFuture, OptionFuture};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, collections::BTreeMap, future::ready};
+use uuid::Uuid;
 use value::Value;
 
 pub mod builder;
@@ -57,6 +59,10 @@ pub type CommandError = anyhow::Error;
 /// Generic trait for implementing commands.
 #[async_trait::async_trait(?Send)]
 pub trait CommandTrait: 'static {
+    fn r#type(&self) -> CommandType {
+        CommandType::Native
+    }
+
     /// Unique name to identify the command.
     fn name(&self) -> Name;
 
@@ -138,6 +144,36 @@ pub trait CommandTrait: 'static {
                     .into_iter()
                     .find_map(|i| (i.name == name && i.passthrough).then_some(!i.required))
             })
+    }
+
+    fn node_data(&self) -> NodeData {
+        NodeData {
+            r#type: self.r#type(),
+            node_id: self.name(),
+            sources: self
+                .outputs()
+                .into_iter()
+                .map(|output| client::Source {
+                    id: Uuid::nil(),
+                    name: output.name,
+                    r#type: output.r#type,
+                    optional: output.optional,
+                })
+                .collect(),
+            targets: self
+                .inputs()
+                .into_iter()
+                .map(|input| client::Target {
+                    id: Uuid::nil(),
+                    name: input.name,
+                    type_bounds: input.type_bounds,
+                    required: input.required,
+                    passthrough: input.passthrough,
+                })
+                .collect(),
+            targets_form: client::TargetsForm::default(),
+            instruction_info: self.instruction_info(),
+        }
     }
 }
 

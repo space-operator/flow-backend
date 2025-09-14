@@ -113,42 +113,7 @@ async fn test_call() {
 
     dbg!("connected");
 
-    let nd = NodeData {
-        r#type: flow_lib::CommandType::Native,
-        node_id: "add".to_owned(),
-        sources: [Source {
-            id: <_>::default(),
-            name: "c".to_owned(),
-            r#type: ValueType::Decimal,
-            optional: false,
-        }]
-        .into(),
-        targets: [
-            Target {
-                id: <_>::default(),
-                name: "a".to_owned(),
-                type_bounds: [ValueType::Decimal].into(),
-                required: true,
-                passthrough: false,
-            },
-            Target {
-                id: <_>::default(),
-                name: "b".to_owned(),
-                type_bounds: [ValueType::Decimal].into(),
-                required: true,
-                passthrough: false,
-            },
-        ]
-        .into(),
-        targets_form: TargetsForm {
-            form_data: serde_json::Value::Null,
-            extra: Extra {
-                ..Default::default()
-            },
-            wasm_bytes: None,
-        },
-        instruction_info: None,
-    };
+    let nd = Add.node_data();
 
     let cmd = client.init(&nd).await.unwrap().unwrap();
 
