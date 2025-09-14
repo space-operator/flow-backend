@@ -2,10 +2,10 @@ use anyhow::Context as _;
 use command_rpc::client::RpcCommandClient;
 use flow_lib::{
     command::{
-        CommandDescription, CommandError, CommandTrait, MatchCommand,
+        CommandDescription, CommandError, CommandTrait, MatchCommand, default_node_data,
         prelude::{Either, async_trait},
     },
-    config::client::NodeData,
+    config::client::{self, NodeData},
     utils::LocalBoxFuture,
 };
 use serde::Deserialize;
@@ -58,7 +58,7 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
 
     let dir = tempdir()?;
 
-    tokio::fs::write(dir.path().join("cmd.ts"), source)
+    tokio::fs::write(dir.path().join("cmd.ts"), &source)
         .await
         .context("write cmd.ts")?;
 
@@ -132,6 +132,7 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
     let cmd = DenoCommand {
         inner: cmd,
         spawned,
+        source,
     };
     tokio::spawn(async move {
         while let Ok(Some(line)) = stdout.next_line().await {
@@ -158,6 +159,7 @@ flow_lib::submit!(CommandDescription {
 pub struct DenoCommand {
     inner: RpcCommandClient,
     spawned: Child,
+    source: String,
 }
 
 #[async_trait(?Send)]
@@ -186,6 +188,11 @@ impl CommandTrait for DenoCommand {
     }
     async fn destroy(&mut self) {
         self.spawned.kill().await.ok();
+    }
+    fn node_data(&self) -> client::NodeData {
+        let mut data = default_node_data(self);
+        data.targets_form.extra.rest = [("source".to_owned(), self.source.clone().into())].into();
+        data
     }
 }
 
