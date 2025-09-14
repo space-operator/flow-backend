@@ -1,86 +1,15 @@
 use crate::command_side::command_factory::{self, CommandFactoryExt};
 use crate::flow_side::command_context::CommandContextImpl;
 use crate::tracing::TrackFlowRun;
-use cmds_std as _;
 use flow_lib::{
-    CmdInputDescription, CmdOutputDescription, Name, ValueType,
-    command::{CommandDescription, CommandError, CommandFactory, CommandTrait},
+    command::CommandFactory,
     context::CommandContext,
-    utils::LocalBoxFuture,
-    value::{
-        self, Decimal, bincode_impl::map_from_bincode, bincode_impl::map_to_bincode,
-        with::AsDecimal,
-    },
+    value::{self, bincode_impl::map_from_bincode, bincode_impl::map_to_bincode},
 };
-use futures::FutureExt;
 use iroh::{Endpoint, Watcher};
 use rust_decimal_macros::dec;
-use serde::{Deserialize, Serialize};
 
-struct Add;
-impl CommandTrait for Add {
-    fn name(&self) -> Name {
-        "add".into()
-    }
-
-    fn inputs(&self) -> Vec<CmdInputDescription> {
-        [
-            CmdInputDescription {
-                name: "a".into(),
-                type_bounds: [ValueType::Decimal].into(),
-                required: true,
-                passthrough: false,
-            },
-            CmdInputDescription {
-                name: "b".into(),
-                type_bounds: [ValueType::Decimal].into(),
-                required: true,
-                passthrough: false,
-            },
-        ]
-        .into()
-    }
-
-    fn outputs(&self) -> Vec<CmdOutputDescription> {
-        [CmdOutputDescription {
-            name: "c".into(),
-            r#type: ValueType::Decimal,
-            optional: false,
-        }]
-        .into()
-    }
-    fn run<'life0, 'async_trait>(
-        &'life0 self,
-        _: CommandContext,
-        params: value::Map,
-    ) -> LocalBoxFuture<'async_trait, Result<value::Map, CommandError>>
-    where
-        'life0: 'async_trait,
-        Self: 'async_trait,
-    {
-        async move {
-            #[serde_with::serde_as]
-            #[derive(Deserialize)]
-            struct Input {
-                #[serde_as(as = "AsDecimal")]
-                a: Decimal,
-                #[serde_as(as = "AsDecimal")]
-                b: Decimal,
-            }
-
-            #[serde_with::serde_as]
-            #[derive(Serialize)]
-            struct Output {
-                #[serde_as(as = "AsDecimal")]
-                c: Decimal,
-            }
-
-            let Input { a, b } = value::from_map(params)?;
-            Ok(value::to_map(&Output { c: a + b })?)
-        }
-        .boxed()
-    }
-}
+pub mod add;
 
 #[actix::test]
 async fn test_serve_iroh() {
@@ -100,8 +29,6 @@ async fn test_serve_iroh() {
     assert!(!names.is_empty());
 }
 
-inventory::submit!(CommandDescription::new("add", |_| Ok(Box::new(Add))));
-
 #[actix::test]
 async fn test_call() {
     let tracker = TrackFlowRun::init_tracing_once();
@@ -117,7 +44,7 @@ async fn test_call() {
 
     dbg!("connected");
 
-    let nd = Add.node_data();
+    let nd = add::build().unwrap().node_data();
 
     let cmd = client.init(&nd).await.unwrap().unwrap();
 

@@ -162,6 +162,9 @@ pub struct DenoCommand {
 
 #[async_trait(?Send)]
 impl CommandTrait for DenoCommand {
+    fn r#type(&self) -> flow_lib::CommandType {
+        flow_lib::CommandType::Deno
+    }
     fn name(&self) -> flow_lib::Name {
         self.inner.name()
     }
