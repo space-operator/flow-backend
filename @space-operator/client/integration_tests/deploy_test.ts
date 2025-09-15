@@ -7,6 +7,7 @@ import { LAMPORTS_PER_SOL } from "npm:@solana/web3.js@^1.91.4";
 import * as nacl from "npm:tweetnacl";
 import { decodeBase64 } from "jsr:@std/encoding@0.221/base64";
 import { checkNoErrors } from "./utils.ts";
+import { encodeBase58 } from "jsr:@std/encoding@0.221/base58";
 
 dotenv.loadSync({
   export: true,
@@ -423,11 +424,11 @@ Deno.test("execute on action", async () => {
   const req = await starter.getSignatureRequest(flow_run_id);
   const tx = req.buildTransaction();
   tx.sign([starterKeypair]);
+  console.log(tx.signatures.map((sig) => encodeBase58(sig)));
 
   const signature = await conn.sendTransaction(tx, {
     skipPreflight: true,
   });
-  console.log(signature);
 
   const output = (await starter.getFlowOutput(flow_run_id)).toJSObject();
   await checkNoErrors(sup, flow_run_id);
