@@ -180,14 +180,9 @@ pub fn default_node_data<T: CommandTrait + ?Sized>(cmd: &T) -> NodeData {
 }
 
 pub fn input_is_required<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Option<bool> {
-    cmd.outputs()
+    cmd.inputs()
         .into_iter()
-        .find_map(|o| (o.name == name).then_some(o.optional))
-        .or_else(|| {
-            cmd.inputs()
-                .into_iter()
-                .find_map(|i| (i.name == name && i.passthrough).then_some(!i.required))
-        })
+        .find_map(|i| (i.name == name).then_some(i.required))
 }
 
 pub fn output_is_optional<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Option<bool> {
