@@ -19,7 +19,7 @@ use super::{
     command_trait::HTTP_CLIENT,
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, schemars::JsonSchema)]
 pub struct FlowServerConfig {
     apikey: Option<String>,
     #[serde(flatten)]
@@ -37,7 +37,7 @@ impl Default for FlowServerConfig {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, schemars::JsonSchema)]
 #[serde(untagged)]
 pub enum FlowServerAddressConfig {
     Info { url: Url },
@@ -58,8 +58,9 @@ pub struct Config {
     pub apikey: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, schemars::JsonSchema)]
 pub struct FlowServerAddress {
+    #[schemars(schema_with = "String::json_schema")]
     pub node_id: iroh::PublicKey,
     pub relay_url: Url,
     pub direct_addresses: Option<BTreeSet<SocketAddr>>,
@@ -184,4 +185,18 @@ pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Err
     join_set.join_all().await;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use schemars::schema_for;
+
+    use super::*;
+    #[test]
+    fn generate_schema() {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&schema_for!(FlowServerConfig)).unwrap()
+        );
+    }
 }
