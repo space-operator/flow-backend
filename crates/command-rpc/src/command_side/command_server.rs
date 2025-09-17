@@ -98,7 +98,12 @@ pub fn main() {
     let _ = *HTTP_CLIENT;
     rt.block_on(async {
         let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
-        let config: Config = toml::from_str(&data).unwrap();
+        let config: Config = serde_json::from_value(
+            jsonc_parser::parse_to_serde_value(&data, &<_>::default())
+                .unwrap()
+                .unwrap_or_default(),
+        )
+        .unwrap();
         tokio::task::LocalSet::new()
             .run_until(serve(config, tracker))
             .await
