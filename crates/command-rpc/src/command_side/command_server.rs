@@ -58,6 +58,16 @@ pub struct Config {
     pub apikey: Option<String>,
 }
 
+#[allow(dead_code)]
+#[derive(Deserialize, schemars::JsonSchema)]
+struct ConfigSchema {
+    #[serde(default = "default_flow_server")]
+    flow_server: Vec<FlowServerConfig>,
+    #[schemars(schema_with = "Option::<String>::json_schema")]
+    secret_key: Option<iroh::SecretKey>,
+    apikey: Option<String>,
+}
+
 #[derive(Deserialize, schemars::JsonSchema)]
 pub struct FlowServerAddress {
     #[schemars(schema_with = "String::json_schema")]
@@ -194,9 +204,13 @@ mod tests {
     use super::*;
     #[test]
     fn generate_schema() {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&schema_for!(FlowServerConfig)).unwrap()
+        let mut schema = schema_for!(ConfigSchema);
+        schema.as_object_mut().unwrap()["$schema"] =
+            "http://json-schema.org/draft-07/schema#".into();
+        schema.as_object_mut().unwrap().insert(
+            "id".into(),
+            "https://schema.spaceoperator.com/command-server-config.schema.json".into(),
         );
+        println!("{}", serde_json::to_string_pretty(&schema).unwrap());
     }
 }

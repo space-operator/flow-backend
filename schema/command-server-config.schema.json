@@ -1,9 +1,21 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://schema.spaceoperator.com/command-server-config.schema.json",
-    "title": "FlowServerConfig",
+    "id": "https://schema.spaceoperator.com/command-server-config.schema.json",
+    "title": "ConfigSchema",
     "type": "object",
     "properties": {
+        "flow_server": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/FlowServerConfig"
+            }
+        },
+        "secret_key": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
         "apikey": {
             "type": [
                 "string",
@@ -11,25 +23,38 @@
             ]
         }
     },
-    "anyOf": [
-        {
-            "type": "object",
-            "properties": {
-                "url": {
-                    "type": "string",
-                    "format": "uri",
-                    "default": "https://dev-api.spaceoperator.com"
-                }
-            },
-            "required": [
-                "url"
-            ]
-        },
-        {
-            "$ref": "#/$defs/FlowServerAddress"
-        }
+    "required": [
+        "secret_key"
     ],
     "$defs": {
+        "FlowServerConfig": {
+            "type": "object",
+            "properties": {
+                "apikey": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "format": "uri"
+                        }
+                    },
+                    "required": [
+                        "url"
+                    ]
+                },
+                {
+                    "$ref": "#/$defs/FlowServerAddress"
+                }
+            ]
+        },
         "FlowServerAddress": {
             "type": "object",
             "properties": {
