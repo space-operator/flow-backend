@@ -4,7 +4,10 @@ use chrono::{DateTime, Utc};
 use command_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
-    command::{CommandError, CommandFactory, CommandTrait, InstructionInfo},
+    command::{
+        CommandError, CommandFactory, CommandTrait, InstructionInfo, input_is_required,
+        output_is_optional, passthrough_outputs,
+    },
     config::client::{self, PartialConfig},
     context::{
         CommandContext, CommandContextData, FlowContextData, FlowServices, FlowSetContextData,
@@ -505,9 +508,7 @@ impl FlowGraph {
                     }
                 }
                 Some(n) => {
-                    let required = n
-                        .command
-                        .input_is_required(&to.1)
+                    let required = input_is_required(&*n.command, &to.1)
                         .ok_or_else(|| BuildGraphError::NoInput(to.clone(), n.command.name()))?;
                     (n.idx, required)
                 }
@@ -536,9 +537,7 @@ impl FlowGraph {
                     }
                 }
                 Some(n) => {
-                    let optional = n
-                        .command
-                        .output_is_optional(&from.1)
+                    let optional = output_is_optional(&*n.command, &from.1)
                         .ok_or_else(|| BuildGraphError::NoOutput(from.clone(), n.command.name()))?;
                     (n.idx, optional)
                 }
@@ -1388,7 +1387,8 @@ impl FlowGraph {
             ) in &n.use_previous_values
             {
                 if s.previous_values.contains_key(node_id) {
-                    let is_required_input = n.command.input_is_required(input_name).unwrap_or(true);
+                    let is_required_input =
+                        input_is_required(&*n.command, input_name).unwrap_or(true);
                     self.g.add_edge(
                         fake_node,
                         n.idx,
@@ -1604,7 +1604,7 @@ impl FlowGraph {
                 command_name: node.command.name(),
                 tracker,
                 instruction_info: node.command.instruction_info(),
-                passthrough: node.command.passthrough_outputs(&inputs),
+                passthrough: passthrough_outputs(&*node.command, &inputs),
                 waiting: None,
                 instruction_sent: false,
             },

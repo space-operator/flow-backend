@@ -1,82 +1,15 @@
 use crate::command_side::command_factory::{self, CommandFactoryExt};
 use crate::flow_side::command_context::CommandContextImpl;
 use crate::tracing::TrackFlowRun;
-use cmds_std as _;
-use flow_lib::command::{CommandDescription, CommandError, CommandFactory, CommandTrait};
-use flow_lib::config::client::NodeData;
-use flow_lib::context::CommandContext;
-use flow_lib::value;
-use flow_lib::value::bincode_impl::map_from_bincode;
 use flow_lib::{
-    CmdInputDescription, CmdOutputDescription, Name, ValueType,
-    config::client::{Extra, Source, Target, TargetsForm},
-    utils::LocalBoxFuture,
-    value::{Decimal, bincode_impl::map_to_bincode, with::AsDecimal},
+    command::CommandFactory,
+    context::CommandContext,
+    value::{self, bincode_impl::map_from_bincode, bincode_impl::map_to_bincode},
 };
-use futures::FutureExt;
 use iroh::{Endpoint, Watcher};
 use rust_decimal_macros::dec;
-use serde::Deserialize;
 
-struct Add;
-impl CommandTrait for Add {
-    fn name(&self) -> Name {
-        "add".into()
-    }
-
-    fn inputs(&self) -> Vec<CmdInputDescription> {
-        [
-            CmdInputDescription {
-                name: "a".into(),
-                type_bounds: [ValueType::Decimal].into(),
-                required: true,
-                passthrough: false,
-            },
-            CmdInputDescription {
-                name: "b".into(),
-                type_bounds: [ValueType::Decimal].into(),
-                required: true,
-                passthrough: false,
-            },
-        ]
-        .into()
-    }
-
-    fn outputs(&self) -> Vec<CmdOutputDescription> {
-        [CmdOutputDescription {
-            name: "c".into(),
-            r#type: ValueType::Decimal,
-            optional: false,
-        }]
-        .into()
-    }
-    fn run<'life0, 'async_trait>(
-        &'life0 self,
-        _: CommandContext,
-        params: value::Map,
-    ) -> LocalBoxFuture<'async_trait, Result<value::Map, CommandError>>
-    where
-        'life0: 'async_trait,
-        Self: 'async_trait,
-    {
-        async move {
-            #[serde_with::serde_as]
-            #[derive(Deserialize)]
-            struct Input {
-                #[serde_as(as = "AsDecimal")]
-                a: Decimal,
-                #[serde_as(as = "AsDecimal")]
-                b: Decimal,
-            }
-
-            let x: Input = value::from_map(params)?;
-            Ok(value::map! {
-                "c" => x.a + x.b,
-            })
-        }
-        .boxed()
-    }
-}
+pub mod add;
 
 #[actix::test]
 async fn test_serve_iroh() {
@@ -96,8 +29,6 @@ async fn test_serve_iroh() {
     assert!(!names.is_empty());
 }
 
-inventory::submit!(CommandDescription::new("add", |_| Ok(Box::new(Add))));
-
 #[actix::test]
 async fn test_call() {
     let tracker = TrackFlowRun::init_tracing_once();
@@ -113,42 +44,7 @@ async fn test_call() {
 
     dbg!("connected");
 
-    let nd = NodeData {
-        r#type: flow_lib::CommandType::Native,
-        node_id: "add".to_owned(),
-        sources: [Source {
-            id: <_>::default(),
-            name: "c".to_owned(),
-            r#type: ValueType::Decimal,
-            optional: false,
-        }]
-        .into(),
-        targets: [
-            Target {
-                id: <_>::default(),
-                name: "a".to_owned(),
-                type_bounds: [ValueType::Decimal].into(),
-                required: true,
-                passthrough: false,
-            },
-            Target {
-                id: <_>::default(),
-                name: "b".to_owned(),
-                type_bounds: [ValueType::Decimal].into(),
-                required: true,
-                passthrough: false,
-            },
-        ]
-        .into(),
-        targets_form: TargetsForm {
-            form_data: serde_json::Value::Null,
-            extra: Extra {
-                ..Default::default()
-            },
-            wasm_bytes: None,
-        },
-        instruction_info: None,
-    };
+    let nd = add::build().unwrap().node_data();
 
     let cmd = client.init(&nd).await.unwrap().unwrap();
 

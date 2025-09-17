@@ -40,12 +40,12 @@ iroh = { version = "0.90.0", features = ["discovery-pkarr-dht"] }
 iroh-quinn = { version = "0.14", features = ["futures-io"] }
 anyhow.workspace = true
 rand = "0.8"
-toml = "0.8.23"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 pin-project-lite = "0.2.16"
 flow-tracing = { version = "0.1.0", path = "../flow-tracing" }
 ahash = "0.8.12"
 bytes = "1.10.1"
+jsonc-parser = { version = "0.26.3", features = ["preserve_order", "serde"] }
 
 [dev-dependencies]
 criterion = "0.5.1"

@@ -19,7 +19,7 @@ use super::{
     command_trait::HTTP_CLIENT,
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, schemars::JsonSchema)]
 pub struct FlowServerConfig {
     apikey: Option<String>,
     #[serde(flatten)]
@@ -30,17 +30,24 @@ impl Default for FlowServerConfig {
     fn default() -> Self {
         Self {
             apikey: None,
-            address: FlowServerAddressConfig::Info {
-                url: "https://dev-api.spaceoperator.com".parse().unwrap(),
-            },
+            address: FlowServerAddressConfig::Info { url: default_url() },
         }
     }
 }
 
-#[derive(Deserialize)]
+fn default_url() -> Url {
+    "https://dev-api.spaceoperator.com".parse().unwrap()
+}
+
+#[derive(Deserialize, schemars::JsonSchema)]
 #[serde(untagged)]
 pub enum FlowServerAddressConfig {
-    Info { url: Url },
+    Info {
+        #[schemars(default = "default_url")]
+        #[schemars(example = "https://dev-api.spaceoperator.com/")]
+        #[schemars(example = "http://localhost:8080/")]
+        url: Url,
+    },
     Direct(FlowServerAddress),
 }
 
@@ -58,8 +65,19 @@ pub struct Config {
     pub apikey: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[allow(dead_code)]
+#[derive(Deserialize, schemars::JsonSchema)]
+struct ConfigSchema {
+    #[serde(default = "default_flow_server")]
+    flow_server: Vec<FlowServerConfig>,
+    #[schemars(schema_with = "Option::<String>::json_schema")]
+    secret_key: Option<iroh::SecretKey>,
+    apikey: Option<String>,
+}
+
+#[derive(Deserialize, schemars::JsonSchema)]
 pub struct FlowServerAddress {
+    #[schemars(schema_with = "String::json_schema")]
     pub node_id: iroh::PublicKey,
     pub relay_url: Url,
     pub direct_addresses: Option<BTreeSet<SocketAddr>>,
@@ -80,7 +98,12 @@ pub fn main() {
     let _ = *HTTP_CLIENT;
     rt.block_on(async {
         let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
-        let config: Config = toml::from_str(&data).unwrap();
+        let config: Config = serde_json::from_value(
+            jsonc_parser::parse_to_serde_value(&data, &<_>::default())
+                .unwrap()
+                .unwrap_or_default(),
+        )
+        .unwrap();
         tokio::task::LocalSet::new()
             .run_until(serve(config, tracker))
             .await
@@ -184,4 +207,27 @@ pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Err
     join_set.join_all().await;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use schemars::schema_for;
+
+    use super::*;
+    #[test]
+    fn generate_schema() {
+        let serde_json::Value::Object(mut schema) =
+            serde_json::to_value(&schema_for!(ConfigSchema)).unwrap()
+        else {
+            panic!()
+        };
+        schema["$schema"] = "http://json-schema.org/draft-07/schema#".into();
+        schema.shift_insert(
+            1,
+            "id".into(),
+            "https://schema.spaceoperator.com/command-server-config.schema.json".into(),
+        );
+        let text = serde_json::to_string_pretty(&schema).unwrap();
+        std::fs::write("../../schema/command-server-config.schema.json", &text).unwrap();
+    }
 }

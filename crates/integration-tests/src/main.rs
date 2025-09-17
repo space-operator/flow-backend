@@ -37,7 +37,7 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     sh.change_dir(&meta.workspace_root);
     sh.change_dir("@space-operator/client");
 
-    cmd!(sh, "deno test -A --trace-leaks integration_tests").run()?;
+    cmd!(sh, "deno test --parallel -A --trace-leaks integration_tests").run()?;
 
     Ok(())
 }

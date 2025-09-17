@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "https://schema.spaceoperator.com/command-server-config.schema.json",
+  "title": "ConfigSchema",
+  "type": "object",
+  "properties": {
+    "flow_server": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FlowServerConfig"
+      }
+    },
+    "secret_key": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "apikey": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "secret_key"
+  ],
+  "$defs": {
+    "FlowServerConfig": {
+      "type": "object",
+      "properties": {
+        "apikey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "examples": [
+                "https://dev-api.spaceoperator.com/",
+                "http://localhost:8080/"
+              ],
+              "default": "https://dev-api.spaceoperator.com/"
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/FlowServerAddress"
+        }
+      ]
+    },
+    "FlowServerAddress": {
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "type": "string"
+        },
+        "relay_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "direct_addresses": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "node_id",
+        "relay_url"
+      ]
+    }
+  }
+}

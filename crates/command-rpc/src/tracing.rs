@@ -72,37 +72,34 @@ async fn drive(mut rx: EventReceiver, clients: ClientsMap) {
     }
 }
 
+fn init_tracing_flow_logs() -> FlowLogs {
+    let (logs, ignore) = flow_tracing::new();
+    let env = tracing_subscriber::EnvFilter::builder().parse_lossy(
+        std::env::var("RUST_LOG")
+            .as_deref()
+            .unwrap_or("info,iroh=error"),
+    );
+    let fmt = tracing_subscriber::fmt::layer()
+        .with_filter(env)
+        .with_filter(ignore);
+    tracing_subscriber::registry()
+        .with(fmt)
+        .with(logs.clone())
+        .init();
+    logs
+}
+
 impl TrackFlowRun {
     pub fn init_tracing_once() -> Self {
         static LOGS: OnceLock<FlowLogs> = OnceLock::new();
 
-        let logs = LOGS
-            .get_or_init(|| {
-                let (logs, ignore) = flow_tracing::new();
-                let fmt = tracing_subscriber::fmt::layer()
-                    .with_filter(tracing_subscriber::EnvFilter::from_default_env())
-                    .with_filter(ignore);
-                tracing_subscriber::registry()
-                    .with(fmt)
-                    .with(logs.clone())
-                    .init();
-                logs
-            })
-            .clone();
+        let logs = LOGS.get_or_init(init_tracing_flow_logs).clone();
 
         Self::new(logs)
     }
 
     pub fn init_tracing() -> Self {
-        let (logs, ignore) = flow_tracing::new();
-        let fmt = tracing_subscriber::fmt::layer()
-            .with_filter(tracing_subscriber::EnvFilter::from_default_env())
-            .with_filter(ignore);
-        tracing_subscriber::registry()
-            .with(fmt)
-            .with(logs.clone())
-            .init();
-        Self::new(logs)
+        Self::new(init_tracing_flow_logs())
     }
 
     pub fn new(flow_logs: FlowLogs) -> Self {
