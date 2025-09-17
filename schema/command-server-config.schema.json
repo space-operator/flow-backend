@@ -17,7 +17,8 @@
             "properties": {
                 "url": {
                     "type": "string",
-                    "format": "uri"
+                    "format": "uri",
+                    "default": "https://dev-api.spaceoperator.com"
                 }
             },
             "required": [
