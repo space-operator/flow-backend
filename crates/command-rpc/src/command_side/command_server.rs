@@ -30,17 +30,22 @@ impl Default for FlowServerConfig {
     fn default() -> Self {
         Self {
             apikey: None,
-            address: FlowServerAddressConfig::Info {
-                url: "https://dev-api.spaceoperator.com".parse().unwrap(),
-            },
+            address: FlowServerAddressConfig::Info { url: default_url() },
         }
     }
+}
+
+fn default_url() -> Url {
+    "https://dev-api.spaceoperator.com".parse().unwrap()
 }
 
 #[derive(Deserialize, schemars::JsonSchema)]
 #[serde(untagged)]
 pub enum FlowServerAddressConfig {
-    Info { url: Url },
+    Info {
+        #[schemars(default = "default_url")]
+        url: Url,
+    },
     Direct(FlowServerAddress),
 }
 
