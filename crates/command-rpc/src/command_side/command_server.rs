@@ -44,6 +44,8 @@ fn default_url() -> Url {
 pub enum FlowServerAddressConfig {
     Info {
         #[schemars(default = "default_url")]
+        #[schemars(example = "https://dev-api.spaceoperator.com/")]
+        #[schemars(example = "http://localhost:8080/")]
         url: Url,
     },
     Direct(FlowServerAddress),
@@ -209,13 +211,18 @@ mod tests {
     use super::*;
     #[test]
     fn generate_schema() {
-        let mut schema = schema_for!(ConfigSchema);
-        schema.as_object_mut().unwrap()["$schema"] =
-            "http://json-schema.org/draft-07/schema#".into();
-        schema.as_object_mut().unwrap().insert(
+        let serde_json::Value::Object(mut schema) =
+            serde_json::to_value(&schema_for!(ConfigSchema)).unwrap()
+        else {
+            panic!()
+        };
+        schema["$schema"] = "http://json-schema.org/draft-07/schema#".into();
+        schema.shift_insert(
+            1,
             "id".into(),
             "https://schema.spaceoperator.com/command-server-config.schema.json".into(),
         );
-        println!("{}", serde_json::to_string_pretty(&schema).unwrap());
+        let text = serde_json::to_string_pretty(&schema).unwrap();
+        std::fs::write("../../schema/command-server-config.schema.json", &text).unwrap();
     }
 }
