@@ -23,16 +23,17 @@ async fn test_call() {
     let names = client.all_availables().await.unwrap();
     assert_eq!(names, availables);
     assert!(!names.is_empty());
-    let node = RemoteCommand::new(
-        client
-            .init(&crate::error_node::build().unwrap().node_data())
-            .await
-            .unwrap()
-            .unwrap(),
-    )
-    .await
-    .unwrap();
+    let real_node = crate::error_node::build().unwrap();
+    let node = RemoteCommand::new(client.init(&real_node.node_data()).await.unwrap().unwrap())
+        .await
+        .unwrap();
     let error = node
+        .run(<_>::default(), flow_lib::value::map! { "x" => 0 })
+        .await
+        .unwrap_err();
+    println!("{}", error);
+
+    let error = real_node
         .run(<_>::default(), flow_lib::value::map! { "x" => 0 })
         .await
         .unwrap_err();
