@@ -1,5 +1,6 @@
 use crate::command_side::command_trait;
 use async_trait::async_trait;
+use capnp::ErrorKind;
 use flow_lib::{
     CmdInputDescription, CmdOutputDescription, Name,
     command::{CommandError, CommandTrait, InstructionInfo},
@@ -135,7 +136,22 @@ impl CommandTrait for RemoteCommand {
         let mut req = self.client.run_request();
         req.get().set_ctx(ctx_client);
         req.get().set_inputs(&map_to_bincode(&params)?);
-        let resp = req.send().promise.await?;
+        let resp = match req.send().promise.await {
+            Ok(resp) => resp,
+            Err(error) => {
+                return if error.kind == ErrorKind::Failed {
+                    let extra = error.extra.as_str();
+                    Err(CommandError::msg(
+                        extra
+                            .strip_prefix("remote exception: ")
+                            .unwrap_or(&extra)
+                            .to_owned(),
+                    ))
+                } else {
+                    Err(error.into())
+                };
+            }
+        };
         let outputs = resp.get()?.get_output()?;
         Ok(map_from_bincode(outputs)?)
     }
