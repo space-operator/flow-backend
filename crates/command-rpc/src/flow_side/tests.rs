@@ -3,6 +3,7 @@ use crate::flow_side::remote_command::RemoteCommand;
 use crate::tracing::TrackFlowRun;
 use flow_lib::command::CommandFactory;
 use flow_lib::command::CommandTrait;
+use flow_lib::context::CommandContext;
 use iroh::{Endpoint, Watcher};
 
 #[actix::test]
@@ -28,13 +29,19 @@ async fn test_call() {
         .await
         .unwrap();
     let error = node
-        .run(<_>::default(), flow_lib::value::map! { "x" => 0 })
+        .run(
+            CommandContext::test_context(),
+            flow_lib::value::map! { "x" => 0 },
+        )
         .await
         .unwrap_err();
     println!("{}", error);
 
     let error = real_node
-        .run(<_>::default(), flow_lib::value::map! { "x" => 0 })
+        .run(
+            CommandContext::test_context(),
+            flow_lib::value::map! { "x" => 0 },
+        )
         .await
         .unwrap_err();
     println!("{}", error);

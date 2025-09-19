@@ -30,19 +30,15 @@ async fn test_serve_iroh() {
 }
 
 #[actix::test]
-async fn test_call() {
+async fn test_call_add() {
     let tracker = TrackFlowRun::init_tracing_once();
     let client = command_factory::new_client(CommandFactory::collect(), tracker);
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
-    dbg!("bind");
     let addr = endpoint.node_addr().initialized().await.unwrap();
-    dbg!(&addr);
     client.bind_iroh(endpoint);
 
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
     let client = command_factory::connect_iroh(endpoint, addr).await.unwrap();
-
-    dbg!("connected");
 
     let nd = crate::add::build().unwrap().node_data();
 
@@ -64,4 +60,36 @@ async fn test_call() {
     let output = map_from_bincode(result.get().unwrap().get_output().unwrap()).unwrap();
     assert_eq!(output["c"], dec!(4.8429).into());
     dbg!(output);
+}
+
+#[actix::test]
+async fn test_call_error() {
+    let tracker = TrackFlowRun::init_tracing_once();
+    let client = command_factory::new_client(CommandFactory::collect(), tracker);
+    let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
+    let addr = endpoint.node_addr().initialized().await.unwrap();
+    client.bind_iroh(endpoint);
+
+    let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
+    let client = command_factory::connect_iroh(endpoint, addr).await.unwrap();
+
+    let nd = crate::error_node::build().unwrap().node_data();
+
+    let cmd = client.init(&nd).await.unwrap().unwrap();
+
+    let mut req = cmd.run_request();
+    req.get().set_inputs(
+        map_to_bincode(&value::map! {
+            "x" => 0,
+        })
+        .unwrap()
+        .as_slice(),
+    );
+    req.get().set_ctx(capnp_rpc::new_client(CommandContextImpl {
+        context: CommandContext::test_context(),
+    }));
+    let Err(error) = req.send().promise.await else {
+        panic!();
+    };
+    println!("{}", error);
 }
