@@ -98,11 +98,7 @@ impl CommandTraitImpl {
             let id = *ctx.node_id();
             let times = *ctx.times();
             let cmd_lock = cmd.lock().await;
-            let result = cmd_lock
-                .run(ctx, inputs)
-                .instrument(span)
-                .await
-                .context("run command")?;
+            let result = cmd_lock.run(ctx, inputs).instrument(span).await?;
             tracker.exit(run_id, node_id, times);
             results
                 .get()
