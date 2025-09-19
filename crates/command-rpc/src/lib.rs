@@ -1,6 +1,6 @@
 //! RPC specification for calling a command on a remote node
 
-#![allow(unused_parens)]
+// #![allow(unused_parens)]
 
 use capnp::capability::FromClientHook;
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
