@@ -91,5 +91,5 @@ async fn test_call_error() {
     let Err(error) = req.send().promise.await else {
         panic!();
     };
-    println!("{}", error);
+    println!("{:?}", error);
 }
