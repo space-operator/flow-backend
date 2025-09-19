@@ -9,42 +9,38 @@ use flow_lib::{
 use iroh::{Endpoint, Watcher};
 use rust_decimal_macros::dec;
 
-pub mod add;
-
 #[actix::test]
 async fn test_serve_iroh() {
     let tracker = TrackFlowRun::init_tracing_once();
-    let addr = {
-        let factory = command_factory::new_client(CommandFactory::collect(), tracker);
+    let (addr, availables) = {
+        let factory = CommandFactory::collect();
+        let availables = factory.availables().collect::<Vec<_>>();
+        let factory = command_factory::new_client(factory, tracker);
         let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
         let addr = endpoint.node_addr().initialized().await.unwrap();
         factory.bind_iroh(endpoint);
-        addr
+        (addr, availables)
     };
 
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
     let client = command_factory::connect_iroh(endpoint, addr).await.unwrap();
     let names = client.all_availables().await.unwrap();
-    dbg!(&names);
+    assert_eq!(names, availables);
     assert!(!names.is_empty());
 }
 
 #[actix::test]
-async fn test_call() {
+async fn test_call_add() {
     let tracker = TrackFlowRun::init_tracing_once();
     let client = command_factory::new_client(CommandFactory::collect(), tracker);
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
-    dbg!("bind");
     let addr = endpoint.node_addr().initialized().await.unwrap();
-    dbg!(&addr);
     client.bind_iroh(endpoint);
 
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
     let client = command_factory::connect_iroh(endpoint, addr).await.unwrap();
 
-    dbg!("connected");
-
-    let nd = add::build().unwrap().node_data();
+    let nd = crate::add::build().unwrap().node_data();
 
     let cmd = client.init(&nd).await.unwrap().unwrap();
 
@@ -64,4 +60,36 @@ async fn test_call() {
     let output = map_from_bincode(result.get().unwrap().get_output().unwrap()).unwrap();
     assert_eq!(output["c"], dec!(4.8429).into());
     dbg!(output);
+}
+
+#[actix::test]
+async fn test_call_error() {
+    let tracker = TrackFlowRun::init_tracing_once();
+    let client = command_factory::new_client(CommandFactory::collect(), tracker);
+    let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
+    let addr = endpoint.node_addr().initialized().await.unwrap();
+    client.bind_iroh(endpoint);
+
+    let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
+    let client = command_factory::connect_iroh(endpoint, addr).await.unwrap();
+
+    let nd = crate::error_node::build().unwrap().node_data();
+
+    let cmd = client.init(&nd).await.unwrap().unwrap();
+
+    let mut req = cmd.run_request();
+    req.get().set_inputs(
+        map_to_bincode(&value::map! {
+            "x" => 0,
+        })
+        .unwrap()
+        .as_slice(),
+    );
+    req.get().set_ctx(capnp_rpc::new_client(CommandContextImpl {
+        context: CommandContext::test_context(),
+    }));
+    let Err(error) = req.send().promise.await else {
+        panic!();
+    };
+    println!("{:?}", error);
 }

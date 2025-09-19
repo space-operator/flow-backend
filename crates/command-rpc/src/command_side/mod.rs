@@ -3,4 +3,4 @@ pub mod command_server;
 pub mod command_trait;
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

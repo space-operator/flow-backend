@@ -1,7 +1,5 @@
 //! RPC specification for calling a command on a remote node
 
-#![allow(unused_parens)]
-
 use capnp::capability::FromClientHook;
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
 
@@ -41,3 +39,9 @@ pub(crate) mod make_sync;
 pub mod command_side;
 pub mod flow_side;
 pub mod tracing;
+
+
+#[cfg(test)]
+pub mod add;
+#[cfg(test)]
+pub mod error_node;
