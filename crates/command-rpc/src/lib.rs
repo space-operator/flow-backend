@@ -39,3 +39,9 @@ pub(crate) mod make_sync;
 pub mod command_side;
 pub mod flow_side;
 pub mod tracing;
+
+
+#[cfg(test)]
+pub mod add;
+#[cfg(test)]
+pub mod error_node;

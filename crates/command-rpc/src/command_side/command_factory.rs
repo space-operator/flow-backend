@@ -5,7 +5,10 @@ use anyhow::{Context, anyhow};
 use bincode::config::standard;
 use capnp::{ErrorKind, capability::Promise};
 use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::VatNetwork};
-use flow_lib::{command::CommandFactory, config::client::NodeData};
+use flow_lib::{
+    command::{CommandFactory, MatchCommand},
+    config::client::NodeData,
+};
 use futures::{
     TryFutureExt,
     future::LocalBoxFuture,
@@ -40,7 +43,7 @@ pub trait CommandFactoryExt {
         &self,
         nd: &NodeData,
     ) -> impl Future<Output = Result<Option<command_trait::Client>, anyhow::Error>>;
-    fn all_availables(&self) -> impl Future<Output = Result<Vec<String>, anyhow::Error>>;
+    fn all_availables(&self) -> impl Future<Output = Result<Vec<MatchCommand>, anyhow::Error>>;
     fn bind_iroh(&self, endpoint: Endpoint) -> JoinHandle<()>;
 }
 
@@ -69,7 +72,7 @@ impl CommandFactoryExt for Client {
         }
     }
 
-    async fn all_availables(&self) -> Result<Vec<String>, anyhow::Error> {
+    async fn all_availables(&self) -> Result<Vec<MatchCommand>, anyhow::Error> {
         let resp = self
             .all_availables_request()
             .send()
