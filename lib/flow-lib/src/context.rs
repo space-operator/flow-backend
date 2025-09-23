@@ -287,7 +287,7 @@ pub mod execute {
     };
     use futures::channel::oneshot::Canceled;
     use serde::{Deserialize, Serialize};
-    use serde_with::{DisplayFromStr, base64::Base64, serde_as};
+    use serde_with::{DisplayFromStr, base64::Base64, serde_as, serde_conv};
     use solana_program::{
         instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
     };
@@ -383,7 +383,90 @@ pub mod execute {
         s.as_ref().map(|v| v.as_str()).unwrap_or_default()
     }
 
-    #[derive(ThisError, Debug, Clone)]
+    #[derive(Serialize, Deserialize)]
+    enum AsRpcRequestImpl {
+        Custom { method: &'static str },
+        DeregisterNode,
+        GetAccountInfo,
+        GetBalance,
+        GetBlock,
+        GetBlockHeight,
+        GetBlockProduction,
+        GetBlocks,
+        GetBlocksWithLimit,
+        GetBlockTime,
+        GetClusterNodes,
+        GetEpochInfo,
+        GetEpochSchedule,
+        GetFeeForMessage,
+        GetFirstAvailableBlock,
+        GetGenesisHash,
+        GetHealth,
+        GetIdentity,
+        GetInflationGovernor,
+        GetInflationRate,
+        GetInflationReward,
+        GetLargestAccounts,
+        GetLatestBlockhash,
+        GetLeaderSchedule,
+        GetMaxRetransmitSlot,
+        GetMaxShredInsertSlot,
+        GetMinimumBalanceForRentExemption,
+        GetMultipleAccounts,
+        GetProgramAccounts,
+        GetRecentPerformanceSamples,
+        GetRecentPrioritizationFees,
+        GetHighestSnapshotSlot,
+        GetSignaturesForAddress,
+        GetSignatureStatuses,
+        GetSlot,
+        GetSlotLeader,
+        GetSlotLeaders,
+        GetStorageTurn,
+        GetStorageTurnRate,
+        GetSlotsPerSegment,
+        GetStakeMinimumDelegation,
+        GetStoragePubkeysForSlot,
+        GetSupply,
+        GetTokenAccountBalance,
+        GetTokenAccountsByDelegate,
+        GetTokenAccountsByOwner,
+        GetTokenLargestAccounts,
+        GetTokenSupply,
+        GetTransaction,
+        GetTransactionCount,
+        GetVersion,
+        GetVoteAccounts,
+        IsBlockhashValid,
+        MinimumLedgerSlot,
+        RegisterNode,
+        RequestAirdrop,
+        SendTransaction,
+        SimulateTransaction,
+        SignVote,
+    }
+
+    enum AsErrorKindImpl {
+        Io { kind: u32, msg: String },
+        // These get turned in to Custom
+        // Reqwest(Error),
+        // Middleware(Error),
+        // SerdeJson(Error),
+        RpcError(RpcError),
+        SigningError(SignerError),
+        TransactionError(TransactionError),
+        Custom(String),
+    }
+
+    struct AsClientErrorImpl {
+        request: Option<AsRpcRequestImpl>,
+        kind: Box<AsErrorKindImpl>,
+    }
+
+    serde_conv!(AsClientError, ClientError, |e: &ClientError| {}, || {});
+
+    #[serde_as]
+    #[derive(ThisError, Debug, Clone, Serialize, Deserialize)]
     pub enum Error {
         #[error("canceled {}", unwrap(.0))]
         Canceled(Option<String>),
@@ -400,6 +483,7 @@ pub mod execute {
         #[error("{}", crate::utils::verbose_solana_error(.error))]
         Solana {
             #[source]
+            #[serde_with(as = "Arc<AsClientError>")]
             error: Arc<ClientError>,
             inserted: usize,
         },
