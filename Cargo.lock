@@ -3119,6 +3119,7 @@ dependencies = [
  "solana-rpc-client-api",
  "solana-signature",
  "solana-signer",
+ "solana-transaction-error",
  "thiserror 1.0.69",
  "tokio",
  "tower",

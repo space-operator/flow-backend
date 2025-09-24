@@ -45,3 +45,4 @@ solana-keypair = "2"
 solana-program = "2"
 solana-commitment-config = "2"
 solana-presigner = "2"
+solana-transaction-error = { version = "2", features = ["serde"] }
