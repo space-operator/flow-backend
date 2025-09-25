@@ -1,11 +1,12 @@
 use std::convert::Infallible;
 use std::io;
 
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv};
 use solana_rpc_client_api::client_error::{Error as ClientError, ErrorKind as ClientErrorKind};
-use solana_rpc_client_api::request::{RpcError, RpcRequest};
-use solana_signer::SignerError;
+use solana_rpc_client_api::request::{RpcError, RpcRequest, RpcResponseErrorData};
+use solana_signer::{PresignerError, SignerError};
 use solana_transaction_error::TransactionError;
 
 #[derive(Serialize, Deserialize)]
@@ -209,16 +210,105 @@ serde_conv!(pub AsRpcRequest, RpcRequest, ser_rpc_request, de_rpc_request);
 #[derive(Serialize, Deserialize)]
 pub enum AsClientErrorKindImpl {
     Io(#[serde_as(as = "AsIoError")] io::Error),
-    // Reqwest(reqwest::Error),
     Middleware(#[serde_as(as = "AsAnyhow")] anyhow::Error),
     RpcError(#[serde_as(as = "AsRpcEeror")] RpcError),
-    // SerdeJson(serde_json::error::Error),
     SigningError(#[serde_as(as = "AsSignerError")] SignerError),
     TransactionError(TransactionError),
     Custom(String),
 }
 
-serde_conv!(AsClientErrorKind, ClientErrorKind, || {}, || {});
+fn clone_rpc_response_error(data: &RpcResponseErrorData) -> RpcResponseErrorData {
+    match data {
+        RpcResponseErrorData::Empty => RpcResponseErrorData::Empty,
+        RpcResponseErrorData::SendTransactionPreflightFailure(result) => {
+            RpcResponseErrorData::SendTransactionPreflightFailure(result.clone())
+        }
+        RpcResponseErrorData::NodeUnhealthy { num_slots_behind } => {
+            RpcResponseErrorData::NodeUnhealthy {
+                num_slots_behind: *num_slots_behind,
+            }
+        }
+    }
+}
+
+fn clone_rpc_error(error: &RpcError) -> RpcError {
+    match error {
+        RpcError::RpcRequestError(error) => RpcError::RpcRequestError(error.clone()),
+        RpcError::RpcResponseError {
+            code,
+            message,
+            data,
+        } => RpcError::RpcResponseError {
+            code: *code,
+            message: message.clone(),
+            data: clone_rpc_response_error(data),
+        },
+        RpcError::ParseError(error) => RpcError::ParseError(error.clone()),
+        RpcError::ForUser(error) => RpcError::ForUser(error.clone()),
+    }
+}
+
+fn clone_presigner_error(error: &PresignerError) -> PresignerError {
+    match error {
+        PresignerError::VerificationFailure => PresignerError::VerificationFailure,
+    }
+}
+
+fn clone_signer_error(error: &SignerError) -> SignerError {
+    match error {
+        SignerError::KeypairPubkeyMismatch => SignerError::KeypairPubkeyMismatch,
+        SignerError::NotEnoughSigners => SignerError::NotEnoughSigners,
+        SignerError::TransactionError(error) => SignerError::TransactionError(error.clone()),
+        SignerError::Custom(error) => SignerError::Custom(error.clone()),
+        SignerError::PresignerError(error) => {
+            SignerError::PresignerError(clone_presigner_error(error))
+        }
+        SignerError::Connection(error) => SignerError::Connection(error.clone()),
+        SignerError::InvalidInput(error) => SignerError::InvalidInput(error.clone()),
+        SignerError::NoDeviceFound => SignerError::NoDeviceFound,
+        SignerError::Protocol(error) => SignerError::Protocol(error.clone()),
+        SignerError::UserCancel(error) => SignerError::UserCancel(error.clone()),
+        SignerError::TooManySigners => SignerError::TooManySigners,
+    }
+}
+
+fn ser_kind(kind: &ClientErrorKind) -> AsClientErrorKindImpl {
+    match kind {
+        ClientErrorKind::Io(error) => {
+            AsClientErrorKindImpl::Io(io::Error::new(error.kind(), error.to_string()))
+        }
+        ClientErrorKind::Reqwest(error) => AsClientErrorKindImpl::Custom(error.to_string()),
+        ClientErrorKind::Middleware(error) => {
+            AsClientErrorKindImpl::Middleware(anyhow!(format!("{:#}", error)))
+        }
+        ClientErrorKind::RpcError(error) => AsClientErrorKindImpl::RpcError(clone_rpc_error(error)),
+        ClientErrorKind::SerdeJson(error) => AsClientErrorKindImpl::Custom(error.to_string()),
+        ClientErrorKind::SigningError(error) => {
+            AsClientErrorKindImpl::SigningError(clone_signer_error(error))
+        }
+        ClientErrorKind::TransactionError(error) => {
+            AsClientErrorKindImpl::TransactionError(error.clone())
+        }
+        ClientErrorKind::Custom(error) => AsClientErrorKindImpl::Custom(error.clone()),
+    }
+}
+
+fn de_kind(kind: AsClientErrorKindImpl) -> Result<ClientErrorKind, Infallible> {
+    Ok(match kind {
+        AsClientErrorKindImpl::Io(error) => ClientErrorKind::Io(error),
+        AsClientErrorKindImpl::Middleware(error) => ClientErrorKind::Middleware(error),
+        AsClientErrorKindImpl::RpcError(rpc_error) => ClientErrorKind::RpcError(rpc_error),
+        AsClientErrorKindImpl::SigningError(signer_error) => {
+            ClientErrorKind::SigningError(signer_error)
+        }
+        AsClientErrorKindImpl::TransactionError(transaction_error) => {
+            ClientErrorKind::TransactionError(transaction_error)
+        }
+        AsClientErrorKindImpl::Custom(error) => ClientErrorKind::Custom(error),
+    })
+}
+
+serde_conv!(AsClientErrorKind, ClientErrorKind, ser_kind, de_kind);
 
 #[serde_as]
 #[derive(Serialize, Deserialize)]
@@ -229,4 +319,27 @@ pub struct AsClientErrorImpl {
     pub kind: ClientErrorKind,
 }
 
-serde_conv!(AsClientError, ClientError, || {}, || {});
+fn clone_client_error_kind(kind: &ClientErrorKind) -> ClientErrorKind {
+    de_kind(ser_kind(kind)).unwrap()
+}
+
+fn ser_client_error(error: &ClientError) -> AsClientErrorImpl {
+    AsClientErrorImpl {
+        request: error.request.clone(),
+        kind: clone_client_error_kind(&error.kind),
+    }
+}
+
+fn de_client_error(error: AsClientErrorImpl) -> Result<ClientError, Infallible> {
+    Ok(ClientError {
+        request: error.request,
+        kind: error.kind,
+    })
+}
+
+serde_conv!(
+    AsClientError,
+    ClientError,
+    ser_client_error,
+    de_client_error
+);
