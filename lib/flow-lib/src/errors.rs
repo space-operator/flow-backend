@@ -217,6 +217,95 @@ pub enum AsClientErrorKindImpl {
     Custom(String),
 }
 
+#[derive(Serialize, Deserialize)]
+pub enum AsPresignerErrorImpl {
+    VerificationFailure,
+}
+
+fn ser_presigner_error(error: &PresignerError) -> AsPresignerErrorImpl {
+    match error {
+        PresignerError::VerificationFailure => AsPresignerErrorImpl::VerificationFailure,
+    }
+}
+
+fn de_presigner_error(error: AsPresignerErrorImpl) -> Result<PresignerError, Infallible> {
+    Ok(match error {
+        AsPresignerErrorImpl::VerificationFailure => PresignerError::VerificationFailure,
+    })
+}
+
+serde_conv!(
+    AsPresignerError,
+    PresignerError,
+    ser_presigner_error,
+    de_presigner_error
+);
+
+#[serde_as]
+#[derive(Serialize, Deserialize)]
+pub enum AsSignerErrorImpl {
+    KeypairPubkeyMismatch,
+    NotEnoughSigners,
+    TransactionError(TransactionError),
+    Custom(String),
+    // Presigner-specific Errors
+    PresignerError(#[serde_as(as = "AsPresignerError")] PresignerError),
+    // Remote Keypair-specific Errors
+    Connection(String),
+    InvalidInput(String),
+    NoDeviceFound,
+    Protocol(String),
+    UserCancel(String),
+    TooManySigners,
+}
+
+fn ser_signer_error(error: &SignerError) -> AsSignerErrorImpl {
+    match clone_signer_error(error) {
+        SignerError::KeypairPubkeyMismatch => AsSignerErrorImpl::KeypairPubkeyMismatch,
+        SignerError::NotEnoughSigners => AsSignerErrorImpl::NotEnoughSigners,
+        SignerError::TransactionError(transaction_error) => {
+            AsSignerErrorImpl::TransactionError(transaction_error)
+        }
+        SignerError::Custom(error) => AsSignerErrorImpl::Custom(error),
+        SignerError::PresignerError(presigner_error) => {
+            AsSignerErrorImpl::PresignerError(presigner_error)
+        }
+        SignerError::Connection(error) => AsSignerErrorImpl::Connection(error),
+        SignerError::InvalidInput(error) => AsSignerErrorImpl::InvalidInput(error),
+        SignerError::NoDeviceFound => AsSignerErrorImpl::NoDeviceFound,
+        SignerError::Protocol(error) => AsSignerErrorImpl::Protocol(error),
+        SignerError::UserCancel(error) => AsSignerErrorImpl::UserCancel(error),
+        SignerError::TooManySigners => AsSignerErrorImpl::TooManySigners,
+    }
+}
+
+fn de_signer_error(error: AsSignerErrorImpl) -> Result<SignerError, Infallible> {
+    Ok(match error {
+        AsSignerErrorImpl::KeypairPubkeyMismatch => SignerError::KeypairPubkeyMismatch,
+        AsSignerErrorImpl::NotEnoughSigners => SignerError::NotEnoughSigners,
+        AsSignerErrorImpl::TransactionError(transaction_error) => {
+            SignerError::TransactionError(transaction_error)
+        }
+        AsSignerErrorImpl::Custom(error) => SignerError::Custom(error),
+        AsSignerErrorImpl::PresignerError(presigner_error) => {
+            SignerError::PresignerError(presigner_error)
+        }
+        AsSignerErrorImpl::Connection(error) => SignerError::Connection(error),
+        AsSignerErrorImpl::InvalidInput(error) => SignerError::InvalidInput(error),
+        AsSignerErrorImpl::NoDeviceFound => SignerError::NoDeviceFound,
+        AsSignerErrorImpl::Protocol(error) => SignerError::Protocol(error),
+        AsSignerErrorImpl::UserCancel(error) => SignerError::UserCancel(error),
+        AsSignerErrorImpl::TooManySigners => SignerError::TooManySigners,
+    })
+}
+
+serde_conv!(
+    AsSignerError,
+    SignerError,
+    ser_signer_error,
+    de_signer_error
+);
+
 fn clone_rpc_response_error(data: &RpcResponseErrorData) -> RpcResponseErrorData {
     match data {
         RpcResponseErrorData::Empty => RpcResponseErrorData::Empty,

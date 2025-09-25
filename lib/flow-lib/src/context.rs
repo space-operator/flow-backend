@@ -287,7 +287,7 @@ pub mod execute {
     };
     use futures::channel::oneshot::Canceled;
     use serde::{Deserialize, Serialize};
-    use serde_with::{DisplayFromStr, base64::Base64, serde_as, serde_conv};
+    use serde_with::{DisplayFromStr, base64::Base64, serde_as};
     use solana_program::{
         instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
     };
@@ -401,7 +401,7 @@ pub mod execute {
         #[error("{}", crate::utils::verbose_solana_error(.error))]
         Solana {
             #[source]
-            #[serde_with(as = "Arc<serde_errors::AsClientError>")]
+            #[serde_as(as = "Arc<crate::errors::AsClientError>")]
             error: Arc<ClientError>,
             inserted: usize,
         },
