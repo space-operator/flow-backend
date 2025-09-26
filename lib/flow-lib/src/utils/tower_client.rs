@@ -20,7 +20,7 @@ pub enum CommonError {
     #[error(transparent)]
     MailBox(
         #[from]
-        #[serde_as(as = "Arc<crate::errors::AsMailboxError>")]
+        #[serde_as(as = "crate::errors::AsMailboxError")]
         MailboxError,
     ),
     #[error(transparent)]

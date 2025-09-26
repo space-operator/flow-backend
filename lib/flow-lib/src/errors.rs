@@ -5,6 +5,7 @@ use std::io;
 
 use actix::MailboxError;
 use anyhow::anyhow;
+use futures::channel::oneshot::Canceled;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv};
 use solana_program::clock::Slot;
@@ -559,7 +560,7 @@ fn de_signer_error(error: AsSignerErrorImpl) -> Result<SignerError, Infallible> 
 }
 
 serde_conv!(
-    AsSignerError,
+    pub AsSignerError,
     SignerError,
     ser_signer_error,
     de_signer_error
@@ -656,7 +657,7 @@ fn de_kind(kind: AsClientErrorKindImpl) -> Result<ClientErrorKind, Infallible> {
     })
 }
 
-serde_conv!(AsClientErrorKind, ClientErrorKind, ser_kind, de_kind);
+serde_conv!(pub AsClientErrorKind, ClientErrorKind, ser_kind, de_kind);
 
 #[serde_as]
 #[derive(Serialize, Deserialize)]
@@ -686,7 +687,7 @@ fn de_client_error(error: AsClientErrorImpl) -> Result<ClientError, Infallible> 
 }
 
 serde_conv!(
-    AsClientError,
+    pub AsClientError,
     ClientError,
     ser_client_error,
     de_client_error
@@ -771,3 +772,5 @@ fn de_MailboxError(error: AsMailboxErrorImpl) -> Result<MailboxError, Infallible
 }
 
 serde_conv!(pub AsMailboxError, MailboxError, ser_MailboxError, de_MailboxError);
+
+serde_conv!(pub AsCancelled, Canceled, |_| (), |_: ()| Ok::<_, Infallible>(Canceled));

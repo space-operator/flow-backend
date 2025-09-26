@@ -428,7 +428,7 @@ pub mod execute {
         #[error(transparent)]
         ChannelClosed(
             #[from]
-            #[serde_as(as = "()")]
+            #[serde_as(as = "crate::errors::AsCancelled")]
             Canceled,
         ),
         #[error(transparent)]
