@@ -406,7 +406,11 @@ pub mod execute {
             inserted: usize,
         },
         #[error(transparent)]
-        Signer(#[from] Arc<SignerError>),
+        Signer(
+            #[from]
+            #[serde_as(as = "Arc<crate::errors::AsSignerError>")]
+            Arc<SignerError>,
+        ),
         #[error(transparent)]
         CompileError(#[from] Arc<CompileError>),
         #[error(transparent)]
