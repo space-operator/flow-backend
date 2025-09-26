@@ -222,8 +222,9 @@ fn de_rpc_response_error_data(
 ) -> Result<RpcResponseErrorData, Infallible> {
 }
 
-serde_conv!(pub AsRpcResponseErrorData, RpcResponseErrorData, ser_rpc_response_error_data, de_rpc_error_response_data);
+serde_conv!(pub AsRpcResponseErrorData, RpcResponseErrorData, ser_rpc_response_error_data, de_rpc_response_error_data);
 
+#[serde_as]
 #[derive(Serialize, Deserialize)]
 pub enum AsRpcErrorImpl {
     RpcRequestError(String),
