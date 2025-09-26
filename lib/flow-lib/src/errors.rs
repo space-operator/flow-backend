@@ -215,11 +215,34 @@ pub enum AsRpcResponseErrorDataImpl {
     NodeUnhealthy { num_slots_behind: Option<Slot> },
 }
 
-fn ser_rpc_response_error_data(error: &RpcResponseErrorData) -> AsRpcResponseErrorDataImpl {}
+fn ser_rpc_response_error_data(error: &RpcResponseErrorData) -> AsRpcResponseErrorDataImpl {
+    match error {
+        RpcResponseErrorData::Empty => AsRpcResponseErrorDataImpl::Empty,
+        RpcResponseErrorData::SendTransactionPreflightFailure(rpc_simulate_transaction_result) => {
+            AsRpcResponseErrorDataImpl::SendTransactionPreflightFailure(
+                rpc_simulate_transaction_result.clone(),
+            )
+        }
+        RpcResponseErrorData::NodeUnhealthy { num_slots_behind } => {
+            AsRpcResponseErrorDataImpl::NodeUnhealthy {
+                num_slots_behind: *num_slots_behind,
+            }
+        }
+    }
+}
 
 fn de_rpc_response_error_data(
     error: AsRpcResponseErrorDataImpl,
 ) -> Result<RpcResponseErrorData, Infallible> {
+    Ok(match error {
+        AsRpcResponseErrorDataImpl::Empty => RpcResponseErrorData::Empty,
+        AsRpcResponseErrorDataImpl::SendTransactionPreflightFailure(
+            rpc_simulate_transaction_result,
+        ) => RpcResponseErrorData::SendTransactionPreflightFailure(rpc_simulate_transaction_result),
+        AsRpcResponseErrorDataImpl::NodeUnhealthy { num_slots_behind } => {
+            RpcResponseErrorData::NodeUnhealthy { num_slots_behind }
+        }
+    })
 }
 
 serde_conv!(pub AsRpcResponseErrorData, RpcResponseErrorData, ser_rpc_response_error_data, de_rpc_response_error_data);
@@ -238,9 +261,39 @@ pub enum AsRpcErrorImpl {
     ForUser(String),
 }
 
-fn ser_rpc_error(error: &RpcError) -> AsRpcErrorImpl {}
+fn ser_rpc_error(error: &RpcError) -> AsRpcErrorImpl {
+    match error {
+        RpcError::RpcRequestError(error) => AsRpcErrorImpl::RpcRequestError(error.clone()),
+        RpcError::RpcResponseError {
+            code,
+            message,
+            data,
+        } => AsRpcErrorImpl::RpcResponseError {
+            code: *code,
+            message: message.clone(),
+            data: clone_rpc_response_error(data),
+        },
+        RpcError::ParseError(error) => AsRpcErrorImpl::ParseError(error.clone()),
+        RpcError::ForUser(error) => AsRpcErrorImpl::ForUser(error.clone()),
+    }
+}
 
-fn de_rpc_error(error: AsRpcErrorImpl) -> Result<RpcError, Infallible> {}
+fn de_rpc_error(error: AsRpcErrorImpl) -> Result<RpcError, Infallible> {
+    Ok(match error {
+        AsRpcErrorImpl::RpcRequestError(error) => RpcError::RpcRequestError(error),
+        AsRpcErrorImpl::RpcResponseError {
+            code,
+            message,
+            data,
+        } => RpcError::RpcResponseError {
+            code,
+            message,
+            data,
+        },
+        AsRpcErrorImpl::ParseError(error) => RpcError::ParseError(error),
+        AsRpcErrorImpl::ForUser(error) => RpcError::ForUser(error),
+    })
+}
 
 serde_conv!(pub AsRpcEeror, RpcError, ser_rpc_error, de_rpc_error);
 
