@@ -4,8 +4,10 @@ use std::io;
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv};
+use solana_program::clock::Slot;
 use solana_rpc_client_api::client_error::{Error as ClientError, ErrorKind as ClientErrorKind};
 use solana_rpc_client_api::request::{RpcError, RpcRequest, RpcResponseErrorData};
+use solana_rpc_client_api::response::RpcSimulateTransactionResult;
 use solana_signer::{PresignerError, SignerError};
 use solana_transaction_error::TransactionError;
 
@@ -205,6 +207,41 @@ fn de_rpc_request(r: AsRpcRequestImpl) -> Result<RpcRequest, Infallible> {
 }
 
 serde_conv!(pub AsRpcRequest, RpcRequest, ser_rpc_request, de_rpc_request);
+
+#[derive(Serialize, Deserialize)]
+pub enum AsRpcResponseErrorDataImpl {
+    Empty,
+    SendTransactionPreflightFailure(RpcSimulateTransactionResult),
+    NodeUnhealthy { num_slots_behind: Option<Slot> },
+}
+
+fn ser_rpc_response_error_data(error: &RpcResponseErrorData) -> AsRpcResponseErrorDataImpl {}
+
+fn de_rpc_response_error_data(
+    error: AsRpcResponseErrorDataImpl,
+) -> Result<RpcResponseErrorData, Infallible> {
+}
+
+serde_conv!(pub AsRpcResponseErrorData, RpcResponseErrorData, ser_rpc_response_error_data, de_rpc_error_response_data);
+
+#[derive(Serialize, Deserialize)]
+pub enum AsRpcErrorImpl {
+    RpcRequestError(String),
+    RpcResponseError {
+        code: i64,
+        message: String,
+        #[serde_as(as = "AsRpcResponseErrorData")]
+        data: RpcResponseErrorData,
+    },
+    ParseError(String),
+    ForUser(String),
+}
+
+fn ser_rpc_error(error: &RpcError) -> AsRpcErrorImpl {}
+
+fn de_rpc_error(error: AsRpcErrorImpl) -> Result<RpcError, Infallible> {}
+
+serde_conv!(pub AsRpcEeror, RpcError, ser_rpc_error, de_rpc_error);
 
 #[serde_as]
 #[derive(Serialize, Deserialize)]
