@@ -308,6 +308,13 @@ pub enum AsClientErrorKindImpl {
     Custom(String),
 }
 
+serde_conv!(
+    pub AsAnyhow,
+    anyhow::Error,
+    |error: &anyhow::Error| error.to_string(),
+    |error: String| Ok::<_, Infallible>(anyhow::Error::msg(error))
+);
+
 #[derive(Serialize, Deserialize)]
 pub enum AsPresignerErrorImpl {
     VerificationFailure,
