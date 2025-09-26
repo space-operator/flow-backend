@@ -420,9 +420,17 @@ pub mod execute {
         #[error(transparent)]
         InstructionError(#[from] Arc<InstructionError>),
         #[error(transparent)]
-        SanitizeError(#[from] Arc<SanitizeError>),
+        SanitizeError(
+            #[from]
+            #[serde_as(as = "Arc<crate::errors::AsSanitizeError>")]
+            Arc<SanitizeError>,
+        ),
         #[error(transparent)]
-        ChannelClosed(#[from] Canceled),
+        ChannelClosed(
+            #[from]
+            #[serde_as(as = "()")]
+            Canceled,
+        ),
         #[error(transparent)]
         Common(#[from] CommonError),
     }

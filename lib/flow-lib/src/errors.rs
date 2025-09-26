@@ -3,11 +3,13 @@
 use std::convert::Infallible;
 use std::io;
 
+use actix::MailboxError;
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv};
 use solana_program::clock::Slot;
 use solana_program::message::CompileError;
+use solana_program::sanitize::SanitizeError;
 use solana_pubkey::Pubkey;
 use solana_rpc_client_api::client_error::{Error as ClientError, ErrorKind as ClientErrorKind};
 use solana_rpc_client_api::request::{RpcError, RpcRequest, RpcResponseErrorData};
@@ -722,3 +724,50 @@ fn de_CompileError(error: AsCompileErrorImpl) -> Result<CompileError, Infallible
 }
 
 serde_conv!(pub AsCompileError, CompileError, ser_CompileError, de_CompileError);
+
+#[derive(Serialize, Deserialize)]
+pub enum AsSanitizeErrorImpl {
+    IndexOutOfBounds,
+    ValueOutOfBounds,
+    InvalidValue,
+}
+
+fn ser_SanitizeError(error: &SanitizeError) -> AsSanitizeErrorImpl {
+    match error {
+        SanitizeError::IndexOutOfBounds => AsSanitizeErrorImpl::IndexOutOfBounds,
+        SanitizeError::ValueOutOfBounds => AsSanitizeErrorImpl::ValueOutOfBounds,
+        SanitizeError::InvalidValue => AsSanitizeErrorImpl::InvalidValue,
+    }
+}
+
+fn de_SanitizeError(error: AsSanitizeErrorImpl) -> Result<SanitizeError, Infallible> {
+    Ok(match error {
+        AsSanitizeErrorImpl::IndexOutOfBounds => SanitizeError::IndexOutOfBounds,
+        AsSanitizeErrorImpl::ValueOutOfBounds => SanitizeError::ValueOutOfBounds,
+        AsSanitizeErrorImpl::InvalidValue => SanitizeError::InvalidValue,
+    })
+}
+
+serde_conv!(pub AsSanitizeError, SanitizeError, ser_SanitizeError, de_SanitizeError);
+
+#[derive(Serialize, Deserialize)]
+pub enum AsMailboxErrorImpl {
+    Closed,
+    Timeout,
+}
+
+fn ser_MailboxError(error: &MailboxError) -> AsMailboxErrorImpl {
+    match error {
+        MailboxError::Closed => AsMailboxErrorImpl::Closed,
+        MailboxError::Timeout => AsMailboxErrorImpl::Timeout,
+    }
+}
+
+fn de_MailboxError(error: AsMailboxErrorImpl) -> Result<MailboxError, Infallible> {
+    Ok(match error {
+        AsMailboxErrorImpl::Closed => MailboxError::Closed,
+        AsMailboxErrorImpl::Timeout => MailboxError::Timeout,
+    })
+}
+
+serde_conv!(pub AsMailboxError, MailboxError, ser_MailboxError, de_MailboxError);
