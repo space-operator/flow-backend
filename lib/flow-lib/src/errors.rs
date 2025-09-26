@@ -308,6 +308,161 @@ pub enum AsClientErrorKindImpl {
     Custom(String),
 }
 
+#[derive(Serialize, Deserialize)]
+pub enum AsErrorKindImpl {
+    NotFound,
+    PermissionDenied,
+    ConnectionRefused,
+    ConnectionReset,
+    HostUnreachable,
+    NetworkUnreachable,
+    ConnectionAborted,
+    NotConnected,
+    AddrInUse,
+    AddrNotAvailable,
+    NetworkDown,
+    BrokenPipe,
+    AlreadyExists,
+    WouldBlock,
+    NotADirectory,
+    IsADirectory,
+    DirectoryNotEmpty,
+    ReadOnlyFilesystem,
+    StaleNetworkFileHandle,
+    InvalidInput,
+    InvalidData,
+    TimedOut,
+    WriteZero,
+    StorageFull,
+    NotSeekable,
+    QuotaExceeded,
+    FileTooLarge,
+    ResourceBusy,
+    ExecutableFileBusy,
+    Deadlock,
+    CrossesDevices,
+    TooManyLinks,
+    InvalidFilename,
+    ArgumentListTooLong,
+    Interrupted,
+    Unsupported,
+    UnexpectedEof,
+    OutOfMemory,
+    Other,
+}
+
+fn ser_error_kind(kind: &io::ErrorKind) -> AsErrorKindImpl {
+    match kind {
+        io::ErrorKind::NotFound => AsErrorKindImpl::NotFound,
+        io::ErrorKind::PermissionDenied => AsErrorKindImpl::PermissionDenied,
+        io::ErrorKind::ConnectionRefused => AsErrorKindImpl::ConnectionRefused,
+        io::ErrorKind::ConnectionReset => AsErrorKindImpl::ConnectionReset,
+        io::ErrorKind::HostUnreachable => AsErrorKindImpl::HostUnreachable,
+        io::ErrorKind::NetworkUnreachable => AsErrorKindImpl::NetworkUnreachable,
+        io::ErrorKind::ConnectionAborted => AsErrorKindImpl::ConnectionAborted,
+        io::ErrorKind::NotConnected => AsErrorKindImpl::NotConnected,
+        io::ErrorKind::AddrInUse => AsErrorKindImpl::AddrInUse,
+        io::ErrorKind::AddrNotAvailable => AsErrorKindImpl::AddrNotAvailable,
+        io::ErrorKind::NetworkDown => AsErrorKindImpl::NetworkDown,
+        io::ErrorKind::BrokenPipe => AsErrorKindImpl::BrokenPipe,
+        io::ErrorKind::AlreadyExists => AsErrorKindImpl::AlreadyExists,
+        io::ErrorKind::WouldBlock => AsErrorKindImpl::WouldBlock,
+        io::ErrorKind::NotADirectory => AsErrorKindImpl::NotADirectory,
+        io::ErrorKind::IsADirectory => AsErrorKindImpl::IsADirectory,
+        io::ErrorKind::DirectoryNotEmpty => AsErrorKindImpl::DirectoryNotEmpty,
+        io::ErrorKind::ReadOnlyFilesystem => AsErrorKindImpl::ReadOnlyFilesystem,
+        io::ErrorKind::StaleNetworkFileHandle => AsErrorKindImpl::StaleNetworkFileHandle,
+        io::ErrorKind::InvalidInput => AsErrorKindImpl::InvalidInput,
+        io::ErrorKind::InvalidData => AsErrorKindImpl::InvalidData,
+        io::ErrorKind::TimedOut => AsErrorKindImpl::TimedOut,
+        io::ErrorKind::WriteZero => AsErrorKindImpl::WriteZero,
+        io::ErrorKind::StorageFull => AsErrorKindImpl::StorageFull,
+        io::ErrorKind::NotSeekable => AsErrorKindImpl::NotSeekable,
+        io::ErrorKind::QuotaExceeded => AsErrorKindImpl::QuotaExceeded,
+        io::ErrorKind::FileTooLarge => AsErrorKindImpl::FileTooLarge,
+        io::ErrorKind::ResourceBusy => AsErrorKindImpl::ResourceBusy,
+        io::ErrorKind::ExecutableFileBusy => AsErrorKindImpl::ExecutableFileBusy,
+        io::ErrorKind::Deadlock => AsErrorKindImpl::Deadlock,
+        io::ErrorKind::CrossesDevices => AsErrorKindImpl::CrossesDevices,
+        io::ErrorKind::TooManyLinks => AsErrorKindImpl::TooManyLinks,
+        io::ErrorKind::InvalidFilename => AsErrorKindImpl::InvalidFilename,
+        io::ErrorKind::ArgumentListTooLong => AsErrorKindImpl::ArgumentListTooLong,
+        io::ErrorKind::Interrupted => AsErrorKindImpl::Interrupted,
+        io::ErrorKind::Unsupported => AsErrorKindImpl::Unsupported,
+        io::ErrorKind::UnexpectedEof => AsErrorKindImpl::UnexpectedEof,
+        io::ErrorKind::OutOfMemory => AsErrorKindImpl::OutOfMemory,
+        io::ErrorKind::Other => AsErrorKindImpl::Other,
+        _ => AsErrorKindImpl::Other,
+    }
+}
+
+fn de_error_kind(kind: AsErrorKindImpl) -> Result<io::ErrorKind, Infallible> {
+    Ok(match kind {
+        AsErrorKindImpl::NotFound => io::ErrorKind::NotFound,
+        AsErrorKindImpl::PermissionDenied => io::ErrorKind::PermissionDenied,
+        AsErrorKindImpl::ConnectionRefused => io::ErrorKind::ConnectionRefused,
+        AsErrorKindImpl::ConnectionReset => io::ErrorKind::ConnectionReset,
+        AsErrorKindImpl::HostUnreachable => io::ErrorKind::HostUnreachable,
+        AsErrorKindImpl::NetworkUnreachable => io::ErrorKind::NetworkUnreachable,
+        AsErrorKindImpl::ConnectionAborted => io::ErrorKind::ConnectionAborted,
+        AsErrorKindImpl::NotConnected => io::ErrorKind::NotConnected,
+        AsErrorKindImpl::AddrInUse => io::ErrorKind::AddrInUse,
+        AsErrorKindImpl::AddrNotAvailable => io::ErrorKind::AddrNotAvailable,
+        AsErrorKindImpl::NetworkDown => io::ErrorKind::NetworkDown,
+        AsErrorKindImpl::BrokenPipe => io::ErrorKind::BrokenPipe,
+        AsErrorKindImpl::AlreadyExists => io::ErrorKind::AlreadyExists,
+        AsErrorKindImpl::WouldBlock => io::ErrorKind::WouldBlock,
+        AsErrorKindImpl::NotADirectory => io::ErrorKind::NotADirectory,
+        AsErrorKindImpl::IsADirectory => io::ErrorKind::IsADirectory,
+        AsErrorKindImpl::DirectoryNotEmpty => io::ErrorKind::DirectoryNotEmpty,
+        AsErrorKindImpl::ReadOnlyFilesystem => io::ErrorKind::ReadOnlyFilesystem,
+        AsErrorKindImpl::StaleNetworkFileHandle => io::ErrorKind::StaleNetworkFileHandle,
+        AsErrorKindImpl::InvalidInput => io::ErrorKind::InvalidInput,
+        AsErrorKindImpl::InvalidData => io::ErrorKind::InvalidData,
+        AsErrorKindImpl::TimedOut => io::ErrorKind::TimedOut,
+        AsErrorKindImpl::WriteZero => io::ErrorKind::WriteZero,
+        AsErrorKindImpl::StorageFull => io::ErrorKind::StorageFull,
+        AsErrorKindImpl::NotSeekable => io::ErrorKind::NotSeekable,
+        AsErrorKindImpl::QuotaExceeded => io::ErrorKind::QuotaExceeded,
+        AsErrorKindImpl::FileTooLarge => io::ErrorKind::FileTooLarge,
+        AsErrorKindImpl::ResourceBusy => io::ErrorKind::ResourceBusy,
+        AsErrorKindImpl::ExecutableFileBusy => io::ErrorKind::ExecutableFileBusy,
+        AsErrorKindImpl::Deadlock => io::ErrorKind::Deadlock,
+        AsErrorKindImpl::CrossesDevices => io::ErrorKind::CrossesDevices,
+        AsErrorKindImpl::TooManyLinks => io::ErrorKind::TooManyLinks,
+        AsErrorKindImpl::InvalidFilename => io::ErrorKind::InvalidFilename,
+        AsErrorKindImpl::ArgumentListTooLong => io::ErrorKind::ArgumentListTooLong,
+        AsErrorKindImpl::Interrupted => io::ErrorKind::Interrupted,
+        AsErrorKindImpl::Unsupported => io::ErrorKind::Unsupported,
+        AsErrorKindImpl::UnexpectedEof => io::ErrorKind::UnexpectedEof,
+        AsErrorKindImpl::OutOfMemory => io::ErrorKind::OutOfMemory,
+        AsErrorKindImpl::Other => io::ErrorKind::Other,
+    })
+}
+
+serde_conv!(pub AsErrorKind, io::ErrorKind, ser_error_kind, de_error_kind);
+
+#[serde_as]
+#[derive(Serialize, Deserialize)]
+pub struct AsIoErrorImpl {
+    #[serde_as(as = "AsErrorKind")]
+    pub kind: io::ErrorKind,
+    pub msg: String,
+}
+
+fn ser_io_error(error: &io::Error) -> AsIoErrorImpl {
+    AsIoErrorImpl {
+        kind: error.kind(),
+        msg: error.to_string(),
+    }
+}
+
+fn de_io_error(error: AsIoErrorImpl) -> Result<io::Error, Infallible> {
+    Ok(io::Error::new(error.kind, error.msg))
+}
+
+serde_conv!(pub AsIoError, io::Error, ser_io_error, de_io_error);
+
 serde_conv!(
     pub AsAnyhow,
     anyhow::Error,
