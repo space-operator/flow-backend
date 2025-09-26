@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use std::convert::Infallible;
 use std::io;
 
@@ -5,6 +7,8 @@ use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv};
 use solana_program::clock::Slot;
+use solana_program::message::CompileError;
+use solana_pubkey::Pubkey;
 use solana_rpc_client_api::client_error::{Error as ClientError, ErrorKind as ClientErrorKind};
 use solana_rpc_client_api::request::{RpcError, RpcRequest, RpcResponseErrorData};
 use solana_rpc_client_api::response::RpcSimulateTransactionResult;
@@ -685,3 +689,36 @@ serde_conv!(
     ser_client_error,
     de_client_error
 );
+
+#[derive(Serialize, Deserialize)]
+pub enum AsCompileErrorImpl {
+    AccountIndexOverflow,
+    AddressTableLookupIndexOverflow,
+    UnknownInstructionKey(Pubkey),
+}
+
+fn ser_CompileError(error: &CompileError) -> AsCompileErrorImpl {
+    match error {
+        CompileError::AccountIndexOverflow => AsCompileErrorImpl::AccountIndexOverflow,
+        CompileError::AddressTableLookupIndexOverflow => {
+            AsCompileErrorImpl::AddressTableLookupIndexOverflow
+        }
+        CompileError::UnknownInstructionKey(pubkey) => {
+            AsCompileErrorImpl::UnknownInstructionKey(*pubkey)
+        }
+    }
+}
+
+fn de_CompileError(error: AsCompileErrorImpl) -> Result<CompileError, Infallible> {
+    Ok(match error {
+        AsCompileErrorImpl::AccountIndexOverflow => CompileError::AccountIndexOverflow,
+        AsCompileErrorImpl::AddressTableLookupIndexOverflow => {
+            CompileError::AddressTableLookupIndexOverflow
+        }
+        AsCompileErrorImpl::UnknownInstructionKey(pubkey) => {
+            CompileError::UnknownInstructionKey(pubkey)
+        }
+    })
+}
+
+serde_conv!(pub AsCompileError, CompileError, ser_CompileError, de_CompileError);

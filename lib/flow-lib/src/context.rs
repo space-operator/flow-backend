@@ -412,7 +412,11 @@ pub mod execute {
             Arc<SignerError>,
         ),
         #[error(transparent)]
-        CompileError(#[from] Arc<CompileError>),
+        CompileError(
+            #[from]
+            #[serde_as(as = "Arc<crate::errors::AsCompileError>")]
+            Arc<CompileError>,
+        ),
         #[error(transparent)]
         InstructionError(#[from] Arc<InstructionError>),
         #[error(transparent)]
