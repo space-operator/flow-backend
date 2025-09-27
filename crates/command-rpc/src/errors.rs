@@ -1,9 +1,11 @@
 use flow_lib::context::execute;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 
-#[derive(Debug)]
+#[serde_as]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum TypedError {
-    Unknown(anyhow::Error),
+    Unknown(#[serde_as(as = "flow_lib::errors::AsAnyhow")] anyhow::Error),
     Execute(execute::Error),
 }
 
@@ -14,22 +16,6 @@ impl From<anyhow::Error> for TypedError {
             Err(e) => e,
         };
         TypedError::Unknown(e)
-    }
-}
-
-impl Serialize for TypedError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match self {
-            TypedError::Unknown(error) => {
-                serializer.serialize_newtype_variant("TypedError", 0, "Unknown", &error.to_string())
-            }
-            TypedError::Execute(error) => {
-                serializer.serialize_newtype_variant("TypedError", 1, "Execute", &error)
-            }
-        }
     }
 }
 
