@@ -12,6 +12,16 @@ pub enum TypedError {
     Execute(execute::Error),
 }
 
+impl TypedError {
+    pub fn to_anyhow(self) -> anyhow::Error {
+        match self {
+            TypedError::Unknown(error) => error,
+            TypedError::Capnp(error) => error.into(),
+            TypedError::Execute(error) => error.into(),
+        }
+    }
+}
+
 impl From<anyhow::Error> for TypedError {
     fn from(e: anyhow::Error) -> Self {
         let e = match e.downcast::<execute::Error>() {
