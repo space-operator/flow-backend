@@ -1,4 +1,3 @@
-use anyhow::Context;
 use capnp::capability::Promise;
 use flow_lib::{
     Value,
@@ -38,8 +37,8 @@ struct CommandTraitImpl {
 }
 
 fn parse_inputs(params: run_params::Reader<'_>) -> Result<value::Map, anyhow::Error> {
-    let inputs = params.get_inputs().context("get_inputs")?;
-    map_from_bincode(inputs).context("map_from_bincode")
+    let inputs = params.get_inputs()?;
+    Ok(map_from_bincode(inputs)?)
 }
 
 // TODO: old flow-lib code use reqwest client with 30 secs timeout
@@ -55,19 +54,13 @@ impl CommandTraitImpl {
         let tracker = self.tracker.clone();
         async move {
             let now = Instant::now();
-            let params = params.get().context("get")?;
+            let params = params.get()?;
             let inputs = parse_inputs(params)?;
-            let context = params.get_ctx().context("get_ctx")?;
-            let resp = context
-                .data_request()
-                .send()
-                .promise
-                .await
-                .context("send data_request")?;
-            let data = resp.get().context("get")?.get_data().context("get_data")?;
-            let value = Value::from_bincode(data).context("Value::from_bincode")?;
-            let data: CommandContextData =
-                value::from_value(value).context("decode CommandContextData")?;
+            let context = params.get_ctx()?;
+            let resp = context.data_request().send().promise.await?;
+            let data = resp.get()?.get_data()?;
+            let value = Value::from_bincode(data)?;
+            let data: CommandContextData = value::from_value(value)?;
             let run_id = data.flow.flow_run_id;
             let node_id = data.node_id;
             let times = data.times;
@@ -100,9 +93,7 @@ impl CommandTraitImpl {
             let cmd_lock = cmd.lock().await;
             let result = cmd_lock.run(ctx, inputs).instrument(span).await?;
             tracker.exit(run_id, node_id, times);
-            results
-                .get()
-                .set_output(&map_to_bincode(&result).context("map_to_bincode")?);
+            results.get().set_output(&map_to_bincode(&result)?);
             tracing::info!("ran {}:{} {:?}", id, times, now.elapsed());
             Ok(())
         }
@@ -128,7 +119,7 @@ impl Server for CommandTraitImpl {
         Promise::from_future(
             async move {
                 let inputs = cmd.lock().await.inputs();
-                let inputs = simd_json::to_vec(&inputs).context("serialize inputs description")?;
+                let inputs = simd_json::to_vec(&inputs)?;
                 results.get().set_inputs(&inputs);
                 Ok::<_, anyhow::Error>(())
             }
@@ -145,8 +136,7 @@ impl Server for CommandTraitImpl {
         Promise::from_future(
             async move {
                 let outputs = cmd.lock().await.outputs();
-                let outputs =
-                    simd_json::to_vec(&outputs).context("serialize outputs description")?;
+                let outputs = simd_json::to_vec(&outputs)?;
                 results.get().set_outputs(&outputs);
                 Ok::<_, anyhow::Error>(())
             }
@@ -163,7 +153,7 @@ impl Server for CommandTraitImpl {
         Promise::from_future(
             async move {
                 let info = cmd.lock().await.instruction_info();
-                let info = simd_json::to_vec(&info).context("serialize instruction info")?;
+                let info = simd_json::to_vec(&info)?;
                 results.get().set_info(&info);
                 Ok::<_, anyhow::Error>(())
             }
@@ -180,7 +170,7 @@ impl Server for CommandTraitImpl {
         Promise::from_future(
             async move {
                 let perm = cmd.lock().await.permissions();
-                let perm = simd_json::to_vec(&perm).context("serialize permissions")?;
+                let perm = simd_json::to_vec(&perm)?;
                 results.get().set_permissions(&perm);
                 Ok::<_, anyhow::Error>(())
             }

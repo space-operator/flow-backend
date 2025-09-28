@@ -2,10 +2,13 @@ use flow_lib::context::execute;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
+pub mod r#as;
+
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TypedError {
     Unknown(#[serde_as(as = "flow_lib::errors::AsAnyhow")] anyhow::Error),
+    Capnp(#[serde_as(as = "r#as::AsCapnp")] capnp::Error),
     Execute(execute::Error),
 }
 
