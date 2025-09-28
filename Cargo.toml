@@ -49,7 +49,6 @@ mpl-core-candy-guard = { path = "anchor-libs/mpl-core-candy-guard", version = "0
 # lib/
 value = { path = "lib/flow-value", version = "0.2.0", package = "flow-value" }
 flow-lib = { path = "lib/flow-lib", version = "0.1.1" }
-space-lib = { path = "lib/space-lib", version = "0.5.0" }
 space-macro = { path = "lib/space-macro", version = "0.2.1" }
 spo-helius = { path = "./lib/spo-helius", version = "0.1.0" }
 futures-metrics = { path = "./lib/futures-metrics", version = "0.1.0" }
