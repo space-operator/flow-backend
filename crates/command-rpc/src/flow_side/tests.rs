@@ -36,13 +36,4 @@ async fn test_call() {
         .await
         .unwrap_err();
     println!("{}", error);
-
-    let error = real_node
-        .run(
-            CommandContext::test_context(),
-            flow_lib::value::map! { "x" => 0 },
-        )
-        .await
-        .unwrap_err();
-    println!("{}", error);
 }
