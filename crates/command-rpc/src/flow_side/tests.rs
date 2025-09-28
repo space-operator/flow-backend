@@ -3,7 +3,7 @@ use crate::flow_side::remote_command::RemoteCommand;
 use crate::tracing::TrackFlowRun;
 use flow_lib::command::CommandFactory;
 use flow_lib::command::CommandTrait;
-use flow_lib::context::CommandContext;
+use flow_lib::context::{CommandContext, execute};
 use iroh::{Endpoint, Watcher};
 
 #[actix::test]
@@ -35,5 +35,8 @@ async fn test_call() {
         )
         .await
         .unwrap_err();
-    println!("{}", error);
+    assert!(matches!(
+        error.downcast::<execute::Error>().unwrap(),
+        execute::Error::Collected
+    ));
 }

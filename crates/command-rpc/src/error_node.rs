@@ -1,4 +1,4 @@
-use flow_lib::command::prelude::*;
+use flow_lib::{command::prelude::*, context::execute};
 const NAME: &str = "error_node";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 pub fn build() -> BuildResult {
@@ -19,7 +19,10 @@ pub struct Output {
 }
 async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
     tracing::info!("input: {:?}", input);
-    Err(CommandError::msg("unimplemented"))
+    Err(match input.x {
+        Some(0) => execute::Error::Collected.into(),
+        _ => CommandError::msg("unimplemented"),
+    })
 }
 #[cfg(test)]
 mod tests {
