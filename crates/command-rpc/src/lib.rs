@@ -37,10 +37,9 @@ pub(crate) fn connect_generic_futures_io<
 pub(crate) mod make_sync;
 
 pub mod command_side;
+pub mod errors;
 pub mod flow_side;
 pub mod tracing;
-pub mod errors;
-
 
 #[cfg(test)]
 pub mod add;

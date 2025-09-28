@@ -18,6 +18,10 @@ impl From<anyhow::Error> for TypedError {
             Ok(e) => return TypedError::Execute(e),
             Err(e) => e,
         };
+        let e = match e.downcast::<capnp::Error>() {
+            Ok(e) => return TypedError::Capnp(e),
+            Err(e) => e,
+        };
         TypedError::Unknown(e)
     }
 }
