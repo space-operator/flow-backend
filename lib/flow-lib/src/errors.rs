@@ -508,9 +508,7 @@ pub enum AsSignerErrorImpl {
     NotEnoughSigners,
     TransactionError(TransactionError),
     Custom(String),
-    // Presigner-specific Errors
     PresignerError(#[serde_as(as = "AsPresignerError")] PresignerError),
-    // Remote Keypair-specific Errors
     Connection(String),
     InvalidInput(String),
     NoDeviceFound,
