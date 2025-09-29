@@ -4,6 +4,7 @@ use crate::tracing::TrackFlowRun;
 use flow_lib::command::CommandFactory;
 use flow_lib::command::CommandTrait;
 use flow_lib::context::{CommandContext, execute};
+use flow_lib::utils::tower_client::CommonError;
 use iroh::{Endpoint, Watcher};
 
 #[actix::test]
@@ -28,6 +29,7 @@ async fn test_call() {
     let node = RemoteCommand::new(client.init(&real_node.node_data()).await.unwrap().unwrap())
         .await
         .unwrap();
+
     let error = node
         .run(
             CommandContext::test_context(),
@@ -35,8 +37,22 @@ async fn test_call() {
         )
         .await
         .unwrap_err();
+    dbg!(&error);
     assert!(matches!(
         error.downcast::<execute::Error>().unwrap(),
         execute::Error::Collected
+    ));
+
+    let error = node
+        .run(
+            CommandContext::test_context(),
+            flow_lib::value::map! { "x" => 1 },
+        )
+        .await
+        .unwrap_err();
+    dbg!(&error);
+    assert!(matches!(
+        error.downcast::<execute::Error>().unwrap(),
+        execute::Error::Common(CommonError::Unimplemented)
     ));
 }
