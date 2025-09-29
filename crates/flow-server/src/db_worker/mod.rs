@@ -85,11 +85,11 @@ impl actix::Handler<GetIrohInfo> for DBWorker {
         let endpoint = self.remote_command_address_book.endpoint().clone();
         Box::pin(async move {
             let node_id = endpoint.node_id().to_string();
-            let relay_url = endpoint.home_relay().initialized().await?.to_string();
+            let relay_url = endpoint.home_relay().initialized().await.to_string();
             let direct_addresses = endpoint
                 .direct_addresses()
                 .initialized()
-                .await?
+                .await
                 .into_iter()
                 .map(|addr| addr.addr)
                 .collect();

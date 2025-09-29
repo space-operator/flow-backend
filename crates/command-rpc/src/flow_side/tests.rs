@@ -15,7 +15,7 @@ async fn test_call() {
         let availables = factory.availables().collect::<Vec<_>>();
         let factory = command_factory::new_client(factory, tracker);
         let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
-        let addr = endpoint.node_addr().initialized().await.unwrap();
+        let addr = endpoint.node_addr().initialized().await;
         factory.bind_iroh(endpoint);
         (addr, availables)
     };
