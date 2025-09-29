@@ -18,7 +18,6 @@ pub struct Output {
     pub output: u64,
 }
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    tracing::info!("input: {:?}", input);
     Err(match input.x {
         Some(0) => execute::Error::Collected.into(),
         Some(1) => {
