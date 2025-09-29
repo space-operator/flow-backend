@@ -14,8 +14,8 @@ use flow_lib::{
 use futures::{TryFutureExt, future::LocalBoxFuture};
 use tower::{Service, ServiceExt};
 
-use crate::anyhow2capnp;
 pub use crate::command_capnp::command_context::*;
+use crate::{anyhow2capnp, capnp2typed, errors::TypedError};
 
 impl tower::Service<signer::SignatureRequest> for Client {
     type Response = signer::SignatureResponse;
@@ -83,11 +83,14 @@ impl tower::Service<execute::Request> for Client {
             request.get().set_request(
                 &bincode::encode_to_vec(&req, standard()).map_err(execute::Error::other)?,
             );
-            let resp = request
-                .send()
-                .promise
-                .await
-                .map_err(execute::Error::other)?;
+            let resp = match request.send().promise.await {
+                Ok(resp) => resp,
+                Err(error) => Err(match capnp2typed(error) {
+                    TypedError::Execute(error) => error,
+                    TypedError::Unknown(error) => execute::Error::from_anyhow(error),
+                    TypedError::Capnp(error) => execute::Error::other(error),
+                })?,
+            };
             let resp: execute::Response = bincode::decode_from_slice(
                 resp.get()
                     .context("get")

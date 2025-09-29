@@ -22,12 +22,6 @@ pub struct Tracker {
     tx: EventSender,
 }
 
-#[derive(Clone)]
-pub struct TrackFlowRun {
-    flow_logs: FlowLogs,
-    runs: Rc<RefCell<AHashMap<FlowRunId, Tracker>>>,
-}
-
 async fn send_log(
     client: &command_context::Client,
     log: NodeLogContent,
@@ -41,7 +35,7 @@ async fn send_log(
 
 type ClientsMap = Rc<RefCell<AHashMap<(NodeId, u32), command_context::Client>>>;
 
-async fn drive(mut rx: EventReceiver, clients: ClientsMap) {
+async fn drive(mut rx: EventReceiver, clients: ClientsMap, run_id: FlowRunId) {
     while let Some(Event::NodeLog(NodeLog {
         time,
         node_id,
@@ -67,7 +61,7 @@ async fn drive(mut rx: EventReceiver, clients: ClientsMap) {
                 tracing::error!("send_log error: {}", error);
             }
         } else {
-            tracing::error!("no client registered {}:{}", node_id, times)
+            tracing::error!("no client registered {}:{}:{}", run_id, node_id, times)
         }
     }
 }
@@ -87,6 +81,12 @@ fn init_tracing_flow_logs() -> FlowLogs {
         .with(logs.clone())
         .init();
     logs
+}
+
+#[derive(Clone)]
+pub struct TrackFlowRun {
+    flow_logs: FlowLogs,
+    runs: Rc<RefCell<AHashMap<FlowRunId, Tracker>>>,
 }
 
 impl TrackFlowRun {
@@ -117,11 +117,12 @@ impl TrackFlowRun {
         times: u32,
         client: command_context::Client,
     ) -> (Span, NodeLogSender) {
+        tracing::debug!("tracker enter: {run_id}:{node_id}:{times}");
         let mut runs = self.runs.borrow_mut();
         let tracker = runs.entry(run_id).or_insert_with(|| {
             let (tx, rx) = flow_run_events::channel();
             let clients = ClientsMap::default();
-            spawn_local(drive(rx, clients.clone()));
+            spawn_local(drive(rx, clients.clone(), run_id));
             let span = self
                 .flow_logs
                 .register_flow_logs(run_id, filter, tx.clone());
@@ -138,6 +139,7 @@ impl TrackFlowRun {
     }
 
     pub fn exit(&self, run_id: FlowRunId, node_id: NodeId, times: u32) {
+        tracing::debug!("tracker exit: {run_id}:{node_id}:{times}");
         let mut runs = self.runs.borrow_mut();
         if let Entry::Occupied(mut tracker) = runs.entry(run_id) {
             let delete = {

@@ -1,4 +1,4 @@
-use flow_lib::command::prelude::*;
+use flow_lib::{command::prelude::*, context::execute};
 const NAME: &str = "error_node";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 pub fn build() -> BuildResult {
@@ -17,9 +17,25 @@ pub struct Input {
 pub struct Output {
     pub output: u64,
 }
-async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
-    tracing::info!("input: {:?}", input);
-    Err(CommandError::msg("unimplemented"))
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    Err(match input.x {
+        Some(0) => execute::Error::Collected.into(),
+        Some(1) => {
+            return ctx
+                .execute(
+                    Instructions::builder()
+                        .fee_payer(Pubkey::new_unique())
+                        .instructions(Vec::new())
+                        .signers(Vec::new())
+                        .build(),
+                    <_>::default(),
+                )
+                .await
+                .map_err(Into::into)
+                .map(|_| Output { output: 0 });
+        }
+        _ => CommandError::msg("unimplemented"),
+    })
 }
 #[cfg(test)]
 mod tests {

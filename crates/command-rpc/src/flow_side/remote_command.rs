@@ -1,4 +1,4 @@
-use crate::command_side::command_trait;
+use crate::{command_side::command_trait, errors::TypedError};
 use async_trait::async_trait;
 use capnp::ErrorKind;
 use flow_lib::{
@@ -141,12 +141,11 @@ impl CommandTrait for RemoteCommand {
             Err(error) => {
                 return if error.kind == ErrorKind::Failed {
                     let extra = error.extra.as_str();
-                    Err(CommandError::msg(
-                        extra
-                            .strip_prefix("remote exception: ")
-                            .unwrap_or(&extra)
-                            .to_owned(),
-                    ))
+                    let extra = extra.strip_prefix("remote exception: ").unwrap_or(&extra);
+                    match serde_json::from_str::<TypedError>(extra) {
+                        Ok(typed) => Err(typed.to_anyhow()),
+                        Err(_) => Err(CommandError::msg(extra.to_owned())),
+                    }
                 } else {
                     Err(error.into())
                 };

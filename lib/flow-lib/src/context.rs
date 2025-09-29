@@ -383,7 +383,8 @@ pub mod execute {
         s.as_ref().map(|v| v.as_str()).unwrap_or_default()
     }
 
-    #[derive(ThisError, Debug, Clone)]
+    #[serde_as]
+    #[derive(ThisError, Debug, Clone, Serialize, Deserialize)]
     pub enum Error {
         #[error("canceled {}", unwrap(.0))]
         Canceled(Option<String>),
@@ -400,19 +401,36 @@ pub mod execute {
         #[error("{}", crate::utils::verbose_solana_error(.error))]
         Solana {
             #[source]
+            #[serde_as(as = "Arc<crate::errors::AsClientError>")]
             error: Arc<ClientError>,
             inserted: usize,
         },
         #[error(transparent)]
-        Signer(#[from] Arc<SignerError>),
+        Signer(
+            #[from]
+            #[serde_as(as = "Arc<crate::errors::AsSignerError>")]
+            Arc<SignerError>,
+        ),
         #[error(transparent)]
-        CompileError(#[from] Arc<CompileError>),
+        CompileError(
+            #[from]
+            #[serde_as(as = "Arc<crate::errors::AsCompileError>")]
+            Arc<CompileError>,
+        ),
         #[error(transparent)]
         InstructionError(#[from] Arc<InstructionError>),
         #[error(transparent)]
-        SanitizeError(#[from] Arc<SanitizeError>),
+        SanitizeError(
+            #[from]
+            #[serde_as(as = "Arc<crate::errors::AsSanitizeError>")]
+            Arc<SanitizeError>,
+        ),
         #[error(transparent)]
-        ChannelClosed(#[from] Canceled),
+        ChannelClosed(
+            #[from]
+            #[serde_as(as = "crate::errors::AsCancelled")]
+            Canceled,
+        ),
         #[error(transparent)]
         Common(#[from] CommonError),
     }

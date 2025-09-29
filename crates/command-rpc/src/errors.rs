@@ -1,0 +1,49 @@
+use flow_lib::context::execute;
+use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
+
+pub mod r#as;
+
+#[serde_as]
+#[derive(Debug, Serialize, Deserialize)]
+pub enum TypedError {
+    Unknown(#[serde_as(as = "flow_lib::errors::AsAnyhow")] anyhow::Error),
+    Capnp(#[serde_as(as = "r#as::AsCapnp")] capnp::Error),
+    Execute(execute::Error),
+}
+
+impl TypedError {
+    pub fn to_anyhow(self) -> anyhow::Error {
+        match self {
+            TypedError::Unknown(error) => error,
+            TypedError::Capnp(error) => error.into(),
+            TypedError::Execute(error) => error.into(),
+        }
+    }
+}
+
+impl From<anyhow::Error> for TypedError {
+    fn from(e: anyhow::Error) -> Self {
+        let e = match e.downcast::<execute::Error>() {
+            Ok(e) => return TypedError::Execute(e),
+            Err(e) => e,
+        };
+        let e = match e.downcast::<capnp::Error>() {
+            Ok(e) => return TypedError::Capnp(e),
+            Err(e) => e,
+        };
+        TypedError::Unknown(e)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_downcast() {
+        let execute = execute::Error::Collected;
+        let error = anyhow::Error::from(execute).context("run command");
+        let typed = TypedError::from(error);
+        assert!(matches!(typed, TypedError::Execute(_)));
+    }
+}

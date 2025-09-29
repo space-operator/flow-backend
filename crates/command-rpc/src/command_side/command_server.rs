@@ -132,11 +132,11 @@ pub async fn serve_server(
     let direct_addresses: BTreeSet<SocketAddr> = endpoint
         .direct_addresses()
         .initialized()
-        .await?
+        .await
         .into_iter()
         .map(|addr| addr.addr)
         .collect();
-    let relay_url: Url = endpoint.home_relay().initialized().await?.into();
+    let relay_url: Url = endpoint.home_relay().initialized().await.into();
 
     let client = address_book::connect_iroh(
         endpoint.clone(),
@@ -158,7 +158,7 @@ pub async fn serve_server(
     tracing::info!("joined {}", server_addr.node_id);
     let conn_type = endpoint
         .conn_type(server_addr.node_id)
-        .and_then(|watcher| watcher.get().ok());
+        .map(|mut watcher| watcher.get());
     tracing::info!("connection type {:?}", conn_type);
 
     cancel.cancelled().await;

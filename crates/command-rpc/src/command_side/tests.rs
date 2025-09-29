@@ -17,7 +17,7 @@ async fn test_serve_iroh() {
         let availables = factory.availables().collect::<Vec<_>>();
         let factory = command_factory::new_client(factory, tracker);
         let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
-        let addr = endpoint.node_addr().initialized().await.unwrap();
+        let addr = endpoint.node_addr().initialized().await;
         factory.bind_iroh(endpoint);
         (addr, availables)
     };
@@ -34,7 +34,7 @@ async fn test_call_add() {
     let tracker = TrackFlowRun::init_tracing_once();
     let client = command_factory::new_client(CommandFactory::collect(), tracker);
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
-    let addr = endpoint.node_addr().initialized().await.unwrap();
+    let addr = endpoint.node_addr().initialized().await;
     client.bind_iroh(endpoint);
 
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
@@ -67,7 +67,7 @@ async fn test_call_error() {
     let tracker = TrackFlowRun::init_tracing_once();
     let client = command_factory::new_client(CommandFactory::collect(), tracker);
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
-    let addr = endpoint.node_addr().initialized().await.unwrap();
+    let addr = endpoint.node_addr().initialized().await;
     client.bind_iroh(endpoint);
 
     let endpoint = Endpoint::builder().discovery_n0().bind().await.unwrap();
