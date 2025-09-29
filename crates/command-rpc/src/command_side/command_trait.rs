@@ -16,7 +16,7 @@ use futures::TryFutureExt;
 use std::{
     rc::Rc,
     sync::{Arc, LazyLock},
-    time::Instant,
+    time::{Duration, Instant},
 };
 use tokio::sync::Mutex;
 use tracing::Instrument;
@@ -91,9 +91,14 @@ impl CommandTraitImpl {
             let id = *ctx.node_id();
             let times = *ctx.times();
             let cmd_lock = cmd.lock().await;
-            let result = cmd_lock.run(ctx, inputs).instrument(span).await?;
-            tracker.exit(run_id, node_id, times);
-            results.get().set_output(&map_to_bincode(&result)?);
+            let result = cmd_lock.run(ctx, inputs).instrument(span).await;
+            tokio::task::spawn_local(async move {
+                // TODO: without this delay, tracker get dropped before event are sent by tracing
+                // is there a better way?
+                tokio::time::sleep(Duration::from_secs(5)).await;
+                tracker.exit(run_id, node_id, times);
+            });
+            results.get().set_output(&map_to_bincode(&result?)?);
             tracing::info!("ran {}:{} {:?}", id, times, now.elapsed());
             Ok(())
         }
