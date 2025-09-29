@@ -21,6 +21,19 @@ pub(crate) fn anyhow2capnp(error: anyhow::Error) -> capnp::Error {
     }
 }
 
+pub(crate) fn capnp2typed(error: capnp::Error) -> TypedError {
+    if error.kind == capnp::ErrorKind::Failed {
+        let extra = error.extra.as_str();
+        let extra = extra.strip_prefix("remote exception: ").unwrap_or(&extra);
+        match serde_json::from_str::<TypedError>(extra) {
+            Ok(typed) => typed,
+            Err(_) => TypedError::Unknown(anyhow::Error::msg(extra.to_owned())),
+        }
+    } else {
+        TypedError::Capnp(error)
+    }
+}
+
 pub(crate) fn connect_generic_futures_io<
     R: futures::io::AsyncRead + Unpin + 'static,
     W: futures::io::AsyncWrite + Unpin + 'static,
