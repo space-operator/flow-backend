@@ -1,5 +1,6 @@
 FROM docker.io/library/rust AS rustc
-RUN apt-get update && apt-get install -y capnproto && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y clang lld capnproto && rm -rf /var/lib/apt/lists/*
+ENV RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=lld"
 RUN cargo install cargo-chef --quiet
 WORKDIR /build/
 
@@ -23,7 +24,7 @@ COPY . .
 COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
 ARG PROFILE=release
-RUN cargo build --profile=$PROFILE --bin flow-server --quiet
+RUN cargo build --profile=$PROFILE --bin all-cmds-server --quiet
 
 FROM docker.io/denoland/deno:debian AS deno
 
@@ -32,16 +33,9 @@ FROM docker.io/denoland/deno:debian AS deno
 # It only contains our final binaries.
 FROM docker.io/library/debian:stable-slim AS runtime
 COPY ./certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
-COPY ./crates/flow-server/entrypoint.bash /space-operator/
-RUN apt-get update && \
-    apt-get install -y libssl3 ca-certificates wget lld && \
-    wget https://github.com/supabase/cli/releases/download/v1.167.4/supabase_1.167.4_linux_amd64.deb && \
-    apt-get install -y ./supabase_1.167.4_linux_amd64.deb && \
-    apt-get remove -y wget && \
-    rm -rf /var/lib/apt/lists/*
 COPY --from=deno /usr/bin/deno /usr/local/bin
 RUN deno --version
 WORKDIR /space-operator/
-COPY --from=builder /build/target/release/flow-server /usr/local/bin
-RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')" && apt-get remove -y lld
-ENTRYPOINT ["./entrypoint.bash"]
+COPY --from=builder /build/target/release/all-cmds-server /usr/local/bin
+RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')"
+ENTRYPOINT ["sh"]

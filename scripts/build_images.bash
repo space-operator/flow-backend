@@ -12,14 +12,14 @@ echo Using $CMD
 
 PROFILE=${PROFILE:-release}
 
-NAME="space-operator/flow-server"
-DOCKERFILE="crates/flow-server/Dockerfile"
 
 DIRTY=""
 if [[ "$(git describe --always --dirty)" == *-dirty ]]; then
     DIRTY="-dirty"
 fi
 
+NAME="space-operator/flow-server"
+DOCKERFILE="crates/flow-server/Dockerfile"
 set -x
 time $BUILD --target rustc -t "$NAME-rustc:latest" -f "$DOCKERFILE" .
 time $BUILD --target planner -t "$NAME-planner:latest" -f "$DOCKERFILE" .
