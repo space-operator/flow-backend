@@ -41,3 +41,4 @@ function build {
 }
 
 build space-operator/flow-server crates/flow-server/Dockerfile
+build space-operator/cmds-server cmds-server.dockerfile
