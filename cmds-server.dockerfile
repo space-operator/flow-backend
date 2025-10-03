@@ -34,4 +34,4 @@ COPY ./certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
 WORKDIR /space-operator/
 COPY --from=builder /build/target/release/all-cmds-server /usr/local/bin
 RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')"
-ENTRYPOINT ["sh"]
+ENTRYPOINT ["all-cmds-server"]
