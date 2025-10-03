@@ -1,6 +1,5 @@
 FROM docker.io/library/rust AS rustc
-RUN apt-get update && apt-get install -y clang lld capnproto && rm -rf /var/lib/apt/lists/*
-ENV RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=lld"
+RUN apt-get update && apt-get install -y capnproto && rm -rf /var/lib/apt/lists/*
 RUN cargo install cargo-chef --quiet
 WORKDIR /build/
 
