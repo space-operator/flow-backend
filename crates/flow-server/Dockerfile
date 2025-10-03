@@ -37,11 +37,10 @@ RUN apt-get update && \
     apt-get install -y libssl3 ca-certificates wget lld && \
     wget https://github.com/supabase/cli/releases/download/v1.167.4/supabase_1.167.4_linux_amd64.deb && \
     apt-get install -y ./supabase_1.167.4_linux_amd64.deb && \
-    apt-get remove -y wget && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get remove -y wget
 COPY --from=deno /usr/bin/deno /usr/local/bin
 RUN deno --version
 WORKDIR /space-operator/
 COPY --from=builder /build/target/release/flow-server /usr/local/bin
-RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')" && apt-get remove -y lld
+RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')" && apt-get remove -y lld && rm -rf /var/lib/apt/lists/*
 ENTRYPOINT ["./entrypoint.bash"]

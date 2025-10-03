@@ -26,15 +26,11 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 ARG PROFILE=release
 RUN cargo build --profile=$PROFILE --bin all-cmds-server --quiet
 
-FROM docker.io/denoland/deno:debian AS deno
-
 # Step 4:
 # Create a tiny output image.
 # It only contains our final binaries.
 FROM docker.io/library/debian:stable-slim AS runtime
 COPY ./certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
-COPY --from=deno /usr/bin/deno /usr/local/bin
-RUN deno --version
 WORKDIR /space-operator/
 COPY --from=builder /build/target/release/all-cmds-server /usr/local/bin
 RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')"
