@@ -30,6 +30,7 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     let repo = if compile { "" } else { "public.ecr.aws/" };
     cmd!(sh, "docker compose -f with-cmds-server.yml up --quiet-pull -d --wait ")
         .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
+        .env("CMDS_IMAGE", format!("{repo}space-operator/cmds-server:{tag}"))
         .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
     cmd!(sh, "./import-data.ts --file=export.json").run()?;
