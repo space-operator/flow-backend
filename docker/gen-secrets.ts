@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write
+#!/usr/bin/env -S deno run -A
 
 import {
   encodeBase58,
@@ -10,11 +10,14 @@ import { load } from "@std/dotenv";
 import { crypto } from "@std/crypto/crypto";
 import * as toml from "@std/toml";
 import * as fs from "@std/fs";
+import * as sol from "@solana/web3.js";
 
 const ENV_PATH = ".env";
 const CONFIG_PATH = ".config.toml";
+const CMDS_CONFIG_PATH = ".cmds-server-config.jsonc";
 const ENV_TEMPLATE = "env.example";
 const CONFIG_TEMPLATE = "flow-server-config.toml";
+const CMDS_SERVER_TEMPLATE = "cmds-server-config.jsonc";
 
 async function initHmac(secret: string): Promise<CryptoKey> {
   return await crypto.subtle.importKey(
@@ -52,6 +55,17 @@ async function generateKey(secret: CryptoKey, role: string): Promise<string> {
   );
   return `${data}.${encodeBase64Url(signature)}`;
 }
+
+const cmdsServerKey = sol.Keypair.generate();
+const cmdsServerConfig = JSON.parse(
+  Deno.readTextFileSync(CMDS_SERVER_TEMPLATE),
+);
+cmdsServerConfig["secret_key"] = encodeHex(cmdsServerKey.secretKey.slice(0, 32));
+console.log("Writing", CMDS_CONFIG_PATH);
+Deno.writeTextFileSync(
+  CMDS_CONFIG_PATH,
+  JSON.stringify(cmdsServerConfig, null, 2),
+);
 
 const encryptionKey = encodeBase64(crypto.getRandomValues(new Uint8Array(32)));
 
@@ -94,6 +108,7 @@ config.supabase.anon_key = anonKey;
 config.db.password = flowRunnerPassword;
 config.db.encryption_key = encryptionKey;
 config.iroh.secret_key = irohSecretKey;
+config.iroh.trusted = [encodeHex(cmdsServerKey.publicKey.toBytes())];
 const configContent = toml.stringify(config) + "\n";
 
 const fileExists: string[] = [];

@@ -1,0 +1,9 @@
+{
+    "$schema": "https://schema.spaceoperator.com/command-server-config.schema.json",
+    "secret_key": "",
+    "flow_server": [
+        {
+            "url": "http://flow-server:8080/"
+        }
+    ]
+}

@@ -28,7 +28,7 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     cmd!(sh, "./gen-secrets.ts").run()?;
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let repo = if compile { "" } else { "public.ecr.aws/" };
-    cmd!(sh, "docker compose up --quiet-pull -d --wait ")
+    cmd!(sh, "docker compose -f with-cmds-server.yml up --quiet-pull -d --wait ")
         .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
         .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
@@ -99,13 +99,13 @@ fn main() {
     sh.change_dir("docker/");
 
     if result.is_err() {
-        cmd!(sh, "docker compose logs flow-server")
+        cmd!(sh, "docker compose -f with-cmds-server.yml logs flow-server")
             .run()
             .inspect_err(|error| eprint!("{error}"))
             .ok();
     }
 
-    cmd!(sh, "docker compose down -v")
+    cmd!(sh, "docker compose -f with-cmds-server.yml down -v")
         .ignore_stdout()
         .ignore_stderr()
         .run()

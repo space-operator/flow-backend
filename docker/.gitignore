@@ -4,3 +4,4 @@
 .env
 .config.toml
 .local-config.toml
+.cmds-server-config.jsonc
