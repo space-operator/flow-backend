@@ -28,10 +28,16 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     cmd!(sh, "./gen-secrets.ts").run()?;
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let repo = if compile { "" } else { "public.ecr.aws/" };
-    cmd!(sh, "docker compose -f with-cmds-server.yml up --quiet-pull -d --wait ")
-        .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
-        .env("CMDS_IMAGE", format!("{repo}space-operator/cmds-server:{tag}"))
-        .run()?;
+    cmd!(
+        sh,
+        "docker compose -f with-cmds-server.yml up --quiet-pull -d --wait "
+    )
+    .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
+    .env(
+        "CMDS_IMAGE",
+        format!("{repo}space-operator/cmds-server:{tag}"),
+    )
+    .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
     cmd!(sh, "./import-data.ts --file=export.json").run()?;
 
@@ -100,10 +106,13 @@ fn main() {
     sh.change_dir("docker/");
 
     if result.is_err() {
-        cmd!(sh, "docker compose -f with-cmds-server.yml logs flow-server")
-            .run()
-            .inspect_err(|error| eprint!("{error}"))
-            .ok();
+        cmd!(
+            sh,
+            "docker compose -f with-cmds-server.yml logs flow-server"
+        )
+        .run()
+        .inspect_err(|error| eprint!("{error}"))
+        .ok();
     }
 
     cmd!(sh, "docker compose -f with-cmds-server.yml down -v")
