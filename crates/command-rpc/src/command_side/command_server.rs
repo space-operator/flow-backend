@@ -1,6 +1,6 @@
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use flow_lib::command::{CommandFactory, MatchCommand};
-use futures::TryFutureExt;
+use futures::{TryFutureExt, future};
 use iroh::Watcher;
 use iroh::{Endpoint, NodeAddr};
 use rand::rngs::OsRng;
@@ -201,12 +201,25 @@ pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Err
         );
     }
 
-    tokio::signal::ctrl_c().await.ok();
-    cancel.cancel();
-
-    join_set.join_all().await;
-
-    Ok(())
+    match future::select(
+        std::pin::pin!(join_set.join_all()),
+        std::pin::pin!(tokio::signal::ctrl_c()),
+    )
+    .await
+    {
+        future::Either::Left((results, _)) => {
+            if results.iter().all(|r| r.is_err()) {
+                Err(anyhow!("all connects failed"))
+            } else {
+                Ok(())
+            }
+        }
+        future::Either::Right((_, join)) => {
+            cancel.cancel();
+            join.await;
+            Ok(())
+        }
+    }
 }
 
 #[cfg(test)]
