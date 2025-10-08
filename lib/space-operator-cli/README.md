@@ -38,6 +38,7 @@ Commands:
   start     Start flow-server [aliases: s]
   node      Manage your nodes [aliases: n]
   generate  Generate various things [aliases: g]
+  run       Run various binaries
   help      Print this message or the help of the given subcommand(s)
 
 Options:
@@ -297,6 +298,7 @@ This document contains the help content for the `spo` command-line program.
 * [`spo generate input`↴](#spo-generate-input)
 * [`spo generate output`↴](#spo-generate-output)
 * [`spo generate config`↴](#spo-generate-config)
+* [`spo run`↴](#spo-run)
 
 ## `spo`
 
@@ -308,6 +310,7 @@ This document contains the help content for the `spo` command-line program.
 * `start` — Start flow-server
 * `node` — Manage your nodes
 * `generate` — Generate various things
+* `run` — Run various binaries
 
 ###### **Options:**
 
@@ -327,11 +330,18 @@ Login to Space Operator using API key
 
 Start flow-server
 
-**Usage:** `spo start [CONFIG]`
+**Usage:** `spo start [OPTIONS] [CONFIG]`
+
+**Command Alias:** `s`
 
 ###### **Arguments:**
 
 * `<CONFIG>` — Path to configuration file
+
+###### **Options:**
+
+* `--docker` — Connect to local Docker instance
+* `--release` — Use `--release` build
 
 
 
@@ -340,6 +350,8 @@ Start flow-server
 Manage your nodes
 
 **Usage:** `spo node <COMMAND>`
+
+**Command Alias:** `n`
 
 ###### **Subcommands:**
 
@@ -354,6 +366,8 @@ Generate a new node
 
 **Usage:** `spo node new [OPTIONS]`
 
+**Command Alias:** `n`
+
 ###### **Options:**
 
 * `--allow-dirty` — Allow dirty git repository
@@ -366,6 +380,8 @@ Generate a new node
 Upload nodes
 
 **Usage:** `spo node upload [OPTIONS] <PATH>`
+
+**Command Alias:** `u`
 
 ###### **Arguments:**
 
@@ -384,6 +400,8 @@ Generate various things
 
 **Usage:** `spo generate <COMMAND>`
 
+**Command Alias:** `g`
+
 ###### **Subcommands:**
 
 * `input` — Generate input struct
@@ -398,6 +416,8 @@ Generate input struct
 
 **Usage:** `spo generate input <PATH>`
 
+**Command Alias:** `i`
+
 ###### **Arguments:**
 
 * `<PATH>` — Path to node definition file
@@ -409,6 +429,8 @@ Generate input struct
 Generate output struct
 
 **Usage:** `spo generate output <PATH>`
+
+**Command Alias:** `o`
 
 ###### **Arguments:**
 
@@ -422,9 +444,30 @@ Generate configuration file for flow-server
 
 **Usage:** `spo generate config [PATH]`
 
+**Command Alias:** `c`
+
 ###### **Arguments:**
 
 * `<PATH>` — Path to save configuration file (default: config.toml)
+
+
+
+## `spo run`
+
+Run various binaries
+
+**Usage:** `spo run [OPTIONS] <BIN>`
+
+###### **Arguments:**
+
+* `<BIN>` — Specify binary to run
+
+  Possible values: `all-cmds-server`
+
+
+###### **Options:**
+
+* `--release` — Run in release mode
 
 
 
