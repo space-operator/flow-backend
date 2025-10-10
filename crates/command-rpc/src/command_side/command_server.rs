@@ -97,7 +97,10 @@ pub fn main() {
     // initializing these clients take a long time
     let _ = *HTTP_CLIENT;
     rt.block_on(async {
-        let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
+        let path = std::env::args().nth(1).unwrap();
+        let data = std::fs::read_to_string(&path)
+            .with_context(|| format!("error reading {path}"))
+            .unwrap();
         let config: Config = serde_json::from_value(
             jsonc_parser::parse_to_serde_value(&data, &<_>::default())
                 .unwrap()
