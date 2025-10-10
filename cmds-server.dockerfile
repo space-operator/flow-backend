@@ -35,4 +35,4 @@ WORKDIR /space-operator/
 COPY --from=builder /build/target/release/all-cmds-server /usr/local/bin
 COPY --from=builder /build/target/release/deno-cmds-server /usr/local/bin
 RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')" && apt-get remove -y lld && rm -rf /var/lib/apt/lists/*
-ENTRYPOINT ["bash", "-c"]
+ENTRYPOINT ["all-cmds-server"]
