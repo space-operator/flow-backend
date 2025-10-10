@@ -199,6 +199,7 @@ enum Commands {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 enum Binaries {
     AllCmdsServer,
+    DenoCmdsServer,
 }
 
 #[derive(Subcommand, Debug)]
@@ -313,6 +314,8 @@ pub enum Error {
     Metadata,
     #[error("package not found: {}", .0)]
     PackageNotFound(String),
+    #[error("binary not found: {}", .0)]
+    BinaryNotFound(String),
     #[error("package is not a library: {}", .0)]
     NotLib(String),
     #[error("invalid value")]
@@ -739,6 +742,15 @@ fn cargo_metadata() -> Result<Metadata, Report<Error>> {
         .no_deps()
         .exec()
         .change_context(Error::Metadata)
+}
+
+fn find_binary_by_name<'a>(meta: &'a Metadata, bin: &str) -> Result<&'a Target, Report<Error>> {
+    Ok(meta
+        .workspace_packages()
+        .into_iter()
+        .flat_map(|p| p.targets.iter().filter(|t| t.is_bin()))
+        .find(|t| t.name == bin)
+        .ok_or_else(|| Error::BinaryNotFound(bin.to_owned()))?)
 }
 
 fn find_target_crate_by_name<'a>(
@@ -1699,32 +1711,29 @@ async fn generate_cmds_server_config(path: &Path) -> Result<(), Report<Error>> {
     Ok(())
 }
 
-async fn run_all_cmds_server(release: bool) -> Result<(), Report<Error>> {
+async fn run_cmds_server(release: bool, bin: &str) -> Result<(), Report<Error>> {
     let meta =
         cargo_metadata().attach_printable("make sure you are inside flow-backend repository")?;
-    find_target_crate_by_name(&meta, "all-cmds-server")
+    find_binary_by_name(&meta, bin)
         .attach_printable("make sure you are inside flow-backend repository")?;
     if matches!(std::env::current_dir(), Ok(dir) if dir != meta.workspace_root) {
         println!("$ cd {}", relative_to_pwd(&meta.workspace_root).display());
         std::env::set_current_dir(&meta.workspace_root).change_context(Error::Io("chdir"))?;
     }
-    let config_path = Path::new("_data/all-cmds-server.jsonc");
+    let config_path = PathBuf::from(format!("_data/{bin}.jsonc"));
     if !config_path.is_file() {
-        generate_cmds_server_config(config_path).await?;
+        generate_cmds_server_config(&config_path).await?;
     }
 
+    let bin = bin.to_owned();
     let handler = spawn_blocking(move || -> Result<(), Report<Error>> {
         let sh = Shell::new().change_context(Error::Shell)?;
         let build_dir = release.then_some("release/").unwrap_or("debug/");
         let release = release.then_some("--release");
-        cmd!(sh, "cargo build --bin all-cmds-server {release...}")
+        cmd!(sh, "cargo build --bin {bin} {release...}")
             .run()
             .change_context(Error::Subprocess)?;
-        let binary = relative_to_pwd(
-            meta.target_directory
-                .join(build_dir)
-                .join("all-cmds-server"),
-        );
+        let binary = relative_to_pwd(meta.target_directory.join(build_dir).join(&bin));
         cmd!(sh, "{binary} {config_path}")
             .run()
             .change_context(Error::Subprocess)?;
@@ -1934,7 +1943,8 @@ async fn run() -> Result<(), Report<Error>> {
             },
         },
         Some(Commands::Run { bin, release }) => match bin {
-            Binaries::AllCmdsServer => run_all_cmds_server(*release).await?,
+            Binaries::AllCmdsServer => run_cmds_server(*release, "all-cmds-server").await?,
+            Binaries::DenoCmdsServer => run_cmds_server(*release, "deno-cmds-server").await?,
         },
         None => {
             Args::command().print_long_help().ok();
