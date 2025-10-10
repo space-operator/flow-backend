@@ -8,7 +8,7 @@ secrets:
 services:
   cmds-server:
     image: ${CMDS_IMAGE:-public.ecr.aws/space-operator/cmds-server:latest}
-    command: /run/secrets/cmds-server-config
+    command: all-cmds-server /run/secrets/cmds-server-config
     secrets:
       - cmds-server-config
     depends_on:
