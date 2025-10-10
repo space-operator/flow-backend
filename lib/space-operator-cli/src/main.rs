@@ -10,7 +10,7 @@ use futures::{AsyncBufReadExt, AsyncReadExt, future, io::AllowStdIo};
 use postgrest::Postgrest;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use rand::rngs::OsRng;
+use rand::{Rng, rngs::OsRng};
 use regex::Regex;
 use reqwest::{
     StatusCode,
@@ -1696,8 +1696,7 @@ fn make_absolute(path: impl AsRef<Path>) -> Result<PathBuf, Report<Error>> {
 async fn generate_cmds_server_config(path: &Path) -> Result<(), Report<Error>> {
     let client = ApiClient::load().await.change_context(Error::NotLogin)?;
     let apikey = client.config.apikey;
-    let secret_key =
-        data_encoding::HEXLOWER.encode(&iroh_base::SecretKey::generate(&mut OsRng).to_bytes());
+    let secret_key = data_encoding::HEXLOWER.encode(&OsRng.r#gen::<[u8; 32]>());
     let config = json!({
         "$schema": "https://schema.spaceoperator.com/command-server-config.schema.json",
         "apikey": apikey,

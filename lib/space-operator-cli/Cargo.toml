@@ -25,7 +25,6 @@ directories = "6.0.0"
 error-stack = "0.5.0"
 futures = "0.3.30"
 gix = { version = "0.72.1", default-features = false, features = ["status"] }
-iroh-base = "0.92.0"
 postgrest = { package = "spo-postgrest", version = "1.6.0" }
 prettyplease = "0.2.22"
 proc-macro2 = "1.0.87"
