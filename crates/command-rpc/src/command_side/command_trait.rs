@@ -88,9 +88,9 @@ impl CommandTraitImpl {
                 .data(data)
                 .node_log(node_log)
                 .build();
-            let id = *ctx.node_id();
             let times = *ctx.times();
             let cmd_lock = cmd.lock().await;
+            let name = cmd_lock.name();
             let result = cmd_lock.run(ctx, inputs).instrument(span).await;
             tokio::task::spawn_local(async move {
                 // TODO: without this delay, tracker get dropped before event are sent by tracing
@@ -99,7 +99,7 @@ impl CommandTraitImpl {
                 tracker.exit(run_id, node_id, times);
             });
             results.get().set_output(&map_to_bincode(&result?)?);
-            tracing::info!("ran {}:{} {:?}", id, times, now.elapsed());
+            tracing::info!("ran {} {:?}", name, now.elapsed());
             Ok(())
         }
     }
