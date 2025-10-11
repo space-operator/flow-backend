@@ -296,6 +296,8 @@ pub enum Error {
     ReadFile(PathBuf),
     #[error("failed to write file {}", .0.display())]
     WriteFile(PathBuf),
+    #[error("failed to create dir {}", .0.display())]
+    CreateDir(PathBuf),
     #[error("failed to parse node definition")]
     ParseNodeDefinition,
     #[error("{}", .0)]
@@ -398,6 +400,11 @@ async fn write_file(path: impl AsRef<Path>, data: impl AsRef<[u8]>) -> Result<bo
         stdout.flush().change_context(Error::Io("write stdout"))?;
         Ok(false)
     } else {
+        if let Some(path) = path.parent() {
+            tokio::fs::create_dir_all(path)
+                .await
+                .change_context_lazy(|| Error::CreateDir(path.to_owned()))?;
+        }
         tokio::fs::write(path, data)
             .await
             .change_context_lazy(|| Error::WriteFile(path.to_owned()))?;
@@ -615,7 +622,7 @@ impl ApiClient {
 
         tokio::fs::create_dir_all(&base)
             .await
-            .change_context_lazy(|| Error::WriteData(base.clone()))?;
+            .change_context_lazy(|| Error::CreateDir(base.clone()))?;
 
         let path = base.join(Self::data_file_name());
 
@@ -1059,7 +1066,7 @@ async fn write_node_definition(
     path.extend(modules);
     tokio::fs::create_dir_all(&path)
         .await
-        .change_context(Error::Io("create dir"))?;
+        .change_context_lazy(|| Error::CreateDir(path.to_owned()))?;
     path.push(&format!("{}.json", def.data.node_id));
     let path = relative_to_pwd(path);
 
@@ -1385,7 +1392,7 @@ async fn write_code(
     path.extend(modules);
     tokio::fs::create_dir_all(&path)
         .await
-        .change_context(Error::Io("create dir"))?;
+        .change_context_lazy(|| Error::CreateDir(path.to_owned()))?;
     path.push(format!("{}.rs", def.data.node_id));
     let path = relative_to_pwd(path);
 
