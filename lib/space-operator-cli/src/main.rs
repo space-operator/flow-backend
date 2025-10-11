@@ -1064,9 +1064,6 @@ async fn write_node_definition(
 
     let mut path = root.join("node-definitions");
     path.extend(modules);
-    tokio::fs::create_dir_all(&path)
-        .await
-        .change_context_lazy(|| Error::CreateDir(path.to_owned()))?;
     path.push(&format!("{}.json", def.data.node_id));
     let path = relative_to_pwd(path);
 
