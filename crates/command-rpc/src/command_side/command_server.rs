@@ -179,6 +179,7 @@ pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Err
         .bind()
         .await
         .context("bind iroh endpoint")?;
+    tracing::info!("using public key: {}", endpoint.node_id());
     let factory = CommandFactory::collect();
     let availables = factory.availables().collect::<Vec<_>>();
     command_factory::new_client(factory, logs).bind_iroh(endpoint.clone());
