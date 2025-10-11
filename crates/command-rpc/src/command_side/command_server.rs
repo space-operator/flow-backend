@@ -88,26 +88,24 @@ struct InfoResponse {
     iroh: FlowServerAddress,
 }
 
-pub fn main() {
+pub fn main() -> Result<(), anyhow::Error> {
     let tracker = TrackFlowRun::init_tracing();
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
-        .build()
-        .unwrap();
+        .build()?;
     // initializing these clients take a long time
     let _ = *HTTP_CLIENT;
     rt.block_on(async {
-        let data = std::fs::read_to_string(std::env::args().nth(1).unwrap()).unwrap();
+        let path = std::env::args().nth(1).unwrap();
+        let data =
+            std::fs::read_to_string(&path).with_context(|| format!("error reading {path}"))?;
         let config: Config = serde_json::from_value(
-            jsonc_parser::parse_to_serde_value(&data, &<_>::default())
-                .unwrap()
-                .unwrap_or_default(),
-        )
-        .unwrap();
+            jsonc_parser::parse_to_serde_value(&data, &<_>::default())?.unwrap_or_default(),
+        )?;
         tokio::task::LocalSet::new()
             .run_until(serve(config, tracker))
-            .await
-            .unwrap();
+            .await?;
+        Ok(())
     })
 }
 
