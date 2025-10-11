@@ -6,59 +6,62 @@
   "properties": {
     "flow_server": {
       "type": "array",
+      "description": "List of flow servers to connect to, if not specified, it will connect to the flow server at https://dev-api.spaceoperator.com/",
+      "default": [
+        {
+          "url": "https://dev-api.spaceoperator.com/"
+        }
+      ],
       "items": {
-        "$ref": "#/$defs/FlowServerConfig"
+        "$ref": "#/definitions/FlowServerConfig"
       }
     },
     "secret_key": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "description": "Iroh secret key, if not specified, the server will generate a new key every time it starts.",
+      "type": "string"
     },
     "apikey": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "description": "Common API key to authenticate with all servers in `flow_server` list, use this if you don't need a different key for each server.",
+      "type": "string"
     }
   },
-  "required": [
-    "secret_key"
-  ],
-  "$defs": {
+  "required": [],
+  "definitions": {
     "FlowServerConfig": {
       "type": "object",
       "properties": {
         "apikey": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "description": "Per-server API key to use.",
+          "type": "string"
         }
       },
       "anyOf": [
         {
-          "type": "object",
-          "properties": {
-            "url": {
-              "type": "string",
-              "format": "uri",
-              "examples": [
-                "https://dev-api.spaceoperator.com/",
-                "http://localhost:8080/"
-              ],
-              "default": "https://dev-api.spaceoperator.com/"
-            }
-          }
+          "$ref": "#/definitions/FlowServerUrl"
         },
         {
-          "$ref": "#/$defs/FlowServerAddress"
+          "$ref": "#/definitions/FlowServerAddress"
         }
       ]
     },
+    "FlowServerUrl": {
+      "type": "object",
+      "description": "Connect via flow-server public URL.",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "https://dev-api.spaceoperator.com/",
+            "http://localhost:8080/"
+          ],
+          "default": "https://dev-api.spaceoperator.com/"
+        }
+      }
+    },
     "FlowServerAddress": {
       "type": "object",
+      "description": "Connect directly via node ID, relay URL (and IP addresses).",
       "properties": {
         "node_id": {
           "type": "string"
@@ -68,10 +71,7 @@
           "format": "uri"
         },
         "direct_addresses": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
