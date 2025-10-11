@@ -1715,7 +1715,6 @@ dependencies = [
  "byteorder",
  "bytes",
  "chrono",
- "ed25519-dalek 1.0.1",
  "flow-lib",
  "flow-value",
  "futures",
@@ -10720,7 +10719,8 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 [[package]]
 name = "struct-convert"
 version = "1.4.0"
-source = "git+https://github.com/juchiast/struct-convert?rev=83b132915519515e364ce612ef2ac92441dc7bc9#83b132915519515e364ce612ef2ac92441dc7bc9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8da5b58ec0bf7da9271e24988b562c7bf1831f8327c619842ff89fbe83b9d3ce"
 dependencies = [
  "anyhow",
  "darling 0.14.4",
