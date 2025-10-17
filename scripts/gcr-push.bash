@@ -19,8 +19,8 @@ COMMIT="$(git rev-parse --verify HEAD)$DIRTY"
 
 function push {
     IMAGE="$1"
-    NAME="$PROJECT_ID/$ORG/$IMAGE"
-    URL="us-west1-docker.pkg.dev/$NAME"
+    NAME="$ORG/$IMAGE"
+    URL="us-west1-docker.pkg.dev/$PROJECT_ID/$NAME"
 
     $CMD tag $NAME:$COMMIT $URL:$COMMIT
     $CMD push $URL:$COMMIT
