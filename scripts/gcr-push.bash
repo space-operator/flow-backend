@@ -6,12 +6,8 @@ if [[ "${1:-}" == docker ]]; then
     CMD="docker"
 fi
 
-ORG=space-operator
-
-if [ "${1:-}" = "login" ]; then
-    aws ecr-public get-login-password --region us-east-1 |
-        $CMD login --username AWS --password-stdin "public.ecr.aws/$ORG"
-fi
+PROJECT_ID=${GCP_PROJECT_ID:-seraphic-spider-445423-f4}
+ORG=app-cluster-docker
 
 DIRTY=""
 if [[ "$(git describe --always --dirty)" == *-dirty ]]; then
@@ -23,8 +19,8 @@ COMMIT="$(git rev-parse --verify HEAD)$DIRTY"
 
 function push {
     IMAGE="$1"
-    NAME="$ORG/$IMAGE"
-    URL="public.ecr.aws/$NAME"
+    NAME="$PROJECT_ID/$ORG/$IMAGE"
+    URL="us-west1-docker.pkg.dev/$NAME"
 
     $CMD tag $NAME:$COMMIT $URL:$COMMIT
     $CMD push $URL:$COMMIT
@@ -39,4 +35,3 @@ function push {
 }
 
 push flow-server
-push cmds-server
