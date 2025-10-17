@@ -62,11 +62,7 @@ jobs:
           deno-version: v2.x
       - name: Build Integration Tests
         run: cargo build --bin integration-tests --quiet
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-east-1
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
+
       - name: Run Integration Tests
         env:
           APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}

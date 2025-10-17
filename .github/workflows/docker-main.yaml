@@ -13,8 +13,6 @@ jobs:
       BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
       - name: Build
         run: ./scripts/build_images.bash
       - uses: aws-actions/configure-aws-credentials@v4
