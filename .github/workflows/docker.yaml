@@ -29,6 +29,18 @@ jobs:
         run: ./scripts/ecr-push.bash login
       - name: Clean up
         run: podman image prune -f
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev
+
   integration-test:
     name: Integration Test
     if: ${{ contains(github.event.pull_request.labels.*.name, 'integration-test') }}
