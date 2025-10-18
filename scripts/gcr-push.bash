@@ -36,3 +36,5 @@ function push {
 }
 
 push flow-server
+push cmds-server
+push schema-server
