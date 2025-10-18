@@ -42,3 +42,8 @@ function build {
 
 build space-operator/flow-server crates/flow-server/Dockerfile
 build space-operator/cmds-server cmds-server.dockerfile
+
+pushd schema
+time $BUILD -t space-operator/schema-server:$COMMIT .
+$CMD tag space-operator/schema-server:$COMMIT space-operator/schema-server:$BRANCH
+popd
