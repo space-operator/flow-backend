@@ -47,6 +47,8 @@ pub use utils::*;
 pub mod watcher;
 pub use watcher::*;
 
+pub mod multi_watcher;
+
 pub mod spl_memo {
     pub const ID: solana_pubkey::Pubkey =
         solana_pubkey::pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
@@ -394,7 +396,10 @@ async fn insert_priority_fee(
             match rpc
                 .simulate_transaction(&VersionedTransaction {
                     message: VersionedMessage::V0(message.clone()),
-                    signatures: Vec::new(),
+                    signatures: vec![
+                        Signature::from([0u8; 64]);
+                        message.header.num_required_signatures as usize
+                    ],
                 })
                 .await
             {

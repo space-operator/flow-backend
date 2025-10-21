@@ -298,6 +298,7 @@ pub struct ExecutionConfig {
     #[serde(default)]
     pub priority_fee: InsertionBehavior,
 
+    // TODO: only finalized work
     #[serde(default = "default_simulation_level")]
     pub simulation_commitment_level: CommitmentLevel,
     #[serde(default = "default_tx_level")]
