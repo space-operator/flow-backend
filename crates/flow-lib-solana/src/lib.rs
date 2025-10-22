@@ -4,10 +4,7 @@ use bytes::Bytes;
 use chrono::Utc;
 use flow_lib::{
     FlowRunId, SolanaNet,
-    context::{
-        execute::{self, Error},
-        signer,
-    },
+    context::{execute::Error, signer},
     solana::{
         ExecuteOn, ExecutionConfig, InsertionBehavior, Instructions, SolanaActionConfig, Wallet,
     },
@@ -23,7 +20,6 @@ use solana_program::{
 };
 use solana_pubkey::Pubkey;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use solana_rpc_client_api::config::RpcSendTransactionConfig;
 use solana_signature::Signature;
 use solana_signer::{Signer, SignerError, signers::Signers};
@@ -31,11 +27,7 @@ use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
 };
-use std::{
-    collections::BTreeSet,
-    sync::{Arc, LazyLock},
-    time::Duration,
-};
+use std::{collections::BTreeSet, sync::LazyLock, time::Duration};
 use tower::Service;
 use tower::ServiceExt;
 
@@ -57,30 +49,6 @@ pub mod spl_memo {
         pub const ID: solana_pubkey::Pubkey =
             solana_pubkey::pubkey!("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo");
     }
-}
-
-pub fn simple_execute_svc(
-    rpc: Arc<SolanaClient>,
-    network: SolanaNet,
-    signer: signer::Svc,
-    flow_run_id: Option<FlowRunId>,
-    config: ExecutionConfig,
-) -> execute::Svc {
-    let handle = move |req: execute::Request| {
-        let rpc = rpc.clone();
-        let signer = signer.clone();
-        let config = config.clone();
-        async move {
-            Ok(execute::Response {
-                signature: Some(
-                    req.instructions
-                        .execute(&rpc, network, signer, flow_run_id, config)
-                        .await?,
-                ),
-            })
-        }
-    };
-    execute::Svc::new(tower::service_fn(handle))
 }
 
 fn is_set_compute_unit_limit(ix: &Instruction) -> Option<()> {

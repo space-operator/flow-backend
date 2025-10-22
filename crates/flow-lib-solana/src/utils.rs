@@ -1,12 +1,18 @@
+use std::sync::Arc;
+
+use crate::InstructionsExt;
+
 use super::Error;
 use super::{Pubkey, Signature};
 use agave_feature_set::FeatureSet;
 use agave_precompiles::verify_if_precompile;
 use anyhow::{anyhow, bail, ensure};
 use base64::prelude::*;
-use flow_lib::context::signer::Presigner;
+use flow_lib::context::execute;
+use flow_lib::context::signer::{self, Presigner};
+use flow_lib::solana::ExecutionConfig;
 use flow_lib::utils::tower_client::CommonErrorExt;
-use flow_lib::FlowRunId;
+use flow_lib::{FlowRunId, SolanaNet};
 use nom::{
     IResult,
     bytes::complete::take,
@@ -22,6 +28,30 @@ use solana_rpc_client_api::{
 };
 use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
+
+pub fn simple_execute_svc(
+    rpc: Arc<RpcClient>,
+    network: SolanaNet,
+    signer: signer::Svc,
+    flow_run_id: Option<FlowRunId>,
+    config: ExecutionConfig,
+) -> execute::Svc {
+    let handle = move |req: execute::Request| {
+        let rpc = rpc.clone();
+        let signer = signer.clone();
+        let config = config.clone();
+        async move {
+            Ok(execute::Response {
+                signature: Some(
+                    req.instructions
+                        .execute(&rpc, network, signer, flow_run_id, config)
+                        .await?,
+                ),
+            })
+        }
+    };
+    execute::Svc::new(tower::service_fn(handle))
+}
 
 pub async fn fetch_address_lookup_table(
     rpc: &RpcClient,
