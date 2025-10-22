@@ -2,10 +2,11 @@ use super::Error;
 use super::{Pubkey, Signature};
 use agave_feature_set::FeatureSet;
 use agave_precompiles::verify_if_precompile;
-use anyhow::{anyhow, bail};
+use anyhow::{anyhow, bail, ensure};
 use base64::prelude::*;
 use flow_lib::context::signer::Presigner;
 use flow_lib::utils::tower_client::CommonErrorExt;
+use flow_lib::FlowRunId;
 use nom::{
     IResult,
     bytes::complete::take,
@@ -13,7 +14,7 @@ use nom::{
 };
 use solana_address_lookup_table_interface::state::AddressLookupTable;
 use solana_clock::{Slot, UnixTimestamp};
-use solana_program::message::AddressLookupTableAccount;
+use solana_program::message::{AddressLookupTableAccount, VersionedMessage, v0};
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::{
     client_error::{Error as ClientError, ErrorKind as ClientErrorKind},
@@ -157,4 +158,142 @@ pub fn verify_precompiles(tx: &Transaction, feature_set: &FeatureSet) -> Result<
         .map_err(|error| anyhow!("instruction #{} error: {}", index, error))?;
     }
     Ok(())
+}
+
+/// `l` is old, `r` is new
+pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<v0::Message, anyhow::Error> {
+    let l = bincode1::deserialize::<VersionedMessage>(l)?;
+    let l = if let VersionedMessage::V0(l) = l {
+        l
+    } else {
+        return Err(anyhow!("only V0 message is supported"));
+    };
+    let r = bincode1::deserialize::<VersionedMessage>(r)?;
+    let r = if let VersionedMessage::V0(r) = r {
+        r
+    } else {
+        return Err(anyhow!("only V0 message is supported"));
+    };
+    l.sanitize()?;
+    r.sanitize()?;
+    ensure!(
+        l.header.num_required_signatures == r.header.num_required_signatures,
+        "different num_required_signatures"
+    );
+    ensure!(
+        l.header.num_readonly_signed_accounts >= r.header.num_readonly_signed_accounts,
+        "different num_readonly_signed_accounts"
+    );
+    if l.header.num_readonly_signed_accounts != r.header.num_readonly_signed_accounts {
+        tracing::warn!(
+            "less num_readonly_signed_accounts, old = {}, new = {}",
+            l.header.num_readonly_signed_accounts,
+            r.header.num_readonly_signed_accounts
+        );
+    }
+    ensure!(
+        l.header.num_readonly_unsigned_accounts >= r.header.num_readonly_unsigned_accounts,
+        "different num_readonly_unsigned_accounts"
+    );
+    if l.header.num_readonly_unsigned_accounts != r.header.num_readonly_unsigned_accounts {
+        tracing::warn!(
+            "less num_readonly_unsigned_accounts, old = {}, new = {}",
+            l.header.num_readonly_unsigned_accounts,
+            r.header.num_readonly_unsigned_accounts
+        );
+    }
+    ensure!(
+        l.account_keys.len() == r.account_keys.len(),
+        "different account inputs length, old = {}, new = {}",
+        l.account_keys.len(),
+        r.account_keys.len()
+    );
+    ensure!(!l.account_keys.is_empty(), "empty transaction");
+    ensure!(
+        l.instructions.len() == r.instructions.len(),
+        "different instructions count, old = {}, new = {}",
+        l.instructions.len(),
+        r.instructions.len()
+    );
+    ensure!(
+        l.account_keys[0] == r.account_keys[0],
+        "different fee payer"
+    );
+    ensure!(
+        l.recent_blockhash == r.recent_blockhash,
+        "different blockhash"
+    );
+
+    /*
+     * TODO
+    for i in 0..l.instructions.len() {
+        let program_id_l = l
+            .program_id(i)
+            .ok_or_else(|| anyhow!("no program id for instruction {}", i))?;
+
+        let program_id_r = r
+            .program_id(i)
+            .ok_or_else(|| anyhow!("no program id for instruction {}", i))?;
+        ensure!(
+            program_id_l == program_id_r,
+            "different program id for instruction {}",
+            i
+        );
+        let il = &l.instructions[i];
+        let ir = &r.instructions[i];
+        ensure!(il.data == ir.data, "different instruction data {}", i);
+        let inputs_l = il.accounts.iter().map(|i| l.account_keys.get(*i as usize));
+        let inputs_r = ir.accounts.iter().map(|i| r.account_keys.get(*i as usize));
+        inputs_l
+            .zip(inputs_r)
+            .map(|(l, r)| {
+                (l == r)
+                    .then_some(())
+                    .ok_or_else(|| anyhow!("different account inputs for instruction {}", i))
+            })
+            .collect::<Result<Vec<()>, _>>()?;
+    }
+    */
+
+    Ok(r)
+}
+
+#[derive(Debug)]
+pub struct ParsedMemo {
+    pub identity: Pubkey,
+    pub timestamp: i64,
+    pub run_id: FlowRunId,
+}
+
+pub fn parse_action_memo(reference: &str) -> Result<ParsedMemo, anyhow::Error> {
+    let mut parts = reference.split(':');
+    let scheme = parts.next();
+    ensure!(scheme == Some("solana-action"), "scheme != solana-action");
+
+    let identity: Pubkey = parts
+        .next()
+        .ok_or_else(|| anyhow!("no identity pubkey"))?
+        .parse()?;
+
+    let reference = parts.next().ok_or_else(|| anyhow!("no reference"))?;
+    let reference = bs58::decode(reference).into_vec()?;
+    ensure!(reference.len() == 32, "decoded length != 32");
+
+    let signature: Signature = parts
+        .next()
+        .ok_or_else(|| anyhow!("no signature"))?
+        .parse()?;
+
+    ensure!(
+        signature.verify(&identity.to_bytes(), &reference),
+        "signature verification failed"
+    );
+
+    let timestamp = i64::from_le_bytes(reference[0..size_of::<i64>()].try_into().unwrap());
+    let run_id = FlowRunId::from_slice(&reference[size_of::<i64>()..(size_of::<i64>() + 16)])?;
+    Ok(ParsedMemo {
+        identity,
+        timestamp,
+        run_id,
+    })
 }
