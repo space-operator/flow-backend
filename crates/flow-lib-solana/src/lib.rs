@@ -19,7 +19,10 @@ use solana_program::{
 };
 use solana_pubkey::Pubkey;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use solana_rpc_client_api::config::RpcSendTransactionConfig;
+use solana_rpc_client_api::{
+    config::RpcSendTransactionConfig,
+    response::{RpcResult, RpcSimulateTransactionResult},
+};
 use solana_signature::Signature;
 use solana_signer::{Signer, SignerError, signers::Signers};
 use solana_transaction::{Transaction, versioned::VersionedTransaction};
@@ -179,24 +182,25 @@ async fn insert_priority_fee(
     rpc: &RpcClient,
     network: SolanaNet,
     config: &ExecutionConfig,
-) -> Result<usize, Error> {
-    // can only simulate with `Finalized`
-    let simulation_commitment_level = CommitmentLevel::Finalized;
-    if simulation_commitment_level != config.tx_commitment_level {
-        tracing::warn!(
-            "simulation commitment level is different than tx_commitment_level, simulation can fail"
-        );
-    }
-    let message = build_message(i, rpc, network, config, simulation_commitment_level).await?;
+) -> Result<(usize, Option<RpcResult<RpcSimulateTransactionResult>>), Error> {
     let count = i.instructions.len();
 
     let mut inserted = 0;
+
+    let mut simulation_result = None;
 
     if config.compute_budget != InsertionBehavior::No && !contains_set_compute_unit_limit(i) {
         let compute_units = if let InsertionBehavior::Value(x) = config.compute_budget {
             x
         } else {
-            match rpc
+            // can only simulate with `Finalized`
+            let simulation_commitment_level = CommitmentLevel::Finalized;
+            if simulation_commitment_level != config.tx_commitment_level {
+                tracing::warn!("tx_commitment_level is not Finalized, simulation can fail");
+            }
+            let message =
+                build_message(i, rpc, network, config, simulation_commitment_level).await?;
+            let result = rpc
                 .simulate_transaction(&VersionedTransaction {
                     message: VersionedMessage::V0(message.clone()),
                     signatures: vec![
@@ -204,24 +208,27 @@ async fn insert_priority_fee(
                         message.header.num_required_signatures as usize
                     ],
                 })
-                .await
-            {
+                .await;
+            let compute_units = match &result {
                 Err(error) => {
                     tracing::warn!("simulation failed: {}", error);
                     None
                 }
-                Ok(result) => {
-                    if let Some(error) = result.value.err {
-                        tracing::warn!("simulation error: {}", error);
-                        for log in result.value.logs.unwrap_or_default() {
-                            tracing::info!("{}", log);
-                        }
+                Ok(response) => {
+                    if let Some(error) = &response.value.err {
+                        let logs = response
+                            .value
+                            .logs
+                            .as_ref()
+                            .map(|logs| logs.join("\n"))
+                            .unwrap_or_default();
+                        tracing::warn!("simulation error: {}\n{}", error, logs);
                     } else {
-                        for log in result.value.logs.unwrap_or_default() {
+                        for log in response.value.logs.iter().flatten() {
                             tracing::debug!("{}", log);
                         }
                     }
-                    let consumed = result.value.units_consumed;
+                    let consumed = response.value.units_consumed;
                     if consumed.is_none() || consumed == Some(0) {
                         None
                     } else {
@@ -230,7 +237,9 @@ async fn insert_priority_fee(
                 }
             }
             .or(config.fallback_compute_budget)
-            .unwrap_or(200_000 * count as u64)
+            .unwrap_or(200_000 * count as u64);
+            simulation_result = Some(result);
+            compute_units
         }
         .min(1_400_000) as u32;
         tracing::info!("setting compute unit limit {}", compute_units);
@@ -258,7 +267,7 @@ async fn insert_priority_fee(
         inserted += 1;
     }
 
-    Ok(inserted)
+    Ok((inserted, simulation_result))
 }
 
 fn commitment(commitment: CommitmentLevel) -> CommitmentConfig {
@@ -302,8 +311,15 @@ async fn build_and_sign_tx(
     mut signer: signer::Svc,
     flow_run_id: Option<FlowRunId>,
     config: &ExecutionConfig,
-) -> Result<(VersionedTransaction, usize), Error> {
-    let inserted = insert_priority_fee(&mut i, rpc, network, config).await?;
+) -> Result<
+    (
+        VersionedTransaction,
+        usize,
+        Option<RpcResult<RpcSimulateTransactionResult>>,
+    ),
+    Error,
+> {
+    let (inserted, simulate_result) = insert_priority_fee(&mut i, rpc, network, config).await?;
     let mut message = build_message(&i, rpc, network, config, config.tx_commitment_level).await?;
     let mut data: Bytes = message.serialize().into();
     let fee_payer_signature = {
@@ -409,7 +425,7 @@ async fn build_and_sign_tx(
         VersionedTransaction::try_new(VersionedMessage::V0(message), &signers)?
     };
 
-    Ok((tx, inserted))
+    Ok((tx, inserted, simulate_result))
 }
 
 async fn execute_current_machine(
@@ -420,12 +436,20 @@ async fn execute_current_machine(
     flow_run_id: Option<FlowRunId>,
     config: &ExecutionConfig,
 ) -> Result<Signature, Error> {
-    let (tx, inserted) = build_and_sign_tx(i, rpc, network, signer, flow_run_id, config).await?;
+    let (tx, inserted, simulate_result) =
+        build_and_sign_tx(i, rpc, network, signer, flow_run_id, config).await?;
+
+    let skip_preflight = match simulate_result {
+        Some(Ok(resp)) => resp.value.err.is_none(),
+        Some(Err(_)) => false,
+        None => false,
+    };
 
     let signature = rpc
         .send_transaction_with_config(
             &tx,
             RpcSendTransactionConfig {
+                skip_preflight,
                 preflight_commitment: Some(config.tx_commitment_level),
                 ..<_>::default()
             },
@@ -578,7 +602,8 @@ impl InstructionsExt for Instructions {
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<(PartialVersionedTransaction, usize, Option<String>), Error> {
-        let inserted = insert_priority_fee(&mut self, rpc, network, config).await?;
+        let (inserted, _simulate_result) =
+            insert_priority_fee(&mut self, rpc, network, config).await?;
         let memo = if let Some(action_identity) = action_identity {
             if !self
                 .instructions
@@ -804,9 +829,10 @@ mod tests {
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
             lookup_tables: None,
         };
-        let inserted = insert_priority_fee(&mut ins, &rpc, SolanaNet::Devnet, &<_>::default())
-            .await
-            .unwrap();
+        let (inserted, simulate_result) =
+            insert_priority_fee(&mut ins, &rpc, SolanaNet::Devnet, &<_>::default())
+                .await
+                .unwrap();
         build_message(
             &ins,
             &rpc,
