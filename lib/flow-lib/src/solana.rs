@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as, serde_conv};
 use solana_commitment_config::CommitmentLevel;
 use solana_program::instruction::{AccountMeta, Instruction};
+use solana_rpc_client_api::response::{RpcResult, RpcSimulateTransactionResult};
 use solana_signer::Signer;
 use std::{
     borrow::Cow, collections::HashMap, convert::Infallible, fmt::Display, num::ParseIntError,
@@ -253,10 +254,6 @@ impl<'de> Deserialize<'de> for InsertionBehavior {
     }
 }
 
-const fn default_simulation_level() -> CommitmentLevel {
-    CommitmentLevel::Finalized
-}
-
 const fn default_tx_level() -> CommitmentLevel {
     CommitmentLevel::Confirmed
 }
@@ -298,8 +295,6 @@ pub struct ExecutionConfig {
     #[serde(default)]
     pub priority_fee: InsertionBehavior,
 
-    #[serde(default = "default_simulation_level")]
-    pub simulation_commitment_level: CommitmentLevel,
     #[serde(default = "default_tx_level")]
     pub tx_commitment_level: CommitmentLevel,
     #[serde(default = "default_wait_level")]
@@ -351,7 +346,6 @@ impl Default for ExecutionConfig {
             compute_budget: InsertionBehavior::default(),
             fallback_compute_budget: None,
             priority_fee: InsertionBehavior::default(),
-            simulation_commitment_level: default_simulation_level(),
             tx_commitment_level: default_tx_level(),
             wait_commitment_level: default_wait_level(),
             execute_on: ExecuteOn::default(),
@@ -364,7 +358,7 @@ mod tests {
     use super::*;
     use crate::context::env::{
         COMPUTE_BUDGET, FALLBACK_COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE,
-        SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
+        TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
     use bincode::config::standard;
     use solana_program::{pubkey, system_instruction::transfer};
@@ -422,7 +416,6 @@ mod tests {
                 (COMPUTE_BUDGET, "auto"),
                 (FALLBACK_COMPUTE_BUDGET, "500000"),
                 (PRIORITY_FEE, "1000"),
-                (SIMULATION_COMMITMENT_LEVEL, "confirmed"),
                 (TX_COMMITMENT_LEVEL, "finalized"),
                 (WAIT_COMMITMENT_LEVEL, "processed"),
             ],
@@ -430,7 +423,6 @@ mod tests {
                 compute_budget: InsertionBehavior::Auto,
                 fallback_compute_budget: Some(500000),
                 priority_fee: InsertionBehavior::Value(1000),
-                simulation_commitment_level: CommitmentLevel::Confirmed,
                 tx_commitment_level: CommitmentLevel::Finalized,
                 wait_commitment_level: CommitmentLevel::Processed,
                 ..<_>::default()

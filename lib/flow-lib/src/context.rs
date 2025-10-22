@@ -31,7 +31,6 @@ pub mod env {
     pub const COMPUTE_BUDGET: &str = "COMPUTE_BUDGET";
     pub const FALLBACK_COMPUTE_BUDGET: &str = "FALLBACK_COMPUTE_BUDGET";
     pub const PRIORITY_FEE: &str = "PRIORITY_FEE";
-    pub const SIMULATION_COMMITMENT_LEVEL: &str = "SIMULATION_COMMITMENT_LEVEL";
     pub const TX_COMMITMENT_LEVEL: &str = "TX_COMMITMENT_LEVEL";
     pub const WAIT_COMMITMENT_LEVEL: &str = "WAIT_COMMITMENT_LEVEL";
     pub const EXECUTE_ON: &str = "EXECUTE_ON";
