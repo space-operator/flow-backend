@@ -180,8 +180,14 @@ async fn insert_priority_fee(
     network: SolanaNet,
     config: &ExecutionConfig,
 ) -> Result<usize, Error> {
-    let message =
-        build_message(i, rpc, network, config, config.simulation_commitment_level).await?;
+    // can only simulate with `Finalized`
+    let simulation_commitment_level = CommitmentLevel::Finalized;
+    if simulation_commitment_level != config.tx_commitment_level {
+        tracing::warn!(
+            "simulation commitment level is different than tx_commitment_level, simulation can fail"
+        );
+    }
+    let message = build_message(i, rpc, network, config, simulation_commitment_level).await?;
     let count = i.instructions.len();
 
     let mut inserted = 0;
@@ -708,7 +714,7 @@ mod tests {
     use bincode::config::standard;
     use flow_lib::context::env::{
         COMPUTE_BUDGET, FALLBACK_COMPUTE_BUDGET, OVERWRITE_FEEPAYER, PRIORITY_FEE,
-        SIMULATION_COMMITMENT_LEVEL, TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
+        TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
     use flow_lib::solana::WalletOrPubkey;
     // use base64::prelude::*;
@@ -770,7 +776,6 @@ mod tests {
                 (COMPUTE_BUDGET, "auto"),
                 (FALLBACK_COMPUTE_BUDGET, "500000"),
                 (PRIORITY_FEE, "1000"),
-                (SIMULATION_COMMITMENT_LEVEL, "confirmed"),
                 (TX_COMMITMENT_LEVEL, "finalized"),
                 (WAIT_COMMITMENT_LEVEL, "processed"),
             ],
@@ -778,7 +783,6 @@ mod tests {
                 compute_budget: InsertionBehavior::Auto,
                 fallback_compute_budget: Some(500000),
                 priority_fee: InsertionBehavior::Value(1000),
-                simulation_commitment_level: CommitmentLevel::Confirmed,
                 tx_commitment_level: CommitmentLevel::Finalized,
                 wait_commitment_level: CommitmentLevel::Processed,
                 ..<_>::default()
