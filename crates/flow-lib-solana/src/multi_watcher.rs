@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tower::Service;
 
 pub struct Confirmer {
-    client: Arc<SolanaClient>,
+    _client: Arc<SolanaClient>,
 }
 
 pub struct Confirm {
@@ -24,12 +24,12 @@ impl Service<Confirm> for Confirmer {
 
     fn poll_ready(
         &mut self,
-        cx: &mut std::task::Context<'_>,
+        _cx: &mut std::task::Context<'_>,
     ) -> std::task::Poll<Result<(), Self::Error>> {
         todo!()
     }
 
-    fn call(&mut self, req: Confirm) -> Self::Future {
+    fn call(&mut self, _req: Confirm) -> Self::Future {
         todo!()
     }
 }

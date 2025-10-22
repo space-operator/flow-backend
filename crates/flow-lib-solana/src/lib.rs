@@ -1,4 +1,3 @@
-use anyhow::{anyhow, bail};
 use borsh1::BorshDeserialize;
 use bytes::Bytes;
 use chrono::Utc;
@@ -24,10 +23,7 @@ use solana_rpc_client_api::config::RpcSendTransactionConfig;
 use solana_signature::Signature;
 use solana_signer::{Signer, SignerError, signers::Signers};
 use solana_transaction::{Transaction, versioned::VersionedTransaction};
-use spo_helius::{
-    GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
-};
-use std::{collections::BTreeSet, sync::LazyLock, time::Duration};
+use std::{collections::BTreeSet, time::Duration};
 use tower::Service;
 use tower::ServiceExt;
 
@@ -70,35 +66,6 @@ fn is_set_compute_unit_price(ix: &Instruction) -> Option<()> {
         matches!(data, ComputeBudgetInstruction::SetComputeUnitPrice(_)).then_some(())
     } else {
         None
-    }
-}
-
-async fn get_priority_fee(accounts: &BTreeSet<Pubkey>) -> Result<u64, anyhow::Error> {
-    static HTTP: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
-    if let Ok(apikey) = std::env::var("HELIUS_API_KEY") {
-        let helius = Helius::new(HTTP.clone(), &apikey);
-        // Not available on devnet and testnet
-        let network = SolanaNet::Mainnet;
-        let resp = helius
-            .get_priority_fee_estimate(
-                network.as_str(),
-                GetPriorityFeeEstimateRequest {
-                    account_keys: Some(accounts.iter().map(|pk| pk.to_string()).collect()),
-                    options: Some(GetPriorityFeeEstimateOptions {
-                        priority_level: Some(PriorityLevel::Medium),
-                        ..Default::default()
-                    }),
-                    ..Default::default()
-                },
-            )
-            .await?;
-        tracing::debug!("helius response: {:?}", resp);
-        Ok(resp
-            .priority_fee_estimate
-            .ok_or_else(|| anyhow!("helius didn't return fee"))?
-            .round() as u64)
-    } else {
-        bail!("no HELIUS_API_KEY env");
     }
 }
 
