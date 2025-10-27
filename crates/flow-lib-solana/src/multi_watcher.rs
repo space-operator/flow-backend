@@ -3,9 +3,9 @@ use futures::{channel::oneshot, future::BoxFuture};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_program::hash::Hash;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
+use solana_rpc_client_api::request::MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS;
 use solana_signature::Signature;
 use std::{
-    collections::BTreeMap,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -13,6 +13,7 @@ use tokio::task::JoinHandle;
 use tower::Service;
 
 struct Data {
+    signature: Signature,
     data: TransactionData,
     sender: oneshot::Sender<Result<Signature, execute::Error>>,
 }
@@ -22,11 +23,12 @@ pub struct TransactionData {
     pub blockhash: Hash,
     pub slot: u64,
     pub level: CommitmentLevel,
+    pub inserted: usize,
 }
 
 pub struct Confirmer {
     client: Arc<SolanaClient>,
-    need_confirm: Arc<Mutex<BTreeMap<Signature, Data>>>,
+    need_confirm: Arc<Mutex<Vec<Data>>>,
     task: Option<JoinHandle<()>>,
 }
 
@@ -44,23 +46,33 @@ impl Confirmer {
                 // wait for a tx
 
                 loop {
-                    let (sig, data) = {
-                        let map = map.lock().unwrap();
-                        let (sig, data): (Vec<_>, Vec<_>) =
-                            map.iter().map(|(k, v)| (*k, v.data.clone())).unzip();
-                        (sig, data)
+                    let mut query = {
+                        let mut data = map.lock().unwrap();
+                        let index = data
+                            .len()
+                            .checked_sub(MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS)
+                            .unwrap_or(0);
+                        let query = data.split_off(index);
+                        query
                     };
+                    let sig = query.iter().map(|d| d.signature).collect::<Vec<_>>();
                     let result = client.get_signature_statuses(&sig).await;
+                    let mut done = Vec::new();
                     match result {
                         Ok(ok) => {
                             for (index, result) in ok.value.into_iter().enumerate() {
                                 match result {
                                     Some(status) => {
                                         if status.satisfies_commitment(CommitmentConfig {
-                                            commitment: data[index].level,
-                                        }) {}
+                                            commitment: query[index].data.level,
+                                        }) {
+                                            done.push((index, status));
+                                        }
                                     }
-                                    None => {}
+                                    None => {
+                                        query[index].data;
+                                        // not processed or expired
+                                    }
                                 }
                             }
                         }
@@ -68,6 +80,19 @@ impl Confirmer {
                             tracing::warn!("{err}");
                         }
                     }
+                    for (index, status) in done.into_iter().rev() {
+                        let q = query.remove(index);
+                        q.sender
+                            .send(match status.status {
+                                Ok(()) => Ok(q.signature),
+                                Err(error) => Err(execute::Error::Solana {
+                                    error: Arc::new(error.into()),
+                                    inserted: q.data.inserted,
+                                }),
+                            })
+                            .ok();
+                    }
+                    map.lock().unwrap().extend(query);
                     tokio::time::sleep(Duration::from_secs(1)).await;
                 }
             }));
@@ -92,13 +117,11 @@ impl Service<Confirm> for Confirmer {
 
     fn call(&mut self, req: Confirm) -> Self::Future {
         let (tx, rx) = oneshot::channel();
-        self.need_confirm.lock().unwrap().insert(
-            req.signature,
-            Data {
-                data: req.data,
-                sender: tx,
-            },
-        );
+        self.need_confirm.lock().unwrap().push(Data {
+            signature: req.signature,
+            data: req.data,
+            sender: tx,
+        });
 
         Box::pin(async move { rx.await.map_err(execute::Error::ChannelClosed)? })
     }
