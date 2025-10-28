@@ -1,13 +1,14 @@
-use flow_lib::context::execute;
+use flow_lib::{config::client, context::execute};
 use futures::{channel::oneshot, future::BoxFuture};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_program::hash::Hash;
-use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
+use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::request::MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS;
 use solana_signature::Signature;
 use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
+    marker::PhantomData,
+    sync::{Arc, Mutex, RwLock},
+    time::{Duration, Instant},
 };
 use tokio::task::JoinHandle;
 use tower::Service;
@@ -27,7 +28,7 @@ pub struct TransactionData {
 }
 
 pub struct Confirmer {
-    client: Arc<SolanaClient>,
+    client: Arc<RpcClient>,
     need_confirm: Arc<Mutex<Vec<Data>>>,
     task: Option<JoinHandle<()>>,
 }
@@ -35,6 +36,105 @@ pub struct Confirmer {
 pub struct Confirm {
     pub signature: Signature,
     pub data: TransactionData,
+}
+
+struct BlockhashData {
+    current_block_height: u64,
+    blockhash: Hash,
+    last_valid_block_height: u64,
+}
+
+struct BlockhashService {
+    client: Arc<RpcClient>,
+}
+
+impl Service<()> for BlockhashService {
+    type Response = BlockhashData;
+
+    type Error = solana_rpc_client_api::client_error::Error;
+
+    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+
+    fn poll_ready(
+        &mut self,
+        _cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        std::task::Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, _req: ()) -> Self::Future {
+        let client = self.client.clone();
+        Box::pin(async move {
+            let ((blockhash, last_valid_block_height), current_block_height) = tokio::try_join!(
+                client.get_latest_blockhash_with_commitment(CommitmentConfig::processed()),
+                client.get_block_height(),
+            )?;
+
+            Ok(BlockhashData {
+                current_block_height,
+                blockhash,
+                last_valid_block_height,
+            })
+        })
+    }
+}
+
+struct CacheService<S, T, U> {
+    time: Duration,
+    value: Arc<Mutex<Option<U>>>,
+    fetch_time: Arc<Mutex<Option<Instant>>>,
+    service: S,
+    _t: PhantomData<fn() -> T>,
+}
+
+impl<S, T, U> Service<T> for CacheService<S, T, U>
+where
+    S: Service<T, Response = U>,
+    U: Clone + Send + Sync + 'static,
+    S::Error: Send + Sync + 'static,
+    S::Future: Send + Sync + 'static,
+{
+    type Response = S::Response;
+
+    type Error = S::Error;
+
+    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+
+    fn poll_ready(
+        &mut self,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        self.service.poll_ready(cx)
+    }
+
+    fn call(&mut self, req: T) -> Self::Future {
+        let mut fetch_time = self.fetch_time.lock().unwrap();
+        if let Some(instant) = *fetch_time {
+            if instant.elapsed() > self.time {
+                *fetch_time = None;
+                *self.value.lock().unwrap() = None;
+            }
+        }
+
+        if let Some(value) = self.value.lock().unwrap().clone() {
+            Box::pin(async move { Ok(value) })
+        } else {
+            let fetch_time = self.fetch_time.clone();
+            let value = self.value.clone();
+            let fut = self.service.call(req);
+            Box::pin(async move {
+                let result = fut.await;
+                match result {
+                    Ok(result) => {
+                        *value.lock().unwrap() = Some(result.clone());
+                        *fetch_time.lock().unwrap() = Some(Instant::now());
+                        Ok(result)
+                    }
+                    Err(error) => Err(error),
+                }
+            })
+        }
+    }
 }
 
 impl Confirmer {
