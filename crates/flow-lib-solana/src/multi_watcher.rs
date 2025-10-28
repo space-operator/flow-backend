@@ -10,7 +10,7 @@ use std::{
     sync::{Arc, Mutex, RwLock},
     time::{Duration, Instant},
 };
-use tokio::task::JoinHandle;
+use tokio::{sync::watch, task::JoinHandle};
 use tower::Service;
 
 struct Data {
@@ -31,6 +31,7 @@ pub struct Confirmer {
     client: Arc<RpcClient>,
     need_confirm: Arc<Mutex<Vec<Data>>>,
     task: Option<JoinHandle<()>>,
+    blockhash_data_svc: CacheService<BlockhashService>,
 }
 
 pub struct Confirm {
@@ -79,20 +80,24 @@ impl Service<()> for BlockhashService {
     }
 }
 
-struct CacheService<S, T, U> {
+struct CacheService<S>
+where
+    S: Service<()>,
+{
     time: Duration,
-    value: Arc<Mutex<Option<U>>>,
+    value: Arc<Mutex<Option<S::Response>>>,
     fetch_time: Arc<Mutex<Option<Instant>>>,
     service: S,
-    _t: PhantomData<fn() -> T>,
 }
 
-impl<S, T, U> Service<T> for CacheService<S, T, U>
+impl<S> Service<()> for CacheService<S>
 where
-    S: Service<T, Response = U>,
-    U: Clone + Send + Sync + 'static,
-    S::Error: Send + Sync + 'static,
-    S::Future: Send + Sync + 'static,
+    S: Service<
+            (),
+            Response: Clone + Send + Sync + 'static,
+            Error: Send + Sync + 'static,
+            Future: Send + Sync + 'static,
+        >,
 {
     type Response = S::Response;
 
@@ -107,7 +112,7 @@ where
         self.service.poll_ready(cx)
     }
 
-    fn call(&mut self, req: T) -> Self::Future {
+    fn call(&mut self, req: ()) -> Self::Future {
         let mut fetch_time = self.fetch_time.lock().unwrap();
         if let Some(instant) = *fetch_time {
             if instant.elapsed() > self.time {
@@ -119,9 +124,9 @@ where
         if let Some(value) = self.value.lock().unwrap().clone() {
             Box::pin(async move { Ok(value) })
         } else {
+            let fut = self.service.call(req);
             let fetch_time = self.fetch_time.clone();
             let value = self.value.clone();
-            let fut = self.service.call(req);
             Box::pin(async move {
                 let result = fut.await;
                 match result {
