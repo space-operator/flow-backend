@@ -3,15 +3,18 @@ use futures::{channel::oneshot, future::BoxFuture};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_program::hash::Hash;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use solana_rpc_client_api::request::MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS;
+use solana_rpc_client_api::request::{MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS, RpcError};
 use solana_signature::Signature;
 use std::{
     marker::PhantomData,
     sync::{Arc, Mutex, RwLock},
     time::{Duration, Instant},
 };
-use tokio::{sync::watch, task::JoinHandle};
-use tower::Service;
+use tokio::{
+    sync::{Notify, watch},
+    task::JoinHandle,
+};
+use tower::{Service, ServiceExt};
 
 struct Data {
     signature: Signature,
@@ -22,7 +25,7 @@ struct Data {
 #[derive(Clone, Copy)]
 pub struct TransactionData {
     pub blockhash: Hash,
-    pub slot: u64,
+    pub last_valid_block_height: u64,
     pub level: CommitmentLevel,
     pub inserted: usize,
 }
@@ -31,6 +34,7 @@ pub struct Confirmer {
     client: Arc<RpcClient>,
     need_confirm: Arc<Mutex<Vec<Data>>>,
     task: Option<JoinHandle<()>>,
+    notify: Arc<Notify>,
     blockhash_data_svc: CacheService<BlockhashService>,
 }
 
@@ -39,12 +43,14 @@ pub struct Confirm {
     pub data: TransactionData,
 }
 
+#[derive(Clone)]
 struct BlockhashData {
     current_block_height: u64,
     blockhash: Hash,
     last_valid_block_height: u64,
 }
 
+#[derive(Clone)]
 struct BlockhashService {
     client: Arc<RpcClient>,
 }
@@ -68,7 +74,7 @@ impl Service<()> for BlockhashService {
         Box::pin(async move {
             let ((blockhash, last_valid_block_height), current_block_height) = tokio::try_join!(
                 client.get_latest_blockhash_with_commitment(CommitmentConfig::processed()),
-                client.get_block_height(),
+                client.get_block_height_with_commitment(CommitmentConfig::processed()),
             )?;
 
             Ok(BlockhashData {
@@ -80,6 +86,7 @@ impl Service<()> for BlockhashService {
     }
 }
 
+#[derive(Clone)]
 struct CacheService<S>
 where
     S: Service<()>,
@@ -92,12 +99,7 @@ where
 
 impl<S> Service<()> for CacheService<S>
 where
-    S: Service<
-            (),
-            Response: Clone + Send + Sync + 'static,
-            Error: Send + Sync + 'static,
-            Future: Send + Sync + 'static,
-        >,
+    S: Service<(), Response: Clone + Send + 'static, Error: Send + 'static, Future: Send + 'static>,
 {
     type Response = S::Response;
 
@@ -147,9 +149,9 @@ impl Confirmer {
         if self.task.is_none() {
             let map = self.need_confirm.clone();
             let client = self.client.clone();
+            let notify = self.notify.clone();
+            let mut svc = self.blockhash_data_svc.clone();
             self.task = Some(tokio::spawn(async move {
-                // wait for a tx
-
                 loop {
                     let mut query = {
                         let mut data = map.lock().unwrap();
@@ -160,6 +162,11 @@ impl Confirmer {
                         let query = data.split_off(index);
                         query
                     };
+                    if query.is_empty() {
+                        notify.notified().await;
+                        break;
+                    }
+
                     let sig = query.iter().map(|d| d.signature).collect::<Vec<_>>();
                     let result = client.get_signature_statuses(&sig).await;
                     let mut done = Vec::new();
@@ -171,12 +178,23 @@ impl Confirmer {
                                         if status.satisfies_commitment(CommitmentConfig {
                                             commitment: query[index].data.level,
                                         }) {
-                                            done.push((index, status));
+                                            done.push((index, Some(status)));
                                         }
                                     }
                                     None => {
-                                        query[index].data;
-                                        // not processed or expired
+                                        let current_block_height = svc
+                                            .ready()
+                                            .await
+                                            .unwrap()
+                                            .call(())
+                                            .await
+                                            .unwrap()
+                                            .current_block_height;
+                                        let is_expired = query[index].data.last_valid_block_height
+                                            < current_block_height;
+                                        if is_expired {
+                                            done.push((index, None));
+                                        }
                                     }
                                 }
                             }
@@ -188,12 +206,20 @@ impl Confirmer {
                     for (index, status) in done.into_iter().rev() {
                         let q = query.remove(index);
                         q.sender
-                            .send(match status.status {
-                                Ok(()) => Ok(q.signature),
-                                Err(error) => Err(execute::Error::Solana {
-                                    error: Arc::new(error.into()),
+                            .send(match status {
+                                None => Err(execute::Error::Solana {
+                                    error: Arc::new(RpcError::ForUser("unable to confirm transaction.\
+                                                   This can happen in situations such as transaction expiration
+                                                   and insufficient fee-payer funds".to_owned()).into()),
                                     inserted: q.data.inserted,
                                 }),
+                                Some(status) => match status.status {
+                                    Ok(()) => Ok(q.signature),
+                                    Err(error) => Err(execute::Error::Solana {
+                                        error: Arc::new(error.into()),
+                                        inserted: q.data.inserted,
+                                    }),
+                                },
                             })
                             .ok();
                     }
@@ -227,6 +253,7 @@ impl Service<Confirm> for Confirmer {
             data: req.data,
             sender: tx,
         });
+        self.notify.notify_one();
 
         Box::pin(async move { rx.await.map_err(execute::Error::ChannelClosed)? })
     }
