@@ -1,4 +1,4 @@
-use flow_lib::{config::client, context::execute};
+use flow_lib::context::execute;
 use futures::{channel::oneshot, future::BoxFuture};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_program::hash::Hash;
@@ -6,14 +6,10 @@ use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::request::{MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS, RpcError};
 use solana_signature::Signature;
 use std::{
-    marker::PhantomData,
-    sync::{Arc, Mutex, RwLock},
+    sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
-use tokio::{
-    sync::{Notify, watch},
-    task::JoinHandle,
-};
+use tokio::{sync::Notify, task::JoinHandle};
 use tower::{Service, ServiceExt};
 
 struct Data {
@@ -46,8 +42,6 @@ pub struct Confirm {
 #[derive(Clone)]
 struct BlockhashData {
     current_block_height: u64,
-    blockhash: Hash,
-    last_valid_block_height: u64,
 }
 
 #[derive(Clone)]
