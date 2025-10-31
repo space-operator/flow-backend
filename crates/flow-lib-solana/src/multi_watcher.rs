@@ -66,15 +66,12 @@ impl Service<()> for BlockhashService {
     fn call(&mut self, _req: ()) -> Self::Future {
         let client = self.client.clone();
         Box::pin(async move {
-            let ((blockhash, last_valid_block_height), current_block_height) = tokio::try_join!(
-                client.get_latest_blockhash_with_commitment(CommitmentConfig::processed()),
-                client.get_block_height_with_commitment(CommitmentConfig::processed()),
-            )?;
+            let current_block_height = client
+                .get_block_height_with_commitment(CommitmentConfig::processed())
+                .await?;
 
             Ok(BlockhashData {
                 current_block_height,
-                blockhash,
-                last_valid_block_height,
             })
         })
     }
