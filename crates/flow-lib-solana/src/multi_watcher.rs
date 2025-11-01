@@ -136,6 +136,21 @@ where
 }
 
 impl Confirmer {
+    pub fn new(client: Arc<RpcClient>) -> Self {
+        Self {
+            client: client.clone(),
+            need_confirm: Default::default(),
+            task: None,
+            notify: Default::default(),
+            blockhash_data_svc: CacheService {
+                time: Duration::from_secs(5),
+                value: Default::default(),
+                fetch_time: Default::default(),
+                service: BlockhashService { client },
+            },
+        }
+    }
+
     fn spawn(&mut self) {
         if self.task.is_none() {
             let map = self.need_confirm.clone();
@@ -155,7 +170,7 @@ impl Confirmer {
                     };
                     if query.is_empty() {
                         notify.notified().await;
-                        break;
+                        continue;
                     }
 
                     let sig = query.iter().map(|d| d.signature).collect::<Vec<_>>();
@@ -247,5 +262,89 @@ impl Service<Confirm> for Confirmer {
         self.notify.notify_one();
 
         Box::pin(async move { rx.await.map_err(execute::Error::ChannelClosed)? })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use futures::{
+        StreamExt,
+        channel::mpsc,
+        future::{join, join_all},
+    };
+    use rand::seq::IndexedRandom;
+    use solana_keypair::Keypair;
+    use solana_rpc_client_api::config::RpcSendTransactionConfig;
+    use solana_signer::Signer;
+    use tower::util::CallAllUnordered;
+
+    #[tokio::test]
+    async fn test_confirm_need_key() {
+        let from =
+            Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_FROM").unwrap());
+        let to = Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_TO").unwrap());
+        let client = Arc::new(RpcClient::new(std::env::var("SOLANA_URL").unwrap()));
+
+        let confirmer = Confirmer::new(client.clone());
+        let count = 30;
+        let (hash, height) = client
+            .get_latest_blockhash_with_commitment(CommitmentConfig::finalized())
+            .await
+            .unwrap();
+        let (sender, receiver) = mpsc::unbounded();
+        let tasks = (0..count).map(|i| {
+            let client = client.clone();
+            let sender = sender.clone();
+            let tx = solana_system_transaction::transfer(&from, &to.pubkey(), 100000 + i, hash);
+            async move {
+                tokio::time::sleep(Duration::from_secs_f64(rand::random_range(0.1..2.0))).await;
+                match client
+                    .send_transaction_with_config(
+                        &tx,
+                        RpcSendTransactionConfig {
+                            skip_preflight: true,
+                            preflight_commitment: Some(CommitmentLevel::Finalized),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                {
+                    Ok(signature) => {
+                        sender
+                            .unbounded_send(Confirm {
+                                signature,
+                                data: TransactionData {
+                                    blockhash: hash,
+                                    last_valid_block_height: height,
+                                    level: *[
+                                        CommitmentLevel::Confirmed,
+                                        CommitmentLevel::Finalized,
+                                    ]
+                                    .choose(&mut rand::rng())
+                                    .unwrap(),
+                                    inserted: 0,
+                                },
+                            })
+                            .ok();
+                    }
+                    Err(error) => {
+                        println!("{error}");
+                    }
+                }
+            }
+        });
+        let (_, _) = join(
+            CallAllUnordered::new(confirmer, receiver).for_each(async |result| {
+                let _ = dbg!(result);
+            }),
+            async {
+                join_all(tasks).await;
+                sender.close_channel();
+            },
+        )
+        .await;
+
+        tokio::time::sleep(Duration::from_secs(5)).await;
     }
 }
