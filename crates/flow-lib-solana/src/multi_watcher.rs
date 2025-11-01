@@ -339,12 +339,11 @@ mod tests {
                 let _ = dbg!(result);
             }),
             async {
+                tokio::time::sleep(Duration::from_secs(1)).await;
                 join_all(tasks).await;
                 sender.close_channel();
             },
         )
         .await;
-
-        tokio::time::sleep(Duration::from_secs(5)).await;
     }
 }
