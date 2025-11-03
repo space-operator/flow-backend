@@ -319,7 +319,7 @@ mod tests {
     use tower::util::CallAllUnordered;
 
     #[tokio::test]
-    async fn test_confirm_need_key() {
+    async fn need_key_test_confirm() {
         tracing_subscriber::fmt::try_init().ok();
         let from =
             Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_FROM").unwrap());
@@ -389,7 +389,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_confirm_expired_need_key() {
+    async fn need_key_test_confirm_expired() {
         tracing_subscriber::fmt::try_init().ok();
         let from =
             Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_FROM").unwrap());
