@@ -261,8 +261,6 @@ impl Service<Confirm> for Confirmer {
 
     type Future = Unwrap<oneshot::Receiver<Result<Self::Response, Self::Error>>>;
 
-    //BoxFuture<'static, Result<Self::Response, Self::Error>>;
-
     fn poll_ready(
         &mut self,
         _cx: &mut std::task::Context<'_>,
