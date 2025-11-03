@@ -152,12 +152,19 @@ impl Confirmer {
     }
 
     fn spawn(&mut self) {
+        if let Some(task) = &self.task {
+            if task.is_finished() {
+                self.task = None;
+            }
+        }
         if self.task.is_none() {
             let map = self.need_confirm.clone();
             let client = self.client.clone();
             let notify = self.notify.clone();
             let mut svc = self.blockhash_data_svc.clone();
+            tracing::trace!("spawning confirm task");
             self.task = Some(tokio::spawn(async move {
+                let mut first_request = true;
                 loop {
                     let mut query = {
                         let mut data = map.lock().unwrap();
@@ -168,11 +175,17 @@ impl Confirmer {
                         let query = data.split_off(index);
                         query
                     };
+                    tracing::trace!("querying {} signatures", query.len());
                     if query.is_empty() {
-                        notify.notified().await;
-                        continue;
+                        if first_request {
+                            notify.notified().await;
+                            continue;
+                        } else {
+                            break;
+                        }
                     }
 
+                    first_request = false;
                     let sig = query.iter().map(|d| d.signature).collect::<Vec<_>>();
                     let result = client.get_signature_statuses(&sig).await;
                     let mut done = Vec::new();
@@ -232,6 +245,7 @@ impl Confirmer {
                     map.lock().unwrap().extend(query);
                     tokio::time::sleep(Duration::from_secs(1)).await;
                 }
+                tracing::trace!("closing confirm task");
             }));
         }
     }
@@ -281,6 +295,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_confirm_need_key() {
+        tracing_subscriber::fmt::try_init().ok();
         let from =
             Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_FROM").unwrap());
         let to = Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_TO").unwrap());
@@ -335,8 +350,9 @@ mod tests {
             }
         });
         let (_, _) = join(
-            CallAllUnordered::new(confirmer, receiver).for_each(async |result| {
-                let _ = dbg!(result);
+            CallAllUnordered::new(confirmer, receiver).for_each(async |result| match result {
+                Ok(ok) => tracing::info!("{}", ok),
+                Err(error) => tracing::info!("{:?}", error),
             }),
             async {
                 tokio::time::sleep(Duration::from_secs(1)).await;
@@ -345,5 +361,6 @@ mod tests {
             },
         )
         .await;
+        tokio::time::sleep(Duration::from_secs(2)).await;
     }
 }
