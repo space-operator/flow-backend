@@ -1,12 +1,15 @@
 use flow_lib::context::execute;
 use futures::{channel::oneshot, future::BoxFuture};
+use pin_project_lite::pin_project;
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_program::hash::Hash;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::request::{MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS, RpcError};
 use solana_signature::Signature;
 use std::{
+    fmt::Debug,
     sync::{Arc, Mutex},
+    task::ready,
     time::{Duration, Instant},
 };
 use tokio::{sync::Notify, task::JoinHandle};
@@ -256,7 +259,9 @@ impl Service<Confirm> for Confirmer {
 
     type Error = execute::Error;
 
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Future = Unwrap<oneshot::Receiver<Result<Self::Response, Self::Error>>>;
+
+    //BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     fn poll_ready(
         &mut self,
@@ -275,7 +280,29 @@ impl Service<Confirm> for Confirmer {
         });
         self.notify.notify_waiters();
 
-        Box::pin(async move { rx.await.map_err(execute::Error::ChannelClosed)? })
+        Unwrap { future: rx }
+    }
+}
+
+pin_project! {
+    pub struct Unwrap<F> {
+        #[pin]
+        pub future: F,
+    }
+}
+
+impl<F, T, E> Future for Unwrap<F>
+where
+    F: Future<Output = Result<T, E>>,
+    E: Debug,
+{
+    type Output = T;
+
+    fn poll(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        std::task::Poll::Ready(ready!(self.project().future.poll(cx)).unwrap())
     }
 }
 
@@ -361,5 +388,49 @@ mod tests {
         )
         .await;
         tokio::time::sleep(Duration::from_secs(2)).await;
+    }
+
+    #[tokio::test]
+    async fn test_confirm_expired_need_key() {
+        tracing_subscriber::fmt::try_init().ok();
+        let from =
+            Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_FROM").unwrap());
+        let to = Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_TO").unwrap());
+        let client = Arc::new(RpcClient::new(std::env::var("SOLANA_URL").unwrap()));
+        let mut confirmer = Confirmer::new(client.clone());
+
+        let (hash, last_valid_block_height) = client
+            .get_latest_blockhash_with_commitment(CommitmentConfig::finalized())
+            .await
+            .unwrap();
+        tokio::time::sleep(Duration::from_secs(45)).await;
+        let tx = solana_system_transaction::transfer(&from, &to.pubkey(), 10000, hash);
+        let signature = client
+            .send_transaction_with_config(
+                &tx,
+                RpcSendTransactionConfig {
+                    skip_preflight: true,
+                    preflight_commitment: Some(CommitmentLevel::Finalized),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        dbg!(signature);
+        let a = client.confirm_transaction_with_spinner(
+            &signature,
+            &hash,
+            CommitmentConfig::confirmed(),
+        );
+        let b = confirmer.ready().await.unwrap().call(Confirm {
+            signature,
+            data: TransactionData {
+                blockhash: hash,
+                last_valid_block_height,
+                level: CommitmentLevel::Confirmed,
+                inserted: 0,
+            },
+        });
+        let _ = dbg!(join(a, b).await);
     }
 }
