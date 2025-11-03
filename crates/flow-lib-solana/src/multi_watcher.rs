@@ -273,7 +273,7 @@ impl Service<Confirm> for Confirmer {
             data: req.data,
             sender: tx,
         });
-        self.notify.notify_one();
+        self.notify.notify_waiters();
 
         Box::pin(async move { rx.await.map_err(execute::Error::ChannelClosed)? })
     }
@@ -313,7 +313,7 @@ mod tests {
             let sender = sender.clone();
             let tx = solana_system_transaction::transfer(&from, &to.pubkey(), 100000 + i, hash);
             async move {
-                tokio::time::sleep(Duration::from_secs_f64(rand::random_range(0.1..2.0))).await;
+                tokio::time::sleep(Duration::from_secs_f64(rand::random_range(0.1..5.0))).await;
                 match client
                     .send_transaction_with_config(
                         &tx,
@@ -355,7 +355,6 @@ mod tests {
                 Err(error) => tracing::info!("{:?}", error),
             }),
             async {
-                tokio::time::sleep(Duration::from_secs(1)).await;
                 join_all(tasks).await;
                 sender.close_channel();
             },
