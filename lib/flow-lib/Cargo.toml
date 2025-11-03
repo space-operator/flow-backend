@@ -16,7 +16,7 @@ async-trait = "0.1"
 bytes = { version = "1.8.0", features = ["serde"] }
 thiserror = "1.0.31"
 uuid = { version = "1.0.0", features = ["v4", "serde"] }
-serde = { version = "1.0.137", features = ["derive"] }
+serde = { version = "1.0.137", features = ["derive", "rc"] }
 serde_json = { version = "1", features = ["raw_value"] }
 serde_with = { version = "3", features = ["base64"] }
 tower = { version = "0.5", features = ["buffer", "util", "retry"] }
@@ -46,3 +46,4 @@ solana-program = "2"
 solana-commitment-config = "2"
 solana-presigner = "2"
 solana-transaction-error = { version = "2", features = ["serde"] }
+solana-instruction = { version = "2.3.1", features = ["std", "serde"] }

@@ -55,9 +55,9 @@ pub struct UserWorker {
     new_flow_api_request: NewRequestService,
     remote_command_address_book: BaseAddressBook,
 
-    #[builder(default)]
+    #[builder(skip)]
     subs: HashMap<u64, Subscription>,
-    #[builder(default)]
+    #[builder(skip)]
     sigreg: HashMap<i64, SigReq>,
 }
 

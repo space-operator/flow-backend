@@ -829,7 +829,7 @@ mod tests {
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
             lookup_tables: None,
         };
-        let (inserted, simulate_result) =
+        let (inserted, _) =
             insert_priority_fee(&mut ins, &rpc, SolanaNet::Devnet, &<_>::default())
                 .await
                 .unwrap();

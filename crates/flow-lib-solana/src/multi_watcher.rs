@@ -1,12 +1,15 @@
 use flow_lib::context::execute;
 use futures::{channel::oneshot, future::BoxFuture};
+use pin_project_lite::pin_project;
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_program::hash::Hash;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::request::{MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS, RpcError};
 use solana_signature::Signature;
 use std::{
+    fmt::Debug,
     sync::{Arc, Mutex},
+    task::ready,
     time::{Duration, Instant},
 };
 use tokio::{sync::Notify, task::JoinHandle};
@@ -136,13 +139,35 @@ where
 }
 
 impl Confirmer {
+    pub fn new(client: Arc<RpcClient>) -> Self {
+        Self {
+            client: client.clone(),
+            need_confirm: Default::default(),
+            task: None,
+            notify: Default::default(),
+            blockhash_data_svc: CacheService {
+                time: Duration::from_secs(5),
+                value: Default::default(),
+                fetch_time: Default::default(),
+                service: BlockhashService { client },
+            },
+        }
+    }
+
     fn spawn(&mut self) {
+        if let Some(task) = &self.task {
+            if task.is_finished() {
+                self.task = None;
+            }
+        }
         if self.task.is_none() {
             let map = self.need_confirm.clone();
             let client = self.client.clone();
             let notify = self.notify.clone();
             let mut svc = self.blockhash_data_svc.clone();
+            tracing::trace!("spawning confirm task");
             self.task = Some(tokio::spawn(async move {
+                let mut first_request = true;
                 loop {
                     let mut query = {
                         let mut data = map.lock().unwrap();
@@ -153,11 +178,17 @@ impl Confirmer {
                         let query = data.split_off(index);
                         query
                     };
+                    tracing::trace!("querying {} signatures", query.len());
                     if query.is_empty() {
-                        notify.notified().await;
-                        break;
+                        if first_request {
+                            notify.notified().await;
+                            continue;
+                        } else {
+                            break;
+                        }
                     }
 
+                    first_request = false;
                     let sig = query.iter().map(|d| d.signature).collect::<Vec<_>>();
                     let result = client.get_signature_statuses(&sig).await;
                     let mut done = Vec::new();
@@ -217,6 +248,7 @@ impl Confirmer {
                     map.lock().unwrap().extend(query);
                     tokio::time::sleep(Duration::from_secs(1)).await;
                 }
+                tracing::trace!("closing confirm task");
             }));
         }
     }
@@ -227,7 +259,7 @@ impl Service<Confirm> for Confirmer {
 
     type Error = execute::Error;
 
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Future = Unwrap<oneshot::Receiver<Result<Self::Response, Self::Error>>>;
 
     fn poll_ready(
         &mut self,
@@ -244,8 +276,159 @@ impl Service<Confirm> for Confirmer {
             data: req.data,
             sender: tx,
         });
-        self.notify.notify_one();
+        self.notify.notify_waiters();
 
-        Box::pin(async move { rx.await.map_err(execute::Error::ChannelClosed)? })
+        Unwrap { future: rx }
+    }
+}
+
+pin_project! {
+    pub struct Unwrap<F> {
+        #[pin]
+        pub future: F,
+    }
+}
+
+impl<F, T, E> Future for Unwrap<F>
+where
+    F: Future<Output = Result<T, E>>,
+    E: Debug,
+{
+    type Output = T;
+
+    fn poll(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        std::task::Poll::Ready(ready!(self.project().future.poll(cx)).unwrap())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use futures::{
+        StreamExt,
+        channel::mpsc,
+        future::{join, join_all},
+    };
+    use rand::seq::IndexedRandom;
+    use solana_keypair::Keypair;
+    use solana_rpc_client_api::config::RpcSendTransactionConfig;
+    use solana_signer::Signer;
+    use tower::util::CallAllUnordered;
+
+    #[tokio::test]
+    async fn need_key_test_confirm() {
+        tracing_subscriber::fmt::try_init().ok();
+        let from =
+            Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_FROM").unwrap());
+        let to = Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_TO").unwrap());
+        let client = Arc::new(RpcClient::new(std::env::var("SOLANA_URL").unwrap()));
+
+        let confirmer = Confirmer::new(client.clone());
+        let count = 30;
+        let (hash, height) = client
+            .get_latest_blockhash_with_commitment(CommitmentConfig::finalized())
+            .await
+            .unwrap();
+        let (sender, receiver) = mpsc::unbounded();
+        let tasks = (0..count).map(|i| {
+            let client = client.clone();
+            let sender = sender.clone();
+            let tx = solana_system_transaction::transfer(&from, &to.pubkey(), 100000 + i, hash);
+            async move {
+                tokio::time::sleep(Duration::from_secs_f64(rand::random_range(0.1..5.0))).await;
+                match client
+                    .send_transaction_with_config(
+                        &tx,
+                        RpcSendTransactionConfig {
+                            skip_preflight: true,
+                            preflight_commitment: Some(CommitmentLevel::Finalized),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                {
+                    Ok(signature) => {
+                        sender
+                            .unbounded_send(Confirm {
+                                signature,
+                                data: TransactionData {
+                                    blockhash: hash,
+                                    last_valid_block_height: height,
+                                    level: *[
+                                        CommitmentLevel::Confirmed,
+                                        CommitmentLevel::Finalized,
+                                    ]
+                                    .choose(&mut rand::rng())
+                                    .unwrap(),
+                                    inserted: 0,
+                                },
+                            })
+                            .ok();
+                    }
+                    Err(error) => {
+                        println!("{error}");
+                    }
+                }
+            }
+        });
+        let (_, _) = join(
+            CallAllUnordered::new(confirmer, receiver).for_each(async |result| match result {
+                Ok(ok) => tracing::info!("{}", ok),
+                Err(error) => tracing::info!("{:?}", error),
+            }),
+            async {
+                join_all(tasks).await;
+                sender.close_channel();
+            },
+        )
+        .await;
+        tokio::time::sleep(Duration::from_secs(2)).await;
+    }
+
+    #[tokio::test]
+    async fn need_key_test_confirm_expired() {
+        tracing_subscriber::fmt::try_init().ok();
+        let from =
+            Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_FROM").unwrap());
+        let to = Keypair::from_base58_string(&std::env::var("TEST_CONFIRM_KEYPAIR_TO").unwrap());
+        let client = Arc::new(RpcClient::new(std::env::var("SOLANA_URL").unwrap()));
+        let mut confirmer = Confirmer::new(client.clone());
+
+        let (hash, last_valid_block_height) = client
+            .get_latest_blockhash_with_commitment(CommitmentConfig::finalized())
+            .await
+            .unwrap();
+        tokio::time::sleep(Duration::from_secs(45)).await;
+        let tx = solana_system_transaction::transfer(&from, &to.pubkey(), 10000, hash);
+        let signature = client
+            .send_transaction_with_config(
+                &tx,
+                RpcSendTransactionConfig {
+                    skip_preflight: true,
+                    preflight_commitment: Some(CommitmentLevel::Finalized),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        dbg!(signature);
+        let a = client.confirm_transaction_with_spinner(
+            &signature,
+            &hash,
+            CommitmentConfig::confirmed(),
+        );
+        let b = confirmer.ready().await.unwrap().call(Confirm {
+            signature,
+            data: TransactionData {
+                blockhash: hash,
+                last_valid_block_height,
+                level: CommitmentLevel::Confirmed,
+                inserted: 0,
+            },
+        });
+        let _ = dbg!(join(a, b).await);
     }
 }
