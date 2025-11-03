@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as, serde_conv};
 use solana_commitment_config::CommitmentLevel;
 use solana_program::instruction::{AccountMeta, Instruction};
-use solana_rpc_client_api::response::{RpcResult, RpcSimulateTransactionResult};
 use solana_signer::Signer;
 use std::{
     borrow::Cow, collections::HashMap, convert::Infallible, fmt::Display, num::ParseIntError,
