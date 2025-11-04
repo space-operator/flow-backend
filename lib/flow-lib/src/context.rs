@@ -287,8 +287,9 @@ pub mod execute {
     use futures::channel::oneshot::Canceled;
     use serde::{Deserialize, Serialize};
     use serde_with::{DisplayFromStr, base64::Base64, serde_as};
-    use solana_instruction::error::InstructionError;
-    use solana_program::{message::CompileError, sanitize::SanitizeError};
+    use solana_instruction_error::InstructionError;
+    use solana_message::CompileError;
+    use solana_sanitize::SanitizeError;
 
     use solana_rpc_client_api::client_error::Error as ClientError;
     use solana_signature::Signature;

@@ -1,6 +1,6 @@
 [package]
 name = "flow-lib"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
 description = "Library for implementing Space Operator nodes."
 license = "AGPL-3.0-only"
@@ -14,10 +14,10 @@ anyhow = "1.0"
 inventory = "0.3"
 async-trait = "0.1"
 bytes = { version = "1.8.0", features = ["serde"] }
-thiserror = "1.0.31"
+thiserror = "2"
 uuid = { version = "1.0.0", features = ["v4", "serde"] }
 serde = { version = "1.0.137", features = ["derive", "rc"] }
-serde_json = { version = "1", features = ["raw_value"] }
+serde_json = { version = "1", features = ["raw_value", "preserve_order"] }
 serde_with = { version = "3", features = ["base64"] }
 tower = { version = "0.5", features = ["buffer", "util", "retry"] }
 tracing = "0.1"
@@ -28,7 +28,7 @@ futures = "0.3"
 reqwest = { version = "0.12", default-features = false }
 chrono = { version = "0.4", features = ["serde"] }
 rmp-serde = "1.1.2"
-five8 = { version = "0.2.1", features = ["std"] }
+five8 = "1"
 bon = "3.0.2"
 schemars = { version = "1.0.4", features = ["indexmap2", "preserve_order", "rust_decimal1", "url2", "uuid1"] }
 bincode = { version = "2.0.1", features = ["serde"] }
@@ -36,14 +36,19 @@ regex = "1.11.1"
 derive_more = { version = "2.0.1", features = ["from"] }
 
 # solana libs
-solana-rpc-client = "2"
-solana-rpc-client-api = "2"
-solana-pubkey = "2"
-solana-signer = "2"
-solana-signature = "2"
-solana-keypair = "2"
-solana-program = "2"
-solana-commitment-config = "2"
-solana-presigner = "2"
-solana-transaction-error = { version = "2", features = ["serde"] }
-solana-instruction = { version = "2.3.1", features = ["std", "serde"] }
+solana-rpc-client = "3"
+solana-rpc-client-api = "3"
+solana-pubkey = "3"
+solana-signer = "3"
+solana-signature = "3"
+solana-keypair = "3"
+solana-program = "3"
+solana-commitment-config = "3"
+solana-presigner = "3"
+solana-sanitize = "3"
+solana-message = "3"
+solana-transaction-error = { version = "3", features = ["serde"] }
+solana-instruction-error = { version = "2", features = ["serde"] }
+
+[dev-dependencies]
+solana-system-interface = { version = "2", features = ["bincode"] }
