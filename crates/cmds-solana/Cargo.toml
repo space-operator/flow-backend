@@ -14,12 +14,7 @@ rust_decimal = { version = "1", features = ["maths"] }
 bincode = "1"
 base64 = "0.13"
 serde_json = "1"
-reqwest = { version = "0.12", features = [
-    "json",
-    "rustls-tls",
-    "gzip",
-    "multipart",
-] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "gzip", "multipart"] }
 tokio = { version = "1", features = ["time", "macros"] }
 mime_guess = "2"
 borsh = "0.10.4"
@@ -38,24 +33,23 @@ primitive-types = { version = "0.9.0", default-features = false }
 chrono = "0.4.33"
 bytemuck = "1.16.1"
 bytemuck_derive ="1.7.0"
-# branch: dev
 struct-convert = "1.4.0"
 
 # solana libs
-solana-rpc-client = "2"
-solana-rpc-client-api = "2"
-solana-program = "2"
-solana-account-decoder = "2"
-solana-transaction-status = "2"
-solana-compute-budget-interface = "2"
-solana-commitment-config = "2"
-solana-signer = "2"
-solana-account = "2"
-solana-keypair = "2"
-solana-presigner = "2"
-solana-transaction = "2"
-solana-sdk-ids = "2"
-solana-system-interface = "1"
+solana-rpc-client = { workspace = true }
+solana-rpc-client-api = { workspace = true }
+solana-program = { workspace = true }
+solana-account-decoder = { workspace = true }
+solana-transaction-status = { workspace = true }
+solana-compute-budget-interface = { workspace = true }
+solana-commitment-config = { workspace = true }
+solana-signer = { workspace = true }
+solana-account = { workspace = true }
+solana-keypair = { workspace = true }
+solana-presigner = { workspace = true }
+solana-transaction = { workspace = true }
+solana-sdk-ids = { workspace = true }
+solana-system-interface = { workspace = true }
 
 anchor-libs.workspace = true
 

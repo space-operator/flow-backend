@@ -12,11 +12,9 @@ use flow_lib::{
 use futures::{FutureExt, TryStreamExt, future::Either};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_compute_budget_interface::ComputeBudgetInstruction;
+use solana_message::{VersionedMessage, v0};
 use solana_presigner::Presigner as SdkPresigner;
-use solana_program::{
-    instruction::{AccountMeta, Instruction},
-    message::{VersionedMessage, v0},
-};
+use solana_program::instruction::{AccountMeta, Instruction};
 use solana_pubkey::Pubkey;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::{
@@ -744,7 +742,8 @@ mod tests {
     use flow_lib::solana::WalletOrPubkey;
     // use base64::prelude::*;
     use solana_keypair::Keypair;
-    use solana_program::{pubkey, system_instruction::transfer};
+    use solana_program::pubkey;
+    use solana_system_interface::instruction::transfer;
     use std::collections::HashMap;
     use value::Value;
 
@@ -829,10 +828,9 @@ mod tests {
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
             lookup_tables: None,
         };
-        let (inserted, _) =
-            insert_priority_fee(&mut ins, &rpc, SolanaNet::Devnet, &<_>::default())
-                .await
-                .unwrap();
+        let (inserted, _) = insert_priority_fee(&mut ins, &rpc, SolanaNet::Devnet, &<_>::default())
+            .await
+            .unwrap();
         build_message(
             &ins,
             &rpc,

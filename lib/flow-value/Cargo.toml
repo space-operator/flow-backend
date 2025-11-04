@@ -30,15 +30,15 @@ schemars = { version = "1.0.4", default-features = false }
 
 serde_json = { version = "1", optional = true }
 bincode = { version = "2", optional = true }
-solana-pubkey = { version = "3", optional = true }
-solana-keypair = { version = "3", optional = true }
-solana-signature = { version = "3", optional = true }
+solana-pubkey = { workspace = true, optional = true }
+solana-keypair = { workspace = true, optional = true }
+solana-signature = { workspace = true, optional = true }
 
 [dev-dependencies]
 rust_decimal_macros = "1"
 serde_json = { version = "1", features = ["preserve_order"] }
-solana-pubkey = { version = "3", features = ["rand"] }
-solana-keypair = "3"
-solana-signature = "3"
-solana-signer = "3"
-solana-instruction = { version = "3", features = ["serde"] }
+solana-pubkey = { workspace = true, features = ["rand"] }
+solana-keypair = { workspace = true }
+solana-signature = { workspace = true }
+solana-signer = { workspace = true }
+solana-instruction = { workspace = true }

@@ -21,7 +21,7 @@ use nom::{
 };
 use solana_address_lookup_table_interface::state::AddressLookupTable;
 use solana_clock::{Slot, UnixTimestamp};
-use solana_program::message::{AddressLookupTableAccount, VersionedMessage, v0};
+use solana_message::{AddressLookupTableAccount, VersionedMessage, v0};
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::{
     client_error::{Error as ClientError, ErrorKind as ClientErrorKind},
@@ -101,7 +101,7 @@ pub async fn fetch_address_lookup_table(
 }
 
 pub fn find_failed_instruction(err: &ClientError) -> Option<usize> {
-    if let ClientErrorKind::RpcError(RpcError::RpcResponseError { message, .. }) = &err.kind {
+    if let ClientErrorKind::RpcError(RpcError::RpcResponseError { message, .. }) = &*err.kind {
         if let Some(s) =
             message.strip_prefix("Transaction simulation failed: Error processing Instruction ")
         {

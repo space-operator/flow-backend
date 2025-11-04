@@ -36,19 +36,19 @@ regex = "1.11.1"
 derive_more = { version = "2.0.1", features = ["from"] }
 
 # solana libs
-solana-rpc-client = "3"
-solana-rpc-client-api = "3"
-solana-pubkey = "3"
-solana-signer = "3"
-solana-signature = "3"
-solana-keypair = "3"
-solana-program = "3"
-solana-commitment-config = "3"
-solana-presigner = "3"
-solana-sanitize = "3"
-solana-message = "3"
-solana-transaction-error = { version = "3", features = ["serde"] }
-solana-instruction-error = { version = "2", features = ["serde"] }
+solana-rpc-client = { workspace = true }
+solana-rpc-client-api = { workspace = true }
+solana-pubkey = { workspace = true }
+solana-signer = { workspace = true }
+solana-signature = { workspace = true }
+solana-keypair = { workspace = true }
+solana-program = { workspace = true }
+solana-commitment-config = { workspace = true }
+solana-presigner = { workspace = true }
+solana-sanitize = { workspace = true }
+solana-message = { workspace = true }
+solana-transaction-error = { workspace = true }
+solana-instruction-error = { workspace = true }
 
 [dev-dependencies]
-solana-system-interface = { version = "2", features = ["bincode"] }
+solana-system-interface = { workspace = true }
