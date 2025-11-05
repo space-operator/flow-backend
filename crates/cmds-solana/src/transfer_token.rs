@@ -150,7 +150,11 @@ async fn command_transfer_token(
         decimals,
     )?);
 
-    instructions.push(spl_memo::build_memo(memo.as_bytes(), &[fee_payer]));
+    instructions.push(spl_memo_interface::instruction::build_memo(
+        &spl_memo_interface::v3::ID,
+        memo.as_bytes(),
+        &[fee_payer],
+    ));
 
     Ok((instructions, recipient_token_account))
 }

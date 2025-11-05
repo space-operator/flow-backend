@@ -60,7 +60,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             input.freeze_authority.as_ref(),
             input.decimals,
         )?,
-        spl_memo::build_memo(input.memo.as_bytes(), &[&input.fee_payer.pubkey()]),
+        spl_memo_interface::instruction::build_memo(
+            &spl_memo_interface::v3::ID,
+            input.memo.as_bytes(),
+            &[&input.fee_payer.pubkey()],
+        ),
     ]
     .into();
 
