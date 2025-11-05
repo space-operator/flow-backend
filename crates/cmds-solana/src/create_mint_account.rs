@@ -2,7 +2,7 @@ use crate::prelude::*;
 use solana_program::program_pack::Pack;
 use solana_system_interface::instruction::create_account;
 
-use spl_token::state::Mint;
+use spl_token_interface::state::Mint;
 
 const NAME: &str = "create_mint_account";
 
@@ -51,10 +51,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             &input.mint_account.pubkey(),
             lamports,
             Mint::LEN as u64,
-            &spl_token::id(),
+            &spl_token_interface::ID,
         ),
-        spl_token::instruction::initialize_mint2(
-            &spl_token::id(),
+        spl_token_interface::instruction::initialize_mint2(
+            &spl_token_interface::ID,
             &input.mint_account.pubkey(),
             &input.mint_authority.pubkey(),
             input.freeze_authority.as_ref(),

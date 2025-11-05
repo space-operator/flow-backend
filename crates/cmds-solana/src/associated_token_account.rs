@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use spl_associated_token_account::instruction::create_associated_token_account;
+use spl_associated_token_account_interface::instruction::create_associated_token_account;
 
 const SOLANA_ASSOCIATED_TOKEN_ACCOUNT: &str = "associated_token_account";
 
@@ -43,7 +43,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         &input.fee_payer.pubkey(),
         &input.owner,
         &input.mint_account,
-        &spl_token::id(),
+        &spl_token_interface::ID,
     );
 
     let associated_token_account = instruction.accounts[1].pubkey;
