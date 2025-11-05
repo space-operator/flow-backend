@@ -4,8 +4,9 @@ use solana_commitment_config::CommitmentConfig;
 use solana_program::instruction::Instruction;
 use solana_program::program_pack::Pack;
 use solana_sdk_ids::system_program;
-use spl_associated_token_account::instruction;
-use spl_token::instruction::transfer_checked;
+use spl_associated_token_account_interface::address::get_associated_token_address;
+use spl_associated_token_account_interface::instruction;
+use spl_token_interface::instruction::transfer_checked;
 use tracing::info;
 
 const SOLANA_TRANSFER_TOKEN: &str = "transfer_token";
@@ -40,7 +41,7 @@ async fn command_transfer_token(
     let sender_token_acc = if let Some(sender) = sender {
         sender
     } else {
-        spl_associated_token_account::get_associated_token_address(&sender_owner, &token_mint)
+        get_associated_token_address(&sender_owner, &token_mint)
     };
 
     let decimals = if let Some(d) = decimals {
@@ -85,8 +86,8 @@ async fn command_transfer_token(
             .await?
             .value
             .map(|account| {
-                account.owner == spl_token::id()
-                    && account.data.len() == spl_token::state::Account::LEN
+                spl_token_interface::check_id(&account.owner)
+                    && account.data.len() == spl_token_interface::state::Account::LEN
             });
 
         if recipient_account_info.is_none() && !allow_unfunded_recipient {
@@ -102,8 +103,7 @@ async fn command_transfer_token(
 
     let mut instructions = vec![];
     if !recipient_is_token_account {
-        recipient_token_account =
-            spl_associated_token_account::get_associated_token_address(&recipient, &token_mint);
+        recipient_token_account = get_associated_token_address(&recipient, &token_mint);
 
         let needs_funding = {
             match client
@@ -113,7 +113,7 @@ async fn command_transfer_token(
             {
                 Some(recipient_token_account_data) => match recipient_token_account_data.owner {
                     x if x == system_program::ID => true,
-                    y if y == spl_token::ID => false,
+                    y if y == spl_token_interface::ID => false,
                     _ => {
                         return Err(crate::Error::UnsupportedRecipientAddress(
                             recipient.to_string(),
@@ -130,7 +130,7 @@ async fn command_transfer_token(
                     fee_payer,
                     &recipient,
                     &token_mint,
-                    &spl_token::ID,
+                    &spl_token_interface::ID,
                 ));
             } else {
                 // TODO: discuss the logic of this error
@@ -140,7 +140,7 @@ async fn command_transfer_token(
     }
 
     instructions.push(transfer_checked(
-        &spl_token::ID,
+        &spl_token_interface::ID,
         &sender_token_acc,
         &token_mint,
         &recipient_token_account,

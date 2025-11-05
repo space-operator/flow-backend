@@ -6,8 +6,9 @@ use rust_decimal::{
 };
 use solana_presigner::Presigner;
 use solana_program::{
-    hash::Hash, instruction::Instruction, message::Message, native_token::LAMPORTS_PER_SOL,
+    hash::Hash, instruction::Instruction, native_token::LAMPORTS_PER_SOL,
 };
+use solana_message::Message;
 use solana_transaction::Transaction;
 use std::time::Duration;
 use value::Error as ValueError;

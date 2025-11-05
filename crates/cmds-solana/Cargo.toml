@@ -50,16 +50,16 @@ solana-presigner = { workspace = true }
 solana-transaction = { workspace = true }
 solana-sdk-ids = { workspace = true }
 solana-system-interface = { workspace = true }
+solana-message = { workspace = true }
 
 anchor-libs.workspace = true
 
 # spl
-spl-token = { version = "=7.0.0", features = ["no-entrypoint"] }
-spl-token-2022 = { version = "=7.0.0", features = ["serde-traits"] }
+spl-token-interface = "2"
+spl-token-2022-interface = "2"
 spl-memo-interface = "2"
-spl-associated-token-account = { version = "=6.0.0", features = ["no-entrypoint"] }
-# branch: dev
-spl-concurrent-merkle-tree = { git = "https://github.com/space-operator/solana-program-library", rev = "9595801a5" }
+spl-associated-token-account-interface = "2"
+spl-concurrent-merkle-tree = "1"
 
 # metaplex
 mpl-token-metadata = { path = "../../vendor/mpl-token-metadata" }
