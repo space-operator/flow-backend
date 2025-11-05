@@ -3,12 +3,12 @@ use std::str::FromStr;
 use crate::prelude::*;
 use crate::streamflow::StreamContract;
 use crate::utils::anchor_sighash;
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
 use solana_account_decoder::UiAccountEncoding;
 use solana_commitment_config::CommitmentConfig;
 use solana_program::instruction::AccountMeta;
 use solana_rpc_client_api::config::RpcAccountInfoConfig;
-use spl_associated_token_account::get_associated_token_address;
+use spl_associated_token_account_interface::address::get_associated_token_address;
 use tracing::info;
 
 use super::{STRM_TREASURY, WithdrawData, WithdrawDataInput};
@@ -73,7 +73,7 @@ fn create_withdraw_stream_instruction(
         AccountMeta::new(*partner, false),
         AccountMeta::new(*partner_tokens, false),
         AccountMeta::new_readonly(*mint, false),
-        AccountMeta::new_readonly(spl_token::ID, false),
+        AccountMeta::new_readonly(spl_token_interface::ID, false),
     ]
     .to_vec();
 
