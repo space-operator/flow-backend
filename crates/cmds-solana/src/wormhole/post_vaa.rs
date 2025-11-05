@@ -1,6 +1,5 @@
 use super::{PostVAAData, VAA};
 use crate::{prelude::*, wormhole::WormholeInstructions};
-use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
 use solana_sdk_ids::system_program;
@@ -70,7 +69,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
         ],
-        data: (WormholeInstructions::PostVAA, vaa).try_to_vec()?,
+        data: borsh::to_vec(&(WormholeInstructions::PostVAA, vaa))?,
     };
 
     let ins = Instructions {
