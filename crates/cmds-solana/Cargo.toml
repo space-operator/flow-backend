@@ -56,7 +56,7 @@ anchor-libs.workspace = true
 
 # spl
 spl-token-interface = "2"
-spl-token-2022-interface = "2"
+spl-token-2022-interface = { version = "2", features = ["serde"] }
 spl-memo-interface = "2"
 spl-associated-token-account-interface = "2"
 spl-concurrent-merkle-tree = "1"
