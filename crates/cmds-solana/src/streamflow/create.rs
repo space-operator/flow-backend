@@ -87,7 +87,7 @@ fn create_create_stream_instruction(
     Instruction {
         program_id: *timelock_program,
         accounts,
-        data: (discriminator, data).try_to_vec().unwrap(),
+        data: borsh::to_vec(&(discriminator, data)).unwrap(),
     }
 }
 
