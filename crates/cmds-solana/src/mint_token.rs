@@ -1,6 +1,6 @@
 use crate::{get_decimals, prelude::*, utils::ui_amount_to_amount};
 
-use spl_token::instruction::mint_to_checked;
+use spl_token_interface::instruction::mint_to_checked;
 
 const SOLANA_MINT_TOKEN: &str = "mint_token";
 
@@ -47,7 +47,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let amount = ui_amount_to_amount(input.amount, decimals)?;
 
     let instruction = mint_to_checked(
-        &spl_token::id(),
+        &spl_token_interface::ID,
         &input.mint_account,
         &input.recipient,
         &input.mint_authority.pubkey(),
