@@ -80,7 +80,7 @@ pub async fn get_decimals(client: &RpcClient, mint_account: Pubkey) -> crate::Re
     //     tracing::error!("Error: {:?}", e);
     //     crate::Error::AccountNotFound(mint_account)
     // })?;
-    let source_account = spl_token::state::Mint::unpack(&source_account.data)?;
+    let source_account = spl_token_interface::state::Mint::unpack(&source_account.data)?;
     info!("source_account: {:?}", source_account);
     Ok(source_account.decimals)
 }
