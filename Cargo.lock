@@ -7186,7 +7186,7 @@ dependencies = [
 [[package]]
 name = "pyth-sdk"
 version = "0.8.0"
-source = "git+https://github.com/space-operator/pyth-sdk-rs?rev=c658146e28322ab89720cef94efb56b3c5c12f28#c658146e28322ab89720cef94efb56b3c5c12f28"
+source = "git+https://github.com/space-operator/pyth-sdk-rs?rev=b26ee1ddf6dced5d4fc95ba339a6a1de76a5b1b3#b26ee1ddf6dced5d4fc95ba339a6a1de76a5b1b3"
 dependencies = [
  "borsh 0.10.4",
  "borsh-derive 0.10.4",
@@ -7199,16 +7199,16 @@ dependencies = [
 [[package]]
 name = "pyth-sdk-solana"
 version = "0.10.2"
-source = "git+https://github.com/space-operator/pyth-sdk-rs?rev=c658146e28322ab89720cef94efb56b3c5c12f28#c658146e28322ab89720cef94efb56b3c5c12f28"
+source = "git+https://github.com/space-operator/pyth-sdk-rs?rev=b26ee1ddf6dced5d4fc95ba339a6a1de76a5b1b3#b26ee1ddf6dced5d4fc95ba339a6a1de76a5b1b3"
 dependencies = [
- "borsh 0.10.4",
- "borsh-derive 0.10.4",
+ "borsh 1.5.7",
+ "borsh-derive 1.5.7",
  "bytemuck",
  "num-derive 0.4.2",
  "num-traits",
  "pyth-sdk",
  "serde",
- "solana-program 2.3.0",
+ "solana-program 3.0.0",
  "thiserror 1.0.69",
 ]
 

@@ -81,7 +81,7 @@ bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
 reqwest11 = { package = "reqwest", version = "0.11", features = ["json"] }
 
 # branch: vendor
-pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "c658146e28322ab89720cef94efb56b3c5c12f28" }
+pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "b26ee1ddf6dced5d4fc95ba339a6a1de76a5b1b3" }
 
 # jupiter-swap-api-client = { git = "https://github.com/jup-ag/jupiter-swap-api-client.git", package = "jupiter-swap-api-client", rev = "e3c162b921f46eacc867ca9c55e7d610eefabe25"}
 
