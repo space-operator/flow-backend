@@ -2,7 +2,6 @@ use crate::wormhole::{PostVAAData, VAA};
 
 use crate::prelude::*;
 
-use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
 use solana_sdk_ids::system_program;
@@ -130,11 +129,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             // Program
             AccountMeta::new_readonly(spl_token_interface::ID, false),
         ],
-        data: (
+        data: borsh::to_vec(&(
             TokenBridgeInstructions::CompleteNative,
             CompleteNativeData {},
-        )
-            .try_to_vec()?,
+        ))?,
     };
 
     let ins = Instructions {

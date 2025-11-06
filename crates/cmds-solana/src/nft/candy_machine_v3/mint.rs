@@ -86,7 +86,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let nft_master_edition = MasterEdition::find_pda(&input.mint_account).0;
 
     // NFT Associated Token Account
-    let nft_associated_token_account = spl_associated_token_account::get_associated_token_address(
+    let nft_associated_token_account = spl_associated_token_account_interface::address::get_associated_token_address(
         &input.minter.pubkey(),
         &input.mint_account,
     );

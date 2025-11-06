@@ -1,6 +1,5 @@
 use super::TokenBridgeInstructions;
 use crate::prelude::*;
-use borsh::BorshSerialize;
 use solana_program::instruction::AccountMeta;
 use solana_program::pubkey::Pubkey;
 
@@ -49,13 +48,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new(config_key, false),
             // Dependencies
             AccountMeta::new(solana_program::sysvar::rent::id(), false),
-            AccountMeta::new(solana_program::system_program::id(), false),
+            AccountMeta::new(solana_system_interface::program::ID, false),
         ],
-        data: (
+        data: borsh::to_vec(&(
             TokenBridgeInstructions::Initialize,
             wormhole_core_program_id,
-        )
-            .try_to_vec()?,
+        ))?,
     };
 
     let ins = Instructions {

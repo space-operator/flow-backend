@@ -1,7 +1,6 @@
 use super::{CreateWrappedData, PayloadAssetMeta, TokenBridgeInstructions};
 use crate::prelude::*;
 use crate::wormhole::{PostVAAData, VAA};
-use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
 use solana_sdk_ids::system_program;
@@ -142,10 +141,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
             // Program
-            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(spl_token_interface::ID, false),
             AccountMeta::new_readonly(mpl_token_metadata::ID, false),
         ],
-        data: (TokenBridgeInstructions::CreateWrapped, CreateWrappedData {}).try_to_vec()?,
+        data: borsh::to_vec(&(TokenBridgeInstructions::CreateWrapped, CreateWrappedData {}))?,
     };
 
     info!("ix: {:?}", ix);

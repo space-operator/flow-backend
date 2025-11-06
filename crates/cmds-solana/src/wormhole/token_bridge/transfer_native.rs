@@ -1,6 +1,5 @@
 use crate::prelude::*;
 
-use borsh::BorshSerialize;
 use rand::Rng;
 use solana_program::instruction::AccountMeta;
 use solana_program::pubkey::Pubkey;
@@ -110,16 +109,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new_readonly(solana_program::sysvar::clock::id(), false),
             // Dependencies
             AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(solana_system_interface::program::ID, false),
             // Program
             AccountMeta::new_readonly(spl_token_interface::ID, false),
             AccountMeta::new_readonly(wormhole_core_program_id, false),
         ],
-        data: (TokenBridgeInstructions::TransferNative, wrapped_data).try_to_vec()?,
+        data: borsh::to_vec(&(TokenBridgeInstructions::TransferNative, wrapped_data))?,
     };
 
     let instructions = [
-        spl_token::instruction::approve(
+        spl_token_interface::instruction::approve(
             &spl_token_interface::ID,
             &input.from,
             &authority_signer,
