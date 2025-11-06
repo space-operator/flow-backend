@@ -91,7 +91,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         target_chain: input.target_chain,
     };
 
-    let from_ata = spl_associated_token_account::get_associated_token_address(
+    let from_ata = spl_associated_token_account_interface::address::get_associated_token_address(
         &input.from_owner.pubkey(),
         &input.mint,
     );
@@ -115,16 +115,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new_readonly(solana_program::sysvar::clock::id(), false),
             // Dependencies
             AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(solana_system_interface::program::ID, false),
             // Program
             AccountMeta::new_readonly(wormhole_core_program_id, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_token_interface::ID, false),
         ],
-        data: (NFTBridgeInstructions::TransferWrapped, wrapped_data).try_to_vec()?,
+        data: borsh::to_vec(&(NFTBridgeInstructions::TransferWrapped, wrapped_data))?,
     };
 
-    let approve_ix = spl_token::instruction::approve(
-        &spl_token::id(),
+    let approve_ix = spl_token_interface::instruction::approve(
+        &spl_token_interface::ID,
         &from_ata,
         &authority_signer,
         &input.from_owner.pubkey(),

@@ -140,15 +140,14 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new_readonly(system_program::id(), false),
             // Program
             AccountMeta::new_readonly(wormhole_core_program_id, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+            AccountMeta::new_readonly(spl_token_interface::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account_interface::program::ID, false),
             AccountMeta::new_readonly(mpl_token_metadata::ID, false),
         ],
-        data: (
+        data: borsh::to_vec(&(
             NFTBridgeInstructions::CompleteWrappedMeta,
             CompleteWrappedMetaData {},
-        )
-            .try_to_vec()?,
+        ))?,
     };
 
     info!("ix: {:?}", ix);
