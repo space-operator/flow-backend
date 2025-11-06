@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use crate::wormhole::nft_bridge::Address;
 use crate::wormhole::{PostVAAData, VAA};
-use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
 use solana_sdk_ids::system_program;

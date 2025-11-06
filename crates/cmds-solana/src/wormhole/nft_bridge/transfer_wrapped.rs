@@ -2,8 +2,6 @@ use crate::wormhole::token_bridge::{eth::hex_to_address, get_sequence_number_fro
 
 use crate::prelude::*;
 
-use borsh::BorshSerialize;
-
 use rand::Rng;
 use solana_program::instruction::AccountMeta;
 use solana_program::pubkey::Pubkey;
