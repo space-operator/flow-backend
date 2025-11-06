@@ -80,3 +80,16 @@ impl LeafSchemaEvent {
         }
     }
 }
+
+pub trait TryToVec {
+    fn try_to_vec(&self) -> Result<Vec<u8>, borsh::io::Error>;
+}
+
+impl<T> TryToVec for T
+where
+    T: borsh::BorshSerialize,
+{
+    fn try_to_vec(&self) -> Result<Vec<u8>, borsh::io::Error> {
+        borsh::to_vec(self)
+    }
+}
