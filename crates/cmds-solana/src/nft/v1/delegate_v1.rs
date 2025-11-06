@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use anchor_lang::AnchorSerialize;
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
     accounts::{MasterEdition, Metadata, MetadataDelegateRecord, TokenRecord},

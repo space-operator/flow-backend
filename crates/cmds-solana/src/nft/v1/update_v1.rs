@@ -4,7 +4,6 @@ use crate::{
     nft::{CollectionDetails, NftCreator, NftUses, TokenStandard},
     prelude::*,
 };
-use anchor_lang::AnchorSerialize;
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
     accounts::{MasterEdition, Metadata},
