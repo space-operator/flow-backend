@@ -1,6 +1,6 @@
 use crate::{prelude::*, wormhole::WormholeInstructions};
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
 use rand::Rng;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
@@ -72,17 +72,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new(input.payer.pubkey(), true),
             AccountMeta::new(fee_collector, false),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(solana_system_interface::program::ID, false),
         ],
-        data: (
+        data: borsh::to_vec(&(
             WormholeInstructions::PostMessage,
             PostMessageData {
                 nonce,
                 payload: payload.to_vec(),
                 consistency_level: super::ConsistencyLevel::Confirmed,
             },
-        )
-            .try_to_vec()?,
+        ))?,
     };
 
     // Get message fee

@@ -41,6 +41,19 @@ pub use error::{Error, Result};
 
 pub use flow_lib::solana::WalletOrPubkey;
 
+pub trait TryToVec {
+    fn try_to_vec(&self) -> std::result::Result<Vec<u8>, borsh::io::Error>;
+}
+
+impl<T> TryToVec for T
+where
+    T: borsh::BorshSerialize,
+{
+    fn try_to_vec(&self) -> std::result::Result<Vec<u8>, borsh::io::Error> {
+        borsh::to_vec(self)
+    }
+}
+
 pub mod prelude {
     pub use crate::utils::{execute, submit_transaction, try_sign_wallet};
     pub use anchor_libs::{candy_guard, candy_machine_core, spl_account_compression};
@@ -55,6 +68,7 @@ pub mod prelude {
     pub use solana_signer::Signer;
     pub use std::sync::Arc;
     pub use value::HashMap;
+    pub use crate::TryToVec;
 }
 
 // make a nodes out of this
@@ -80,7 +94,7 @@ pub async fn get_decimals(client: &RpcClient, mint_account: Pubkey) -> crate::Re
     //     tracing::error!("Error: {:?}", e);
     //     crate::Error::AccountNotFound(mint_account)
     // })?;
-    let source_account = spl_token::state::Mint::unpack(&source_account.data)?;
+    let source_account = spl_token_interface::state::Mint::unpack(&source_account.data)?;
     info!("source_account: {:?}", source_account);
     Ok(source_account.decimals)
 }

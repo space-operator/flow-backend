@@ -21,7 +21,7 @@ pub fn verbose_solana_error(err: &ClientError) -> String {
         code,
         message,
         data,
-    }) = &err.kind
+    }) = &*err.kind
     {
         let mut s = String::new();
         writeln!(s, "{message} ({code})").unwrap();

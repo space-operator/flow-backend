@@ -26,3 +26,16 @@ pub const MAX_EDITION_MARKER_SIZE: usize = 32;
 
 /// Number of bits used by a edition marker.
 pub const EDITION_MARKER_BIT_SIZE: u64 = 248;
+
+pub trait TryToVec {
+    fn try_to_vec(&self) -> Result<Vec<u8>, borsh::io::Error>;
+}
+
+impl<T> TryToVec for T
+where
+    T: borsh::BorshSerialize,
+{
+    fn try_to_vec(&self) -> Result<Vec<u8>, borsh::io::Error> {
+        borsh::to_vec(self)
+    }
+}

@@ -1,5 +1,6 @@
 use crate::prelude::*;
-use solana_program::{pubkey::Pubkey, system_instruction::create_account};
+use solana_program::pubkey::Pubkey;
+use solana_system_interface::instruction::create_account;
 
 use spl_concurrent_merkle_tree::concurrent_merkle_tree::ConcurrentMerkleTree;
 use std::mem::size_of;

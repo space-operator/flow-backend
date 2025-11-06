@@ -2,7 +2,6 @@ use crate::wormhole::{PostVAAData, VAA};
 
 use crate::prelude::*;
 
-use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
 use solana_sdk_ids::system_program;
@@ -110,7 +109,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         Pubkey::find_program_address(&[b"custody_signer"], &nft_bridge_program_id).0;
 
     let associated_token =
-        spl_associated_token_account::get_associated_token_address(&input.to_authority, &mint);
+        spl_associated_token_account_interface::address::get_associated_token_address(
+            &input.to_authority,
+            &mint,
+        );
 
     let ix = solana_program::instruction::Instruction {
         program_id: nft_bridge_program_id,
@@ -130,10 +132,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new_readonly(system_program::id(), false),
             // Program
             AccountMeta::new_readonly(wormhole_core_program_id, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+            AccountMeta::new_readonly(spl_token_interface::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account_interface::program::ID, false),
         ],
-        data: (NFTBridgeInstructions::CompleteNative, CompleteNativeData {}).try_to_vec()?,
+        data: borsh::to_vec(&(NFTBridgeInstructions::CompleteNative, CompleteNativeData {}))?,
     };
 
     let ins = Instructions {

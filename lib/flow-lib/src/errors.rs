@@ -8,13 +8,13 @@ use anyhow::anyhow;
 use futures::channel::oneshot::Canceled;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, serde_conv};
+use solana_message::CompileError;
 use solana_program::clock::Slot;
-use solana_program::message::CompileError;
-use solana_program::sanitize::SanitizeError;
 use solana_pubkey::Pubkey;
 use solana_rpc_client_api::client_error::{Error as ClientError, ErrorKind as ClientErrorKind};
 use solana_rpc_client_api::request::{RpcError, RpcRequest, RpcResponseErrorData};
 use solana_rpc_client_api::response::RpcSimulateTransactionResult;
+use solana_sanitize::SanitizeError;
 use solana_signer::{PresignerError, SignerError};
 use solana_transaction_error::TransactionError;
 
@@ -662,12 +662,12 @@ serde_conv!(pub AsClientErrorKind, ClientErrorKind, ser_kind, de_kind);
 pub struct AsClientErrorImpl {
     #[serde_as(as = "Option<AsRpcRequest>")]
     pub request: Option<RpcRequest>,
-    #[serde_as(as = "AsClientErrorKind")]
-    pub kind: ClientErrorKind,
+    #[serde_as(as = "Box<AsClientErrorKind>")]
+    pub kind: Box<ClientErrorKind>,
 }
 
-fn clone_client_error_kind(kind: &ClientErrorKind) -> ClientErrorKind {
-    de_kind(ser_kind(kind)).unwrap()
+fn clone_client_error_kind(kind: &ClientErrorKind) -> Box<ClientErrorKind> {
+    Box::new(de_kind(ser_kind(kind)).unwrap())
 }
 
 fn ser_client_error(error: &ClientError) -> AsClientErrorImpl {

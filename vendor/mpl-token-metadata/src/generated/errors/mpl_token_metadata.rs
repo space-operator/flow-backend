@@ -621,8 +621,10 @@ pub enum MplTokenMetadataError {
     ConditionsForClosingNotMet,
 }
 
+/*
 impl solana_program::program_error::PrintProgramError for MplTokenMetadataError {
     fn print<E>(&self) {
         solana_program::msg!(&self.to_string());
     }
 }
+*/

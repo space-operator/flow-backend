@@ -5,6 +5,7 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::TryToVec;
 use crate::generated::types::MetadataArgs;
 use crate::generated::types::UpdateArgs;
 use borsh::BorshDeserialize;

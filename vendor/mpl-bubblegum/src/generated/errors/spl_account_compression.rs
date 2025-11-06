@@ -40,9 +40,3 @@ pub enum SplAccountCompressionError {
     #[error("Leaf index of concurrent merkle tree is out of bounds")]
     LeafIndexOutOfBounds,
 }
-
-impl solana_program::program_error::PrintProgramError for SplAccountCompressionError {
-    fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
-    }
-}

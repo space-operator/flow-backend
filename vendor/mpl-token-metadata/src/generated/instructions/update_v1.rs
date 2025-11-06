@@ -11,6 +11,7 @@ use crate::generated::types::CollectionToggle;
 use crate::generated::types::Data;
 use crate::generated::types::RuleSetToggle;
 use crate::generated::types::UsesToggle;
+use crate::TryToVec;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;

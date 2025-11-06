@@ -161,9 +161,3 @@ pub enum MplCoreError {
     #[error("Invalid Signing PDA for Asset or Collection Execute")]
     InvalidExecutePda,
 }
-
-impl solana_program::program_error::PrintProgramError for MplCoreError {
-    fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
-    }
-}

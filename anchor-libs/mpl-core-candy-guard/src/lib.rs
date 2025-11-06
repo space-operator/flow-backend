@@ -1036,7 +1036,7 @@ pub mod cpi {
                 .map_err(|_| anchor_lang::error::ErrorCode::InstructionDidNotSerialize)?;
             let accounts = ctx.to_account_metas(None);
             anchor_lang::solana_program::instruction::Instruction {
-                program_id: ctx.program.key(),
+                program_id: ctx.program_id,
                 accounts,
                 data,
             }
@@ -1058,7 +1058,7 @@ pub mod cpi {
                 .map_err(|_| anchor_lang::error::ErrorCode::InstructionDidNotSerialize)?;
             let accounts = ctx.to_account_metas(None);
             anchor_lang::solana_program::instruction::Instruction {
-                program_id: ctx.program.key(),
+                program_id: ctx.program_id,
                 accounts,
                 data,
             }
@@ -1080,7 +1080,7 @@ pub mod cpi {
                 .map_err(|_| anchor_lang::error::ErrorCode::InstructionDidNotSerialize)?;
             let accounts = ctx.to_account_metas(None);
             anchor_lang::solana_program::instruction::Instruction {
-                program_id: ctx.program.key(),
+                program_id: ctx.program_id,
                 accounts,
                 data,
             }
@@ -1101,7 +1101,7 @@ pub mod cpi {
                 .map_err(|_| anchor_lang::error::ErrorCode::InstructionDidNotSerialize)?;
             let accounts = ctx.to_account_metas(None);
             anchor_lang::solana_program::instruction::Instruction {
-                program_id: ctx.program.key(),
+                program_id: ctx.program_id,
                 accounts,
                 data,
             }
@@ -1121,7 +1121,7 @@ pub mod cpi {
                 .map_err(|_| anchor_lang::error::ErrorCode::InstructionDidNotSerialize)?;
             let accounts = ctx.to_account_metas(None);
             anchor_lang::solana_program::instruction::Instruction {
-                program_id: ctx.program.key(),
+                program_id: ctx.program_id,
                 accounts,
                 data,
             }
@@ -1142,7 +1142,7 @@ pub mod cpi {
                 .map_err(|_| anchor_lang::error::ErrorCode::InstructionDidNotSerialize)?;
             let accounts = ctx.to_account_metas(None);
             anchor_lang::solana_program::instruction::Instruction {
-                program_id: ctx.program.key(),
+                program_id: ctx.program_id,
                 accounts,
                 data,
             }
@@ -1162,7 +1162,7 @@ pub mod cpi {
                 .map_err(|_| anchor_lang::error::ErrorCode::InstructionDidNotSerialize)?;
             let accounts = ctx.to_account_metas(None);
             anchor_lang::solana_program::instruction::Instruction {
-                program_id: ctx.program.key(),
+                program_id: ctx.program_id,
                 accounts,
                 data,
             }
@@ -1182,7 +1182,7 @@ pub mod cpi {
                 .map_err(|_| anchor_lang::error::ErrorCode::InstructionDidNotSerialize)?;
             let accounts = ctx.to_account_metas(None);
             anchor_lang::solana_program::instruction::Instruction {
-                program_id: ctx.program.key(),
+                program_id: ctx.program_id,
                 accounts,
                 data,
             }

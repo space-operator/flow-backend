@@ -6,6 +6,7 @@
 //!
 
 use crate::generated::types::MintNewEditionFromMasterEditionViaTokenArgs;
+use crate::TryToVec;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 

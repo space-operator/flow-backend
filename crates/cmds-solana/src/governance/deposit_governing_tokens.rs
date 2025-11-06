@@ -78,7 +78,7 @@ pub fn deposit_governing_tokens(
         AccountMeta::new(token_owner_record_address, false),
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_token_interface::ID, false),
         AccountMeta::new_readonly(realm_config_address, false),
     ];
 
@@ -100,7 +100,7 @@ pub fn deposit_governing_tokens(
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
 
-    let governing_token_source = spl_associated_token_account::get_associated_token_address(
+    let governing_token_source = spl_associated_token_account_interface::address::get_associated_token_address(
         &input.governing_token_owner.pubkey(),
         &input.governing_token_mint,
     );

@@ -30,7 +30,11 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let instruction = spl_memo::build_memo(input.memo.as_bytes(), &[&input.fee_payer.pubkey()]);
+    let instruction = spl_memo_interface::instruction::build_memo(
+        &spl_memo_interface::v3::ID,
+        input.memo.as_bytes(),
+        &[&input.fee_payer.pubkey()],
+    );
 
     let ins = Instructions {
         lookup_tables: None,

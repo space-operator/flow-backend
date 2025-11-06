@@ -6,6 +6,7 @@
 //!
 
 use crate::generated::types::ExternalPluginAdapterInitInfo;
+use crate::TryToVec;
 use crate::generated::types::PluginAuthorityPair;
 #[cfg(feature = "anchor")]
 use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};

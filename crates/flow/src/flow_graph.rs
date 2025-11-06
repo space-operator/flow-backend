@@ -36,7 +36,7 @@ use petgraph::{
     stable_graph::{Edges, NodeIndex, StableGraph},
     visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
 };
-use solana_program::system_instruction::transfer_many;
+use solana_system_interface::instruction::transfer_many;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,

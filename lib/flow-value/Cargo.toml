@@ -1,6 +1,6 @@
 [package]
 name = "flow-value"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 description = "Value type for flow inputs and outputs."
 license = "AGPL-3.0-only"
@@ -18,28 +18,27 @@ json = ["dep:serde_json"]
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 rust_decimal = { version = "1", default-features = false }
-bs58 = "0.4"
-base64 = "0.13"
+base64 = "0.22.1"
 indexmap = { version = "2", features = ["serde"] }
-thiserror = "1"
+thiserror = "2"
 bytes = { version = "1", features = ["serde"] }
 itoa = "1"
 ryu = "1"
 serde_with = "3.11.0"
-five8 = { version = "0.2.1", features = ["std"] }
+five8 = "1.0.0"
 schemars = { version = "1.0.4", default-features = false }
 
 serde_json = { version = "1", optional = true }
 bincode = { version = "2", optional = true }
-solana-pubkey = { version = "2", optional = true }
-solana-keypair = { version = "2", optional = true }
-solana-signature = { version = "2", optional = true }
+solana-pubkey = { workspace = true, optional = true }
+solana-keypair = { workspace = true, optional = true }
+solana-signature = { workspace = true, optional = true }
 
 [dev-dependencies]
-rust_decimal_macros = "1.26"
+rust_decimal_macros = "1"
 serde_json = { version = "1", features = ["preserve_order"] }
-solana-pubkey = { version = "2", features = ["rand"] }
-solana-keypair = "2"
-solana-signature = "2"
-solana-signer = "2"
-solana-instruction = { version = "2", features = ["serde"] }
+solana-pubkey = { workspace = true, features = ["rand"] }
+solana-keypair = { workspace = true }
+solana-signature = { workspace = true }
+solana-signer = { workspace = true }
+solana-instruction = { workspace = true }

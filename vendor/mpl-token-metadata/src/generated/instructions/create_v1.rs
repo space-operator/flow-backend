@@ -11,6 +11,7 @@ use crate::generated::types::Creator;
 use crate::generated::types::PrintSupply;
 use crate::generated::types::TokenStandard;
 use crate::generated::types::Uses;
+use crate::TryToVec;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;

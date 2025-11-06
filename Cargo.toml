@@ -47,13 +47,41 @@ mpl-core-candy-machine-core = { path = "anchor-libs/mpl-core-candy-machine-core"
 mpl-core-candy-guard = { path = "anchor-libs/mpl-core-candy-guard", version = "0.0.0" }
 
 # lib/
-value = { path = "lib/flow-value", version = "0.2.0", package = "flow-value" }
-flow-lib = { path = "lib/flow-lib", version = "0.1.1" }
+value = { path = "lib/flow-value", version = "0.3.0", package = "flow-value" }
+flow-lib = { path = "lib/flow-lib", version = "0.2.0" }
 space-macro = { path = "lib/space-macro", version = "0.2.1" }
 spo-helius = { path = "./lib/spo-helius", version = "0.1.0" }
 futures-metrics = { path = "./lib/futures-metrics", version = "0.1.0" }
 
-# Non-local crates
+# Solana crates
+solana-rpc-client = "3"
+solana-rpc-client-api = "3"
+solana-pubkey = "3"
+solana-signer = "3"
+solana-signature = "3"
+solana-keypair = "3"
+solana-program = "3"
+solana-commitment-config = "3"
+solana-presigner = "3"
+solana-sanitize = "3"
+solana-message = "3"
+solana-transaction-error = { version = "3", features = ["serde"] }
+solana-instruction-error = { version = "2", features = ["serde"] }
+solana-system-interface = { version = "2", features = ["bincode"] }
+solana-instruction = { version = "3", features = ["serde"] }
+solana-account = "3"
+solana-account-decoder = "3"
+solana-compute-budget-interface = { version = "3", features = ["borsh"] }
+solana-sdk-ids = "3"
+solana-transaction = "3"
+solana-transaction-status = "3"
+agave-feature-set = "3"
+agave-precompiles = "3"
+solana-address-lookup-table-interface = "3"
+solana-clock = "3"
+solana-system-transaction = "3"
+
+# Other crates
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 anyhow = "1"

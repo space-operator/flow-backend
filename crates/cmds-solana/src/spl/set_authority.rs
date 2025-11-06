@@ -36,8 +36,8 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let ix = spl_token::instruction::set_authority(
-        &spl_token::id(),
+    let ix = spl_token_interface::instruction::set_authority(
+        &spl_token_interface::ID,
         &input.owned_pubkey,
         input.new_authority.as_ref(),
         input.authority_type.into(),
@@ -70,7 +70,7 @@ pub enum AuthorityType {
     CloseAccount,
 }
 
-impl From<AuthorityType> for spl_token::instruction::AuthorityType {
+impl From<AuthorityType> for spl_token_interface::instruction::AuthorityType {
     fn from(value: AuthorityType) -> Self {
         match value {
             AuthorityType::MintTokens => Self::MintTokens,

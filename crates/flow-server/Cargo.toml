@@ -15,7 +15,7 @@ flow-lib = { workspace = true }
 value = { workspace = true }
 utils = { workspace = true }
 cmds-pdg = { workspace = true, optional = true }
-cmds-std = { workspace = true , optional = true}
+cmds-std = { workspace = true, optional = true }
 cmds-solana = { workspace = true, optional = true }
 cmds-deno = { workspace = true, optional = true }
 rhai-script = { workspace = true }
@@ -71,11 +71,11 @@ simd-json = "0.15.1"
 metrics-rs-dashboard-actix = "0.1.6"
 metrics = "0.24.2"
 
-solana-pubkey = "2"
-solana-keypair = "2"
-solana-signer = "2"
-solana-signature = "2"
-solana-rpc-client = { version = "2", default-features = false }
+solana-pubkey = { workspace = true }
+solana-keypair = { workspace = true }
+solana-signer = { workspace = true }
+solana-signature = { workspace = true }
+solana-rpc-client = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.5"

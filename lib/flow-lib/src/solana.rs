@@ -1,4 +1,5 @@
 use crate::SolanaNet;
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as, serde_conv};
 use solana_commitment_config::CommitmentLevel;
@@ -26,7 +27,7 @@ pub trait KeypairExt: Sized {
 impl KeypairExt for Keypair {
     fn from_str(s: &str) -> Result<Self, anyhow::Error> {
         let mut buf = [0u8; 64];
-        five8::decode_64(s, &mut buf)?;
+        five8::decode_64(s, &mut buf).map_err(|_| anyhow!("invalid base64"))?;
         Ok(Keypair::try_from(&buf[..])?)
     }
 }
@@ -360,7 +361,8 @@ mod tests {
         TX_COMMITMENT_LEVEL, WAIT_COMMITMENT_LEVEL,
     };
     use bincode::config::standard;
-    use solana_program::{pubkey, system_instruction::transfer};
+    use solana_program::pubkey;
+    use solana_system_interface::instruction::transfer;
 
     #[test]
     fn test_wallet_serde() {

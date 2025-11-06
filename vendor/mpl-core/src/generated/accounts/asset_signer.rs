@@ -9,7 +9,7 @@
 use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 #[cfg(not(feature = "anchor"))]
 use borsh::{BorshDeserialize, BorshSerialize};
-use kaigan::types::RemainderVec;
+use crate::remainder_vec::RemainderVec;
 use solana_program::pubkey::Pubkey;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

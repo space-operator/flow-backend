@@ -1,4 +1,4 @@
-use spl_token_2022::instruction::AuthorityType;
+use spl_token_2022_interface::instruction::AuthorityType;
 
 use crate::prelude::*;
 
@@ -38,8 +38,8 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let ix = spl_token_2022::instruction::set_authority(
-        &spl_token_2022::id(),
+    let ix = spl_token_2022_interface::instruction::set_authority(
+        &spl_token_2022_interface::ID,
         &input.owned_pubkey,
         input.new_authority.as_ref(),
         input.authority_type,

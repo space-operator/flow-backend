@@ -20,7 +20,7 @@ petgraph = "0.8.2"
 inventory = "0.3"
 thiserror = "1.0.31"
 async-trait = "0.1.56"
-solana-program = { version = "2", default-features = false }
+solana-system-interface = { workspace = true }
 tokio = "1"
 uuid = { version = "1", features = ["v4", "serde"] }
 serde = { version = "1", features = ["derive"] }

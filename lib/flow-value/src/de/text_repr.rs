@@ -1,4 +1,5 @@
 use crate::{Value, value_type::Variant};
+use base64::prelude::*;
 use serde::de::VariantAccess;
 use std::borrow::Cow;
 
@@ -43,8 +44,8 @@ impl<'de> serde::de::Visitor<'de> for EnumVisitor {
             Variant::Decimal => Ok(Value::Decimal(number_from_str(a)?)),
             Variant::I128 => Ok(Value::I128(number_from_str(a)?)),
             Variant::U128 => Ok(Value::U128(number_from_str(a)?)),
-            Variant::B32 => Ok(Value::B32(b58_str(a)?)),
-            Variant::B64 => Ok(Value::B64(b58_str(a)?)),
+            Variant::B32 => Ok(Value::B32(b58_str_32(a)?)),
+            Variant::B64 => Ok(Value::B64(b58_str_64(a)?)),
             Variant::Bytes => Ok(Value::Bytes(b64_str(a)?)),
             Variant::Array => Ok(Value::Array(a.newtype_variant::<Array>()?.0)),
             Variant::Map => Ok(Value::Map(a.newtype_variant::<Map>()?.0)),
@@ -132,22 +133,26 @@ where
         .map_err(|_| serde::de::Error::custom(format!("invalid number: {s}")))
 }
 
-fn b58_str<'de, A, const N: usize>(a: A) -> Result<[u8; N], A::Error>
+fn b58_str_32<'de, A>(a: A) -> Result<[u8; 32], A::Error>
 where
     A: VariantAccess<'de>,
 {
-    let mut buf = [0u8; N];
     let s = a.newtype_variant::<Cow<'_, str>>()?;
-    let size = bs58::decode(&*s)
-        .into(&mut buf)
+    let mut data = [0u8; 32];
+    five8::decode_32(s.as_bytes(), &mut data)
         .map_err(|_| serde::de::Error::custom("invalid base58"))?;
-    if size != N {
-        return Err(serde::de::Error::invalid_length(
-            size,
-            &itoa::Buffer::new().format(N),
-        ));
-    }
-    Ok(buf)
+    Ok(data)
+}
+
+fn b58_str_64<'de, A>(a: A) -> Result<[u8; 64], A::Error>
+where
+    A: VariantAccess<'de>,
+{
+    let s = a.newtype_variant::<Cow<'_, str>>()?;
+    let mut data = [0u8; 64];
+    five8::decode_64(s.as_bytes(), &mut data)
+        .map_err(|_| serde::de::Error::custom("invalid base58"))?;
+    Ok(data)
 }
 
 fn b64_str<'de, A>(a: A) -> Result<bytes::Bytes, A::Error>
@@ -155,7 +160,8 @@ where
     A: VariantAccess<'de>,
 {
     let s = a.newtype_variant::<Cow<'_, str>>()?;
-    base64::decode(&*s)
+    BASE64_STANDARD
+        .decode(s.as_bytes())
         .map_err(|_| serde::de::Error::custom("invalid base64"))
         .map(Into::into)
 }

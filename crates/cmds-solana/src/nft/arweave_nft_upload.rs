@@ -336,7 +336,7 @@ impl Uploader {
             .parse::<Pubkey>()
             .map_err(crate::Error::custom)?;
 
-        let instruction = solana_program::system_instruction::transfer(
+        let instruction = solana_system_interface::instruction::transfer(
             &self.fee_payer.pubkey(),
             &recipient,
             amount,
