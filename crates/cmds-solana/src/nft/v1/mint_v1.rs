@@ -78,7 +78,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         authorization_rules: input.authorization_rules,
         system_program: system_program::id(),
         sysvar_instructions: sysvar::instructions::id(),
-        spl_token_program: spl_token::id(),
+        spl_token_program: spl_token_interface::ID,
     };
 
     let args = MintV1InstructionArgs {

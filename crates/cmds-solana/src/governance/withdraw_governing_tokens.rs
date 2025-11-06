@@ -71,7 +71,7 @@ pub fn withdraw_governing_tokens(
         AccountMeta::new(*governing_token_destination, false),
         AccountMeta::new_readonly(*governing_token_owner, true),
         AccountMeta::new(token_owner_record_address, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_token_interface::ID, false),
         AccountMeta::new_readonly(realm_config_address, false),
     ];
 

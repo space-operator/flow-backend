@@ -128,7 +128,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
             // Program
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_token_interface::ID, false),
         ],
         data: (
             TokenBridgeInstructions::CompleteNative,

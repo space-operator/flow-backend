@@ -141,7 +141,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             &input.payer.pubkey(),
             &input.payer.pubkey(),
             &mint,
-            &spl_token::id(),
+            &spl_token_interface::ID,
         );
 
     info!("associated_token_exists: {:?}", associated_token_exists);
@@ -166,7 +166,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             // Dependencies
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_token_interface::ID, false),
             AccountMeta::new_readonly(wormhole_core_program_id, false),
             // Program
         ],

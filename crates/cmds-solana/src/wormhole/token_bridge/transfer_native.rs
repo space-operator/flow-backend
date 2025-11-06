@@ -112,7 +112,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             // Program
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_token_interface::ID, false),
             AccountMeta::new_readonly(wormhole_core_program_id, false),
         ],
         data: (TokenBridgeInstructions::TransferNative, wrapped_data).try_to_vec()?,
@@ -120,7 +120,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let instructions = [
         spl_token::instruction::approve(
-            &spl_token::id(),
+            &spl_token_interface::ID,
             &input.from,
             &authority_signer,
             &input.payer.pubkey(),

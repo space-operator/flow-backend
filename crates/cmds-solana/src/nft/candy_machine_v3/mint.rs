@@ -133,7 +133,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         collection_master_edition,
         collection_update_authority: input.collection_update_authority,
         token_metadata_program,
-        spl_token_program: spl_token::id(),
+        spl_token_program: spl_token_interface::ID,
         spl_ata_program: Some(spl_associated_token_account::id()),
         system_program: system_program::id(),
         sysvar_instructions: sysvar::instructions::id(),

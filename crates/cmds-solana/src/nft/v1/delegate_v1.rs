@@ -125,7 +125,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         payer: input.fee_payer.pubkey(),
         system_program: system_program::id(),
         sysvar_instructions: sysvar::instructions::id(),
-        spl_token_program: Some(spl_token::id()),
+        spl_token_program: Some(spl_token_interface::ID),
         authorization_rules_program: None,
         authorization_rules: None,
     };
