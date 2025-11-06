@@ -4,6 +4,7 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-anchor-lang = "0.31.0"
+# branch: merged
+anchor-lang = { git = "https://github.com/space-operator/anchor", rev = "6469201c5399f95f9414839282ea91471bd20260" }
 mpl-candy-guard-derive = { path = "../mpl-candy-guard-derive" }
 arrayref = "0.3.9"
