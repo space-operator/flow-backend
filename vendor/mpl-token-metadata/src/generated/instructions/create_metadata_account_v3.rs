@@ -7,6 +7,7 @@
 
 use crate::generated::types::CollectionDetails;
 use crate::generated::types::DataV2;
+use crate::TryToVec;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 

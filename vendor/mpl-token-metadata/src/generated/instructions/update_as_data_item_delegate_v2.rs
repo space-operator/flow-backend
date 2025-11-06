@@ -7,6 +7,7 @@
 
 use crate::generated::types::AuthorizationData;
 use crate::generated::types::Data;
+use crate::TryToVec;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 

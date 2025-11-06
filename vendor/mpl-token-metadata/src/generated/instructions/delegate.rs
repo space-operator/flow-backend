@@ -6,6 +6,7 @@
 //!
 
 use crate::generated::types::DelegateArgs;
+use crate::TryToVec;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 

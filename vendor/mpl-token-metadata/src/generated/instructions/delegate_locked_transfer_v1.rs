@@ -6,6 +6,7 @@
 //!
 
 use crate::generated::types::AuthorizationData;
+use crate::TryToVec;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;

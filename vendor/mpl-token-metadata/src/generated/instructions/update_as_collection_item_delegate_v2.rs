@@ -7,6 +7,7 @@
 
 use crate::generated::types::AuthorizationData;
 use crate::generated::types::CollectionToggle;
+use crate::TryToVec;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
