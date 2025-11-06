@@ -6,6 +6,7 @@
 //!
 
 use crate::generated::types::CompressionProof;
+use crate::TryToVec;
 #[cfg(feature = "anchor")]
 use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 #[cfg(not(feature = "anchor"))]

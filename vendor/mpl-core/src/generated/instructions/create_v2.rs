@@ -6,6 +6,7 @@
 //!
 
 use crate::generated::types::DataState;
+use crate::TryToVec;
 use crate::generated::types::ExternalPluginAdapterInitInfo;
 use crate::generated::types::PluginAuthorityPair;
 #[cfg(feature = "anchor")]
