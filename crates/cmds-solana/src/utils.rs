@@ -4,11 +4,9 @@ use rust_decimal::{
     Decimal,
     prelude::{MathematicalOps, ToPrimitive},
 };
-use solana_presigner::Presigner;
-use solana_program::{
-    hash::Hash, instruction::Instruction, native_token::LAMPORTS_PER_SOL,
-};
 use solana_message::Message;
+use solana_presigner::Presigner;
+use solana_program::{hash::Hash, instruction::Instruction, native_token::LAMPORTS_PER_SOL};
 use solana_transaction::Transaction;
 use std::time::Duration;
 use value::Error as ValueError;
@@ -91,8 +89,6 @@ pub fn anchor_sighash(name: &str) -> [u8; 8] {
     let namespace = "global";
     let preimage = format!("{namespace}:{name}");
     let mut sighash = [0u8; 8];
-    sighash.copy_from_slice(
-        &anchor_lang::solana_program::hash::hash(preimage.as_bytes()).to_bytes()[..8],
-    );
+    sighash.copy_from_slice(&solana_program::hash::hash(preimage.as_bytes()).to_bytes()[..8]);
     sighash
 }
