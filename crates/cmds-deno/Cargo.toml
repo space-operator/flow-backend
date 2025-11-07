@@ -11,9 +11,9 @@ local-deps = []
 command-rpc.workspace = true
 flow-lib.workspace = true
 
-serde_json.workspace = true
-serde.workspace = true
-anyhow.workspace = true
+serde_json = { version = "1", features = ["preserve_order"] }
+serde = { version = "1", features = ["derive"] }
+anyhow = "1"
 
 tempfile = "3.10.1"
 tokio = "1"
