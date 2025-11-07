@@ -175,7 +175,9 @@ impl Confirmer {
                             .len()
                             .checked_sub(MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS)
                             .unwrap_or(0);
-                        let query = data.split_off(index);
+                        let mut query = data.split_off(index);
+                        // serve old request first
+                        std::mem::swap(&mut query, &mut data);
                         query
                     };
                     tracing::trace!("querying {} signatures", query.len());
