@@ -1,10 +1,12 @@
-use flow_lib::context::execute;
 use futures::{channel::oneshot, future::BoxFuture};
 use pin_project_lite::pin_project;
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_program::hash::Hash;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use solana_rpc_client_api::request::{MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS, RpcError};
+use solana_rpc_client_api::{
+    client_error,
+    request::{MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS, RpcError},
+};
 use solana_signature::Signature;
 use std::{
     fmt::Debug,
@@ -18,7 +20,7 @@ use tower::{Service, ServiceExt};
 struct Data {
     signature: Signature,
     data: TransactionData,
-    sender: oneshot::Sender<Result<Signature, execute::Error>>,
+    sender: oneshot::Sender<Result<Signature, client_error::Error>>,
 }
 
 #[derive(Clone, Copy)]
@@ -231,18 +233,12 @@ impl Confirmer {
                         let q = query.remove(index);
                         q.sender
                             .send(match status {
-                                None => Err(execute::Error::Solana {
-                                    error: Arc::new(RpcError::ForUser("unable to confirm transaction.\
+                                None => Err(RpcError::ForUser("unable to confirm transaction.\
                                                    This can happen in situations such as transaction expiration
                                                    and insufficient fee-payer funds".to_owned()).into()),
-                                    inserted: q.data.inserted,
-                                }),
                                 Some(status) => match status.status {
                                     Ok(()) => Ok(q.signature),
-                                    Err(error) => Err(execute::Error::Solana {
-                                        error: Arc::new(error.into()),
-                                        inserted: q.data.inserted,
-                                    }),
+                                    Err(error) => Err(error.into()),
                                 },
                             })
                             .ok();
@@ -259,7 +255,7 @@ impl Confirmer {
 impl Service<Confirm> for Confirmer {
     type Response = Signature;
 
-    type Error = execute::Error;
+    type Error = client_error::Error;
 
     type Future = Unwrap<oneshot::Receiver<Result<Self::Response, Self::Error>>>;
 
