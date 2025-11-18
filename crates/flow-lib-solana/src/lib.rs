@@ -28,7 +28,7 @@ use std::{collections::BTreeSet, time::Duration};
 use tower::Service;
 use tower::ServiceExt;
 
-pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
+pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(90);
 
 pub mod utils;
 pub use utils::*;
