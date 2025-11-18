@@ -7,13 +7,14 @@ edition = "2024"
 name = "gen"
 
 [dependencies]
-anyhow.workspace = true
-bs58.workspace = true
 flow-lib.workspace = true
+
+anyhow = "1"
+bs58 = "0.4"
 rhai = { version = "1.17.2", features = ["decimal", "indexmap"] }
 rhai-rand = { version = "0.1.6", features = ["decimal"] }
-serde.workspace = true
-serde_json.workspace = true
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
 thiserror = "1.0.50"
 tracing = "0.1.40"
 chrono = "0.4"
