@@ -20,7 +20,9 @@ use flow_lib::{
     solana::{ExecutionConfig, Instructions, Pubkey, Wallet},
     utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
 };
-use flow_lib_solana::{InstructionsExt, find_failed_instruction, simple_execute_svc};
+use flow_lib_solana::{
+    InstructionsExt, find_failed_instruction, helius_client_from_env, simple_execute_svc,
+};
 use futures::{
     FutureExt, StreamExt,
     channel::{mpsc, oneshot},
@@ -1204,6 +1206,7 @@ impl FlowGraph {
                                 std::pin::pin!(s.stop_shared.race(
                                     std::pin::pin!(ins.execute(
                                         &self.ctx_svcs.set.solana_client,
+                                        helius_client_from_env().ok().as_ref(),
                                         network,
                                         self.ctx_svcs.signer.clone(),
                                         Some(s.flow_run_id),
@@ -1557,6 +1560,7 @@ impl FlowGraph {
                         fee_payer,
                         self.action_identity,
                         &self.ctx_svcs.set.solana_client,
+                        helius_client_from_env().ok().as_ref(),
                         self.ctx_data.set.solana.cluster,
                         self.ctx_svcs.signer.clone(),
                         Some(s.flow_run_id),
