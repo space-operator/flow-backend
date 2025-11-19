@@ -49,6 +49,7 @@ solana-sanitize = { workspace = true }
 solana-message = { workspace = true }
 solana-transaction-error = { workspace = true }
 solana-instruction-error = { workspace = true }
+spo-helius.workspace = true
 
 [dev-dependencies]
 solana-system-interface = { workspace = true }

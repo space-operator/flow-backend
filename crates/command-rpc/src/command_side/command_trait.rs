@@ -81,6 +81,7 @@ impl CommandTraitImpl {
                         solana_client: Arc::new(
                             data.flow.set.solana.build_client(Some(HTTP_CLIENT.clone())),
                         ),
+                        helius: None,
                         extensions: Arc::new(Default::default()),
                         api_input: unimplemented_svc(),
                     },

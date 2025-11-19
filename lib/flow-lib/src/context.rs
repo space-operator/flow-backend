@@ -22,6 +22,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use solana_pubkey::Pubkey;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
+use spo_helius::Helius;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
 use tower::{Service, ServiceExt};
 
@@ -32,7 +33,7 @@ pub mod env {
     pub const FALLBACK_COMPUTE_BUDGET: &str = "FALLBACK_COMPUTE_BUDGET";
     pub const PRIORITY_FEE: &str = "PRIORITY_FEE";
     pub const TX_COMMITMENT_LEVEL: &str = "TX_COMMITMENT_LEVEL";
-    pub const WAIT_COMMITMENT_LEVEL: &str = "WAIT_COMMITMENT_LEVEL";
+    pub const WAIT_COMMITMENT_LEVEL: &str = "WAIT_COMMITMEgT_LEVEL";
     pub const EXECUTE_ON: &str = "EXECUTE_ON";
     pub const DEVNET_LOOKUP_TABLE: &str = "DEVNET_LOOKUP_TABLE";
     pub const MAINNET_LOOKUP_TABLE: &str = "MAINNET_LOOKUP_TABLE";
@@ -513,6 +514,7 @@ pub struct CommandContextData {
 pub struct FlowSetServices {
     pub http: reqwest::Client,
     pub solana_client: Arc<SolanaClient>,
+    pub helius: Option<Arc<Helius>>,
     pub extensions: Arc<Extensions>,
     pub api_input: api_input::Svc,
 }
@@ -564,6 +566,7 @@ impl CommandContext {
                 set: FlowSetServices {
                     http: reqwest::Client::new(),
                     solana_client,
+                    helius: None,
                     extensions: <_>::default(),
                     api_input: unimplemented_svc(),
                 },

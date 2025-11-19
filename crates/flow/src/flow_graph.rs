@@ -421,6 +421,7 @@ impl FlowGraph {
                         .solana
                         .build_client(Some(registry.http.clone())),
                 ),
+                helius: None,
             },
         };
 

@@ -3228,6 +3228,7 @@ dependencies = [
  "solana-signer",
  "solana-system-interface",
  "solana-transaction-error",
+ "spo-helius",
  "thiserror 2.0.17",
  "tokio",
  "tower",
