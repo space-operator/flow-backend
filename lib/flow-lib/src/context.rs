@@ -22,9 +22,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use solana_pubkey::Pubkey;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
-use spo_helius::Helius;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
 use tower::{Service, ServiceExt};
+
+pub use spo_helius::Helius;
 
 pub mod env {
     pub const RUST_LOG: &str = "RUST_LOG";

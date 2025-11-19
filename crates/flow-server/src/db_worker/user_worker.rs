@@ -673,6 +673,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     token: addr_to_service(&wrk),
                     new_flow_run: addr_to_service(&addr),
                     get_previous_values: addr_to_service(&addr),
+                    helius: None,
                 })
                 .get_flow(addr_to_service(&addr))
                 .remotes(remotes)
@@ -772,6 +773,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     token: addr_to_service(&wrk),
                     new_flow_run: addr_to_service(&addr),
                     get_previous_values: addr_to_service(&addr),
+                    helius: None,
                 })
                 .get_flow(addr_to_service(&addr))
                 .remotes(remotes)
