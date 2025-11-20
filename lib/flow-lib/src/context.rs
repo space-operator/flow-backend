@@ -34,7 +34,7 @@ pub mod env {
     pub const FALLBACK_COMPUTE_BUDGET: &str = "FALLBACK_COMPUTE_BUDGET";
     pub const PRIORITY_FEE: &str = "PRIORITY_FEE";
     pub const TX_COMMITMENT_LEVEL: &str = "TX_COMMITMENT_LEVEL";
-    pub const WAIT_COMMITMENT_LEVEL: &str = "WAIT_COMMITMEgT_LEVEL";
+    pub const WAIT_COMMITMENT_LEVEL: &str = "WAIT_COMMITMENT_LEVEL";
     pub const EXECUTE_ON: &str = "EXECUTE_ON";
     pub const DEVNET_LOOKUP_TABLE: &str = "DEVNET_LOOKUP_TABLE";
     pub const MAINNET_LOOKUP_TABLE: &str = "MAINNET_LOOKUP_TABLE";
