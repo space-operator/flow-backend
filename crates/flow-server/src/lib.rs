@@ -188,19 +188,11 @@ pub struct Config {
     #[serde(default = "Config::default_shutdown_timeout_secs")]
     pub shutdown_timeout_secs: u16,
     pub helius_api_key: Option<String>,
-    pub solana: Option<SolanaConfig>,
     #[serde(default = "IrohConfig::default")]
     pub iroh: IrohConfig,
 
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
-}
-
-#[derive(Deserialize, Default)]
-pub struct SolanaConfig {
-    pub mainnet_url: Option<Url>,
-    pub devnet_url: Option<Url>,
-    pub testnet_url: Option<Url>,
 }
 
 impl Default for Config {
@@ -214,7 +206,6 @@ impl Default for Config {
             local_storage: Self::default_local_storage(),
             shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
             blake3_key: OsRng.r#gen(),
-            solana: None,
             helius_api_key: None,
             iroh: IrohConfig::default(),
         }
@@ -289,33 +280,6 @@ impl Config {
                 .get_version()
                 .await
                 .context("Helius devnet failed")
-                .map_err(|error| errors.push(error))
-                .ok();
-        }
-        if let Some(url) = self.solana.as_ref().and_then(|s| s.mainnet_url.as_ref()) {
-            let client = RpcClient::new(url.to_string());
-            client
-                .get_version()
-                .await
-                .context("Solana mainnet failed")
-                .map_err(|error| errors.push(error))
-                .ok();
-        }
-        if let Some(url) = self.solana.as_ref().and_then(|s| s.devnet_url.as_ref()) {
-            let client = RpcClient::new(url.to_string());
-            client
-                .get_version()
-                .await
-                .context("Solana devnet failed")
-                .map_err(|error| errors.push(error))
-                .ok();
-        }
-        if let Some(url) = self.solana.as_ref().and_then(|s| s.testnet_url.as_ref()) {
-            let client = RpcClient::new(url.to_string());
-            client
-                .get_version()
-                .await
-                .context("Solana testnet failed")
                 .map_err(|error| errors.push(error))
                 .ok();
         }
