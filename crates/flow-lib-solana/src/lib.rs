@@ -847,7 +847,7 @@ mod tests {
         let (inserted, _) = insert_priority_fee(
             &mut ins,
             &rpc,
-            helius_client_from_env().ok().as_ref(),
+            None, // TODO: does test need this?
             SolanaNet::Devnet,
             &<_>::default(),
         )

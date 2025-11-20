@@ -1,5 +1,5 @@
 use std::collections::BTreeSet;
-use std::sync::{Arc, LazyLock};
+use std::sync::Arc;
 
 use crate::InstructionsExt;
 
@@ -33,15 +33,6 @@ use spo_helius::{
     GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
 };
 
-pub fn helius_client_from_env() -> Result<Helius, anyhow::Error> {
-    static HTTP: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
-    if let Ok(apikey) = std::env::var("HELIUS_API_KEY") {
-        Ok(Helius::new(HTTP.clone(), &apikey))
-    } else {
-        bail!("no HELIUS_API_KEY env");
-    }
-}
-
 pub async fn get_priority_fee(
     helius: &Helius,
     accounts: &BTreeSet<Pubkey>,
@@ -70,6 +61,7 @@ pub async fn get_priority_fee(
 
 pub fn simple_execute_svc(
     rpc: Arc<RpcClient>,
+    helius: Option<Arc<Helius>>,
     network: SolanaNet,
     signer: signer::Svc,
     flow_run_id: Option<FlowRunId>,
@@ -79,13 +71,14 @@ pub fn simple_execute_svc(
         let rpc = rpc.clone();
         let signer = signer.clone();
         let config = config.clone();
+        let helius = helius.clone();
         async move {
             Ok(execute::Response {
                 signature: Some(
                     req.instructions
                         .execute(
                             &rpc,
-                            helius_client_from_env().ok().as_ref(),
+                            helius.as_deref(),
                             network,
                             signer,
                             flow_run_id,

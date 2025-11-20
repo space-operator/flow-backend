@@ -185,11 +185,6 @@ async fn main() {
 
     let shutdown_timeout_secs = config.shutdown_timeout_secs;
 
-    if let Some(key) = &config.helius_api_key {
-        unsafe {
-            std::env::set_var("HELIUS_API_KEY", key);
-        }
-    }
     if let Some(solana) = &config.solana {
         if let Some(url) = &solana.devnet_url {
             unsafe {

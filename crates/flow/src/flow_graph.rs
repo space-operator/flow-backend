@@ -1777,6 +1777,7 @@ async fn run_command(
             tx: tx.clone(),
             simple_svc: simple_execute_svc(
                 ctx_svcs.set.solana_client.clone(),
+                ctx_svcs.set.helius.clone(),
                 ctx_data.set.solana.cluster,
                 ctx_svcs.signer.clone(),
                 Some(flow_run_id),
