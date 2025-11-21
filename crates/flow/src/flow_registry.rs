@@ -12,7 +12,7 @@ use flow_lib::{
         Endpoints,
         client::{BundlingMode, ClientConfig, FlowRunOrigin, PartialConfig},
     },
-    context::{User, api_input, execute, get_jwt, signer},
+    context::{Helius, User, api_input, execute, get_jwt, signer},
     flow_run_events::{self, EventSender, NodeLog},
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
     utils::tower_client::{CommonErrorExt, unimplemented_svc},
@@ -60,6 +60,7 @@ pub struct BackendServices {
     pub token: get_jwt::Svc,
     pub new_flow_run: new_flow_run::Svc,
     pub get_previous_values: get_previous_values::Svc,
+    pub helius: Option<Arc<Helius>>,
 }
 
 impl BackendServices {
@@ -70,6 +71,7 @@ impl BackendServices {
             token: unimplemented_svc(),
             new_flow_run: unimplemented_svc(),
             get_previous_values: unimplemented_svc(),
+            helius: None,
         }
     }
 }

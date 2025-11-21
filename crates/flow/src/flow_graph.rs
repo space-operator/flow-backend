@@ -419,6 +419,7 @@ impl FlowGraph {
                         .solana
                         .build_client(Some(registry.http.clone())),
                 ),
+                helius: registry.backend.helius.clone(),
             },
         };
 
@@ -1204,6 +1205,7 @@ impl FlowGraph {
                                 std::pin::pin!(s.stop_shared.race(
                                     std::pin::pin!(ins.execute(
                                         &self.ctx_svcs.set.solana_client,
+                                        self.ctx_svcs.set.helius.as_deref(),
                                         network,
                                         self.ctx_svcs.signer.clone(),
                                         Some(s.flow_run_id),
@@ -1557,6 +1559,7 @@ impl FlowGraph {
                         fee_payer,
                         self.action_identity,
                         &self.ctx_svcs.set.solana_client,
+                        self.ctx_svcs.set.helius.as_deref(),
                         self.ctx_data.set.solana.cluster,
                         self.ctx_svcs.signer.clone(),
                         Some(s.flow_run_id),
@@ -1774,6 +1777,7 @@ async fn run_command(
             tx: tx.clone(),
             simple_svc: simple_execute_svc(
                 ctx_svcs.set.solana_client.clone(),
+                ctx_svcs.set.helius.clone(),
                 ctx_data.set.solana.cluster,
                 ctx_svcs.signer.clone(),
                 Some(flow_run_id),

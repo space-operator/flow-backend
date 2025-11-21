@@ -25,6 +25,8 @@ use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
 use tower::{Service, ServiceExt};
 
+pub use spo_helius::Helius;
+
 pub mod env {
     pub const RUST_LOG: &str = "RUST_LOG";
     pub const OVERWRITE_FEEPAYER: &str = "OVERWRITE_FEEPAYER";
@@ -513,6 +515,7 @@ pub struct CommandContextData {
 pub struct FlowSetServices {
     pub http: reqwest::Client,
     pub solana_client: Arc<SolanaClient>,
+    pub helius: Option<Arc<Helius>>,
     pub extensions: Arc<Extensions>,
     pub api_input: api_input::Svc,
 }
@@ -564,6 +567,7 @@ impl CommandContext {
                 set: FlowSetServices {
                     http: reqwest::Client::new(),
                     solana_client,
+                    helius: None,
                     extensions: <_>::default(),
                     api_input: unimplemented_svc(),
                 },

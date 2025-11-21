@@ -1,5 +1,5 @@
 use std::collections::BTreeSet;
-use std::sync::{Arc, LazyLock};
+use std::sync::Arc;
 
 use crate::InstructionsExt;
 
@@ -29,40 +29,39 @@ use solana_rpc_client_api::{
 };
 use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use solana_transaction_status::{EncodedTransaction, TransactionBinaryEncoding};
-use spo_helius::{GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel};
+use spo_helius::{
+    GetPriorityFeeEstimateOptions, GetPriorityFeeEstimateRequest, Helius, PriorityLevel,
+};
 
-pub async fn get_priority_fee(accounts: &BTreeSet<Pubkey>) -> Result<u64, anyhow::Error> {
-    static HTTP: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
-    if let Ok(apikey) = std::env::var("HELIUS_API_KEY") {
-        let helius = Helius::new(HTTP.clone(), &apikey);
-        // Not available on devnet and testnet
-        let network = SolanaNet::Mainnet;
-        let resp = helius
-            .get_priority_fee_estimate(
-                network.as_str(),
-                GetPriorityFeeEstimateRequest {
-                    account_keys: Some(accounts.iter().map(|pk| pk.to_string()).collect()),
-                    options: Some(GetPriorityFeeEstimateOptions {
-                        priority_level: Some(PriorityLevel::Medium),
-                        ..Default::default()
-                    }),
+pub async fn get_priority_fee(
+    helius: &Helius,
+    accounts: &BTreeSet<Pubkey>,
+) -> Result<u64, anyhow::Error> {
+    // Not available on devnet and testnet
+    let network = SolanaNet::Mainnet;
+    let resp = helius
+        .get_priority_fee_estimate(
+            network.as_str(),
+            GetPriorityFeeEstimateRequest {
+                account_keys: Some(accounts.iter().map(|pk| pk.to_string()).collect()),
+                options: Some(GetPriorityFeeEstimateOptions {
+                    priority_level: Some(PriorityLevel::Medium),
                     ..Default::default()
-                },
-            )
-            .await?;
-        tracing::debug!("helius response: {:?}", resp);
-        Ok(resp
-            .priority_fee_estimate
-            .ok_or_else(|| anyhow!("helius didn't return fee"))?
-            .round() as u64)
-    } else {
-        bail!("no HELIUS_API_KEY env");
-    }
+                }),
+                ..Default::default()
+            },
+        )
+        .await?;
+    tracing::debug!("helius response: {:?}", resp);
+    Ok(resp
+        .priority_fee_estimate
+        .ok_or_else(|| anyhow!("helius didn't return fee"))?
+        .round() as u64)
 }
-
 
 pub fn simple_execute_svc(
     rpc: Arc<RpcClient>,
+    helius: Option<Arc<Helius>>,
     network: SolanaNet,
     signer: signer::Svc,
     flow_run_id: Option<FlowRunId>,
@@ -72,11 +71,19 @@ pub fn simple_execute_svc(
         let rpc = rpc.clone();
         let signer = signer.clone();
         let config = config.clone();
+        let helius = helius.clone();
         async move {
             Ok(execute::Response {
                 signature: Some(
                     req.instructions
-                        .execute(&rpc, network, signer, flow_run_id, config)
+                        .execute(
+                            &rpc,
+                            helius.as_deref(),
+                            network,
+                            signer,
+                            flow_run_id,
+                            config,
+                        )
                         .await?,
                 ),
             })

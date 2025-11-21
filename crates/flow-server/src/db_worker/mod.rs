@@ -8,7 +8,7 @@ use db::{FlowRunLogsRow, pool::DbPool};
 use flow_lib::{
     FlowRunId, UserId,
     config::Endpoints,
-    context::get_jwt,
+    context::{Helius, get_jwt},
     flow_run_events::{DEFAULT_LOG_FILTER, EventSender},
 };
 use futures_channel::mpsc;
@@ -63,6 +63,7 @@ pub struct DBWorker {
     done_tx: broadcast::Sender<()>,
     new_flow_api_request: NewRequestService,
     remote_command_address_book: BaseAddressBook,
+    helius: Option<Arc<Helius>>,
 }
 
 #[derive(Serialize)]
@@ -121,6 +122,10 @@ impl DBWorker {
                 act.done_tx.send(()).ok();
             }),
         );
+        let helius = config
+            .helius_api_key
+            .as_ref()
+            .map(|key| Arc::new(Helius::new(crate::HTTP.clone(), &key)));
 
         Self {
             db,
@@ -132,6 +137,7 @@ impl DBWorker {
             done_tx: broadcast::channel(1).0,
             new_flow_api_request,
             remote_command_address_book,
+            helius,
         }
     }
 }
@@ -235,6 +241,7 @@ impl actix::Handler<GetUserWorker> for DBWorker {
             let endpoints = self.endpoints.clone();
             let new_flow_api_request = self.new_flow_api_request.clone();
             let remote_command_address_book = self.remote_command_address_book.clone();
+            let helius = self.helius.clone();
             let arbiter = Arbiter::current();
             move || {
                 UserWorker::start_in_arbiter(&arbiter, move |_| {
@@ -245,6 +252,7 @@ impl actix::Handler<GetUserWorker> for DBWorker {
                         .counter(counter)
                         .new_flow_api_request(new_flow_api_request)
                         .remote_command_address_book(remote_command_address_book)
+                        .maybe_helius(helius)
                         .build()
                 })
             }

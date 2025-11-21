@@ -24,11 +24,12 @@ use solana_rpc_client_api::{
 use solana_signature::Signature;
 use solana_signer::{Signer, SignerError, signers::Signers};
 use solana_transaction::{Transaction, versioned::VersionedTransaction};
+use spo_helius::Helius;
 use std::{collections::BTreeSet, time::Duration};
 use tower::Service;
 use tower::ServiceExt;
 
-pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(3 * 60);
+pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(90);
 
 pub mod utils;
 pub use utils::*;
@@ -178,6 +179,7 @@ fn unique_accounts(i: &Instructions) -> BTreeSet<Pubkey> {
 async fn insert_priority_fee(
     i: &mut Instructions,
     rpc: &RpcClient,
+    helius: Option<&Helius>,
     network: SolanaNet,
     config: &ExecutionConfig,
 ) -> Result<(usize, Option<RpcResult<RpcSimulateTransactionResult>>), Error> {
@@ -251,13 +253,16 @@ async fn insert_priority_fee(
     if config.priority_fee != InsertionBehavior::No && !contains_set_compute_unit_price(i) {
         let fee = if let InsertionBehavior::Value(x) = config.priority_fee {
             x
-        } else {
-            get_priority_fee(&unique_accounts(i))
+        } else if let Some(helius) = helius {
+            get_priority_fee(helius, &unique_accounts(i))
                 .await
-                .map_err(|error| {
+                .inspect_err(|error| {
                     tracing::warn!("get_priority_fee error: {}", error);
                 })
                 .unwrap_or(100)
+        } else {
+            tracing::warn!("no Helius client");
+            100
         };
         tracing::info!("adding priority fee {}", fee);
         i.instructions
@@ -305,6 +310,7 @@ async fn build_message(
 async fn build_and_sign_tx(
     mut i: Instructions,
     rpc: &RpcClient,
+    helius: Option<&Helius>,
     network: SolanaNet,
     mut signer: signer::Svc,
     flow_run_id: Option<FlowRunId>,
@@ -317,7 +323,8 @@ async fn build_and_sign_tx(
     ),
     Error,
 > {
-    let (inserted, simulate_result) = insert_priority_fee(&mut i, rpc, network, config).await?;
+    let (inserted, simulate_result) =
+        insert_priority_fee(&mut i, rpc, helius, network, config).await?;
     let mut message = build_message(&i, rpc, network, config, config.tx_commitment_level).await?;
     let mut data: Bytes = message.serialize().into();
     let fee_payer_signature = {
@@ -429,13 +436,14 @@ async fn build_and_sign_tx(
 async fn execute_current_machine(
     i: Instructions,
     rpc: &RpcClient,
+    helius: Option<&Helius>,
     network: SolanaNet,
     signer: signer::Svc,
     flow_run_id: Option<FlowRunId>,
     config: &ExecutionConfig,
 ) -> Result<Signature, Error> {
     let (tx, inserted, simulate_result) =
-        build_and_sign_tx(i, rpc, network, signer, flow_run_id, config).await?;
+        build_and_sign_tx(i, rpc, helius, network, signer, flow_run_id, config).await?;
 
     let skip_preflight = match simulate_result {
         Some(Ok(resp)) => resp.value.err.is_none(),
@@ -471,6 +479,7 @@ async fn execute_current_machine(
 async fn execute_solana_action(
     i: Instructions,
     rpc: &RpcClient,
+    helius: Option<&Helius>,
     network: SolanaNet,
     mut signer: signer::Svc,
     flow_run_id: Option<FlowRunId>,
@@ -482,6 +491,7 @@ async fn execute_solana_action(
             action_config.action_signer,
             Some(action_config.action_identity),
             rpc,
+            helius,
             network,
             signer.clone(),
             flow_run_id,
@@ -533,6 +543,7 @@ pub trait InstructionsExt: Sized {
         action_signer: Pubkey,
         action_identity: Option<Pubkey>,
         rpc: &RpcClient,
+        helius: Option<&Helius>,
         network: SolanaNet,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
@@ -541,6 +552,7 @@ pub trait InstructionsExt: Sized {
     fn execute(
         self,
         rpc: &RpcClient,
+        helius: Option<&Helius>,
         network: SolanaNet,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
@@ -595,13 +607,14 @@ impl InstructionsExt for Instructions {
         action_signer: Pubkey,
         action_identity: Option<Pubkey>,
         rpc: &RpcClient,
+        helius: Option<&Helius>,
         network: SolanaNet,
         mut signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
         config: &ExecutionConfig,
     ) -> Result<(PartialVersionedTransaction, usize, Option<String>), Error> {
         let (inserted, _simulate_result) =
-            insert_priority_fee(&mut self, rpc, network, config).await?;
+            insert_priority_fee(&mut self, rpc, helius, network, config).await?;
         let memo = if let Some(action_identity) = action_identity {
             if !self
                 .instructions
@@ -706,6 +719,7 @@ impl InstructionsExt for Instructions {
     async fn execute(
         self,
         rpc: &RpcClient,
+        helius: Option<&Helius>,
         network: SolanaNet,
         signer: signer::Svc,
         flow_run_id: Option<FlowRunId>,
@@ -713,12 +727,14 @@ impl InstructionsExt for Instructions {
     ) -> Result<Signature, Error> {
         match &config.execute_on {
             ExecuteOn::CurrentMachine => {
-                execute_current_machine(self, rpc, network, signer, flow_run_id, &config).await
+                execute_current_machine(self, rpc, helius, network, signer, flow_run_id, &config)
+                    .await
             }
             ExecuteOn::SolanaAction(action_config) => {
                 execute_solana_action(
                     self,
                     rpc,
+                    helius,
                     network,
                     signer,
                     flow_run_id,
@@ -828,9 +844,15 @@ mod tests {
             instructions: [transfer(&from.pubkey(), &to, 100000)].into(),
             lookup_tables: None,
         };
-        let (inserted, _) = insert_priority_fee(&mut ins, &rpc, SolanaNet::Devnet, &<_>::default())
-            .await
-            .unwrap();
+        let (inserted, _) = insert_priority_fee(
+            &mut ins,
+            &rpc,
+            None, // TODO: does test need this?
+            SolanaNet::Devnet,
+            &<_>::default(),
+        )
+        .await
+        .unwrap();
         build_message(
             &ins,
             &rpc,

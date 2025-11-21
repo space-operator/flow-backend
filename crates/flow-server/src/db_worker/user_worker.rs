@@ -28,6 +28,7 @@ use flow_lib::{
         client::{FlowRunOrigin, PartialConfig},
     },
     context::{
+        Helius,
         env::RUST_LOG,
         get_jwt,
         signer::{self, SignatureRequest},
@@ -42,7 +43,10 @@ use futures_util::{TryFutureExt, future::BoxFuture};
 use hashbrown::HashMap;
 use metrics::histogram;
 use solana_signature::Signature;
-use std::future::{Future, ready};
+use std::{
+    future::{Future, ready},
+    sync::Arc,
+};
 use thiserror::Error as ThisError;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
 
@@ -52,6 +56,7 @@ pub struct UserWorker {
     counter: Counter,
     user_id: UserId,
     endpoints: Endpoints,
+    helius: Option<Arc<Helius>>,
     new_flow_api_request: NewRequestService,
     remote_command_address_book: BaseAddressBook,
 
@@ -644,6 +649,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
         let user_id = self.user_id;
         let addr = ctx.address();
         let endpoints = self.endpoints.clone();
+        let helius = self.helius.clone();
         let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
@@ -673,6 +679,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     token: addr_to_service(&wrk),
                     new_flow_run: addr_to_service(&addr),
                     get_previous_values: addr_to_service(&addr),
+                    helius,
                 })
                 .get_flow(addr_to_service(&addr))
                 .remotes(remotes)
@@ -740,6 +747,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let user_id = self.user_id;
         let addr = ctx.address();
         let endpoints = self.endpoints.clone();
+        let helius = self.helius.clone();
         let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
@@ -772,6 +780,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     token: addr_to_service(&wrk),
                     new_flow_run: addr_to_service(&addr),
                     get_previous_values: addr_to_service(&addr),
+                    helius,
                 })
                 .get_flow(addr_to_service(&addr))
                 .remotes(remotes)

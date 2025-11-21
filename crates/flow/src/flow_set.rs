@@ -341,6 +341,7 @@ impl FlowSet {
                 token: self.context.get_jwt,
                 new_flow_run: self.context.new_flow_run,
                 get_previous_values: unimplemented_svc(),
+                helius: None,
             })
             .build();
         let action_config = if let (Some(action_identity), Some(action_signer)) = (
