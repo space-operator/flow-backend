@@ -77,7 +77,6 @@ async fn start_deployment(
     params: actix_web::Result<web::Json<Params>>,
     user: AuthEither<AuthenticatedUser, Unverified>,
     db: web::Data<DbPool>,
-
     sup: web::Data<SupabaseAuth>,
     sig: web::Data<SignatureAuth>,
 ) -> actix_web::Result<web::Json<Output>> {
