@@ -8,7 +8,49 @@ use tokio_postgres::{binary_copy::BinaryCopyInWriter, types::Type};
 
 use super::super::*;
 
+fn x402_fee_from_row(row: Row) -> crate::Result<X402Fee> {
+    Ok(X402Fee {
+        id: row.try_get("id").map_err(Error::data("X402Fee.id"))?,
+        network: row
+            .try_get("network")
+            .map_err(Error::data("X402Fee.network"))?,
+        pay_to: row
+            .try_get("pay_to")
+            .map_err(Error::data("X402Fee.pay_to"))?,
+        amount: row
+            .try_get("amount")
+            .map_err(Error::data("X402Fee.amount"))?,
+        enabled: row
+            .try_get("enabled")
+            .map_err(Error::data("X402Fee.enabled"))?,
+    })
+}
+
 impl UserConnection {
+    pub(crate) async fn get_deployment_x402_fees_impl(
+        &self,
+        id: &DeploymentId,
+    ) -> crate::Result<Option<Vec<X402Fee>>> {
+        let conn = self.pool.get_conn().await?;
+        let fees = conn
+            .do_query(
+                r"select
+                id,
+                network,
+                pay_to,
+                amount,
+                enabled
+            where deployment_id = $1 and enabled#",
+                &[id],
+            )
+            .await
+            .map_err(Error::exec("get_deployment_x402_fees"))?
+            .into_iter()
+            .map(x402_fee_from_row)
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(if fees.is_empty() { None } else { Some(fees) })
+    }
+
     pub(crate) async fn get_deployment_id_from_tag_impl(
         &self,
         entrypoint: &FlowId,
@@ -89,6 +131,7 @@ impl UserConnection {
                 .try_get::<_, Json<SolanaClientConfig>>("solana_network")
                 .map_err(Error::data("flow_deployments.solana_network"))?
                 .0,
+            x402_fees: None,
         };
         Ok(d)
     }

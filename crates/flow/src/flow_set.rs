@@ -10,9 +10,9 @@ use flow_lib::{
 };
 use getset::Getters;
 use hashbrown::HashMap;
+use postgres_types::{FromSql, ToSql};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use value::Decimal;
 use std::{
     collections::BTreeSet,
     sync::{Arc, OnceLock},
@@ -20,6 +20,7 @@ use std::{
 use tokio::{sync::Semaphore, task::JoinHandle};
 use tower::ServiceExt;
 use uuid::Uuid;
+use value::Decimal;
 
 use crate::{
     command::{interflow, interflow_instructions},
@@ -93,7 +94,9 @@ impl Flow {
 
 pub type DeploymentId = Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromSql, ToSql)]
+#[serde(rename_all = "kebab-case")]
+#[postgres(name = "x402network", rename_all = "kebab-case")]
 pub enum X402Network {
     Base,
     BaseSepolia,

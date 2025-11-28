@@ -3422,6 +3422,7 @@ dependencies = [
  "polars",
  "rand 0.8.5",
  "reqwest 0.12.24",
+ "rust_decimal",
  "rustls 0.20.9",
  "rustls-native-certs 0.6.3",
  "rustls-pemfile",
@@ -4156,6 +4157,7 @@ dependencies = [
  "inventory",
  "mime_guess",
  "petgraph",
+ "postgres-types",
  "reqwest 0.12.24",
  "rhai-script",
  "rust_decimal",
@@ -8077,6 +8079,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "postgres-derive"
+version = "0.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56df96f5394370d1b20e49de146f9e6c25aa9ae750f449c9d665eafecb3ccae6"
+dependencies = [
+ "heck 0.5.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.109",
+]
+
+[[package]]
 name = "postgres-protocol"
 version = "0.6.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8103,6 +8117,7 @@ dependencies = [
  "bytes",
  "chrono",
  "fallible-iterator 0.2.0",
+ "postgres-derive",
  "postgres-protocol",
  "serde_core",
  "serde_json",
@@ -9147,6 +9162,7 @@ dependencies = [
  "borsh 1.5.7",
  "bytes",
  "num-traits",
+ "postgres-types",
  "rand 0.8.5",
  "rkyv",
  "serde",
