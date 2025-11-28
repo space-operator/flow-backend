@@ -1,0 +1,11 @@
+create type x402network as enum (
+    'base', 'base-sepolia',
+    'solana', 'solana-devnet'
+);
+create table flow_deployments_x402_fees (
+    id bigserial primary key,
+    deployment_id uuid not null references flow_deployments(id),
+    network x402network not null,
+    pay_to bigint not null references wallets(id),
+    amount decimal not null
+);
