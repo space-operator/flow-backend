@@ -109,6 +109,7 @@ async fn start_deployment(
     let conn = db.get_user_conn(deployment.user_id).await?;
     deployment.flows = conn.get_deployment_flows(&id).await?;
     deployment.wallets_id = conn.get_deployment_wallets(&id).await?;
+    deployment.x402_fees = conn.get_deployment_x402_fees(&id).await?;
 
     if starter.user_id.is_nil() {
         starter.user_id = sup.get_or_create_user(&starter.pubkey.to_bytes()).await?.0;

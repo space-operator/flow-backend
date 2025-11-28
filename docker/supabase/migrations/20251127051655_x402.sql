@@ -5,7 +5,7 @@ create type x402network as enum (
 
 create table flow_x402_fees (
     id bigserial primary key,
-    flow_id uuid not null references flows(id),
+    flow_id integer not null references flows(id),
     network x402network not null,
     pay_to bigint not null references wallets(id),
     amount decimal not null,
