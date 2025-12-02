@@ -6,7 +6,7 @@ exclude = [
     "vendor/mpl-core",
     "vendor/mpl-token-metadata",
 ]
-resolver = "2"
+resolver = "3"
 
 [patch.crates-io]
 rhai = { git = "https://github.com/space-operator/rhai", rev = "b39d2bfb" }
