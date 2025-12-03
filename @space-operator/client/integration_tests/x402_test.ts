@@ -36,12 +36,38 @@ Deno.test("run x402", async () => {
     anonKey,
     token: apiKey,
   });
+  const jwt = await owner.claimToken();
+  const sup = createClient<client.Database>(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false },
+  });
+  await sup.auth.setSession(jwt);
+
   const ownerKeypair = web3.Keypair.fromSecretKey(
     bs58.decodeBase58(getEnv("KEYPAIR")),
   );
 
   const flowId = 3643;
   const id = await owner.deployFlow(flowId);
+
+  let walletId = await sup.from("wallets").select("id").eq(
+    "public_key",
+    ownerKeypair.publicKey.toBase58(),
+  ).single().then((result) => {
+    result.data?.id;
+  });
+  if (walletId == null) {
+    throw "could not find wallet";
+  }
+
+  await sup.from("flow_deployments_x402_fees").insert(
+    {
+      deployment_id: id,
+      amount: 0.01,
+      enabled: true,
+      network: "solana-devnet",
+      pay_to: walletId,
+    },
+  );
 
   const starterKeypair = web3.Keypair.generate();
   const starter = new client.Client({
@@ -66,10 +92,5 @@ Deno.test("run x402", async () => {
   assertEquals(count, 112);
   assertEquals(out, 1);
 
-  const jwt = await owner.claimToken();
-  const sup = createClient<client.Database>(supabaseUrl, anonKey, {
-    auth: { autoRefreshToken: false },
-  });
-  await sup.auth.setSession(jwt);
   await checkNoErrors(sup, flow_run_id);
 });
