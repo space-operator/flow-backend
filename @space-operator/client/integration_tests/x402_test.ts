@@ -66,8 +66,11 @@ Deno.test("run x402", async () => {
     throw "could not find wallet";
   }
 
+  const user_id = (await sup.auth.getUser()).data.user?.id;
+
   await sup.from("flow_deployments_x402_fees").insert(
     {
+      user_id: user_id!,
       deployment_id: id,
       amount: 0.01,
       enabled: true,
@@ -101,5 +104,5 @@ Deno.test("run x402", async () => {
 
   await checkNoErrors(sup, flow_run_id);
 
-  await sup.from("flow_deployments").delete().eq("id", id);
+  // await sup.from("flow_deployments").delete().eq("id", id);
 });

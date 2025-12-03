@@ -34,13 +34,14 @@ impl UserConnection {
         let conn = self.pool.get_conn().await?;
         let fees = conn
             .do_query(
-                r"select
+                r#"select
                 id,
                 network,
                 pay_to,
                 amount,
                 enabled
-            where deployment_id = $1 and enabled#",
+            from flow_deployments_x402_fees
+            where deployment_id = $1 and enabled"#,
                 &[id],
             )
             .await

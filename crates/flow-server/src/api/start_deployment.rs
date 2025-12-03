@@ -111,6 +111,8 @@ async fn start_deployment(
     deployment.wallets_id = conn.get_deployment_wallets(&id).await?;
     deployment.x402_fees = conn.get_deployment_x402_fees(&id).await?;
 
+    dbg!(&deployment.x402_fees);
+
     if starter.user_id.is_nil() {
         starter.user_id = sup.get_or_create_user(&starter.pubkey.to_bytes()).await?.0;
     }
