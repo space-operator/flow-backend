@@ -42,19 +42,26 @@ Deno.test("run x402", async () => {
   });
   await sup.auth.setSession(jwt);
 
-  const ownerKeypair = web3.Keypair.fromSecretKey(
-    bs58.decodeBase58(getEnv("KEYPAIR")),
-  );
-
-  const flowId = 3643;
+  const flowId = 3623;
   const id = await owner.deployFlow(flowId);
 
-  let walletId = await sup.from("wallets").select("id").eq(
-    "public_key",
-    ownerKeypair.publicKey.toBase58(),
-  ).single().then((result) => {
-    result.data?.id;
-  });
+  await sup
+    .from("flow_deployments")
+    .update({ start_permission: "Anonymous" })
+    .eq("id", id);
+
+  const walletId = await sup
+    .from("wallets")
+    .select("id")
+    .eq(
+      "name",
+      "Main wallet",
+    )
+    .single()
+    .then((result) => {
+      return result.data?.id;
+    });
+
   if (walletId == null) {
     throw "could not find wallet";
   }
@@ -89,7 +96,7 @@ Deno.test("run x402", async () => {
 
   const result = await starter.getFlowOutput(flow_run_id);
   const { out, count } = result.toJSObject();
-  assertEquals(count, 112);
+  assertEquals(count, 1);
   assertEquals(out, 1);
 
   await checkNoErrors(sup, flow_run_id);
