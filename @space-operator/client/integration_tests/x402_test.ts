@@ -100,4 +100,6 @@ Deno.test("run x402", async () => {
   assertEquals(out, 1);
 
   await checkNoErrors(sup, flow_run_id);
+
+  await sup.from("flow_deployments").delete().eq("id", id);
 });
