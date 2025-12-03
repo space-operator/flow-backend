@@ -1866,7 +1866,7 @@ dependencies = [
  "bitflags 2.10.0",
  "cexpr",
  "clang-sys",
- "itertools 0.13.0",
+ "itertools 0.11.0",
  "log",
  "prettyplease",
  "proc-macro2",
@@ -3940,7 +3940,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -5219,7 +5219,7 @@ dependencies = [
  "js-sys",
  "log",
  "wasm-bindgen",
- "windows-core 0.61.2",
+ "windows-core 0.57.0",
 ]
 
 [[package]]
@@ -5711,7 +5711,7 @@ checksum = "3640c1c38b8e4e43584d8df18be5fc6b0aa314ce6ebf51b53313d4306cca8e46"
 dependencies = [
  "hermit-abi",
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -6769,7 +6769,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -8336,7 +8336,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a56d757972c98b346a9b766e3f02746cde6dd1cd1d1d563472929fdd74bec4d"
 dependencies = [
  "anyhow",
- "itertools 0.13.0",
+ "itertools 0.11.0",
  "proc-macro2",
  "quote",
  "syn 2.0.109",
@@ -8503,7 +8503,7 @@ dependencies = [
  "once_cell",
  "socket2 0.6.1",
  "tracing",
- "windows-sys 0.60.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -9231,7 +9231,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -12122,7 +12122,7 @@ dependencies = [
  "getrandom 0.3.4",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -13941,7 +13941,7 @@ dependencies = [
 [[package]]
 name = "x402-actix"
 version = "0.1.0"
-source = "git+https://github.com/space-operator/x402-rs?branch=fork#6f4fff0ae7e6c98295709fea121ef159902b3cf7"
+source = "git+https://github.com/space-operator/x402-rs?branch=fork#1a6179b6b85ed5caa63fdaa06f96e91f639eb758"
 dependencies = [
  "actix-http",
  "actix-web",
@@ -13957,7 +13957,7 @@ dependencies = [
 [[package]]
 name = "x402-rs"
 version = "0.9.2"
-source = "git+https://github.com/space-operator/x402-rs?branch=fork#6f4fff0ae7e6c98295709fea121ef159902b3cf7"
+source = "git+https://github.com/space-operator/x402-rs?branch=fork#1a6179b6b85ed5caa63fdaa06f96e91f639eb758"
 dependencies = [
  "alloy-contract",
  "alloy-dyn-abi",
