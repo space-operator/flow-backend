@@ -76,7 +76,8 @@ solana-keypair = { workspace = true }
 solana-signer = { workspace = true }
 solana-signature = { workspace = true }
 solana-rpc-client = { workspace = true }
-x402-actix.workspace = true
+x402-actix = { workspace = true }
+x402-rs = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.5"

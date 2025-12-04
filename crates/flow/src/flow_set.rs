@@ -94,7 +94,7 @@ impl Flow {
 
 pub type DeploymentId = Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromSql, ToSql)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, FromSql, ToSql)]
 #[serde(rename_all = "kebab-case")]
 #[postgres(name = "x402network", rename_all = "kebab-case")]
 pub enum X402Network {

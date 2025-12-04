@@ -4346,6 +4346,7 @@ dependencies = [
  "utils",
  "uuid 1.18.1",
  "x402-actix",
+ "x402-rs",
 ]
 
 [[package]]

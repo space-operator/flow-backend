@@ -270,6 +270,7 @@ async fn main() {
         let mut app = App::new()
             .wrap(Compress::default())
             .wrap(logger)
+            .app_data(web::Data::new(x402.clone()))
             .app_data(web::Data::new(db.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
             .app_data(web::Data::new(sig_auth))

@@ -3,15 +3,23 @@ use crate::{
     db_worker::{GetUserWorker, user_worker::StartDeployment},
     middleware::{
         auth_v1::{AuthEither, AuthenticatedUser, Unverified},
+        full_url::FullUrl,
         optional,
     },
     user::{SignatureAuth, SupabaseAuth},
 };
-use flow::flow_set::{DeploymentId, FlowStarter, StartFlowDeploymentOptions};
+use flow::flow_set::{DeploymentId, FlowStarter, StartFlowDeploymentOptions, X402Network};
 use flow_lib::solana::Pubkey;
 use serde_with::serde_as;
-use std::num::ParseIntError;
+use std::{collections::BTreeMap, num::ParseIntError};
 use value::with::AsPubkey;
+use x402_actix::{
+    facilitator_client::FacilitatorClient, middleware::X402Middleware, price::IntoPriceTag,
+};
+use x402_rs::{
+    network::USDCDeployment,
+    types::{MixedAddress, MoneyAmount},
+};
 
 fn default_tag() -> String {
     "latest".to_owned()
@@ -72,6 +80,16 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
         .route(web::post().to(start_deployment))
 }
 
+fn to_network(net: X402Network) -> x402_rs::network::Network {
+    use x402_rs::network::Network;
+    match net {
+        X402Network::Base => Network::Base,
+        X402Network::BaseSepolia => Network::BaseSepolia,
+        X402Network::Solana => Network::Solana,
+        X402Network::SolanaDevnet => Network::SolanaDevnet,
+    }
+}
+
 async fn start_deployment(
     query: web::Query<Query>,
     params: actix_web::Result<web::Json<Params>>,
@@ -79,6 +97,8 @@ async fn start_deployment(
     db: web::Data<DbPool>,
     sup: web::Data<SupabaseAuth>,
     sig: web::Data<SignatureAuth>,
+    x402: web::Data<X402Middleware<FacilitatorClient>>,
+    req: actix_web::HttpRequest,
 ) -> actix_web::Result<web::Json<Output>> {
     let params = optional(params)?.map(|x| x.0);
     let (action_signer, inputs) = match params {
@@ -111,7 +131,28 @@ async fn start_deployment(
     deployment.wallets_id = conn.get_deployment_wallets(&id).await?;
     deployment.x402_fees = conn.get_deployment_x402_fees(&id).await?;
 
-    if let Some(fees) = deployment.x402_fees.as_ref() {}
+    if let Some(fees) = deployment.x402_fees.as_ref() {
+        let pubkeys = conn
+            .get_some_wallets(&fees.iter().map(|fee| fee.pay_to).collect::<Vec<_>>())
+            .await?
+            .into_iter()
+            .map(|w| (w.id, Pubkey::new_from_array(w.pubkey)))
+            .collect::<BTreeMap<_, _>>();
+        let mut paygate = x402.with_mime_type("application/json");
+        for fee in fees {
+            paygate = paygate.or_price_tag(
+                USDCDeployment::by_network(to_network(fee.network))
+                    .amount(MoneyAmount(fee.amount))
+                    .pay_to(MixedAddress::Solana(pubkeys[&fee.pay_to]))
+                    .build()
+                    .unwrap(),
+            );
+        }
+        let paygate = paygate.to_paygate(&req.full_url());
+        let payload = paygate.extract_payment_payload(req.headers()).await?;
+        let r = paygate.verify_payment(payload).await?;
+        paygate.settle_payment(&r).await?;
+    }
 
     if starter.user_id.is_nil() {
         starter.user_id = sup.get_or_create_user(&starter.pubkey.to_bytes()).await?.0;
