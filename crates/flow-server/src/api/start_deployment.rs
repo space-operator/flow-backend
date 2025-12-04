@@ -3,7 +3,6 @@ use crate::{
     db_worker::{GetUserWorker, user_worker::StartDeployment},
     middleware::{
         auth_v1::{AuthEither, AuthenticatedUser, Unverified},
-        full_url::FullUrl,
         optional,
     },
     user::{SignatureAuth, SupabaseAuth},
