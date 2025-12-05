@@ -81,7 +81,7 @@ pub struct Output {
 
 pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/start")
-        .wrap(middleware::from_fn(log_full))
+        // .wrap(middleware::from_fn(log_full))
         .wrap(config.cors())
         .route(web::post().to(start_deployment))
 }
