@@ -15,11 +15,17 @@ import {
   selectPaymentRequirements,
 } from "x402/client";
 
-function cloneRequestInfo(input: RequestInfo): RequestInfo {
-  if (typeof input == "string") {
+interface Clone {
+  clone(): Request;
+}
+
+function cloneRequestInfo(input: RequestInfo | URL): RequestInfo | URL {
+  if (typeof input === "string") {
     return input;
-  } else {
+  } else if (input instanceof Request) {
     return input.clone();
+  } else {
+    return input;
   }
 }
 
@@ -67,8 +73,8 @@ export function wrapFetchWithPayment(
   paymentRequirementsSelector: PaymentRequirementsSelector =
     selectPaymentRequirements,
   config?: X402Config,
-) {
-  return async (input: RequestInfo, init?: RequestInit) => {
+): typeof globalThis.fetch {
+  return async (input: RequestInfo | URL, init?: RequestInit) => {
     const cloned = cloneRequestInfo(input);
     const response = await fetch(input, init);
 
