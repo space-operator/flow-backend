@@ -101,7 +101,7 @@ export class Client {
   token?: TokenProvider;
   anonKey?: TokenProvider;
   private logger: Function = noop;
-  private fetch: Function = fetch;
+  private fetch: typeof globalThis.fetch = fetch;
 
   constructor(options: ClientOptions = {}) {
     this.host = options.host ?? HOST;
@@ -113,7 +113,7 @@ export class Client {
     return await this.#sendJSONPost(`${this.host}/wallets/upsert`, body);
   }
 
-  setFetch(f: Function) {
+  setFetch(f: typeof globalThis.fetch) {
     this.fetch = f;
   }
 

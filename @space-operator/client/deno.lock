@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@space-operator/flow-lib@0.11.0": "0.11.0",
+    "jsr:@space-operator/x402-fetch@0.1": "0.1.0",
     "jsr:@std/assert@*": "1.0.13",
     "jsr:@std/assert@^1.0.16": "1.0.16",
     "jsr:@std/bytes@0.221": "0.221.0",
@@ -22,7 +23,7 @@
     "npm:@supabase/supabase-js@^2.86.2": "2.86.2",
     "npm:tweetnacl@*": "1.0.3",
     "npm:tweetnacl@^1.0.3": "1.0.3",
-    "npm:x402-fetch@~0.7.3": "0.7.3_zod@3.25.76"
+    "npm:x402@~0.7.3": "0.7.3_@solana+kit@5.0.0__typescript@5.9.3_viem@2.41.2__zod@3.25.76__ws@8.18.3___bufferutil@4.0.9___utf-8-validate@5.0.10_zod@3.25.76"
   },
   "jsr": {
     "@space-operator/flow-lib@0.11.0": {
@@ -31,6 +32,12 @@
         "jsr:@std/encoding@0.221",
         "jsr:@std/msgpack",
         "npm:@solana/web3.js@1.94.0"
+      ]
+    },
+    "@space-operator/x402-fetch@0.1.0": {
+      "integrity": "0fad5af8b80f81b71b6831cbd830c50b28aec3e5db20e22085a269d546f52ac0",
+      "dependencies": [
+        "npm:x402"
       ]
     },
     "@std/assert@1.0.13": {
@@ -3484,14 +3491,6 @@
         "utf-8-validate"
       ]
     },
-    "x402-fetch@0.7.3_zod@3.25.76": {
-      "integrity": "sha512-LuMRN/cdWwWXvRTJq8PJkX5JOPyEKLPzehUsR3/VcZuINEYg/Nzd8Dhbcy64cmmLaIY9vDnx+J0/k4P+Zkz+Nw==",
-      "dependencies": [
-        "viem@2.41.2_zod@3.25.76_ws@8.18.3__bufferutil@4.0.9__utf-8-validate@5.0.10",
-        "x402",
-        "zod@3.25.76"
-      ]
-    },
     "x402@0.7.3_@solana+kit@5.0.0__typescript@5.9.3_viem@2.41.2__zod@3.25.76__ws@8.18.3___bufferutil@4.0.9___utf-8-validate@5.0.10_zod@3.25.76": {
       "integrity": "sha512-8CIZsdMTOn52PjMH/ErVke9ebeZ7ErwiZ5FL3tN3Wny7Ynxs3LkuB/0q7IoccRLdVXA7f2lueYBJ2iDrElhXnA==",
       "dependencies": [
@@ -3576,14 +3575,14 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@space-operator/x402-fetch@0.1",
       "jsr:@std/assert@^1.0.16",
       "jsr:@std/dotenv@~0.225.5",
       "jsr:@std/encoding@^1.0.10",
       "npm:@solana/kit@5",
       "npm:@solana/web3.js@^1.98.4",
       "npm:@supabase/supabase-js@^2.86.2",
-      "npm:tweetnacl@^1.0.3",
-      "npm:x402-fetch@~0.7.3"
+      "npm:tweetnacl@^1.0.3"
     ]
   }
 }
