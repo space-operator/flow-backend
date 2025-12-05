@@ -30,10 +30,7 @@ Deno.test("run x402", async () => {
   const usdcKeypair = await createKeyPairSignerFromBytes(
     bs58.decodeBase58(getEnv("USDC_KEYPAIR")),
   );
-  const xFetch = wrapFetchWithPayment(async (a, b) => {
-    console.log(a, b);
-    return await fetch(a, b);
-  }, usdcKeypair);
+  const xFetch = wrapFetchWithPayment(fetch, usdcKeypair);
 
   const jwt = await owner.claimToken();
   const sup = createClient<client.Database>(supabaseUrl, anonKey, {
