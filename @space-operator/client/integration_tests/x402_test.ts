@@ -3,10 +3,11 @@ import * as client from "../src/mod.ts";
 import * as dotenv from "@std/dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { assertEquals } from "@std/assert";
-// import { wrapFetchWithPayment } from "@space-operator/x402-fetch";
-import { wrapFetchWithPayment } from "../../x402-fetch/mod.ts";
 import { createKeyPairSignerFromBytes } from "@solana/kit";
 import { checkNoErrors } from "./utils.ts";
+
+import { wrapFetchWithPayment } from "@space-operator/x402-fetch";
+// import { wrapFetchWithPayment } from "../../x402-fetch/mod.ts";
 
 dotenv.loadSync({
   export: true,
