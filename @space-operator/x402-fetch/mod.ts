@@ -15,16 +15,6 @@ import {
   selectPaymentRequirements,
 } from "x402/client";
 
-function cloneRequestInfo(input: RequestInfo | URL): RequestInfo | URL {
-  if (typeof input === "string") {
-    return input;
-  } else if (input instanceof Request) {
-    return input.clone();
-  } else {
-    return input;
-  }
-}
-
 /**
  * Enables the payment of APIs using the x402 payment protocol.
  *
@@ -71,12 +61,17 @@ export function wrapFetchWithPayment(
   config?: X402Config,
 ): typeof globalThis.fetch {
   return async (input: RequestInfo | URL, init?: RequestInit) => {
-    const cloned = cloneRequestInfo(input);
-    console.log(input);
-    const response = await fetch(input, init);
+    const request = new Request(input, init);
+    const cloned = request.clone();
+
+    const response = await fetch(request);
 
     if (response.status !== 402) {
       return response;
+    }
+
+    if (request.headers.has("X-PAYMENT")) {
+      throw new Error("Payment already attempted");
     }
 
     const { x402Version, accepts } = (await response.json()) as {
@@ -112,22 +107,13 @@ export function wrapFetchWithPayment(
       config,
     );
 
-    if (init && (init as { __is402Retry?: boolean }).__is402Retry) {
-      throw new Error("Payment already attempted");
-    }
+    cloned.headers.append("X-PAYMENT", paymentHeader);
+    cloned.headers.append(
+      "Access-Control-Expose-Headers",
+      "X-PAYMENT-RESPONSE",
+    );
 
-    const newInit = {
-      ...init,
-      headers: {
-        ...(init?.headers || {}),
-        "X-PAYMENT": paymentHeader,
-        "Access-Control-Expose-Headers": "X-PAYMENT-RESPONSE",
-      },
-      __is402Retry: true,
-    };
-
-    console.log(cloned);
-    const secondResponse = await fetch(cloned, newInit);
+    const secondResponse = await fetch(cloned);
     return secondResponse;
   };
 }
