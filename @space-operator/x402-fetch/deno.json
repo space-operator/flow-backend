@@ -1,0 +1,8 @@
+{
+    "name": "@space-operator/x402-fetch",
+    "version": "0.1",
+    "exports": "./mod.ts",
+    "imports": {
+        "x402": "npm:x402@^0.7.3"
+    }
+}

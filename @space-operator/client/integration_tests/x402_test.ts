@@ -1,24 +1,15 @@
 import { bs58, Value, web3 } from "../src/deps.ts";
 import * as client from "../src/mod.ts";
-import * as dotenv from "jsr:@std/dotenv";
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { assert, assertEquals } from "jsr:@std/assert";
-import { LAMPORTS_PER_SOL } from "npm:@solana/web3.js@^1.91.4";
-import * as nacl from "npm:tweetnacl";
-import { decodeBase64 } from "jsr:@std/encoding@0.221/base64";
+import * as dotenv from "@std/dotenv";
+import { createClient } from "@supabase/supabase-js";
+import { assertEquals } from "@std/assert";
+import { wrapFetchWithPayment } from "x402-fetch";
+import { createKeyPairSignerFromBytes } from "@solana/kit";
 import { checkNoErrors } from "./utils.ts";
-import { encodeBase58 } from "jsr:@std/encoding@0.221/base58";
 
 dotenv.loadSync({
   export: true,
 });
-
-function ed25519SignText(keypair: web3.Keypair, message: string): Uint8Array {
-  return nacl.default.sign.detached(
-    new TextEncoder().encode(message),
-    keypair.secretKey,
-  );
-}
 
 function getEnv(key: string): string {
   const env = Deno.env.get(key);
@@ -36,6 +27,14 @@ Deno.test("run x402", async () => {
     anonKey,
     token: apiKey,
   });
+  const usdcKeypair = await createKeyPairSignerFromBytes(
+    bs58.decodeBase58(getEnv("USDC_KEYPAIR")),
+  );
+  const xFetch = wrapFetchWithPayment(async (a, b) => {
+    console.log(a, b);
+    return await fetch(a, b);
+  }, usdcKeypair);
+
   const jwt = await owner.claimToken();
   const sup = createClient<client.Database>(supabaseUrl, anonKey, {
     auth: { autoRefreshToken: false },
@@ -84,6 +83,7 @@ Deno.test("run x402", async () => {
     host: "http://localhost:8080",
     anonKey,
   });
+  starter.setFetch(xFetch);
   starter.setToken(starterKeypair.publicKey.toString());
   const { flow_run_id, token } = await starter.startDeployment(
     {
