@@ -15,10 +15,6 @@ import {
   selectPaymentRequirements,
 } from "x402/client";
 
-interface Clone {
-  clone(): Request;
-}
-
 function cloneRequestInfo(input: RequestInfo | URL): RequestInfo | URL {
   if (typeof input === "string") {
     return input;
