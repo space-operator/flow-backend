@@ -2,7 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@space-operator/flow-lib@0.11.0": "0.11.0",
-    "jsr:@space-operator/x402-fetch@0.1": "0.1.0",
+    "jsr:@space-operator/x402-fetch@~0.1.1": "0.1.1",
     "jsr:@std/assert@*": "1.0.13",
     "jsr:@std/assert@^1.0.16": "1.0.16",
     "jsr:@std/bytes@0.221": "0.221.0",
@@ -34,8 +34,8 @@
         "npm:@solana/web3.js@1.94.0"
       ]
     },
-    "@space-operator/x402-fetch@0.1.0": {
-      "integrity": "0fad5af8b80f81b71b6831cbd830c50b28aec3e5db20e22085a269d546f52ac0",
+    "@space-operator/x402-fetch@0.1.1": {
+      "integrity": "341a26f3d47cf47df2a97b11cce25f4671a4a7480b65c04bb9f63fc54712e4ad",
       "dependencies": [
         "npm:x402"
       ]
@@ -416,12 +416,6 @@
         "@noble/hashes@1.7.1"
       ]
     },
-    "@noble/curves@1.8.2": {
-      "integrity": "sha512-vnI7V6lFNe0tLAuJMu+2sX+FcL14TaCWy1qiczg1VwRmPrpQCdq5ESXQMqUc2tluRNf6irBXrWbl1mGN8uaU/g==",
-      "dependencies": [
-        "@noble/hashes@1.7.2"
-      ]
-    },
     "@noble/curves@1.9.1": {
       "integrity": "sha512-k11yZxZg+t+gWvBbIswW0yoJlu8cHOC7dhunwOzoWH/mXGBiYyR4YY6hAEK/3EUs4UpB8la1RfdRpeGsFHkWsA==",
       "dependencies": [
@@ -442,9 +436,6 @@
     },
     "@noble/hashes@1.7.1": {
       "integrity": "sha512-B8XBPsn4vT/KJAGqDzbwztd+6Yte3P4V7iafm24bxgDe/mlRuK6xmWPuCNrKt2vDafZ8MfJLlchDG/vYafQEjQ=="
-    },
-    "@noble/hashes@1.7.2": {
-      "integrity": "sha512-biZ0NUSxyjLLqo6KxEJ1b+C2NAx0wtDoFvCaXHGgUkeHzf3Xc1xKumFKREuT7f7DARNZ/slvYUwFG6B0f2b6hQ=="
     },
     "@noble/hashes@1.8.0": {
       "integrity": "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="
@@ -591,8 +582,8 @@
     "@scure/bip32@1.6.2": {
       "integrity": "sha512-t96EPDMbtGgtb7onKKqxRLfE5g05k7uHnHRM2xdE6BP/ZmxaLtPek4J4KfVn/90IQNrU1IOAqMgiDtUdtbe3nw==",
       "dependencies": [
-        "@noble/curves@1.8.2",
-        "@noble/hashes@1.7.2",
+        "@noble/curves@1.8.1",
+        "@noble/hashes@1.7.1",
         "@scure/base@1.2.6"
       ]
     },
@@ -614,7 +605,7 @@
     "@scure/bip39@1.5.4": {
       "integrity": "sha512-TFM4ni0vKvCfBpohoh+/lY05i9gRbSwXWngAsF4CABQxoaOHijxuaZ2R6cStDQ5CHtHO9aGJTr4ksVJASRRyMA==",
       "dependencies": [
-        "@noble/hashes@1.7.2",
+        "@noble/hashes@1.7.1",
         "@scure/base@1.2.6"
       ]
     },
@@ -3575,14 +3566,15 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@space-operator/x402-fetch@0.1",
+      "jsr:@space-operator/x402-fetch@~0.1.1",
       "jsr:@std/assert@^1.0.16",
       "jsr:@std/dotenv@~0.225.5",
       "jsr:@std/encoding@^1.0.10",
       "npm:@solana/kit@5",
       "npm:@solana/web3.js@^1.98.4",
       "npm:@supabase/supabase-js@^2.86.2",
-      "npm:tweetnacl@^1.0.3"
+      "npm:tweetnacl@^1.0.3",
+      "npm:x402@~0.7.3"
     ]
   }
 }

@@ -7,6 +7,12 @@ use crate::{
     },
     user::{SignatureAuth, SupabaseAuth},
 };
+use actix_web::{
+    body::MessageBody,
+    dev::{ServiceRequest, ServiceResponse},
+    http::header::HeaderMap,
+    middleware::{self, Next},
+};
 use flow::flow_set::{DeploymentId, FlowStarter, StartFlowDeploymentOptions, X402Network};
 use flow_lib::solana::Pubkey;
 use serde_with::serde_as;
@@ -75,6 +81,7 @@ pub struct Output {
 
 pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
     web::resource("/start")
+        .wrap(middleware::from_fn(log_full))
         .wrap(config.cors())
         .route(web::post().to(start_deployment))
 }
@@ -89,6 +96,28 @@ fn to_network(net: X402Network) -> x402_rs::network::Network {
     }
 }
 
+#[allow(dead_code)]
+fn pretty_print(map: &HeaderMap) -> String {
+    map.iter()
+        .map(|(k, v)| {
+            format!(
+                "{}: {}\n",
+                k.as_str(),
+                String::from_utf8_lossy(v.as_bytes())
+            )
+        })
+        .collect()
+}
+
+#[allow(dead_code)]
+async fn log_full(
+    req: ServiceRequest,
+    next: Next<impl MessageBody>,
+) -> Result<ServiceResponse<impl MessageBody>, actix_web::Error> {
+    tracing::debug!("{}", pretty_print(req.headers()));
+    next.call(req).await
+}
+
 async fn start_deployment(
     query: web::Query<Query>,
     params: actix_web::Result<web::Json<Params>>,
@@ -99,6 +128,8 @@ async fn start_deployment(
     x402: web::Data<X402Middleware<FacilitatorClient>>,
     req: actix_web::HttpRequest,
 ) -> actix_web::Result<web::Json<Output>> {
+    // tracing::debug!("{}", pretty_print(req.headers()));
+
     let params = optional(params)?.map(|x| x.0);
     let (action_signer, inputs) = match params {
         Some(params) => (params.action_signer, params.inputs.unwrap_or_default()),

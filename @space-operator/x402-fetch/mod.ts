@@ -72,6 +72,7 @@ export function wrapFetchWithPayment(
 ): typeof globalThis.fetch {
   return async (input: RequestInfo | URL, init?: RequestInit) => {
     const cloned = cloneRequestInfo(input);
+    console.log(input);
     const response = await fetch(input, init);
 
     if (response.status !== 402) {
@@ -125,6 +126,7 @@ export function wrapFetchWithPayment(
       __is402Retry: true,
     };
 
+    console.log(cloned);
     const secondResponse = await fetch(cloned, newInit);
     return secondResponse;
   };
