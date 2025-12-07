@@ -1,7 +1,7 @@
 {
     "name": "@space-operator/x402-fetch",
-    "version": "0.1.2",
-    "exports": "./mod.ts",
+    "version": "0.1.3",
+    "exports": "./src/mod.ts",
     "license": "Apache-2.0",
     "author": "Coinbase Inc.",
     "imports": {

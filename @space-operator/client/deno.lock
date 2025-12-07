@@ -2,11 +2,11 @@
   "version": "5",
   "specifiers": {
     "jsr:@space-operator/flow-lib@0.11.0": "0.11.0",
-    "jsr:@space-operator/x402-fetch@~0.1.1": "0.1.1",
-    "jsr:@std/assert@*": "1.0.13",
+    "jsr:@space-operator/x402-fetch@~0.1.2": "0.1.2",
+    "jsr:@std/assert@*": "1.0.16",
     "jsr:@std/assert@^1.0.16": "1.0.16",
     "jsr:@std/bytes@0.221": "0.221.0",
-    "jsr:@std/dotenv@*": "0.225.3",
+    "jsr:@std/dotenv@*": "0.225.5",
     "jsr:@std/dotenv@~0.225.5": "0.225.5",
     "jsr:@std/encoding@0.221": "0.221.0",
     "jsr:@std/encoding@^1.0.10": "1.0.10",
@@ -34,8 +34,8 @@
         "npm:@solana/web3.js@1.94.0"
       ]
     },
-    "@space-operator/x402-fetch@0.1.1": {
-      "integrity": "341a26f3d47cf47df2a97b11cce25f4671a4a7480b65c04bb9f63fc54712e4ad",
+    "@space-operator/x402-fetch@0.1.2": {
+      "integrity": "79769b359b61d0c8d1cf67bcbfa452b87b5306269acb5fd8497c194132678d2b",
       "dependencies": [
         "npm:x402"
       ]
@@ -104,8 +104,8 @@
         "zustand@5.0.3_react@19.2.1_use-sync-external-store@1.4.0__react@19.2.1"
       ]
     },
-    "@coinbase/cdp-sdk@1.38.6_@solana+kit@3.0.3__typescript@5.9.3_zod@3.25.76_axios@1.13.2": {
-      "integrity": "sha512-l9gGGZqhCryuD3nfqB4Y+i8kfBtsnPJoKB5jxx5lKgXhVJw7/BPhgscKkVhP81115Srq3bFegD1IBwUkJ0JFMw==",
+    "@coinbase/cdp-sdk@1.39.0_@solana+kit@3.0.3__typescript@5.9.3_zod@3.25.76_axios@1.13.2": {
+      "integrity": "sha512-3RbeIGVHBlDUxRKSLSnrvpsxo7W4IIqaOHyCscX1rPL/iprL0Nh6AaL/JogC4OkHwquu7SkKWjjNDb+a5wG8gw==",
       "dependencies": [
         "@solana-program/system",
         "@solana-program/token@0.6.0_@solana+kit@3.0.3__typescript@5.9.3",
@@ -3566,7 +3566,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@space-operator/x402-fetch@~0.1.1",
+      "jsr:@space-operator/x402-fetch@~0.1.2",
       "jsr:@std/assert@^1.0.16",
       "jsr:@std/dotenv@~0.225.5",
       "jsr:@std/encoding@^1.0.10",
