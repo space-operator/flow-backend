@@ -47,6 +47,7 @@ jobs:
     env:
       APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
       KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
+      USDC_KEYPAIR: ${{ secrets.USDC_KEYPAIR }}
       SOLANA_DEVNET_URL: ${{ secrets.SOLANA_DEVNET_URL }}
     steps:
       - uses: actions-rs/toolchain@v1
