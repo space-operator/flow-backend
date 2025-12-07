@@ -2,7 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@space-operator/flow-lib@0.11.0": "0.11.0",
-    "jsr:@space-operator/x402-fetch@~0.1.2": "0.1.2",
+    "jsr:@space-operator/x402-fetch@~0.1.3": "0.1.3",
     "jsr:@std/assert@*": "1.0.16",
     "jsr:@std/assert@^1.0.16": "1.0.16",
     "jsr:@std/bytes@0.221": "0.221.0",
@@ -34,8 +34,8 @@
         "npm:@solana/web3.js@1.94.0"
       ]
     },
-    "@space-operator/x402-fetch@0.1.2": {
-      "integrity": "79769b359b61d0c8d1cf67bcbfa452b87b5306269acb5fd8497c194132678d2b",
+    "@space-operator/x402-fetch@0.1.3": {
+      "integrity": "dbbb3d415c124061791110f2056ecc176c99cae345ae13e10d8f11f114db7351",
       "dependencies": [
         "npm:x402"
       ]
@@ -3566,7 +3566,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@space-operator/x402-fetch@~0.1.2",
+      "jsr:@space-operator/x402-fetch@~0.1.3",
       "jsr:@std/assert@^1.0.16",
       "jsr:@std/dotenv@~0.225.5",
       "jsr:@std/encoding@^1.0.10",
