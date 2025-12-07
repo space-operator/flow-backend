@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@space-operator/flow-lib@0.11.0": "0.11.0",
+    "jsr:@space-operator/flow-lib@0.14": "0.14.0",
     "jsr:@space-operator/x402-fetch@~0.1.3": "0.1.3",
     "jsr:@std/assert@*": "1.0.16",
     "jsr:@std/assert@^1.0.16": "1.0.16",
@@ -19,6 +20,7 @@
     "npm:@solana/web3.js@^1.91.4": "1.98.4",
     "npm:@solana/web3.js@^1.98.4": "1.98.4",
     "npm:@supabase/auth-js@2": "2.86.2",
+    "npm:@supabase/auth-js@^2.86.2": "2.86.2",
     "npm:@supabase/supabase-js@2": "2.86.2",
     "npm:@supabase/supabase-js@^2.86.2": "2.86.2",
     "npm:tweetnacl@*": "1.0.3",
@@ -28,6 +30,14 @@
   "jsr": {
     "@space-operator/flow-lib@0.11.0": {
       "integrity": "f15ae8d5b1fbaab8e131263caaebf8380f17906d95a86d10de914b82bb02ac2a",
+      "dependencies": [
+        "jsr:@std/encoding@0.221",
+        "jsr:@std/msgpack",
+        "npm:@solana/web3.js@1.94.0"
+      ]
+    },
+    "@space-operator/flow-lib@0.14.0": {
+      "integrity": "754f1b52f36016cf69fb3d9873ad51cf002c5bdcfbb0cbeb03e0e357be7a888f",
       "dependencies": [
         "jsr:@std/encoding@0.221",
         "jsr:@std/msgpack",
@@ -3566,12 +3576,14 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@space-operator/flow-lib@0.14",
       "jsr:@space-operator/x402-fetch@~0.1.3",
       "jsr:@std/assert@^1.0.16",
       "jsr:@std/dotenv@~0.225.5",
       "jsr:@std/encoding@^1.0.10",
       "npm:@solana/kit@5",
       "npm:@solana/web3.js@^1.98.4",
+      "npm:@supabase/auth-js@^2.86.2",
       "npm:@supabase/supabase-js@^2.86.2",
       "npm:tweetnacl@^1.0.3",
       "npm:x402@~0.7.3"

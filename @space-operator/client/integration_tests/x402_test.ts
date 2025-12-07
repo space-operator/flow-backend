@@ -103,5 +103,5 @@ Deno.test("run x402", async () => {
 
   await checkNoErrors(sup, flow_run_id);
 
-  // await sup.from("flow_deployments").delete().eq("id", id);
+  await sup.from("flow_deployments").delete().eq("id", id);
 });
