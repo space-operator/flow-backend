@@ -59,7 +59,7 @@ export interface SubscribeFlowRunEventsResponse {
 export class SubscribeSignatureRequestsRequest {
   id: number;
   method: "Authenticate";
-  params: {};
+  params: Record<string, never>;
   constructor(id: number) {
     this.id = id;
     this.method = "Authenticate";
