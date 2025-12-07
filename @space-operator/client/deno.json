@@ -1,6 +1,6 @@
 {
     "name": "@space-operator/client",
-    "version": "0.12.0",
+    "version": "0.12.1",
     "exports": "./src/mod.ts",
     "imports": {
         "@solana/kit": "npm:@solana/kit@^5.0.0",
