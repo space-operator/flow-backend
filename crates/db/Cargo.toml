@@ -45,6 +45,7 @@ zeroize = "1.8.1"
 ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 actix-web = { version = "4.9.0", default-features = false }
 polars = { version = "0.46.0", default-features = false, features = ["csv", "fmt"] }
+rust_decimal = { version = "1", features = ["db-tokio-postgres"] }
 
 [dependencies.tokio-postgres]
 version = "0.7.10"

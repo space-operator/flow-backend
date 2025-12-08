@@ -6,7 +6,7 @@ exclude = [
     "vendor/mpl-core",
     "vendor/mpl-token-metadata",
 ]
-resolver = "2"
+resolver = "3"
 
 [patch.crates-io]
 rhai = { git = "https://github.com/space-operator/rhai", rev = "b39d2bfb" }
@@ -80,3 +80,6 @@ agave-precompiles = "3"
 solana-address-lookup-table-interface = "3"
 solana-clock = "3"
 solana-system-transaction = "3"
+
+x402-actix = { git = "https://github.com/space-operator/x402-rs", branch = "fork" }
+x402-rs = { git = "https://github.com/space-operator/x402-rs", branch = "fork" }

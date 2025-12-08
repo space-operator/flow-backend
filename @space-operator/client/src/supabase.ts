@@ -234,6 +234,46 @@ export type Database = {
           },
         ]
       }
+      flow_deployments_x402_fees: {
+        Row: {
+          amount: number
+          deployment_id: string
+          enabled: boolean
+          id: number
+          network: Database["public"]["Enums"]["x402network"]
+          pay_to: number
+        }
+        Insert: {
+          amount: number
+          deployment_id: string
+          enabled: boolean
+          id?: number
+          network: Database["public"]["Enums"]["x402network"]
+          pay_to: number
+        }
+        Update: {
+          amount?: number
+          deployment_id?: string
+          enabled?: boolean
+          id?: number
+          network?: Database["public"]["Enums"]["x402network"]
+          pay_to?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_deployments_x402_fees_deployment_id_fkey"
+            columns: ["deployment_id"]
+            referencedRelation: "flow_deployments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_deployments_x402_fees_pay_to_fkey"
+            columns: ["pay_to"]
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flow_run: {
         Row: {
           call_depth: number
@@ -401,6 +441,46 @@ export type Database = {
             foreignKeyName: "fk-user_id"
             columns: ["user_id"]
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flow_x402_fees: {
+        Row: {
+          amount: number
+          enabled: boolean
+          flow_id: number
+          id: number
+          network: Database["public"]["Enums"]["x402network"]
+          pay_to: number
+        }
+        Insert: {
+          amount: number
+          enabled: boolean
+          flow_id: number
+          id?: number
+          network: Database["public"]["Enums"]["x402network"]
+          pay_to: number
+        }
+        Update: {
+          amount?: number
+          enabled?: boolean
+          flow_id?: number
+          id?: number
+          network?: Database["public"]["Enums"]["x402network"]
+          pay_to?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_x402_fees_flow_id_fkey"
+            columns: ["flow_id"]
+            referencedRelation: "flows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_x402_fees_pay_to_fkey"
+            columns: ["pay_to"]
+            referencedRelation: "wallets"
             referencedColumns: ["id"]
           },
         ]
@@ -906,7 +986,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      x402network: "base" | "base-sepolia" | "solana" | "solana-devnet"
     }
     CompositeTypes: {
       [_ in never]: never

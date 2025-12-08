@@ -1,6 +1,6 @@
 import type { FlowRunId } from "../src/mod.ts";
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
-import * as client from "../src/mod.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type * as client from "../src/mod.ts";
 
 export async function checkNoErrors(
   sup: SupabaseClient<client.Database>,

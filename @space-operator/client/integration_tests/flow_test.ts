@@ -1,8 +1,8 @@
 import { Value } from "../src/deps.ts";
 import * as client from "../src/mod.ts";
-import * as dotenv from "jsr:@std/dotenv";
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { assert, assertEquals } from "jsr:@std/assert";
+import * as dotenv from "@std/dotenv";
+import { createClient } from "@supabase/supabase-js";
+import { assert, assertEquals } from "@std/assert";
 import { checkNoErrors } from "./utils.ts";
 
 dotenv.loadSync({

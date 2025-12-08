@@ -1,13 +1,13 @@
 import { bs58, Value, web3 } from "../src/deps.ts";
 import * as client from "../src/mod.ts";
-import * as dotenv from "jsr:@std/dotenv";
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { assert, assertEquals } from "jsr:@std/assert";
-import { LAMPORTS_PER_SOL } from "npm:@solana/web3.js@^1.91.4";
-import * as nacl from "npm:tweetnacl";
-import { decodeBase64 } from "jsr:@std/encoding@0.221/base64";
+import * as dotenv from "@std/dotenv";
+import { createClient } from "@supabase/supabase-js";
+import { assert, assertEquals } from "@std/assert";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import * as nacl from "tweetnacl";
+import { decodeBase64 } from "@std/encoding/base64";
 import { checkNoErrors } from "./utils.ts";
-import { encodeBase58 } from "jsr:@std/encoding@0.221/base58";
+import { encodeBase58 } from "@std/encoding/base58";
 
 dotenv.loadSync({
   export: true,

@@ -1,5 +1,5 @@
 import * as client from "../src/mod.ts";
-import * as dotenv from "jsr:@std/dotenv";
+import * as dotenv from "@std/dotenv";
 
 dotenv.loadSync({
     export: true,
