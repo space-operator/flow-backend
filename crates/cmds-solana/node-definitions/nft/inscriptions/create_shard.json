@@ -3,11 +3,11 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "foreach",
+    "node_id": "create_shard",
     "version": "0.1",
-    "display_name": "Foreach",
-    "description": "Loop over elements of an array",
-    "tags": [],
+    "display_name": "Create Shard",
+    "description": "",
+    "tags": ["NFT", "Solana", "Inscription", "Shard"],
     "related_to": [
       {
         "id": "",
@@ -49,43 +49,38 @@
   },
   "sources": [
     {
-      "name": "element",
-      "type": "json",
-      "defaultValue": null,
-      "tooltip": ""
-    },
-    {
-      "name": "index",
-      "type": "number",
+      "name": "signature",
+      "type": "signature",
       "defaultValue": null,
       "tooltip": ""
     }
   ],
   "targets": [
     {
-      "name": "array",
-      "type_bounds": ["json"],
+      "name": "fee_payer",
+      "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": null,
-      "passthrough": false,
-      "tooltip": ""
+      "tooltip": "",
+      "passthrough": true
+    },
+    {
+      "name": "shard_number",
+      "type_bounds": ["u8"],
+      "required": true,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
+      "name": "submit",
+      "type_bounds": ["bool"],
+      "required": false,
+      "defaultValue": true,
+      "tooltip": "",
+      "passthrough": false
     }
   ],
-  "targets_form.json_schema": {
-    "type": "object",
-    "title": "Foreach",
-    "properties": {
-      "array": {
-        "title": "array",
-        "type": "string",
-        "default": "[]"
-      }
-    }
-  },
-  "targets_form.ui_schema": {
-    "array": {
-      "ui:widget": "textarea"
-    },
-    "ui:order": ["array"]
-  }
+  "targets_form.json_schema": {},
+  "targets_form.ui_schema": {}
 }

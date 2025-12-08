@@ -18,6 +18,7 @@ pub mod v1;
 // pub mod sign_metadata;
 // pub mod update_metadata_account;
 // pub mod verify_collection;
+pub mod inscriptions;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NftDataV2 {

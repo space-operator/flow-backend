@@ -14,7 +14,12 @@ rust_decimal = { version = "1", features = ["maths"] }
 bincode = "1"
 base64 = "0.13"
 serde_json = "1"
-reqwest = { version = "0.12", features = ["json", "rustls-tls", "gzip", "multipart"] }
+reqwest = { version = "0.12", features = [
+    "json",
+    "rustls-tls",
+    "gzip",
+    "multipart",
+] }
 tokio = { version = "1", features = ["time", "macros"] }
 mime_guess = "2"
 borsh = { version = "1", features = ["derive"] }
@@ -32,7 +37,7 @@ byteorder = "1.4.3"
 primitive-types = { version = "0.9.0", default-features = false }
 chrono = "0.4.33"
 bytemuck = "1.16.1"
-bytemuck_derive ="1.7.0"
+bytemuck_derive = "1.7.0"
 struct-convert = "1.4.0"
 
 # solana libs
@@ -60,6 +65,8 @@ spl-token-2022-interface = { version = "2", features = ["serde"] }
 spl-memo-interface = "2"
 spl-associated-token-account-interface = "2"
 spl-concurrent-merkle-tree = "1"
+spl-record = { version = "0.4.0" }
+
 
 # metaplex
 mpl-token-metadata = { path = "../../vendor/mpl-token-metadata" }

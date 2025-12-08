@@ -3,10 +3,10 @@
   "data": {
     "node_definition_version": "0.1",
     "unique_id": "",
-    "node_id": "foreach",
+    "node_id": "chunk_string",
     "version": "0.1",
-    "display_name": "Foreach",
-    "description": "Loop over elements of an array",
+    "display_name": "Chunk String",
+    "description": "Chunk a string into an array of strings",
     "tags": [],
     "related_to": [
       {
@@ -49,43 +49,30 @@
   },
   "sources": [
     {
-      "name": "element",
-      "type": "json",
-      "defaultValue": null,
-      "tooltip": ""
-    },
-    {
-      "name": "index",
-      "type": "number",
+      "name": "chunks",
+      "type": "array",
       "defaultValue": null,
       "tooltip": ""
     }
   ],
   "targets": [
     {
-      "name": "array",
-      "type_bounds": ["json"],
+      "name": "string",
+      "type_bounds": ["string"],
+      "required": true,
+      "defaultValue": null,
+      "passthrough": false,
+      "tooltip": ""
+    },
+    {
+      "name": "chunk_size",
+      "type_bounds": ["number"],
       "required": true,
       "defaultValue": null,
       "passthrough": false,
       "tooltip": ""
     }
   ],
-  "targets_form.json_schema": {
-    "type": "object",
-    "title": "Foreach",
-    "properties": {
-      "array": {
-        "title": "array",
-        "type": "string",
-        "default": "[]"
-      }
-    }
-  },
-  "targets_form.ui_schema": {
-    "array": {
-      "ui:widget": "textarea"
-    },
-    "ui:order": ["array"]
-  }
+  "targets_form.json_schema": {},
+  "targets_form.ui_schema": {}
 }

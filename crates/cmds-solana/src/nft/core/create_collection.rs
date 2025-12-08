@@ -2,7 +2,10 @@ use std::borrow::BorrowMut;
 
 use mpl_core::{
     instructions::CreateCollectionV2Builder,
-    types::{Plugin, PluginAuthorityPair},
+    types::{
+        ExternalPluginAdapterInitInfo, ExternalPluginAdapterSchema, LinkedAppDataInitInfo, Plugin,
+        PluginAuthority, PluginAuthorityPair,
+    },
 };
 use tracing::info;
 
@@ -108,13 +111,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .collection(input.collection.pubkey())
         .payer(input.fee_payer.pubkey())
         .name(input.name)
-        // .external_plugin_adapters(vec![ExternalPluginAdapterInitInfo::DataStore(
-        //     DataStoreInitInfo {
-        //         data_authority: mpl_core::types::PluginAuthority::Owner,
-        //         init_plugin_authority: Some(mpl_core::types::PluginAuthority::UpdateAuthority),
-        //         schema: Some(ExternalPluginAdapterSchema::Binary),
-        //     },
-        // )])
+        .external_plugin_adapters(vec![ExternalPluginAdapterInitInfo::LinkedAppData(
+            LinkedAppDataInitInfo {
+                data_authority: PluginAuthority::Owner,
+                schema: Some(ExternalPluginAdapterSchema::Binary),
+                init_plugin_authority: Some(PluginAuthority::Owner),
+            },
+        )])
         .uri(input.uri);
 
     let builder = if !plugins.is_empty() {
