@@ -8,8 +8,7 @@ use std::{path::Path, time::Duration};
 pub trait CacheBucket {
     type Key: ?Sized;
     type EncodedKey: for<'a> kv::Key<'a>;
-
-    type Object: Serialize + DeserializeOwned;
+    type Object: Serialize + DeserializeOwned + Clone;
     fn name() -> &'static str;
     fn encode_key(key: &Self::Key) -> Self::EncodedKey;
     fn cache_time() -> Duration;

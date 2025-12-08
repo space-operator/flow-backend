@@ -6,10 +6,7 @@ if [[ "${1:-}" == docker ]]; then
     CMD="docker"
 fi
 
-
 ORG=space-operator
-IMAGE=flow-server
-NAME="$ORG/$IMAGE"
 
 if [ "${1:-}" = "login" ]; then
     aws ecr-public get-login-password --region us-east-1 |
@@ -24,13 +21,22 @@ fi
 BRANCH="${BRANCH:-$(git rev-parse --abbrev-ref HEAD)$DIRTY}"
 COMMIT="$(git rev-parse --verify HEAD)$DIRTY"
 
-$CMD tag $NAME:$COMMIT public.ecr.aws/$NAME:$COMMIT
-$CMD push public.ecr.aws/$NAME:$COMMIT
+function push {
+    IMAGE="$1"
+    NAME="$ORG/$IMAGE"
+    URL="public.ecr.aws/$NAME"
 
-$CMD tag $NAME:$BRANCH public.ecr.aws/$NAME:$BRANCH
-$CMD push public.ecr.aws/$NAME:$BRANCH
+    $CMD tag $NAME:$COMMIT $URL:$COMMIT
+    $CMD push $URL:$COMMIT
 
-if [[ "$BRANCH" == "main" ]]; then
-    $CMD tag $NAME:$COMMIT public.ecr.aws/$NAME:latest
-    $CMD push public.ecr.aws/$NAME:latest
-fi
+    $CMD tag $NAME:$BRANCH $URL:$BRANCH
+    $CMD push $URL:$BRANCH
+
+    if [[ "$BRANCH" == "main" ]]; then
+        $CMD tag $NAME:$COMMIT $URL:latest
+        $CMD push $URL:latest
+    fi
+}
+
+push flow-server
+push cmds-server

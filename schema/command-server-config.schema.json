@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "https://schema.spaceoperator.com/command-server-config.schema.json",
+  "title": "ConfigSchema",
+  "type": "object",
+  "properties": {
+    "flow_server": {
+      "type": "array",
+      "description": "List of flow servers to connect to, if not specified, it will connect to the flow server at https://dev-api.spaceoperator.com/",
+      "default": [
+        {
+          "url": "https://dev-api.spaceoperator.com/"
+        }
+      ],
+      "items": {
+        "$ref": "#/definitions/FlowServerConfig"
+      }
+    },
+    "secret_key": {
+      "description": "Iroh secret key, if not specified, the server will generate a new key every time it starts.",
+      "type": "string"
+    },
+    "apikey": {
+      "description": "Common API key to authenticate with all servers in `flow_server` list, use this if you don't need a different key for each server.",
+      "type": "string"
+    }
+  },
+  "required": [],
+  "definitions": {
+    "FlowServerConfig": {
+      "type": "object",
+      "properties": {
+        "apikey": {
+          "description": "Per-server API key to use.",
+          "type": "string"
+        }
+      },
+      "anyOf": [
+        {
+          "$ref": "#/definitions/FlowServerUrl"
+        },
+        {
+          "$ref": "#/definitions/FlowServerAddress"
+        }
+      ]
+    },
+    "FlowServerUrl": {
+      "type": "object",
+      "description": "Connect via flow-server public URL.",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "https://dev-api.spaceoperator.com/",
+            "http://localhost:8080/"
+          ],
+          "default": "https://dev-api.spaceoperator.com/"
+        }
+      }
+    },
+    "FlowServerAddress": {
+      "type": "object",
+      "description": "Connect directly via node ID, relay URL (and IP addresses).",
+      "properties": {
+        "node_id": {
+          "type": "string"
+        },
+        "relay_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "direct_addresses": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "node_id",
+        "relay_url"
+      ]
+    }
+  }
+}

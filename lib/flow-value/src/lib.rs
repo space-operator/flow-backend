@@ -35,9 +35,6 @@ pub mod bincode_impl;
 
 // custom serialize and deserialize modules
 pub mod decimal;
-#[cfg(feature = "solana-keypair")]
-#[deprecated]
-pub mod keypair;
 #[cfg(feature = "solana-pubkey")]
 pub mod pubkey;
 #[cfg(feature = "solana-signature")]
@@ -353,28 +350,19 @@ impl JsonSchema for Value {
     }
 
     fn schema_id() -> std::borrow::Cow<'static, str> {
-        concat!(module_path!(), "::Value").into()
+        "https://schema.spaceoperator.com/value.schema.json".into()
     }
 
     fn json_schema(_: &mut schemars::SchemaGenerator) -> schemars::Schema {
-        serde_json::from_str(include_str!("../../../schema/value.schema.json")).unwrap()
+        serde_json::from_str(include_str!("../value.schema.json")).unwrap()
     }
 }
 
 impl Value {
     pub fn new_keypair_bs58(s: &str) -> Result<Self, Error> {
-        // and Ed25519 keypair
-        const KEYPAIR_LENGTH: usize = 64;
-        let mut buf = [0u8; KEYPAIR_LENGTH];
-        let size = bs58::decode(s).into(&mut buf)?;
-        if size != KEYPAIR_LENGTH {
-            return Err(Error::InvalidLenght {
-                need: KEYPAIR_LENGTH,
-                got: size,
-            });
-        }
-
-        Ok(Value::B64(buf))
+        let mut data = [0u8; 64];
+        five8::decode_64(s, &mut data).map_err(|_| Error::Base58Error)?;
+        Ok(Value::B64(data))
     }
 
     pub fn normalize(self) -> Self {
@@ -701,11 +689,11 @@ impl std::fmt::Debug for Value {
             Value::Bytes(x) => f.debug_tuple("Bytes").field(&x.len()).finish(),
             Value::B32(x) => f
                 .debug_tuple("B32")
-                .field(&bs58::encode(x).into_string())
+                .field(&Five8Buffer32::new().encode(x))
                 .finish(),
             Value::B64(x) => f
                 .debug_tuple("B64")
-                .field(&bs58::encode(x).into_string())
+                .field(&Five8Buffer64::new().encode(x))
                 .finish(),
         }
     }
@@ -717,8 +705,8 @@ pub enum Error {
     Custom(String),
     #[error("key must be a string")]
     KeyMustBeAString,
-    #[error("invalid base58: {0}")]
-    Bs58Decode(#[from] bs58::decode::Error),
+    #[error("invalid base58")]
+    Base58Error,
     #[error("need length {need}, got {got}")]
     InvalidLenght { need: usize, got: usize },
     #[error("expected a map")]
@@ -795,6 +783,48 @@ where
     }
 }
 
+pub struct Five8Buffer32 {
+    out: [u8; 44],
+}
+
+impl Five8Buffer32 {
+    pub const fn new() -> Self {
+        Self { out: [0; _] }
+    }
+
+    pub fn encode<'a>(&'a mut self, data: &[u8; 32]) -> &'a str {
+        let len = five8::encode_32(data, &mut self.out) as usize;
+        unsafe { str::from_utf8_unchecked(&self.out[..len]) }
+    }
+}
+
+pub struct Five8Buffer64 {
+    out: [u8; 88],
+}
+
+impl Five8Buffer64 {
+    pub const fn new() -> Self {
+        Self { out: [0; _] }
+    }
+
+    pub fn encode<'a>(&'a mut self, data: &[u8; 64]) -> &'a str {
+        let len = five8::encode_64(data, &mut self.out) as usize;
+        unsafe { str::from_utf8_unchecked(&self.out[..len]) }
+    }
+}
+
+pub fn five8_decode_32<T: AsRef<[u8]>>(encoded: T) -> Result<[u8; 32], five8::DecodeError> {
+    let mut out = [0u8; 32];
+    five8::decode_32(encoded, &mut out)?;
+    Ok(out)
+}
+
+pub fn five8_decode_64<T: AsRef<[u8]>>(encoded: T) -> Result<[u8; 64], five8::DecodeError> {
+    let mut out = [0u8; 64];
+    five8::decode_64(encoded, &mut out)?;
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -858,22 +888,12 @@ mod tests {
             r#"{"A":[{"I":"1"},{"S":"hello"}]}"#,
         );
         t(
-            Value::B32(
-                bs58::decode("5sNRWMrT2P3KULzW3faaktCB3k2eqHow2GBJtcsCPcg7")
-                    .into_vec()
-                    .unwrap()
-                    .try_into()
-                    .unwrap(),
-            ),
+            Value::B32(five8_decode_32("5sNRWMrT2P3KULzW3faaktCB3k2eqHow2GBJtcsCPcg7").unwrap()),
             r#"{"B3":"5sNRWMrT2P3KULzW3faaktCB3k2eqHow2GBJtcsCPcg7"}"#,
         );
         t(
             Value::B64(
-                bs58::decode("3PvNxykqBz1BzBaq2AMU4Sa3CPJGnSC9JXkyzXe33m6W7Sj4MMgsZet6YxUQdPx1fEFU79QWm6RpPRVJAyeqiNsR")
-                    .into_vec()
-                    .unwrap()
-                    .try_into()
-                    .unwrap(),
+                five8_decode_64("3PvNxykqBz1BzBaq2AMU4Sa3CPJGnSC9JXkyzXe33m6W7Sj4MMgsZet6YxUQdPx1fEFU79QWm6RpPRVJAyeqiNsR").unwrap()
             ),
             r#"{"B6":"3PvNxykqBz1BzBaq2AMU4Sa3CPJGnSC9JXkyzXe33m6W7Sj4MMgsZet6YxUQdPx1fEFU79QWm6RpPRVJAyeqiNsR"}"#,
         );

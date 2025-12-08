@@ -25,3 +25,7 @@ dbname = "postgres"
 
 [db.ssl]
 enabled = false
+
+[iroh]
+secret_key = ""
+trusted = []

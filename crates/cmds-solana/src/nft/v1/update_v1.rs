@@ -4,7 +4,6 @@ use crate::{
     nft::{CollectionDetails, NftCreator, NftUses, TokenStandard},
     prelude::*,
 };
-use anchor_lang::AnchorSerialize;
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
     accounts::{MasterEdition, Metadata},
@@ -65,7 +64,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let (_master_edition_account, _) = MasterEdition::find_pda(&input.mint_account);
 
     // get associated token account pda
-    let _token_account = spl_associated_token_account::get_associated_token_address(
+    let _token_account = spl_associated_token_account_interface::address::get_associated_token_address(
         &input.fee_payer.pubkey(),
         &input.mint_account,
     );
@@ -533,17 +532,6 @@ impl UpdateAsUpdateAuthorityV2InstructionData {
             discriminator: 50,
             update_as_update_authority_v2_discriminator: 1,
         }
-    }
-}
-
-#[derive(BorshDeserialize, BorshSerialize)]
-struct UpdateMetadataAccountV2InstructionData {
-    discriminator: u8,
-}
-
-impl Default for UpdateMetadataAccountV2InstructionData {
-    fn default() -> Self {
-        Self { discriminator: 15 }
     }
 }
 

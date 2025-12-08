@@ -14,7 +14,7 @@ struct Params {
 async fn delete_store(
     params: web::Json<Params>,
     user: Auth<auth_v1::AuthenticatedUser>,
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
 ) -> Result<web::Json<Success>, Error> {
     let params = params.into_inner();
     let success = db

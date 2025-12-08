@@ -56,10 +56,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let (master_edition_account, _) = MasterEdition::find_pda(&input.mint_account);
 
     // get associated token account pda
-    let token_account = spl_associated_token_account::get_associated_token_address(
-        &input.token_owner,
-        &input.mint_account,
-    );
+    let token_account =
+        spl_associated_token_account_interface::address::get_associated_token_address(
+            &input.token_owner,
+            &input.mint_account,
+        );
 
     let token_record = TokenRecord::find_pda(&input.mint_account, &token_account).0;
 
@@ -73,12 +74,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         token_owner: Some(input.token_owner),
         token_record: Some(token_record),
         delegate_record: input.delegate_record,
-        spl_ata_program: spl_associated_token_account::id(),
+        spl_ata_program: spl_associated_token_account_interface::program::ID,
         authorization_rules_program: input.authorization_rules_program,
         authorization_rules: input.authorization_rules,
         system_program: system_program::id(),
         sysvar_instructions: sysvar::instructions::id(),
-        spl_token_program: spl_token::id(),
+        spl_token_program: spl_token_interface::ID,
     };
 
     let args = MintV1InstructionArgs {

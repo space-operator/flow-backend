@@ -2,8 +2,6 @@ use crate::wormhole::{PostVAAData, VAA};
 
 use crate::prelude::*;
 
-use borsh::BorshSerialize;
-
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
 use solana_sdk_ids::system_program;
@@ -140,15 +138,14 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new_readonly(system_program::id(), false),
             // Program
             AccountMeta::new_readonly(wormhole_core_program_id, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+            AccountMeta::new_readonly(spl_token_interface::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account_interface::program::ID, false),
             AccountMeta::new_readonly(mpl_token_metadata::ID, false),
         ],
-        data: (
+        data: borsh::to_vec(&(
             NFTBridgeInstructions::CompleteWrappedMeta,
             CompleteWrappedMetaData {},
-        )
-            .try_to_vec()?,
+        ))?,
     };
 
     info!("ix: {:?}", ix);

@@ -4,11 +4,15 @@ use std::{
 };
 
 use command_rpc::flow_side::address_book::authenticate;
+use futures_util::future::{self, BoxFuture};
 use tower::Service;
 
-#[derive(Debug, Clone, bon::Builder)]
+use crate::middleware::auth_v1::AuthV1;
+
+#[derive(Clone, bon::Builder)]
 pub struct WorkerAuthenticate {
     trusted: BTreeSet<iroh::PublicKey>,
+    auth: AuthV1,
 }
 
 impl Service<authenticate::Request> for WorkerAuthenticate {
@@ -16,7 +20,10 @@ impl Service<authenticate::Request> for WorkerAuthenticate {
 
     type Error = authenticate::Error;
 
-    type Future = Ready<Result<Self::Response, Self::Error>>;
+    type Future = future::Either<
+        Ready<Result<Self::Response, Self::Error>>,
+        BoxFuture<'static, Result<Self::Response, Self::Error>>,
+    >;
 
     fn poll_ready(
         &mut self,
@@ -26,13 +33,20 @@ impl Service<authenticate::Request> for WorkerAuthenticate {
     }
 
     fn call(&mut self, req: authenticate::Request) -> Self::Future {
-        ready(Ok(authenticate::Response {}))
-        /*
-        if self.trusted.contains(&req) {
-            ready(Ok(authenticate::Response {}))
-        } else {
-            ready(Err(anyhow!("failed")))
+        if self.trusted.contains(&req.pubkey) {
+            return future::Either::Left(ready(Ok(authenticate::Response {
+                permission: authenticate::Permission::All,
+            })));
         }
-        */
+        if let Some(apikey) = req.apikey {
+            let auth = self.auth.clone();
+            return future::Either::Right(Box::pin(async move {
+                let key = auth.apikey_authenticate(&apikey).await?;
+                Ok(authenticate::Response {
+                    permission: authenticate::Permission::User(*key.user_id()),
+                })
+            }));
+        }
+        future::Either::Left(ready(Err(anyhow::anyhow!("failed"))))
     }
 }

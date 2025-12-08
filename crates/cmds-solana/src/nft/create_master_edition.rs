@@ -52,7 +52,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         mint_authority: input.mint_authority,
         payer: input.fee_payer.pubkey(),
         metadata: metadata_account,
-        token_program: spl_token::id(),
+        token_program: spl_token_interface::ID,
         system_program: system_program::id(),
         rent: None,
     };

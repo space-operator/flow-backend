@@ -2,7 +2,7 @@ use crate::SupabaseConfig;
 use crate::error::ErrorBody;
 use actix_web::ResponseError;
 use bincode::{Decode, Encode};
-use db::pool::{DbPool, RealDbPool};
+use db::pool::DbPool;
 use flow::BoxedError;
 use flow_lib::solana::{Keypair, KeypairExt};
 use flow_lib::{FlowRunId, UserId};
@@ -128,7 +128,7 @@ impl SignatureAuth {
 #[derive(Clone)]
 pub struct SupabaseAuth {
     client: reqwest::Client,
-    pool: RealDbPool,
+    pool: DbPool,
     anon_key: String,
     login_url: Url,
     create_user_url: Url,
@@ -235,9 +235,6 @@ pub struct UpsertWalletBody {
 
 impl SupabaseAuth {
     pub fn new(config: &SupabaseConfig, pool: DbPool) -> Result<Self, BoxedError> {
-        let pool = match pool {
-            DbPool::Real(pool) => pool,
-        };
         let base_url = config.endpoint.url.join("auth/v1/")?;
         let service_key = config.service_key.as_ref().ok_or("need service_key")?;
         let login_url = base_url.join("token?grant_type=password")?;
@@ -246,7 +243,7 @@ impl SupabaseAuth {
         let admin_token = HeaderValue::from_str(&format!("Bearer {service_key}"))?;
 
         Ok(Self {
-            client: reqwest::Client::new(),
+            client: crate::HTTP.clone(),
             anon_key: config.anon_key.clone(),
             login_url,
             create_user_url,
@@ -306,10 +303,10 @@ impl SupabaseAuth {
 
     fn cleanup_semaphore(&self, pubkey: &[u8; 32]) {
         let mut limits = self.limits.lock().unwrap();
-        if let Some(semaphore) = limits.get(pubkey) {
-            if Arc::strong_count(semaphore) == 1 {
-                limits.remove(pubkey).unwrap();
-            }
+        if let Some(semaphore) = limits.get(pubkey)
+            && Arc::strong_count(semaphore) == 1
+        {
+            limits.remove(pubkey).unwrap();
         }
         tracing::debug!("semaphore counts: {}", limits.len());
     }

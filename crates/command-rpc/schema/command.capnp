@@ -7,7 +7,7 @@ interface CommandFactory {
 }
 
 interface AddressBook {
-    join @0 (direct_addresses: Data, relay_url: Text, availables: Data);
+    join @0 (direct_addresses: Data, relay_url: Text, availables: Data, apikey: Text);
 
     leave @1 ();
 }
@@ -20,6 +20,8 @@ interface CommandContext {
     getJwt @2 (user_id: Text) -> (access_token: Text);
 
     log @3 (log: Data);
+
+    requestSignature @4 (request: Data) -> (response: Data);
 }
 
 interface CommandTrait {

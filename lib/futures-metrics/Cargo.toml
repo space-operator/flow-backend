@@ -1,0 +1,8 @@
+[package]
+name = "futures-metrics"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+metrics = "0.24.2"
+pin-project-lite = "0.2.16"

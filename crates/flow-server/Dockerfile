@@ -1,6 +1,5 @@
 FROM docker.io/library/rust AS rustc
-RUN apt-get update && apt-get install -y clang lld capnproto && rm -rf /var/lib/apt/lists/*
-ENV RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=lld"
+RUN apt-get update && apt-get install -y capnproto && rm -rf /var/lib/apt/lists/*
 RUN cargo install cargo-chef --quiet
 WORKDIR /build/
 
@@ -15,7 +14,7 @@ FROM rustc AS cacher
 COPY vendor vendor
 ARG PROFILE=release
 COPY --from=planner /build/recipe.json recipe.json
-RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json --bin flow-server
+RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json
 
 # Step 3: Build the binary
 FROM rustc AS builder
@@ -35,14 +34,13 @@ FROM docker.io/library/debian:stable-slim AS runtime
 COPY ./certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
 COPY ./crates/flow-server/entrypoint.bash /space-operator/
 RUN apt-get update && \
-    apt-get install -y libssl3 ca-certificates wget && \
+    apt-get install -y libssl3 ca-certificates wget lld && \
     wget https://github.com/supabase/cli/releases/download/v1.167.4/supabase_1.167.4_linux_amd64.deb && \
     apt-get install -y ./supabase_1.167.4_linux_amd64.deb && \
-    apt-get remove -y wget && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get remove -y wget
 COPY --from=deno /usr/bin/deno /usr/local/bin
 RUN deno --version
 WORKDIR /space-operator/
 COPY --from=builder /build/target/release/flow-server /usr/local/bin
-RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')"
+RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')" && apt-get remove -y lld && rm -rf /var/lib/apt/lists/*
 ENTRYPOINT ["./entrypoint.bash"]

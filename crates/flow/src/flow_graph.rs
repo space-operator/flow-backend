@@ -4,7 +4,10 @@ use chrono::{DateTime, Utc};
 use command_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
-    command::{CommandError, CommandFactory, CommandTrait, InstructionInfo},
+    command::{
+        CommandError, CommandFactory, CommandTrait, InstructionInfo, input_is_required,
+        output_is_optional, passthrough_outputs,
+    },
     config::client::{self, PartialConfig},
     context::{
         CommandContext, CommandContextData, FlowContextData, FlowServices, FlowSetContextData,
@@ -14,9 +17,10 @@ use flow_lib::{
         EventSender, FlowError, FlowFinish, FlowStart, NODE_SPAN_NAME, NodeError, NodeFinish,
         NodeLogSender, NodeOutput, NodeStart,
     },
-    solana::{ExecutionConfig, Instructions, Pubkey, Wallet, find_failed_instruction},
+    solana::{ExecutionConfig, Instructions, Pubkey, Wallet},
     utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
 };
+use flow_lib_solana::{InstructionsExt, find_failed_instruction, simple_execute_svc};
 use futures::{
     FutureExt, StreamExt,
     channel::{mpsc, oneshot},
@@ -32,7 +36,7 @@ use petgraph::{
     stable_graph::{Edges, NodeIndex, StableGraph},
     visit::{Bfs, EdgeRef, GraphRef, VisitMap, Visitable},
 };
-use solana_program::system_instruction::transfer_many;
+use solana_system_interface::instruction::transfer_many;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::ControlFlow,
@@ -46,7 +50,7 @@ use std::{
 use thiserror::Error as ThisError;
 use tokio::{
     sync::Semaphore,
-    task::{JoinError, JoinHandle},
+    task::{JoinError, JoinHandle, JoinSet},
 };
 use tokio_util::sync::CancellationToken;
 use tower::{Service, ServiceExt, service_fn};
@@ -239,6 +243,7 @@ pub struct EdgeValue {
 
 #[derive(Debug)]
 struct State {
+    early_return: bool,
     flow_run_id: FlowRunId,
     previous_values: HashMap<NodeId, Vec<Value>>,
     flow_inputs: value::Map,
@@ -408,17 +413,17 @@ impl FlowGraph {
                     ext
                 }),
                 http: registry.http.clone(),
-                // TODO: re-use reqwest client
                 solana_client: Arc::new(
                     ctx_data
                         .set
                         .solana
                         .build_client(Some(registry.http.clone())),
                 ),
+                helius: registry.backend.helius.clone(),
             },
         };
 
-        let mut f = CommandFactoryWithRemotes {
+        let f = CommandFactoryWithRemotes {
             factory: CommandFactory::collect(),
             remotes: registry.remotes,
         };
@@ -437,6 +442,7 @@ impl FlowGraph {
             }
         }
         let mut excluded_foreach = HashSet::new();
+        let mut join_set = JoinSet::new();
         for n in c.nodes {
             if n.client_node_data.r#type == CommandType::Mock {
                 mocks.insert(n.id);
@@ -449,16 +455,27 @@ impl FlowGraph {
                 }
                 continue;
             }
-            let command = f
-                .init(&n.client_node_data)
-                .await
-                .map_err(crate::Error::CreateCmd)?
-                .ok_or_else(|| {
-                    crate::Error::CreateCmd(CommandError::msg(format!(
-                        "not found: {}",
-                        n.client_node_data.node_id
-                    )))
-                })?;
+
+            let mut f = f.clone();
+            let task = async move {
+                let command = f
+                    .init(&n.client_node_data)
+                    .await
+                    .map_err(crate::Error::CreateCmd)?
+                    .ok_or_else(|| {
+                        crate::Error::CreateCmd(CommandError::msg(format!(
+                            "not found: {}",
+                            n.client_node_data.node_id
+                        )))
+                    })?;
+                Ok::<_, crate::Error>((n, command))
+            };
+            join_set.spawn_local(task);
+        }
+
+        let results = join_set.join_all().await;
+        for result in results {
+            let (n, command) = result?;
             let id = n.id;
             let idx = g.add_node(id);
             let node = Node {
@@ -492,9 +509,7 @@ impl FlowGraph {
                     }
                 }
                 Some(n) => {
-                    let required = n
-                        .command
-                        .input_is_required(&to.1)
+                    let required = input_is_required(&*n.command, &to.1)
                         .ok_or_else(|| BuildGraphError::NoInput(to.clone(), n.command.name()))?;
                     (n.idx, required)
                 }
@@ -523,9 +538,7 @@ impl FlowGraph {
                     }
                 }
                 Some(n) => {
-                    let optional = n
-                        .command
-                        .output_is_optional(&from.1)
+                    let optional = output_is_optional(&*n.command, &from.1)
                         .ok_or_else(|| BuildGraphError::NoOutput(from.clone(), n.command.name()))?;
                     (n.idx, optional)
                 }
@@ -971,6 +984,11 @@ impl FlowGraph {
                 }
             }
             Err(error) => {
+                if let Some(execute_error) = error.downcast_ref::<execute::Error>()
+                    && matches!(execute_error, execute::Error::Collected)
+                {
+                    return;
+                }
                 let err_str = error.to_string();
                 o.resp.send(Err(execute::Error::from_anyhow(error))).ok();
                 node_error(&s.event_tx, &mut s.result, info.id, info.times, err_str);
@@ -1012,7 +1030,7 @@ impl FlowGraph {
                         (!o.optional && !output.contains_key(&o.name)).then_some(o.name)
                     })
                     .collect::<Vec<String>>();
-                if !missing.is_empty() {
+                if !missing.is_empty() && !s.early_return {
                     node_error(
                         &s.event_tx,
                         &mut s.result,
@@ -1148,8 +1166,9 @@ impl FlowGraph {
                     // this flow is an "Interflow instructions"
                     if self.output_instructions {
                         for resp in resp {
-                            resp.sender.send(Err(execute::Error::Canceled(None))).ok();
+                            resp.sender.send(Err(execute::Error::Collected)).ok();
                         }
+                        s.early_return = true;
                         return ControlFlow::Break(Ok(ins));
                     }
                     let res = if s.stop.token.is_cancelled() {
@@ -1186,6 +1205,7 @@ impl FlowGraph {
                                 std::pin::pin!(s.stop_shared.race(
                                     std::pin::pin!(ins.execute(
                                         &self.ctx_svcs.set.solana_client,
+                                        self.ctx_svcs.set.helius.as_deref(),
                                         network,
                                         self.ctx_svcs.signer.clone(),
                                         Some(s.flow_run_id),
@@ -1318,6 +1338,7 @@ impl FlowGraph {
 
         let (out_tx, out_rx) = mpsc::unbounded::<PartialOutput>();
         let mut s = State {
+            early_return: false,
             flow_run_id,
             previous_values,
             flow_inputs,
@@ -1368,7 +1389,8 @@ impl FlowGraph {
             ) in &n.use_previous_values
             {
                 if s.previous_values.contains_key(node_id) {
-                    let is_required_input = n.command.input_is_required(input_name).unwrap_or(true);
+                    let is_required_input =
+                        input_is_required(&*n.command, input_name).unwrap_or(true);
                     self.g.add_edge(
                         fake_node,
                         n.idx,
@@ -1446,7 +1468,10 @@ impl FlowGraph {
                             s.flow_error(error);
                         }
                     }
-                    s.stop.token.cancel();
+                    // all currently running nodes are in "waiting" State
+                    // in `collect_and_execute_instructions`, we sent an error response
+                    // so we can wait for them to stop manually
+                    // s.stop.token.cancel();
                     continue;
                 }
             }
@@ -1479,7 +1504,7 @@ impl FlowGraph {
             .iter()
             .filter(|(_, e)| !e.is_empty())
             .count();
-        if failed > 0 {
+        if failed > 0 && !s.early_return {
             s.flow_error(format!("{failed} nodes failed"));
         }
 
@@ -1499,6 +1524,8 @@ impl FlowGraph {
         for n in self.nodes.values_mut() {
             n.command.destroy().await;
         }
+
+        s.event_tx.close_channel();
 
         s.result
     }
@@ -1524,7 +1551,7 @@ impl FlowGraph {
                 s.result.output.insert(name.clone(), value);
             }
         }
-        if let Some(ins) = s.result.instructions.take() {
+        if let Some(ins) = s.result.instructions.clone() {
             let fee_payer = ins.fee_payer;
             if !s.result.output.contains_key("transaction") {
                 match ins
@@ -1532,6 +1559,7 @@ impl FlowGraph {
                         fee_payer,
                         self.action_identity,
                         &self.ctx_svcs.set.solana_client,
+                        self.ctx_svcs.set.helius.as_deref(),
                         self.ctx_data.set.solana.cluster,
                         self.ctx_svcs.signer.clone(),
                         Some(s.flow_run_id),
@@ -1579,7 +1607,7 @@ impl FlowGraph {
                 command_name: node.command.name(),
                 tracker,
                 instruction_info: node.command.instruction_info(),
-                passthrough: node.command.passthrough_outputs(&inputs),
+                passthrough: passthrough_outputs(&*node.command, &inputs),
                 waiting: None,
                 instruction_sent: false,
             },
@@ -1747,8 +1775,9 @@ async fn run_command(
             node_id: node.id,
             times,
             tx: tx.clone(),
-            simple_svc: execute::simple(
+            simple_svc: simple_execute_svc(
                 ctx_svcs.set.solana_client.clone(),
+                ctx_svcs.set.helius.clone(),
                 ctx_data.set.solana.cluster,
                 ctx_svcs.signer.clone(),
                 Some(flow_run_id),

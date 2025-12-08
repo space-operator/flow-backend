@@ -74,7 +74,7 @@ pub fn revoke_governing_tokens(
         AccountMeta::new(*governing_token_mint, false),
         AccountMeta::new_readonly(*revoke_authority, true),
         AccountMeta::new_readonly(realm_config_address, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_token_interface::ID, false),
     ];
 
     let data = GovernanceInstruction::RevokeGoverningTokens { amount };

@@ -1,6 +1,5 @@
 use crate::prelude::*;
 
-use borsh::BorshSerialize;
 use rand::Rng;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
@@ -100,11 +99,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             // Program
             AccountMeta::new_readonly(wormhole_core_program_id, false),
         ],
-        data: (
+        data: borsh::to_vec(&(
             TokenBridgeInstructions::AttestToken,
             AttestTokenData { nonce },
-        )
-            .try_to_vec()?,
+        ))?,
     };
 
     let message_pubkey = input.message.pubkey();

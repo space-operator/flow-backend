@@ -6,6 +6,7 @@
     "required": [
         "type",
         "name",
+        "version",
         "inputs",
         "outputs"
     ],
@@ -15,15 +16,22 @@
             "type": "string",
             "enum": [
                 "native",
-                "WASM",
+                "wasm",
                 "deno",
                 "rhai",
+                "interflow",
                 "mock"
             ]
         },
         "name": {
-            "title": "Unique name of node, name will be used to identify the node",
-            "type": "string"
+            "title": "Unique name of node, used to identify the node",
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+        },
+        "version": {
+            "title": "Semver version",
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
         },
         "display_name": {
             "title": "Display name of node",
@@ -57,13 +65,9 @@
         "instruction_info": {
             "description": "Tell the flow graph this node will emit Solana instructions, and specify the order of outputs:\n- 'before': list of output names returned before instructions are sent.\n- 'signature': name of the signature output port.\n- 'after': list of output names returned after instructions are sent.\nNode only have to declare 'signature' and 'after', 'before' is the rest of the output.",
             "type": "object",
-            "required": [
-                "signature",
-                "after"
-            ],
             "properties": {
                 "signature": {
-                    "title": "Name of signature output",
+                    "title": "Name of signature output, flow will use default value if not specified.",
                     "type": "string",
                     "default": "signature"
                 },
@@ -89,12 +93,13 @@
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Name of this input port"
+                    "description": "Name of this input port",
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
                 },
                 "type_bounds": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/type_bound"
                     }
                 },
                 "required": {
@@ -124,7 +129,9 @@
             ],
             "properties": {
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Name of this input port",
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
                 },
                 "type": {
                     "type": "string"
@@ -141,6 +148,34 @@
                     "description": "Hard-coded output value"
                 }
             }
+        },
+        "type_bound": {
+            "title": "Type bound for inputs and outputs",
+            "enum": [
+                "bool",
+                "u8",
+                "u16",
+                "u32",
+                "u64",
+                "u128",
+                "i8",
+                "i16",
+                "i32",
+                "i64",
+                "i128",
+                "f32",
+                "f64",
+                "decimal",
+                "pubkey",
+                "keypair",
+                "signature",
+                "address",
+                "string",
+                "bytes",
+                "array",
+                "object",
+                "free"
+            ]
         }
     }
 }

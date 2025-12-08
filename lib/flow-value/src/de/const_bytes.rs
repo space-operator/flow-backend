@@ -41,13 +41,13 @@ impl<'de, const N: usize> serde::de::Visitor<'de> for ConstBytesVisitor<N> {
         A: serde::de::SeqAccess<'de>,
     {
         let size = seq.size_hint();
-        if let Some(size) = size {
-            if size != N {
-                return Err(serde::de::Error::invalid_length(
-                    size,
-                    &itoa::Buffer::new().format(N),
-                ));
-            }
+        if let Some(size) = size
+            && size != N
+        {
+            return Err(serde::de::Error::invalid_length(
+                size,
+                &itoa::Buffer::new().format(N),
+            ));
         }
 
         let mut buf = [0u8; N];

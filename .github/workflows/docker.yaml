@@ -14,10 +14,9 @@ jobs:
     runs-on: self-hosted
     env:
       BRANCH: ${{ github.head_ref || github.ref_name }}
+      GPC_PROJECT_ID: ${{ secrets.GPC_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
       - name: Build
         run: ./scripts/build_images.bash
       - uses: aws-actions/configure-aws-credentials@v4
@@ -25,10 +24,21 @@ jobs:
           aws-region: us-east-1
           aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
-      - name: Push
+      - name: ECR Push
         run: ./scripts/ecr-push.bash login
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+      - name: Configure Docker
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev
+      - name: GCR Push
+        run: ./scripts/gcr-push.bash
       - name: Clean up
         run: podman image prune -f
+
   integration-test:
     name: Integration Test
     if: ${{ contains(github.event.pull_request.labels.*.name, 'integration-test') }}
@@ -52,11 +62,7 @@ jobs:
           deno-version: v2.x
       - name: Build Integration Tests
         run: cargo build --bin integration-tests --quiet
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-east-1
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
+
       - name: Run Integration Tests
         env:
           APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}

@@ -2,11 +2,10 @@ use std::str::FromStr;
 
 use crate::prelude::*;
 use crate::utils::anchor_sighash;
-use borsh::BorshSerialize;
 use solana_program::instruction::AccountMeta;
 use solana_program::sysvar;
 use solana_sdk_ids::system_program;
-use spl_associated_token_account::get_associated_token_address;
+use spl_associated_token_account_interface::address::get_associated_token_address;
 
 use super::{CreateData, CreateDataInput, FEE_ORACLE_ADDRESS, STRM_TREASURY, WITHDRAWOR_ADDRESS};
 
@@ -77,8 +76,8 @@ fn create_create_stream_instruction(
         AccountMeta::new_readonly(Pubkey::from_str(FEE_ORACLE_ADDRESS).unwrap(), false),
         AccountMeta::new_readonly(sysvar::rent::ID, false),
         AccountMeta::new_readonly(*timelock_program, false),
-        AccountMeta::new_readonly(spl_token::ID, false),
-        AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+        AccountMeta::new_readonly(spl_token_interface::ID, false),
+        AccountMeta::new_readonly(spl_associated_token_account_interface::program::ID, false),
         AccountMeta::new_readonly(system_program::ID, false),
     ]
     .to_vec();
@@ -88,7 +87,7 @@ fn create_create_stream_instruction(
     Instruction {
         program_id: *timelock_program,
         accounts,
-        data: (discriminator, data).try_to_vec().unwrap(),
+        data: borsh::to_vec(&(discriminator, data)).unwrap(),
     }
 }
 

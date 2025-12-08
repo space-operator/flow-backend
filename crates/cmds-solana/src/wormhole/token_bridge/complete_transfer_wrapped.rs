@@ -1,7 +1,6 @@
 use super::{Address, CompleteWrappedData, PayloadTransfer, TokenBridgeInstructions};
 use crate::prelude::*;
 use crate::wormhole::{PostVAAData, VAA};
-use borsh::BorshSerialize;
 use solana_commitment_config::CommitmentConfig;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
@@ -121,7 +120,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     // Check if the associated token account exists
     let associated_token =
-        spl_associated_token_account::get_associated_token_address(&input.payer.pubkey(), &mint);
+        spl_associated_token_account_interface::address::get_associated_token_address(
+            &input.payer.pubkey(),
+            &mint,
+        );
 
     let associated_token_exists = match ctx
         .solana_client()
@@ -137,11 +139,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     // add associated token account instruction if it doesn't exist
     let associated_token_ix =
-        spl_associated_token_account::instruction::create_associated_token_account(
+        spl_associated_token_account_interface::instruction::create_associated_token_account(
             &input.payer.pubkey(),
             &input.payer.pubkey(),
             &mint,
-            &spl_token::id(),
+            &spl_token_interface::ID,
         );
 
     info!("associated_token_exists: {:?}", associated_token_exists);
@@ -166,15 +168,14 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             // Dependencies
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_token_interface::ID, false),
             AccountMeta::new_readonly(wormhole_core_program_id, false),
             // Program
         ],
-        data: (
+        data: borsh::to_vec(&(
             TokenBridgeInstructions::CompleteWrapped,
             CompleteWrappedData {},
-        )
-            .try_to_vec()?,
+        ))?,
     };
 
     let instructions = if associated_token_exists {

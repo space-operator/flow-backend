@@ -246,7 +246,7 @@ where
 }
 
 impl Value {
-    pub(self) fn unexpected(&self) -> serde::de::Unexpected {
+    pub(self) fn unexpected(&'_ self) -> serde::de::Unexpected<'_> {
         use serde::de::Unexpected;
         match self {
             Value::Null => Unexpected::Unit,

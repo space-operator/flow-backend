@@ -1,4 +1,5 @@
-use crate::Value;
+use crate::{Value, Five8Buffer32, Five8Buffer64};
+use base64::prelude::*;
 
 #[derive(Debug)]
 pub struct TextRepr<'a>(&'a Value);
@@ -39,13 +40,9 @@ impl serde::Serialize for TextRepr<'_> {
             Value::U128(v) => {
                 s.serialize_newtype_variant(NAME, i, k, itoa::Buffer::new().format(*v))
             }
-            Value::B32(v) => {
-                s.serialize_newtype_variant(NAME, i, k, &bs58::encode(v).into_string())
-            }
-            Value::B64(v) => {
-                s.serialize_newtype_variant(NAME, i, k, &bs58::encode(v).into_string())
-            }
-            Value::Bytes(v) => s.serialize_newtype_variant(NAME, i, k, &base64::encode(v)),
+            Value::B32(v) => s.serialize_newtype_variant(NAME, i, k, Five8Buffer32::new().encode(v)),
+            Value::B64(v) => s.serialize_newtype_variant(NAME, i, k, Five8Buffer64::new().encode(v)),
+            Value::Bytes(v) => s.serialize_newtype_variant(NAME, i, k, &BASE64_STANDARD.encode(v)),
             Value::Array(v) => s.serialize_newtype_variant(
                 NAME,
                 i,

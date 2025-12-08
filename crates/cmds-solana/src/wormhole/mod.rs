@@ -1,4 +1,3 @@
-use anchor_lang::AnchorSerialize;
 use borsh::{BorshDeserialize, BorshSerialize};
 use byteorder::{BigEndian, ReadBytesExt};
 use flow_lib::SolanaNet;
@@ -72,7 +71,7 @@ pub enum WormholeInstructions {
     PostMessageUnreliable,
 }
 
-#[derive(AnchorSerialize, Deserialize, Serialize)]
+#[derive(BorshSerialize, Deserialize, Serialize)]
 pub struct PostMessageData {
     /// Unique nonce for this message
     pub nonce: u32,
@@ -85,7 +84,7 @@ pub struct PostMessageData {
 }
 
 #[repr(u8)]
-#[derive(AnchorSerialize, Clone, Serialize, Deserialize)]
+#[derive(BorshSerialize, Clone, Serialize, Deserialize)]
 pub enum ConsistencyLevel {
     Confirmed,
     Finalized,

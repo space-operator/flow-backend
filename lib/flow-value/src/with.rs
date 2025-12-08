@@ -361,7 +361,7 @@ pub(crate) mod signature {
             E: serde::de::Error,
         {
             let mut buffer = [0u8; 64];
-            five8::decode_64(v, &mut buffer).map_err(de::Error::custom)?;
+            five8::decode_64(v, &mut buffer).map_err(|_| de::Error::custom("invalid base58"))?;
             Ok(Signature::from(buffer))
         }
 
@@ -475,7 +475,7 @@ pub(crate) mod keypair {
             E: serde::de::Error,
         {
             let mut buffer = [0u8; 64];
-            five8::decode_64(v, &mut buffer).map_err(de::Error::custom)?;
+            five8::decode_64(v, &mut buffer).map_err(|_| de::Error::custom("invalid base58"))?;
             Ok(CustomKeypair(buffer))
         }
 

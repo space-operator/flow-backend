@@ -265,20 +265,8 @@ impl SolanaNet {
                 });
                 URL.clone()
             }
-            SolanaNet::Testnet => {
-                static URL: LazyLock<String> = LazyLock::new(|| {
-                    std::env::var("SOLANA_TESTNET_URL")
-                        .unwrap_or_else(|_| "https://api.testnet.solana.com".to_owned())
-                });
-                URL.clone()
-            }
-            SolanaNet::Mainnet => {
-                static URL: LazyLock<String> = LazyLock::new(|| {
-                    std::env::var("SOLANA_MAINNET_URL")
-                        .unwrap_or_else(|_| "https://api.mainnet-beta.solana.com".to_owned())
-                });
-                URL.clone()
-            }
+            SolanaNet::Testnet => "https://api.testnet.solana.com".to_owned(),
+            SolanaNet::Mainnet => "https://api.mainnet-beta.solana.com".to_owned(),
         }
     }
 

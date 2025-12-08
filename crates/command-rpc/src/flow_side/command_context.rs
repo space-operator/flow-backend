@@ -1,18 +1,66 @@
+use std::time::Duration;
+
 use anyhow::Context;
 use bincode::config::standard;
 use capnp::capability::Promise;
 use flow_lib::{
     UserId,
-    context::{CommandContext, execute, get_jwt},
+    context::{CommandContext, execute, get_jwt, signer},
     flow_run_events::NodeLogContent,
+    solana::Pubkey,
     utils::tower_client::CommonErrorExt,
     value,
 };
 use futures::{TryFutureExt, future::LocalBoxFuture};
 use tower::{Service, ServiceExt};
 
-use crate::anyhow2capnp;
 pub use crate::command_capnp::command_context::*;
+use crate::{anyhow2capnp, capnp2typed, errors::TypedError};
+
+impl tower::Service<signer::SignatureRequest> for Client {
+    type Response = signer::SignatureResponse;
+
+    type Error = signer::Error;
+
+    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
+
+    fn poll_ready(
+        &mut self,
+        _: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        std::task::Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: signer::SignatureRequest) -> Self::Future {
+        let client = self.clone();
+        Box::pin(async move {
+            let mut request = client.request_signature_request();
+            request.get().set_request(
+                &bincode::encode_to_vec(
+                    RequestSignatureData {
+                        pubkey: req.pubkey,
+                        message: req.message,
+                        timeout: req.timeout,
+                    },
+                    standard(),
+                )
+                .map_err(signer::Error::other)?,
+            );
+            let resp = request.send().promise.await.map_err(signer::Error::other)?;
+            let resp: signer::SignatureResponse = bincode::decode_from_slice(
+                resp.get()
+                    .map_err(signer::Error::other)?
+                    .get_response()
+                    .map_err(signer::Error::other)?,
+                standard(),
+            )
+            .map_err(signer::Error::other)?
+            .0;
+
+            Ok(resp)
+        })
+    }
+}
 
 impl tower::Service<execute::Request> for Client {
     type Response = execute::Response;
@@ -35,11 +83,14 @@ impl tower::Service<execute::Request> for Client {
             request.get().set_request(
                 &bincode::encode_to_vec(&req, standard()).map_err(execute::Error::other)?,
             );
-            let resp = request
-                .send()
-                .promise
-                .await
-                .map_err(execute::Error::other)?;
+            let resp = match request.send().promise.await {
+                Ok(resp) => resp,
+                Err(error) => Err(match capnp2typed(error) {
+                    TypedError::Execute(error) => error,
+                    TypedError::Unknown(error) => execute::Error::from_anyhow(error),
+                    TypedError::Capnp(error) => execute::Error::other(error),
+                })?,
+            };
             let resp: execute::Response = bincode::decode_from_slice(
                 resp.get()
                     .context("get")
@@ -96,6 +147,49 @@ impl tower::Service<get_jwt::Request> for Client {
 pub struct CommandContextImpl {
     pub(crate) context: CommandContext,
 }
+
+pub struct RequestSignatureData {
+    pub pubkey: Pubkey,
+    pub message: bytes::Bytes,
+    pub timeout: Duration,
+}
+
+impl bincode::Encode for RequestSignatureData {
+    fn encode<E: bincode::enc::Encoder>(
+        &self,
+        encoder: &mut E,
+    ) -> Result<(), bincode::error::EncodeError> {
+        self.pubkey.as_array().encode(encoder)?;
+        self.message.as_ref().encode(encoder)?;
+        bincode::serde::Compat(&self.timeout).encode(encoder)?;
+        Ok(())
+    }
+}
+
+impl<C> bincode::Decode<C> for RequestSignatureData {
+    fn decode<D: bincode::de::Decoder<Context = C>>(
+        decoder: &mut D,
+    ) -> Result<Self, bincode::error::DecodeError> {
+        let pubkey = Pubkey::new_from_array(<[u8; 32]>::decode(decoder)?);
+        let message = bytes::Bytes::from(Vec::<u8>::decode(decoder)?);
+        let timeout = bincode::serde::Compat::<Duration>::decode(decoder)?.0;
+        Ok(Self {
+            pubkey,
+            message,
+            timeout,
+        })
+    }
+}
+
+impl<'de, C> bincode::BorrowDecode<'de, C> for RequestSignatureData {
+    fn borrow_decode<D: bincode::de::BorrowDecoder<'de, Context = C>>(
+        d: &mut D,
+    ) -> Result<Self, bincode::error::DecodeError> {
+        bincode::Decode::<C>::decode(d)
+    }
+}
+
+pub type RequestSignatureResponse = signer::SignatureResponse;
 
 impl CommandContextImpl {
     fn data_impl(&mut self, _: DataParams, mut result: DataResults) -> Result<(), anyhow::Error> {
@@ -170,6 +264,28 @@ impl CommandContextImpl {
         self.context.log(log)?;
         Ok(())
     }
+
+    fn request_signature_impl(
+        &mut self,
+        params: RequestSignatureParams,
+        mut results: RequestSignatureResults,
+    ) -> impl Future<Output = Result<(), anyhow::Error>> + 'static {
+        let mut ctx = self.context.clone();
+        async move {
+            let data = bincode::decode_from_slice::<RequestSignatureData, _>(
+                params.get()?.get_request()?,
+                standard(),
+            )?
+            .0;
+            let result = ctx
+                .request_signature(data.pubkey, data.message, data.timeout)
+                .await?;
+            results
+                .get()
+                .set_response(&bincode::encode_to_vec(result, standard())?);
+            Ok(())
+        }
+    }
 }
 
 impl Server for CommandContextImpl {
@@ -195,5 +311,16 @@ impl Server for CommandContextImpl {
 
     fn log(&mut self, params: LogParams, results: LogResults) -> Promise<(), capnp::Error> {
         self.logs_impl(params, results).map_err(anyhow2capnp).into()
+    }
+
+    fn request_signature(
+        &mut self,
+        params: RequestSignatureParams,
+        results: RequestSignatureResults,
+    ) -> Promise<(), capnp::Error> {
+        Promise::from_future(
+            self.request_signature_impl(params, results)
+                .map_err(anyhow2capnp),
+        )
     }
 }

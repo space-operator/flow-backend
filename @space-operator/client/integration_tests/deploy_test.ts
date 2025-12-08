@@ -7,6 +7,7 @@ import { LAMPORTS_PER_SOL } from "npm:@solana/web3.js@^1.91.4";
 import * as nacl from "npm:tweetnacl";
 import { decodeBase64 } from "jsr:@std/encoding@0.221/base64";
 import { checkNoErrors } from "./utils.ts";
+import { encodeBase58 } from "jsr:@std/encoding@0.221/base58";
 
 dotenv.loadSync({
   export: true,
@@ -15,7 +16,7 @@ dotenv.loadSync({
 function ed25519SignText(keypair: web3.Keypair, message: string): Uint8Array {
   return nacl.default.sign.detached(
     new TextEncoder().encode(message),
-    keypair.secretKey
+    keypair.secretKey,
   );
 }
 
@@ -36,7 +37,7 @@ Deno.test("deploy and run", async () => {
     token: apiKey,
   });
   const ownerKeypair = web3.Keypair.fromSecretKey(
-    bs58.decodeBase58(getEnv("KEYPAIR"))
+    bs58.decodeBase58(getEnv("KEYPAIR")),
   );
 
   const flowId = 3643;
@@ -57,7 +58,7 @@ Deno.test("deploy and run", async () => {
         sender: starterKeypair.publicKey,
         n: 2,
       }).M!,
-    }
+    },
   );
   starter.setToken(token);
 
@@ -69,7 +70,7 @@ Deno.test("deploy and run", async () => {
       (tx) => {
         tx.sign([ownerKeypair]);
         return tx;
-      }
+      },
     );
   }
 
@@ -81,7 +82,7 @@ Deno.test("deploy and run", async () => {
       (tx) => {
         tx.sign([starterKeypair]);
         return tx;
-      }
+      },
     );
   }
 
@@ -112,7 +113,7 @@ Deno.test("deploy and delete", async (t) => {
   const flowId = 3625;
 
   const getLatest = async (
-    flowId: client.FlowId
+    flowId: client.FlowId,
   ): Promise<client.DeploymentId> => {
     const result = await sup
       .from("flow_deployments_tags")
@@ -210,7 +211,7 @@ Deno.test("output instructions", async () => {
       inputs: new Value({
         sender: starterKeypair.publicKey,
       }).M!,
-    }
+    },
   );
   starter.setToken(token);
   const output = await starter.getFlowOutput(flow_run_id);
@@ -237,7 +238,7 @@ Deno.test("fees", async () => {
   const flowId = 3674;
   const id = await owner.deployFlow(flowId);
   const feeRecipient = new web3.PublicKey(
-    "J8mdVB7duENExHwKgyHnK3gve8CvUgFsmwWkJ55LWgZj"
+    "J8mdVB7duENExHwKgyHnK3gve8CvUgFsmwWkJ55LWgZj",
   );
   const feeAmount = 1000000;
   const updateResult = await sup
@@ -265,7 +266,7 @@ Deno.test("fees", async () => {
       inputs: new Value({
         sender: starterKeypair.publicKey,
       }).M!,
-    }
+    },
   );
   starter.setToken(token);
   const output = await starter.getFlowOutput(flow_run_id);
@@ -329,7 +330,7 @@ Deno.test("action identity", async () => {
       inputs: new Value({
         sender: starterKeypair.publicKey,
       }).M!,
-    }
+    },
   );
   starter.setToken(token);
   const output = await starter.getFlowOutput(flow_run_id);
@@ -385,7 +386,7 @@ Deno.test("execute on action", async () => {
 
   const conn = new web3.Connection(getEnv("SOLANA_DEVNET_URL"));
   const ownerKeypair = web3.Keypair.fromSecretKey(
-    bs58.decodeBase58(getEnv("KEYPAIR"))
+    bs58.decodeBase58(getEnv("KEYPAIR")),
   );
   const recent = await conn.getLatestBlockhash();
   const fundTx = web3.Transaction.populate(
@@ -399,7 +400,7 @@ Deno.test("execute on action", async () => {
       ],
       payerKey: ownerKeypair.publicKey,
       recentBlockhash: recent.blockhash,
-    })
+    }),
   );
   const fundSignature = await web3.sendAndConfirmTransaction(conn, fundTx, [
     ownerKeypair,
@@ -416,18 +417,18 @@ Deno.test("execute on action", async () => {
         sender: starterKeypair.publicKey,
       }).M!,
       action_signer: starterKeypair.publicKey.toBase58(),
-    }
+    },
   );
   starter.setToken(token);
 
   const req = await starter.getSignatureRequest(flow_run_id);
   const tx = req.buildTransaction();
   tx.sign([starterKeypair]);
+  console.log(tx.signatures.map((sig) => encodeBase58(sig)));
 
   const signature = await conn.sendTransaction(tx, {
     skipPreflight: true,
   });
-  console.log(signature);
 
   const output = (await starter.getFlowOutput(flow_run_id)).toJSObject();
   await checkNoErrors(sup, flow_run_id);
@@ -474,7 +475,7 @@ Deno.test("start authenticated by flow", async () => {
         a: 1,
         b: 2,
       }).M!,
-    }
+    },
   );
 
   const result = await starter.getFlowOutput(flow_run_id);
@@ -492,7 +493,10 @@ Deno.test("start authenticated by flow", async () => {
     .eq("deployment_id", id)
     .single();
   if (selectResult.error) throw new Error(JSON.stringify(selectResult.error));
-  assertEquals(Value.fromJSON(selectResult.data.output as client.IValue), result);
+  assertEquals(
+    Value.fromJSON(selectResult.data.output as client.IValue),
+    result,
+  );
 });
 
 Deno.test("start by flow + tag", async () => {
@@ -515,7 +519,7 @@ Deno.test("start by flow + tag", async () => {
         a: 1,
         b: 2,
       }).M!,
-    }
+    },
   );
 
   const result = await owner.getFlowOutput(flow_run_id);
@@ -562,7 +566,7 @@ Deno.test("start custom tag", async () => {
         a: 1,
         b: 2,
       }).M!,
-    }
+    },
   );
 
   const result = await owner.getFlowOutput(flow_run_id);

@@ -28,16 +28,27 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     cmd!(sh, "./gen-secrets.ts").run()?;
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let repo = if compile { "" } else { "public.ecr.aws/" };
-    cmd!(sh, "docker compose up --quiet-pull -d --wait ")
-        .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
-        .run()?;
+    cmd!(
+        sh,
+        "docker compose -f with-cmds-server.yml up --quiet-pull -d --wait "
+    )
+    .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
+    .env(
+        "CMDS_IMAGE",
+        format!("{repo}space-operator/cmds-server:{tag}"),
+    )
+    .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
-    cmd!(sh, "./import-data.ts").run()?;
+    cmd!(sh, "./import-data.ts --file=export.json").run()?;
 
     sh.change_dir(&meta.workspace_root);
     sh.change_dir("@space-operator/client");
 
-    cmd!(sh, "deno test -A --trace-leaks integration_tests").run()?;
+    cmd!(
+        sh,
+        "deno test --parallel -A --trace-leaks integration_tests"
+    )
+    .run()?;
 
     Ok(())
 }
@@ -57,23 +68,22 @@ fn main() {
 
     let sh = Shell::new().unwrap();
 
-    if args.ecr_login {
-        if let Ok(password) = cmd!(sh, "aws ecr-public get-login-password --region us-east-1")
+    if args.ecr_login
+        && let Ok(password) = cmd!(sh, "aws ecr-public get-login-password --region us-east-1")
             .read()
             .inspect_err(|error| eprint!("{error}"))
-        {
-            cmd!(
-                sh,
-                "docker login --username AWS --password-stdin public.ecr.aws/space-operator"
-            )
-            .stdin(password.trim())
-            .run()
-            .inspect_err(|error| {
-                eprint!("{error}");
-                args.ecr_login = false;
-            })
-            .ok();
-        }
+    {
+        cmd!(
+            sh,
+            "docker login --username AWS --password-stdin public.ecr.aws/space-operator"
+        )
+        .stdin(password.trim())
+        .run()
+        .inspect_err(|error| {
+            eprint!("{error}");
+            args.ecr_login = false;
+        })
+        .ok();
     }
 
     dotenv::dotenv().ok();
@@ -96,13 +106,16 @@ fn main() {
     sh.change_dir("docker/");
 
     if result.is_err() {
-        cmd!(sh, "docker compose logs flow-server")
-            .run()
-            .inspect_err(|error| eprint!("{error}"))
-            .ok();
+        cmd!(
+            sh,
+            "docker compose -f with-cmds-server.yml logs flow-server"
+        )
+        .run()
+        .inspect_err(|error| eprint!("{error}"))
+        .ok();
     }
 
-    cmd!(sh, "docker compose down -v")
+    cmd!(sh, "docker compose -f with-cmds-server.yml down -v")
         .ignore_stdout()
         .ignore_stderr()
         .run()

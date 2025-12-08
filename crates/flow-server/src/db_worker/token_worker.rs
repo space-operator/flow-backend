@@ -5,7 +5,7 @@ use crate::{
 };
 use actix::{Actor, ActorFutureExt, Addr, AsyncContext, ResponseFuture, WrapFuture};
 use chrono::{Duration, Utc};
-use db::{LocalStorage, local_storage::Jwt, pool::RealDbPool};
+use db::{LocalStorage, local_storage::Jwt, pool::DbPool};
 use flow_lib::{UserId, config::Endpoints, context::get_jwt, utils::tower_client::CommonErrorExt};
 use futures_channel::oneshot;
 use futures_util::{FutureExt, future::BoxFuture};
@@ -23,7 +23,7 @@ pub trait ClaimToken: Unpin + 'static {
 pub struct LoginWithAdminCred {
     pub client: reqwest::Client,
     pub user_id: UserId,
-    pub db: RealDbPool,
+    pub db: DbPool,
     pub endpoints: Endpoints,
 }
 
@@ -230,7 +230,7 @@ async fn refresh(refresh_token: String, endpoints: Endpoints) -> Result<Jwt, get
         refresh_token: String,
     }
 
-    let resp = reqwest::Client::new()
+    let resp = crate::HTTP
         .post(format!(
             "{}/auth/v1/token?grant_type=refresh_token",
             endpoints.supabase
@@ -361,7 +361,6 @@ pub async fn token_from_apikeys(
     HashMap<UserId, get_jwt::Svc>,
     HashMap<UserId, actix::Addr<TokenWorker>>,
 ) {
-    let client = reqwest::Client::new();
     let tasks = keys.into_iter().map(|k| {
         async fn send(
             client: &reqwest::Client,
@@ -380,7 +379,7 @@ pub async fn token_from_apikeys(
             Ok(output.user_id)
         }
 
-        send(&client, &upstream_url, k.clone()).map(|r| (k, r))
+        send(&crate::HTTP, &upstream_url, k.clone()).map(|r| (k, r))
     });
     let actors = futures_util::future::join_all(tasks)
         .await
@@ -398,7 +397,7 @@ pub async fn token_from_apikeys(
                 local_db.clone(),
                 endpoints.clone(),
                 ClaimWithApiKey {
-                    client: client.clone(),
+                    client: crate::HTTP.clone(),
                     user_id,
                     api_key,
                     upstream_url: upstream_url.clone(),

@@ -25,13 +25,14 @@ use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
 use std::{any::Any, collections::HashMap, sync::Arc, time::Duration};
 use tower::{Service, ServiceExt};
 
+pub use spo_helius::Helius;
+
 pub mod env {
     pub const RUST_LOG: &str = "RUST_LOG";
     pub const OVERWRITE_FEEPAYER: &str = "OVERWRITE_FEEPAYER";
     pub const COMPUTE_BUDGET: &str = "COMPUTE_BUDGET";
     pub const FALLBACK_COMPUTE_BUDGET: &str = "FALLBACK_COMPUTE_BUDGET";
     pub const PRIORITY_FEE: &str = "PRIORITY_FEE";
-    pub const SIMULATION_COMMITMENT_LEVEL: &str = "SIMULATION_COMMITMENT_LEVEL";
     pub const TX_COMMITMENT_LEVEL: &str = "TX_COMMITMENT_LEVEL";
     pub const WAIT_COMMITMENT_LEVEL: &str = "WAIT_COMMITMENT_LEVEL";
     pub const EXECUTE_ON: &str = "EXECUTE_ON";
@@ -164,13 +165,15 @@ pub mod get_jwt {
 pub mod signer {
     use crate::{
         FlowRunId,
-        solana::{Pubkey, SdkPresigner, Signature},
         utils::{TowerClient, tower_client::CommonError},
     };
     use actix::MailboxError;
     use chrono::{DateTime, Utc};
     use serde::{Deserialize, Serialize};
     use serde_with::{DisplayFromStr, DurationSecondsWithFrac, base64::Base64, serde_as};
+    use solana_presigner::Presigner as SdkPresigner;
+    use solana_pubkey::Pubkey;
+    use solana_signature::Signature;
     use std::time::Duration;
     use thiserror::Error as ThisError;
 
@@ -237,13 +240,47 @@ pub mod signer {
         #[serde_as(as = "Option<Base64>")]
         pub new_message: Option<bytes::Bytes>,
     }
+
+    impl bincode::Encode for SignatureResponse {
+        fn encode<E: bincode::enc::Encoder>(
+            &self,
+            encoder: &mut E,
+        ) -> Result<(), bincode::error::EncodeError> {
+            self.signature.as_array().encode(encoder)?;
+            self.new_message
+                .as_ref()
+                .map(|m| m.as_ref())
+                .encode(encoder)?;
+            Ok(())
+        }
+    }
+
+    impl<C> bincode::Decode<C> for SignatureResponse {
+        fn decode<D: bincode::de::Decoder<Context = C>>(
+            decoder: &mut D,
+        ) -> Result<Self, bincode::error::DecodeError> {
+            let signature = Signature::from(<[u8; 64]>::decode(decoder)?);
+            let new_message = Option::<Vec<u8>>::decode(decoder)?.map(Into::into);
+            Ok(Self {
+                signature,
+                new_message,
+            })
+        }
+    }
+
+    impl<'de, C> bincode::BorrowDecode<'de, C> for SignatureResponse {
+        fn borrow_decode<D: bincode::de::BorrowDecoder<'de, Context = C>>(
+            decoder: &mut D,
+        ) -> Result<Self, bincode::error::DecodeError> {
+            bincode::Decode::decode(decoder)
+        }
+    }
 }
 
 /// Output values and Solana instructions to be executed.
 pub mod execute {
     use crate::{
-        FlowRunId, SolanaNet,
-        solana::{ExecutionConfig, Instructions},
+        solana::Instructions,
         utils::{
             TowerClient,
             tower_client::{CommonError, CommonErrorExt},
@@ -252,10 +289,10 @@ pub mod execute {
     use futures::channel::oneshot::Canceled;
     use serde::{Deserialize, Serialize};
     use serde_with::{DisplayFromStr, base64::Base64, serde_as};
-    use solana_program::{
-        instruction::InstructionError, message::CompileError, sanitize::SanitizeError,
-    };
-    use solana_rpc_client::nonblocking::rpc_client::RpcClient as SolanaClient;
+    use solana_instruction_error::InstructionError;
+    use solana_message::CompileError;
+    use solana_sanitize::SanitizeError;
+
     use solana_rpc_client_api::client_error::Error as ClientError;
     use solana_signature::Signature;
     use solana_signer::SignerError;
@@ -347,10 +384,13 @@ pub mod execute {
         s.as_ref().map(|v| v.as_str()).unwrap_or_default()
     }
 
-    #[derive(ThisError, Debug, Clone)]
+    #[serde_as]
+    #[derive(ThisError, Debug, Clone, Serialize, Deserialize)]
     pub enum Error {
         #[error("canceled {}", unwrap(.0))]
         Canceled(Option<String>),
+        #[error("collected")]
+        Collected,
         #[error("some node failed to provide instructions")]
         TxIncomplete,
         #[error("time out")]
@@ -359,22 +399,39 @@ pub mod execute {
         InsufficientSolanaBalance { needed: u64, balance: u64 },
         #[error("transaction simulation failed")]
         TxSimFailed,
-        #[error("{}", crate::solana::verbose_solana_error(.error))]
+        #[error("{}", crate::utils::verbose_solana_error(.error))]
         Solana {
             #[source]
+            #[serde_as(as = "Arc<crate::errors::AsClientError>")]
             error: Arc<ClientError>,
             inserted: usize,
         },
         #[error(transparent)]
-        Signer(#[from] Arc<SignerError>),
+        Signer(
+            #[from]
+            #[serde_as(as = "Arc<crate::errors::AsSignerError>")]
+            Arc<SignerError>,
+        ),
         #[error(transparent)]
-        CompileError(#[from] Arc<CompileError>),
+        CompileError(
+            #[from]
+            #[serde_as(as = "Arc<crate::errors::AsCompileError>")]
+            Arc<CompileError>,
+        ),
         #[error(transparent)]
         InstructionError(#[from] Arc<InstructionError>),
         #[error(transparent)]
-        SanitizeError(#[from] Arc<SanitizeError>),
+        SanitizeError(
+            #[from]
+            #[serde_as(as = "Arc<crate::errors::AsSanitizeError>")]
+            Arc<SanitizeError>,
+        ),
         #[error(transparent)]
-        ChannelClosed(#[from] Canceled),
+        ChannelClosed(
+            #[from]
+            #[serde_as(as = "crate::errors::AsCancelled")]
+            Canceled,
+        ),
         #[error(transparent)]
         Common(#[from] CommonError),
     }
@@ -428,30 +485,6 @@ pub mod execute {
             Error::SanitizeError(Arc::new(value))
         }
     }
-
-    pub fn simple(
-        rpc: Arc<SolanaClient>,
-        network: SolanaNet,
-        signer: signer::Svc,
-        flow_run_id: Option<FlowRunId>,
-        config: ExecutionConfig,
-    ) -> Svc {
-        let handle = move |req: Request| {
-            let rpc = rpc.clone();
-            let signer = signer.clone();
-            let config = config.clone();
-            async move {
-                Ok(Response {
-                    signature: Some(
-                        req.instructions
-                            .execute(&rpc, network, signer, flow_run_id, config)
-                            .await?,
-                    ),
-                })
-            }
-        };
-        Svc::new(tower::service_fn(handle))
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
@@ -482,6 +515,7 @@ pub struct CommandContextData {
 pub struct FlowSetServices {
     pub http: reqwest::Client,
     pub solana_client: Arc<SolanaClient>,
+    pub helius: Option<Arc<Helius>>,
     pub extensions: Arc<Extensions>,
     pub api_input: api_input::Svc,
 }
@@ -533,6 +567,7 @@ impl CommandContext {
                 set: FlowSetServices {
                     http: reqwest::Client::new(),
                     solana_client,
+                    helius: None,
                     extensions: <_>::default(),
                     api_input: unimplemented_svc(),
                 },

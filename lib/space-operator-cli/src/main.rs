@@ -10,6 +10,7 @@ use futures::{AsyncBufReadExt, AsyncReadExt, future, io::AllowStdIo};
 use postgrest::Postgrest;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
+use rand::{Rng, rngs::OsRng};
 use regex::Regex;
 use reqwest::{
     StatusCode,
@@ -18,6 +19,7 @@ use reqwest::{
 use schema::{CommandDefinition, CommandId, ValueType};
 use semver::Version;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde_json::json;
 use std::{
     borrow::{Borrow, Cow},
     cmp::Ordering,
@@ -33,7 +35,7 @@ use url::Url;
 use uuid::Uuid;
 use xshell::{Shell, cmd};
 
-static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| reqwest::Client::new());
+static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(Default::default);
 
 pub mod schema;
 
@@ -184,6 +186,20 @@ enum Commands {
         #[command(subcommand)]
         command: GenerateCommands,
     },
+    /// Run various binaries
+    Run {
+        /// Specify binary to run
+        bin: Binaries,
+        /// Run in release mode
+        #[arg(long)]
+        release: bool,
+    },
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum Binaries {
+    AllCmdsServer,
+    DenoCmdsServer,
 }
 
 #[derive(Subcommand, Debug)]
@@ -280,6 +296,8 @@ pub enum Error {
     ReadFile(PathBuf),
     #[error("failed to write file {}", .0.display())]
     WriteFile(PathBuf),
+    #[error("failed to create dir {}", .0.display())]
+    CreateDir(PathBuf),
     #[error("failed to parse node definition")]
     ParseNodeDefinition,
     #[error("{}", .0)]
@@ -298,6 +316,8 @@ pub enum Error {
     Metadata,
     #[error("package not found: {}", .0)]
     PackageNotFound(String),
+    #[error("binary not found: {}", .0)]
+    BinaryNotFound(String),
     #[error("package is not a library: {}", .0)]
     NotLib(String),
     #[error("invalid value")]
@@ -380,6 +400,11 @@ async fn write_file(path: impl AsRef<Path>, data: impl AsRef<[u8]>) -> Result<bo
         stdout.flush().change_context(Error::Io("write stdout"))?;
         Ok(false)
     } else {
+        if let Some(path) = path.parent() {
+            tokio::fs::create_dir_all(path)
+                .await
+                .change_context_lazy(|| Error::CreateDir(path.to_owned()))?;
+        }
         tokio::fs::write(path, data)
             .await
             .change_context_lazy(|| Error::WriteFile(path.to_owned()))?;
@@ -597,7 +622,7 @@ impl ApiClient {
 
         tokio::fs::create_dir_all(&base)
             .await
-            .change_context_lazy(|| Error::WriteData(base.clone()))?;
+            .change_context_lazy(|| Error::CreateDir(base.clone()))?;
 
         let path = base.join(Self::data_file_name());
 
@@ -724,6 +749,15 @@ fn cargo_metadata() -> Result<Metadata, Report<Error>> {
         .no_deps()
         .exec()
         .change_context(Error::Metadata)
+}
+
+fn find_binary_by_name<'a>(meta: &'a Metadata, bin: &str) -> Result<&'a Target, Report<Error>> {
+    Ok(meta
+        .workspace_packages()
+        .into_iter()
+        .flat_map(|p| p.targets.iter().filter(|t| t.is_bin()))
+        .find(|t| t.name == bin)
+        .ok_or_else(|| Error::BinaryNotFound(bin.to_owned()))?)
 }
 
 fn find_target_crate_by_name<'a>(
@@ -1030,9 +1064,6 @@ async fn write_node_definition(
 
     let mut path = root.join("node-definitions");
     path.extend(modules);
-    tokio::fs::create_dir_all(&path)
-        .await
-        .change_context(Error::Io("create dir"))?;
     path.push(&format!("{}.json", def.data.node_id));
     let path = relative_to_pwd(path);
 
@@ -1358,7 +1389,7 @@ async fn write_code(
     path.extend(modules);
     tokio::fs::create_dir_all(&path)
         .await
-        .change_context(Error::Io("create dir"))?;
+        .change_context_lazy(|| Error::CreateDir(path.to_owned()))?;
     path.push(format!("{}.rs", def.data.node_id));
     let path = relative_to_pwd(path);
 
@@ -1666,6 +1697,62 @@ fn make_absolute(path: impl AsRef<Path>) -> Result<PathBuf, Report<Error>> {
     }
 }
 
+async fn generate_cmds_server_config(path: &Path) -> Result<(), Report<Error>> {
+    let client = ApiClient::load().await.change_context(Error::NotLogin)?;
+    let apikey = client.config.apikey;
+    let secret_key = data_encoding::HEXLOWER.encode(&OsRng.r#gen::<[u8; 32]>());
+    let config = json!({
+        "$schema": "https://schema.spaceoperator.com/command-server-config.schema.json",
+        "apikey": apikey,
+        "secret_key": secret_key,
+    });
+    let text = serde_json::to_string_pretty(&config).unwrap();
+    if write_file(path, text).await? {
+        println!("generated {}", relative_to_pwd(path).display());
+    }
+
+    Ok(())
+}
+
+async fn run_cmds_server(release: bool, bin: &str) -> Result<(), Report<Error>> {
+    let meta =
+        cargo_metadata().attach_printable("make sure you are inside flow-backend repository")?;
+    find_binary_by_name(&meta, bin)
+        .attach_printable("make sure you are inside flow-backend repository")?;
+    if matches!(std::env::current_dir(), Ok(dir) if dir != meta.workspace_root) {
+        println!("$ cd {}", relative_to_pwd(&meta.workspace_root).display());
+        std::env::set_current_dir(&meta.workspace_root).change_context(Error::Io("chdir"))?;
+    }
+    let config_path = PathBuf::from(format!("_data/{bin}.jsonc"));
+    if !config_path.is_file() {
+        generate_cmds_server_config(&config_path).await?;
+    }
+
+    let bin = bin.to_owned();
+    let handler = spawn_blocking(move || -> Result<(), Report<Error>> {
+        let sh = Shell::new().change_context(Error::Shell)?;
+        let build_dir = release.then_some("release/").unwrap_or("debug/");
+        let release = release.then_some("--release");
+        cmd!(sh, "cargo build --bin {bin} {release...}")
+            .run()
+            .change_context(Error::Subprocess)?;
+        let binary = relative_to_pwd(meta.target_directory.join(build_dir).join(&bin));
+        cmd!(sh, "{binary} {config_path}")
+            .run()
+            .change_context(Error::Subprocess)?;
+        Ok(())
+    });
+
+    let result = match future::select(std::pin::pin!(ctrl_c()), handler).await {
+        future::Either::Left((_, handler)) => handler.await,
+        future::Either::Right((result, _)) => result,
+    };
+
+    result.change_context(Error::Thread)??;
+
+    Ok(())
+}
+
 async fn start_flow_server(
     config: &Option<PathBuf>,
     mut docker: bool,
@@ -1749,7 +1836,8 @@ async fn start_flow_server(
         let flow_server =
             relative_to_pwd(meta.target_directory.join(build_dir).join("flow-server"));
         let rust_log = std::env::var("RUST_LOG")
-            .unwrap_or_else(|_| "info,actix_web=debug,flow_server=debug,iroh=warn".to_owned());
+            .unwrap_or_else(|_| "info,actix_web=debug,flow_server=debug,iroh=warn,iroh::net_report=error,iroh_quinn_udp=error".to_owned());
+        println!("RUST_LOG={rust_log}");
         cmd!(sh, "{flow_server} {config_path}")
             .env("RUST_LOG", rust_log)
             .run()
@@ -1856,6 +1944,10 @@ async fn run() -> Result<(), Report<Error>> {
                 Some(path) => generate_flow_server_config(path).await?,
                 None => generate_flow_server_config("config.toml").await?,
             },
+        },
+        Some(Commands::Run { bin, release }) => match bin {
+            Binaries::AllCmdsServer => run_cmds_server(*release, "all-cmds-server").await?,
+            Binaries::DenoCmdsServer => run_cmds_server(*release, "deno-cmds-server").await?,
         },
         None => {
             Args::command().print_long_help().ok();

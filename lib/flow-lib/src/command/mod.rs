@@ -9,7 +9,8 @@
 use crate::{
     CommandType, ValueType,
     config::{
-        CmdInputDescription, CmdOutputDescription, Name, ValueSet, client::NodeData,
+        CmdInputDescription, CmdOutputDescription, Name, ValueSet,
+        client::{self, NodeData},
         node::Permissions,
     },
     context::CommandContext,
@@ -18,6 +19,7 @@ use futures::future::{Either, LocalBoxFuture, OptionFuture};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, collections::BTreeMap, future::ready};
+use uuid::Uuid;
 use value::Value;
 
 pub mod builder;
@@ -33,7 +35,7 @@ pub mod prelude {
         },
         config::{client::NodeData, node::Permissions},
         context::CommandContext,
-        solana::{Instructions, Keypair, Pubkey, Signature},
+        solana::Instructions,
     };
     pub use async_trait::async_trait;
     pub use bytes::Bytes;
@@ -41,6 +43,9 @@ pub mod prelude {
     pub use serde::{Deserialize, Serialize};
     pub use serde_json::Value as JsonValue;
     pub use serde_with::serde_as;
+    pub use solana_keypair::Keypair;
+    pub use solana_pubkey::Pubkey;
+    pub use solana_signature::Signature;
     pub use thiserror::Error as ThisError;
     pub use value::{
         self, Decimal, Value,
@@ -54,6 +59,10 @@ pub type CommandError = anyhow::Error;
 /// Generic trait for implementing commands.
 #[async_trait::async_trait(?Send)]
 pub trait CommandTrait: 'static {
+    fn r#type(&self) -> CommandType {
+        CommandType::Native
+    }
+
     /// Unique name to identify the command.
     fn name(&self) -> Name;
 
@@ -91,51 +100,100 @@ pub trait CommandTrait: 'static {
         result
     }
 
-    /// Specify how to convert inputs into passthrough outputs.
-    fn passthrough_outputs(&self, inputs: &ValueSet) -> ValueSet {
-        let mut res = ValueSet::new();
-        for i in self.inputs() {
-            if i.passthrough {
-                if let Some(value) = inputs.get(&i.name) {
-                    if !i.required && matches!(value, Value::Null) {
-                        continue;
-                    }
+    fn node_data(&self) -> NodeData {
+        default_node_data(self)
+    }
+}
 
-                    let value = match i.type_bounds.first() {
-                        Some(ValueType::Pubkey) => {
-                            // keypair could be automatically converted into pubkey
-                            // we don't want to passthrough the keypair here, only pubkey
-                            value::pubkey::deserialize(value.clone()).map(Into::into)
-                        }
-                        _ => Ok(value.clone()),
-                    }
-                    .unwrap_or_else(|error| {
-                        tracing::warn!("error reading passthrough: {}", error);
-                        value.clone()
-                    });
-                    res.insert(i.name, value);
-                }
+/// Specify how to convert inputs into passthrough outputs.
+pub fn passthrough_outputs<T: CommandTrait + ?Sized>(cmd: &T, inputs: &ValueSet) -> ValueSet {
+    let mut res = ValueSet::new();
+    for i in cmd.inputs() {
+        if i.passthrough
+            && let Some(value) = inputs.get(&i.name)
+        {
+            if !i.required && matches!(value, Value::Null) {
+                continue;
             }
+
+            let value = match i.type_bounds.first() {
+                Some(ValueType::Pubkey) => {
+                    // keypair could be automatically converted into pubkey
+                    // we don't want to passthrough the keypair here, only pubkey
+                    value::pubkey::deserialize(value.clone()).map(Into::into)
+                }
+                _ => Ok(value.clone()),
+            }
+            .unwrap_or_else(|error| {
+                tracing::warn!("error reading passthrough: {}", error);
+                value.clone()
+            });
+            res.insert(i.name, value);
         }
-        res
     }
+    res
+}
 
-    fn input_is_required(&self, name: &str) -> Option<bool> {
-        self.inputs()
-            .into_iter()
-            .find_map(|i| (i.name == name).then_some(i.required))
+/// Specify how [`form_data`][crate::config::NodeConfig::form_data] are read.
+pub fn default_read_form_data<T: CommandTrait + ?Sized>(
+    cmd: &T,
+    data: serde_json::Value,
+) -> ValueSet {
+    let mut result = ValueSet::new();
+    for i in cmd.inputs() {
+        if let Some(json) = data.get(&i.name) {
+            let value = Value::from(json.clone());
+            result.insert(i.name.clone(), value);
+        }
     }
+    result
+}
 
-    fn output_is_optional(&self, name: &str) -> Option<bool> {
-        self.outputs()
+pub fn default_node_data<T: CommandTrait + ?Sized>(cmd: &T) -> NodeData {
+    NodeData {
+        r#type: cmd.r#type(),
+        node_id: cmd.name(),
+        sources: cmd
+            .outputs()
             .into_iter()
-            .find_map(|o| (o.name == name).then_some(o.optional))
-            .or_else(|| {
-                self.inputs()
-                    .into_iter()
-                    .find_map(|i| (i.name == name && i.passthrough).then_some(!i.required))
+            .map(|output| client::Source {
+                id: Uuid::nil(),
+                name: output.name,
+                r#type: output.r#type,
+                optional: output.optional,
             })
+            .collect(),
+        targets: cmd
+            .inputs()
+            .into_iter()
+            .map(|input| client::Target {
+                id: Uuid::nil(),
+                name: input.name,
+                type_bounds: input.type_bounds,
+                required: input.required,
+                passthrough: input.passthrough,
+            })
+            .collect(),
+        targets_form: client::TargetsForm::default(),
+        instruction_info: cmd.instruction_info(),
     }
+}
+
+pub fn input_is_required<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Option<bool> {
+    cmd.inputs()
+        .into_iter()
+        .find_map(|i| (i.name == name).then_some(i.required))
+}
+
+pub fn output_is_optional<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Option<bool> {
+    cmd.outputs()
+        .into_iter()
+        .find_map(|o| (o.name == name).then_some(o.optional))
+        .or_else(|| {
+            cmd.inputs()
+                .into_iter()
+                .find_map(|i| (i.name == name && i.passthrough).then_some(!i.required))
+        })
 }
 
 /// Specify the order with which a command will return its output:
@@ -355,6 +413,7 @@ impl<T> CommandIndex<T> {
     }
 }
 
+#[derive(Clone)]
 pub struct CommandFactory {
     index: CommandIndex<&'static CommandDescription>,
 }

@@ -1,0 +1,16 @@
+include:
+  - docker-compose.yml
+
+secrets:
+  cmds-server-config:
+    file: ./.cmds-server-config.jsonc
+
+services:
+  cmds-server:
+    image: ${CMDS_IMAGE:-public.ecr.aws/space-operator/cmds-server:latest}
+    command: /run/secrets/cmds-server-config
+    secrets:
+      - cmds-server-config
+    depends_on:
+      flow-server:
+        condition: service_healthy

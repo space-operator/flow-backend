@@ -1,4 +1,6 @@
 use actix::MailboxError;
+use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use std::{
     error::Error as StdError,
     fmt::{Debug, Display},
@@ -10,14 +12,19 @@ use tower::{service_fn, util::BoxCloneSyncService};
 
 pub type TowerClient<T, U, E> = BoxCloneSyncService<T, U, E>;
 
-#[derive(Clone, Debug, ThisError)]
+#[serde_as]
+#[derive(Clone, Debug, ThisError, Serialize, Deserialize)]
 pub enum CommonError {
     #[error("unimplemented")]
     Unimplemented,
     #[error(transparent)]
-    MailBox(#[from] MailboxError),
+    MailBox(
+        #[from]
+        #[serde_as(as = "crate::errors::AsMailboxError")]
+        MailboxError,
+    ),
     #[error(transparent)]
-    Other(Arc<anyhow::Error>),
+    Other(#[serde_as(as = "Arc<crate::errors::AsAnyhow>")] Arc<anyhow::Error>),
 }
 
 pub trait FromAnyhow: Sized {

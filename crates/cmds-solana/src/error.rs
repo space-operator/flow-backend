@@ -11,7 +11,7 @@ pub type Result<T> = StdResult<T, Error>;
 pub enum Error {
     #[error(transparent)]
     Any(#[from] anyhow::Error),
-    #[error("{}", flow_lib::solana::verbose_solana_error(.0))]
+    #[error("{}", flow_lib::utils::verbose_solana_error(.0))]
     SolanaClient(#[from] Box<solana_rpc_client_api::client_error::Error>),
     #[error(transparent)]
     SolanaProgram(#[from] solana_program::program_error::ProgramError),

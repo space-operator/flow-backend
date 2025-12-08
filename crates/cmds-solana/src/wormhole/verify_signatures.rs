@@ -1,6 +1,6 @@
 use super::{GuardianSetData, SignatureItem, VerifySignaturesData};
 use crate::{prelude::*, wormhole::WormholeInstructions};
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
 use byteorder::{LittleEndian, WriteBytesExt};
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
@@ -121,10 +121,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
                 AccountMeta::new(input.signature_set.pubkey(), true),
                 AccountMeta::new_readonly(sysvar::instructions::id(), false),
                 AccountMeta::new_readonly(sysvar::rent::id(), false),
-                AccountMeta::new_readonly(solana_program::system_program::id(), false),
+                AccountMeta::new_readonly(solana_system_interface::program::ID, false),
             ],
 
-            data: (WormholeInstructions::VerifySignatures, payload).try_to_vec()?,
+            data: borsh::to_vec(&(WormholeInstructions::VerifySignatures, payload))?,
         };
 
         verify_txs.push(vec![secp_ix, verify_ix])

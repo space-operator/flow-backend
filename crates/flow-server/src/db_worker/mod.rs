@@ -4,14 +4,11 @@ use actix::{
     ResponseFuture, WrapFuture, fut::wrap_future,
 };
 use command_rpc::flow_side::address_book::BaseAddressBook;
-use db::{
-    FlowRunLogsRow,
-    pool::{DbPool, RealDbPool},
-};
+use db::{FlowRunLogsRow, pool::DbPool};
 use flow_lib::{
     FlowRunId, UserId,
     config::Endpoints,
-    context::get_jwt,
+    context::{Helius, get_jwt},
     flow_run_events::{DEFAULT_LOG_FILTER, EventSender},
 };
 use futures_channel::mpsc;
@@ -22,7 +19,7 @@ use serde::Serialize;
 use std::{
     convert::Infallible,
     net::SocketAddr,
-    sync::{Arc, atomic::AtomicU64},
+    sync::{Arc, LazyLock, atomic::AtomicU64},
     time::Duration,
 };
 use tokio::sync::broadcast;
@@ -66,6 +63,7 @@ pub struct DBWorker {
     done_tx: broadcast::Sender<()>,
     new_flow_api_request: NewRequestService,
     remote_command_address_book: BaseAddressBook,
+    helius: Option<Arc<Helius>>,
 }
 
 #[derive(Serialize)]
@@ -88,11 +86,11 @@ impl actix::Handler<GetIrohInfo> for DBWorker {
         let endpoint = self.remote_command_address_book.endpoint().clone();
         Box::pin(async move {
             let node_id = endpoint.node_id().to_string();
-            let relay_url = endpoint.home_relay().initialized().await?.to_string();
+            let relay_url = endpoint.home_relay().initialized().await.to_string();
             let direct_addresses = endpoint
                 .direct_addresses()
                 .initialized()
-                .await?
+                .await
                 .into_iter()
                 .map(|addr| addr.addr)
                 .collect();
@@ -119,13 +117,15 @@ impl DBWorker {
         ctx: &mut actix::Context<Self>,
     ) -> Self {
         let (tx, rx) = mpsc::unbounded();
-        match &db {
-            DbPool::Real(db) => ctx.spawn(wrap_future::<_, Self>(db_copy_in(rx, db.clone())).map(
-                |_, act, _| {
-                    act.done_tx.send(()).ok();
-                },
-            )),
-        };
+        ctx.spawn(
+            wrap_future::<_, Self>(db_copy_in(rx, db.clone())).map(|_, act, _| {
+                act.done_tx.send(()).ok();
+            }),
+        );
+        let helius = config
+            .helius_api_key
+            .as_ref()
+            .map(|key| Arc::new(Helius::new(crate::HTTP.clone(), &key)));
 
         Self {
             db,
@@ -137,6 +137,7 @@ impl DBWorker {
             done_tx: broadcast::channel(1).0,
             new_flow_api_request,
             remote_command_address_book,
+            helius,
         }
     }
 }
@@ -240,6 +241,7 @@ impl actix::Handler<GetUserWorker> for DBWorker {
             let endpoints = self.endpoints.clone();
             let new_flow_api_request = self.new_flow_api_request.clone();
             let remote_command_address_book = self.remote_command_address_book.clone();
+            let helius = self.helius.clone();
             let arbiter = Arbiter::current();
             move || {
                 UserWorker::start_in_arbiter(&arbiter, move |_| {
@@ -250,6 +252,7 @@ impl actix::Handler<GetUserWorker> for DBWorker {
                         .counter(counter)
                         .new_flow_api_request(new_flow_api_request)
                         .remote_command_address_book(remote_command_address_book)
+                        .maybe_helius(helius)
                         .build()
                 })
             }
@@ -268,28 +271,26 @@ impl actix::Message for GetTokenWorker {
 impl actix::Handler<GetTokenWorker> for DBWorker {
     type Result = Result<actix::Addr<TokenWorker>, get_jwt::Error>;
     fn handle(&mut self, msg: GetTokenWorker, _: &mut Self::Context) -> Self::Result {
+        static HTTP: LazyLock<reqwest::Client> = LazyLock::new(Default::default);
+
         let id = msg.user_id;
-        match &self.db {
-            DbPool::Real(db) => {
-                let addr = self.actors.get_or_start(id, {
-                    let user_id = msg.user_id;
-                    let local_db = self.db.get_local().clone();
-                    let endpoints = self.endpoints.clone();
-                    let claim = LoginWithAdminCred {
-                        client: reqwest::Client::new(),
-                        user_id,
-                        db: db.clone(),
-                        endpoints: endpoints.clone(),
-                    };
-                    move || {
-                        TokenWorker::start_in_arbiter(&Arbiter::current(), move |_| {
-                            TokenWorker::new(user_id, local_db, endpoints, claim)
-                        })
-                    }
-                });
-                Ok(addr)
+        let addr = self.actors.get_or_start(id, {
+            let user_id = msg.user_id;
+            let local_db = self.db.get_local().clone();
+            let endpoints = self.endpoints.clone();
+            let claim = LoginWithAdminCred {
+                client: HTTP.clone(),
+                user_id,
+                db: self.db.clone(),
+                endpoints: endpoints.clone(),
+            };
+            move || {
+                TokenWorker::start_in_arbiter(&Arbiter::current(), move |_| {
+                    TokenWorker::new(user_id, local_db, endpoints, claim)
+                })
             }
-        }
+        });
+        Ok(addr)
     }
 }
 
@@ -389,7 +390,7 @@ impl actix::Handler<CopyIn<Vec<FlowRunLogsRow>>> for DBWorker {
     }
 }
 
-async fn db_copy_in(rx: mpsc::UnboundedReceiver<Vec<FlowRunLogsRow>>, db: RealDbPool) {
+async fn db_copy_in(rx: mpsc::UnboundedReceiver<Vec<FlowRunLogsRow>>, db: DbPool) {
     const CHUNK_SIZE: usize = 16;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
 

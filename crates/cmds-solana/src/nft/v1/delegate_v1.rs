@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use anchor_lang::AnchorSerialize;
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
     accounts::{MasterEdition, Metadata, MetadataDelegateRecord, TokenRecord},
@@ -64,7 +63,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let (master_edition_account, _) = MasterEdition::find_pda(&input.mint_account);
 
     // get associated token account pda
-    let token_account = spl_associated_token_account::get_associated_token_address(
+    let token_account = spl_associated_token_account_interface::address::get_associated_token_address(
         &input.fee_payer.pubkey(),
         &input.mint_account,
     );
@@ -125,7 +124,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         payer: input.fee_payer.pubkey(),
         system_program: system_program::id(),
         sysvar_instructions: sysvar::instructions::id(),
-        spl_token_program: Some(spl_token::id()),
+        spl_token_program: Some(spl_token_interface::ID),
         authorization_rules_program: None,
         authorization_rules: None,
     };

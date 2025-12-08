@@ -28,25 +28,27 @@ use flow_lib::{
         client::{FlowRunOrigin, PartialConfig},
     },
     context::{
+        Helius,
         env::RUST_LOG,
         get_jwt,
         signer::{self, SignatureRequest},
     },
-    solana::{Pubkey, SolanaActionConfig, is_same_message_logic},
+    solana::{Pubkey, SolanaActionConfig},
     utils::{TowerClient, tower_client::CommonErrorExt},
 };
+use flow_lib_solana::is_same_message_logic;
 use futures_channel::{mpsc, oneshot};
+use futures_metrics::FutureExt;
 use futures_util::{TryFutureExt, future::BoxFuture};
 use hashbrown::HashMap;
+use metrics::histogram;
 use solana_signature::Signature;
 use std::{
     future::{Future, ready},
-    sync::LazyLock,
+    sync::Arc,
 };
 use thiserror::Error as ThisError;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
-
-static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(Default::default);
 
 #[derive(bon::Builder)]
 pub struct UserWorker {
@@ -54,12 +56,13 @@ pub struct UserWorker {
     counter: Counter,
     user_id: UserId,
     endpoints: Endpoints,
+    helius: Option<Arc<Helius>>,
     new_flow_api_request: NewRequestService,
     remote_command_address_book: BaseAddressBook,
 
-    #[builder(default)]
+    #[builder(skip)]
     subs: HashMap<u64, Subscription>,
-    #[builder(default)]
+    #[builder(skip)]
     sigreg: HashMap<i64, SigReq>,
 }
 
@@ -180,12 +183,12 @@ impl UserWorker {
                     .await?;
                 signer.add_wallet(&starter.user_id, &addr.recipient(), wallet)?;
             }
-            if let Some(pk) = action_identity {
-                if !signer.signers.contains_key(&pk) {
-                    let conn = db.get_user_conn(user_id).await?;
-                    let wallet = conn.get_wallet_by_pubkey(&pk.to_bytes()).await?;
-                    signer.add_wallet(&starter.user_id, &addr, wallet)?;
-                }
+            if let Some(pk) = action_identity
+                && !signer.signers.contains_key(&pk)
+            {
+                let conn = db.get_user_conn(user_id).await?;
+                let wallet = conn.get_wallet_by_pubkey(&pk.to_bytes()).await?;
+                signer.add_wallet(&starter.user_id, &addr, wallet)?;
             }
             let signer = signer.start();
             let signer = TowerClient::new(ActixService::from(signer.recipient()));
@@ -327,72 +330,75 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
         let db = self.db.clone();
         let root = DBWorker::from_registry();
         let counter = self.counter.clone();
-        Box::pin(async move {
-            if user_id != msg.user_id {
-                return Err(new_flow_run::Error::Unauthorized);
-            }
-
-            let conn = db
-                .get_user_conn(user_id)
-                .await
-                .map_err(new_flow_run::Error::other)?;
-            let run_id = conn
-                .new_flow_run(&msg.config, &msg.inputs, &msg.deployment_id)
-                .await
-                .map_err(new_flow_run::Error::other)?;
-
-            for id in &msg.shared_with {
-                if *id != user_id {
-                    conn.share_flow_run(run_id, *id)
-                        .await
-                        .map_err(new_flow_run::Error::other)?;
+        Box::pin(
+            async move {
+                if user_id != msg.user_id {
+                    return Err(new_flow_run::Error::Unauthorized);
                 }
-            }
 
-            let stop_signal = StopSignal::new();
-            let stop_shared_signal = StopSignal::new();
+                let conn = db
+                    .get_user_conn(user_id)
+                    .await
+                    .map_err(new_flow_run::Error::other)?;
+                let run_id = conn
+                    .new_flow_run(&msg.config, &msg.inputs, &msg.deployment_id)
+                    .await
+                    .map_err(new_flow_run::Error::other)?;
 
-            root.send(StartFlowRunWorker {
-                id: run_id,
-                make_actor: {
-                    let stop_signal = stop_signal.clone();
-                    let stop_shared_signal = stop_shared_signal.clone();
-                    let root = root.clone();
-                    move |ctx| {
-                        FlowRunWorker::new(
-                            run_id,
-                            user_id,
-                            msg.shared_with,
-                            counter,
-                            msg.stream,
-                            db,
-                            root.clone(),
-                            stop_signal.clone(),
-                            stop_shared_signal.clone(),
-                            ctx,
-                        )
+                for id in &msg.shared_with {
+                    if *id != user_id {
+                        conn.share_flow_run(run_id, *id)
+                            .await
+                            .map_err(new_flow_run::Error::other)?;
                     }
-                },
-            })
-            .await?
-            .map_err(|_| new_flow_run::Error::msg("could not start worker"))?;
+                }
 
-            let span = root
-                .send(RegisterLogs {
-                    flow_run_id: run_id,
-                    tx: msg.tx,
-                    filter: msg.config.environment.get(RUST_LOG).cloned(),
+                let stop_signal = StopSignal::new();
+                let stop_shared_signal = StopSignal::new();
+
+                root.send(StartFlowRunWorker {
+                    id: run_id,
+                    make_actor: {
+                        let stop_signal = stop_signal.clone();
+                        let stop_shared_signal = stop_shared_signal.clone();
+                        let root = root.clone();
+                        move |ctx| {
+                            FlowRunWorker::new(
+                                run_id,
+                                user_id,
+                                msg.shared_with,
+                                counter,
+                                msg.stream,
+                                db,
+                                root.clone(),
+                                stop_signal.clone(),
+                                stop_shared_signal.clone(),
+                                ctx,
+                            )
+                        }
+                    },
                 })
                 .await?
-                .unwrap();
+                .map_err(|_| new_flow_run::Error::msg("could not start worker"))?;
 
-            Ok(new_flow_run::Response {
-                flow_run_id: run_id,
-                stop_signal,
-                stop_shared_signal,
-                span,
-            })
-        })
+                let span = root
+                    .send(RegisterLogs {
+                        flow_run_id: run_id,
+                        tx: msg.tx,
+                        filter: msg.config.environment.get(RUST_LOG).cloned(),
+                    })
+                    .await?
+                    .unwrap();
+
+                Ok(new_flow_run::Response {
+                    flow_run_id: run_id,
+                    stop_signal,
+                    stop_shared_signal,
+                    span,
+                })
+            }
+            .histogram(histogram!("new_flow_run")),
+        )
     }
 }
 
@@ -643,10 +649,11 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
         let user_id = self.user_id;
         let addr = ctx.address();
         let endpoints = self.endpoints.clone();
+        let helius = self.helius.clone();
         let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
-        let remotes = AddressBook::new(self.remote_command_address_book.clone());
+        let remotes = AddressBook::new(self.remote_command_address_book.clone(), Some(user_id));
         Box::pin(async move {
             if msg.user.id != user_id {
                 return Err(StartError::Unauthorized);
@@ -672,10 +679,11 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     token: addr_to_service(&wrk),
                     new_flow_run: addr_to_service(&addr),
                     get_previous_values: addr_to_service(&addr),
+                    helius,
                 })
                 .get_flow(addr_to_service(&addr))
                 .remotes(remotes)
-                .http(HTTP_CLIENT.clone())
+                .http(crate::HTTP.clone())
                 .call()
                 .await?;
 
@@ -739,10 +747,11 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let user_id = self.user_id;
         let addr = ctx.address();
         let endpoints = self.endpoints.clone();
+        let helius = self.helius.clone();
         let root = DBWorker::from_registry();
         let db = self.db.clone();
         let new_flow_api_request = self.new_flow_api_request.clone();
-        let remotes = AddressBook::new(self.remote_command_address_book.clone());
+        let remotes = AddressBook::new(self.remote_command_address_book.clone(), Some(user_id));
         Box::pin(async move {
             let wrk = root.send(GetTokenWorker { user_id }).await??;
 
@@ -771,10 +780,11 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     token: addr_to_service(&wrk),
                     new_flow_run: addr_to_service(&addr),
                     get_previous_values: addr_to_service(&addr),
+                    helius,
                 })
                 .get_flow(addr_to_service(&addr))
                 .remotes(remotes)
-                .http(HTTP_CLIENT.clone())
+                .http(crate::HTTP.clone())
                 .call()
                 .await?;
 

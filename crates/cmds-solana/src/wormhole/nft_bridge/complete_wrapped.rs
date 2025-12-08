@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use crate::wormhole::nft_bridge::Address;
 use crate::wormhole::{PostVAAData, VAA};
-use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 use solana_program::{instruction::AccountMeta, sysvar};
 use solana_sdk_ids::system_program;
@@ -126,7 +125,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let mint_authority = Pubkey::find_program_address(&[b"mint_signer"], &nft_bridge_program_id).0;
 
     let to = Pubkey::from(payload.to.0);
-    // let to = spl_associated_token_account::get_associated_token_address(&input.to_authority, &mint);
+    // let to = spl_associated_token_account_interface::address::get_associated_token_address(&input.to_authority, &mint);
     info!("to: {:?}", to);
 
     let ix = solana_program::instruction::Instruction {
@@ -147,15 +146,14 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new_readonly(system_program::id(), false),
             // Program
             AccountMeta::new_readonly(wormhole_core_program_id, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+            AccountMeta::new_readonly(spl_token_interface::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account_interface::program::ID, false),
             AccountMeta::new_readonly(mpl_token_metadata::ID, false),
         ],
-        data: (
+        data: borsh::to_vec(&(
             NFTBridgeInstructions::CompleteWrapped,
             CompleteWrappedData {},
-        )
-            .try_to_vec()?,
+        ))?,
     };
 
     let ins = Instructions {

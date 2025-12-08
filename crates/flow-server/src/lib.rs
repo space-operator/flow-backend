@@ -3,11 +3,11 @@ use anyhow::Context;
 use db::config::{DbConfig, EncryptionKey, SslConfig};
 use flow_lib::config::Endpoints;
 use middleware::req_fn::{self, Function, ReqFn};
-use rand::{Rng, thread_rng};
+use rand::{Rng, rngs::OsRng, thread_rng};
 use serde::Deserialize;
 use serde_with::serde_as;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use std::{path::PathBuf, rc::Rc};
+use std::{collections::BTreeSet, path::PathBuf, rc::Rc, sync::LazyLock};
 use url::Url;
 use user::SignatureAuth;
 
@@ -18,6 +18,8 @@ pub mod error;
 pub mod middleware;
 pub mod user;
 pub mod ws;
+
+pub(crate) static HTTP: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 pub static X_API_KEY: HeaderName = HeaderName::from_static("x-api-key");
 
@@ -150,6 +152,27 @@ fn default_db_config() -> DbConfig {
 
 #[serde_as]
 #[derive(Deserialize)]
+pub struct IrohConfig {
+    #[serde_as(as = "serde_with::DisplayFromStr")]
+    #[serde(default = "Config::default_secret_key")]
+    pub secret_key: iroh::SecretKey,
+    #[serde_as(as = "BTreeSet<serde_with::DisplayFromStr>")]
+    #[serde(default)]
+    pub trusted: BTreeSet<iroh::PublicKey>,
+}
+
+impl Default for IrohConfig {
+    fn default() -> Self {
+        Self {
+            secret_key: iroh::SecretKey::generate(&mut OsRng),
+            trusted: BTreeSet::new(),
+        }
+    }
+}
+
+#[serde_as]
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
     #[serde(default = "Config::default_host")]
     pub host: String,
@@ -165,20 +188,11 @@ pub struct Config {
     #[serde(default = "Config::default_shutdown_timeout_secs")]
     pub shutdown_timeout_secs: u16,
     pub helius_api_key: Option<String>,
-    pub solana: Option<SolanaConfig>,
-    #[serde_as(as = "serde_with::DisplayFromStr")]
-    #[serde(default = "Config::default_secret_key")]
-    pub iroh_secret_key: iroh::SecretKey,
+    #[serde(default = "IrohConfig::default")]
+    pub iroh: IrohConfig,
 
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
-}
-
-#[derive(Deserialize, Default)]
-pub struct SolanaConfig {
-    pub mainnet_url: Option<Url>,
-    pub devnet_url: Option<Url>,
-    pub testnet_url: Option<Url>,
 }
 
 impl Default for Config {
@@ -191,10 +205,9 @@ impl Default for Config {
             supabase: SupabaseConfig::default(),
             local_storage: Self::default_local_storage(),
             shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
-            blake3_key: rand::rngs::OsRng.r#gen(),
-            solana: None,
+            blake3_key: OsRng.r#gen(),
             helius_api_key: None,
-            iroh_secret_key: iroh::SecretKey::generate(&mut rand::rngs::OsRng),
+            iroh: IrohConfig::default(),
         }
     }
 }
@@ -270,33 +283,6 @@ impl Config {
                 .map_err(|error| errors.push(error))
                 .ok();
         }
-        if let Some(url) = self.solana.as_ref().and_then(|s| s.mainnet_url.as_ref()) {
-            let client = RpcClient::new(url.to_string());
-            client
-                .get_version()
-                .await
-                .context("Solana mainnet failed")
-                .map_err(|error| errors.push(error))
-                .ok();
-        }
-        if let Some(url) = self.solana.as_ref().and_then(|s| s.devnet_url.as_ref()) {
-            let client = RpcClient::new(url.to_string());
-            client
-                .get_version()
-                .await
-                .context("Solana devnet failed")
-                .map_err(|error| errors.push(error))
-                .ok();
-        }
-        if let Some(url) = self.solana.as_ref().and_then(|s| s.testnet_url.as_ref()) {
-            let client = RpcClient::new(url.to_string());
-            client
-                .get_version()
-                .await
-                .context("Solana testnet failed")
-                .map_err(|error| errors.push(error))
-                .ok();
-        }
         if errors.is_empty() {
             Ok(())
         } else {
@@ -306,9 +292,7 @@ impl Config {
 
     pub fn endpoints(&self) -> Endpoints {
         Endpoints {
-            flow_server: match &self.db {
-                _ => format!("http://localhost:{}", self.port),
-            },
+            flow_server: format!("http://localhost:{}", self.port),
             supabase: self.supabase_endpoint(),
             supabase_anon_key: self.supabase.anon_key.clone(),
         }

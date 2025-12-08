@@ -260,6 +260,16 @@ pub struct TargetsForm {
     pub wasm_bytes: Option<bytes::Bytes>,
 }
 
+impl Default for TargetsForm {
+    fn default() -> Self {
+        Self {
+            form_data: JsonValue::Object(<_>::default()),
+            extra: Extra::default(),
+            wasm_bytes: None,
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TargetsFormSkipWasm {
     pub form_data: JsonValue,

@@ -13,18 +13,20 @@ use actix::{
     StreamHandler, WrapFuture, fut::wrap_future,
 };
 use actix_web::http::StatusCode;
-use db::{FlowRunLogsRow, pool::DbPool};
+use ahash::{HashMap, HashMapExt};
+use chrono::{DateTime, Utc};
+use db::{FlowRunLogsRow, connection::PartialNodeRunRow, pool::DbPool};
 use flow::flow_graph::StopSignal;
 use flow_lib::{
     FlowRunId, UserId,
     flow_run_events::{
-        self, ApiInput, Event, FlowError, FlowFinish, FlowLog, FlowStart, NodeError, NodeFinish,
-        NodeLog, NodeOutput, NodeStart,
+        self, ApiInput, Event, FlowError, FlowFinish, FlowLog, NodeError, NodeFinish, NodeLog,
+        NodeOutput, NodeStart,
     },
 };
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt, stream::BoxStream};
-use hashbrown::HashMap;
+use metrics::histogram;
 use thiserror::Error as ThisError;
 use tokio::sync::broadcast::{self, error::RecvError};
 use utils::address_book::ManagableActor;
@@ -305,6 +307,11 @@ fn strip(value: Value) -> Value {
     }
 }
 
+fn report(time: DateTime<Utc>, ty: &'static str) {
+    let lag = Utc::now() - time;
+    metrics::histogram!("event_lag", "type" => ty).record(lag.as_seconds_f64());
+}
+
 async fn save_to_db(
     user_id: UserId,
     run_id: FlowRunId,
@@ -313,9 +320,11 @@ async fn save_to_db(
     tx: actix::Recipient<CopyIn<Vec<FlowRunLogsRow>>>,
 ) {
     let mut log_index = 0i32;
-    const CHUNK_SIZE: usize = 16;
+    const CHUNK_SIZE: usize = 64;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
+    let mut finished = None;
     while let Some(events) = chunks.next().await {
+        tracing::trace!("events count: {}", events.len());
         let mut logs: Vec<FlowRunLogsRow> = Vec::new();
         let conn = match db.get_user_conn(user_id).await {
             Ok(conn) => conn,
@@ -327,72 +336,90 @@ async fn save_to_db(
                 continue;
             }
         };
+
+        let mut before = Vec::new();
+        let mut new_nodes = HashMap::new();
+        let mut after = Vec::new();
         for event in events {
             match event {
-                Event::FlowStart(FlowStart { time }) => {
-                    conn.set_start_time(&run_id, &time)
-                        .await
-                        .map_err(log_error)
-                        .ok();
-                }
-                Event::FlowError(FlowError { error, .. }) => {
-                    conn.push_flow_error(&run_id, error.as_str())
-                        .await
-                        .map_err(log_error)
-                        .ok();
-                }
-                Event::FlowFinish(FlowFinish {
-                    time,
-                    not_run,
-                    output,
-                }) => {
-                    conn.set_run_result(&run_id, &time, &not_run, &output)
-                        .await
-                        .map_err(log_error)
-                        .ok();
-                }
                 Event::NodeStart(NodeStart {
                     time,
                     node_id,
                     times,
                     input,
                 }) => {
-                    conn.new_node_run(&run_id, &node_id, &(times as i32), &time, &strip(input))
-                        .await
-                        .map_err(log_error)
-                        .ok();
+                    new_nodes.insert(
+                        (node_id, times),
+                        PartialNodeRunRow {
+                            user_id,
+                            flow_run_id: run_id,
+                            node_id,
+                            times,
+                            start_time: Some(time),
+                            end_time: None,
+                            input: Some(input.clone()),
+                            output: None,
+                            errors: None,
+                        },
+                    );
                 }
                 Event::NodeOutput(NodeOutput {
                     node_id,
                     times,
                     output,
-                    ..
-                }) => {
-                    conn.save_node_output(&run_id, &node_id, &(times as i32), &strip(output))
-                        .await
-                        .map_err(log_error)
-                        .ok();
-                }
+                    time,
+                }) => match new_nodes.get_mut(&(node_id, times)) {
+                    Some(node) => {
+                        node.output = Some(output);
+                    }
+                    None => {
+                        after.push(Event::NodeOutput(NodeOutput {
+                            node_id,
+                            times,
+                            output,
+                            time,
+                        }));
+                    }
+                },
                 Event::NodeError(NodeError {
                     node_id,
                     times,
                     error,
-                    ..
-                }) => {
-                    conn.push_node_error(&run_id, &node_id, &(times as i32), &error)
-                        .await
-                        .map_err(log_error)
-                        .ok();
-                }
+                    time,
+                }) => match new_nodes.get_mut(&(node_id, times)) {
+                    Some(node) => {
+                        if let Some(errors) = &mut node.errors {
+                            errors.push(error.clone());
+                        } else {
+                            node.errors = Some([error.clone()].into());
+                        }
+                    }
+                    None => {
+                        after.push(Event::NodeError(NodeError {
+                            node_id,
+                            times,
+                            error,
+                            time,
+                        }));
+                    }
+                },
                 Event::NodeFinish(NodeFinish {
                     time,
                     node_id,
                     times,
-                }) => {
-                    conn.set_node_finish(&run_id, &node_id, &(times as i32), &time)
-                        .await
-                        .map_err(log_error)
-                        .ok();
+                }) => match new_nodes.get_mut(&(node_id, times)) {
+                    Some(node) => {
+                        node.end_time = Some(time);
+                    }
+                    None => {
+                        after.push(event);
+                    }
+                },
+                Event::FlowStart(flow_start) => {
+                    before.push(flow_start);
+                }
+                Event::FlowError(_) | Event::FlowFinish(_) => {
+                    after.push(event);
                 }
                 Event::NodeLog(NodeLog {
                     time,
@@ -438,9 +465,92 @@ async fn save_to_db(
                 Event::ApiInput(_) => {}
             }
         }
+
+        histogram!("batch_nodes_insert_size").record(new_nodes.len() as f64);
+        histogram!("after_insert_size").record(after.len() as f64);
+
+        for event in before {
+            conn.set_start_time(&run_id, &event.time)
+                .await
+                .map_err(log_error)
+                .ok();
+        }
+
+        conn.copy_in_node_run(new_nodes.into_values().collect())
+            .await
+            .map_err(log_error)
+            .ok();
+
+        for event in after {
+            match event {
+                Event::FlowError(FlowError { error, .. }) => {
+                    conn.push_flow_error(&run_id, error.as_str())
+                        .await
+                        .map_err(log_error)
+                        .ok();
+                }
+                Event::FlowFinish(FlowFinish {
+                    time,
+                    not_run,
+                    output,
+                }) => {
+                    conn.set_run_result(&run_id, &time, &not_run, &output)
+                        .await
+                        .map_err(log_error)
+                        .ok();
+                    // FlowFinish is the final message
+                    finished = Some(time);
+                }
+
+                Event::NodeOutput(NodeOutput {
+                    node_id,
+                    times,
+                    output,
+                    ..
+                }) => {
+                    conn.save_node_output(&run_id, &node_id, &(times as i32), &strip(output))
+                        .await
+                        .map_err(log_error)
+                        .ok();
+                }
+                Event::NodeError(NodeError {
+                    node_id,
+                    times,
+                    error,
+                    ..
+                }) => {
+                    conn.push_node_error(&run_id, &node_id, &(times as i32), &error)
+                        .await
+                        .map_err(log_error)
+                        .ok();
+                }
+                Event::NodeFinish(NodeFinish {
+                    time,
+                    node_id,
+                    times,
+                }) => {
+                    conn.set_node_finish(&run_id, &node_id, &(times as i32), &time)
+                        .await
+                        .map_err(log_error)
+                        .ok();
+                }
+                Event::FlowStart(_)
+                | Event::NodeStart(_)
+                | Event::NodeLog(_)
+                | Event::FlowLog(_)
+                | Event::SignatureRequest(_)
+                | Event::ApiInput(_) => {
+                    unreachable!();
+                }
+            }
+        }
         drop(conn);
         if !logs.is_empty() && tx.send(CopyIn(logs)).await.is_err() {
-            tracing::error!("failed to send to DBWorker, dropping event.")
+            tracing::error!("failed to send to DBWorker, dropping events.")
+        }
+        if let Some(time) = finished {
+            report(time, "flow_finish");
+            break;
         }
     }
 }

@@ -11,10 +11,7 @@ use actix_web::{
     web::{self, ServiceConfig},
 };
 use chrono::Utc;
-use db::{
-    apikey,
-    pool::{DbPool, RealDbPool},
-};
+use db::{apikey, pool::DbPool};
 use flow_lib::{FlowRunId, UserId};
 use futures_util::{FutureExt, future::LocalBoxFuture};
 use getset::Getters;
@@ -117,16 +114,12 @@ impl ResponseError for AuthError {
 }
 
 pub fn configure(cfg: &mut ServiceConfig, server_config: &crate::Config, db: &DbPool) {
-    let Some(ref jwt_key) = server_config.supabase.jwt_key else {
-        return;
-    };
-    let hmac = Hmac::new_from_slice(jwt_key.as_bytes()).unwrap();
-    let DbPool::Real(pool) = db;
-    let sig = SignatureAuth::new(server_config.blake3_key);
-    let state = AuthV1 {
-        hmac,
-        pool: pool.clone(),
-        sig,
+    let state = match AuthV1::new(server_config, db) {
+        Ok(state) => state,
+        Err(error) => {
+            tracing::error!("could not build auth_v1 middleware: {}", error);
+            return;
+        }
     };
     cfg.app_data(web::ThinData(state));
 }
@@ -134,11 +127,37 @@ pub fn configure(cfg: &mut ServiceConfig, server_config: &crate::Config, db: &Db
 #[derive(Clone)]
 pub struct AuthV1 {
     hmac: Hmac<Sha256>,
-    pool: RealDbPool,
+    pool: DbPool,
     sig: SignatureAuth,
 }
 
+#[derive(ThisError, Debug)]
+#[error("supabase.jwt_key not found in config")]
+pub struct ConfigError;
+
 impl AuthV1 {
+    pub fn new(server_config: &crate::Config, db: &DbPool) -> Result<Self, ConfigError> {
+        let Some(ref jwt_key) = server_config.supabase.jwt_key else {
+            return Err(ConfigError);
+        };
+        let hmac = Hmac::new_from_slice(jwt_key.as_bytes()).unwrap();
+        let sig = SignatureAuth::new(server_config.blake3_key);
+        Ok(AuthV1 {
+            hmac,
+            pool: db.clone(),
+            sig,
+        })
+    }
+
+    pub async fn apikey_authenticate(&self, key: &str) -> Result<ApiKey, AuthError> {
+        if key.starts_with(apikey::KEY_PREFIX) {
+            let key = apikey_verify_inner(key, self).await?;
+            Ok(key)
+        } else {
+            Err(AuthError::InvalidFormat)
+        }
+    }
+
     pub async fn ws_authenticate(
         &self,
         token: &str,
@@ -223,8 +242,10 @@ impl Identity for Jwt {
 
 #[derive(Getters)]
 pub struct ApiKey {
-    #[get = "pub"]
-    key: String,
+    // don't store the key if not needed
+    // prevent accidental leak
+    // #[get = "pub"]
+    // key: String,
     #[get = "pub"]
     user_id: UserId,
     #[get = "pub"]
@@ -237,7 +258,7 @@ async fn apikey_verify_inner(key: &str, auth: &AuthV1) -> Result<ApiKey, AuthErr
     let conn = auth.pool.get_admin_conn().await?;
     let user = conn.get_user_from_apikey(key).await?;
     Ok(ApiKey {
-        key: key.to_owned(),
+        // key: key.to_owned(),
         user_id: user.user_id,
         pubkey: user.pubkey,
     })
@@ -410,7 +431,7 @@ impl AuthEither<AuthenticatedUser, FlowRunToken> {
     pub async fn can_access_flow_run(
         &self,
         id: FlowRunId,
-        pool: &RealDbPool,
+        pool: &DbPool,
     ) -> Result<bool, db::Error> {
         match self {
             AuthEither::One(user) => {

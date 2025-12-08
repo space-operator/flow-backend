@@ -139,9 +139,3 @@ pub enum MplBubblegumError {
     #[error("Canopy size should be set bigger for this tree")]
     InvalidCanopySize,
 }
-
-impl solana_program::program_error::PrintProgramError for MplBubblegumError {
-    fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
-    }
-}

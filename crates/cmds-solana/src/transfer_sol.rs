@@ -37,7 +37,7 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let amount = sol_to_lamports(input.amount)?;
 
-    let instruction = solana_program::system_instruction::transfer(
+    let instruction = solana_system_interface::instruction::transfer(
         &input.sender.pubkey(),
         &input.recipient,
         amount,
@@ -45,10 +45,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let sender_pubkey = input.sender.pubkey();
     let mut signers = vec![input.sender];
-    if let Some(fee_payer) = input.fee_payer {
-        if fee_payer.pubkey() != sender_pubkey {
-            signers.insert(0, fee_payer);
-        }
+    if let Some(fee_payer) = input.fee_payer
+        && fee_payer.pubkey() != sender_pubkey
+    {
+        signers.insert(0, fee_payer);
     }
     let fee_payer = signers[0].pubkey();
     let instructions = if input.submit {

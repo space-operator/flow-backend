@@ -42,7 +42,7 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let minimum_balance_for_rent_exemption = ctx
         .solana_client()
-        .get_minimum_balance_for_rent_exemption(spl_token::state::Account::LEN)
+        .get_minimum_balance_for_rent_exemption(spl_token_interface::state::Account::LEN)
         .await?;
 
     let account = input.token_account.pubkey();
@@ -52,11 +52,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             &input.fee_payer.pubkey(),
             &account,
             minimum_balance_for_rent_exemption,
-            spl_token::state::Account::LEN as u64,
-            &spl_token::id(),
+            spl_token_interface::state::Account::LEN as u64,
+            &spl_token_interface::ID,
         ),
-        spl_token::instruction::initialize_account(
-            &spl_token::id(),
+        spl_token_interface::instruction::initialize_account(
+            &spl_token_interface::ID,
             &account,
             &input.mint_account,
             &input.owner,
@@ -70,14 +70,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .get_account_with_commitment(&account, ctx.solana_client().commitment())
         .await?
         .value
+        && !(account_data.owner == system_program::id() && system_account_ok)
     {
-        if !(account_data.owner == system_program::id() && system_account_ok) {
-            return Err(crate::Error::custom(anyhow::anyhow!(
-                "Error: Account already exists: {}",
-                account
-            ))
-            .into());
-        }
+        return Err(crate::Error::custom(anyhow::anyhow!(
+            "Error: Account already exists: {}",
+            account
+        ))
+        .into());
     }
 
     let instructions = if input.submit {

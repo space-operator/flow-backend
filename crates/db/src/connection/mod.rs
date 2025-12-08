@@ -1,4 +1,8 @@
-use crate::{Error, LocalStorage, Wallet, WasmStorage, pool::RealDbPool};
+use crate::{
+    Error, LocalStorage, Wallet, WasmStorage,
+    apikey::{APIKey, NameConflict},
+    pool::DbPool,
+};
 use async_trait::async_trait;
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
@@ -32,7 +36,7 @@ pub use admin::*;
 pub struct UserConnection {
     pub local: LocalStorage,
     pub wasm_storage: WasmStorage,
-    pub pool: RealDbPool,
+    pub pool: DbPool,
     pub user_id: Uuid,
 }
 
@@ -115,8 +119,26 @@ impl tower::Service<get_flow_row::Request> for Box<dyn UserConnectionTrait> {
     }
 }
 
+pub struct PartialNodeRunRow {
+    pub user_id: UserId,
+    pub flow_run_id: FlowRunId,
+    pub node_id: NodeId,
+    pub times: u32,
+    pub start_time: Option<DateTime<Utc>>,
+    pub end_time: Option<DateTime<Utc>>,
+    pub input: Option<Value>,
+    pub output: Option<Value>,
+    pub errors: Option<Vec<String>>,
+}
+
 #[async_trait(?Send)]
 pub trait UserConnectionTrait: Any + 'static {
+    async fn copy_in_node_run(&self, rows: Vec<PartialNodeRunRow>) -> crate::Result<()>;
+
+    async fn create_apikey(&self, name: &str) -> Result<(APIKey, String), Error<NameConflict>>;
+
+    async fn delete_apikey(&self, key_hash: &str) -> crate::Result<()>;
+
     async fn get_wallet_by_pubkey(&self, pubkey: &[u8; 32]) -> crate::Result<Wallet>;
 
     async fn get_deployment_id_from_tag(

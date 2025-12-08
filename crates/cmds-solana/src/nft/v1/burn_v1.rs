@@ -41,7 +41,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let (metadata_account, _) = Metadata::find_pda(&input.mint_account);
 
     // // get associated token account pda
-    let token_account = spl_associated_token_account::get_associated_token_address(
+    let token_account = spl_associated_token_account_interface::address::get_associated_token_address(
         &input.authority.pubkey(),
         &input.mint_account,
     );
@@ -61,12 +61,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     {
         let metadata = Metadata::safe_deserialize(&acc.data)?;
 
-        if let Some(standard) = metadata.token_standard {
-            if standard == TokenStandard::ProgrammableNonFungible {
-                let token_record =
-                    Some(TokenRecord::find_pda(&input.mint_account, &token_account).0);
-                create_ix_builder.token_record(token_record);
-            }
+        if let Some(standard) = metadata.token_standard
+            && standard == TokenStandard::ProgrammableNonFungible
+        {
+            let token_record = Some(TokenRecord::find_pda(&input.mint_account, &token_account).0);
+            create_ix_builder.token_record(token_record);
         };
     }
 

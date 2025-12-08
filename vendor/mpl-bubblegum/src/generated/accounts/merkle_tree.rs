@@ -9,7 +9,7 @@ use crate::generated::types::CompressionAccountType;
 use crate::generated::types::ConcurrentMerkleTreeHeaderData;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
-use kaigan::types::RemainderVec;
+use crate::remainder_vec::RemainderVec;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

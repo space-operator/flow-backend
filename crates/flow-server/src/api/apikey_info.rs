@@ -11,14 +11,7 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
         .route(web::get().to(key_info))
 }
 
-async fn key_info(
-    db: web::Data<RealDbPool>,
-    apikey: Auth<auth_v1::ApiKey>,
-) -> Result<web::Json<Output>, Error> {
-    let user_id = db
-        .get_admin_conn()
-        .await?
-        .get_user_id_from_apikey(&apikey.key())
-        .await?;
+async fn key_info(apikey: Auth<auth_v1::ApiKey>) -> Result<web::Json<Output>, Error> {
+    let user_id = *apikey.user_id();
     Ok(web::Json(Output { user_id }))
 }

@@ -8,24 +8,25 @@ name = "serialize"
 harness = false
 
 [build-dependencies]
-capnpc = "0.20"
+capnpc = "0.21.4"
 
 [dependencies]
+flow-lib.workspace = true
+srpc.workspace = true
+
 actix = "0.13.3"
 async-trait = "0.1.79"
-flow-lib.workspace = true
 futures = "0.3.30"
 inventory = "0.3.15"
-serde.workspace = true
 serde_with = "3.7.0"
-srpc.workspace = true
+serde = { version = "1", features = ["derive"] }
 thiserror = "1.0.63"
 tokio = { version = "1", features = ["net"] }
 tokio-tungstenite = { version = "0.24.0", features = ["__rustls-tls"] }
 tower = "0.5"
 tracing = "0.1.40"
 url = { version = "2.5.0", features = ["serde"] }
-capnp = "0.21.2"
+capnp = "0.21.5"
 capnp-rpc = "0.21.0"
 schemars = { version = "1.0.0-alpha.17", features = ["uuid1", "rust_decimal1", "preserve_order", "indexmap2", "url2"] }
 features = "0.10.0"
@@ -33,22 +34,24 @@ uuid1 = "0.0.2"
 reqwest = { version = "0.12", features = ["rustls-tls", "json"] }
 bincode = { version = "2", features = ["serde"] }
 simd-json = "0.15.1"
-serde_json = { workspace = true, features = ["preserve_order"] }
+serde_json = { version = "1", features = ["preserve_order"] }
 semver = "1.0.26"
 tokio-util = { version = "0.7.15", features = ["compat"] }
-iroh = { version = "0.90.0", features = ["discovery-pkarr-dht"] }
+iroh = { version = "0.92.0", features = ["discovery-pkarr-dht", "discovery-local-network"] }
 iroh-quinn = { version = "0.14", features = ["futures-io"] }
-anyhow.workspace = true
+anyhow = "1"
 rand = "0.8"
-toml = "0.8.23"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 pin-project-lite = "0.2.16"
 flow-tracing = { version = "0.1.0", path = "../flow-tracing" }
 ahash = "0.8.12"
+bytes = "1.10.1"
+jsonc-parser = { version = "0.26.3", features = ["preserve_order", "serde"] }
 
 [dev-dependencies]
+cmds-std.workspace = true
+
 criterion = "0.5.1"
 rust_decimal = "1.37.1"
 rust_decimal_macros = "1.37.1"
 tokio = { version = "1", features = ["macros"] }
-cmds-std.workspace = true

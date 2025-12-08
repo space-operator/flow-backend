@@ -17,7 +17,7 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
 async fn delete_key(
     params: web::Json<Params>,
     user: Auth<auth_v1::Jwt>,
-    db: web::Data<RealDbPool>,
+    db: web::Data<DbPool>,
 ) -> Result<web::Json<Output>, Error> {
     let Params { key_hash } = params.into_inner();
     db.get_user_conn(*user.user_id())

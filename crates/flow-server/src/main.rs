@@ -5,10 +5,7 @@ use actix_web::{
     web,
 };
 use command_rpc::flow_side::address_book::BaseAddressBook;
-use db::{
-    LocalStorage, WasmStorage,
-    pool::{DbPool, RealDbPool},
-};
+use db::{LocalStorage, WasmStorage, pool::DbPool};
 use flow_lib::{command::CommandFactory, utils::TowerClient};
 use flow_server::{
     Config,
@@ -24,6 +21,9 @@ use flow_server::{
     ws,
 };
 use futures_util::future::ok;
+use metrics_rs_dashboard_actix::{
+    DashboardInput, create_metrics_actx_scope, metrics_exporter_prometheus::Matcher,
+};
 use std::{convert::Infallible, sync::Arc, time::Duration};
 use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 use utils::address_book::AddressBook;
@@ -91,10 +91,7 @@ async fn main() {
 
     let pool_size = config.db.max_pool_size;
 
-    let db = match RealDbPool::new(&config.db, wasm_storage.clone(), local)
-        .await
-        .map(DbPool::Real)
-    {
+    let db = match DbPool::new(&config.db, wasm_storage.clone(), local).await {
         Ok(db) => db,
         Err(e) => {
             tracing::error!("failed to start database connection pool: {}", e);
@@ -133,16 +130,24 @@ async fn main() {
 
     let store = RequestStore::new_app_data();
 
-    let base_book = BaseAddressBook::new(
-        command_rpc::flow_side::address_book::ServerConfig {
-            secret_key: config.iroh_secret_key.clone(),
-        },
-        TowerClient::new(WorkerAuthenticate::builder().trusted([].into()).build()),
-    )
-    .await
-    .unwrap();
+    let base_book = {
+        let auth = auth_v1::AuthV1::new(&config, &db).unwrap();
+        BaseAddressBook::new(
+            command_rpc::flow_side::address_book::ServerConfig {
+                secret_key: config.iroh.secret_key.clone(),
+            },
+            TowerClient::new(
+                WorkerAuthenticate::builder()
+                    .trusted(config.iroh.trusted.clone())
+                    .auth(auth)
+                    .build(),
+            ),
+        )
+        .await
+        .unwrap()
+    };
 
-    tracing::info!("iroh node ID: {}", config.iroh_secret_key.public());
+    tracing::info!("iroh node ID: {}", config.iroh.secret_key.public());
 
     let db_worker = DBWorker::create(|ctx| {
         DBWorker::builder()
@@ -180,31 +185,30 @@ async fn main() {
 
     let shutdown_timeout_secs = config.shutdown_timeout_secs;
 
-    if let Some(key) = &config.helius_api_key {
-        unsafe {
-            std::env::set_var("HELIUS_API_KEY", key);
-        }
-    }
-    if let Some(solana) = &config.solana {
-        if let Some(url) = &solana.devnet_url {
-            unsafe {
-                std::env::set_var("SOLANA_DEVNET_URL", url.to_string());
-            }
-        }
-        if let Some(url) = &solana.testnet_url {
-            unsafe {
-                std::env::set_var("SOLANA_TESTNET_URL", url.to_string());
-            }
-        }
-        if let Some(url) = &solana.mainnet_url {
-            unsafe {
-                std::env::set_var("SOLANA_MAINNET_URL", url.to_string());
-            }
-        }
-    }
-
     let config = Arc::new(config);
     let mut server = HttpServer::new(move || {
+        let dashboard_input = DashboardInput {
+            buckets_for_metrics: vec![
+                (
+                    Matcher::Full("event_lag".to_owned()),
+                    &[0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0],
+                ),
+                (
+                    Matcher::Full("batch_nodes_insert_size".to_owned()),
+                    &[0.0, 8.0, 16.0, 24.0, 32.0, 40.0, 48.0, 56.0, 64.0],
+                ),
+                (
+                    Matcher::Full("after_insert_size".to_owned()),
+                    &[0.0, 8.0, 16.0, 24.0, 32.0, 40.0, 48.0, 56.0, 64.0],
+                ),
+                (
+                    Matcher::Full("new_flow_run".to_owned()),
+                    &[0.05, 0.1, 0.2, 0.5, 1.0],
+                ),
+            ],
+        };
+        let metrics_scope = create_metrics_actx_scope(&dashboard_input).unwrap();
+
         let wallets = supabase_auth.as_ref().map(|supabase_auth| {
             web::scope("/wallets")
                 .app_data(web::Data::new(supabase_auth.clone()))
@@ -254,19 +258,21 @@ async fn main() {
 
         let deployment = web::scope("/deployment").service(api::start_deployment::service(&config));
 
+        let logger = Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#)
+            .exclude("/healthcheck")
+            .exclude_regex("/metrics/");
+
         let mut app = App::new()
             .wrap(Compress::default())
-            .wrap(Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#).exclude("/healthcheck"))
+            .wrap(logger)
             .app_data(web::Data::new(db.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
-            .app_data(web::Data::new(sig_auth));
+            .app_data(web::Data::new(sig_auth))
+            .app_data(web::Data::new(db.clone()))
+            .service(metrics_scope);
         if let Some(auth) = supabase_auth.clone() {
             app = app.app_data(web::Data::new(auth));
         }
-
-        let mut app = match &db {
-            DbPool::Real(db) => app.app_data(web::Data::new(db.clone())),
-        };
 
         if let Some(wallets) = wallets {
             app = app.service(wallets);

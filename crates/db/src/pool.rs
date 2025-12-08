@@ -13,29 +13,7 @@ pub use deadpool_postgres::Object as Connection;
 static BUILTIN_SUPABASE_CERT: &str = include_str!("../../../certs/supabase-prod-ca-2021.crt");
 
 #[derive(Clone)]
-pub enum DbPool {
-    Real(RealDbPool),
-}
-
-impl DbPool {
-    pub async fn get_user_conn(
-        &self,
-        user_id: UserId,
-    ) -> crate::Result<Box<dyn UserConnectionTrait>> {
-        match self {
-            DbPool::Real(pool) => Ok(Box::new(pool.get_user_conn(user_id).await?)),
-        }
-    }
-
-    pub fn get_local(&self) -> &LocalStorage {
-        match self {
-            DbPool::Real(pool) => pool.get_local(),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct RealDbPool {
+pub struct DbPool {
     encryption_key: Option<EncryptionKey>,
     pg: Pool,
     wasm: WasmStorage,
@@ -76,7 +54,7 @@ async fn conn_healthcheck(
     }
 }
 
-impl RealDbPool {
+impl DbPool {
     pub async fn new(
         cfg: &DbConfig,
         wasm: WasmStorage,
@@ -198,13 +176,16 @@ impl RealDbPool {
         self.pg.get().await.map_err(Error::GetDbConnection)
     }
 
-    pub async fn get_user_conn(&self, user_id: UserId) -> crate::Result<UserConnection> {
-        Ok(UserConnection::new(
+    pub async fn get_user_conn(
+        &self,
+        user_id: UserId,
+    ) -> crate::Result<Box<dyn UserConnectionTrait>> {
+        Ok(Box::new(UserConnection::new(
             self.clone(),
             self.wasm.clone(),
             user_id,
             self.local.clone(),
-        ))
+        )))
     }
 
     pub async fn get_admin_conn(&self) -> crate::Result<AdminConn> {

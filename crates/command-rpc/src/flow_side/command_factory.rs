@@ -5,6 +5,7 @@ use flow_lib::{
 
 use super::address_book::AddressBook;
 
+#[derive(Clone)]
 pub struct CommandFactoryWithRemotes {
     pub factory: CommandFactory,
     pub remotes: Option<AddressBook>,

@@ -119,10 +119,10 @@ impl NodeLogSpanVisitor {
 
 impl NodeLogSpanVisitor {
     fn record_times<T: TryInto<u32>>(&mut self, field: &tracing::field::Field, value: T) {
-        if field.name() == "times" {
-            if let Ok(u) = value.try_into() {
-                self.times = Some(u);
-            }
+        if field.name() == "times"
+            && let Ok(u) = value.try_into()
+        {
+            self.times = Some(u);
         }
     }
 }
@@ -149,10 +149,10 @@ impl tracing::field::Visit for NodeLogSpanVisitor {
     fn record_bool(&mut self, _field: &tracing::field::Field, _value: bool) {}
 
     fn record_str(&mut self, field: &tracing::field::Field, value: &str) {
-        if field.name() == "node_id" {
-            if let Ok(id) = value.parse::<NodeId>() {
-                self.node_id = Some(id);
-            }
+        if field.name() == "node_id"
+            && let Ok(id) = value.parse::<NodeId>()
+        {
+            self.node_id = Some(id);
         }
     }
 
@@ -196,10 +196,10 @@ where
     }
 
     fn on_close(&self, id: span::Id, cx: tracing_subscriber::layer::Context<'_, S>) {
-        if let Some(span) = cx.span(&id) {
-            if span.name() == FLOW_SPAN_NAME {
-                self.map.write().unwrap().remove(&id);
-            }
+        if let Some(span) = cx.span(&id)
+            && span.name() == FLOW_SPAN_NAME
+        {
+            self.map.write().unwrap().remove(&id);
         }
     }
 
