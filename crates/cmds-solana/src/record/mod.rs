@@ -9,6 +9,7 @@ use {bytemuck::Pod, solana_program::program_error::ProgramError};
 pub mod initialize_record_with_seed;
 pub mod read_record;
 pub mod reallocate;
+pub mod set_authority;
 pub mod write_to_record;
 
 pub const RECORD_MAINNET: Pubkey = pubkey!("recr1L3PCGKLbckBqMNcJhuuyU1zgo8nBhfLVsJNwr5");
