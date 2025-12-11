@@ -101,6 +101,7 @@ export class Client {
   token?: TokenProvider;
   anonKey?: TokenProvider;
   private logger: Function = noop;
+  private fetch: typeof globalThis.fetch = fetch;
 
   constructor(options: ClientOptions = {}) {
     this.host = options.host ?? HOST;
@@ -110,6 +111,10 @@ export class Client {
 
   async upsertWallet(body: any): Promise<any> {
     return await this.#sendJSONPost(`${this.host}/wallets/upsert`, body);
+  }
+
+  setFetch(f: typeof globalThis.fetch) {
+    this.fetch = f;
   }
 
   setToken(token: string | (() => Promise<string>)) {
@@ -152,7 +157,7 @@ export class Client {
     let req = new Request(url);
     req = await this.#setAuthHeader(req, auth);
 
-    const resp = await fetch(req);
+    const resp = await this.fetch(req);
     return await parseResponse(resp);
   }
 
@@ -180,7 +185,7 @@ export class Client {
       req.headers.set("apikey", await getToken(this.anonKey));
     }
 
-    const resp = await fetch(req);
+    const resp = await this.fetch(req);
     return await parseResponse(resp);
   }
 

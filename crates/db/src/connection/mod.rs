@@ -8,7 +8,7 @@ use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use csv_export::df_serde;
 use deadpool_postgres::{Object as Connection, Transaction};
-use flow::flow_set::{DeploymentId, Flow, FlowDeployment, get_flow_row};
+use flow::flow_set::{DeploymentId, Flow, FlowDeployment, X402Fee, get_flow_row};
 use flow_lib::{
     CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
     config::client::{self, ClientConfig, FlowRow},
@@ -153,6 +153,11 @@ pub trait UserConnectionTrait: Any + 'static {
 
     async fn get_deployment_flows(&self, id: &DeploymentId)
     -> crate::Result<HashMap<FlowId, Flow>>;
+
+    async fn get_deployment_x402_fees(
+        &self,
+        id: &DeploymentId,
+    ) -> crate::Result<Option<Vec<X402Fee>>>;
 
     async fn insert_deployment(&self, d: &FlowDeployment) -> crate::Result<DeploymentId>;
 

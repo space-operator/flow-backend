@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 import { Client, type Database } from "../src/mod.ts";
 
 function getEnv(key: string): string {

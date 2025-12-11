@@ -113,6 +113,13 @@ impl UserConnectionTrait for UserConnection {
         Ok(wallet)
     }
 
+    async fn get_deployment_x402_fees(
+        &self,
+        id: &DeploymentId,
+    ) -> crate::Result<Option<Vec<X402Fee>>> {
+        self.get_deployment_x402_fees_impl(id).await
+    }
+
     async fn get_deployment_id_from_tag(
         &self,
         entrypoint: &FlowId,

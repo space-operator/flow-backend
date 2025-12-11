@@ -21,6 +21,6 @@ jobs:
         with:
           deno-version: v2.x
       - name: Check libraries
-        run: bash -c 'deno check -r @space-operator/*/src/mod.ts'
+        run: bash -c 'for dir in @space-operator/*; do (cd "$dir"; deno check -r src/mod.ts); done'
       - name: Check all
-        run: bash -c 'deno check -r @space-operator/**/*.ts'
+        run: bash -c 'for dir in @space-operator/*; do (cd "$dir"; deno check -r **/*.ts); done'
