@@ -8,18 +8,18 @@ use {bytemuck::Pod, solana_program::program_error::ProgramError};
 
 pub mod initialize_record_with_seed;
 pub mod read_record;
+pub mod reallocate;
+pub mod set_authority;
 pub mod write_to_record;
 
-// TODO need to find correct mainnet
 pub const RECORD_MAINNET: Pubkey = pubkey!("recr1L3PCGKLbckBqMNcJhuuyU1zgo8nBhfLVsJNwr5");
-// recr1L3PCGKLbckBqMNcJhuuyU1zgo8nBhfLVsJNwr5
-pub const RECORD_DEVNET: Pubkey = pubkey!("6bCYkQ6pfLJMPivh17TV1Bqm3Q7GfkhU56iLtUiPXpK9");
+pub const RECORD_DEVNET: Pubkey = pubkey!("recr1L3PCGKLbckBqMNcJhuuyU1zgo8nBhfLVsJNwr5");
 
 pub const fn record_program_id(net: SolanaNet) -> Pubkey {
     match net {
         SolanaNet::Mainnet => crate::record::RECORD_MAINNET,
-        // TODO testnet not deployed yet
         SolanaNet::Devnet => crate::record::RECORD_DEVNET,
+        // TODO testnet not deployed yet
         SolanaNet::Testnet => crate::record::RECORD_DEVNET,
     }
 }

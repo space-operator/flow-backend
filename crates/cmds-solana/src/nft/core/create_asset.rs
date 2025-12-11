@@ -1,6 +1,9 @@
 use mpl_core::{
     instructions::CreateV2Builder,
-    types::{Plugin, PluginAuthorityPair},
+    types::{
+        AppDataInitInfo, ExternalPluginAdapterInitInfo, ExternalPluginAdapterSchema, Plugin,
+        PluginAuthority, PluginAuthorityPair,
+    },
 };
 use tracing::info;
 
@@ -105,6 +108,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .asset(input.asset.pubkey())
         .payer(input.fee_payer.pubkey())
         .name(input.name)
+        .external_plugin_adapters(vec![ExternalPluginAdapterInitInfo::AppData(
+            AppDataInitInfo {
+                data_authority: PluginAuthority::Owner,
+                schema: Some(ExternalPluginAdapterSchema::Binary),
+                init_plugin_authority: Some(PluginAuthority::Owner),
+            },
+        )])
         .uri(input.uri);
 
     let builder = match input.authority {

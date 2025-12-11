@@ -1,8 +1,8 @@
 use solana_program::instruction::AccountMeta;
+use spl_record::instruction::RecordInstruction;
+use tracing::info;
 
-use crate::prelude::*;
-
-use super::{RecordInstruction, record_program_id};
+use crate::{prelude::*, record::record_program_id};
 
 const NAME: &str = "write_to_record";
 
@@ -42,10 +42,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         Pubkey::create_with_seed(&input.authority.pubkey(), &input.seed, &record_program_id)
             .unwrap();
 
+    info!("record_account: {:?}", record_account);
     let data = RecordInstruction::Write {
         offset: input.offset,
-        data: input.data.into(),
+        data: &input.data.as_bytes(),
     };
+    info!("data: {:?}", data.pack().len());
 
     let write_to_record_instruction = Instruction {
         program_id: record_program_id,
@@ -53,7 +55,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             AccountMeta::new(record_account, false),
             AccountMeta::new_readonly(input.authority.pubkey(), false),
         ],
-        data: borsh::to_vec(&data).unwrap(),
+        data: data.pack(),
     };
 
     let ins = Instructions {
