@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 use spl_record::instruction as record_instruction;
 
-const NAME: &str = "set_authority";
+const NAME: &str = "set_authority_record";
 
 const DEFINITION: &str = flow_lib::node_definition!("/record/set_authority.json");
 
