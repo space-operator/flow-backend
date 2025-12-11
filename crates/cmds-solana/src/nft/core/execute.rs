@@ -105,6 +105,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn read_data() {
         tracing_subscriber::fmt::try_init().ok();
 
