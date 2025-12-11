@@ -115,21 +115,21 @@ mod tests {
 
         let mut account = rpc_client.get_account(&asset).await.unwrap();
 
-        dbg!(&account);
+        // dbg!(&account);
         let account_data = bytemuck::try_from_bytes::<RecordData>(
             &account.data[..RecordData::WRITABLE_START_INDEX],
         )
         .unwrap();
 
-        dbg!(&account_data);
+        // dbg!(&account_data);
         let data = &account.data[RecordData::WRITABLE_START_INDEX..];
-        dbg!(&data);
+        // dbg!(&data);
 
         let data = String::from_utf8(data.to_vec())
             .unwrap()
             .trim_end_matches('\0')
             .to_string();
-        dbg!(&data);
+        // dbg!(&data);
 
         let asset_v1 = BaseAssetV1::from_bytes(&account.data).unwrap();
 
@@ -145,7 +145,7 @@ mod tests {
         )
         .unwrap();
 
-        dbg!(app_data_plugin);
+        // dbg!(app_data_plugin);
 
         let (data_offset, data_length) =
             fetch_external_plugin_adapter_data_info(&account_info, Some(&asset_v1), &plugin_key)
@@ -156,7 +156,7 @@ mod tests {
         let account_data =
             bytemuck::try_from_bytes::<RecordData>(&data[..RecordData::WRITABLE_START_INDEX])
                 .unwrap();
-        dbg!(&account_data);
+        // dbg!(&account_data);
 
         let data = &data[RecordData::WRITABLE_START_INDEX..];
         // dbg!(&data);
@@ -165,7 +165,7 @@ mod tests {
             .unwrap()
             .trim_end_matches('\0')
             .to_string();
-        dbg!(&data);
+        // dbg!(&data);
 
         // Deserialize the data
         // let data: String = bincode::deserialize::<String>(&data).unwrap();
