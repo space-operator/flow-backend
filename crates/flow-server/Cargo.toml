@@ -78,6 +78,8 @@ solana-signature = { workspace = true }
 solana-rpc-client = { workspace = true }
 x402-actix = { workspace = true }
 x402-rs = { workspace = true }
+reqwest-middleware = "0.4.2"
+cdp-sdk.workspace = true
 
 [dev-dependencies]
 criterion = "0.5"

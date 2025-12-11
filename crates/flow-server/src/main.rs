@@ -27,7 +27,7 @@ use metrics_rs_dashboard_actix::{
 use std::{convert::Infallible, sync::Arc, time::Duration};
 use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 use utils::address_book::AddressBook;
-use x402_actix::{facilitator_client::FacilitatorClient, middleware::X402Middleware};
+use x402_actix::middleware::X402Middleware;
 
 // avoid commands being optimized out by the compiler
 #[cfg(feature = "commands")]
@@ -129,9 +129,9 @@ async fn main() {
     }
     */
 
-    let facilitator =
-        FacilitatorClient::try_new("https://www.x402.org/facilitator/".parse().unwrap()).unwrap();
-    let x402 = X402Middleware::new(facilitator).await.unwrap();
+    let x402 = X402Middleware::new(config.facilitator_client())
+        .await
+        .unwrap();
 
     let store = RequestStore::new_app_data();
 

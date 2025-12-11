@@ -1,5 +1,6 @@
 use super::prelude::*;
 use crate::{
+    FacilitatorType,
     db_worker::{GetUserWorker, user_worker::StartDeployment},
     middleware::{
         auth_v1::{AuthEither, AuthenticatedUser, Unverified},
@@ -11,16 +12,14 @@ use actix_web::{
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
     http::header::HeaderMap,
-    middleware::{self, Next},
+    middleware::Next,
 };
 use flow::flow_set::{DeploymentId, FlowStarter, StartFlowDeploymentOptions, X402Network};
 use flow_lib::solana::Pubkey;
 use serde_with::serde_as;
 use std::{collections::BTreeMap, num::ParseIntError};
 use value::with::AsPubkey;
-use x402_actix::{
-    facilitator_client::FacilitatorClient, middleware::X402Middleware, price::IntoPriceTag,
-};
+use x402_actix::{middleware::X402Middleware, price::IntoPriceTag};
 use x402_rs::{
     network::USDCDeployment,
     types::{MixedAddress, MoneyAmount},
@@ -125,7 +124,7 @@ async fn start_deployment(
     db: web::Data<DbPool>,
     sup: web::Data<SupabaseAuth>,
     sig: web::Data<SignatureAuth>,
-    x402: web::Data<X402Middleware<FacilitatorClient>>,
+    x402: web::Data<X402Middleware<FacilitatorType>>,
     req: actix_web::HttpRequest,
 ) -> actix_web::Result<web::Json<Output>> {
     // tracing::debug!("{}", pretty_print(req.headers()));
