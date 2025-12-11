@@ -11,7 +11,7 @@ use actix_web::{
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
     http::header::HeaderMap,
-    middleware::{self, Next},
+    middleware::Next,
 };
 use flow::flow_set::{DeploymentId, FlowStarter, StartFlowDeploymentOptions, X402Network};
 use flow_lib::solana::Pubkey;

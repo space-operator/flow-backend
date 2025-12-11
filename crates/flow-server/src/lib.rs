@@ -1,6 +1,8 @@
 use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
 use anyhow::Context;
+use cdp_sdk::{CDP_BASE_URL, auth::WalletAuth};
 use db::config::{DbConfig, EncryptionKey, SslConfig};
+use either::Either;
 use flow_lib::config::Endpoints;
 use middleware::req_fn::{self, Function, ReqFn};
 use rand::{Rng, rngs::OsRng, thread_rng};
@@ -10,6 +12,9 @@ use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use std::{collections::BTreeSet, path::PathBuf, rc::Rc, sync::LazyLock};
 use url::Url;
 use user::SignatureAuth;
+use x402_actix::{
+    cdp_facilitator_client::CdpFacilitatorClient, facilitator_client::FacilitatorClient,
+};
 
 pub mod api;
 pub mod cmd_workers;
@@ -152,6 +157,7 @@ fn default_db_config() -> DbConfig {
 
 #[serde_as]
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct IrohConfig {
     #[serde_as(as = "serde_with::DisplayFromStr")]
     #[serde(default = "Config::default_secret_key")]
@@ -168,6 +174,13 @@ impl Default for IrohConfig {
             trusted: BTreeSet::new(),
         }
     }
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CdpConfig {
+    pub api_key_id: String,
+    pub api_key_secret: String,
 }
 
 #[serde_as]
@@ -190,6 +203,7 @@ pub struct Config {
     pub helius_api_key: Option<String>,
     #[serde(default = "IrohConfig::default")]
     pub iroh: IrohConfig,
+    pub cdp: Option<CdpConfig>,
 
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
@@ -208,9 +222,12 @@ impl Default for Config {
             blake3_key: OsRng.r#gen(),
             helius_api_key: None,
             iroh: IrohConfig::default(),
+            cdp: None,
         }
     }
 }
+
+pub type FacilitatorType = Either<CdpFacilitatorClient, FacilitatorClient>;
 
 impl Config {
     pub fn default_host() -> String {
@@ -231,6 +248,27 @@ impl Config {
 
     pub fn default_secret_key() -> iroh::SecretKey {
         iroh::SecretKey::generate(&mut thread_rng())
+    }
+
+    pub fn facilitator_client(&self) -> FacilitatorType {
+        match &self.cdp {
+            Some(cdp) => {
+                let wallet_auth = WalletAuth::builder()
+                    .api_key_id(cdp.api_key_id.clone())
+                    .api_key_secret(cdp.api_key_secret.clone())
+                    .build()
+                    .unwrap();
+                let http_client = reqwest_middleware::ClientBuilder::new(HTTP.clone())
+                    .with(wallet_auth)
+                    .build();
+                let client = cdp_sdk::Client::new_with_client(CDP_BASE_URL, http_client);
+                Either::Left(CdpFacilitatorClient::new(client))
+            }
+            None => Either::Right(
+                FacilitatorClient::try_new("https://www.x402.org/facilitator/".parse().unwrap())
+                    .unwrap(),
+            ),
+        }
     }
 
     pub fn get_config() -> Self {
