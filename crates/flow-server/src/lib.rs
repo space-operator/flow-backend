@@ -1,5 +1,5 @@
 use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use cdp_sdk::{CDP_BASE_URL, auth::WalletAuth};
 use db::config::{DbConfig, EncryptionKey, SslConfig};
 use either::Either;
@@ -229,6 +229,13 @@ impl Default for Config {
 
 pub type FacilitatorType = Either<CdpFacilitatorClient, FacilitatorClient>;
 
+fn parse_toml_or_jsonc(s: &str) -> Result<Config, anyhow::Error> {
+    match jsonc_parser::parse_to_serde_value(s, &Default::default()) {
+        Ok(Some(value)) => Ok(serde_json::from_value(value)?),
+        _ => Ok(toml::from_str(s)?),
+    }
+}
+
 impl Config {
     pub fn default_host() -> String {
         "127.0.0.1".to_owned()
@@ -271,35 +278,26 @@ impl Config {
         }
     }
 
-    pub fn get_config() -> Self {
+    pub fn get_config() -> Result<Self, anyhow::Error> {
         match std::env::args().nth(1) {
-            Some(s) => if s == "-" {
-                use std::io::Read;
-                let mut buf = String::new();
-                std::io::stdin()
-                    .read_to_string(&mut buf)
-                    .map_err(|error| {
-                        tracing::error!("Error reading STDIN: {}", error);
-                    })
-                    .map(move |_| buf)
-            } else {
-                std::fs::read_to_string(s).map_err(|error| {
-                    tracing::error!("Error reading config: {}", error);
-                })
+            Some(s) => {
+                let config_str = if s == "-" {
+                    use std::io::Read;
+                    let mut buf = String::new();
+                    std::io::stdin()
+                        .read_to_string(&mut buf)
+                        .context("Error reading STDIN")?;
+                    buf
+                } else {
+                    std::fs::read_to_string(&s)
+                        .with_context(|| format!("Error reading path {}", s))?
+                };
+
+                let config = parse_toml_or_jsonc(&config_str)?;
+
+                Ok(config)
             }
-            .and_then(|s| {
-                toml::from_str(&s).map_err(|error| {
-                    tracing::error!("Error parsing config: {}", error);
-                })
-            })
-            .map_err(|_| {
-                tracing::warn!("Invalid config file, using default");
-            })
-            .unwrap_or_default(),
-            None => {
-                tracing::info!("No config specified, using default");
-                Config::default()
-            }
+            None => Err(anyhow!("No config specified, using default")),
         }
     }
 
