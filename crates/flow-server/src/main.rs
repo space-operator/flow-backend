@@ -51,7 +51,7 @@ async fn main() {
         .with(flow_logs.clone())
         .init();
 
-    let config = Config::get_config();
+    let config = Config::get_config().unwrap();
 
     if let Err(errors) = config.healthcheck().await {
         for error in errors {
