@@ -124,7 +124,7 @@ async fn start_deployment(
     db: web::Data<DbPool>,
     sup: web::Data<SupabaseAuth>,
     sig: web::Data<SignatureAuth>,
-    x402: web::Data<X402Middleware<FacilitatorType>>,
+    x402: web::Data<Option<X402Middleware<FacilitatorType>>>,
     req: actix_web::HttpRequest,
 ) -> actix_web::Result<web::Json<Output>> {
     // tracing::debug!("{}", pretty_print(req.headers()));
@@ -161,6 +161,11 @@ async fn start_deployment(
     deployment.x402_fees = conn.get_deployment_x402_fees(&id).await?;
 
     if let Some(fees) = deployment.x402_fees.as_ref() {
+        let Some(x402) = x402.as_ref() else {
+            return Err(actix_web::error::ErrorInternalServerError(
+                "flow requires x402 fee but server is not configured for it",
+            ));
+        };
         let pubkeys = conn
             .get_some_wallets(&fees.iter().map(|fee| fee.pay_to).collect::<Vec<_>>())
             .await?

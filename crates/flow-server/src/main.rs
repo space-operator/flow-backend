@@ -131,7 +131,10 @@ async fn main() {
 
     let x402 = X402Middleware::new(config.facilitator_client())
         .await
-        .unwrap();
+        .inspect_err(|error| {
+            tracing::error!("x402 init error: {}", error);
+        })
+        .ok();
 
     let store = RequestStore::new_app_data();
 
