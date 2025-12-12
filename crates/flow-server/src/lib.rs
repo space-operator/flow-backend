@@ -6,6 +6,7 @@ use either::Either;
 use flow_lib::config::Endpoints;
 use middleware::req_fn::{self, Function, ReqFn};
 use rand::{Rng, rngs::OsRng, thread_rng};
+use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_with::serde_as;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
@@ -64,15 +65,16 @@ pub fn match_wildcard(pat: &str, origin: &HeaderValue) -> bool {
     true
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, JsonSchema)]
 #[serde(untagged)]
 enum EndpointConfigUnchecked {
     ProjectId { project_id: String },
     Endpoint { endpoint: Url },
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, JsonSchema)]
 #[serde(try_from = "EndpointConfigUnchecked")]
+#[schemars(into = "EndpointConfigUnchecked")]
 pub struct EndpointConfig {
     url: Url,
 }
@@ -98,7 +100,7 @@ impl Default for EndpointConfig {
     }
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, JsonSchema)]
 pub struct SupabaseConfig {
     #[serde(flatten)]
     pub endpoint: EndpointConfig,
@@ -155,9 +157,18 @@ fn default_db_config() -> DbConfig {
     }
 }
 
+#[allow(dead_code)]
+#[derive(JsonSchema)]
+struct IrohConfigSchema {
+    secret_key: String,
+    trusted: BTreeSet<String>,
+}
+
 #[serde_as]
-#[derive(Deserialize)]
+#[derive(Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
+#[schemars(from = "IrohConfigSchema")]
+#[schemars(into = "IrohConfigSchema")]
 pub struct IrohConfig {
     #[serde_as(as = "serde_with::DisplayFromStr")]
     #[serde(default = "Config::default_secret_key")]
@@ -176,7 +187,7 @@ impl Default for IrohConfig {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct CdpConfig {
     pub api_key_id: String,
@@ -184,9 +195,12 @@ pub struct CdpConfig {
 }
 
 #[serde_as]
-#[derive(Deserialize)]
+#[derive(Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
+    #[serde(rename = "$schema")]
+    #[schemars(skip)]
+    pub schema: Option<String>,
     #[serde(default = "Config::default_host")]
     pub host: String,
     #[serde(default = "Config::default_port")]
@@ -212,6 +226,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
+            schema: None,
             host: Self::default_host(),
             port: Self::default_port(),
             db: default_db_config(),
@@ -409,6 +424,7 @@ mod tests {
         FlowConfig, command::CommandDescription, config::client::ClientConfig,
         flow_run_events::event_channel,
     };
+    use schemars::schema_for;
     use value::Value;
 
     use cmds_solana as _;
@@ -582,5 +598,17 @@ mod tests {
             }
         }
         assert!(!dup);
+    }
+
+    #[test]
+    fn print_schema() {
+        let mut schema = schema_for!(Config);
+        schema.as_object_mut().unwrap()["$schema"] =
+            "http://json-schema.org/draft-07/schema#".into();
+        std::fs::write(
+            "../../schema/flow-server-config.schema.json",
+            serde_json::to_string_pretty(&schema).unwrap(),
+        )
+        .unwrap();
     }
 }

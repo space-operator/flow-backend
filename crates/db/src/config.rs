@@ -1,13 +1,16 @@
 use chacha20poly1305::{AeadCore, ChaCha20Poly1305, KeyInit, aead::Aead};
 use flow_lib::solana::Keypair;
 use rand::rngs::OsRng;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::{base64::Base64, serde_as};
 use std::fmt::Display;
 use zeroize::Zeroize;
 
 #[serde_as]
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, JsonSchema)]
+#[schemars(from = "String")]
+#[schemars(into = "String")]
 pub struct EncryptionKey(#[serde_as(as = "Base64")] [u8; 32]);
 
 impl EncryptionKey {
@@ -72,7 +75,7 @@ impl EncryptionKey {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, JsonSchema)]
 pub struct DbConfig {
     pub user: String,
     pub password: String,
@@ -89,7 +92,7 @@ const fn bool<const B: bool>() -> bool {
     B
 }
 
-#[derive(Deserialize, Clone, Default)]
+#[derive(Deserialize, Clone, Default, JsonSchema)]
 pub struct SslConfig {
     #[serde(default = "bool::<true>")]
     pub use_builtin_supabase_cert: bool,

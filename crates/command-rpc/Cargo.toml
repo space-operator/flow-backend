@@ -28,7 +28,7 @@ tracing = "0.1.40"
 url = { version = "2.5.0", features = ["serde"] }
 capnp = "0.21.5"
 capnp-rpc = "0.21.0"
-schemars = { version = "1.0.0-alpha.17", features = ["uuid1", "rust_decimal1", "preserve_order", "indexmap2", "url2"] }
+schemars = { version = "1.1.0", features = ["uuid1", "rust_decimal1", "preserve_order", "indexmap2", "url2"] }
 features = "0.10.0"
 uuid1 = "0.0.2"
 reqwest = { version = "0.12", features = ["rustls-tls", "json"] }
