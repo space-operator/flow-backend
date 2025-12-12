@@ -602,7 +602,13 @@ mod tests {
 
     #[test]
     fn print_schema() {
-        let schema = schema_for!(Config);
-        println!("{}", serde_json::to_string_pretty(&schema).unwrap());
+        let mut schema = schema_for!(Config);
+        schema.as_object_mut().unwrap()["$schema"] =
+            "http://json-schema.org/draft-07/schema#".into();
+        std::fs::write(
+            "../../schema/flow-server-config.schema.json",
+            serde_json::to_string_pretty(&schema).unwrap(),
+        )
+        .unwrap();
     }
 }

@@ -1,0 +1,233 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Config",
+  "type": "object",
+  "properties": {
+    "host": {
+      "type": "string",
+      "default": "127.0.0.1"
+    },
+    "port": {
+      "type": "integer",
+      "format": "uint16",
+      "minimum": 0,
+      "maximum": 65535,
+      "default": 8080
+    },
+    "db": {
+      "$ref": "#/$defs/DbConfig"
+    },
+    "cors_origins": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "supabase": {
+      "$ref": "#/$defs/SupabaseConfig"
+    },
+    "local_storage": {
+      "type": "string",
+      "default": "./local_storage"
+    },
+    "shutdown_timeout_secs": {
+      "type": "integer",
+      "format": "uint16",
+      "minimum": 0,
+      "maximum": 65535,
+      "default": 1
+    },
+    "helius_api_key": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "iroh": {
+      "$ref": "#/$defs/IrohConfig"
+    },
+    "cdp": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CdpConfig"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "supabase"
+  ],
+  "$defs": {
+    "DbConfig": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "dbname": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "ssl": {
+          "$ref": "#/$defs/SslConfig"
+        },
+        "max_pool_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "encryption_key": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EncryptionKey"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "user",
+        "password",
+        "dbname",
+        "host",
+        "port"
+      ]
+    },
+    "SslConfig": {
+      "type": "object",
+      "properties": {
+        "use_builtin_supabase_cert": {
+          "type": "boolean",
+          "default": true
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "cert": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "enabled"
+      ]
+    },
+    "EncryptionKey": {
+      "type": "string"
+    },
+    "SupabaseConfig": {
+      "type": "object",
+      "properties": {
+        "jwt_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "anon_key": {
+          "type": "string"
+        },
+        "service_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "wasm_bucket": {
+          "type": "string",
+          "default": "node-files"
+        },
+        "open_whitelists": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "project_id"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "endpoint": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "required": [
+            "endpoint"
+          ]
+        }
+      ],
+      "required": [
+        "anon_key"
+      ]
+    },
+    "IrohConfig": {
+      "type": "object",
+      "properties": {
+        "secret_key": {
+          "type": "string"
+        },
+        "trusted": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "secret_key",
+        "trusted"
+      ]
+    },
+    "CdpConfig": {
+      "type": "object",
+      "properties": {
+        "api_key_id": {
+          "type": "string"
+        },
+        "api_key_secret": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "api_key_id",
+        "api_key_secret"
+      ]
+    }
+  }
+}
