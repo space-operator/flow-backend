@@ -229,6 +229,13 @@ impl Default for Config {
 
 pub type FacilitatorType = Either<CdpFacilitatorClient, FacilitatorClient>;
 
+fn parse_toml_or_jsonc(s: &str) -> Result<Config, anyhow::Error> {
+    match jsonc_parser::parse_to_serde_value(s, &Default::default()) {
+        Ok(Some(value)) => Ok(serde_json::from_value(value)?),
+        _ => Ok(toml::from_str(s)?),
+    }
+}
+
 impl Config {
     pub fn default_host() -> String {
         "127.0.0.1".to_owned()
@@ -286,7 +293,7 @@ impl Config {
                         .with_context(|| format!("Error reading path {}", s))?
                 };
 
-                let config = toml::from_str(&config_str)?;
+                let config = parse_toml_or_jsonc(&config_str)?;
 
                 Ok(config)
             }
