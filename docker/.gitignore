@@ -2,6 +2,6 @@
 .branches
 .temp
 .env
-.config.toml
-.local-config.toml
-.cmds-server-config.jsonc
+.config.*
+.local-config.*
+.cmds-server-config.*
