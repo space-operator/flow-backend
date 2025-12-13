@@ -199,7 +199,6 @@ pub struct CdpConfig {
 #[serde(deny_unknown_fields)]
 pub struct Config {
     #[serde(rename = "$schema")]
-    #[schemars(skip)]
     pub schema: Option<String>,
     #[serde(default = "Config::default_host")]
     pub host: String,
