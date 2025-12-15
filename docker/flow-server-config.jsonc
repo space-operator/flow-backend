@@ -1,0 +1,31 @@
+{
+  "$schema": "https://schema.spaceoperator.com/flow-server-config.schema.json",
+  "host": "0.0.0.0",
+  "port": 8080,
+  "local_storage": "/data/local_storage",
+  "shutdown_timeout_secs": 60,
+  "cors_origins": [
+    "*"
+  ],
+  "supabase": {
+    "endpoint": "http://kong:8000",
+    "jwt_key": "your-super-secret-jwt-token-with-at-least-32-characters-long",
+    "service_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q",
+    "anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE",
+    "open_whitelists": true
+  },
+  "db": {
+    "host": "db",
+    "port": 5432,
+    "user": "flow_runner",
+    "password": "flow_runner",
+    "dbname": "postgres",
+    "ssl": {
+      "enabled": false
+    }
+  },
+  "iroh": {
+    "secret_key": "",
+    "trusted": []
+  }
+}
