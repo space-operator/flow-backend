@@ -8,12 +8,12 @@ import {
 } from "@std/encoding";
 import { load } from "@std/dotenv";
 import { crypto } from "@std/crypto/crypto";
-import * as toml from "@std/toml";
 import * as fs from "@std/fs";
 import * as sol from "@solana/web3.js";
 
 const ENV_PATH = ".env";
-const CONFIG_PATH = ".config.toml";
+const EXTRA_ENV_PATH = ".env.extra";
+const CONFIG_PATH = ".config.jsonc";
 const CMDS_CONFIG_PATH = ".cmds-server-config.jsonc";
 const ENV_TEMPLATE = "env.example";
 const CONFIG_TEMPLATE = "flow-server-config.jsonc";
@@ -101,12 +101,13 @@ async function main() {
   env["FLOW_RUNNER_PASSWORD"] = flowRunnerPassword;
   env["ENCRYPTION_KEY"] = encryptionKey;
   env["IROH_SECRET_KEY"] = irohSecretKey;
+  const envExtra = Deno.readTextFileSync(EXTRA_ENV_PATH) ?? "";
   const envContent = Object.entries(env)
     .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-    .join("\n") + "\n";
+    .join("\n") + "\n" + envExtra;
 
   // deno-lint-ignore no-explicit-any
-  const config: any = toml.parse(await Deno.readTextFile(CONFIG_TEMPLATE));
+  const config: any = JSON.parse(await Deno.readTextFile(CONFIG_TEMPLATE));
   config.supabase.jwt_key = jwtSecret;
   config.supabase.service_key = serviceRoleKey;
   config.supabase.anon_key = anonKey;

@@ -2,6 +2,7 @@
 .branches
 .temp
 .env
+.env.extra
 .config.*
 .local-config.*
 .cmds-server-config.*
