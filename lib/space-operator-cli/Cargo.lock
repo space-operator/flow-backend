@@ -1958,6 +1958,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonc-parser"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b187b7e06feb2c205d8ec71f12cd8f553e33477ec155ebfc34f8daa7f3ae4eab"
+
+[[package]]
 name = "kstring"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2724,7 +2730,7 @@ dependencies = [
 
 [[package]]
 name = "space-operator-cli"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "bon",
  "cargo_metadata",
@@ -2737,6 +2743,7 @@ dependencies = [
  "error-stack",
  "futures",
  "gix",
+ "jsonc-parser",
  "prettyplease",
  "proc-macro2",
  "quote",

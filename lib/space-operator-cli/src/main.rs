@@ -7,6 +7,7 @@ use console::style;
 use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
 use futures::{AsyncBufReadExt, AsyncReadExt, future, io::AllowStdIo};
+use jsonc_parser::cst::CstRootNode;
 use postgrest::Postgrest;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -219,7 +220,7 @@ enum GenerateCommands {
     /// Generate configuration file for flow-server
     #[command(visible_alias = "c")]
     Config {
-        /// Path to save configuration file (default: config.toml)
+        /// Path to save configuration file (default: config.jsonc)
         path: Option<PathBuf>,
     },
 }
@@ -260,6 +261,8 @@ pub struct Config {
 
 #[derive(ThisError, Debug)]
 pub enum Error {
+    #[error("failed to parse JSONC config")]
+    ParseJsonc,
     #[error("please start docker-compose first")]
     DockerComposeNotRunning,
     #[error("response from server: {}", .0)]
@@ -1771,7 +1774,7 @@ async fn start_flow_server(
     let config_path = if docker {
         let local_config_path = meta
             .workspace_root
-            .join("docker/.local-config.toml")
+            .join("docker/.local-config.jsonc")
             .into_std_path_buf();
         if !std::fs::exists(&local_config_path)
             .change_context_lazy(|| Error::ReadFile(local_config_path.clone()))
@@ -1780,7 +1783,7 @@ async fn start_flow_server(
             println!("generating local configuration");
             let base_config_path = meta
                 .workspace_root
-                .join("docker/.config.toml")
+                .join("docker/.config.jsonc")
                 .into_std_path_buf();
             if !std::fs::exists(&base_config_path)
                 .change_context_lazy(|| Error::ReadFile(base_config_path.clone()))
@@ -1790,28 +1793,39 @@ async fn start_flow_server(
             }
             let config = std::fs::read_to_string(&base_config_path)
                 .change_context_lazy(|| Error::ReadFile(base_config_path.clone()))?;
-            let mut config = toml::from_str::<toml::Table>(&config)
-                .change_context_lazy(|| Error::ReadFile(base_config_path.clone()))?;
 
-            config["supabase"]["endpoint"] = "http://127.0.0.1:8000".into();
-            config["db"]["host"] = "127.0.0.1".into();
-            config["local_storage"] = "_data/local_storage".into();
+            let config = CstRootNode::parse(&config, &Default::default())
+                .change_context_lazy(|| Error::ParseJsonc)?;
+
+            let obj = config.object_value().unwrap();
+
+            obj.object_value_or_set("supabase")
+                .get("endpoint")
+                .unwrap()
+                .set_value("http://127.0.0.1:8000".into());
+
+            obj.object_value_or_set("db")
+                .get("host")
+                .unwrap()
+                .set_value("127.0.0.1".into());
+
+            obj.get("local_storage")
+                .unwrap()
+                .set_value("_data/local_storage".into());
+
             println!(
                 "writing to {}",
                 relative_to_pwd(&local_config_path).display()
             );
-            std::fs::write(
-                &local_config_path,
-                toml::to_string(&config).change_context(Error::SerializeData)?,
-            )
-            .change_context_lazy(|| Error::WriteFile(local_config_path.clone()))?;
+            std::fs::write(&local_config_path, obj.to_string())
+                .change_context_lazy(|| Error::WriteFile(local_config_path.clone()))?;
         }
         local_config_path
     } else {
         match config {
             Some(config) => make_absolute(config)?,
             None => {
-                let path = meta.workspace_root.join("config.toml");
+                let path = meta.workspace_root.join("config.jsonc");
                 if !path.is_file() {
                     generate_flow_server_config(&path).await?;
                 }
