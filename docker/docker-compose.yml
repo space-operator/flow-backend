@@ -8,7 +8,7 @@ name: flow
 
 secrets:
   flow-server-config:
-    file: ./.config.toml
+    file: ./.config.jsonc
 
 volumes:
   db-config:
