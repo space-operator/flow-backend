@@ -295,7 +295,6 @@ This document contains the help content for the `spo` command-line program.
 * [`spo generate`↴](#spo-generate)
 * [`spo generate input`↴](#spo-generate-input)
 * [`spo generate output`↴](#spo-generate-output)
-* [`spo generate config`↴](#spo-generate-config)
 * [`spo run`↴](#spo-run)
 
 ## `spo`
@@ -404,7 +403,6 @@ Generate various things
 
 * `input` — Generate input struct
 * `output` — Generate output struct
-* `config` — Generate configuration file for flow-server
 
 
 
@@ -436,20 +434,6 @@ Generate output struct
 
 
 
-## `spo generate config`
-
-Generate configuration file for flow-server
-
-**Usage:** `spo generate config [PATH]`
-
-**Command Alias:** `c`
-
-###### **Arguments:**
-
-* `<PATH>` — Path to save configuration file (default: config.toml)
-
-
-
 ## `spo run`
 
 Run various binaries
@@ -460,7 +444,7 @@ Run various binaries
 
 * `<BIN>` — Specify binary to run
 
-  Possible values: `all-cmds-server`
+  Possible values: `all-cmds-server`, `deno-cmds-server`
 
 
 ###### **Options:**
