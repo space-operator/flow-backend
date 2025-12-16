@@ -78,7 +78,7 @@ spo start config.jsonc
 
 ### Run with docker database
 
-Start a local docker deployment as instructed in [docker/README.md](docker/README.md).
+Start a local docker deployment as instructed in [docker/README.md](/docker/README.md).
 
 Stop the docker flow-server:
 
