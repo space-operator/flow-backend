@@ -217,12 +217,6 @@ enum GenerateCommands {
         /// Path to node definition file
         path: PathBuf,
     },
-    /// Generate configuration file for flow-server
-    #[command(visible_alias = "c")]
-    Config {
-        /// Path to save configuration file (default: config.jsonc)
-        path: Option<PathBuf>,
-    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -261,6 +255,8 @@ pub struct Config {
 
 #[derive(ThisError, Debug)]
 pub enum Error {
+    #[error("no config file specified")]
+    NoConfig,
     #[error("failed to parse JSONC config")]
     ParseJsonc,
     #[error("please start docker-compose first")]
@@ -1647,49 +1643,6 @@ async fn generate_output_struct(path: impl AsRef<Path>) -> Result<(), Report<Err
     Ok(())
 }
 
-fn strip_slash(mut s: String) -> String {
-    if s.ends_with("/") {
-        s.pop();
-    }
-    s
-}
-
-async fn generate_flow_server_config(path: impl AsRef<Path>) -> Result<(), Report<Error>> {
-    let client = ApiClient::load().await.change_context(Error::NotLogin)?;
-
-    let apikey = client.config.apikey;
-    let anon_key = client.config.info.anon_key;
-    let endpoint = strip_slash(client.config.info.supabase_url.to_string());
-    let upstream_url = strip_slash(client.config.flow_server.to_string());
-
-    #[rustfmt::skip]
-    let config = toml::toml! {
-host = "0.0.0.0"
-port = 8080
-
-local_storage = "_data/guest_local_storage"
-
-cors_origins = [ "*" ]
-
-[supabase]
-anon_key = anon_key
-endpoint = endpoint
-
-[db]
-upstream_url = upstream_url
-api_keys = [ apikey ]
-    };
-
-    let text = toml::to_string_pretty(&config).change_context(Error::SerializeData)?;
-
-    let path = path.as_ref();
-    if write_file(path, text).await? {
-        println!("generated {}", relative_to_pwd(path).display());
-    }
-
-    Ok(())
-}
-
 fn make_absolute(path: impl AsRef<Path>) -> Result<PathBuf, Report<Error>> {
     let path = path.as_ref();
     if path.is_relative() {
@@ -1825,11 +1778,7 @@ async fn start_flow_server(
         match config {
             Some(config) => make_absolute(config)?,
             None => {
-                let path = meta.workspace_root.join("config.jsonc");
-                if !path.is_file() {
-                    generate_flow_server_config(&path).await?;
-                }
-                path.into_std_path_buf()
+                return Err(Error::NoConfig.into());
             }
         }
     };
@@ -1954,10 +1903,6 @@ async fn run() -> Result<(), Report<Error>> {
         Some(Commands::Generate { command }) => match command {
             GenerateCommands::Input { path } => generate_input_struct(path).await?,
             GenerateCommands::Output { path } => generate_output_struct(path).await?,
-            GenerateCommands::Config { path } => match path {
-                Some(path) => generate_flow_server_config(path).await?,
-                None => generate_flow_server_config("config.toml").await?,
-            },
         },
         Some(Commands::Run { bin, release }) => match bin {
             Binaries::AllCmdsServer => run_cmds_server(*release, "all-cmds-server").await?,
