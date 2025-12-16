@@ -8,15 +8,15 @@ import {
 } from "@std/encoding";
 import { load } from "@std/dotenv";
 import { crypto } from "@std/crypto/crypto";
-import * as toml from "@std/toml";
 import * as fs from "@std/fs";
 import * as sol from "@solana/web3.js";
 
 const ENV_PATH = ".env";
-const CONFIG_PATH = ".config.toml";
+const EXTRA_ENV_PATH = ".env.extra";
+const CONFIG_PATH = ".config.jsonc";
 const CMDS_CONFIG_PATH = ".cmds-server-config.jsonc";
 const ENV_TEMPLATE = "env.example";
-const CONFIG_TEMPLATE = "flow-server-config.toml";
+const CONFIG_TEMPLATE = "flow-server-config.jsonc";
 const CMDS_SERVER_TEMPLATE = "cmds-server-config.jsonc";
 
 async function initHmac(secret: string): Promise<CryptoKey> {
@@ -101,12 +101,22 @@ async function main() {
   env["FLOW_RUNNER_PASSWORD"] = flowRunnerPassword;
   env["ENCRYPTION_KEY"] = encryptionKey;
   env["IROH_SECRET_KEY"] = irohSecretKey;
+
+  function readExtra(): string {
+    try {
+      return Deno.readTextFileSync(EXTRA_ENV_PATH);
+    } catch {
+      return "";
+    }
+  }
+  const envExtra = readExtra();
+
   const envContent = Object.entries(env)
     .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-    .join("\n") + "\n";
+    .join("\n") + "\n" + envExtra;
 
   // deno-lint-ignore no-explicit-any
-  const config: any = toml.parse(await Deno.readTextFile(CONFIG_TEMPLATE));
+  const config: any = JSON.parse(await Deno.readTextFile(CONFIG_TEMPLATE));
   config.supabase.jwt_key = jwtSecret;
   config.supabase.service_key = serviceRoleKey;
   config.supabase.anon_key = anonKey;
@@ -114,7 +124,7 @@ async function main() {
   config.db.encryption_key = encryptionKey;
   config.iroh.secret_key = irohSecretKey;
   config.iroh.trusted = [encodeHex(cmdsServerKey.publicKey.toBytes())];
-  const configContent = toml.stringify(config) + "\n";
+  const configContent = JSON.stringify(config, null, 2) + "\n";
 
   const fileExists: string[] = [];
   if (await fs.exists(ENV_PATH)) fileExists.push(ENV_PATH);

@@ -7,6 +7,7 @@ use console::style;
 use directories::ProjectDirs;
 use error_stack::{Report, ResultExt};
 use futures::{AsyncBufReadExt, AsyncReadExt, future, io::AllowStdIo};
+use jsonc_parser::cst::CstRootNode;
 use postgrest::Postgrest;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -216,12 +217,6 @@ enum GenerateCommands {
         /// Path to node definition file
         path: PathBuf,
     },
-    /// Generate configuration file for flow-server
-    #[command(visible_alias = "c")]
-    Config {
-        /// Path to save configuration file (default: config.toml)
-        path: Option<PathBuf>,
-    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -260,6 +255,10 @@ pub struct Config {
 
 #[derive(ThisError, Debug)]
 pub enum Error {
+    #[error("no config file specified")]
+    NoConfig,
+    #[error("failed to parse JSONC config")]
+    ParseJsonc,
     #[error("please start docker-compose first")]
     DockerComposeNotRunning,
     #[error("response from server: {}", .0)]
@@ -1644,49 +1643,6 @@ async fn generate_output_struct(path: impl AsRef<Path>) -> Result<(), Report<Err
     Ok(())
 }
 
-fn strip_slash(mut s: String) -> String {
-    if s.ends_with("/") {
-        s.pop();
-    }
-    s
-}
-
-async fn generate_flow_server_config(path: impl AsRef<Path>) -> Result<(), Report<Error>> {
-    let client = ApiClient::load().await.change_context(Error::NotLogin)?;
-
-    let apikey = client.config.apikey;
-    let anon_key = client.config.info.anon_key;
-    let endpoint = strip_slash(client.config.info.supabase_url.to_string());
-    let upstream_url = strip_slash(client.config.flow_server.to_string());
-
-    #[rustfmt::skip]
-    let config = toml::toml! {
-host = "0.0.0.0"
-port = 8080
-
-local_storage = "_data/guest_local_storage"
-
-cors_origins = [ "*" ]
-
-[supabase]
-anon_key = anon_key
-endpoint = endpoint
-
-[db]
-upstream_url = upstream_url
-api_keys = [ apikey ]
-    };
-
-    let text = toml::to_string_pretty(&config).change_context(Error::SerializeData)?;
-
-    let path = path.as_ref();
-    if write_file(path, text).await? {
-        println!("generated {}", relative_to_pwd(path).display());
-    }
-
-    Ok(())
-}
-
 fn make_absolute(path: impl AsRef<Path>) -> Result<PathBuf, Report<Error>> {
     let path = path.as_ref();
     if path.is_relative() {
@@ -1771,7 +1727,7 @@ async fn start_flow_server(
     let config_path = if docker {
         let local_config_path = meta
             .workspace_root
-            .join("docker/.local-config.toml")
+            .join("docker/.local-config.jsonc")
             .into_std_path_buf();
         if !std::fs::exists(&local_config_path)
             .change_context_lazy(|| Error::ReadFile(local_config_path.clone()))
@@ -1780,7 +1736,7 @@ async fn start_flow_server(
             println!("generating local configuration");
             let base_config_path = meta
                 .workspace_root
-                .join("docker/.config.toml")
+                .join("docker/.config.jsonc")
                 .into_std_path_buf();
             if !std::fs::exists(&base_config_path)
                 .change_context_lazy(|| Error::ReadFile(base_config_path.clone()))
@@ -1790,32 +1746,39 @@ async fn start_flow_server(
             }
             let config = std::fs::read_to_string(&base_config_path)
                 .change_context_lazy(|| Error::ReadFile(base_config_path.clone()))?;
-            let mut config = toml::from_str::<toml::Table>(&config)
-                .change_context_lazy(|| Error::ReadFile(base_config_path.clone()))?;
 
-            config["supabase"]["endpoint"] = "http://127.0.0.1:8000".into();
-            config["db"]["host"] = "127.0.0.1".into();
-            config["local_storage"] = "_data/local_storage".into();
+            let config = CstRootNode::parse(&config, &Default::default())
+                .change_context_lazy(|| Error::ParseJsonc)?;
+
+            let obj = config.object_value().unwrap();
+
+            obj.object_value_or_set("supabase")
+                .get("endpoint")
+                .unwrap()
+                .set_value("http://127.0.0.1:8000".into());
+
+            obj.object_value_or_set("db")
+                .get("host")
+                .unwrap()
+                .set_value("127.0.0.1".into());
+
+            obj.get("local_storage")
+                .unwrap()
+                .set_value("_data/local_storage".into());
+
             println!(
                 "writing to {}",
                 relative_to_pwd(&local_config_path).display()
             );
-            std::fs::write(
-                &local_config_path,
-                toml::to_string(&config).change_context(Error::SerializeData)?,
-            )
-            .change_context_lazy(|| Error::WriteFile(local_config_path.clone()))?;
+            std::fs::write(&local_config_path, obj.to_string())
+                .change_context_lazy(|| Error::WriteFile(local_config_path.clone()))?;
         }
         local_config_path
     } else {
         match config {
             Some(config) => make_absolute(config)?,
             None => {
-                let path = meta.workspace_root.join("config.toml");
-                if !path.is_file() {
-                    generate_flow_server_config(&path).await?;
-                }
-                path.into_std_path_buf()
+                return Err(Error::NoConfig.into());
             }
         }
     };
@@ -1940,10 +1903,6 @@ async fn run() -> Result<(), Report<Error>> {
         Some(Commands::Generate { command }) => match command {
             GenerateCommands::Input { path } => generate_input_struct(path).await?,
             GenerateCommands::Output { path } => generate_output_struct(path).await?,
-            GenerateCommands::Config { path } => match path {
-                Some(path) => generate_flow_server_config(path).await?,
-                None => generate_flow_server_config("config.toml").await?,
-            },
         },
         Some(Commands::Run { bin, release }) => match bin {
             Binaries::AllCmdsServer => run_cmds_server(*release, "all-cmds-server").await?,
