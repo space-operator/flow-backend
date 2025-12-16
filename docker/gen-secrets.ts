@@ -101,7 +101,16 @@ async function main() {
   env["FLOW_RUNNER_PASSWORD"] = flowRunnerPassword;
   env["ENCRYPTION_KEY"] = encryptionKey;
   env["IROH_SECRET_KEY"] = irohSecretKey;
-  const envExtra = Deno.readTextFileSync(EXTRA_ENV_PATH) ?? "";
+
+  function readExtra(): string {
+    try {
+      return Deno.readTextFileSync(EXTRA_ENV_PATH);
+    } catch {
+      return "";
+    }
+  }
+  const envExtra = readExtra();
+
   const envContent = Object.entries(env)
     .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
     .join("\n") + "\n" + envExtra;
