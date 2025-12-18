@@ -99,6 +99,23 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
         home.display().to_string()
     });
 
+    let local_networks = [
+        "127.0.0.0/8",    // Loopback (127.0.0.1, etc.)
+        "10.0.0.0/8",     // Private Class A (10.x.x.x)
+        "172.16.0.0/12",  // Private Class B (172.16-31.x.x)
+        "192.168.0.0/16", // Private Class C (192.168.x.x)
+        "169.254.0.0/16", // Link-local (APIPA)
+        "224.0.0.0/4",    // Multicast
+        "240.0.0.0/4",    // Reserved
+        "0.0.0.0/8",      // Local all
+        "[::1]",          // IPv6 loopback
+        "[fe80::]",       // IPv6 link-local
+        "[fc00::]",       // IPv6 private/unique local
+        "[ff00::]",       // IPv6 multicast
+        "localhost",      // Cover localhost hostname
+    ]
+    .join(",");
+
     let mut spawned = Command::new("deno")
         .current_dir(dir.path())
         .stdout(Stdio::piped())
@@ -108,6 +125,7 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
         .kill_on_drop(true)
         .arg("run")
         .arg("--allow-net")
+        .arg(format!("--deny-net={}", local_networks))
         .arg("--allow-env=WS_NO_BUFFER_UTIL")
         .arg("--no-prompt")
         .arg("run.ts")
