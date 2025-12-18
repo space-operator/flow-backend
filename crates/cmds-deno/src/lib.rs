@@ -100,7 +100,7 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
     });
 
     let local_networks = [
-        "127.0.0.0/8",    // Loopback (127.0.0.1, etc.)
+        // "127.0.0.0/8",    // Loopback (127.0.0.1, etc.)
         "10.0.0.0/8",     // Private Class A (10.x.x.x)
         "172.16.0.0/12",  // Private Class B (172.16-31.x.x)
         "192.168.0.0/16", // Private Class C (192.168.x.x)
