@@ -311,7 +311,7 @@ impl Config {
 
                 Ok(config)
             }
-            None => Err(anyhow!("No config specified, using default")),
+            None => Err(anyhow!("No config specified")),
         }
     }
 
