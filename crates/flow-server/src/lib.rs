@@ -5,7 +5,7 @@ use db::config::{DbConfig, EncryptionKey, SslConfig};
 use either::Either;
 use flow_lib::config::Endpoints;
 use middleware::req_fn::{self, Function, ReqFn};
-use rand::{Rng, rngs::OsRng, thread_rng};
+use rand::{Rng, rngs::OsRng};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_with::serde_as;
@@ -268,7 +268,7 @@ impl Config {
     }
 
     pub fn default_secret_key() -> iroh::SecretKey {
-        iroh::SecretKey::generate(&mut thread_rng())
+        iroh::SecretKey::generate(&mut OsRng)
     }
 
     pub fn facilitator_client(&self) -> FacilitatorType {
@@ -311,7 +311,7 @@ impl Config {
 
                 Ok(config)
             }
-            None => Err(anyhow!("No config specified, using default")),
+            None => Err(anyhow!("No config specified")),
         }
     }
 
