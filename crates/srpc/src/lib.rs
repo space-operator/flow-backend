@@ -88,6 +88,7 @@ struct Service {
     queue: VecDeque<(Request, oneshot::Sender<Response>)>,
 }
 
+#[derive(Debug)]
 enum Transport {
     Http {
         handle: ServerHandle,
@@ -110,7 +111,7 @@ impl Transport {
         let server = server.run();
         let handle = server.handle();
         actix::spawn(server);
-        Ok(addrs
+        Ok(dbg!(addrs)
             .into_iter()
             .map(|listen| Self::Http {
                 handle: handle.clone(),
@@ -160,7 +161,7 @@ impl actix::Message for GetBaseUrl {
 impl actix::Handler<GetBaseUrl> for Server {
     type Result = actix::Response<<GetBaseUrl as actix::Message>::Result>;
     fn handle(&mut self, _: GetBaseUrl, _: &mut Self::Context) -> Self::Result {
-        actix::Response::reply(self.base_url())
+        actix::Response::reply(dbg!(self.base_url()))
     }
 }
 
@@ -171,7 +172,7 @@ impl Server {
         Ok(ctx.run(Self {
             services: <_>::default(),
             dead_services: <_>::default(),
-            transport: Transport::start_http(addr.clone(), "127.0.0.1:0")?.into(),
+            transport: Transport::start_http(addr.clone(), "0.0.0.0:0")?.into(),
         }))
     }
 
