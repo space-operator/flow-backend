@@ -161,7 +161,7 @@ impl actix::Message for GetBaseUrl {
 impl actix::Handler<GetBaseUrl> for Server {
     type Result = actix::Response<<GetBaseUrl as actix::Message>::Result>;
     fn handle(&mut self, _: GetBaseUrl, _: &mut Self::Context) -> Self::Result {
-        actix::Response::reply(dbg!(self.base_url()))
+        actix::Response::reply(self.base_url())
     }
 }
 
