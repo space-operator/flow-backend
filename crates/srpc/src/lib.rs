@@ -111,7 +111,7 @@ impl Transport {
         let server = server.run();
         let handle = server.handle();
         actix::spawn(server);
-        Ok(dbg!(addrs)
+        Ok(addrs
             .into_iter()
             .map(|listen| Self::Http {
                 handle: handle.clone(),
