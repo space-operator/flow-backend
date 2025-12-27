@@ -6,7 +6,7 @@ edition = "2024"
 [features]
 default = [
     "import",
-    # "commands",
+    "commands",
 ]
 import = []
 commands = ["dep:cmds-pdg", "dep:cmds-std", "dep:cmds-solana", "dep:cmds-deno"]
