@@ -105,15 +105,29 @@ fn main() {
     sh.change_dir(&meta.workspace_root);
     sh.change_dir("docker/");
 
-    if result.is_err() {
-        cmd!(
-            sh,
-            "docker compose -f with-cmds-server.yml logs flow-server"
-        )
-        .run()
-        .inspect_err(|error| eprint!("{error}"))
-        .ok();
-    }
+    cmd!(
+        sh,
+        "docker compose -f with-cmds-server.yml logs flow-server"
+    )
+    .run()
+    .inspect_err(|error| eprint!("{error}"))
+    .ok();
+
+    cmd!(
+        sh,
+        "docker compose -f with-cmds-server.yml logs cmds-server"
+    )
+    .run()
+    .inspect_err(|error| eprint!("{error}"))
+    .ok();
+
+    cmd!(
+        sh,
+        "docker compose -f with-cmds-server.yml logs deno-cmds-server"
+    )
+    .run()
+    .inspect_err(|error| eprint!("{error}"))
+    .ok();
 
     cmd!(sh, "docker compose -f with-cmds-server.yml down -v")
         .ignore_stdout()
