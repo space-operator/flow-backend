@@ -16,7 +16,7 @@ services:
         condition: service_healthy
   deno-cmds-server:
       image: ${CMDS_IMAGE:-public.ecr.aws/space-operator/cmds-server:latest}
-      entrypint: deno-cmds-server
+      entrypoint: deno-cmds-server
       command: /run/secrets/cmds-server-config
       secrets:
         - cmds-server-config
