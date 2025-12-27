@@ -172,7 +172,7 @@ impl Server {
         Ok(ctx.run(Self {
             services: <_>::default(),
             dead_services: <_>::default(),
-            transport: Transport::start_http(addr.clone(), "0.0.0.0:0")?.into(),
+            transport: Transport::start_http(addr.clone(), "127.0.0.1:0")?.into(),
         }))
     }
 
