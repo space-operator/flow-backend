@@ -1,8 +1,11 @@
 # Supabase
-.branches
-.temp
-.env
-.env.extra
-.config.*
-.local-config.*
-.cmds-server-config.*
+#.branches
+#.temp
+#.env
+#.env.extra
+#.config.*
+#.local-config.*
+#.cmds-server-config.*
+#.deno-cmds-server-config.*
+# just ignore all hidden files
+.*
