@@ -1,5 +1,7 @@
 #![allow(clippy::print_stderr, clippy::print_stdout)]
 
+use std::time::Duration;
+
 use clap::Parser;
 use xshell::{Shell, cmd};
 
@@ -30,7 +32,7 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     let repo = if compile { "" } else { "public.ecr.aws/" };
     cmd!(
         sh,
-        "docker compose -f with-cmds-server.yml up --quiet-pull -d --wait "
+        "docker compose -f with-cmds-server.yml up --quiet-pull --pull always -d --wait"
     )
     .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
     .env(
@@ -40,6 +42,9 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
     cmd!(sh, "./import-data.ts --file=export.json").run()?;
+
+    // wait for cmds-server to join
+    std::thread::sleep(Duration::from_secs(5));
 
     sh.change_dir(&meta.workspace_root);
     sh.change_dir("@space-operator/client");
@@ -114,6 +119,22 @@ fn main() {
         .inspect_err(|error| eprint!("{error}"))
         .ok();
     }
+
+    cmd!(
+        sh,
+        "docker compose -f with-cmds-server.yml logs cmds-server"
+    )
+    .run()
+    .inspect_err(|error| eprint!("{error}"))
+    .ok();
+
+    cmd!(
+        sh,
+        "docker compose -f with-cmds-server.yml logs deno-cmds-server"
+    )
+    .run()
+    .inspect_err(|error| eprint!("{error}"))
+    .ok();
 
     cmd!(sh, "docker compose -f with-cmds-server.yml down -v")
         .ignore_stdout()

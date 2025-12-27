@@ -15,6 +15,7 @@ const ENV_PATH = ".env";
 const EXTRA_ENV_PATH = ".env.extra";
 const CONFIG_PATH = ".config.jsonc";
 const CMDS_CONFIG_PATH = ".cmds-server-config.jsonc";
+const DENO_CMDS_CONFIG_PATH = ".deno-cmds-server-config.jsonc";
 const ENV_TEMPLATE = "env.example";
 const CONFIG_TEMPLATE = "flow-server-config.jsonc";
 const CMDS_SERVER_TEMPLATE = "cmds-server-config.jsonc";
@@ -56,7 +57,7 @@ async function generateKey(secret: CryptoKey, role: string): Promise<string> {
   return `${data}.${encodeBase64Url(signature)}`;
 }
 
-async function main() {
+function generateCmdsConfig(path: string): sol.PublicKey {
   const cmdsServerKey = sol.Keypair.generate();
   const cmdsServerConfig = JSON.parse(
     Deno.readTextFileSync(CMDS_SERVER_TEMPLATE),
@@ -64,11 +65,17 @@ async function main() {
   cmdsServerConfig["secret_key"] = encodeHex(
     cmdsServerKey.secretKey.slice(0, 32),
   );
-  console.log("Writing", CMDS_CONFIG_PATH);
+  console.log("Writing", path);
   Deno.writeTextFileSync(
-    CMDS_CONFIG_PATH,
+    path,
     JSON.stringify(cmdsServerConfig, null, 2),
   );
+  return cmdsServerKey.publicKey;
+}
+
+async function main() {
+  const cmdsServerKey = generateCmdsConfig(CMDS_CONFIG_PATH);
+  const denoCmdsServerKey = generateCmdsConfig(DENO_CMDS_CONFIG_PATH);
 
   const encryptionKey = encodeBase64(
     crypto.getRandomValues(new Uint8Array(32)),
@@ -123,7 +130,10 @@ async function main() {
   config.db.password = flowRunnerPassword;
   config.db.encryption_key = encryptionKey;
   config.iroh.secret_key = irohSecretKey;
-  config.iroh.trusted = [encodeHex(cmdsServerKey.publicKey.toBytes())];
+  config.iroh.trusted = [
+    encodeHex(cmdsServerKey.toBytes()),
+    encodeHex(denoCmdsServerKey.toBytes()),
+  ];
   const configContent = JSON.stringify(config, null, 2) + "\n";
 
   const fileExists: string[] = [];

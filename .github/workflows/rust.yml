@@ -53,7 +53,7 @@ jobs:
     name: Benchmark PR
     needs: unit-test
     # DO NOT REMOVE: For handling Fork PRs see Pull Requests from Forks
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && contains(github.event.pull_request.labels.*.name, 'benchmark')
     permissions:
       pull-requests: write
     runs-on: self-hosted

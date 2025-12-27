@@ -6,7 +6,7 @@ use flow_lib::{
         CommandContext, CommandContextData, FlowServices, FlowSetServices, execute, get_jwt,
     },
     flow_run_events::DEFAULT_LOG_FILTER,
-    utils::tower_client::unimplemented_svc,
+    utils::{Extensions, tower_client::unimplemented_svc},
     value::{
         self,
         bincode_impl::{map_from_bincode, map_to_bincode},
@@ -82,7 +82,18 @@ impl CommandTraitImpl {
                             data.flow.set.solana.build_client(Some(HTTP_CLIENT.clone())),
                         ),
                         helius: None,
-                        extensions: Arc::new(Default::default()),
+                        extensions: Arc::new({
+                            let mut ex = Extensions::new();
+                            match srpc::Server::start_http_server() {
+                                Ok(server) => {
+                                    ex.insert(server);
+                                }
+                                Err(error) => {
+                                    tracing::error!("could not start srpc::Server: {error}");
+                                }
+                            }
+                            ex
+                        }),
                         api_input: unimplemented_svc(),
                     },
                 })
