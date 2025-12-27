@@ -11,6 +11,7 @@ secrets:
 services:
   cmds-server:
     image: ${CMDS_IMAGE:-public.ecr.aws/space-operator/cmds-server:latest}
+    entrypoint: all-cmds-server
     command: /run/secrets/cmds-server-config
     secrets:
       - cmds-server-config

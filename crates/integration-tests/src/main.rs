@@ -30,7 +30,7 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     let repo = if compile { "" } else { "public.ecr.aws/" };
     cmd!(
         sh,
-        "docker compose -f with-cmds-server.yml up --quiet-pull -d --wait "
+        "docker compose -f with-cmds-server.yml up --quiet-pull --pull always -d --wait"
     )
     .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
     .env(
