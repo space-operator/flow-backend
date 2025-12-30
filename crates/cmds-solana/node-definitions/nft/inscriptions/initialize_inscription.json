@@ -6,8 +6,12 @@
     "node_id": "initialize_inscription",
     "version": "0.1",
     "display_name": "Initialize Inscription",
-    "description": "",
-    "tags": ["NFT", "Solana", "Inscription"],
+    "description": "Initialize a new Solana inscription account for on-chain data storage.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "Inscription"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +62,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays for account creation",
       "passthrough": true
     },
     {
       "name": "inscription_account",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Keypair for the new inscription account",
       "passthrough": false
     },
     {
       "name": "authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Authority keypair for the inscription",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

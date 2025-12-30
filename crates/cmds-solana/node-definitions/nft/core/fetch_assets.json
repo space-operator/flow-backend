@@ -6,8 +6,12 @@
     "node_id": "fetch_assets",
     "version": "0.1",
     "display_name": "Fetch Assets",
-    "description": "",
-    "tags": ["NFT", "Solana", "Core"],
+    "description": "Fetch all Metaplex Core assets belonging to a collection.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "Core"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,10 +62,12 @@
   "targets": [
     {
       "name": "collection",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Collection address to fetch assets from",
       "passthrough": false
     }
   ],

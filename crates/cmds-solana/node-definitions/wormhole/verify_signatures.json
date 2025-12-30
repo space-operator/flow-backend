@@ -6,8 +6,13 @@
     "node_id": "verify_signatures",
     "version": "0.1",
     "display_name": "Verify Signatures",
-    "description": "",
-    "tags": [],
+    "description": "Verify Wormhole guardian signatures on a VAA.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "signatures",
+      "verify"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +63,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "signature_set",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Keypair for signature set account",
       "passthrough": true
     },
     {
       "name": "guardian_set_index",
-      "type_bounds": ["u32"],
+      "type_bounds": [
+        "u32"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Guardian set index to verify against",
       "passthrough": true
     },
     {
       "name": "signatures",
-      "type_bounds": ["array"],
+      "type_bounds": [
+        "array"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",
@@ -90,7 +103,9 @@
     },
     {
       "name": "vaa_body",
-      "type_bounds": ["bytes"],
+      "type_bounds": [
+        "bytes"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",
@@ -98,7 +113,9 @@
     },
     {
       "name": "vaa_hash",
-      "type_bounds": ["bytes"],
+      "type_bounds": [
+        "bytes"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

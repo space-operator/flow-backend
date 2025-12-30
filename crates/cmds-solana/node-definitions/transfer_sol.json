@@ -6,8 +6,13 @@
     "node_id": "transfer_sol",
     "version": "0.1",
     "display_name": "Transfer SOL",
-    "description": "",
-    "tags": [],
+    "description": "Transfer native SOL tokens from one wallet to another. Requires the sender to sign the transaction.",
+    "tags": [
+      "solana",
+      "transfer",
+      "native",
+      "sol"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,42 +63,52 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees (usually the sender)",
       "passthrough": false
     },
     {
       "name": "sender",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Keypair of the wallet sending SOL (must sign)",
       "passthrough": false
     },
     {
       "name": "recipient",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Public key of the destination wallet",
       "passthrough": false
     },
     {
       "name": "amount",
-      "type_bounds": ["decimal"],
+      "type_bounds": [
+        "decimal"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Amount of SOL to transfer (in SOL units, e.g., 1.5)",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately; if false, returns unsigned transaction",
       "passthrough": false
     }
   ],

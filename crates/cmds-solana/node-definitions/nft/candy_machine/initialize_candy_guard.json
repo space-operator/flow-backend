@@ -6,8 +6,12 @@
     "node_id": "initialize_candy_guard",
     "version": "0.1",
     "display_name": "Initialize Candy Guard",
-    "description": "",
-    "tags": ["NFT", "Solana", "Candy Machine"],
+    "description": "Initialize a Candy Guard to add minting restrictions (price, start time, whitelist) to a Candy Machine.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "Candy Machine"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +68,39 @@
   "targets": [
     {
       "name": "base",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Base keypair for guard account derivation",
       "passthrough": true
     },
     {
       "name": "authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Authority that can modify the guard settings",
       "passthrough": false
     },
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays for account creation",
       "passthrough": true
     },
     {
       "name": "candy_guards",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -96,7 +108,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

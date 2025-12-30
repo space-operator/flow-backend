@@ -6,8 +6,15 @@
     "node_id": "create_tree",
     "version": "0.1",
     "display_name": "Create Tree",
-    "description": "",
-    "tags": [],
+    "description": "Create a Merkle tree for compressed NFTs (cNFTs) using Bubblegum. Tree depth determines max capacity.",
+    "tags": [
+      "solana",
+      "nft",
+      "compressed",
+      "cnft",
+      "bubblegum",
+      "merkle"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,7 +71,9 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -72,7 +81,9 @@
     },
     {
       "name": "creator",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -80,7 +91,9 @@
     },
     {
       "name": "merkle_tree",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -88,23 +101,29 @@
     },
     {
       "name": "max_depth",
-      "type_bounds": ["u32"],
+      "type_bounds": [
+        "u32"
+      ],
       "required": false,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Tree depth: 14 = 16K NFTs, 20 = 1M NFTs",
       "passthrough": false
     },
     {
       "name": "max_buffer",
-      "type_bounds": ["u32"],
+      "type_bounds": [
+        "u32"
+      ],
       "required": false,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Concurrent mint buffer size (usually 64)",
       "passthrough": false
     },
     {
       "name": "canopy_levels",
-      "type_bounds": ["u32"],
+      "type_bounds": [
+        "u32"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -112,7 +131,9 @@
     },
     {
       "name": "is_public",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "If public, anyone will be able to mint Compressed NFTs from it. Otherwise, only the Tree Creator or the Tree Delegate can.",
@@ -120,10 +141,12 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately",
       "passthrough": false
     }
   ],

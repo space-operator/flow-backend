@@ -6,8 +6,12 @@
     "node_id": "create_proxy_authority",
     "version": "0.1",
     "display_name": "Create Proxy Authority",
-    "description": "",
-    "tags": [],
+    "description": "Create a proxy authority account for delegated signing operations.",
+    "tags": [
+      "solana",
+      "authority",
+      "proxy"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,10 +68,12 @@
   "targets": [
     {
       "name": "authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Keypair that will control the proxy authority",
       "passthrough": false
     }
   ],

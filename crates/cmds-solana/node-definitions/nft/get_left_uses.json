@@ -6,8 +6,13 @@
     "node_id": "get_left_uses",
     "version": "0.1",
     "display_name": "Get Left Uses",
-    "description": "",
-    "tags": [],
+    "description": "Get the remaining uses for a Use Authority NFT.",
+    "tags": [
+      "solana",
+      "nft",
+      "uses",
+      "query"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,10 +63,12 @@
   "targets": [
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "NFT mint address to check uses for",
       "passthrough": false
     }
   ],

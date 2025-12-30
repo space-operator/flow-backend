@@ -6,8 +6,12 @@
     "node_id": "parse_pdg_attrs",
     "version": "0.1",
     "display_name": "Parse PDG attributes",
-    "description": "",
-    "tags": [],
+    "description": "Parse and validate PDG attributes from input data.",
+    "tags": [
+      "core",
+      "pdg",
+      "parse"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,15 +62,19 @@
   "targets": [
     {
       "name": "attributes",
-      "type_bounds": ["object"],
+      "type_bounds": [
+        "object"
+      ],
       "required": true,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Attributes object to parse"
     },
     {
       "name": "check_human_readable",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": true,
@@ -74,7 +82,9 @@
     },
     {
       "name": "defaults",
-      "type_bounds": ["object"],
+      "type_bounds": [
+        "object"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": null,

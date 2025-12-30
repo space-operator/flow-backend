@@ -6,8 +6,13 @@
     "node_id": "gen_pdg_attrs",
     "version": "0.1",
     "display_name": "Generate PDG attributes",
-    "description": "",
-    "tags": [],
+    "description": "Generate PDG (Procedural Dependency Graph) attributes for rendering.",
+    "tags": [
+      "core",
+      "pdg",
+      "render",
+      "generate"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,15 +63,19 @@
   "targets": [
     {
       "name": "attributes",
-      "type_bounds": ["object"],
+      "type_bounds": [
+        "object"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Input attributes object"
     },
     {
       "name": "gen_human_readable",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": true,
@@ -74,7 +83,9 @@
     },
     {
       "name": "flag",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": null,

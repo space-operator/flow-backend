@@ -6,8 +6,13 @@
     "node_id": "push_effect_list",
     "version": "0.1",
     "display_name": "Push Effects List",
-    "description": "",
-    "tags": [],
+    "description": "Add an effect element to a PDG effects list.",
+    "tags": [
+      "core",
+      "pdg",
+      "effects",
+      "array"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,19 +63,23 @@
   "targets": [
     {
       "name": "effects",
-      "type_bounds": ["array"],
+      "type_bounds": [
+        "array"
+      ],
       "required": true,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Current effects array"
     },
     {
       "name": "element",
-      "type_bounds": ["array"],
+      "type_bounds": [
+        "array"
+      ],
       "required": true,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Effect element to add"
     }
   ],
   "targets_form.json_schema": {},

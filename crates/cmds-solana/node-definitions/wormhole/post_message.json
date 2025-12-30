@@ -6,8 +6,13 @@
     "node_id": "post_message",
     "version": "0.1",
     "display_name": "Post Message",
-    "description": "",
-    "tags": [],
+    "description": "Post a message to Wormhole for cross-chain communication.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "message",
+      "post"
+    ],
     "related_to": [
       {
         "id": "",
@@ -70,31 +75,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "emitter",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Emitter keypair for the message",
       "passthrough": false
     },
     {
       "name": "message",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Message keypair",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

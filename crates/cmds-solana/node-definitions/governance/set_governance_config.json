@@ -6,8 +6,11 @@
     "node_id": "set_governance_config",
     "version": "0.1",
     "display_name": "Set Governance Config",
-    "description": "",
-    "tags": ["governance", "solana"],
+    "description": "Update the configuration settings for a governance.",
+    "tags": [
+      "governance",
+      "solana"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +61,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "governance",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Governance keypair",
       "passthrough": false
     },
     {
       "name": "config",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "New configuration settings (JSON)",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

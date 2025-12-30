@@ -6,8 +6,11 @@
     "node_id": "create_metadata_account",
     "version": "0.1",
     "display_name": "Create Metadata Account",
-    "description": "",
-    "tags": ["NFT", "Solana"],
+    "description": "Create Metaplex metadata for a token mint. Sets the name, symbol, URI, and creator information.",
+    "tags": [
+      "NFT",
+      "Solana"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,15 +67,19 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays for metadata account rent",
       "passthrough": true
     },
     {
       "name": "update_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "Who can update the on-chain metadata",
@@ -80,7 +87,9 @@
     },
     {
       "name": "is_mutable",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "Whether Metadata Account can be updated",
@@ -88,7 +97,9 @@
     },
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "Token Mint Account",
@@ -96,15 +107,19 @@
     },
     {
       "name": "mint_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Keypair with mint authority (must sign)",
       "passthrough": true
     },
     {
       "name": "metadata",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -112,19 +127,22 @@
     },
     {
       "name": "collection_details",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "Only applies to Collection NFTs and is automatically set. To facility migration, set the collection size manually.",
       "passthrough": false
     },
-  
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately",
       "passthrough": false
     }
   ],

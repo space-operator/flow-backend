@@ -6,8 +6,13 @@
     "node_id": "attest_token",
     "version": "0.1",
     "display_name": "Attest Token",
-    "description": "",
-    "tags": [],
+    "description": "Attest a Solana token for cross-chain bridging via Wormhole.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "token-bridge",
+      "attest"
+    ],
     "related_to": [
       {
         "id": "",
@@ -82,31 +87,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "message",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Message keypair for attestation",
       "passthrough": false
     },
     {
       "name": "mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Token mint to attest",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

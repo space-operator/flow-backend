@@ -6,8 +6,11 @@
     "node_id": "create_token_owner_record",
     "version": "0.1",
     "display_name": "Create Token Owner Record",
-    "description": "",
-    "tags": ["governance", "solana"],
+    "description": "Create a token owner record to participate in governance voting.",
+    "tags": [
+      "governance",
+      "solana"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +67,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays for account creation",
       "passthrough": true
     },
     {
       "name": "realm",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Governance realm",
       "passthrough": true
     },
     {
       "name": "governing_token_owner",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Owner of the governing tokens",
       "passthrough": true
     },
     {
       "name": "governing_token_mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -96,7 +107,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

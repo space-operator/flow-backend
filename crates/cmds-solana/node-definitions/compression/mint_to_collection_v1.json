@@ -6,8 +6,11 @@
     "node_id": "mint_cNFT_to_collection",
     "version": "0.1",
     "display_name": "Mint cNFT to Collection",
-    "description": "",
-    "tags": ["compression", "NFT"],
+    "description": "Mint a compressed NFT directly into a verified collection.",
+    "tags": [
+      "compression",
+      "NFT"
+    ],
     "related_to": [
       {
         "id": "",
@@ -88,31 +91,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "collection_mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Collection NFT mint address",
       "passthrough": false
     },
     {
       "name": "collection_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Keypair with collection authority",
       "passthrough": false
     },
     {
       "name": "creator_or_delegate",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -120,7 +131,9 @@
     },
     {
       "name": "is_delegate_authority",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": false,
       "tooltip": "",
@@ -128,7 +141,9 @@
     },
     {
       "name": "tree_config",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -136,15 +151,19 @@
     },
     {
       "name": "merkle_tree",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Merkle tree address to mint into",
       "passthrough": false
     },
     {
       "name": "leaf_owner",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -152,7 +171,9 @@
     },
     {
       "name": "leaf_delegate",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -160,7 +181,9 @@
     },
     {
       "name": "metadata",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -168,7 +191,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

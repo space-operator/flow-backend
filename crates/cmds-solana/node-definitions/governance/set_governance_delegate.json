@@ -6,8 +6,11 @@
     "node_id": "set_governance_delegate",
     "version": "0.1",
     "display_name": "Set Governance Delegate",
-    "description": "",
-    "tags": ["governance", "solana"],
+    "description": "Delegate your governance voting power to another address.",
+    "tags": [
+      "governance",
+      "solana"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +67,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "governance_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Your governance authority keypair",
       "passthrough": true
     },
     {
       "name": "realm",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Governance realm",
       "passthrough": true
     },
     {
       "name": "governing_token_mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -96,7 +107,9 @@
     },
     {
       "name": "governing_token_owner",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -104,7 +117,9 @@
     },
     {
       "name": "new_governance_delegate",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -112,7 +127,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

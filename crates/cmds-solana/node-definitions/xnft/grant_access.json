@@ -6,8 +6,13 @@
     "node_id": "grant_access",
     "version": "0.1",
     "display_name": "xNFT Grant Access",
-    "description": "",
-    "tags": [],
+    "description": "Grant access to a permissioned xNFT to a specific user.",
+    "tags": [
+      "solana",
+      "xnft",
+      "access",
+      "grant"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,39 +69,49 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Authority address",
       "passthrough": true
     },
     {
       "name": "xnft",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "xNFT to grant access to",
       "passthrough": true
     },
     {
       "name": "wallet",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet to grant access to",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

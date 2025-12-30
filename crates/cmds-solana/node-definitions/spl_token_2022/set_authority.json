@@ -6,8 +6,12 @@
     "node_id": "set_authority_2022",
     "version": "0.1",
     "display_name": "Set Authority 2022",
-    "description": "",
-    "tags": [],
+    "description": "Set or change authority on a Token-2022 account (mint, freeze, close, etc.).",
+    "tags": [
+      "solana",
+      "token-2022",
+      "authority"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,39 +62,49 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "owned_pubkey",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Account to change authority on",
       "passthrough": true
     },
     {
       "name": "new_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "New authority address (or null to remove)",
       "passthrough": true
     },
     {
       "name": "authority_type",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Type of authority to change",
       "passthrough": false
     },
     {
       "name": "owner_pubkey",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -98,7 +112,9 @@
     },
     {
       "name": "signer_pubkeys",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -106,7 +122,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

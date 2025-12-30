@@ -6,8 +6,13 @@
     "node_id": "create_install",
     "version": "0.1",
     "display_name": "xNFT Create Install",
-    "description": "",
-    "tags": [],
+    "description": "Install an xNFT application to your wallet.",
+    "tags": [
+      "solana",
+      "xnft",
+      "install",
+      "app"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +69,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays for installation",
       "passthrough": true
     },
     {
       "name": "authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Authority address for the installation",
       "passthrough": true
     },
     {
       "name": "xnft",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "xNFT address to install",
       "passthrough": true
     },
     {
       "name": "target",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -96,7 +109,9 @@
     },
     {
       "name": "install_vault",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -104,7 +119,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

@@ -6,8 +6,11 @@
     "node_id": "set_realm_config",
     "version": "0.1",
     "display_name": "Set Realm Config",
-    "description": "",
-    "tags": ["governance", "solana"],
+    "description": "Update the configuration settings for a governance realm.",
+    "tags": [
+      "governance",
+      "solana"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +61,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "realm",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Realm to update",
       "passthrough": true
     },
     {
       "name": "realm_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Realm authority keypair",
       "passthrough": true
     },
     {
       "name": "community_token_mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -90,7 +101,9 @@
     },
     {
       "name": "council_token_mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -98,7 +111,9 @@
     },
     {
       "name": "community_token_config_args",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -106,7 +121,9 @@
     },
     {
       "name": "council_token_config_args",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -114,7 +131,9 @@
     },
     {
       "name": "min_weight",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -122,7 +141,9 @@
     },
     {
       "name": "max_weight_source",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -130,7 +151,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

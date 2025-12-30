@@ -6,8 +6,13 @@
     "node_id": "set_token_standard",
     "version": "0.1",
     "display_name": "Set Token Standard",
-    "description": "",
-    "tags": [],
+    "description": "Set or update the token standard for an NFT (NFT, FungibleAsset, etc.).",
+    "tags": [
+      "solana",
+      "nft",
+      "metaplex",
+      "token-standard"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +63,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "update_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Update authority keypair",
       "passthrough": true
     },
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "NFT mint to update",
       "passthrough": true
     },
     {
       "name": "edition_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -90,7 +103,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",

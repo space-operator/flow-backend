@@ -6,8 +6,13 @@
     "node_id": "create_shard",
     "version": "0.1",
     "display_name": "Create Shard",
-    "description": "",
-    "tags": ["NFT", "Solana", "Inscription", "Shard"],
+    "description": "Create a shard account for Solana inscriptions.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "Inscription",
+      "Shard"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,26 +63,32 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays for account creation",
       "passthrough": true
     },
     {
       "name": "shard_number",
-      "type_bounds": ["u8"],
+      "type_bounds": [
+        "u8"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Shard number (0-255)",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately",
       "passthrough": false
     }
   ],

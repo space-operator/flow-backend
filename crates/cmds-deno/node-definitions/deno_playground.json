@@ -3,11 +3,16 @@
   "data": {
     "node_id": "deno_playground",
     "display_name": "Deno Playground",
-    "description": "",
+    "description": "Execute custom JavaScript/TypeScript code using the Deno runtime.",
     "node_definition_version": "0.1",
     "unique_id": "",
     "version": "0.1",
-    "tags": [],
+    "tags": [
+      "core",
+      "deno",
+      "javascript",
+      "script"
+    ],
     "related_to": [
       {
         "id": "",
@@ -50,27 +55,33 @@
   "targets": [
     {
       "name": "input_one",
-      "type_bounds": ["free"],
+      "type_bounds": [
+        "free"
+      ],
       "required": true,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "First input value to pass to the script"
     },
     {
       "name": "input_two",
-      "type_bounds": ["free"],
+      "type_bounds": [
+        "free"
+      ],
       "required": true,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Second input value to pass to the script"
     },
     {
       "name": "input_three",
-      "type_bounds": ["free"],
+      "type_bounds": [
+        "free"
+      ],
       "required": true,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Third input value to pass to the script"
     }
   ],
   "sources": [

@@ -6,8 +6,11 @@
     "node_id": "remove_transaction",
     "version": "0.1",
     "display_name": "Remove Transaction",
-    "description": "",
-    "tags": ["governance", "solana"],
+    "description": "Remove a transaction from a governance proposal before execution.",
+    "tags": [
+      "governance",
+      "solana"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +67,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "proposal",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Proposal to remove transaction from",
       "passthrough": false
     },
     {
       "name": "proposal_transaction",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Transaction to remove",
       "passthrough": false
     },
     {
       "name": "token_owner_record",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -96,7 +107,9 @@
     },
     {
       "name": "governance_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -104,7 +117,9 @@
     },
     {
       "name": "beneficiary",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -112,7 +127,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

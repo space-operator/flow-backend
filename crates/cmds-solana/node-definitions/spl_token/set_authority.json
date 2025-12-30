@@ -6,8 +6,14 @@
     "node_id": "set_authority",
     "version": "0.1",
     "display_name": "Set Authority",
-    "description": "",
-    "tags": [],
+    "description": "Change the authority (owner/admin) of a mint or token account. Authority types include mint, freeze, and owner.",
+    "tags": [
+      "solana",
+      "token",
+      "authority",
+      "admin",
+      "spl"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,15 +64,19 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "owned_pubkey",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -74,23 +84,29 @@
     },
     {
       "name": "new_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Public key of new authority (null to remove)",
       "passthrough": true
     },
     {
       "name": "authority_type",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Type of authority: 'MintTokens', 'FreezeAccount', 'AccountOwner', 'CloseAccount'",
       "passthrough": false
     },
     {
       "name": "owner_pubkey",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -98,7 +114,9 @@
     },
     {
       "name": "signer_pubkeys",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -106,10 +124,12 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately",
       "passthrough": false
     }
   ],

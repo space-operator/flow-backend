@@ -6,8 +6,13 @@
     "node_id": "write_app_data",
     "version": "0.1",
     "display_name": "MPL Core Write App Data",
-    "description": "",
-    "tags": ["NFT", "Solana", "Core", "AppData"],
+    "description": "Write application-specific data to a Metaplex Core asset's app data plugin.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "Core",
+      "AppData"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +63,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "asset",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Core asset address",
       "passthrough": false
     },
     {
       "name": "collection",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Collection address if applicable",
       "passthrough": false
     },
     {
       "name": "buffer",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -90,7 +103,9 @@
     },
     {
       "name": "authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -98,15 +113,19 @@
     },
     {
       "name": "data",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Application data to write",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

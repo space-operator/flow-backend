@@ -6,8 +6,14 @@
     "node_id": "arweave_nft_upload",
     "version": "0.1",
     "display_name": "Arweave NFT Upload",
-    "description": "",
-    "tags": [],
+    "description": "Upload NFT metadata and image to Arweave permanent storage.",
+    "tags": [
+      "solana",
+      "arweave",
+      "nft",
+      "metadata",
+      "upload"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,26 +70,32 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays for storage",
       "passthrough": true
     },
     {
       "name": "metadata",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "NFT metadata JSON to upload",
       "passthrough": false
     },
     {
       "name": "fund_bundlr",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": true,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, funds Bundlr account if needed",
       "passthrough": false
     }
   ],

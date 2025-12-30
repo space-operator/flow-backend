@@ -6,8 +6,12 @@
     "node_id": "update_payment",
     "version": "0.1",
     "display_name": "Update Payment",
-    "description": "",
-    "tags": [],
+    "description": "Update an existing scheduled payment configuration.",
+    "tags": [
+      "solana",
+      "payments",
+      "update"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +62,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "recipient",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Payment recipient",
       "passthrough": true
     },
     {
       "name": "token_mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Token mint for payment",
       "passthrough": true
     },
     {
       "name": "amount",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",

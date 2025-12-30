@@ -6,8 +6,11 @@
     "node_id": "burn_cNFT",
     "version": "0.1",
     "display_name": "Burn cNFT",
-    "description": "",
-    "tags": ["compression", "NFT"],
+    "description": "Burn (destroy) a compressed NFT from a Merkle tree using Bubblegum.",
+    "tags": [
+      "compression",
+      "NFT"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,7 +61,9 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -66,15 +71,20 @@
     },
     {
       "name": "leaf_owner",
-      "type_bounds": ["keypair", "pubkey"],
+      "type_bounds": [
+        "keypair",
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Keypair owning the cNFT (must sign)",
       "passthrough": false
     },
     {
       "name": "leaf_delegate",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -82,15 +92,19 @@
     },
     {
       "name": "merkle_tree",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Address of the Merkle tree containing the cNFT",
       "passthrough": false
     },
     {
       "name": "root",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -98,7 +112,9 @@
     },
     {
       "name": "data_hash",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -106,7 +122,9 @@
     },
     {
       "name": "creator_hash",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -114,7 +132,9 @@
     },
     {
       "name": "leaf_id",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -122,7 +142,9 @@
     },
     {
       "name": "index",
-      "type_bounds": ["u32"],
+      "type_bounds": [
+        "u32"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -130,10 +152,12 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately",
       "passthrough": false
     }
   ],

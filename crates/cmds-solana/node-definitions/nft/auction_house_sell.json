@@ -6,8 +6,14 @@
     "node_id": "auction_house_sell",
     "version": "0.1",
     "display_name": "Auction House Sell",
-    "description": "",
-    "tags": [],
+    "description": "List an NFT for sale on a Metaplex Auction House marketplace.",
+    "tags": [
+      "solana",
+      "auction-house",
+      "nft",
+      "sell",
+      "marketplace"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,39 +64,49 @@
   "targets": [
     {
       "name": "treasury_mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Mint of the currency accepted for payment",
       "passthrough": true
     },
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "auction_house_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "Auction House authority keypair",
       "passthrough": true
     },
     {
       "name": "seller",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "NFT owner listing for sale",
       "passthrough": false
     },
     {
       "name": "seller_token_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": true,
       "tooltip": "",
@@ -98,7 +114,9 @@
     },
     {
       "name": "seller_token_mint_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": true,
       "tooltip": "",
@@ -106,7 +124,9 @@
     },
     {
       "name": "sale_price",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": true,
       "defaultValue": true,
       "tooltip": "",

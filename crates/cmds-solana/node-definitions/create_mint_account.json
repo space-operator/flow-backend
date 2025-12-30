@@ -6,8 +6,14 @@
     "node_id": "create_mint_account",
     "version": "0.1",
     "display_name": "Create Mint Account",
-    "description": "",
-    "tags": [],
+    "description": "Create a new SPL token mint. This establishes a new token type with configurable decimals and authorities.",
+    "tags": [
+      "solana",
+      "token",
+      "mint",
+      "create",
+      "spl"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,7 +64,9 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "Who pays for account rent and transaction fees",
@@ -66,7 +74,9 @@
     },
     {
       "name": "decimals",
-      "type_bounds": ["u8"],
+      "type_bounds": [
+        "u8"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "NFTs should have decimal = 0\nUS dollars have 2 decimals\nFrom Metaplex documentation:\n'If the token has a master edition it is a NonFungible. If the token has no master edition(ensuring its supply can be > 1) and decimals of 0 it is a FungibleAsset. If the token has no master edition(ensuring its supply can be > 1) and decimals of > 0 it is a Fungible. If the token is a limited edition of a MasterEditon it is a NonFungibleEdition.'",
@@ -74,7 +84,9 @@
     },
     {
       "name": "mint_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "Mint authority - who can mint more tokens",
@@ -82,15 +94,19 @@
     },
     {
       "name": "freeze_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Optional authority that can freeze token accounts",
       "passthrough": true
     },
     {
       "name": "mint_account",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -98,7 +114,9 @@
     },
     {
       "name": "memo",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "Additional notes",
@@ -106,10 +124,12 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately",
       "passthrough": false
     }
   ],

@@ -6,8 +6,13 @@
     "node_id": "verify_collection",
     "version": "0.1",
     "display_name": "Verify Collection",
-    "description": "",
-    "tags": [],
+    "description": "Verify an NFT as belonging to a collection.",
+    "tags": [
+      "solana",
+      "nft",
+      "collection",
+      "verify"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +63,39 @@
   "targets": [
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "NFT mint to verify",
       "passthrough": true
     },
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "collection_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Keypair with collection authority",
       "passthrough": true
     },
     {
       "name": "collection_mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -90,7 +103,9 @@
     },
     {
       "name": "collection_authority_is_delegated",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -98,7 +113,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",

@@ -6,8 +6,14 @@
     "node_id": "nft_complete_wrapped_meta",
     "version": "0.1",
     "display_name": "NFT Complete Wrapped Meta",
-    "description": "",
-    "tags": [],
+    "description": "Complete wrapped NFT transfer and create Metaplex metadata.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "nft-bridge",
+      "wrapped",
+      "metadata"
+    ],
     "related_to": [
       {
         "id": "",
@@ -76,31 +82,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "vaa",
-      "type_bounds": ["bytes"],
+      "type_bounds": [
+        "bytes"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Verified Action Approval from Wormhole",
       "passthrough": false
     },
     {
       "name": "payload",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Transfer payload data",
       "passthrough": false
     },
     {
       "name": "vaa_hash",
-      "type_bounds": ["bytes"],
+      "type_bounds": [
+        "bytes"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -108,7 +122,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

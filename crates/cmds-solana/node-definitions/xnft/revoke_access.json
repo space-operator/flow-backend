@@ -6,8 +6,13 @@
     "node_id": "revoke_access",
     "version": "0.1",
     "display_name": "xNFT Revoke Access",
-    "description": "",
-    "tags": [],
+    "description": "Revoke access to a permissioned xNFT from a user.",
+    "tags": [
+      "solana",
+      "xnft",
+      "access",
+      "revoke"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,39 +69,49 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Authority address",
       "passthrough": true
     },
     {
       "name": "xnft",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "xNFT to revoke access from",
       "passthrough": true
     },
     {
       "name": "wallet",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet to revoke access from",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

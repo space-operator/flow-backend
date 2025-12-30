@@ -6,8 +6,12 @@
     "node_id": "memo",
     "version": "0.1",
     "display_name": "Memo",
-    "description": "Adds a memo to a transaction",
-    "tags": [],
+    "description": "Add a memo (text message) to a transaction. Useful for adding notes or references.",
+    "tags": [
+      "solana",
+      "memo",
+      "utility"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,26 +62,32 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "memo",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Text content of the memo",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately",
       "passthrough": false
     }
   ],

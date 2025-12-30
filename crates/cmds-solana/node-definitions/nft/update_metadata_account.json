@@ -6,8 +6,14 @@
     "node_id": "update_metadata_account",
     "version": "0.1",
     "display_name": "Update Metadata Account",
-    "description": "",
-    "tags": [],
+    "description": "Update existing Metaplex metadata for a token/NFT. Can change name, symbol, URI, and other metadata fields.",
+    "tags": [
+      "solana",
+      "nft",
+      "metaplex",
+      "metadata",
+      "update"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +70,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Token mint whose metadata to update",
       "passthrough": true
     },
     {
       "name": "update_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Keypair with update authority (must sign)",
       "passthrough": false
     },
     {
       "name": "new_update_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -96,7 +110,9 @@
     },
     {
       "name": "data",
-      "type_bounds": ["object"],
+      "type_bounds": [
+        "object"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -104,7 +120,9 @@
     },
     {
       "name": "primary_sale_happen",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -112,7 +130,9 @@
     },
     {
       "name": "is_mutable",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",

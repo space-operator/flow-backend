@@ -6,8 +6,11 @@
     "node_id": "execute_transaction",
     "version": "0.1",
     "display_name": "Execute Transaction",
-    "description": "",
-    "tags": ["governance", "solana"],
+    "description": "Execute an approved governance proposal transaction.",
+    "tags": [
+      "governance",
+      "solana"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +67,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "governance",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Governance account",
       "passthrough": true
     },
     {
       "name": "proposal",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Approved proposal to execute",
       "passthrough": true
     },
     {
       "name": "proposal_transaction",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -96,7 +107,9 @@
     },
     {
       "name": "instruction_program_id",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -104,7 +117,9 @@
     },
     {
       "name": "instruction_accounts",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -112,7 +127,9 @@
     },
     {
       "name": "additional_signers",
-      "type_bounds": ["array of strings"],
+      "type_bounds": [
+        "array of strings"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -120,7 +137,9 @@
     },
     {
       "name": "signer_1",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -128,7 +147,9 @@
     },
     {
       "name": "signer_2",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -136,7 +157,9 @@
     },
     {
       "name": "signer_3",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -144,7 +167,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

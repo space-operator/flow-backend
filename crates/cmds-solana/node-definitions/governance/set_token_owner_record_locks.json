@@ -6,8 +6,11 @@
     "node_id": "set_token_owner_record_locks",
     "version": "0.1",
     "display_name": "Set Token Owner Record Locks",
-    "description": "",
-    "tags": ["governance", "solana"],
+    "description": "Set locks on a token owner record to prevent token withdrawal.",
+    "tags": [
+      "governance",
+      "solana"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +67,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "realm",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Governance realm",
       "passthrough": false
     },
     {
       "name": "token_owner_record",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Token owner record to lock",
       "passthrough": false
     },
     {
       "name": "token_owner_record_lock_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -96,7 +107,9 @@
     },
     {
       "name": "lock_ids",
-      "type_bounds": ["array of u8"],
+      "type_bounds": [
+        "array of u8"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -104,7 +117,9 @@
     },
     {
       "name": "expiry",
-      "type_bounds": ["i64"],
+      "type_bounds": [
+        "i64"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -112,7 +127,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

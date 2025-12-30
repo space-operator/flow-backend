@@ -6,8 +6,12 @@
     "node_id": "wallet",
     "version": "0.1",
     "display_name": "Wallet",
-    "description": "",
-    "tags": ["std", "wallet", "solana"],
+    "description": "Load a wallet keypair by name from the configured wallet store.",
+    "tags": [
+      "std",
+      "wallet",
+      "solana"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,10 +68,12 @@
   "targets": [
     {
       "name": "name",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Name of the wallet to load from the wallet store",
       "passthrough": false
     }
   ],

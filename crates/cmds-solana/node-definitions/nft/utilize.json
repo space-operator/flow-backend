@@ -6,8 +6,13 @@
     "node_id": "utilize",
     "version": "0.1",
     "display_name": "Utilize",
-    "description": "",
-    "tags": [],
+    "description": "Use an NFT and decrement its remaining uses (for Use Authority NFTs).",
+    "tags": [
+      "solana",
+      "nft",
+      "use",
+      "utilize"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +63,39 @@
   "targets": [
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "NFT mint address",
       "passthrough": true
     },
     {
       "name": "use_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Keypair with use authority",
       "passthrough": true
     },
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -90,7 +103,9 @@
     },
     {
       "name": "owner",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -98,7 +113,9 @@
     },
     {
       "name": "burner",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -106,7 +123,9 @@
     },
     {
       "name": "number_of_uses",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -114,7 +133,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",

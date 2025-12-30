@@ -6,8 +6,14 @@
     "node_id": "approve_collection_authority",
     "version": "0.1",
     "display_name": "Approve Collection Authority",
-    "description": "",
-    "tags": [],
+    "description": "Approve another account to verify NFTs as part of your collection.",
+    "tags": [
+      "solana",
+      "nft",
+      "approve",
+      "collection",
+      "metaplex"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,42 +64,52 @@
   "targets": [
     {
       "name": "new_collection_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Public key being granted collection authority",
       "passthrough": false
     },
     {
       "name": "update_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Keypair with collection update authority (must sign)",
       "passthrough": true
     },
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "The collection NFT mint address",
       "passthrough": true
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately",
       "passthrough": false
     }
   ],

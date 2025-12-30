@@ -6,8 +6,15 @@
     "node_id": "transfer_nft_from_eth",
     "version": "0.1",
     "display_name": "Transfer NFT From ETH",
-    "description": "",
-    "tags": [],
+    "description": "Transfer an NFT from Ethereum to Solana via Wormhole bridge.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "bridge",
+      "ethereum",
+      "nft",
+      "transfer"
+    ],
     "related_to": [
       {
         "id": "",
@@ -82,39 +89,49 @@
   "targets": [
     {
       "name": "keypair",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Ethereum signer private key",
       "passthrough": true
     },
     {
       "name": "network_name",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Ethereum network name",
       "passthrough": false
     },
     {
       "name": "token",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "NFT contract address on Ethereum",
       "passthrough": false
     },
     {
       "name": "token_id",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "NFT token ID to transfer",
       "passthrough": false
     },
     {
       "name": "recipient",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",

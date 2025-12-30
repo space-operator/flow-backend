@@ -6,8 +6,13 @@
     "node_id": "api_input",
     "version": "0.1",
     "display_name": "API Input",
-    "description": "",
-    "tags": [],
+    "description": "Accept input from an external API call into the flow. Used for building API-triggered flows.",
+    "tags": [
+      "core",
+      "api",
+      "input",
+      "trigger"
+    ],
     "related_to": [
       {
         "id": "",

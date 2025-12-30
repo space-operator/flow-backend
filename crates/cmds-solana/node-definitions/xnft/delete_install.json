@@ -6,8 +6,13 @@
     "node_id": "delete_install",
     "version": "0.1",
     "display_name": "xNFT Delete Install",
-    "description": "",
-    "tags": [],
+    "description": "Uninstall an xNFT application and recover rent.",
+    "tags": [
+      "solana",
+      "xnft",
+      "uninstall",
+      "delete"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +63,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": false
     },
     {
       "name": "authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Authority keypair",
       "passthrough": false
     },
     {
       "name": "receiver",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Address to receive recovered rent",
       "passthrough": false
     },
     {
       "name": "install",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -90,7 +103,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

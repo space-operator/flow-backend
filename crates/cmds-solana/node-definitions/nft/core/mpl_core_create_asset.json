@@ -6,8 +6,12 @@
     "node_id": "create_core_v2",
     "version": "0.1",
     "display_name": "Create Core Asset",
-    "description": "",
-    "tags": ["NFT", "Solana", "Core"],
+    "description": "Create a Metaplex Core NFT asset with plugins and optional collection.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "Core"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +62,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays for account creation",
       "passthrough": true
     },
     {
       "name": "asset",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Keypair for the new asset account",
       "passthrough": false
     },
     {
       "name": "authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Authority keypair for the asset",
       "passthrough": false
     },
     {
       "name": "name",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -90,7 +102,9 @@
     },
     {
       "name": "uri",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -98,7 +112,9 @@
     },
     {
       "name": "collection",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -106,7 +122,9 @@
     },
     {
       "name": "verified_creator",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -114,7 +132,9 @@
     },
     {
       "name": "plugins",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -122,7 +142,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

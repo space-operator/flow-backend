@@ -6,8 +6,13 @@
     "node_id": "create_xnft",
     "version": "0.1",
     "display_name": "xNFT Create",
-    "description": "",
-    "tags": [],
+    "description": "Create a new xNFT (executable NFT) application.",
+    "tags": [
+      "solana",
+      "xnft",
+      "create",
+      "app"
+    ],
     "related_to": [
       {
         "id": "",
@@ -82,31 +87,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays for account creation",
       "passthrough": true
     },
     {
       "name": "authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Authority address for the xNFT",
       "passthrough": true
     },
     {
       "name": "publisher",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Publisher keypair",
       "passthrough": true
     },
     {
       "name": "name",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -114,7 +127,9 @@
     },
     {
       "name": "parameters",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -122,7 +137,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

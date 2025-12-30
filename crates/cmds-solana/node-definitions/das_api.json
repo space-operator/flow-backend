@@ -6,8 +6,14 @@
     "node_id": "das_api",
     "version": "0.1",
     "display_name": "DAS API",
-    "description": "",
-    "tags": [],
+    "description": "Query the Digital Asset Standard (DAS) API for NFT and compressed NFT data.",
+    "tags": [
+      "solana",
+      "das",
+      "api",
+      "nft",
+      "query"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,23 +64,29 @@
   "targets": [
     {
       "name": "url",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "DAS API endpoint URL",
       "passthrough": true
     },
     {
       "name": "id",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Request ID for tracking",
       "passthrough": true
     },
     {
       "name": "method",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "GetAsset, GetAssetProof, GetAssetsByOwner, GetAssetsByCreator, GetAssetsByAuthority, GetAssetsbyCreator, GetAssetsByGroup, SearchAssets, GetSignaturesForAsset, GetTokenAccounts",
@@ -82,10 +94,12 @@
     },
     {
       "name": "params",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "JSON parameters for the API call",
       "passthrough": true
     }
   ],

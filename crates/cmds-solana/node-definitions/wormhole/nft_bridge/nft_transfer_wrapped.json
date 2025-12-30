@@ -6,8 +6,14 @@
     "node_id": "nft_transfer_wrapped",
     "version": "0.1",
     "display_name": "NFT Transfer Wrapped",
-    "description": "",
-    "tags": [],
+    "description": "Transfer a wrapped NFT back to its origin chain via Wormhole.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "nft-bridge",
+      "wrapped",
+      "transfer"
+    ],
     "related_to": [
       {
         "id": "",
@@ -76,31 +82,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wrapped NFT mint address",
       "passthrough": false
     },
     {
       "name": "target_address",
-      "type_bounds": ["address"],
+      "type_bounds": [
+        "address"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Recipient address on destination chain",
       "passthrough": false
     },
     {
       "name": "target_chain",
-      "type_bounds": ["u16"],
+      "type_bounds": [
+        "u16"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -108,7 +122,9 @@
     },
     {
       "name": "message",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -116,7 +132,9 @@
     },
     {
       "name": "from_owner",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -124,7 +142,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

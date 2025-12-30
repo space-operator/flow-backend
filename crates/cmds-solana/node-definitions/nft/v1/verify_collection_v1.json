@@ -6,8 +6,12 @@
     "node_id": "verify_collection_v1",
     "version": "0.1",
     "display_name": "Verify Collection V1",
-    "description": "",
-    "tags": ["NFT", "Solana", "V1"],
+    "description": "Verify an NFT's collection membership using Metaplex v1.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "V1"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +62,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "NFT mint to verify",
       "passthrough": false
     },
     {
       "name": "collection_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Collection authority keypair",
       "passthrough": false
     },
     {
       "name": "collection_mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -90,7 +102,9 @@
     },
     {
       "name": "delegate_record",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -98,7 +112,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",

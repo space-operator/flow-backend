@@ -6,8 +6,13 @@
     "node_id": "get_vaa",
     "version": "0.1",
     "display_name": "Get VAA",
-    "description": "",
-    "tags": [],
+    "description": "Fetch a Verified Action Approval (VAA) from Wormhole guardians.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "vaa",
+      "fetch"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,26 +69,32 @@
   "targets": [
     {
       "name": "emitter",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Emitter address of the message",
       "passthrough": false
     },
     {
       "name": "sequence",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Sequence number of the message",
       "passthrough": false
     },
     {
       "name": "chain_id",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Chain ID where message originated",
       "passthrough": false
     }
   ],

@@ -6,8 +6,13 @@
     "node_id": "thread_delete",
     "version": "0.1",
     "display_name": "Thread Delete",
-    "description": "",
-    "tags": [],
+    "description": "Delete a Clockwork thread and recover rent.",
+    "tags": [
+      "solana",
+      "clockwork",
+      "thread",
+      "delete"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +63,39 @@
   "targets": [
     {
       "name": "thread_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Authority keypair for the thread",
       "passthrough": false
     },
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": false
     },
     {
       "name": "thread",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Thread address to delete",
       "passthrough": false
     },
     {
       "name": "close_to",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",

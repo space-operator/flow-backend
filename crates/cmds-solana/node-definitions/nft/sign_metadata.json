@@ -6,8 +6,14 @@
     "node_id": "sign_metadata",
     "version": "0.1",
     "display_name": "Sign Metadata",
-    "description": "",
-    "tags": [],
+    "description": "Sign NFT metadata as a verified creator.",
+    "tags": [
+      "solana",
+      "nft",
+      "metaplex",
+      "creator",
+      "verify"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +64,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "NFT mint address",
       "passthrough": true
     },
     {
       "name": "creator",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Creator keypair to sign with",
       "passthrough": true
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

@@ -6,8 +6,15 @@
     "node_id": "redeem_nft_on_eth",
     "version": "0.1",
     "display_name": "Redeem NFT On ETH",
-    "description": "",
-    "tags": [],
+    "description": "Redeem an NFT on Ethereum that was transferred from Solana via Wormhole.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "bridge",
+      "ethereum",
+      "nft",
+      "redeem"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,26 +65,32 @@
   "targets": [
     {
       "name": "keypair",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Ethereum signer private key",
       "passthrough": false
     },
     {
       "name": "network_name",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Ethereum network name",
       "passthrough": false
     },
     {
       "name": "signed_vaa",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Signed VAA for the NFT transfer",
       "passthrough": false
     }
   ],

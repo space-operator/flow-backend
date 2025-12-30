@@ -6,8 +6,12 @@
     "node_id": "wrap_core",
     "version": "0.1",
     "display_name": "Wrap Candy Machine Core",
-    "description": "",
-    "tags": ["NFT", "Solana", "Candy Machine Core"],
+    "description": "Wrap a Candy Machine Core with a Candy Guard for minting restrictions.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "Candy Machine Core"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +62,39 @@
   "targets": [
     {
       "name": "candy_machine",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Candy Machine Core to wrap",
       "passthrough": true
     },
     {
       "name": "candy_machine_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Keypair with Candy Machine authority",
       "passthrough": false
     },
     {
       "name": "candy_guard",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Candy Guard to wrap with",
       "passthrough": false
     },
     {
       "name": "candy_guard_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -90,7 +102,9 @@
     },
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -98,7 +112,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

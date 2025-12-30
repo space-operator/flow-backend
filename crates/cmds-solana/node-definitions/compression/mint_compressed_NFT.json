@@ -6,8 +6,15 @@
     "node_id": "mint_compressed_NFT",
     "version": "0.1",
     "display_name": "Mint Compressed NFT",
-    "description": "",
-    "tags": [],
+    "description": "Mint a compressed NFT (cNFT) to a Merkle tree using Bubblegum protocol.",
+    "tags": [
+      "solana",
+      "cnft",
+      "compressed",
+      "nft",
+      "bubblegum",
+      "mint"
+    ],
     "related_to": [
       {
         "id": "",
@@ -88,31 +95,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "creator_or_delegate",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Creator or delegate keypair for minting",
       "passthrough": false
     },
     {
       "name": "tree_config",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Merkle tree configuration account",
       "passthrough": false
     },
     {
       "name": "merkle_tree",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -120,7 +135,9 @@
     },
     {
       "name": "leaf_owner",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -128,7 +145,9 @@
     },
     {
       "name": "leaf_delegate",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": "",
       "tooltip": "",
@@ -136,7 +155,9 @@
     },
     {
       "name": "metadata",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -144,7 +165,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

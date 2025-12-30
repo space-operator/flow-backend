@@ -6,8 +6,11 @@
     "node_id": "create_proposal",
     "version": "0.1",
     "display_name": "Create Proposal",
-    "description": "",
-    "tags": ["governance", "solana"],
+    "description": "Create a new governance proposal for community voting.",
+    "tags": [
+      "governance",
+      "solana"
+    ],
     "related_to": [
       {
         "id": "",
@@ -70,31 +73,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays for account creation",
       "passthrough": true
     },
     {
       "name": "governance",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Governance the proposal is for",
       "passthrough": true
     },
     {
       "name": "proposal_owner_record",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Token owner record of the proposal creator",
       "passthrough": true
     },
     {
       "name": "governance_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -102,7 +113,9 @@
     },
     {
       "name": "voter_weight_record",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -110,7 +123,9 @@
     },
     {
       "name": "realm",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -118,23 +133,29 @@
     },
     {
       "name": "name",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Proposal title",
       "passthrough": false
     },
     {
       "name": "description_link",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Link to detailed proposal description",
       "passthrough": false
     },
     {
       "name": "governing_token_mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -142,7 +163,9 @@
     },
     {
       "name": "vote_type",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -150,7 +173,9 @@
     },
     {
       "name": "use_deny_option",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -158,7 +183,9 @@
     },
     {
       "name": "options",
-      "type_bounds": ["array of strings"],
+      "type_bounds": [
+        "array of strings"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -166,7 +193,9 @@
     },
     {
       "name": "proposal_seed",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -174,7 +203,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

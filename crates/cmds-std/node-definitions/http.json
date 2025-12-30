@@ -6,8 +6,11 @@
     "node_id": "http_request",
     "version": "0.1",
     "display_name": "HTTP Request",
-    "description": "",
-    "tags": ["std", "network"],
+    "description": "Make an HTTP request to an external URL (GET, POST, PUT, DELETE).",
+    "tags": [
+      "std",
+      "network"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,7 +67,9 @@
   "targets": [
     {
       "name": "url",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "passthrough": false,
       "defaultValue": null,
@@ -72,7 +77,9 @@
     },
     {
       "name": "method",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": "GET",
@@ -80,15 +87,19 @@
     },
     {
       "name": "headers",
-      "type_bounds": ["kv"],
+      "type_bounds": [
+        "kv"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Request headers (JSON)"
     },
     {
       "name": "basic_auth",
-      "type_bounds": ["object"],
+      "type_bounds": [
+        "object"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": null,
@@ -96,7 +107,9 @@
     },
     {
       "name": "query_params",
-      "type_bounds": ["array"],
+      "type_bounds": [
+        "array"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": null,
@@ -104,7 +117,9 @@
     },
     {
       "name": "body",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": null,
@@ -112,7 +127,9 @@
     },
     {
       "name": "form",
-      "type_bounds": ["kv"],
+      "type_bounds": [
+        "kv"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": null,

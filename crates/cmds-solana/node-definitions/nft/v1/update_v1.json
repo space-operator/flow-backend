@@ -6,8 +6,12 @@
     "node_id": "update_v1",
     "version": "0.1",
     "display_name": "Update V1",
-    "description": "",
-    "tags": ["NFT", "Solana", "V1"],
+    "description": "Update a Metaplex v1 (Token Metadata) NFT's metadata.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "V1"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +68,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "delegate",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Delegate keypair if using delegated authority",
       "passthrough": false
     },
     {
       "name": "delegate_record",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Delegate record address",
       "passthrough": false
     },
     {
       "name": "update_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -96,7 +108,9 @@
     },
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -104,7 +118,9 @@
     },
     {
       "name": "update_args",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -112,7 +128,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

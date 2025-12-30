@@ -6,8 +6,12 @@
     "node_id": "create_v1",
     "version": "0.1",
     "display_name": "Create V1",
-    "description": "",
-    "tags": ["NFT", "Solana", "V1"],
+    "description": "Create a new Metaplex Core asset (unified NFT standard). Simpler than legacy Metaplex.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "V1"
+    ],
     "related_to": [
       {
         "id": "",
@@ -76,15 +80,19 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays for asset account rent",
       "passthrough": true
     },
     {
       "name": "update_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -92,7 +100,9 @@
     },
     {
       "name": "mint_account",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -100,7 +110,9 @@
     },
     {
       "name": "mint_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -108,7 +120,9 @@
     },
     {
       "name": "data",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "DataV2",
@@ -116,7 +130,9 @@
     },
     {
       "name": "print_supply",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "0, u64, or none",
@@ -124,7 +140,9 @@
     },
     {
       "name": "collection_mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -132,7 +150,9 @@
     },
     {
       "name": "collection_details",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "Only applies to Collection NFTs and is automatically set. To facility migration, set the collection size manually.",
@@ -140,7 +160,9 @@
     },
     {
       "name": "is_mutable",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "Whether Metadata Account can be updated",
@@ -148,7 +170,9 @@
     },
     {
       "name": "token_standard",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "non_fungible, fungible_asset, fungible, non_fungible_edition, programmable_non_fungible, programmable_non_fungible_edition,",
@@ -156,7 +180,9 @@
     },
     {
       "name": "decimals",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -164,7 +190,9 @@
     },
     {
       "name": "creators",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "Creators and their share of royalties. Limited to 5 creators",
@@ -172,7 +200,9 @@
     },
     {
       "name": "uses",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "How many and which type of uses each NFT will have.\nUses:\nBurn is a single-time use and is burned after use.\nSingle is a single-time use and does not burn the token.\nMultiple allows up to the specified number of uses",
@@ -180,7 +210,9 @@
     },
     {
       "name": "rule_set",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "Programmable rule set configuration (only applicable to `Programmable` asset types)",
@@ -188,10 +220,12 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately",
       "passthrough": false
     }
   ],

@@ -6,8 +6,12 @@
     "node_id": "add_config_lines_core",
     "version": "0.1",
     "display_name": "Add Config Lines Core",
-    "description": "",
-    "tags": ["NFT", "Solana", "Candy Machine Core"],
+    "description": "Add configuration lines to a Candy Machine Core for Metaplex Core NFT minting.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "Candy Machine Core"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +62,39 @@
   "targets": [
     {
       "name": "candy_machine",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Candy Machine Core account address",
       "passthrough": true
     },
     {
       "name": "authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Authority allowed to modify the Candy Machine",
       "passthrough": false
     },
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": "",
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "index",
-      "type_bounds": ["u32"],
+      "type_bounds": [
+        "u32"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -90,7 +102,9 @@
     },
     {
       "name": "config_lines",
-      "type_bounds": ["free"],
+      "type_bounds": [
+        "free"
+      ],
       "required": true,
       "defaultValue": "",
       "tooltip": "",
@@ -98,7 +112,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

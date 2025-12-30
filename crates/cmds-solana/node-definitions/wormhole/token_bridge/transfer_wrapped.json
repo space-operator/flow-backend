@@ -6,8 +6,14 @@
     "node_id": "transfer_wrapped",
     "version": "0.1",
     "display_name": "Transfer Wrapped",
-    "description": "",
-    "tags": [],
+    "description": "Transfer wrapped tokens back to their origin chain via Wormhole.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "token-bridge",
+      "wrapped",
+      "transfer"
+    ],
     "related_to": [
       {
         "id": "",
@@ -76,31 +82,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wrapped token mint",
       "passthrough": false
     },
     {
       "name": "amount",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Amount to transfer",
       "passthrough": false
     },
     {
       "name": "fee",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -108,7 +122,9 @@
     },
     {
       "name": "target_address",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -116,7 +132,9 @@
     },
     {
       "name": "target_chain",
-      "type_bounds": ["u16"],
+      "type_bounds": [
+        "u16"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -124,7 +142,9 @@
     },
     {
       "name": "message",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -132,7 +152,9 @@
     },
     {
       "name": "from_owner",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -140,7 +162,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

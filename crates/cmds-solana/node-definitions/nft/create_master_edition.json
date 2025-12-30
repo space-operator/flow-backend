@@ -6,8 +6,11 @@
     "node_id": "create_master_edition",
     "version": "0.1",
     "display_name": "Create Master Edition",
-    "description": "",
-    "tags": ["NFT", "Solana"],
+    "description": "Create a Metaplex Master Edition, making a token into a non-fungible NFT with optional print limits.",
+    "tags": [
+      "NFT",
+      "Solana"
+    ],
     "related_to": [
       {
         "id": "create_metadata_account",
@@ -70,7 +73,9 @@
   "targets": [
     {
       "name": "proxy_as_update_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "Whether a Proxy Authority is signing the Update Authority",
@@ -78,39 +83,49 @@
     },
     {
       "name": "update_authority",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Keypair with update authority (must sign)",
       "passthrough": false
     },
     {
       "name": "mint_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Token mint (must have supply of 1)",
       "passthrough": true
     },
     {
       "name": "mint_authority",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Keypair with mint authority (must sign)",
       "passthrough": false
     },
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays for master edition account rent",
       "passthrough": true
     },
     {
       "name": "max_supply",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "How many copies you can print. Leave empty for unlimited\n1/1 NFTs should have supply 0",
@@ -118,10 +133,12 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
-      "tooltip": "",
+      "tooltip": "If true, submits transaction immediately",
       "passthrough": false
     }
   ],

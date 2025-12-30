@@ -6,8 +6,13 @@
     "node_id": "parse_vaa",
     "version": "0.1",
     "display_name": "Parse VAA",
-    "description": "",
-    "tags": [],
+    "description": "Parse a Wormhole VAA to extract payload and signatures.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "vaa",
+      "parse"
+    ],
     "related_to": [
       {
         "id": "",
@@ -106,10 +111,12 @@
   "targets": [
     {
       "name": "vaa",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "VAA data to parse (JSON)",
       "passthrough": false
     }
   ],

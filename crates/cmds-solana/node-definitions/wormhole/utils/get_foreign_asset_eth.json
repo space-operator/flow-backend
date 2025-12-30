@@ -6,8 +6,13 @@
     "node_id": "get_foreign_asset_eth",
     "version": "0.1",
     "display_name": "Get Foreign Asset on ETH",
-    "description": "",
-    "tags": [],
+    "description": "Get the Ethereum address of a wrapped Solana asset.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "ethereum",
+      "query"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,32 +63,39 @@
   "targets": [
     {
       "name": "token",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Solana token mint address",
       "passthrough": false
     },
     {
       "name": "is_nft",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": false,
-      "tooltip": "",
+      "tooltip": "Whether the asset is an NFT",
       "passthrough": false
     },
     {
       "name": "chain_id",
-      "type_bounds": ["number"],
+      "type_bounds": [
+        "number"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Target chain ID",
       "passthrough": false
     },
-
     {
       "name": "network",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",

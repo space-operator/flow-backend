@@ -6,8 +6,13 @@
     "node_id": "disburse_payment_ix",
     "version": "0.1",
     "display_name": "Disburse Payment Instruction",
-    "description": "",
-    "tags": [],
+    "description": "Generate an instruction to disburse a scheduled payment.",
+    "tags": [
+      "solana",
+      "payments",
+      "disburse",
+      "instruction"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +63,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Payer address",
       "passthrough": true
     },
     {
       "name": "authority_token_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Authority's token account",
       "passthrough": true
     },
     {
       "name": "mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Token mint for payment",
       "passthrough": true
     },
     {
       "name": "payment",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -90,7 +103,9 @@
     },
     {
       "name": "thread",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -98,7 +113,9 @@
     },
     {
       "name": "recipient",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -106,7 +123,9 @@
     },
     {
       "name": "recipient_ata",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",

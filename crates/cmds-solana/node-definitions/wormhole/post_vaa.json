@@ -6,8 +6,13 @@
     "node_id": "post_vaa",
     "version": "0.1",
     "display_name": "Post VAA",
-    "description": "",
-    "tags": [],
+    "description": "Post a verified VAA to Solana for processing.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "vaa",
+      "post"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +69,39 @@
   "targets": [
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": false
     },
     {
       "name": "signature_set",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Keypair for signature set account",
       "passthrough": false
     },
     {
       "name": "guardian_set_index",
-      "type_bounds": ["u32"],
+      "type_bounds": [
+        "u32"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Guardian set index that signed the VAA",
       "passthrough": true
     },
     {
       "name": "vaa_hash",
-      "type_bounds": ["bytes"],
+      "type_bounds": [
+        "bytes"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -96,7 +109,9 @@
     },
     {
       "name": "vaa",
-      "type_bounds": ["bytes"],
+      "type_bounds": [
+        "bytes"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -104,7 +119,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",

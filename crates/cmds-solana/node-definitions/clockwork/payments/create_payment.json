@@ -6,8 +6,13 @@
     "node_id": "create_payment",
     "version": "0.1",
     "display_name": "Create Payment",
-    "description": "",
-    "tags": [],
+    "description": "Create a scheduled or recurring payment using Clockwork threads.",
+    "tags": [
+      "solana",
+      "payments",
+      "clockwork",
+      "schedule"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,31 +69,39 @@
   "targets": [
     {
       "name": "trigger",
-      "type_bounds": ["json"],
+      "type_bounds": [
+        "json"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Payment trigger configuration (JSON)",
       "passthrough": false
     },
     {
       "name": "payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "recipient",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Payment recipient address",
       "passthrough": true
     },
     {
       "name": "token_mint",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -96,7 +109,9 @@
     },
     {
       "name": "token_account",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -104,15 +119,19 @@
     },
     {
       "name": "amount",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Payment amount",
       "passthrough": false
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",

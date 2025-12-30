@@ -6,8 +6,13 @@
     "node_id": "generate_base",
     "version": "0.1",
     "display_name": "Generate Base",
-    "description": "",
-    "tags": [],
+    "description": "Generate base PDG attributes with optional random seed.",
+    "tags": [
+      "core",
+      "pdg",
+      "render",
+      "base"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,7 +63,9 @@
   "targets": [
     {
       "name": "seed",
-      "type_bounds": ["u64"],
+      "type_bounds": [
+        "u64"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": null,
@@ -66,7 +73,9 @@
     },
     {
       "name": "defaults",
-      "type_bounds": ["object"],
+      "type_bounds": [
+        "object"
+      ],
       "required": false,
       "passthrough": false,
       "defaultValue": null,

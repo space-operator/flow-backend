@@ -6,8 +6,13 @@
     "node_id": "generate_keypair",
     "version": "0.1",
     "display_name": "Generate Keypair",
-    "description": "Generate or load a keypair and it's pubkey.\n\nWill generate a random keypair every run if no inputs are provided. This is useful for testing purpose.",
-    "tags": [],
+    "description": "Generate a new Solana keypair (public/private key pair). Used for creating wallets and signing transactions.",
+    "tags": [
+      "solana",
+      "keypair",
+      "wallet",
+      "utility"
+    ],
     "related_to": [
       {
         "id": "",
@@ -64,7 +69,9 @@
   "targets": [
     {
       "name": "seed",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "12 word BIP39 mnemonic seed phrase",
@@ -72,7 +79,10 @@
     },
     {
       "name": "private_key",
-      "type_bounds": ["keypair", "pubkey"],
+      "type_bounds": [
+        "keypair",
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "Load using a base 58 string, ignores seed/passphrase",
@@ -80,7 +90,9 @@
     },
     {
       "name": "passphrase",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": false,
       "defaultValue": null,
       "tooltip": "",
@@ -88,13 +100,14 @@
     },
     {
       "name": "check_new_account",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": false,
       "tooltip": "Check that generated keypair is a new account",
       "passthrough": false
     }
-
   ],
   "targets_form.json_schema": {},
   "targets_form.ui_schema": {}

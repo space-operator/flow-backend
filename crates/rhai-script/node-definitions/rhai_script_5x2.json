@@ -3,11 +3,15 @@
   "data": {
     "node_id": "rhai_script_5x2",
     "display_name": "RHAI Script 5x2",
-    "description": "",
+    "description": "Execute a RHAI script with 5 inputs and 2 outputs.",
     "node_definition_version": "0.1",
     "unique_id": "",
     "version": "0.1",
-    "tags": [],
+    "tags": [
+      "core",
+      "rhai",
+      "script"
+    ],
     "related_to": [
       {
         "id": "",
@@ -66,7 +70,7 @@
       "required": false,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "First input value"
     },
     {
       "name": "b",
@@ -76,7 +80,7 @@
       "required": false,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Second input value"
     },
     {
       "name": "c",
@@ -86,7 +90,7 @@
       "required": false,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Third input value"
     },
     {
       "name": "d",
@@ -96,7 +100,7 @@
       "required": false,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Fourth input value"
     },
     {
       "name": "e",
@@ -106,7 +110,7 @@
       "required": false,
       "passthrough": false,
       "defaultValue": null,
-      "tooltip": ""
+      "tooltip": "Fifth input value"
     }
   ],
   "sources": [

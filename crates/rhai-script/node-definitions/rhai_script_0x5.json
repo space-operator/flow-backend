@@ -3,11 +3,15 @@
   "data": {
     "node_id": "rhai_script_0x5",
     "display_name": "RHAI Script 0x5",
-    "description": "",
+    "description": "Execute a RHAI script with no inputs and 5 outputs.",
     "node_definition_version": "0.1",
     "unique_id": "",
     "version": "0.1",
-    "tags": [],
+    "tags": [
+      "core",
+      "rhai",
+      "script"
+    ],
     "related_to": [
       {
         "id": "",

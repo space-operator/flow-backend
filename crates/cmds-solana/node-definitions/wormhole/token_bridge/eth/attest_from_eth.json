@@ -6,8 +6,14 @@
     "node_id": "attest_from_eth",
     "version": "0.1",
     "display_name": "Attest From ETH",
-    "description": "",
-    "tags": [],
+    "description": "Attest a token from Ethereum for bridging to Solana via Wormhole.",
+    "tags": [
+      "solana",
+      "wormhole",
+      "bridge",
+      "ethereum",
+      "attest"
+    ],
     "related_to": [
       {
         "id": "",
@@ -70,26 +76,32 @@
   "targets": [
     {
       "name": "keypair",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Signer keypair",
       "passthrough": true
     },
     {
       "name": "network_name",
-      "type_bounds": ["string"],
+      "type_bounds": [
+        "string"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Ethereum network name (mainnet, goerli, etc.)",
       "passthrough": false
     },
     {
       "name": "token",
-      "type_bounds": ["address"],
+      "type_bounds": [
+        "address"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Ethereum token address to attest",
       "passthrough": false
     }
   ],

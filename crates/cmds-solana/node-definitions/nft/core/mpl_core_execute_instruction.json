@@ -6,8 +6,13 @@
     "node_id": "execute_instruction",
     "version": "0.1",
     "display_name": "MPL Core Execute Instruction",
-    "description": "",
-    "tags": ["NFT", "Solana", "Core", "ExecuteInstruction"],
+    "description": "Execute a custom instruction on a Metaplex Core asset using oracle plugins.",
+    "tags": [
+      "NFT",
+      "Solana",
+      "Core",
+      "ExecuteInstruction"
+    ],
     "related_to": [
       {
         "id": "",
@@ -58,31 +63,39 @@
   "targets": [
     {
       "name": "fee_payer",
-      "type_bounds": ["keypair"],
+      "type_bounds": [
+        "keypair"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Wallet that pays the transaction fees",
       "passthrough": true
     },
     {
       "name": "asset",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": true,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Core asset address",
       "passthrough": false
     },
     {
       "name": "collection",
-      "type_bounds": ["pubkey"],
+      "type_bounds": [
+        "pubkey"
+      ],
       "required": false,
       "defaultValue": null,
-      "tooltip": "",
+      "tooltip": "Collection address if applicable",
       "passthrough": false
     },
     {
       "name": "instructions",
-      "type_bounds": ["instructions"],
+      "type_bounds": [
+        "instructions"
+      ],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
@@ -90,7 +103,9 @@
     },
     {
       "name": "submit",
-      "type_bounds": ["bool"],
+      "type_bounds": [
+        "bool"
+      ],
       "required": false,
       "defaultValue": true,
       "tooltip": "",
