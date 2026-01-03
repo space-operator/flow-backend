@@ -30,6 +30,7 @@ pub mod get_info;
 
 pub mod deploy_flow;
 pub mod start_deployment;
+pub mod get_providers;
 
 pub mod prelude {
     pub use crate::{

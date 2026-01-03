@@ -125,6 +125,55 @@ impl BaseAddressBook {
     pub fn endpoint(&self) -> &Endpoint {
         &self.endpoint
     }
+
+    /// Returns a list of all connected providers with their info
+    pub fn get_providers(
+        &self,
+    ) -> Vec<(
+        iroh::PublicKey,
+        BTreeSet<SocketAddr>,
+        Url,
+        Vec<MatchCommand>,
+    )> {
+        self.factories
+            .read()
+            .unwrap()
+            .iter()
+            .map(|(node_id, info)| {
+                (
+                    *node_id,
+                    info.direct_addresses.clone(),
+                    info.relay_url.clone(),
+                    info.availables.availables().collect(),
+                )
+            })
+            .collect()
+    }
+
+    /// Register the server itself as a provider with its native commands
+    pub fn register_self(
+        &self,
+        direct_addresses: BTreeSet<SocketAddr>,
+        relay_url: Url,
+        availables: Vec<MatchCommand>,
+    ) {
+        let node_id = self.endpoint.node_id();
+        tracing::info!(
+            "Registering server {} with {} commands",
+            node_id,
+            availables.len()
+        );
+        
+        self.factories.write().unwrap().insert(
+            node_id,
+            Info {
+                direct_addresses,
+                relay_url,
+                availables: availables.into_iter().map(|m| (m, ())).collect(),
+                permission: authenticate::Permission::All,
+            },
+        );
+    }
 }
 
 impl AddressBook {

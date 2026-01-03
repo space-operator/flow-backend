@@ -104,6 +104,51 @@ impl actix::Handler<GetIrohInfo> for DBWorker {
     }
 }
 
+#[derive(Serialize, Clone)]
+pub struct CommandDetail {
+    pub r#type: String,
+    pub name: String,
+}
+
+#[derive(Serialize, Clone)]
+pub struct ProviderInfo {
+    pub node_id: String,
+    pub relay_url: String,
+    pub direct_addresses: Vec<SocketAddr>,
+    pub commands: Vec<CommandDetail>,
+}
+
+pub struct GetProviders;
+
+impl actix::Message for GetProviders {
+    type Result = Option<Vec<ProviderInfo>>;
+}
+
+impl actix::Handler<GetProviders> for DBWorker {
+    type Result = Option<Vec<ProviderInfo>>;
+
+    fn handle(&mut self, _: GetProviders, _: &mut Self::Context) -> Self::Result {
+        let providers = self
+            .remote_command_address_book
+            .get_providers()
+            .into_iter()
+            .map(|(node_id, direct_addresses, relay_url, availables)| ProviderInfo {
+                node_id: node_id.to_string(),
+                relay_url: relay_url.to_string(),
+                direct_addresses: direct_addresses.into_iter().collect(),
+                commands: availables
+                    .into_iter()
+                    .map(|m| CommandDetail {
+                        r#type: format!("{:?}", m.r#type),
+                        name: m.name.to_string(),
+                    })
+                    .collect(),
+            })
+            .collect();
+        Some(providers)
+    }
+}
+
 #[bon::bon]
 impl DBWorker {
     #[builder]

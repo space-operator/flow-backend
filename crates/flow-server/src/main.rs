@@ -7,6 +7,7 @@ use actix_web::{
 use command_rpc::flow_side::address_book::BaseAddressBook;
 use db::{LocalStorage, WasmStorage, pool::DbPool};
 use flow_lib::{command::CommandFactory, utils::TowerClient};
+use iroh::Watcher;
 use flow_server::{
     Config,
     api::{
@@ -157,6 +158,29 @@ async fn main() {
 
     tracing::info!("iroh node ID: {}", config.iroh.secret_key.public());
 
+    // Auto-register flow-server's native commands
+    {
+        let endpoint = base_book.endpoint();
+        let relay_url = endpoint
+            .home_relay()
+            .initialized()
+            .await;
+        let direct_addresses = endpoint
+            .direct_addresses()
+            .initialized()
+            .await
+            .into_iter()
+            .map(|addr| addr.addr)
+            .collect();
+
+        base_book.register_self(
+            direct_addresses,
+            relay_url.to_string().parse().unwrap(),
+            natives.clone(),
+        );
+        tracing::info!("✓ Auto-registered {} native commands", natives.len());
+    }
+
     let db_worker = DBWorker::create(|ctx| {
         DBWorker::builder()
             .config(&config)
@@ -278,7 +302,8 @@ async fn main() {
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
             .app_data(web::Data::new(sig_auth))
             .app_data(web::Data::new(db.clone()))
-            .service(metrics_scope);
+            .service(metrics_scope)
+            .service(api::get_providers::service());
         if let Some(auth) = supabase_auth.clone() {
             app = app.app_data(web::Data::new(auth));
         }
