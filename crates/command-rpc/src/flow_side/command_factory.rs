@@ -24,7 +24,7 @@ impl CommandFactoryWithRemotes {
                     }
                 }
                 Err(error) => {
-                    tracing::debug!("remote rpc error: {}", error);
+                    tracing::error!("remote rpc error: {}", error);
                 }
             }
         }
