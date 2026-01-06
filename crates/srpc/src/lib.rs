@@ -18,7 +18,7 @@ use std::{
     collections::VecDeque,
     fmt::Display,
     marker::PhantomData,
-    net::{IpAddr, SocketAddr, ToSocketAddrs},
+    net::{SocketAddr, ToSocketAddrs},
 };
 use thiserror::Error as ThisError;
 use tower::{BoxError, Service as _, ServiceBuilder, ServiceExt, util::BoxService};
