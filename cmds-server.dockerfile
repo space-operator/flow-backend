@@ -24,6 +24,8 @@ COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
 ARG PROFILE=release
 RUN cargo build --profile=$PROFILE --bin all-cmds-server --bin deno-cmds-server --quiet
+RUN cp /build/target/*/all-cmds-server /build/all-cmds-server
+RUN cp /build/target/*/deno-cmds-server /build/deno-cmds-server
 
 # Step 4:
 # Create a tiny output image.
@@ -32,7 +34,7 @@ FROM docker.io/library/debian:stable-slim AS runtime
 COPY ./certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
 RUN apt-get update && apt-get install -y libssl3 ca-certificates lld
 WORKDIR /space-operator/
-COPY --from=builder /build/target/release/all-cmds-server /usr/local/bin
-COPY --from=builder /build/target/release/deno-cmds-server /usr/local/bin
+COPY --from=builder /build/all-cmds-server /usr/local/bin
+COPY --from=builder /build/deno-cmds-server /usr/local/bin
 RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')" && apt-get remove -y lld && rm -rf /var/lib/apt/lists/*
 ENTRYPOINT ["all-cmds-server"]
