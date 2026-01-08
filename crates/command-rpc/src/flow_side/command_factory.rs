@@ -24,7 +24,7 @@ impl CommandFactoryWithRemotes {
                     }
                 }
                 Err(error) => {
-                    tracing::error!("remote rpc error for node {}: {}", nd.node_id, error);
+                    tracing::error!("remote rpc error for node {}: {:#}", nd.node_id, error);
                 }
             }
         }
