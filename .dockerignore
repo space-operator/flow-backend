@@ -1,0 +1,9 @@
+target
+.vscode
+_data
+guest_local_storage
+local_storage
+config.*
+.env
+.ipynb_checkpoints
+.idea
