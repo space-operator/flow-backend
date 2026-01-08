@@ -28,12 +28,16 @@ RUN cargo build --profile=$PROFILE --bin all-cmds-server --bin deno-cmds-server 
 RUN cp /build/target/*/all-cmds-server /build/all-cmds-server
 RUN cp /build/target/*/deno-cmds-server /build/deno-cmds-server
 
+FROM docker.io/denoland/deno:debian AS deno
+
 # Step 4:
 # Create a tiny output image.
 # It only contains our final binaries.
 FROM docker.io/library/debian:stable-slim AS runtime
 COPY ./certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/
 RUN apt-get update && apt-get install -y libssl3 ca-certificates lld
+COPY --from=deno /usr/bin/deno /usr/local/bin
+RUN deno --version
 WORKDIR /space-operator/
 COPY --from=builder /build/all-cmds-server /usr/local/bin
 COPY --from=builder /build/deno-cmds-server /usr/local/bin
