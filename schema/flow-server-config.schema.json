@@ -211,13 +211,11 @@
           "uniqueItems": true,
           "items": {
             "type": "string"
-          }
+          },
+          "default": []
         }
       },
-      "required": [
-        "secret_key",
-        "trusted"
-      ]
+      "required": []
     },
     "CdpConfig": {
       "type": "object",
