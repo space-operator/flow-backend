@@ -130,7 +130,6 @@ impl CommandFactoryImpl {
         params: InitParams,
         mut results: InitResults,
     ) -> LocalBoxFuture<'static, Result<(), anyhow::Error>> {
-        tracing::debug!("init");
         let nd = (move || {
             let nd = params.get().context("get")?.get_nd().context("get_nd")?;
             let nd: NodeData =
@@ -140,7 +139,6 @@ impl CommandFactoryImpl {
 
         match nd {
             Ok(nd) => {
-                tracing::debug!("{}", nd.node_id);
                 let fut = self.factory.init(&nd);
                 let tracker = self.tracker.clone();
                 Box::pin(async move {
