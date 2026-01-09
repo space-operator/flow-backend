@@ -14,7 +14,12 @@ use hashbrown::HashMap;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::Value as JsonValue;
 use smallvec::SmallVec;
-use std::{collections::VecDeque, fmt::Display, marker::PhantomData};
+use std::{
+    collections::VecDeque,
+    fmt::Display,
+    marker::PhantomData,
+    net::{SocketAddr, ToSocketAddrs},
+};
 use thiserror::Error as ThisError;
 use tower::{BoxError, Service as _, ServiceBuilder, ServiceExt, util::BoxService};
 use url::Url;
@@ -83,23 +88,36 @@ struct Service {
     queue: VecDeque<(Request, oneshot::Sender<Response>)>,
 }
 
+#[derive(Debug)]
 enum Transport {
-    Http { handle: ServerHandle, port: u16 },
+    Http {
+        handle: ServerHandle,
+        listen: SocketAddr,
+    },
 }
 
 impl Transport {
-    fn start_http(addr: actix::Addr<Server>) -> Result<Self, Error> {
+    fn start_http<A: ToSocketAddrs>(
+        addr: actix::Addr<Server>,
+        listen: A,
+    ) -> Result<Vec<Self>, Error> {
         let server = HttpServer::new(move || {
             App::new().configure(|s| configure_server(s, addr.downgrade()))
         })
         .workers(1)
-        .bind("127.0.0.1:0")
+        .bind(listen)
         .map_err(Error::Bind)?;
-        let port = server.addrs()[0].port();
+        let addrs = server.addrs();
         let server = server.run();
         let handle = server.handle();
         actix::spawn(server);
-        Ok(Self::Http { handle, port })
+        Ok(addrs
+            .into_iter()
+            .map(|listen| Self::Http {
+                handle: handle.clone(),
+                listen,
+            })
+            .collect())
     }
 }
 
@@ -154,14 +172,16 @@ impl Server {
         Ok(ctx.run(Self {
             services: <_>::default(),
             dead_services: <_>::default(),
-            transport: [Transport::start_http(addr.clone())?].into(),
+            transport: Transport::start_http(addr.clone(), "127.0.0.1:0")?.into(),
         }))
     }
 
     pub fn base_url(&self) -> Option<Url> {
         self.transport.iter().find_map(|t| match t {
-            Transport::Http { port, .. } => {
-                Some(Url::parse(&format!("http://127.0.0.1:{port}")).unwrap())
+            Transport::Http { listen, .. } => {
+                let ip = listen.ip();
+                let port = listen.port();
+                Some(Url::parse(&format!("http://{ip}:{port}")).unwrap())
             }
         })
     }

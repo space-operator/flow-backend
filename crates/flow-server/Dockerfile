@@ -11,19 +11,20 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 # Step 2: Cache project dependencies
 FROM rustc AS cacher
-COPY vendor vendor
 ARG PROFILE=release
+COPY vendor vendor
 COPY --from=planner /build/recipe.json recipe.json
 RUN cargo chef cook --profile=$PROFILE --recipe-path recipe.json
 
 # Step 3: Build the binary
 FROM rustc AS builder
+ARG PROFILE=release
 COPY . .
 # Copy over the cached dependencies from above
 COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
-ARG PROFILE=release
 RUN cargo build --profile=$PROFILE --bin flow-server --quiet
+RUN cp /build/target/*/flow-server /build/flow-server
 
 FROM docker.io/denoland/deno:debian AS deno
 
@@ -41,6 +42,6 @@ RUN apt-get update && \
 COPY --from=deno /usr/bin/deno /usr/local/bin
 RUN deno --version
 WORKDIR /space-operator/
-COPY --from=builder /build/target/release/flow-server /usr/local/bin
+COPY --from=builder /build/flow-server /usr/local/bin
 RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')" && apt-get remove -y lld && rm -rf /var/lib/apt/lists/*
 ENTRYPOINT ["./entrypoint.bash"]

@@ -4,13 +4,28 @@ include:
 secrets:
   cmds-server-config:
     file: ./.cmds-server-config.jsonc
+  deno-cmds-server-config:
+    file: ./.deno-cmds-server-config.jsonc
+
 
 services:
   cmds-server:
     image: ${CMDS_IMAGE:-public.ecr.aws/space-operator/cmds-server:latest}
+    entrypoint: all-cmds-server
     command: /run/secrets/cmds-server-config
     secrets:
       - cmds-server-config
+    depends_on:
+      flow-server:
+        condition: service_healthy
+  deno-cmds-server:
+    image: ${CMDS_IMAGE:-public.ecr.aws/space-operator/cmds-server:latest}
+    entrypoint: deno-cmds-server
+    command: /run/secrets/deno-cmds-server-config
+    environment:
+      RUST_LOG: info,iroh=error,command_rpc=debug
+    secrets:
+      - deno-cmds-server-config
     depends_on:
       flow-server:
         condition: service_healthy

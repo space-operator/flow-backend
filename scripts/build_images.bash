@@ -33,7 +33,7 @@ function build {
     local BUILDER_TAG=$RANDOM
     time $BUILD --target builder --build-arg PROFILE=$PROFILE -t "$NAME-builder:$BUILDER_TAG" -f "$DOCKERFILE" .
 
-    time $BUILD -t "$NAME:$COMMIT" -f "$DOCKERFILE" .
+    time $BUILD --build-arg PROFILE=$PROFILE -t "$NAME:$COMMIT" -f "$DOCKERFILE" .
 
     $CMD tag $NAME:$COMMIT $NAME:$BRANCH
 
