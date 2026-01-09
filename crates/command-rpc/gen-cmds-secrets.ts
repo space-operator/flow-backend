@@ -8,7 +8,7 @@ const cmdsServerConfig = {
   "flow_server": [
     {
       // for kubernetes
-      "url": "http://flow-server-1:8080/",
+      "url": "http://flow-server-0:8080/",
     },
   ],
 };
