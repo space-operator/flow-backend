@@ -8,13 +8,17 @@ const cmdsServerConfig = {
   "flow_server": [
     {
       // for kubernetes
-      "url": "http://flow-server-0:8080/",
+      "url": "https://dev-api.spaceoperator.com/",
     },
   ],
 };
 cmdsServerConfig["secret_key"] = encodeHex(
   crypto.getRandomValues(new Uint8Array(32)),
 );
+const url = Deno.env.get("URL");
+if (url) {
+  cmdsServerConfig["flow_server"][0].url = url;
+}
 const json = JSON.stringify(cmdsServerConfig, null, 2);
 const path = Deno.args[0];
 if (path && !existsSync(path)) {
