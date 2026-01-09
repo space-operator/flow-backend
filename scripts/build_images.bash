@@ -41,7 +41,7 @@ function build {
 }
 
 build space-operator/flow-server crates/flow-server/Dockerfile
-build space-operator/cmds-server cmds-server.dockerfile
+build space-operator/cmds-server crates/command-rpc/Dockerfile
 
 pushd schema
 time $BUILD -t space-operator/schema-server:$COMMIT .

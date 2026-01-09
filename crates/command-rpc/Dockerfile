@@ -1,4 +1,3 @@
-
 FROM docker.io/library/rust AS rustc
 RUN apt-get update && apt-get install -y capnproto && rm -rf /var/lib/apt/lists/*
 RUN cargo install cargo-chef --quiet
@@ -41,5 +40,6 @@ RUN deno --version
 WORKDIR /space-operator/
 COPY --from=builder /build/all-cmds-server /usr/local/bin
 COPY --from=builder /build/deno-cmds-server /usr/local/bin
+COPY ./crates/command-rpc/gen-cmds-secrets.ts .
 RUN bash -c "ldd /usr/local/bin/* | (! grep 'not found')" && apt-get remove -y lld && rm -rf /var/lib/apt/lists/*
 ENTRYPOINT ["all-cmds-server"]
