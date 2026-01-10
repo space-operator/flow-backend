@@ -3,7 +3,7 @@ use crate::db_worker::{FindActor, FlowRunWorker};
 use actix_web::web::ServiceConfig;
 use chrono::Utc;
 use flow_lib::{
-    config::Endpoints, context::api_input, flow_run_events::ApiInput,
+    NodeId, config::Endpoints, context::api_input, flow_run_events::ApiInput,
     utils::tower_client::CommonErrorExt,
 };
 use futures_channel::oneshot;
@@ -49,6 +49,15 @@ pub struct NewRequestService {
     pub endpoints: Endpoints,
 }
 
+#[derive(Serialize)]
+pub struct WebHookPostBody {
+    pub url: String,
+    pub flow_run_id: FlowRunId,
+    pub node_id: NodeId,
+    pub times: u32,
+    pub timeout: f64,
+}
+
 impl tower::Service<api_input::Request> for NewRequestService {
     type Response = api_input::Response;
 
@@ -87,7 +96,7 @@ impl tower::Service<api_input::Request> for NewRequestService {
                 Ok(Some(addr)) => {
                     addr.do_send(ApiInput {
                         time: Utc::now(),
-                        url,
+                        url: url.clone(),
                     });
                 }
                 _ => {
@@ -96,6 +105,26 @@ impl tower::Service<api_input::Request> for NewRequestService {
                     )));
                 }
             };
+            if let Some(webhook_url) = req.webhook_url {
+                let mut http = crate::HTTP.post(webhook_url);
+                if let Some(headers) = req.webhook_headers {
+                    http = http.headers(headers);
+                }
+                let body = WebHookPostBody {
+                    url,
+                    flow_run_id,
+                    node_id: req.node_id,
+                    times: req.times,
+                    timeout: req.timeout.as_secs_f64(),
+                };
+                let result = http
+                    .json(&body)
+                    .send()
+                    .await;
+                if let Err(error) = result {
+                    tracing::warn!("{}", error);
+                }
+            }
             if timeout != Duration::MAX {
                 tokio::time::timeout(timeout, rx)
                     .await
