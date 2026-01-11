@@ -629,6 +629,7 @@ impl UserConnection {
         )
         .await?;
         flows.drop_in_place("current_branch_id").ok();
+        flows.drop_in_place("backend_endpoint").ok();
         csv_export::clear_column(&mut flows, "lastest_flow_run_id")?;
 
         let user_quotas = copy_out(
