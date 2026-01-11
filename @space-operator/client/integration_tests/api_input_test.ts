@@ -126,7 +126,7 @@ const router = new Router();
 router.post("/webhook", async (ctx) => {
   const info = await ctx.request.body.json();
   const url = info.url!;
-  console.log("callback url: ", url);
+  console.log(info);
   const resp = await fetch(url, {
     method: "POST",
     headers: [["content-type", "application/json"]],
