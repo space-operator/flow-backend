@@ -52,6 +52,7 @@ pub mod api_input {
     use thiserror::Error as ThisError;
     use value::Value;
 
+    #[derive(Debug)]
     pub struct Request {
         pub flow_run_id: FlowRunId,
         pub node_id: NodeId,

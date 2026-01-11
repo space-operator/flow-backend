@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { assertEquals } from "@std/assert";
 import { checkNoErrors } from "./utils.ts";
 import { Application, Router } from "@oak/oak";
+import { ApplicationCloseEvent } from "@oak/oak/application";
 
 dotenv.loadSync({
   export: true,
@@ -121,33 +122,44 @@ Deno.test("timeout", async () => {
   await ws.close();
 });
 
+const router = new Router();
+router.post("/webhook", async (ctx) => {
+  const info = await ctx.request.body.json();
+  const url = info.url!;
+  console.log("callback url: ", url);
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: [["content-type", "application/json"]],
+    body: JSON.stringify({ value: new Value("hello") }),
+  });
+  await resp.text();
+  ctx.response.body = "ok";
+});
+const app = new Application();
+let setPort = (_x: unknown) => {};
+const portPromise = new Promise((resolve) => {
+  setPort = resolve;
+});
+app.addEventListener("listen", (ev) => {
+  setPort(ev.port);
+});
+app.use(router.routes());
+app.use(router.allowedMethods());
+app.listen({
+  port: 0,
+});
+
 Deno.test("webhook", async () => {
-  const router = new Router();
-  router.get("/webhook", async (ctx) => {
-    const url = (await ctx.request.body.json()).url!;
-    fetch(url, {
-      method: "POST",
-      headers: [["content-type", "application/json"]],
-      body: JSON.stringify({ value: new Value("hello") }),
-    });
-    ctx.response.body = "ok";
-  });
-  const app = new Application();
-  let port = undefined;
-  app.addEventListener("listen", (ev) => {
-    port = ev.port;
-  });
-  app.use(router.routes);
-  app.use(router.allowedMethods());
-  app.listen({
-    port: 0,
-  });
+  const port = await portPromise as number;
+  console.log("listening on port ", port);
 
   const owner = new client.Client({
     host: "http://localhost:8080",
     anonKey,
     token: apiKey,
   });
+  const ws = owner.ws();
+  await ws.authenticate();
 
   const flowId = 3730;
   const { flow_run_id } = await owner.startFlow(flowId, {
@@ -155,8 +167,20 @@ Deno.test("webhook", async () => {
       "webhook_url": `http://localhost:${port}/webhook`,
     }).M!,
   });
+  ws.subscribeFlowRunEvents(
+    async (ev) => {
+      if (ev.event === "FlowLog") {
+        console.log(ev.data.content);
+      }
+      if (ev.event === "NodeLog") {
+        console.log(ev.data.content);
+      }
+    },
+    flow_run_id,
+  );
 
   const result = await owner.getFlowOutput(flow_run_id);
+  ws.close();
   const c = result.toJSObject().c;
   assertEquals(c, "hello");
 
@@ -166,4 +190,5 @@ Deno.test("webhook", async () => {
   });
   await sup.auth.setSession(jwt);
   await checkNoErrors(sup, flow_run_id);
+  app.dispatchEvent(new ApplicationCloseEvent({}));
 });

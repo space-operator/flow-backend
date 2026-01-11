@@ -117,12 +117,17 @@ impl tower::Service<api_input::Request> for NewRequestService {
                     times: req.times,
                     timeout: req.timeout.as_secs_f64(),
                 };
-                let result = http
-                    .json(&body)
-                    .send()
-                    .await;
-                if let Err(error) = result {
-                    tracing::warn!("{}", error);
+                let result = http.json(&body).send().await;
+                match result {
+                    Ok(resp) => {
+                        let status = resp.status();
+                        if !status.is_success() {
+                            tracing::warn!("call webhook error: {}", status);
+                        }
+                    }
+                    Err(error) => {
+                        tracing::warn!("call webhook error: {}", error);
+                    }
                 }
             }
             if timeout != Duration::MAX {
