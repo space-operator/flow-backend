@@ -573,7 +573,7 @@ impl UserConnection {
         csv_export::clear_column(&mut users, "encrypted_password")?;
         users.drop_in_place("confirmed_at")?;
 
-        let nodes = copy_out(
+        let mut nodes = copy_out(
             &tx,
             &format!(
                 r#"SELECT * FROM nodes WHERE
@@ -583,6 +583,10 @@ impl UserConnection {
             ),
         )
         .await?;
+        nodes.drop_in_place("provider").ok();
+        nodes.drop_in_place("category").ok();
+        nodes.drop_in_place("icon_url").ok();
+        nodes.drop_in_place("vendor").ok();
 
         let mut identities = copy_out(
             &tx,
@@ -628,6 +632,8 @@ impl UserConnection {
             &format!("SELECT * FROM flows WHERE user_id = '{}'", self.user_id),
         )
         .await?;
+        flows.drop_in_place("current_branch_id").ok();
+        flows.drop_in_place("backend_endpoint").ok();
         csv_export::clear_column(&mut flows, "lastest_flow_run_id")?;
 
         let user_quotas = copy_out(

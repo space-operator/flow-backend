@@ -61,6 +61,26 @@
       "defaultValue": null,
       "tooltip": "Timeout (seconds)",
       "passthrough": false
+    },
+    {
+      "name": "webhook_url",
+      "type_bounds": [
+        "string"
+      ],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Webhook URL to notify when the node is ready to receive input",
+      "passthrough": false
+    },
+    {
+      "name": "webhook_headers",
+      "type_bounds": [
+        "free"
+      ],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Headers to send to the webhook (e.g. authorization headers)",
+      "passthrough": false
     }
   ],
   "targets_form.ui_schema": {},

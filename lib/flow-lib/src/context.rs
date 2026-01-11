@@ -18,6 +18,7 @@ use crate::{
 use bytes::Bytes;
 use chrono::Utc;
 use futures::channel::mpsc;
+use reqwest::header::HeaderMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use solana_pubkey::Pubkey;
@@ -47,14 +48,18 @@ pub mod api_input {
         FlowRunId, NodeId,
         utils::{TowerClient, tower_client::CommonError},
     };
+    use reqwest::header::HeaderMap;
     use thiserror::Error as ThisError;
     use value::Value;
 
+    #[derive(Debug)]
     pub struct Request {
         pub flow_run_id: FlowRunId,
         pub node_id: NodeId,
         pub times: u32,
         pub timeout: Duration,
+        pub webhook_url: Option<String>,
+        pub webhook_headers: Option<HeaderMap>,
     }
 
     pub struct Response {
@@ -634,12 +639,16 @@ impl CommandContext {
     pub async fn api_input(
         &mut self,
         timeout: Option<Duration>,
+        webhook_url: Option<String>,
+        webhook_headers: Option<HeaderMap>,
     ) -> Result<api_input::Response, api_input::Error> {
         let req = api_input::Request {
             flow_run_id: *self.flow_run_id(),
             node_id: *self.node_id(),
             times: *self.times(),
             timeout: timeout.unwrap_or(Duration::MAX),
+            webhook_url,
+            webhook_headers,
         };
         self.flow.set.api_input.ready().await?.call(req).await
     }
