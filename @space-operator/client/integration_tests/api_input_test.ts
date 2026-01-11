@@ -166,5 +166,4 @@ Deno.test("webhook", async () => {
   });
   await sup.auth.setSession(jwt);
   await checkNoErrors(sup, flow_run_id);
-  await ws.close();
 });
