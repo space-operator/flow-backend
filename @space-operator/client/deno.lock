@@ -1,19 +1,28 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@oak/commons@1": "1.0.1",
+    "jsr:@oak/oak@^17.2.0": "17.2.0",
     "jsr:@space-operator/flow-lib@0.11.0": "0.11.0",
     "jsr:@space-operator/flow-lib@0.14": "0.14.0",
     "jsr:@space-operator/x402-fetch@~0.1.3": "0.1.3",
     "jsr:@std/assert@*": "1.0.16",
+    "jsr:@std/assert@1": "1.0.16",
     "jsr:@std/assert@^1.0.16": "1.0.16",
     "jsr:@std/bytes@0.221": "0.221.0",
+    "jsr:@std/bytes@1": "1.0.6",
+    "jsr:@std/crypto@1": "1.0.5",
     "jsr:@std/dotenv@*": "0.225.5",
     "jsr:@std/dotenv@~0.225.5": "0.225.5",
     "jsr:@std/encoding@0.221": "0.221.0",
+    "jsr:@std/encoding@1": "1.0.10",
     "jsr:@std/encoding@^1.0.10": "1.0.10",
+    "jsr:@std/http@1": "1.0.22",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/internal@^1.0.6": "1.0.6",
+    "jsr:@std/media-types@1": "1.1.0",
     "jsr:@std/msgpack@0.221.0": "0.221.0",
+    "jsr:@std/path@1": "1.1.4",
     "npm:@solana/kit@5": "5.0.0_typescript@5.9.3",
     "npm:@solana/web3.js@1": "1.98.4",
     "npm:@solana/web3.js@1.94.0": "1.94.0",
@@ -23,11 +32,35 @@
     "npm:@supabase/auth-js@^2.86.2": "2.86.2",
     "npm:@supabase/supabase-js@2": "2.86.2",
     "npm:@supabase/supabase-js@^2.86.2": "2.86.2",
+    "npm:path-to-regexp@^6.3.0": "6.3.0",
     "npm:tweetnacl@*": "1.0.3",
     "npm:tweetnacl@^1.0.3": "1.0.3",
     "npm:x402@~0.7.3": "0.7.3_@solana+kit@5.0.0__typescript@5.9.3_viem@2.41.2__zod@3.25.76__ws@8.18.3___bufferutil@4.0.9___utf-8-validate@5.0.10_zod@3.25.76"
   },
   "jsr": {
+    "@oak/commons@1.0.1": {
+      "integrity": "889ff210f0b4292591721be07244ecb1b5c118742f5273c70cf30d7cd4184d0c",
+      "dependencies": [
+        "jsr:@std/assert@1",
+        "jsr:@std/bytes@1",
+        "jsr:@std/crypto",
+        "jsr:@std/encoding@1",
+        "jsr:@std/http",
+        "jsr:@std/media-types"
+      ]
+    },
+    "@oak/oak@17.2.0": {
+      "integrity": "938537a92fc7922a46a9984696c65fb189c9baad164416ac3e336768a9ff0cd1",
+      "dependencies": [
+        "jsr:@oak/commons",
+        "jsr:@std/assert@1",
+        "jsr:@std/bytes@1",
+        "jsr:@std/http",
+        "jsr:@std/media-types",
+        "jsr:@std/path",
+        "npm:path-to-regexp"
+      ]
+    },
     "@space-operator/flow-lib@0.11.0": {
       "integrity": "f15ae8d5b1fbaab8e131263caaebf8380f17906d95a86d10de914b82bb02ac2a",
       "dependencies": [
@@ -65,6 +98,12 @@
     "@std/bytes@0.221.0": {
       "integrity": "64a047011cf833890a4a2ab7293ac55a1b4f5a050624ebc6a0159c357de91966"
     },
+    "@std/bytes@1.0.6": {
+      "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
+    },
+    "@std/crypto@1.0.5": {
+      "integrity": "0dcfbb319fe0bba1bd3af904ceb4f948cde1b92979ec1614528380ed308a3b40"
+    },
     "@std/dotenv@0.225.3": {
       "integrity": "a95e5b812c27b0854c52acbae215856d9cce9d4bbf774d938c51d212711e8d4a"
     },
@@ -77,16 +116,31 @@
     "@std/encoding@1.0.10": {
       "integrity": "8783c6384a2d13abd5e9e87a7ae0520a30e9f56aeeaa3bdf910a3eaaf5c811a1"
     },
+    "@std/http@1.0.22": {
+      "integrity": "53f0bb70e23a2eec3e17c4240a85bb23d185b2e20635adb37ce0f03cc4ca012a",
+      "dependencies": [
+        "jsr:@std/encoding@^1.0.10"
+      ]
+    },
     "@std/internal@1.0.6": {
       "integrity": "9533b128f230f73bd209408bb07a4b12f8d4255ab2a4d22a1fd6d87304aca9a4"
     },
     "@std/internal@1.0.12": {
       "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
     },
+    "@std/media-types@1.1.0": {
+      "integrity": "c9d093f0c05c3512932b330e3cc1fe1d627b301db33a4c2c2185c02471d6eaa4"
+    },
     "@std/msgpack@0.221.0": {
       "integrity": "78a99bca814808f08f49dd2b21a55185540a5ebba861d29d3ee63429157ad490",
       "dependencies": [
-        "jsr:@std/bytes"
+        "jsr:@std/bytes@0.221"
+      ]
+    },
+    "@std/path@1.1.4": {
+      "integrity": "1d2d43f39efb1b42f0b1882a25486647cb851481862dc7313390b2bb044314b5",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.12"
       ]
     }
   },
@@ -2944,6 +2998,9 @@
     "path-exists@4.0.0": {
       "integrity": "sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w=="
     },
+    "path-to-regexp@6.3.0": {
+      "integrity": "sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ=="
+    },
     "picomatch@2.3.1": {
       "integrity": "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA=="
     },
@@ -3576,6 +3633,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@oak/oak@^17.2.0",
       "jsr:@space-operator/flow-lib@0.14",
       "jsr:@space-operator/x402-fetch@~0.1.3",
       "jsr:@std/assert@^1.0.16",

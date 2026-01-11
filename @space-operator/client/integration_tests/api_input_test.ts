@@ -4,6 +4,7 @@ import * as dotenv from "@std/dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { assertEquals } from "@std/assert";
 import { checkNoErrors } from "./utils.ts";
+import { Application, Router } from "@oak/oak";
 
 dotenv.loadSync({
   export: true,
@@ -117,5 +118,53 @@ Deno.test("timeout", async () => {
     flow_run_id,
   );
   assertEquals(await nodeError, "timeout");
+  await ws.close();
+});
+
+Deno.test("webhook", async () => {
+  const router = new Router();
+  router.get("/webhook", async (ctx) => {
+    const url = (await ctx.request.body.json()).url!;
+    fetch(url, {
+      method: "POST",
+      headers: [["content-type", "application/json"]],
+      body: JSON.stringify({ value: new Value("hello") }),
+    });
+    ctx.response.body = "ok";
+  });
+  const app = new Application();
+  let port = undefined;
+  app.addEventListener("listen", (ev) => {
+    port = ev.port;
+  });
+  app.use(router.routes);
+  app.use(router.allowedMethods());
+  app.listen({
+    port: 0,
+  });
+
+  const owner = new client.Client({
+    host: "http://localhost:8080",
+    anonKey,
+    token: apiKey,
+  });
+
+  const flowId = 3730;
+  const { flow_run_id } = await owner.startFlow(flowId, {
+    inputs: new Value({
+      "webhook_url": `http://localhost:${port}/webhook`,
+    }).M!,
+  });
+
+  const result = await owner.getFlowOutput(flow_run_id);
+  const c = result.toJSObject().c;
+  assertEquals(c, "hello");
+
+  const jwt = await owner.claimToken();
+  const sup = createClient<client.Database>(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false },
+  });
+  await sup.auth.setSession(jwt);
+  await checkNoErrors(sup, flow_run_id);
   await ws.close();
 });
