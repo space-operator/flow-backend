@@ -277,6 +277,7 @@ async fn main() {
             .app_data(web::Data::new(x402.clone()))
             .app_data(web::Data::new(db.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
+            .configure(|cfg| flow_server::middleware::url::configure(cfg, &config))
             .app_data(web::Data::new(sig_auth))
             .app_data(web::Data::new(db.clone()))
             .service(metrics_scope);

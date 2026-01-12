@@ -9,7 +9,7 @@ struct Output {
     supabase_url: Url,
     anon_key: String,
     iroh: IrohInfo,
-    host: String,
+    base_url: String,
 }
 
 pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
@@ -22,12 +22,12 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
         async move {
             let db_worker = DBWorker::from_registry();
             let iroh = db_worker.send(GetIrohInfo).await.unwrap().unwrap();
-            let host = format!("{}://{}", info.scheme(), info.host());
+            let base_url = format!("{}://{}", info.scheme(), info.host());
             let output = Output {
                 supabase_url,
                 anon_key,
                 iroh,
-                host,
+                base_url,
             };
             let json = simd_json::to_vec(&output).unwrap();
             HttpResponseBuilder::new(StatusCode::OK)
