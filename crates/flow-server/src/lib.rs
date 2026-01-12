@@ -165,6 +165,8 @@ pub struct Config {
     pub host: String,
     #[serde(default = "Config::default_server_hostname")]
     pub server_hostname: String,
+    #[serde(default = "Config::default_allowed_hostnames")]
+    pub allowed_hostnames: Vec<String>,
     #[serde(default = "Config::default_port")]
     pub port: u16,
     pub db: DbConfig,
@@ -200,6 +202,15 @@ impl Config {
 
     pub const fn default_port() -> u16 {
         8080
+    }
+
+    pub fn default_allowed_hostnames() -> Vec<String> {
+        [
+            "localhost:8080".to_owned(),
+            "flow-server:8080".to_owned(),
+            "dev-api.spaceoperator.com".to_owned(),
+        ]
+        .into()
     }
 
     pub fn default_server_hostname() -> String {
