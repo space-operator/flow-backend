@@ -45,6 +45,9 @@ services:
       - ./supabase:/space-operator/supabase:ro
       - flow-server-data:/data
 
+  webhook:
+    build: ./webhook
+
   kong:
     image: kong/kong-gateway:3.7
     restart: unless-stopped
