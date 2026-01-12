@@ -91,15 +91,6 @@ impl TryFrom<EndpointConfigUnchecked> for EndpointConfig {
     }
 }
 
-impl Default for EndpointConfig {
-    fn default() -> Self {
-        Self {
-            // default location of Supabase CLI local development
-            url: "http://localhost:54321".parse().unwrap(),
-        }
-    }
-}
-
 #[derive(Deserialize, Clone, JsonSchema)]
 pub struct SupabaseConfig {
     #[serde(flatten)]
@@ -124,19 +115,6 @@ impl SupabaseConfig {
 
     pub fn get_endpoint(&self) -> Url {
         self.endpoint.url.clone()
-    }
-}
-
-impl Default for SupabaseConfig {
-    fn default() -> Self {
-        Self {
-            endpoint: <_>::default(),
-            jwt_key: None,
-            anon_key: String::new(),
-            service_key: None,
-            wasm_bucket: Self::default_bucket(),
-            open_whitelists: Self::default_open_whitelists(),
-        }
     }
 }
 
