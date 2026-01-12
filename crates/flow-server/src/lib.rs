@@ -163,6 +163,8 @@ pub struct Config {
     pub schema: Option<String>,
     #[serde(default = "Config::default_host")]
     pub host: String,
+    #[serde(default = "Config::default_server_hostname")]
+    pub server_hostname: String,
     #[serde(default = "Config::default_port")]
     pub port: u16,
     pub db: DbConfig,
@@ -198,6 +200,10 @@ impl Config {
 
     pub const fn default_port() -> u16 {
         8080
+    }
+
+    pub fn default_server_hostname() -> String {
+        format!("{}:{}", Self::default_host(), Self::default_port())
     }
 
     pub fn default_local_storage() -> PathBuf {
