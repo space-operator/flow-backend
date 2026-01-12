@@ -81,7 +81,18 @@
       "defaultValue": null,
       "tooltip": "Headers to send to the webhook (e.g. authorization headers)",
       "passthrough": false
+    },
+    {
+      "name": "extra",
+      "type_bounds": [
+        "object"
+      ],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Extra data to be sent to the webhook",
+      "passthrough": false
     }
+
   ],
   "targets_form.ui_schema": {},
   "targets_form.json_schema": {}

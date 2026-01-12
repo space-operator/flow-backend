@@ -56,6 +56,7 @@ pub struct WebHookPostBody {
     pub node_id: NodeId,
     pub times: u32,
     pub timeout: f64,
+    pub extra: Option<serde_json::Map<String, serde_json::Value>>,
 }
 
 impl tower::Service<api_input::Request> for NewRequestService {
@@ -116,6 +117,7 @@ impl tower::Service<api_input::Request> for NewRequestService {
                     node_id: req.node_id,
                     times: req.times,
                     timeout: req.timeout.as_secs_f64(),
+                    extra: req.extra,
                 };
                 let result = http.json(&body).send().await;
                 match result {
