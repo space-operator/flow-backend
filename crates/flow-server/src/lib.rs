@@ -118,23 +118,6 @@ impl SupabaseConfig {
     }
 }
 
-fn default_db_config() -> DbConfig {
-    DbConfig {
-        user: "flow_runner".to_owned(),
-        password: "flow_runner".to_owned(),
-        dbname: "postgres".to_owned(),
-        host: "localhost".to_owned(),
-        port: 5432,
-        ssl: SslConfig {
-            use_builtin_supabase_cert: false,
-            enabled: false,
-            cert: None,
-        },
-        max_pool_size: None,
-        encryption_key: Some(EncryptionKey::random()),
-    }
-}
-
 #[allow(dead_code)]
 #[derive(JsonSchema)]
 struct IrohConfigSchema {
@@ -182,7 +165,6 @@ pub struct Config {
     pub host: String,
     #[serde(default = "Config::default_port")]
     pub port: u16,
-    #[serde(default = "default_db_config")]
     pub db: DbConfig,
     #[serde(default)]
     pub cors_origins: Vec<String>,
