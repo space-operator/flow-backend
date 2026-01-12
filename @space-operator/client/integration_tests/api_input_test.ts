@@ -151,8 +151,8 @@ app.listen({
 */
 
 Deno.test("webhook", async () => {
-  const port = await portPromise as number;
-  console.log("listening on port ", port);
+  // const port = await portPromise as number;
+  // console.log("listening on port ", port);
 
   const owner = new client.Client({
     host: "http://localhost:8080",
@@ -165,7 +165,7 @@ Deno.test("webhook", async () => {
   const flowId = 3730;
   const { flow_run_id } = await owner.startFlow(flowId, {
     inputs: new Value({
-      "webhook_url": `http://webhook:${port}/webhook`,
+      "webhook_url": `http://webhook/webhook`,
     }).M!,
   });
   ws.subscribeFlowRunEvents(
