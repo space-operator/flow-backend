@@ -2,6 +2,7 @@ import { Application, Router } from "@oak/oak";
 const router = new Router();
 router.post("/webhook", async (ctx) => {
   const info = await ctx.request.body.json();
+  console.log(info);
   const url = info.url!;
   const output = info.extra?.output ?? { "S": "hello" };
   const resp = await fetch(url, {
