@@ -13,6 +13,8 @@ services:
     image: ${CMDS_IMAGE:-public.ecr.aws/space-operator/cmds-server:latest}
     entrypoint: all-cmds-server
     command: /run/secrets/cmds-server-config
+    environment:
+      RUST_LOG: info,iroh=error,command_rpc=debug,actix_server=warn
     secrets:
       - cmds-server-config
     depends_on:
@@ -23,7 +25,7 @@ services:
     entrypoint: deno-cmds-server
     command: /run/secrets/deno-cmds-server-config
     environment:
-      RUST_LOG: info,iroh=error,command_rpc=debug
+      RUST_LOG: info,iroh=error,command_rpc=debug,actix_server=warn
     secrets:
       - deno-cmds-server-config
     depends_on:

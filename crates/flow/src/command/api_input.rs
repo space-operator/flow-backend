@@ -16,6 +16,7 @@ pub struct Input {
     timeout: Option<f64>,
     webhook_url: Option<String>,
     webhook_headers: Option<Vec<(String, String)>>,
+    extra: Option<serde_json::Map<String, serde_json::Value>>,
 }
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
@@ -41,6 +42,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
                 input.timeout.map(Duration::from_secs_f64),
                 input.webhook_url,
                 headers,
+                input.extra,
             )
             .await?
             .value,

@@ -60,6 +60,7 @@ pub mod api_input {
         pub timeout: Duration,
         pub webhook_url: Option<String>,
         pub webhook_headers: Option<HeaderMap>,
+        pub extra: Option<serde_json::Map<String, serde_json::Value>>,
     }
 
     pub struct Response {
@@ -641,6 +642,7 @@ impl CommandContext {
         timeout: Option<Duration>,
         webhook_url: Option<String>,
         webhook_headers: Option<HeaderMap>,
+        extra: Option<serde_json::Map<String, serde_json::Value>>,
     ) -> Result<api_input::Response, api_input::Error> {
         let req = api_input::Request {
             flow_run_id: *self.flow_run_id(),
@@ -649,6 +651,7 @@ impl CommandContext {
             timeout: timeout.unwrap_or(Duration::MAX),
             webhook_url,
             webhook_headers,
+            extra,
         };
         self.flow.set.api_input.ready().await?.call(req).await
     }

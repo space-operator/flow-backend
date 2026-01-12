@@ -5,7 +5,6 @@ import { createClient } from "@supabase/supabase-js";
 import { assertEquals } from "@std/assert";
 import { checkNoErrors } from "./utils.ts";
 import { Application, Router } from "@oak/oak";
-import { ApplicationCloseEvent } from "@oak/oak/application";
 
 dotenv.loadSync({
   export: true,
@@ -122,6 +121,7 @@ Deno.test("timeout", async () => {
   await ws.close();
 });
 
+/*
 const router = new Router();
 router.post("/webhook", async (ctx) => {
   const info = await ctx.request.body.json();
@@ -148,10 +148,11 @@ app.use(router.allowedMethods());
 app.listen({
   port: 0,
 });
+*/
 
 Deno.test("webhook", async () => {
-  const port = await portPromise as number;
-  console.log("listening on port ", port);
+  // const port = await portPromise as number;
+  // console.log("listening on port ", port);
 
   const owner = new client.Client({
     host: "http://localhost:8080",
@@ -164,7 +165,7 @@ Deno.test("webhook", async () => {
   const flowId = 3730;
   const { flow_run_id } = await owner.startFlow(flowId, {
     inputs: new Value({
-      "webhook_url": `http://localhost:${port}/webhook`,
+      "webhook_url": `http://webhook/webhook`,
     }).M!,
   });
   ws.subscribeFlowRunEvents(
@@ -190,5 +191,4 @@ Deno.test("webhook", async () => {
   });
   await sup.auth.setSession(jwt);
   await checkNoErrors(sup, flow_run_id);
-  app.dispatchEvent(new ApplicationCloseEvent({}));
 });

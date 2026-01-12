@@ -110,31 +110,20 @@ fn main() {
     sh.change_dir(&meta.workspace_root);
     sh.change_dir("docker/");
 
-    if result.is_err() {
-        cmd!(
-            sh,
-            "docker compose -f with-cmds-server.yml logs flow-server"
-        )
-        .run()
-        .inspect_err(|error| eprint!("{error}"))
-        .ok();
+    fn logs_service(sh: &Shell, name: &str) {
+        cmd!(sh, "docker compose -f with-cmds-server.yml logs {name}")
+            .run()
+            .inspect_err(|error| eprint!("{error}"))
+            .ok();
     }
 
-    cmd!(
-        sh,
-        "docker compose -f with-cmds-server.yml logs cmds-server"
-    )
-    .run()
-    .inspect_err(|error| eprint!("{error}"))
-    .ok();
+    if result.is_err() {
+        logs_service(&sh, "flow-server");
+        logs_service(&sh, "cmds-server");
+    }
 
-    cmd!(
-        sh,
-        "docker compose -f with-cmds-server.yml logs deno-cmds-server"
-    )
-    .run()
-    .inspect_err(|error| eprint!("{error}"))
-    .ok();
+    logs_service(&sh, "deno-cmds-server");
+    logs_service(&sh, "webhook");
 
     cmd!(sh, "docker compose -f with-cmds-server.yml down -v")
         .ignore_stdout()
