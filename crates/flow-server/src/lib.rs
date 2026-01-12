@@ -160,8 +160,8 @@ fn default_db_config() -> DbConfig {
 #[allow(dead_code)]
 #[derive(JsonSchema)]
 struct IrohConfigSchema {
-    secret_key: String,
-    trusted: BTreeSet<String>,
+    secret_key: Option<String>,
+    trusted: Option<BTreeSet<String>>,
 }
 
 #[serde_as]
