@@ -5,7 +5,7 @@ use db::config::{DbConfig, EncryptionKey, SslConfig};
 use either::Either;
 use flow_lib::config::Endpoints;
 use middleware::req_fn::{self, Function, ReqFn};
-use rand::{Rng, rngs::OsRng};
+use rand::rngs::OsRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_with::serde_as;
@@ -220,25 +220,6 @@ pub struct Config {
 
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            schema: None,
-            host: Self::default_host(),
-            port: Self::default_port(),
-            db: default_db_config(),
-            cors_origins: Vec::new(),
-            supabase: SupabaseConfig::default(),
-            local_storage: Self::default_local_storage(),
-            shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
-            blake3_key: OsRng.r#gen(),
-            helius_api_key: None,
-            iroh: IrohConfig::default(),
-            cdp: None,
-        }
-    }
 }
 
 pub type FacilitatorType = Either<CdpFacilitatorClient, FacilitatorClient>;
