@@ -5,11 +5,11 @@ use actix_web::{HttpResponseBuilder, dev::ConnectionInfo, http::header::ContentT
 use url::Url;
 
 #[derive(Serialize)]
-struct Output<'a> {
+struct Output {
     supabase_url: Url,
     anon_key: String,
     iroh: IrohInfo,
-    host: &'a str,
+    host: String,
 }
 
 pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
@@ -22,7 +22,7 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
         async move {
             let db_worker = DBWorker::from_registry();
             let iroh = db_worker.send(GetIrohInfo).await.unwrap().unwrap();
-            let host = info.host();
+            let host = format!("{}://{}", info.scheme(), info.host());
             let output = Output {
                 supabase_url,
                 anon_key,
