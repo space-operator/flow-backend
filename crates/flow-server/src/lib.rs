@@ -1,7 +1,7 @@
 use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
 use anyhow::{Context, anyhow};
 use cdp_sdk::{CDP_BASE_URL, auth::WalletAuth};
-use db::config::{DbConfig, EncryptionKey, SslConfig};
+use db::config::DbConfig;
 use either::Either;
 use flow_lib::config::Endpoints;
 use middleware::req_fn::{self, Function, ReqFn};
