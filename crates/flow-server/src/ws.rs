@@ -1,6 +1,6 @@
 use crate::{
     Config,
-    api::prelude::AuthEither,
+    api::prelude::{AuthEither, ServerBaseUrl},
     db_worker::{
         DBWorker, FindActor, GetUserWorker,
         flow_run_worker::{FlowRunWorker, SubscribeEvents},
@@ -72,6 +72,7 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
 
 async fn ws_handler(
     auth_service: web::ThinData<AuthV1>,
+    ServerBaseUrl(base_url): ServerBaseUrl,
     req: HttpRequest,
     stream: web::Payload,
 ) -> Result<actix_web::HttpResponse, crate::error::Error> {
@@ -81,6 +82,7 @@ async fn ws_handler(
             subscribing: <_>::default(),
 
             auth_service,
+            base_url,
             db_worker: DBWorker::from_registry(),
         },
         &req,
@@ -93,6 +95,7 @@ async fn ws_handler(
 pub struct WsConn {
     tokens: Vec<AuthEither<AuthenticatedUser, FlowRunToken>>,
     subscribing: HashSet<SubscriptionID>,
+    base_url: String,
 
     auth_service: web::ThinData<AuthV1>,
     db_worker: actix::Addr<DBWorker>,
@@ -290,10 +293,14 @@ impl WsConn {
             }
         };
 
+        let base_url = self.base_url.clone();
         let db_worker = self.db_worker.clone();
         let fut = async move {
             let stream_id = db_worker
-                .send(GetUserWorker { user_id })
+                .send(GetUserWorker {
+                    user_id,
+                    base_url: Some(base_url),
+                })
                 .await?
                 .send(SubscribeSigReq {})
                 .await??;

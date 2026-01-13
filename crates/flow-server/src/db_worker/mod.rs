@@ -225,6 +225,7 @@ impl actix::Handler<SubmitSignature> for DBWorker {
 
 pub struct GetUserWorker {
     pub user_id: UserId,
+    pub base_url: Option<String>,
 }
 
 impl actix::Message for GetUserWorker {

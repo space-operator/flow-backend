@@ -44,6 +44,7 @@ async fn start_flow_unverified(
     sup: web::Data<SupabaseAuth>,
     db: web::Data<DbPool>,
     sig: web::Data<SignatureAuth>,
+    ServerBaseUrl(base_url): ServerBaseUrl,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let params = params.map(|params| params.0).unwrap_or_default();
@@ -62,10 +63,11 @@ async fn start_flow_unverified(
 
     let db_worker = DBWorker::from_registry();
 
-    let starter = db_worker.send(GetUserWorker { user_id }).await?;
+    let starter = db_worker.send(GetUserWorker { user_id, base_url: Some(base_url.clone()) }).await?;
     let owner = db_worker
         .send(GetUserWorker {
             user_id: flow.user_id,
+            base_url: Some(base_url.clone())
         })
         .await?;
 

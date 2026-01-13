@@ -5,7 +5,6 @@ use actix_web::{
     FromRequest,
     web::{self, ServiceConfig},
 };
-use url::Url;
 
 pub struct ServerBaseUrl(pub String);
 
@@ -25,7 +24,11 @@ impl FromRequest for ServerBaseUrl {
         } else {
             state.default.clone()
         };
-        let scheme = info.scheme();
+        let scheme = match info.scheme() {
+            "ws" => "http",
+            "wss" => "https",
+            scheme => scheme,
+        };
         actix::fut::ready(Ok(Self(format!("{}://{}", scheme, host))))
     }
 }

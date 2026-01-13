@@ -36,7 +36,10 @@ pub mod prelude {
         Config,
         db_worker::DBWorker,
         error::Error,
-        middleware::auth_v1::{self, Auth, AuthEither},
+        middleware::{
+            auth_v1::{self, Auth, AuthEither},
+            url::ServerBaseUrl,
+        },
     };
     pub use actix::SystemService;
     pub use actix_web::{dev::HttpServiceFactory, http::StatusCode, web};
