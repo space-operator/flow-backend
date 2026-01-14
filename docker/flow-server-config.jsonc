@@ -2,9 +2,9 @@
   "$schema": "https://schema.spaceoperator.com/flow-server-config.schema.json",
   "host": "0.0.0.0",
   "port": 8080,
-  "server_hostname": "flow-server",
+  "server_hostname": "flow-server:8080",
   "allowed_hostnames": [
-    "flow-server"
+    "flow-server:8080"
   ],
   "local_storage": "/data/local_storage",
   "shutdown_timeout_secs": 60,
