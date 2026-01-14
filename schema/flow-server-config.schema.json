@@ -13,6 +13,21 @@
       "type": "string",
       "default": "127.0.0.1"
     },
+    "server_hostname": {
+      "type": "string",
+      "default": "127.0.0.1:8080"
+    },
+    "allowed_hostnames": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "localhost:8080",
+        "flow-server:8080",
+        "dev-api.spaceoperator.com"
+      ]
+    },
     "port": {
       "type": "integer",
       "format": "uint16",
@@ -66,6 +81,7 @@
   },
   "additionalProperties": false,
   "required": [
+    "db",
     "supabase"
   ],
   "$defs": {
@@ -204,18 +220,22 @@
       "type": "object",
       "properties": {
         "secret_key": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "trusted": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "uniqueItems": true,
           "items": {
             "type": "string"
-          },
-          "default": []
+          }
         }
-      },
-      "required": []
+      }
     },
     "CdpConfig": {
       "type": "object",
