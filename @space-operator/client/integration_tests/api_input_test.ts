@@ -20,6 +20,10 @@ const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
 const supabaseUrl = "http://localhost:8000";
 
+function fixUrl(url: string) {
+  return url.replace("flow-server", "localhost");
+}
+
 Deno.test("submit", async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
@@ -36,7 +40,7 @@ Deno.test("submit", async () => {
     async (ev) => {
       // console.log(ev);
       if (ev.event === "ApiInput") {
-        const resp = await fetch(ev.data.url, {
+        const resp = await fetch(fixUrl(ev.data.url), {
           method: "POST",
           headers: [["content-type", "application/json"]],
           body: JSON.stringify({ value: new Value("hello") }),
@@ -79,7 +83,7 @@ Deno.test("cancel", async () => {
     async (ev) => {
       // console.log(ev);
       if (ev.event === "ApiInput") {
-        const resp = await fetch(ev.data.url, {
+        const resp = await fetch(fixUrl(ev.data.url), {
           method: "DELETE",
         });
         await resp.text();

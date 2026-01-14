@@ -156,6 +156,7 @@ impl UserWorker {
         let addr = ctx.address().recipient();
         let wallets_id = d.wallets_id.clone();
         let endpoints = self.endpoints.clone();
+        let base_url = endpoints.flow_server.clone();
         let starter = options.starter;
         let action_identity = d.action_identity;
         let new_flow_api_request = self.new_flow_api_request.clone();
@@ -174,6 +175,7 @@ impl UserWorker {
                 let addr = root
                     .send(GetUserWorker {
                         user_id: starter.user_id,
+                        base_url: Some(base_url),
                     })
                     .await?;
                 let conn = db.get_user_conn(starter.user_id).await?;

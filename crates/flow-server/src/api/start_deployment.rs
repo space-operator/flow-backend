@@ -126,6 +126,7 @@ async fn start_deployment(
     sig: web::Data<SignatureAuth>,
     x402: web::Data<Option<X402Middleware<FacilitatorType>>>,
     req: actix_web::HttpRequest,
+    ServerBaseUrl(base_url): ServerBaseUrl
 ) -> actix_web::Result<web::Json<Output>> {
     // tracing::debug!("{}", pretty_print(req.headers()));
 
@@ -197,7 +198,10 @@ async fn start_deployment(
     let owner = deployment.user_id;
     let db_worker = DBWorker::from_registry();
     let owner_worker = db_worker
-        .send(GetUserWorker { user_id: owner })
+        .send(GetUserWorker {
+            user_id: owner,
+            base_url: Some(base_url.clone()),
+        })
         .await
         .map_err(Error::from)?;
     let flow_run_id = owner_worker

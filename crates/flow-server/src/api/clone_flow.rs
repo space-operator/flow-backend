@@ -25,6 +25,7 @@ async fn clone_flow(
     let id_map = db_worker
         .send(GetUserWorker {
             user_id: *user.user_id(),
+            base_url: None,
         })
         .await?
         .send(CloneFlow {

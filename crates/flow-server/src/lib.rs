@@ -1,11 +1,11 @@
 use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
 use anyhow::{Context, anyhow};
 use cdp_sdk::{CDP_BASE_URL, auth::WalletAuth};
-use db::config::{DbConfig, EncryptionKey, SslConfig};
+use db::config::DbConfig;
 use either::Either;
 use flow_lib::config::Endpoints;
 use middleware::req_fn::{self, Function, ReqFn};
-use rand::{Rng, rngs::OsRng};
+use rand::rngs::OsRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_with::serde_as;
@@ -91,15 +91,6 @@ impl TryFrom<EndpointConfigUnchecked> for EndpointConfig {
     }
 }
 
-impl Default for EndpointConfig {
-    fn default() -> Self {
-        Self {
-            // default location of Supabase CLI local development
-            url: "http://localhost:54321".parse().unwrap(),
-        }
-    }
-}
-
 #[derive(Deserialize, Clone, JsonSchema)]
 pub struct SupabaseConfig {
     #[serde(flatten)]
@@ -127,41 +118,11 @@ impl SupabaseConfig {
     }
 }
 
-impl Default for SupabaseConfig {
-    fn default() -> Self {
-        Self {
-            endpoint: <_>::default(),
-            jwt_key: None,
-            anon_key: String::new(),
-            service_key: None,
-            wasm_bucket: Self::default_bucket(),
-            open_whitelists: Self::default_open_whitelists(),
-        }
-    }
-}
-
-fn default_db_config() -> DbConfig {
-    DbConfig {
-        user: "flow_runner".to_owned(),
-        password: "flow_runner".to_owned(),
-        dbname: "postgres".to_owned(),
-        host: "localhost".to_owned(),
-        port: 5432,
-        ssl: SslConfig {
-            use_builtin_supabase_cert: false,
-            enabled: false,
-            cert: None,
-        },
-        max_pool_size: None,
-        encryption_key: Some(EncryptionKey::random()),
-    }
-}
-
 #[allow(dead_code)]
 #[derive(JsonSchema)]
 struct IrohConfigSchema {
-    secret_key: String,
-    trusted: BTreeSet<String>,
+    secret_key: Option<String>,
+    trusted: Option<BTreeSet<String>>,
 }
 
 #[serde_as]
@@ -202,9 +163,12 @@ pub struct Config {
     pub schema: Option<String>,
     #[serde(default = "Config::default_host")]
     pub host: String,
+    #[serde(default = "Config::default_server_hostname")]
+    pub server_hostname: String,
+    #[serde(default = "Config::default_allowed_hostnames")]
+    pub allowed_hostnames: Vec<String>,
     #[serde(default = "Config::default_port")]
     pub port: u16,
-    #[serde(default = "default_db_config")]
     pub db: DbConfig,
     #[serde(default)]
     pub cors_origins: Vec<String>,
@@ -220,25 +184,6 @@ pub struct Config {
 
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            schema: None,
-            host: Self::default_host(),
-            port: Self::default_port(),
-            db: default_db_config(),
-            cors_origins: Vec::new(),
-            supabase: SupabaseConfig::default(),
-            local_storage: Self::default_local_storage(),
-            shutdown_timeout_secs: Self::default_shutdown_timeout_secs(),
-            blake3_key: OsRng.r#gen(),
-            helius_api_key: None,
-            iroh: IrohConfig::default(),
-            cdp: None,
-        }
-    }
 }
 
 pub type FacilitatorType = Either<CdpFacilitatorClient, FacilitatorClient>;
@@ -257,6 +202,19 @@ impl Config {
 
     pub const fn default_port() -> u16 {
         8080
+    }
+
+    pub fn default_allowed_hostnames() -> Vec<String> {
+        [
+            "localhost:8080".to_owned(),
+            "flow-server:8080".to_owned(),
+            "dev-api.spaceoperator.com".to_owned(),
+        ]
+        .into()
+    }
+
+    pub fn default_server_hostname() -> String {
+        format!("{}:{}", Self::default_host(), Self::default_port())
     }
 
     pub fn default_local_storage() -> PathBuf {
@@ -342,7 +300,7 @@ impl Config {
 
     pub fn endpoints(&self) -> Endpoints {
         Endpoints {
-            flow_server: format!("http://localhost:{}", self.port),
+            flow_server: format!("http://{}", self.server_hostname),
             supabase: self.supabase_endpoint(),
             supabase_anon_key: self.supabase.anon_key.clone(),
         }

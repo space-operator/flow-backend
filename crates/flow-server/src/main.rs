@@ -192,6 +192,7 @@ async fn main() {
     let root = db_worker.clone();
 
     let shutdown_timeout_secs = config.shutdown_timeout_secs;
+    let server_hostname = config.server_hostname.clone();
 
     let config = Arc::new(config);
     let mut server = HttpServer::new(move || {
@@ -276,6 +277,7 @@ async fn main() {
             .app_data(web::Data::new(x402.clone()))
             .app_data(web::Data::new(db.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
+            .configure(|cfg| flow_server::middleware::url::configure(cfg, &config))
             .app_data(web::Data::new(sig_auth))
             .app_data(web::Data::new(db.clone()))
             .service(metrics_scope);
@@ -314,6 +316,7 @@ async fn main() {
     if let Some(pool_size) = pool_size {
         server = server.workers((pool_size / 2).max(4));
     }
+    server = server.server_hostname(server_hostname);
     server.bind((host, port)).unwrap().run().await.unwrap();
 
     root.send(SystemShutdown {

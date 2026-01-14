@@ -30,6 +30,7 @@ async fn start_flow(
     flow_id: web::Path<FlowId>,
     params: Option<web::Json<Params>>,
     user: Auth<auth_v1::AuthenticatedUser>,
+    ServerBaseUrl(base_url): ServerBaseUrl,
 ) -> Result<web::Json<Output>, Error> {
     let flow_id = flow_id.into_inner();
     let user_id = *user.user_id();
@@ -51,7 +52,7 @@ async fn start_flow(
 
     let db_worker = DBWorker::from_registry();
     let flow_run_id = db_worker
-        .send(GetUserWorker { user_id })
+        .send(GetUserWorker { user_id, base_url: Some(base_url) })
         .await?
         .send(StartFlowFresh {
             user: flow_lib::User { id: user_id },
