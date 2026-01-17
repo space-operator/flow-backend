@@ -126,7 +126,7 @@ async fn start_deployment(
     sig: web::Data<SignatureAuth>,
     x402: web::Data<Option<X402Middleware<FacilitatorType>>>,
     req: actix_web::HttpRequest,
-    ServerBaseUrl(base_url): ServerBaseUrl
+    ServerBaseUrl(base_url): ServerBaseUrl,
 ) -> actix_web::Result<web::Json<Output>> {
     // tracing::debug!("{}", pretty_print(req.headers()));
 

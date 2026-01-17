@@ -81,6 +81,7 @@ solana-signature = { workspace = true }
 solana-rpc-client = { workspace = true }
 x402-actix = { workspace = true }
 x402-rs = { workspace = true }
+x402-kit = { workspace = true }
 reqwest-middleware = "0.4.2"
 cdp-sdk.workspace = true
 jsonc-parser = { version = "0.28.0", features = ["preserve_order", "serde"] }

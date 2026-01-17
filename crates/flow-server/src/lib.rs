@@ -4,7 +4,10 @@ use cdp_sdk::{CDP_BASE_URL, auth::WalletAuth};
 use db::config::DbConfig;
 use either::Either;
 use flow_lib::config::Endpoints;
-use middleware::req_fn::{self, Function, ReqFn};
+use middleware::{
+    req_fn::{self, Function, ReqFn},
+    x402::X402Middleware,
+};
 use rand::rngs::OsRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -16,6 +19,7 @@ use user::SignatureAuth;
 use x402_actix::{
     cdp_facilitator_client::CdpFacilitatorClient, facilitator_client::FacilitatorClient,
 };
+use x402_kit::facilitator_client::StandardFacilitatorClient;
 
 pub mod api;
 pub mod cmd_workers;
@@ -155,6 +159,24 @@ pub struct CdpConfig {
     pub api_key_secret: String,
 }
 
+impl CdpConfig {
+    pub fn x402_middleware(&self) -> X402Middleware {
+        let wallet_auth = WalletAuth::builder()
+            .api_key_id(self.api_key_id.clone())
+            .api_key_secret(self.api_key_secret.clone())
+            .build()
+            .unwrap();
+        let http_client = reqwest_middleware::ClientBuilder::new(HTTP.clone())
+            .with(wallet_auth)
+            .build();
+        let mut client = StandardFacilitatorClient::new_from_url(
+            format!("{}/v2/x402/", CDP_BASE_URL).parse().unwrap(),
+        );
+        client.client = http_client;
+        X402Middleware { client }
+    }
+}
+
 #[serde_as]
 #[derive(Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -227,6 +249,13 @@ impl Config {
 
     pub fn default_secret_key() -> iroh::SecretKey {
         iroh::SecretKey::generate(&mut OsRng)
+    }
+
+    pub fn x402_middleware(&self) -> X402Middleware {
+        match &self.cdp {
+            Some(cdp) => cdp.x402_middleware(),
+            None => default_x402_middleware(),
+        }
     }
 
     pub fn facilitator_client(&self) -> FacilitatorType {
@@ -369,6 +398,15 @@ impl Config {
             }
         }))
     }
+}
+
+fn default_x402_middleware() -> X402Middleware {
+    let http_client = reqwest_middleware::ClientBuilder::new(HTTP.clone()).build();
+    let mut client = StandardFacilitatorClient::new_from_url(
+        "https://www.x402.org/facilitator/".parse().unwrap(),
+    );
+    client.client = http_client;
+    X402Middleware { client }
 }
 
 #[cfg(test)]
