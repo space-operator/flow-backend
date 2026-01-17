@@ -424,6 +424,7 @@ mod tests {
 
     use cmds_solana as _;
     use cmds_std as _;
+    use x402_kit::facilitator::Facilitator;
 
     #[derive(Deserialize)]
     struct TestFile {
@@ -605,5 +606,23 @@ mod tests {
             serde_json::to_string_pretty(&schema).unwrap(),
         )
         .unwrap();
+    }
+
+    #[actix_web::test]
+    async fn test_default_x402() {
+        let x = default_x402_middleware();
+        let supported = x.client.supported().await.unwrap();
+        dbg!(supported);
+    }
+
+    #[actix_web::test]
+    async fn need_key_test_cdp_x402() {
+        let x = CdpConfig {
+            api_key_id: std::env::var("CDP_API_KEY_ID").unwrap(),
+            api_key_secret: std::env::var("CDP_API_KEY_SECRET").unwrap(),
+        }
+        .x402_middleware();
+        let supported = x.client.supported().await.unwrap();
+        dbg!(supported);
     }
 }
