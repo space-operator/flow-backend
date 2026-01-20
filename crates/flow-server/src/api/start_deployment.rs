@@ -153,7 +153,6 @@ async fn start_deployment(
     db: web::Data<DbPool>,
     sup: web::Data<SupabaseAuth>,
     sig: web::Data<SignatureAuth>,
-    x402: web::Data<Option<X402Middleware<FacilitatorType>>>,
     x402_1: web::Data<X402MiddlewareV1>,
     req: actix_web::HttpRequest,
     ServerBaseUrl(base_url): ServerBaseUrl,
