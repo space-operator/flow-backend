@@ -136,6 +136,8 @@ async fn main() {
         })
         .ok();
 
+    let x402_1 = config.x402_middleware();
+
     let store = RequestStore::new_app_data();
 
     let base_book = {
@@ -275,6 +277,7 @@ async fn main() {
             .wrap(Compress::default())
             .wrap(logger)
             .app_data(web::Data::new(x402.clone()))
+            .app_data(web::Data::new(x402_1.clone()))
             .app_data(web::Data::new(db.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
             .configure(|cfg| flow_server::middleware::url::configure(cfg, &config))

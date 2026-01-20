@@ -5,21 +5,32 @@ use crate::{
     middleware::{
         auth_v1::{AuthEither, AuthenticatedUser, Unverified},
         optional,
+        x402::X402Middleware as X402MiddlewareV1,
     },
     user::{SignatureAuth, SupabaseAuth},
 };
 use actix_web::{
+    HttpResponse, Responder,
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
     http::header::HeaderMap,
     middleware::Next,
 };
+use anyhow::anyhow;
 use flow::flow_set::{DeploymentId, FlowStarter, StartFlowDeploymentOptions, X402Network};
 use flow_lib::solana::Pubkey;
 use serde_with::serde_as;
 use std::{collections::BTreeMap, num::ParseIntError};
-use value::with::AsPubkey;
+use value::{Decimal, with::AsPubkey};
 use x402_actix::{middleware::X402Middleware, price::IntoPriceTag};
+use x402_kit::{
+    core::Resource,
+    facilitator_client::StandardFacilitatorClient,
+    networks::svm::assets::{UsdcSolana, UsdcSolanaDevnet},
+    paywall::{paywall::PayWall, processor::ResponseProcessor},
+    schemes::exact_svm::ExactSvm,
+    transport::{Accepts, PaymentRequirements},
+};
 use x402_rs::{
     network::USDCDeployment,
     types::{MixedAddress, MoneyAmount},
@@ -117,6 +128,24 @@ async fn log_full(
     next.call(req).await
 }
 
+fn to_token_amount(money_amount: Decimal) -> Result<u64, anyhow::Error> {
+    let token_decimals = 6;
+    let money_decimals = money_amount.scale();
+    if money_decimals > token_decimals {
+        return Err(anyhow!(
+            "Too big of a precision: {} vs {} on token",
+            money_decimals,
+            token_decimals
+        ));
+    }
+    let scale_diff = token_decimals - money_decimals;
+    let multiplier = 10u64.pow(scale_diff);
+    let digits =
+        u64::try_from(money_amount.mantissa()).map_err(|_| anyhow!("amount is negative"))?;
+    let value = digits.checked_mul(multiplier).ok_or(anyhow!("overflow"))?;
+    Ok(value)
+}
+
 async fn start_deployment(
     query: web::Query<Query>,
     params: actix_web::Result<web::Json<Params>>,
@@ -125,9 +154,10 @@ async fn start_deployment(
     sup: web::Data<SupabaseAuth>,
     sig: web::Data<SignatureAuth>,
     x402: web::Data<Option<X402Middleware<FacilitatorType>>>,
+    x402_1: web::Data<X402MiddlewareV1>,
     req: actix_web::HttpRequest,
     ServerBaseUrl(base_url): ServerBaseUrl,
-) -> actix_web::Result<web::Json<Output>> {
+) -> actix_web::Result<HttpResponse<impl MessageBody>> {
     // tracing::debug!("{}", pretty_print(req.headers()));
 
     let params = optional(params)?.map(|x| x.0);
@@ -161,61 +191,96 @@ async fn start_deployment(
     deployment.wallets_id = conn.get_deployment_wallets(&id).await?;
     deployment.x402_fees = conn.get_deployment_x402_fees(&id).await?;
 
-    if let Some(fees) = deployment.x402_fees.as_ref() {
-        let Some(x402) = x402.as_ref() else {
-            return Err(actix_web::error::ErrorInternalServerError(
-                "flow requires x402 fee but server is not configured for it",
-            ));
-        };
+    let paywall = if let Some(fees) = deployment.x402_fees.as_ref() {
+        let resource = Resource::builder()
+            .url(req.full_url())
+            .mime_type("application/json")
+            .maybe_output_schema(None)
+            .description("start flow deployment")
+            .build();
         let pubkeys = conn
             .get_some_wallets(&fees.iter().map(|fee| fee.pay_to).collect::<Vec<_>>())
             .await?
             .into_iter()
             .map(|w| (w.id, Pubkey::new_from_array(w.pubkey)))
             .collect::<BTreeMap<_, _>>();
-        let mut paygate = x402.with_mime_type("application/json");
+        let mut accepts = Accepts::new();
         for fee in fees {
-            paygate = paygate.or_price_tag(
-                USDCDeployment::by_network(to_network(fee.network))
-                    .amount(MoneyAmount(fee.amount))
-                    .pay_to(MixedAddress::Solana(pubkeys[&fee.pay_to]))
+            let amount = to_token_amount(fee.amount)
+                .map_err(|error| Error::custom(StatusCode::INTERNAL_SERVER_ERROR, error))?;
+            let pay_to = pubkeys[&fee.pay_to];
+            let r: PaymentRequirements = match fee.network {
+                X402Network::Base => todo!(),
+                X402Network::BaseSepolia => todo!(),
+                X402Network::Solana => ExactSvm::builder()
+                    .amount(amount)
+                    .asset(UsdcSolana)
+                    .pay_to(pay_to)
                     .build()
-                    .unwrap(),
-            );
+                    .into(),
+                X402Network::SolanaDevnet => ExactSvm::builder()
+                    .amount(amount)
+                    .asset(UsdcSolanaDevnet)
+                    .pay_to(pay_to)
+                    .build()
+                    .into(),
+            };
+            accepts = accepts.push(r);
         }
-        let paygate = paygate.to_paygate(&req.full_url());
-        let payload = paygate.extract_payment_payload(req.headers()).await?;
-        let r = paygate.verify_payment(payload).await?;
-        paygate.settle_payment(&r).await?;
+        let paywall = PayWall::<StandardFacilitatorClient>::builder()
+            .facilitator(x402_1.client.clone())
+            .resource(resource)
+            .accepts(accepts)
+            .build();
+        Some(paywall)
+    } else {
+        None
+    };
+
+    let handler = async move || {
+        if starter.user_id.is_nil() {
+            starter.user_id = sup.get_or_create_user(&starter.pubkey.to_bytes()).await?.0;
+        }
+
+        let options = StartFlowDeploymentOptions { inputs, starter };
+
+        let owner = deployment.user_id;
+        let db_worker = DBWorker::from_registry();
+        let owner_worker = db_worker
+            .send(GetUserWorker {
+                user_id: owner,
+                base_url: Some(base_url.clone()),
+            })
+            .await
+            .map_err(Error::from)?;
+        let flow_run_id = owner_worker
+            .send(StartDeployment {
+                deployment,
+                options,
+            })
+            .await
+            .map_err(Error::from)??;
+
+        Ok::<_, actix_web::Error>(web::Json(Output {
+            flow_run_id,
+            token: sig.flow_run_token(flow_run_id),
+        }))
+    };
+
+    match paywall {
+        Some(paywall) => {
+            let resp = paywall
+                .handle_payment(req, async move |req| {
+                    let resp = handler().await;
+                    let resp = resp.respond_to(&req);
+                    resp
+                })
+                .await
+                .unwrap();
+            Ok(resp)
+        }
+        None => Ok(handler().await.respond_to(&req)),
     }
-
-    if starter.user_id.is_nil() {
-        starter.user_id = sup.get_or_create_user(&starter.pubkey.to_bytes()).await?.0;
-    }
-
-    let options = StartFlowDeploymentOptions { inputs, starter };
-
-    let owner = deployment.user_id;
-    let db_worker = DBWorker::from_registry();
-    let owner_worker = db_worker
-        .send(GetUserWorker {
-            user_id: owner,
-            base_url: Some(base_url.clone()),
-        })
-        .await
-        .map_err(Error::from)?;
-    let flow_run_id = owner_worker
-        .send(StartDeployment {
-            deployment,
-            options,
-        })
-        .await
-        .map_err(Error::from)??;
-
-    Ok(web::Json(Output {
-        flow_run_id,
-        token: sig.flow_run_token(flow_run_id),
-    }))
 }
 
 #[cfg(test)]
