@@ -252,15 +252,19 @@ async fn start_deployment(
 
     match paywall {
         Some(paywall) => {
-            let resp = paywall
+            let result = paywall
                 .handle_payment(req, async move |req| {
                     let resp = handler().await;
                     let resp = resp.respond_to(&req);
                     resp
                 })
-                .await
-                .unwrap();
-            Ok(resp)
+                .await;
+            match result {
+                Ok(resp) => Ok(resp),
+                Err(error) => {
+                    return Err(error.into());
+                }
+            }
         }
         None => Ok(handler().await.respond_to(&req)),
     }
