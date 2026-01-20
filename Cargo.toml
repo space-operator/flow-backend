@@ -81,7 +81,5 @@ solana-address-lookup-table-interface = "3"
 solana-clock = "3"
 solana-system-transaction = "3"
 
-x402-actix = { git = "https://github.com/space-operator/x402-rs", branch = "fork" }
-x402-rs = { git = "https://github.com/space-operator/x402-rs", branch = "fork" }
-cdp-sdk = { git = "https://github.com/space-operator/cdp-sdk", branch = "fix" }
+cdp-sdk = "0.2.0"
 x402-kit = { git = "https://github.com/space-operator/x402-kit", branch = "fork", default-features = false, features = ["actix-web", "facilitator-client"] }

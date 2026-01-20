@@ -27,7 +27,6 @@ use metrics_rs_dashboard_actix::{
 use std::{convert::Infallible, sync::Arc, time::Duration};
 use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 use utils::address_book::AddressBook;
-use x402_actix::middleware::X402Middleware;
 
 // avoid commands being optimized out by the compiler
 #[cfg(feature = "commands")]
@@ -128,13 +127,6 @@ async fn main() {
         }
     }
     */
-
-    let x402 = X402Middleware::new(config.facilitator_client())
-        .await
-        .inspect_err(|error| {
-            tracing::error!("x402 init error: {}", error);
-        })
-        .ok();
 
     let x402_1 = config.x402_middleware();
 
@@ -276,7 +268,6 @@ async fn main() {
         let mut app = App::new()
             .wrap(Compress::default())
             .wrap(logger)
-            .app_data(web::Data::new(x402.clone()))
             .app_data(web::Data::new(x402_1.clone()))
             .app_data(web::Data::new(db.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))

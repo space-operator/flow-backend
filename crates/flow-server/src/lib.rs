@@ -2,7 +2,6 @@ use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
 use anyhow::{Context, anyhow};
 use cdp_sdk::{CDP_BASE_URL, auth::WalletAuth};
 use db::config::DbConfig;
-use either::Either;
 use flow_lib::config::Endpoints;
 use middleware::{
     req_fn::{self, Function, ReqFn},
@@ -16,9 +15,6 @@ use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use std::{collections::BTreeSet, path::PathBuf, rc::Rc, sync::LazyLock};
 use url::Url;
 use user::SignatureAuth;
-use x402_actix::{
-    cdp_facilitator_client::CdpFacilitatorClient, facilitator_client::FacilitatorClient,
-};
 use x402_kit::facilitator_client::StandardFacilitatorClient;
 
 pub mod api;
@@ -208,8 +204,6 @@ pub struct Config {
     blake3_key: [u8; blake3::KEY_LEN],
 }
 
-pub type FacilitatorType = Either<CdpFacilitatorClient, FacilitatorClient>;
-
 fn parse_toml_or_jsonc(s: &str) -> Result<Config, anyhow::Error> {
     match jsonc_parser::parse_to_serde_value(s, &Default::default()) {
         Ok(Some(value)) => Ok(serde_json::from_value(value)?),
@@ -255,27 +249,6 @@ impl Config {
         match &self.cdp {
             Some(cdp) => cdp.x402_middleware(),
             None => default_x402_middleware(),
-        }
-    }
-
-    pub fn facilitator_client(&self) -> FacilitatorType {
-        match &self.cdp {
-            Some(cdp) => {
-                let wallet_auth = WalletAuth::builder()
-                    .api_key_id(cdp.api_key_id.clone())
-                    .api_key_secret(cdp.api_key_secret.clone())
-                    .build()
-                    .unwrap();
-                let http_client = reqwest_middleware::ClientBuilder::new(HTTP.clone())
-                    .with(wallet_auth)
-                    .build();
-                let client = cdp_sdk::Client::new_with_client(CDP_BASE_URL, http_client);
-                Either::Left(CdpFacilitatorClient::new(client))
-            }
-            None => Either::Right(
-                FacilitatorClient::try_new("https://www.x402.org/facilitator/".parse().unwrap())
-                    .unwrap(),
-            ),
         }
     }
 

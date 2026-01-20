@@ -1,6 +1,5 @@
 use super::prelude::*;
 use crate::{
-    FacilitatorType,
     db_worker::{GetUserWorker, user_worker::StartDeployment},
     middleware::{
         auth_v1::{AuthEither, AuthenticatedUser, Unverified},
@@ -22,18 +21,13 @@ use flow_lib::solana::Pubkey;
 use serde_with::serde_as;
 use std::{collections::BTreeMap, num::ParseIntError};
 use value::{Decimal, with::AsPubkey};
-use x402_actix::{middleware::X402Middleware, price::IntoPriceTag};
 use x402_kit::{
     core::Resource,
     facilitator_client::StandardFacilitatorClient,
     networks::svm::assets::{UsdcSolana, UsdcSolanaDevnet},
-    paywall::{paywall::PayWall, processor::ResponseProcessor},
+    paywall::paywall::PayWall,
     schemes::exact_svm::ExactSvm,
     transport::{Accepts, PaymentRequirements},
-};
-use x402_rs::{
-    network::USDCDeployment,
-    types::{MixedAddress, MoneyAmount},
 };
 
 fn default_tag() -> String {
@@ -94,16 +88,6 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
         // .wrap(middleware::from_fn(log_full))
         .wrap(config.cors())
         .route(web::post().to(start_deployment))
-}
-
-fn to_network(net: X402Network) -> x402_rs::network::Network {
-    use x402_rs::network::Network;
-    match net {
-        X402Network::Base => Network::Base,
-        X402Network::BaseSepolia => Network::BaseSepolia,
-        X402Network::Solana => Network::Solana,
-        X402Network::SolanaDevnet => Network::SolanaDevnet,
-    }
 }
 
 #[allow(dead_code)]
