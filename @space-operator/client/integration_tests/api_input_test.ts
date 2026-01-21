@@ -4,7 +4,7 @@ import * as dotenv from "@std/dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { assertEquals } from "@std/assert";
 import { checkNoErrors } from "./utils.ts";
-import { Application, Router } from "@oak/oak";
+// import { Application, Router } from "@oak/oak";
 
 dotenv.loadSync({
   export: true,

@@ -5,9 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 import { assertEquals } from "@std/assert";
 import { createKeyPairSignerFromBytes } from "@solana/kit";
 import { checkNoErrors } from "./utils.ts";
-
-import { wrapFetchWithPayment } from "@space-operator/x402-fetch";
-// import { wrapFetchWithPayment } from "../../x402-fetch/mod.ts";
+import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
+import { registerExactSvmScheme } from "@x402/svm/exact/client";
 
 dotenv.loadSync({
   export: true,
@@ -32,7 +31,9 @@ Deno.test("run x402", async () => {
   const usdcKeypair = await createKeyPairSignerFromBytes(
     bs58.decodeBase58(getEnv("USDC_KEYPAIR")),
   );
-  const xFetch = wrapFetchWithPayment(fetch, usdcKeypair);
+  const x402 = new x402Client();
+  registerExactSvmScheme(x402, { signer: usdcKeypair });
+  const xFetch = wrapFetchWithPayment(fetch, x402) as typeof globalThis.fetch;
 
   const jwt = await owner.claimToken();
   const sup = createClient<client.Database>(supabaseUrl, anonKey, {
