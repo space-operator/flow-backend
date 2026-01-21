@@ -1,6 +1,7 @@
 pub mod auth_v1;
 pub mod req_fn;
 pub mod url;
+pub mod x402;
 
 pub fn optional<T, E: Into<actix_web::Error>>(
     x: Result<T, E>,

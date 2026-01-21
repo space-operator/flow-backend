@@ -2,9 +2,11 @@ use actix_web::http::header::{AUTHORIZATION, HeaderName, HeaderValue};
 use anyhow::{Context, anyhow};
 use cdp_sdk::{CDP_BASE_URL, auth::WalletAuth};
 use db::config::DbConfig;
-use either::Either;
 use flow_lib::config::Endpoints;
-use middleware::req_fn::{self, Function, ReqFn};
+use middleware::{
+    req_fn::{self, Function, ReqFn},
+    x402::X402Middleware,
+};
 use rand::rngs::OsRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -13,9 +15,7 @@ use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use std::{collections::BTreeSet, path::PathBuf, rc::Rc, sync::LazyLock};
 use url::Url;
 use user::SignatureAuth;
-use x402_actix::{
-    cdp_facilitator_client::CdpFacilitatorClient, facilitator_client::FacilitatorClient,
-};
+use x402_kit::facilitator_client::StandardFacilitatorClient;
 
 pub mod api;
 pub mod cmd_workers;
@@ -155,6 +155,24 @@ pub struct CdpConfig {
     pub api_key_secret: String,
 }
 
+impl CdpConfig {
+    pub fn x402_middleware(&self) -> X402Middleware {
+        let wallet_auth = WalletAuth::builder()
+            .api_key_id(self.api_key_id.clone())
+            .api_key_secret(self.api_key_secret.clone())
+            .build()
+            .unwrap();
+        let http_client = reqwest_middleware::ClientBuilder::new(HTTP.clone())
+            .with(wallet_auth)
+            .build();
+        let mut client = StandardFacilitatorClient::new_from_url(
+            format!("{}/v2/x402/", CDP_BASE_URL).parse().unwrap(),
+        );
+        client.client = http_client;
+        X402Middleware { client }
+    }
+}
+
 #[serde_as]
 #[derive(Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -185,8 +203,6 @@ pub struct Config {
     #[serde(skip)]
     blake3_key: [u8; blake3::KEY_LEN],
 }
-
-pub type FacilitatorType = Either<CdpFacilitatorClient, FacilitatorClient>;
 
 fn parse_toml_or_jsonc(s: &str) -> Result<Config, anyhow::Error> {
     match jsonc_parser::parse_to_serde_value(s, &Default::default()) {
@@ -229,24 +245,10 @@ impl Config {
         iroh::SecretKey::generate(&mut OsRng)
     }
 
-    pub fn facilitator_client(&self) -> FacilitatorType {
+    pub fn x402_middleware(&self) -> X402Middleware {
         match &self.cdp {
-            Some(cdp) => {
-                let wallet_auth = WalletAuth::builder()
-                    .api_key_id(cdp.api_key_id.clone())
-                    .api_key_secret(cdp.api_key_secret.clone())
-                    .build()
-                    .unwrap();
-                let http_client = reqwest_middleware::ClientBuilder::new(HTTP.clone())
-                    .with(wallet_auth)
-                    .build();
-                let client = cdp_sdk::Client::new_with_client(CDP_BASE_URL, http_client);
-                Either::Left(CdpFacilitatorClient::new(client))
-            }
-            None => Either::Right(
-                FacilitatorClient::try_new("https://www.x402.org/facilitator/".parse().unwrap())
-                    .unwrap(),
-            ),
+            Some(cdp) => cdp.x402_middleware(),
+            None => default_x402_middleware(),
         }
     }
 
@@ -371,6 +373,15 @@ impl Config {
     }
 }
 
+fn default_x402_middleware() -> X402Middleware {
+    let http_client = reqwest_middleware::ClientBuilder::new(HTTP.clone()).build();
+    let mut client = StandardFacilitatorClient::new_from_url(
+        "https://www.x402.org/facilitator/".parse().unwrap(),
+    );
+    client.client = http_client;
+    X402Middleware { client }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeSet;
@@ -386,6 +397,7 @@ mod tests {
 
     use cmds_solana as _;
     use cmds_std as _;
+    use x402_kit::facilitator::Facilitator;
 
     #[derive(Deserialize)]
     struct TestFile {
@@ -567,5 +579,23 @@ mod tests {
             serde_json::to_string_pretty(&schema).unwrap(),
         )
         .unwrap();
+    }
+
+    #[actix_web::test]
+    async fn test_default_x402() {
+        let x = default_x402_middleware();
+        let supported = x.client.supported().await.unwrap();
+        dbg!(supported);
+    }
+
+    #[actix_web::test]
+    async fn need_key_test_cdp_x402() {
+        let x = CdpConfig {
+            api_key_id: std::env::var("CDP_API_KEY_ID").unwrap(),
+            api_key_secret: std::env::var("CDP_API_KEY_SECRET").unwrap(),
+        }
+        .x402_middleware();
+        let supported = x.client.supported().await.unwrap();
+        dbg!(supported);
     }
 }

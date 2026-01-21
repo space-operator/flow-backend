@@ -13,6 +13,8 @@
         "@std/encoding": "jsr:@std/encoding@^1.0.10",
         "@supabase/auth-js": "npm:@supabase/auth-js@^2.86.2",
         "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.86.2",
+        "@x402/fetch": "npm:@x402/fetch@^2.2.0",
+        "@x402/svm": "npm:@x402/svm@^2.2.0",
         "tweetnacl": "npm:tweetnacl@^1.0.3",
         "x402": "npm:x402@^0.7.3"
     }
