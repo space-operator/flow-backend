@@ -171,7 +171,9 @@ impl UserWorker {
                 &wallets_id.iter().copied().collect::<Vec<_>>(),
             )
             .await?;
-            if starter.user_id != user_id {
+            // TODO: allow signing with the main wallet
+            //       re-evaluate this later
+            {
                 let addr = root
                     .send(GetUserWorker {
                         user_id: starter.user_id,
@@ -183,7 +185,9 @@ impl UserWorker {
                 let wallet = conn
                     .get_wallet_by_pubkey(&starter.pubkey.to_bytes())
                     .await?;
-                signer.add_wallet(&starter.user_id, &addr.recipient(), wallet)?;
+                if wallet.keypair.is_none() || starter.authenticated {
+                    signer.add_wallet(&starter.user_id, &addr.recipient(), wallet)?;
+                }
             }
             if let Some(pk) = action_identity
                 && !signer.signers.contains_key(&pk)
