@@ -177,7 +177,7 @@ impl UserWorker {
                 let addr = root
                     .send(GetUserWorker {
                         user_id: starter.user_id,
-                        base_url: Some(base_url),
+                        base_url: Some(base_url.clone()),
                     })
                     .await?;
                 let conn = db.get_user_conn(starter.user_id).await?;
@@ -187,6 +187,19 @@ impl UserWorker {
                     .await?;
                 if wallet.keypair.is_none() || starter.authenticated {
                     signer.add_wallet(&starter.user_id, &addr.recipient(), wallet)?;
+                }
+            }
+            if starter.user_id == user_id || starter.authenticated {
+                let addr = root
+                    .send(GetUserWorker {
+                        user_id: starter.user_id,
+                        base_url: Some(base_url.clone()),
+                    })
+                    .await?;
+                let conn = db.get_user_conn(starter.user_id).await?;
+                let wallets = conn.get_wallets().await?;
+                for wallet in wallets {
+                    signer.add_wallet(&starter.user_id, &addr.clone().recipient(), wallet)?;
                 }
             }
             if let Some(pk) = action_identity
