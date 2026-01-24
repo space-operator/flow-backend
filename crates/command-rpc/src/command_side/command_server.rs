@@ -111,6 +111,10 @@ pub fn main() -> Result<(), anyhow::Error> {
 
 async fn ping(client: &address_book::Client) {
     loop {
+        if let Err(error) = client.ping().await {
+            tracing::error!("ping failed: {:#}", error);
+            break;
+        }
         tokio::time::sleep(Duration::from_secs(60)).await;
     }
 }
