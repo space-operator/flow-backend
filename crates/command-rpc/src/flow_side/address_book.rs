@@ -302,6 +302,10 @@ impl Server for AddressBookConnection {
     fn leave(&mut self, _: LeaveParams, _: LeaveResults) -> Promise<(), capnp::Error> {
         self.leave_impl().into()
     }
+
+    fn ping(&mut self, _: PingParams, _: PingResults) -> Promise<(), capnp::Error> {
+        Promise::ok(())
+    }
 }
 
 pub trait AddressBookExt {
@@ -314,6 +318,8 @@ pub trait AddressBookExt {
     ) -> impl Future<Output = Result<(), anyhow::Error>>;
 
     fn leave(&self) -> impl Future<Output = Result<(), anyhow::Error>>;
+
+    fn ping(&self) -> impl Future<Output = Result<(), anyhow::Error>>;
 }
 
 impl AddressBookExt for Client {
@@ -338,6 +344,10 @@ impl AddressBookExt for Client {
     }
     async fn leave(&self) -> Result<(), anyhow::Error> {
         self.leave_request().send().promise.await?;
+        Ok(())
+    }
+    async fn ping(&self) -> Result<(), anyhow::Error> {
+        self.ping_request().send().promise.await?;
         Ok(())
     }
 }

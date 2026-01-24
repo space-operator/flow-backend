@@ -109,6 +109,12 @@ pub fn main() -> Result<(), anyhow::Error> {
     })
 }
 
+async fn ping(client: &address_book::Client) {
+    loop {
+        tokio::time::sleep(Duration::from_secs(60)).await;
+    }
+}
+
 pub async fn serve_server(
     endpoint: Endpoint,
     config: FlowServerConfig,
@@ -159,7 +165,11 @@ pub async fn serve_server(
         .map(|mut watcher| watcher.get());
     tracing::info!("connection type {:?}", conn_type);
 
-    cancel.cancelled().await;
+    future::select(
+        std::pin::pin!(ping(&client)),
+        std::pin::pin!(cancel.cancelled()),
+    )
+    .await;
 
     const LEAVE_TIMEOUT: Duration = Duration::from_secs(3);
     let _ = tokio::time::timeout(LEAVE_TIMEOUT, client.leave()).await;
