@@ -10,6 +10,8 @@ interface AddressBook {
     join @0 (direct_addresses: Data, relay_url: Text, availables: Data, apikey: Text);
 
     leave @1 ();
+
+    ping @2 ();
 }
 
 interface CommandContext {

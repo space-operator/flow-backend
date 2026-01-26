@@ -16,6 +16,7 @@ use std::{
     net::SocketAddr,
     rc::Rc,
     sync::{Arc, RwLock},
+    time::Duration,
 };
 use tokio::{
     sync::Mutex as AsyncMutex,
@@ -150,15 +151,18 @@ impl AddressBook {
                     .read()
                     .unwrap()
                     .get(&node_id)
-                    .unwrap()
+                    .ok_or_else(|| CommandError::msg("node was removed"))?
                     .clone();
                 let addr = NodeAddr {
                     node_id,
                     direct_addresses: info.direct_addresses,
                     relay_url: Some(info.relay_url.into()),
                 };
-                let client =
-                    command_factory::connect_iroh(self.base.endpoint.clone(), addr).await?;
+                let client = tokio::time::timeout(
+                    Duration::from_secs(5),
+                    command_factory::connect_iroh(self.base.endpoint.clone(), addr),
+                )
+                .await??;
                 clients.insert(node_id, client.clone());
                 client
             }
@@ -189,7 +193,14 @@ impl AddressBook {
                 .ok_or_else(|| CommandError::msg("not found"))?
         };
 
-        let factory_client = self.get_or_connect(node_id).await?;
+        let factory_client = match self.get_or_connect(node_id).await {
+            Ok(client) => client,
+            Err(error) => {
+                tracing::warn!("connect error, removing client {}", node_id);
+                self.base.factories.write().unwrap().remove(&node_id);
+                return Err(error);
+            }
+        };
         let cmd_client = factory_client.init(nd).await?;
 
         match cmd_client {
@@ -302,6 +313,10 @@ impl Server for AddressBookConnection {
     fn leave(&mut self, _: LeaveParams, _: LeaveResults) -> Promise<(), capnp::Error> {
         self.leave_impl().into()
     }
+
+    fn ping(&mut self, _: PingParams, _: PingResults) -> Promise<(), capnp::Error> {
+        Promise::ok(())
+    }
 }
 
 pub trait AddressBookExt {
@@ -314,6 +329,8 @@ pub trait AddressBookExt {
     ) -> impl Future<Output = Result<(), anyhow::Error>>;
 
     fn leave(&self) -> impl Future<Output = Result<(), anyhow::Error>>;
+
+    fn ping(&self) -> impl Future<Output = Result<(), anyhow::Error>>;
 }
 
 impl AddressBookExt for Client {
@@ -338,6 +355,10 @@ impl AddressBookExt for Client {
     }
     async fn leave(&self) -> Result<(), anyhow::Error> {
         self.leave_request().send().promise.await?;
+        Ok(())
+    }
+    async fn ping(&self) -> Result<(), anyhow::Error> {
+        self.ping_request().send().promise.await?;
         Ok(())
     }
 }
