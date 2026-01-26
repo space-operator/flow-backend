@@ -230,6 +230,8 @@ enum NodeCommands {
         /// Specify which Rust package to add the new node to
         #[arg(long, short)]
         package: Option<String>,
+        #[arg(long)]
+        deno: bool,
     },
     /// Upload nodes
     #[command(visible_alias = "u")]
@@ -1411,6 +1413,31 @@ async fn write_code(
     Ok(())
 }
 
+async fn write_deno_node_definition(
+    def: &CommandDefinition,
+) -> Result<Option<PathBuf>, Report<Error>> {
+    let path = PathBuf::from(format!("{}.json", def.data.node_id));
+
+    println!("writing node definition to {}", path.display());
+    if path.is_file() {
+        if !ask("file already exists, overwrite?").await {
+            return Ok(None);
+        }
+    }
+    let content = serde_json::to_string_pretty(def).change_context(Error::Json)?;
+    write_file(&path, content).await?;
+    Ok(Some(path))
+}
+
+async fn new_deno_node() -> Result<(), Report<Error>> {
+    let mut def = prompt_node_definition().await?;
+    def.r#type = "deno".to_owned();
+    if let Some(nd) = write_deno_node_definition(&def).await? {
+    }
+
+    Ok(())
+}
+
 async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Report<Error>> {
     if is_dirty()
         .inspect_err(|error| {
@@ -1430,7 +1457,7 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
     } else if let Some(member) = find_target_crate(&meta)? {
         member
     } else {
-        eprintln!("could not determine which package to update");
+        eprintln!("could not determine which Rust package to place your node in");
         eprintln!("use `-p` option to specify a package");
         let list = meta
             .workspace_packages()
@@ -1887,9 +1914,14 @@ async fn run() -> Result<(), Report<Error>> {
             NodeCommands::New {
                 allow_dirty,
                 package,
+                deno,
             } => {
                 check_latest_version().await?;
-                new_node(*allow_dirty, package).await?;
+                if *deno {
+                    new_deno_node().await?;
+                } else {
+                    new_node(*allow_dirty, package).await?;
+                }
             }
             NodeCommands::Upload {
                 path,
