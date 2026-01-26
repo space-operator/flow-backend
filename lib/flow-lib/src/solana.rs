@@ -40,6 +40,7 @@ pub enum Wallet {
     Adapter {
         #[serde_as(as = "AsPubkey")]
         public_key: Pubkey,
+        token: Option<String>,
     },
 }
 
@@ -71,15 +72,16 @@ impl<'de, C> bincode::BorrowDecode<'de, C> for Wallet {
 #[derive(bincode::Encode, bincode::Decode)]
 enum WalletBincode {
     Keypair([u8; 32]),
-    Adapter([u8; 32]),
+    Adapter(([u8; 32], Option<String>)),
 }
 
 impl From<WalletBincode> for Wallet {
     fn from(value: WalletBincode) -> Self {
         match value {
             WalletBincode::Keypair(value) => Wallet::Keypair(Keypair::new_from_array(value)),
-            WalletBincode::Adapter(value) => Wallet::Adapter {
+            WalletBincode::Adapter((value, token)) => Wallet::Adapter {
                 public_key: Pubkey::new_from_array(value),
+                token,
             },
         }
     }
@@ -89,7 +91,9 @@ impl From<&Wallet> for WalletBincode {
     fn from(value: &Wallet) -> Self {
         match value {
             Wallet::Keypair(keypair) => WalletBincode::Keypair(*keypair.secret_bytes()),
-            Wallet::Adapter { public_key } => WalletBincode::Adapter(public_key.to_bytes()),
+            Wallet::Adapter { public_key, token } => {
+                WalletBincode::Adapter((public_key.to_bytes(), token.clone()))
+            }
         }
     }
 }
@@ -104,8 +108,9 @@ impl Clone for Wallet {
     fn clone(&self) -> Self {
         match self {
             Wallet::Keypair(keypair) => Wallet::Keypair(keypair.insecure_clone()),
-            Wallet::Adapter { public_key } => Wallet::Adapter {
+            Wallet::Adapter { public_key, token } => Wallet::Adapter {
                 public_key: *public_key,
+                token: token.clone(),
             },
         }
     }
@@ -274,7 +279,10 @@ impl WalletOrPubkey {
     pub fn to_keypair(self) -> Wallet {
         match self {
             WalletOrPubkey::Wallet(k) => k,
-            WalletOrPubkey::Pubkey(public_key) => Wallet::Adapter { public_key },
+            WalletOrPubkey::Pubkey(public_key) => Wallet::Adapter {
+                public_key,
+                token: None,
+            },
         }
     }
 }
@@ -443,12 +451,16 @@ mod tests {
     #[test]
     fn test_keypair_or_pubkey_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = WalletOrPubkey::Wallet(Wallet::Adapter { public_key: pubkey });
+        let x = WalletOrPubkey::Wallet(Wallet::Adapter {
+            public_key: pubkey,
+            token: Some("x".to_owned()),
+        });
         let value = value::to_value(&x).unwrap();
         assert_eq!(
             value,
             Value::Map(value::map! {
                 "public_key" => pubkey,
+                "token" => "x",
             })
         );
         assert_eq!(value::from_value::<WalletOrPubkey>(value).unwrap(), x);
@@ -475,12 +487,16 @@ mod tests {
     #[test]
     fn test_wallet_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = Wallet::Adapter { public_key: pubkey };
+        let x = Wallet::Adapter {
+            public_key: pubkey,
+            token: Some("x".to_owned()),
+        };
         let value = value::to_value(&x).unwrap();
         assert_eq!(
             value,
             Value::Map(value::map! {
                 "public_key" => pubkey,
+                "token" => "x",
             })
         );
         assert_eq!(value::from_value::<Wallet>(value).unwrap(), x);
@@ -494,6 +510,7 @@ mod tests {
                 Wallet::Keypair(Keypair::new()),
                 Wallet::Adapter {
                     public_key: Pubkey::new_unique(),
+                    token: None,
                 },
             ]
             .into(),

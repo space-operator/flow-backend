@@ -877,12 +877,16 @@ mod tests {
     #[test]
     fn test_keypair_or_pubkey_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = WalletOrPubkey::Wallet(Wallet::Adapter { public_key: pubkey });
+        let x = WalletOrPubkey::Wallet(Wallet::Adapter {
+            public_key: pubkey,
+            token: Some("x".to_owned()),
+        });
         let value = value::to_value(&x).unwrap();
         assert_eq!(
             value,
             Value::Map(value::map! {
                 "public_key" => pubkey,
+                "token" => "x"
             })
         );
         assert_eq!(value::from_value::<WalletOrPubkey>(value).unwrap(), x);
@@ -909,12 +913,16 @@ mod tests {
     #[test]
     fn test_wallet_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = Wallet::Adapter { public_key: pubkey };
+        let x = Wallet::Adapter {
+            public_key: pubkey,
+            token: Some("x".to_owned()),
+        };
         let value = value::to_value(&x).unwrap();
         assert_eq!(
             value,
             Value::Map(value::map! {
                 "public_key" => pubkey,
+                "token" => "x",
             })
         );
         assert_eq!(value::from_value::<Wallet>(value).unwrap(), x);
@@ -935,6 +943,7 @@ mod tests {
                 Wallet::Keypair(Keypair::new()),
                 Wallet::Adapter {
                     public_key: Pubkey::new_unique(),
+                    token: Some("x".to_owned()),
                 },
             ]
             .into(),

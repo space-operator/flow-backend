@@ -27,7 +27,10 @@ enum WalletError {
 fn adapter_wallet(pubkey: Pubkey) -> Output {
     Output {
         pubkey,
-        keypair: Wallet::Adapter { public_key: pubkey },
+        keypair: Wallet::Adapter {
+            public_key: pubkey,
+            token: None,
+        },
     }
 }
 

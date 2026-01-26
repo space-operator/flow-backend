@@ -97,7 +97,10 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
         Some(either) => {
             let keypair = match either {
                 WalletOrPubkey::Wallet(keypair) => keypair,
-                WalletOrPubkey::Pubkey(public_key) => Wallet::Adapter { public_key },
+                WalletOrPubkey::Pubkey(public_key) => Wallet::Adapter {
+                    public_key,
+                    token: None,
+                },
             };
             if input.check_new_account
                 && account_exists(ctx.solana_client(), &keypair.pubkey()).await?
