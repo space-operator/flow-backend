@@ -24,7 +24,6 @@ pub mod request_airdrop;
 pub mod transfer_sol;
 pub mod transfer_token;
 pub mod utils;
-pub mod wallet;
 pub mod wormhole;
 // pub mod xnft;
 pub mod das;

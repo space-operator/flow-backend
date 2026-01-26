@@ -1,9 +1,13 @@
-use crate::prelude::*;
-use flow_lib::config::client::NodeData;
+use crate::command::prelude::*;
+use flow_lib::{
+    CmdInputDescription, CmdOutputDescription,
+    config::client::NodeData,
+    solana::{Pubkey, Wallet},
+};
 use thiserror::Error as ThisError;
 
 #[derive(Debug)]
-pub struct WalletCmd {
+struct WalletCmd {
     form: Result<Output, WalletError>,
 }
 
@@ -47,7 +51,7 @@ impl WalletCmd {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Output {
+struct Output {
     #[serde(with = "value::pubkey")]
     pub pubkey: Pubkey,
     pub keypair: Wallet,
@@ -61,18 +65,18 @@ impl CommandTrait for WalletCmd {
         WALLET.into()
     }
 
-    fn inputs(&self) -> Vec<CmdInput> {
+    fn inputs(&self) -> Vec<CmdInputDescription> {
         [].to_vec()
     }
 
-    fn outputs(&self) -> Vec<CmdOutput> {
+    fn outputs(&self) -> Vec<CmdOutputDescription> {
         [
-            CmdOutput {
+            CmdOutputDescription {
                 name: "pubkey".into(),
                 r#type: ValueType::Pubkey,
                 optional: false,
             },
-            CmdOutput {
+            CmdOutputDescription {
                 name: "keypair".into(),
                 r#type: ValueType::Keypair,
                 optional: false,
@@ -99,7 +103,6 @@ mod tests {
     use flow_lib::config::client::{Extra, TargetsForm};
     use serde_json::json;
 
-    const PUBKEY: Pubkey = solana_program::pubkey!("DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY");
     const PUBKEY_STR: &str = "DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY";
 
     #[test]
@@ -118,6 +121,9 @@ mod tests {
             },
             instruction_info: None,
         };
-        assert_eq!(WalletCmd::new(&nd).form.unwrap().pubkey, PUBKEY);
+        assert_eq!(
+            WalletCmd::new(&nd).form.unwrap().pubkey,
+            Pubkey::from_str_const(PUBKEY_STR)
+        );
     }
 }
