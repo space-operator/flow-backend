@@ -115,7 +115,7 @@ async fn ping(client: &address_book::Client) {
             tracing::error!("ping failed: {:#}", error);
             break;
         }
-        tokio::time::sleep(Duration::from_secs(60)).await;
+        tokio::time::sleep(Duration::from_secs(30)).await;
     }
 }
 
