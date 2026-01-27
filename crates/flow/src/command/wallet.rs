@@ -1,27 +1,28 @@
 use crate::command::prelude::*;
+use base64::{Engine, prelude::BASE64_STANDARD_NO_PAD};
+use chacha20poly1305::{
+    AeadCore, ChaCha20Poly1305,
+    aead::{Aead, rand_core},
+};
 use flow_lib::{
     CmdInputDescription, CmdOutputDescription,
     config::client::NodeData,
     solana::{Pubkey, Wallet},
 };
-use thiserror::Error as ThisError;
+use serde_with::serde_as;
+use zeroize::ZeroizeOnDrop;
 
 #[derive(Debug)]
 struct WalletCmd {
-    form: Result<Output, WalletError>,
+    form: Result<FormData, serde_json::Error>,
 }
 
-#[derive(Deserialize)]
+#[serde_as]
+#[derive(Serialize, Deserialize, Debug, borsh::BorshSerialize, borsh::BorshDeserialize)]
 struct FormData {
-    public_key: String,
-}
-
-#[derive(ThisError, Debug)]
-enum WalletError {
-    #[error("failed to decode wallet as base58")]
-    InvalidBase58,
-    #[error(transparent)]
-    Form(serde_json::Error),
+    #[serde_with(as = "DisplayFromStr")]
+    public_key: Pubkey,
+    wallet_id: i64,
 }
 
 fn adapter_wallet(pubkey: Pubkey) -> Output {
@@ -35,21 +36,52 @@ fn adapter_wallet(pubkey: Pubkey) -> Output {
 }
 
 impl FormData {
-    fn into_output(self) -> Result<Output, WalletError> {
-        let pubkey = self
-            .public_key
-            .parse::<Pubkey>()
-            .map_err(|_| WalletError::InvalidBase58)?;
-        Ok(adapter_wallet(pubkey))
+    fn into_output(self) -> Output {
+        adapter_wallet(self.public_key)
     }
 }
 
 impl WalletCmd {
     fn new(nd: &NodeData) -> Self {
-        let form = serde_json::from_value::<FormData>(nd.targets_form.form_data.clone())
-            .map_err(WalletError::Form)
-            .and_then(FormData::into_output);
+        let form = serde_json::from_value::<FormData>(nd.targets_form.form_data.clone());
         Self { form }
+    }
+}
+
+#[derive(ZeroizeOnDrop)]
+pub(crate) struct WalletPermit {
+    encryption_key: ChaCha20Poly1305,
+}
+
+#[derive(borsh::BorshSerialize, borsh::BorshDeserialize)]
+struct Permit {
+    nonce: [u8; 12],
+    ciphertext: Vec<u8>,
+}
+
+impl WalletPermit {
+    fn encrypt(&self, wallet: &FormData) -> String {
+        let nonce = ChaCha20Poly1305::generate_nonce(&mut rand_core::OsRng);
+        let borsh_form = borsh::to_vec(wallet).unwrap();
+        let ciphertext = self
+            .encryption_key
+            .encrypt(&nonce, borsh_form.as_slice())
+            .unwrap();
+        let permit = Permit {
+            nonce: *nonce.as_array().unwrap(),
+            ciphertext,
+        };
+        BASE64_STANDARD_NO_PAD.encode(&borsh::to_vec(&permit).unwrap())
+    }
+
+    pub(crate) fn decrypt(&self, base64_permit: &str) -> Result<FormData, CommandError> {
+        let borsh_permit = BASE64_STANDARD_NO_PAD.decode(base64_permit)?;
+        let permit: Permit = borsh::from_slice(&borsh_permit)?;
+        let borsh_form = self
+            .encryption_key
+            .decrypt(&permit.nonce.into(), permit.ciphertext.as_slice())?;
+        let form: FormData = borsh::from_slice(&borsh_form)?;
+        Ok(form)
     }
 }
 
@@ -88,9 +120,23 @@ impl CommandTrait for WalletCmd {
         .to_vec()
     }
 
-    async fn run(&self, _: CommandContext, _: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, ctx: CommandContext, _: ValueSet) -> Result<ValueSet, CommandError> {
         match &self.form {
-            Ok(output) => Ok(value::to_map(output)?),
+            Ok(form) => {
+                let permit = ctx
+                    .get::<WalletPermit>()
+                    .ok_or_else(|| CommandError::msg("WalletPermit not found"))?;
+                let token = permit.encrypt(form);
+                let output = Output {
+                    pubkey: form.public_key,
+                    keypair: Wallet::Adapter {
+                        public_key: form.public_key,
+                        token: Some(token),
+                    },
+                };
+
+                Ok(value::to_map(&output)?)
+            }
             Err(e) => Err(CommandError::msg(e.to_string())),
         }
     }
@@ -125,7 +171,7 @@ mod tests {
             instruction_info: None,
         };
         assert_eq!(
-            WalletCmd::new(&nd).form.unwrap().pubkey,
+            WalletCmd::new(&nd).form.unwrap().public_key,
             Pubkey::from_str_const(PUBKEY_STR)
         );
     }

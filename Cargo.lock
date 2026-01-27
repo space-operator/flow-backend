@@ -3482,8 +3482,10 @@ dependencies = [
  "base64 0.22.1",
  "bincode 1.3.3",
  "bon",
+ "borsh 1.6.0",
  "bs58 0.4.0",
  "bytes",
+ "chacha20poly1305",
  "chrono",
  "cmds-solana",
  "cmds-std",
@@ -3521,6 +3523,7 @@ dependencies = [
  "url",
  "utils",
  "uuid 1.19.0",
+ "zeroize",
 ]
 
 [[package]]
