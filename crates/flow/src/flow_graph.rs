@@ -6,7 +6,7 @@ use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
     command::{
         CommandError, CommandFactory, CommandTrait, InstructionInfo, input_is_required,
-        output_is_optional, passthrough_outputs,
+        keypair_outputs, output_is_optional, passthrough_outputs,
     },
     config::client::{self, PartialConfig},
     context::{
@@ -269,6 +269,7 @@ struct RunningNodeInfo {
     passthrough: value::Map,
     waiting: Option<Waiting>,
     instruction_sent: bool,
+    keypair_outputs: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -370,6 +371,16 @@ pub enum BuildGraphError {
     NoInput((NodeId, String), String),
     #[error("node {:?}:{} has no output {:?}", .0.0, .1, .0.1)]
     NoOutput((NodeId, String), String),
+}
+
+fn remove_wallet_token(v: &mut value::Map, keypair_outputs: &[String]) {
+    for o in keypair_outputs {
+        if let Some(v) = v.get_mut(o) {
+            if let Value::Map(v) = v {
+                v.swap_remove("token");
+            }
+        }
+    }
 }
 
 impl FlowGraph {
@@ -945,6 +956,8 @@ impl FlowGraph {
                         });
                     }
                 }
+
+                remove_wallet_token(&mut values, &info.keypair_outputs);
 
                 s.event_tx
                     .unbounded_send(
@@ -1611,6 +1624,7 @@ impl FlowGraph {
                 passthrough: passthrough_outputs(&*node.command, &inputs),
                 waiting: None,
                 instruction_sent: false,
+                keypair_outputs: keypair_outputs(&*node.command),
             },
         );
         let outputs = s.result.node_outputs.entry(node.id).or_default();
