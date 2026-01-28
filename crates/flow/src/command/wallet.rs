@@ -6,7 +6,7 @@ use chacha20poly1305::{
 };
 use flow_lib::{
     CmdInputDescription, CmdOutputDescription,
-    config::client::NodeData,
+    config::{WalletId, client::NodeData},
     solana::{Pubkey, Wallet},
 };
 use serde_with::DisplayFromStr;
@@ -53,9 +53,9 @@ impl WalletPermit {
         }
     }
 
-    fn encrypt(&self, wallet: &FormData) -> String {
+    fn encrypt(&self, wallet_id: WalletId) -> String {
         let nonce = ChaCha20Poly1305::generate_nonce(&mut rand_core::OsRng);
-        let borsh_form = borsh::to_vec(wallet).unwrap();
+        let borsh_form = borsh::to_vec(&wallet_id).unwrap();
         let ciphertext = self
             .encryption_key
             .encrypt(&nonce, borsh_form.as_slice())
@@ -67,14 +67,14 @@ impl WalletPermit {
         BASE64_STANDARD_NO_PAD.encode(&borsh::to_vec(&permit).unwrap())
     }
 
-    pub(crate) fn decrypt(&self, base64_permit: &str) -> Result<FormData, CommandError> {
+    pub(crate) fn decrypt(&self, base64_permit: &str) -> Result<WalletId, CommandError> {
         let borsh_permit = BASE64_STANDARD_NO_PAD.decode(base64_permit)?;
         let permit: Permit = borsh::from_slice(&borsh_permit)?;
         let borsh_form = self
             .encryption_key
             .decrypt(&permit.nonce.into(), permit.ciphertext.as_slice())?;
-        let form: FormData = borsh::from_slice(&borsh_form)?;
-        Ok(form)
+        let wallet_id: WalletId = borsh::from_slice(&borsh_form)?;
+        Ok(wallet_id)
     }
 }
 
@@ -119,7 +119,7 @@ impl CommandTrait for WalletCmd {
                 let permit = ctx
                     .get::<WalletPermit>()
                     .ok_or_else(|| CommandError::msg("WalletPermit not found"))?;
-                let token = permit.encrypt(form);
+                let token = permit.encrypt(form.wallet_id);
                 let output = Output {
                     pubkey: form.public_key,
                     keypair: Wallet::Adapter {
