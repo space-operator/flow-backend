@@ -410,6 +410,7 @@ impl FlowGraph {
                     ext.insert(registry.make_run_rhai_svc());
                     ext.insert(registry.make_start_flow_svc());
                     ext.insert(tokio::runtime::Handle::current());
+                    ext.insert(crate::command::wallet::WalletPermit::new());
                     ext
                 }),
                 http: registry.http.clone(),

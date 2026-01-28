@@ -1,7 +1,7 @@
 use crate::command::prelude::*;
 use base64::{Engine, prelude::BASE64_STANDARD_NO_PAD};
 use chacha20poly1305::{
-    AeadCore, ChaCha20Poly1305,
+    AeadCore, ChaCha20Poly1305, KeyInit,
     aead::{Aead, rand_core},
 };
 use flow_lib::{
@@ -9,6 +9,7 @@ use flow_lib::{
     config::client::NodeData,
     solana::{Pubkey, Wallet},
 };
+use serde_with::DisplayFromStr;
 use serde_with::serde_as;
 use zeroize::ZeroizeOnDrop;
 
@@ -19,26 +20,10 @@ struct WalletCmd {
 
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug, borsh::BorshSerialize, borsh::BorshDeserialize)]
-struct FormData {
-    #[serde_with(as = "DisplayFromStr")]
+pub(crate) struct FormData {
+    #[serde_as(as = "DisplayFromStr")]
     public_key: Pubkey,
     wallet_id: i64,
-}
-
-fn adapter_wallet(pubkey: Pubkey) -> Output {
-    Output {
-        pubkey,
-        keypair: Wallet::Adapter {
-            public_key: pubkey,
-            token: None,
-        },
-    }
-}
-
-impl FormData {
-    fn into_output(self) -> Output {
-        adapter_wallet(self.public_key)
-    }
 }
 
 impl WalletCmd {
@@ -60,6 +45,14 @@ struct Permit {
 }
 
 impl WalletPermit {
+    pub(crate) fn new() -> Self {
+        Self {
+            encryption_key: ChaCha20Poly1305::new(&ChaCha20Poly1305::generate_key(
+                &mut rand_core::OsRng,
+            )),
+        }
+    }
+
     fn encrypt(&self, wallet: &FormData) -> String {
         let nonce = ChaCha20Poly1305::generate_nonce(&mut rand_core::OsRng);
         let borsh_form = borsh::to_vec(wallet).unwrap();
