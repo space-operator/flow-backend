@@ -32,10 +32,11 @@ impl bundlr_sdk::Signer for BundlrSigner {
                     .clone();
                 let mut ctx = self.ctx.clone();
                 let pubkey = self.keypair.pubkey();
+                let token = self.keypair.token();
                 rt.block_on(async move {
                     tokio::time::timeout(
                         SIGNATURE_TIMEOUT,
-                        ctx.request_signature(pubkey, msg, SIGNATURE_TIMEOUT),
+                        ctx.request_signature(pubkey, token, msg, SIGNATURE_TIMEOUT),
                     )
                     .await
                     .map(|res| res.map(|res| res.signature))

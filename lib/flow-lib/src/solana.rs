@@ -128,6 +128,13 @@ impl Wallet {
         }
     }
 
+    pub fn token(&self) -> Option<String> {
+        match self {
+            Wallet::Keypair(_) => None,
+            Wallet::Adapter { token, .. } => token.clone(),
+        }
+    }
+
     pub fn keypair(&self) -> Option<&Keypair> {
         match self {
             Wallet::Keypair(keypair) => Some(keypair),

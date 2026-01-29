@@ -278,7 +278,7 @@ impl CommandContextImpl {
             )?
             .0;
             let result = ctx
-                .request_signature(data.pubkey, data.message, data.timeout)
+                .request_signature(data.pubkey, None, data.message, data.timeout)
                 .await?;
             results
                 .get()
