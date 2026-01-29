@@ -24,4 +24,5 @@ pub mod foreach;
 pub mod interflow;
 pub mod interflow_instructions;
 pub mod rhai;
+pub mod wallet;
 // pub mod wasm;

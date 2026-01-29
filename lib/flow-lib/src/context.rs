@@ -224,6 +224,7 @@ pub mod signer {
         pub id: Option<i64>,
         #[serde(with = "chrono::serde::ts_milliseconds")]
         pub time: DateTime<Utc>,
+        pub token: Option<String>,
         #[serde_as(as = "DisplayFromStr")]
         pub pubkey: Pubkey,
         #[serde_as(as = "Base64")]
@@ -689,6 +690,7 @@ impl CommandContext {
     pub async fn request_signature(
         &mut self,
         pubkey: Pubkey,
+        token: Option<String>,
         message: Bytes,
         timeout: Duration,
     ) -> Result<signer::SignatureResponse, signer::Error> {
@@ -700,6 +702,7 @@ impl CommandContext {
                 id: None,
                 time: Utc::now(),
                 pubkey,
+                token,
                 message,
                 timeout,
                 flow_run_id: Some(self.data.flow.flow_run_id),

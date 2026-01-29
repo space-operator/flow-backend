@@ -71,6 +71,7 @@ pub enum ValueType {
     Other,
 }
 
+pub type WalletId = i64;
 pub type FlowId = i32;
 pub type NodeId = Uuid;
 pub type FlowRunId = Uuid;

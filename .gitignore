@@ -3,7 +3,9 @@ target
 _data
 guest_local_storage
 local_storage
-config.*
+config.json
+config.jsonc
+config.toml
 .env
 .ipynb_checkpoints
 .idea

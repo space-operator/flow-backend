@@ -73,7 +73,7 @@ pub async fn try_sign_wallet(
         let msg: Bytes = tx.message_data().into();
         let sig = tokio::time::timeout(
             SIGNATURE_TIMEOUT,
-            ctx.request_signature(wallet.pubkey(), msg.clone(), SIGNATURE_TIMEOUT),
+            ctx.request_signature(wallet.pubkey(), None, msg.clone(), SIGNATURE_TIMEOUT),
         )
         .await
         .map_err(|_| crate::Error::SignatureTimeout)??;

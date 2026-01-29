@@ -143,6 +143,7 @@ async fn action_identity_memo(
             id: None,
             time: Utc::now(),
             pubkey: identity,
+            token: None,
             message: reference_bytes.into(),
             timeout: SIGNATURE_TIMEOUT,
             flow_run_id: Some(run_id),
@@ -342,6 +343,7 @@ async fn build_and_sign_tx(
                 id: None,
                 time: Utc::now(),
                 pubkey: keypair.pubkey(),
+                token: None,
                 message: data.clone(),
                 timeout: SIGNATURE_TIMEOUT,
                 flow_run_id,
@@ -378,6 +380,7 @@ async fn build_and_sign_tx(
             id: None,
             time: Utc::now(),
             pubkey,
+            token: None,
             message: data.clone(),
             timeout: SIGNATURE_TIMEOUT,
             flow_run_id,
@@ -503,6 +506,7 @@ async fn execute_solana_action(
         id: None,
         time: Utc::now(),
         pubkey: action_config.action_signer,
+        token: None,
         message: tx.message.serialize().into(),
         timeout: SIGNATURE_TIMEOUT,
         flow_run_id,
@@ -668,6 +672,7 @@ impl InstructionsExt for Instructions {
                 id: None,
                 time: Utc::now(),
                 pubkey,
+                token: None,
                 message: data.clone(),
                 timeout: SIGNATURE_TIMEOUT,
                 flow_run_id,
@@ -877,12 +882,16 @@ mod tests {
     #[test]
     fn test_keypair_or_pubkey_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = WalletOrPubkey::Wallet(Wallet::Adapter { public_key: pubkey });
+        let x = WalletOrPubkey::Wallet(Wallet::Adapter {
+            public_key: pubkey,
+            token: Some("x".to_owned()),
+        });
         let value = value::to_value(&x).unwrap();
         assert_eq!(
             value,
             Value::Map(value::map! {
                 "public_key" => pubkey,
+                "token" => "x"
             })
         );
         assert_eq!(value::from_value::<WalletOrPubkey>(value).unwrap(), x);
@@ -909,12 +918,16 @@ mod tests {
     #[test]
     fn test_wallet_adapter() {
         let pubkey = Pubkey::new_unique();
-        let x = Wallet::Adapter { public_key: pubkey };
+        let x = Wallet::Adapter {
+            public_key: pubkey,
+            token: Some("x".to_owned()),
+        };
         let value = value::to_value(&x).unwrap();
         assert_eq!(
             value,
             Value::Map(value::map! {
                 "public_key" => pubkey,
+                "token" => "x",
             })
         );
         assert_eq!(value::from_value::<Wallet>(value).unwrap(), x);
@@ -935,6 +948,7 @@ mod tests {
                 Wallet::Keypair(Keypair::new()),
                 Wallet::Adapter {
                     public_key: Pubkey::new_unique(),
+                    token: Some("x".to_owned()),
                 },
             ]
             .into(),
