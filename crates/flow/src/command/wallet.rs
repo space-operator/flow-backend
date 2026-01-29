@@ -157,6 +157,7 @@ mod tests {
             targets_form: TargetsForm {
                 form_data: json!({
                     "public_key": PUBKEY_STR,
+                    "wallet_id": 0,
                 }),
                 extra: Extra::default(),
                 wasm_bytes: None,
