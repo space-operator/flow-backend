@@ -9,7 +9,6 @@ use solana_commitment_config::CommitmentConfig;
 use solana_program::instruction::AccountMeta;
 use solana_rpc_client_api::config::RpcAccountInfoConfig;
 use spl_associated_token_account_interface::address::get_associated_token_address;
-use tracing::info;
 
 use super::{STRM_TREASURY, WithdrawData, WithdrawDataInput};
 
@@ -102,7 +101,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let response = ctx
         .solana_client()
-        .get_account_with_config(&input.metadata, config)
+        .get_ui_account_with_config(&input.metadata, config)
         .await
         .map_err(|e| {
             tracing::error!("Error: {:?}", e);
@@ -114,7 +113,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         None => return Err(crate::Error::AccountNotFound(input.metadata).into()),
     };
 
-    let mut escrow_data: &[u8] = &escrow.data;
+    let mut escrow_data: &[u8] = &escrow.data.decode().expect("we used base64 config");
     let escrow_data = StreamContract::deserialize(&mut escrow_data).map_err(|_| {
         tracing::error!(
             "Invalid data for: {:?}",
@@ -123,7 +122,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         crate::Error::InvalidAccountData(input.metadata)
     })?;
 
-    info!("Escrow account: {:?}", escrow_data);
+    tracing::debug!("Escrow account: {:?}", escrow_data);
 
     let recipient_tokens = get_associated_token_address(&escrow_data.recipient, &escrow_data.mint);
 

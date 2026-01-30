@@ -6,7 +6,6 @@ use crate::InstructionsExt;
 use super::Error;
 use super::{Pubkey, Signature};
 use agave_feature_set::FeatureSet;
-use agave_precompiles::verify_if_precompile;
 use anyhow::{anyhow, bail, ensure};
 use base64::prelude::*;
 use flow_lib::context::execute;
@@ -218,7 +217,8 @@ pub fn verify_precompiles(tx: &Transaction, feature_set: &FeatureSet) -> Result<
         }
         let program_id = &tx.message().account_keys[instruction.program_id_index as usize];
 
-        verify_if_precompile(
+        #[allow(deprecated)]
+        agave_precompiles::verify_if_precompile(
             program_id,
             instruction,
             &tx.message().instructions,

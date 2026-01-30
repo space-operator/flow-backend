@@ -239,6 +239,7 @@ mod tests {
         build().unwrap();
     }
 
+    #[allow(unused)]
     #[tokio::test]
     #[ignore]
     async fn read_data() {
