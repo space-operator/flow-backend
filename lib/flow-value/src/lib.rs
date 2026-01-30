@@ -787,6 +787,12 @@ pub struct Five8Buffer32 {
     out: [u8; 44],
 }
 
+impl Default for Five8Buffer32 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Five8Buffer32 {
     pub const fn new() -> Self {
         Self { out: [0; _] }
@@ -800,6 +806,12 @@ impl Five8Buffer32 {
 
 pub struct Five8Buffer64 {
     out: [u8; 88],
+}
+
+impl Default for Five8Buffer64 {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Five8Buffer64 {

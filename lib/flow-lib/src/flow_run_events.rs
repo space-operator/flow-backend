@@ -172,15 +172,17 @@ impl NodeLogSender {
             module,
             content,
         }: NodeLogContent,
-    ) -> Result<(), mpsc::TrySendError<Event>> {
-        self.tx.unbounded_send(Event::NodeLog(NodeLog {
-            time,
-            node_id: self.node_id,
-            times: self.times,
-            level,
-            module,
-            content,
-        }))
+    ) -> Result<(), mpsc::SendError> {
+        self.tx
+            .unbounded_send(Event::NodeLog(NodeLog {
+                time,
+                node_id: self.node_id,
+                times: self.times,
+                level,
+                module,
+                content,
+            }))
+            .map_err(|error| error.into_send_error())
     }
 }
 

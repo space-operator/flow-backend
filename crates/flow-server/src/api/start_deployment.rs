@@ -193,8 +193,20 @@ async fn start_deployment(
                 .map_err(|error| Error::custom(StatusCode::INTERNAL_SERVER_ERROR, error))?;
             let pay_to = pubkeys[&fee.pay_to];
             let r: PaymentRequirements = match fee.network {
-                X402Network::Base => return Err(Error::custom(StatusCode::INTERNAL_SERVER_ERROR, "network not supported").into()),
-                X402Network::BaseSepolia => return Err(Error::custom(StatusCode::INTERNAL_SERVER_ERROR, "network not supported").into()),
+                X402Network::Base => {
+                    return Err(Error::custom(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "network not supported",
+                    )
+                    .into());
+                }
+                X402Network::BaseSepolia => {
+                    return Err(Error::custom(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "network not supported",
+                    )
+                    .into());
+                }
                 X402Network::Solana => ExactSvm::builder()
                     .amount(amount)
                     .asset(UsdcSolana)
@@ -255,15 +267,13 @@ async fn start_deployment(
             let result = paywall
                 .handle_payment(req, async move |req| {
                     let resp = handler().await;
-                    let resp = resp.respond_to(&req);
-                    resp
+
+                    resp.respond_to(&req)
                 })
                 .await;
             match result {
                 Ok(resp) => Ok(resp),
-                Err(error) => {
-                    return Err(error.into());
-                }
+                Err(error) => Err(error.into()),
             }
         }
         None => Ok(handler().await.respond_to(&req)),

@@ -218,7 +218,7 @@ serde_conv!(pub AsRpcRequest, RpcRequest, ser_rpc_request, de_rpc_request);
 #[derive(Serialize, Deserialize)]
 pub enum AsRpcResponseErrorDataImpl {
     Empty,
-    SendTransactionPreflightFailure(RpcSimulateTransactionResult),
+    SendTransactionPreflightFailure(Box<RpcSimulateTransactionResult>),
     NodeUnhealthy { num_slots_behind: Option<Slot> },
 }
 
@@ -226,9 +226,9 @@ fn ser_rpc_response_error_data(error: &RpcResponseErrorData) -> AsRpcResponseErr
     match error {
         RpcResponseErrorData::Empty => AsRpcResponseErrorDataImpl::Empty,
         RpcResponseErrorData::SendTransactionPreflightFailure(rpc_simulate_transaction_result) => {
-            AsRpcResponseErrorDataImpl::SendTransactionPreflightFailure(
+            AsRpcResponseErrorDataImpl::SendTransactionPreflightFailure(Box::new(
                 rpc_simulate_transaction_result.clone(),
-            )
+            ))
         }
         RpcResponseErrorData::NodeUnhealthy { num_slots_behind } => {
             AsRpcResponseErrorDataImpl::NodeUnhealthy {
@@ -245,7 +245,9 @@ fn de_rpc_response_error_data(
         AsRpcResponseErrorDataImpl::Empty => RpcResponseErrorData::Empty,
         AsRpcResponseErrorDataImpl::SendTransactionPreflightFailure(
             rpc_simulate_transaction_result,
-        ) => RpcResponseErrorData::SendTransactionPreflightFailure(rpc_simulate_transaction_result),
+        ) => {
+            RpcResponseErrorData::SendTransactionPreflightFailure(*rpc_simulate_transaction_result)
+        }
         AsRpcResponseErrorDataImpl::NodeUnhealthy { num_slots_behind } => {
             RpcResponseErrorData::NodeUnhealthy { num_slots_behind }
         }
@@ -261,8 +263,8 @@ pub enum AsRpcErrorImpl {
     RpcResponseError {
         code: i64,
         message: String,
-        #[serde_as(as = "AsRpcResponseErrorData")]
-        data: RpcResponseErrorData,
+        #[serde_as(as = "Box<AsRpcResponseErrorData>")]
+        data: Box<RpcResponseErrorData>,
     },
     ParseError(String),
     ForUser(String),
@@ -278,7 +280,7 @@ fn ser_rpc_error(error: &RpcError) -> AsRpcErrorImpl {
         } => AsRpcErrorImpl::RpcResponseError {
             code: *code,
             message: message.clone(),
-            data: clone_rpc_response_error(data),
+            data: Box::new(clone_rpc_response_error(data)),
         },
         RpcError::ParseError(error) => AsRpcErrorImpl::ParseError(error.clone()),
         RpcError::ForUser(error) => AsRpcErrorImpl::ForUser(error.clone()),
@@ -295,7 +297,7 @@ fn de_rpc_error(error: AsRpcErrorImpl) -> Result<RpcError, Infallible> {
         } => RpcError::RpcResponseError {
             code,
             message,
-            data,
+            data: *data,
         },
         AsRpcErrorImpl::ParseError(error) => RpcError::ParseError(error),
         AsRpcErrorImpl::ForUser(error) => RpcError::ForUser(error),
@@ -309,7 +311,7 @@ serde_conv!(pub AsRpcEeror, RpcError, ser_rpc_error, de_rpc_error);
 pub enum AsClientErrorKindImpl {
     Io(#[serde_as(as = "AsIoError")] io::Error),
     Middleware(#[serde_as(as = "AsAnyhow")] anyhow::Error),
-    RpcError(#[serde_as(as = "AsRpcEeror")] RpcError),
+    RpcError(#[serde_as(as = "Box<AsRpcEeror>")] Box<RpcError>),
     SigningError(#[serde_as(as = "AsSignerError")] SignerError),
     TransactionError(TransactionError),
     Custom(String),
@@ -628,7 +630,9 @@ fn ser_kind(kind: &ClientErrorKind) -> AsClientErrorKindImpl {
         ClientErrorKind::Middleware(error) => {
             AsClientErrorKindImpl::Middleware(anyhow!(format!("{:#}", error)))
         }
-        ClientErrorKind::RpcError(error) => AsClientErrorKindImpl::RpcError(clone_rpc_error(error)),
+        ClientErrorKind::RpcError(error) => {
+            AsClientErrorKindImpl::RpcError(Box::new(clone_rpc_error(error)))
+        }
         ClientErrorKind::SerdeJson(error) => AsClientErrorKindImpl::Custom(error.to_string()),
         ClientErrorKind::SigningError(error) => {
             AsClientErrorKindImpl::SigningError(clone_signer_error(error))
@@ -644,7 +648,7 @@ fn de_kind(kind: AsClientErrorKindImpl) -> Result<ClientErrorKind, Infallible> {
     Ok(match kind {
         AsClientErrorKindImpl::Io(error) => ClientErrorKind::Io(error),
         AsClientErrorKindImpl::Middleware(error) => ClientErrorKind::Middleware(error),
-        AsClientErrorKindImpl::RpcError(rpc_error) => ClientErrorKind::RpcError(rpc_error),
+        AsClientErrorKindImpl::RpcError(rpc_error) => ClientErrorKind::RpcError(*rpc_error),
         AsClientErrorKindImpl::SigningError(signer_error) => {
             ClientErrorKind::SigningError(signer_error)
         }
@@ -672,7 +676,7 @@ fn clone_client_error_kind(kind: &ClientErrorKind) -> Box<ClientErrorKind> {
 
 fn ser_client_error(error: &ClientError) -> AsClientErrorImpl {
     AsClientErrorImpl {
-        request: error.request.clone(),
+        request: error.request,
         kind: clone_client_error_kind(&error.kind),
     }
 }

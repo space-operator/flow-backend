@@ -63,11 +63,16 @@ async fn start_flow_unverified(
 
     let db_worker = DBWorker::from_registry();
 
-    let starter = db_worker.send(GetUserWorker { user_id, base_url: Some(base_url.clone()) }).await?;
+    let starter = db_worker
+        .send(GetUserWorker {
+            user_id,
+            base_url: Some(base_url.clone()),
+        })
+        .await?;
     let owner = db_worker
         .send(GetUserWorker {
             user_id: flow.user_id,
-            base_url: Some(base_url.clone())
+            base_url: Some(base_url.clone()),
         })
         .await?;
 

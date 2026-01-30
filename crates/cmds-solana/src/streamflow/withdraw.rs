@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::prelude::*;
 use crate::streamflow::StreamContract;
 use crate::utils::anchor_sighash;
@@ -9,7 +7,6 @@ use solana_commitment_config::CommitmentConfig;
 use solana_program::instruction::AccountMeta;
 use solana_rpc_client_api::config::RpcAccountInfoConfig;
 use spl_associated_token_account_interface::address::get_associated_token_address;
-use tracing::info;
 
 use super::{STRM_TREASURY, WithdrawData, WithdrawDataInput};
 
@@ -68,7 +65,7 @@ fn create_withdraw_stream_instruction(
         AccountMeta::new(*recipient_tokens, false),
         AccountMeta::new(*metadata, false),
         AccountMeta::new(*escrow_tokens, false),
-        AccountMeta::new(Pubkey::from_str(STRM_TREASURY).unwrap(), false),
+        AccountMeta::new(STRM_TREASURY, false),
         AccountMeta::new(*streamflow_treasury_tokens, false),
         AccountMeta::new(*partner, false),
         AccountMeta::new(*partner_tokens, false),
@@ -102,7 +99,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let response = ctx
         .solana_client()
-        .get_account_with_config(&input.metadata, config)
+        .get_ui_account_with_config(&input.metadata, config)
         .await
         .map_err(|e| {
             tracing::error!("Error: {:?}", e);
@@ -114,7 +111,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         None => return Err(crate::Error::AccountNotFound(input.metadata).into()),
     };
 
-    let mut escrow_data: &[u8] = &escrow.data;
+    let mut escrow_data: &[u8] = &escrow.data.decode().expect("we used base64 config");
     let escrow_data = StreamContract::deserialize(&mut escrow_data).map_err(|_| {
         tracing::error!(
             "Invalid data for: {:?}",
@@ -123,16 +120,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         crate::Error::InvalidAccountData(input.metadata)
     })?;
 
-    info!("Escrow account: {:?}", escrow_data);
+    tracing::debug!("Escrow account: {:?}", escrow_data);
 
     let recipient_tokens = get_associated_token_address(&escrow_data.recipient, &escrow_data.mint);
 
     let streamflow_treasury_tokens =
-        get_associated_token_address(&Pubkey::from_str(STRM_TREASURY).unwrap(), &escrow_data.mint);
+        get_associated_token_address(&STRM_TREASURY, &escrow_data.mint);
 
     let partner = match &input.partner {
         Some(partner) => *partner,
-        None => Pubkey::from_str(STRM_TREASURY).unwrap(),
+        None => STRM_TREASURY,
     };
 
     let partner_tokens = get_associated_token_address(&partner, &escrow_data.mint);

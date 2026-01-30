@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::prelude::*;
 use crate::utils::anchor_sighash;
 use solana_program::instruction::AccountMeta;
@@ -67,13 +65,13 @@ fn create_create_stream_instruction(
         AccountMeta::new(*metadata, true),
         AccountMeta::new(*escrow_tokens, false),
         AccountMeta::new(*recipient_tokens, false),
-        AccountMeta::new(Pubkey::from_str(STRM_TREASURY).unwrap(), false),
+        AccountMeta::new(STRM_TREASURY, false),
         AccountMeta::new(*streamflow_treasury_tokens, false),
-        AccountMeta::new(Pubkey::from_str(WITHDRAWOR_ADDRESS).unwrap(), false),
+        AccountMeta::new(WITHDRAWOR_ADDRESS, false),
         AccountMeta::new(*partner, false),
         AccountMeta::new(*partner_tokens, false),
         AccountMeta::new_readonly(*mint, false),
-        AccountMeta::new_readonly(Pubkey::from_str(FEE_ORACLE_ADDRESS).unwrap(), false),
+        AccountMeta::new_readonly(FEE_ORACLE_ADDRESS, false),
         AccountMeta::new_readonly(sysvar::rent::ID, false),
         AccountMeta::new_readonly(*timelock_program, false),
         AccountMeta::new_readonly(spl_token_interface::ID, false),
@@ -107,14 +105,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let recipient_tokens = get_associated_token_address(&input.recipient, &input.mint_account);
 
-    let streamflow_treasury_tokens = get_associated_token_address(
-        &Pubkey::from_str(STRM_TREASURY).unwrap(),
-        &input.mint_account,
-    );
+    let streamflow_treasury_tokens =
+        get_associated_token_address(&STRM_TREASURY, &input.mint_account);
 
     let partner = match &input.partner {
         Some(partner) => *partner,
-        None => Pubkey::from_str(STRM_TREASURY).unwrap(),
+        None => STRM_TREASURY,
     };
 
     let partner_tokens = get_associated_token_address(&partner, &input.mint_account);

@@ -45,7 +45,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     info!("record_account: {:?}", record_account);
     let data = RecordInstruction::Write {
         offset: input.offset,
-        data: &input.data.as_bytes(),
+        data: input.data.as_bytes(),
     };
     info!("data: {:?}", data.pack().len());
 

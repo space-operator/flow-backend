@@ -46,10 +46,14 @@ pub struct Malformed<T: std::fmt::Debug>(pub T);
 
 impl<T: std::fmt::Debug, E: std::fmt::Debug> ResultBool<T, E> {
     pub fn into_result(self) -> Result<Result<T, E>, Malformed<Self>> {
-        if self.bSuccess && self.success.is_some() {
-            Ok(Ok(self.success.unwrap()))
-        } else if !self.bSuccess && self.error.is_some() {
-            Ok(Err(self.error.unwrap()))
+        if self.bSuccess
+            && let Some(success) = self.success
+        {
+            Ok(Ok(success))
+        } else if !self.bSuccess
+            && let Some(error) = self.error
+        {
+            Ok(Err(error))
         } else {
             Err(Malformed(self))
         }

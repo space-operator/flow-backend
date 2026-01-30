@@ -48,7 +48,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .data
         .len();
 
-    let new_data_length = input.data.as_bytes().len() as u64;
+    let new_data_length = input.data.len() as u64;
 
     info!("current_account_length: {}", current_account_length);
     info!("new_data_length: {}", new_data_length);
