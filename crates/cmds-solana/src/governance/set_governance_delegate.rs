@@ -82,7 +82,7 @@ pub fn set_governance_delegate(
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
+    let program_id = SPL_GOVERNANCE_ID;
 
     let (ix, vote_record_address) = set_governance_delegate(
         &program_id,

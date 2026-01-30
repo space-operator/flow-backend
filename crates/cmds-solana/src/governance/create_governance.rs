@@ -89,7 +89,7 @@ pub fn create_governance(
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
+    let program_id = SPL_GOVERNANCE_ID;
 
     let (ix, governance_address) = create_governance(
         &program_id,

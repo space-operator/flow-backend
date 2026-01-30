@@ -82,7 +82,7 @@ pub fn create_token_owner_record(
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
+    let program_id = SPL_GOVERNANCE_ID;
 
     let (ix, token_owner_record_address) = create_token_owner_record(
         &program_id,

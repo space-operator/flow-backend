@@ -20,13 +20,15 @@ pub const fn streamflow_program_id(net: SolanaNet) -> Pubkey {
     }
 }
 
-// TODO: declare static Pubkeys instead of strings
 /// Streamflow Treasury address, by default receives 0.25% of tokens deposited
-pub const STRM_TREASURY: &str = "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw";
+pub const STRM_TREASURY: Pubkey =
+    Pubkey::from_str_const("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");
 /// Streamflow Withdrawor address, this account will process withdrawals
-pub const WITHDRAWOR_ADDRESS: &str = "wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u";
+pub const WITHDRAWOR_ADDRESS: Pubkey =
+    Pubkey::from_str_const("wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u");
 /// Address of Fee Oracle that stores information about fees for speficic partners
-pub const FEE_ORACLE_ADDRESS: &str = "B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT";
+pub const FEE_ORACLE_ADDRESS: Pubkey =
+    Pubkey::from_str_const("B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT");
 
 /// Prefix used to derive Escrow account address
 pub const ESCROW_SEED_PREFIX: &[u8] = b"strm";

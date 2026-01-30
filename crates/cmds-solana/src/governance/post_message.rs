@@ -107,8 +107,8 @@ pub fn post_message(
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
-    let chat_program_id = Pubkey::from_str(SPL_GOVERNANCE_CHAT_ID).unwrap();
+    let program_id = SPL_GOVERNANCE_ID;
+    let chat_program_id = SPL_GOVERNANCE_CHAT_ID;
 
     let ix = post_message(
         &chat_program_id,
