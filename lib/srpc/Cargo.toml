@@ -1,5 +1,5 @@
 [package]
-name = "srpc"
+name = "spo-srpc"
 version = "0.1.0"
 edition = "2024"
 description = "RPC for tower service"
