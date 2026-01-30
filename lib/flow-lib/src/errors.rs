@@ -672,7 +672,7 @@ fn clone_client_error_kind(kind: &ClientErrorKind) -> Box<ClientErrorKind> {
 
 fn ser_client_error(error: &ClientError) -> AsClientErrorImpl {
     AsClientErrorImpl {
-        request: error.request.clone(),
+        request: error.request,
         kind: clone_client_error_kind(&error.kind),
     }
 }

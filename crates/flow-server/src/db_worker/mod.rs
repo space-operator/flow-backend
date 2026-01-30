@@ -125,7 +125,7 @@ impl DBWorker {
         let helius = config
             .helius_api_key
             .as_ref()
-            .map(|key| Arc::new(Helius::new(crate::HTTP.clone(), &key)));
+            .map(|key| Arc::new(Helius::new(crate::HTTP.clone(), key)));
 
         Self {
             db,

@@ -375,10 +375,10 @@ pub enum BuildGraphError {
 
 fn remove_wallet_token(v: &mut value::Map, keypair_outputs: &[String]) {
     for o in keypair_outputs {
-        if let Some(v) = v.get_mut(o) {
-            if let Value::Map(v) = v {
-                v.swap_remove("token");
-            }
+        if let Some(v) = v.get_mut(o)
+            && let Value::Map(v) = v
+        {
+            v.swap_remove("token");
         }
     }
 }

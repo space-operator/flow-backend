@@ -199,7 +199,8 @@ pub fn output_is_optional<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Opti
 pub fn keypair_outputs<T: CommandTrait + ?Sized>(cmd: &T) -> Vec<String> {
     cmd.outputs()
         .iter()
-        .filter_map(|o| (o.r#type == ValueType::Keypair).then(|| o.name.clone()))
+        .filter(|&o| (o.r#type == ValueType::Keypair))
+        .map(|o| o.name.clone())
         .chain(cmd.inputs().iter().find_map(|i| {
             i.type_bounds
                 .contains(&ValueType::Keypair)

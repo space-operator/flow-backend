@@ -64,7 +64,7 @@ impl WalletPermit {
             nonce: *nonce.as_array().unwrap(),
             ciphertext,
         };
-        BASE64_STANDARD_NO_PAD.encode(&borsh::to_vec(&permit).unwrap())
+        BASE64_STANDARD_NO_PAD.encode(borsh::to_vec(&permit).unwrap())
     }
 
     pub(crate) fn decrypt(&self, base64_permit: &str) -> Result<WalletId, CommandError> {
