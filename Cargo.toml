@@ -52,6 +52,7 @@ spo-helius = { path = "./lib/spo-helius", version = "0.1.0" }
 futures-metrics = { path = "./lib/futures-metrics", version = "0.1.0" }
 command-rpc = { path = "lib/command-rpc", version = "0.1.0" }
 srpc = { path = "lib/srpc", version = "0.1.0" }
+flow-tracing = { path = "lib/flow-tracing", version = "0.1.0" }
 
 # Solana crates
 solana-rpc-client = "3"
