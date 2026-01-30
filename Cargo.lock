@@ -1926,7 +1926,7 @@ dependencies = [
  "home",
  "serde",
  "serde_json",
- "srpc",
+ "spo-srpc",
  "tempfile",
  "tokio",
  "tracing",
@@ -2147,7 +2147,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "simd-json",
- "srpc",
+ "spo-srpc",
  "thiserror 1.0.69",
  "tokio",
  "tokio-tungstenite 0.24.0",
@@ -3512,7 +3512,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "solana-system-interface",
- "srpc",
+ "spo-srpc",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
@@ -11029,16 +11029,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sqlparser"
-version = "0.53.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05a528114c392209b3264855ad491fcce534b94a38771b0a0b97a79379275ce8"
-dependencies = [
- "log",
-]
-
-[[package]]
-name = "srpc"
+name = "spo-srpc"
 version = "0.1.0"
 dependencies = [
  "actix",
@@ -11058,6 +11049,15 @@ dependencies = [
  "tracing",
  "tungstenite 0.24.0",
  "url",
+]
+
+[[package]]
+name = "sqlparser"
+version = "0.53.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05a528114c392209b3264855ad491fcce534b94a38771b0a0b97a79379275ce8"
+dependencies = [
+ "log",
 ]
 
 [[package]]
