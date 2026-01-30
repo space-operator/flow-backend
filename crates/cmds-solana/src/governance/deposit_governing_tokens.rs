@@ -100,10 +100,11 @@ pub fn deposit_governing_tokens(
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let program_id = SPL_GOVERNANCE_ID;
 
-    let governing_token_source = spl_associated_token_account_interface::address::get_associated_token_address(
-        &input.governing_token_owner.pubkey(),
-        &input.governing_token_mint,
-    );
+    let governing_token_source =
+        spl_associated_token_account_interface::address::get_associated_token_address(
+            &input.governing_token_owner.pubkey(),
+            &input.governing_token_mint,
+        );
     info!("governing_token_source: {governing_token_source}");
 
     let (ix, realm_config_address, governing_token_holding_address, token_owner_record_address) =

@@ -54,6 +54,7 @@ where
 }
 
 pub mod prelude {
+    pub use crate::TryToVec;
     pub use crate::utils::{execute, submit_transaction, try_sign_wallet};
     pub use anchor_libs::{candy_guard, candy_machine_core, spl_account_compression};
     pub use async_trait::async_trait;
@@ -67,7 +68,6 @@ pub mod prelude {
     pub use solana_signer::Signer;
     pub use std::sync::Arc;
     pub use value::HashMap;
-    pub use crate::TryToVec;
 }
 
 // make a nodes out of this
