@@ -2,6 +2,7 @@
 name = "srpc"
 version = "0.1.0"
 edition = "2024"
+description = "RPC for tower service"
 license = "AGPL-3.0-only"
 repository = "https://github.com/space-operator/flow-backend"
 
