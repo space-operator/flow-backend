@@ -2115,7 +2115,7 @@ dependencies = [
 
 [[package]]
 name = "command-rpc"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "actix",
  "ahash 0.8.12",
@@ -3528,7 +3528,7 @@ dependencies = [
 
 [[package]]
 name = "flow-lib"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "actix",
  "anyhow",
@@ -11039,7 +11039,7 @@ dependencies = [
 
 [[package]]
 name = "srpc"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "actix",
  "actix-web",
