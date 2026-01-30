@@ -11,7 +11,8 @@ repository = "https://github.com/space-operator/flow-backend"
 [dependencies]
 actix = "0.13.5"
 actix-web = { version = "4.9.0", default-features = false }
-actix-web-actors = ">= 4.0.0, <= 4.3.0"
+actix-web-actors = "4.3.0"
+actix-http = { version = "3.11.2", features = ["ws"] }
 futures-channel = "0.3.30"
 futures-util = "0.3.30"
 hashbrown = "0.14"
