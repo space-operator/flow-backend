@@ -978,23 +978,25 @@ impl FlowGraph {
                     .expect("bug in start_node")
                     .extend(values);
 
-                if ins.is_none() {
-                    o.resp.send(Ok(execute::Response { signature: None })).ok();
-                } else if info.instruction_info.is_some() {
-                    info.waiting = Some(Waiting {
-                        instructions: ins.expect("ins.is_none() == false"),
-                        resp: o.resp,
-                    });
+                if let Some(ins) = ins {
+                    if info.instruction_info.is_some() {
+                        info.waiting = Some(Waiting {
+                            instructions: ins,
+                            resp: o.resp,
+                        });
+                    } else {
+                        let error = "this node should not have instructions, did you forget to define instruction_info?";
+                        o.resp.send(Err(execute::Error::msg(error))).ok();
+                        node_error(
+                            &s.event_tx,
+                            &mut s.result,
+                            info.id,
+                            info.times,
+                            error.to_owned(),
+                        );
+                    }
                 } else {
-                    let error = "this node should not have instructions, did you forget to define instruction_info?";
-                    o.resp.send(Err(execute::Error::msg(error))).ok();
-                    node_error(
-                        &s.event_tx,
-                        &mut s.result,
-                        info.id,
-                        info.times,
-                        error.to_owned(),
-                    );
+                    o.resp.send(Ok(execute::Response { signature: None })).ok();
                 }
             }
             Err(error) => {

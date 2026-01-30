@@ -199,7 +199,7 @@ pub fn output_is_optional<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Opti
 pub fn keypair_outputs<T: CommandTrait + ?Sized>(cmd: &T) -> Vec<String> {
     cmd.outputs()
         .iter()
-        .filter(|&o| (o.r#type == ValueType::Keypair))
+        .filter(|&o| o.r#type == ValueType::Keypair)
         .map(|o| o.name.clone())
         .chain(cmd.inputs().iter().find_map(|i| {
             i.type_bounds
@@ -332,6 +332,9 @@ impl MatchCommand {
     }
 }
 
+pub type FnNew =
+    Either<fn(&NodeData) -> FnNewResult, fn(&NodeData) -> LocalBoxFuture<'static, FnNewResult>>;
+
 pub type FnNewResult = Result<Box<dyn CommandTrait>, CommandError>;
 
 /// Use [`inventory::submit`] to register commands at compile-time.
@@ -339,8 +342,7 @@ pub type FnNewResult = Result<Box<dyn CommandTrait>, CommandError>;
 pub struct CommandDescription {
     pub matcher: MatchCommand,
     /// Function to initialize the command from a [`NodeData`].
-    pub fn_new:
-        Either<fn(&NodeData) -> FnNewResult, fn(&NodeData) -> LocalBoxFuture<'static, FnNewResult>>,
+    pub fn_new: FnNew,
 }
 
 impl CommandDescription {

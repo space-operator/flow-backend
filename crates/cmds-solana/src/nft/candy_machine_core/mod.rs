@@ -552,8 +552,8 @@ pub struct Gatekeeper {
 /// List of accounts required:
 ///
 ///   0. `[writable]` Mint counter PDA. The PDA is derived
-///                   using the seed `["mint_limit", mint guard id, payer key,
-///                   candy guard pubkey, candy machine pubkey]`.
+///      using the seed `["mint_limit", mint guard id, payer key,
+///      candy guard pubkey, candy machine pubkey]`.
 #[derive(Serialize, Deserialize, Clone, Debug, Convert)]
 #[convert(from_on = "mpl_core_candy_guard::types::MintLimit")]
 pub struct MintLimit {

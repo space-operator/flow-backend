@@ -11,7 +11,7 @@
 use crate::{
     ContextConfig, FlowRunId, HttpClientConfig, NodeId, SolanaClientConfig, UserId, ValueSet,
     config::{Endpoints, client::FlowRunOrigin},
-    flow_run_events::{self, Event, NodeLogContent, NodeLogSender},
+    flow_run_events::{self, NodeLogContent, NodeLogSender},
     solana::Instructions,
     utils::{Extensions, tower_client::unimplemented_svc},
 };
@@ -582,7 +582,7 @@ impl CommandContext {
         }
     }
 
-    pub fn log(&self, log: NodeLogContent) -> Result<(), mpsc::TrySendError<Event>> {
+    pub fn log(&self, log: NodeLogContent) -> Result<(), mpsc::SendError> {
         self.node_log.send(log)
     }
 
