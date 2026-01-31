@@ -1568,6 +1568,7 @@ impl FlowGraph {
         if let Some(ins) = s.result.instructions.clone() {
             let fee_payer = ins.fee_payer;
             if !s.result.output.contains_key("transaction") {
+                tracing::info!("{:#?}", ins);
                 match ins
                     .build_for_solana_action(
                         fee_payer,

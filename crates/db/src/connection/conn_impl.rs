@@ -587,6 +587,7 @@ impl UserConnection {
         nodes.drop_in_place("category").ok();
         nodes.drop_in_place("icon_url").ok();
         nodes.drop_in_place("vendor").ok();
+        nodes.drop_in_place("author_handle").ok();
 
         let mut identities = copy_out(
             &tx,
@@ -634,6 +635,12 @@ impl UserConnection {
         .await?;
         flows.drop_in_place("current_branch_id").ok();
         flows.drop_in_place("backend_endpoint").ok();
+        flows.drop_in_place("slug").ok();
+        flows.drop_in_place("visibility_overrides").ok();
+        flows.drop_in_place("visibility_profile_id").ok();
+        flows.drop_in_place("canvas_state").ok();
+        flows.drop_in_place("variables").ok();
+        flows.drop_in_place("rpc_id").ok();
         csv_export::clear_column(&mut flows, "lastest_flow_run_id")?;
 
         let user_quotas = copy_out(
