@@ -113,7 +113,7 @@ impl CommandTrait for WalletCmd {
         .to_vec()
     }
 
-    async fn run(&self, ctx: CommandContext, _: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(&self, _: CommandContext, _: ValueSet) -> Result<ValueSet, CommandError> {
         match &self.form {
             Ok(form) => {
                 /*
