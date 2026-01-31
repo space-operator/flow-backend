@@ -5,6 +5,7 @@ use crate::{
     flow_registry::{StartFlowOptions, start_flow},
 };
 use bytes::Bytes;
+use flow_lib::solana::Instructions;
 use tower::{Service, ServiceExt};
 
 pub const INTERFLOW_INSTRUCTIONS: &str = "interflow_instructions";
@@ -103,33 +104,36 @@ impl CommandTrait for Interflow {
             return Err(build_error(&result));
         }
         let ins = result.instructions.unwrap();
-        let signers = ins
-            .signers
-            .into_iter()
-            .map(|w| value::to_value(&w))
-            .collect::<Result<Vec<_>, _>>()?;
-        let instructions = ins
-            .instructions
-            .into_iter()
-            .map(|i| {
-                Value::Map(value::map! {
-                    "program_id" => i.program_id,
-                    "accounts" => i.accounts.into_iter().map(|a| Value::Map(value::map! {
-                        "pubkey" => a.pubkey,
-                        "is_signer" => a.is_signer,
-                        "is_writable" => a.is_writable,
-                    })).collect::<Vec<_>>(),
-                    "data" => Bytes::from(i.data),
-                })
-            })
-            .collect::<Vec<_>>();
-        let output = value::map! {
-            "fee_payer" => ins.fee_payer,
-            "signers" => signers,
-            "instructions" => instructions,
-        };
-        Ok(output)
+        Ok(instruction_to_output(ins)?)
     }
+}
+
+pub(crate) fn instruction_to_output(ins: Instructions) -> Result<value::Map, value::Error> {
+    let signers = ins
+        .signers
+        .into_iter()
+        .map(|w| value::to_value(&w))
+        .collect::<Result<Vec<_>, _>>()?;
+    let instructions = ins
+        .instructions
+        .into_iter()
+        .map(|i| {
+            Value::Map(value::map! {
+                "program_id" => i.program_id,
+                "accounts" => i.accounts.into_iter().map(|a| Value::Map(value::map! {
+                    "pubkey" => a.pubkey,
+                    "is_signer" => a.is_signer,
+                    "is_writable" => a.is_writable,
+                })).collect::<Vec<_>>(),
+                "data" => Bytes::from(i.data),
+            })
+        })
+        .collect::<Vec<_>>();
+    Ok(value::map! {
+        "fee_payer" => ins.fee_payer,
+        "signers" => signers,
+        "instructions" => instructions,
+    })
 }
 
 flow_lib::submit!(CommandDescription::new(
