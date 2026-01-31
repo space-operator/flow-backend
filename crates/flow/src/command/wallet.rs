@@ -116,15 +116,17 @@ impl CommandTrait for WalletCmd {
     async fn run(&self, ctx: CommandContext, _: ValueSet) -> Result<ValueSet, CommandError> {
         match &self.form {
             Ok(form) => {
+                /*
                 let permit = ctx
                     .get::<WalletPermit>()
                     .ok_or_else(|| CommandError::msg("WalletPermit not found"))?;
                 let token = permit.encrypt(form.wallet_id);
+                */
                 let output = Output {
                     pubkey: form.public_key,
                     keypair: Wallet::Adapter {
                         public_key: form.public_key,
-                        token: Some(token),
+                        token: None,
                     },
                 };
 

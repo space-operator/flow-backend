@@ -1585,9 +1585,8 @@ impl FlowGraph {
                     Ok(tx) => {
                         let tx_bytes = tx.0.serialize();
                         let tx_base64 = BASE64_STANDARD.encode(&tx_bytes);
-                        s.result
-                            .output
-                            .insert("transaction".into(), Value::String(tx_base64));
+                        let output = &mut s.result.output;
+                        output.insert("transaction".into(), tx_base64.into());
                     }
                     Err(error) => {
                         s.flow_error(error.to_string());
