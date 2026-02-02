@@ -51,7 +51,7 @@ space-macro = { path = "lib/space-macro", version = "0.2.1" }
 spo-helius = { path = "./lib/spo-helius", version = "0.1.0" }
 futures-metrics = { path = "./lib/futures-metrics", version = "0.1.0" }
 command-rpc = { path = "lib/command-rpc", package = "flow-rpc", version = "0.1.0" }
-srpc = { path = "lib/srpc", package = "tower-rpc", version = "0.1.0" }
+srpc = { path = "lib/srpc", package = "tower-rpc", version = "0.1.1" }
 flow-tracing = { path = "lib/flow-tracing", version = "0.1.0" }
 
 # Solana crates
