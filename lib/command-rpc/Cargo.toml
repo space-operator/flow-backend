@@ -11,7 +11,7 @@ capnpc = "0.21.4"
 
 [dependencies]
 flow-lib.workspace = true
-srpc.workspace = true
+tower-rpc.workspace = true
 flow-tracing.workspace = true
 
 actix = "0.13.3"

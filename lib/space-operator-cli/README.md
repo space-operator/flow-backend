@@ -109,7 +109,7 @@ available packages:
     space-lib
     cmds-deno
     command-rpc
-    srpc
+    tower-rpc
     cmds-pdg
     pdg-common
     cmds-solana

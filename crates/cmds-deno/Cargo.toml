@@ -23,7 +23,7 @@ tracing = "0.1"
 uuid = { version = "1", features = ["v4", "serde"] }
 
 [dev-dependencies]
-srpc.workspace = true
+tower-rpc.workspace = true
 value.workspace = true
 
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

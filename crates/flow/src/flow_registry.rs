@@ -95,7 +95,7 @@ pub struct FlowRegistry {
     pub(crate) rhai_permit: Arc<Semaphore>,
     rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,
 
-    pub(crate) rpc_server: Option<actix::Addr<srpc::Server>>,
+    pub(crate) rpc_server: Option<actix::Addr<tower_rpc::Server>>,
     pub(crate) remotes: Option<AddressBook>,
 
     #[builder(default)]
@@ -321,8 +321,8 @@ impl FlowRegistry {
             backend,
             rhai_permit: Arc::new(Semaphore::new(1)),
             rhai_tx: <_>::default(),
-            rpc_server: srpc::Server::start_http_server()
-                .inspect_err(|error| tracing::error!("srpc error: {}", error))
+            rpc_server: tower_rpc::Server::start_http_server()
+                .inspect_err(|error| tracing::error!("tower_rpc error: {}", error))
                 .ok(),
             remotes,
             http: http.unwrap_or_default(),

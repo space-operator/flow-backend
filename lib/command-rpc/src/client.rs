@@ -7,7 +7,7 @@ use flow_lib::{
 };
 use schemars::JsonSchema;
 use serde_with::{DisplayFromStr, serde_as};
-use srpc::GetBaseUrl;
+use tower_rpc::GetBaseUrl;
 use std::convert::Infallible;
 use tower::util::ServiceExt;
 use tracing::Instrument;
@@ -55,13 +55,13 @@ struct ServiceProxy {
     id: String,
     base_url: Url,
     #[serde(skip)]
-    drop: Option<actix::Addr<srpc::Server>>,
+    drop: Option<actix::Addr<tower_rpc::Server>>,
 }
 
 impl Drop for ServiceProxy {
     fn drop(&mut self) {
         if let Some(addr) = &self.drop {
-            addr.do_send(srpc::RemoveService {
+            addr.do_send(tower_rpc::RemoveService {
                 name: self.name.clone(),
                 id: self.id.clone(),
             });
@@ -71,9 +71,9 @@ impl Drop for ServiceProxy {
 
 impl ServiceProxy {
     fn new(
-        result: srpc::RegisterServiceResult,
+        result: tower_rpc::RegisterServiceResult,
         base_url: Url,
-        server: &actix::Addr<srpc::Server>,
+        server: &actix::Addr<tower_rpc::Server>,
     ) -> Self {
         Self {
             name: result.name,
@@ -95,18 +95,18 @@ struct ContextProxy {
 impl ContextProxy {
     async fn new(ctx: CommandContext) -> Result<Self, CommandError> {
         let server = ctx
-            .get::<actix::Addr<srpc::Server>>()
-            .ok_or_else(|| CommandError::msg("srpc::Server not available"))?;
+            .get::<actix::Addr<tower_rpc::Server>>()
+            .ok_or_else(|| CommandError::msg("tower_rpc::Server not available"))?;
         let our_base_url = server
             .send(GetBaseUrl)
             .await?
-            .ok_or_else(|| CommandError::msg("srpc::Server is not listening on any interfaces"))?;
+            .ok_or_else(|| CommandError::msg("tower_rpc::Server is not listening on any interfaces"))?;
         let flow_run_id = *ctx.flow_run_id();
 
         let signer = ctx.raw().services.signer.clone();
 
         let signer = server
-            .send(srpc::RegisterJsonService::new(
+            .send(tower_rpc::RegisterJsonService::new(
                 "signer".to_owned(),
                 flow_run_id.to_string(),
                 signer,
@@ -119,7 +119,7 @@ impl ContextProxy {
         let id = format!("{};{};{}", flow_run_id, ctx.node_id(), ctx.times());
         let execute = ctx.raw().services.execute.clone();
         let execute = server
-            .send(srpc::RegisterJsonService::new(
+            .send(tower_rpc::RegisterJsonService::new(
                 "execute".to_owned(),
                 id.clone(),
                 execute.map_future({
@@ -129,7 +129,7 @@ impl ContextProxy {
             ))
             .await?;
         let log = server
-            .send(srpc::RegisterJsonService::new(
+            .send(tower_rpc::RegisterJsonService::new(
                 "log".to_owned(),
                 id,
                 LogSvc { span },
@@ -192,7 +192,7 @@ impl CommandTrait for RpcCommandClient {
         let ctx_proxy = ContextProxy::new(ctx).await?;
         let resp = http
             .post(url)
-            .json(&srpc::Request {
+            .json(&tower_rpc::Request {
                 // HTTP protocol doesn't need an envelope
                 envelope: "".to_owned(),
                 svc_name: RUN_SVC.into(),
@@ -204,7 +204,7 @@ impl CommandTrait for RpcCommandClient {
             })
             .send()
             .await?
-            .json::<srpc::Response<RunOutput>>()
+            .json::<tower_rpc::Response<RunOutput>>()
             .await?
             .data
             .0
