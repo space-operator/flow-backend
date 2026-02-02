@@ -4,10 +4,8 @@
 
 use actix::{Actor, ActorFutureExt, AsyncContext, Context, ResponseFuture, WrapFuture};
 use actix_web::{
-    App, HttpRequest, HttpResponse, HttpServer, dev::ServerHandle, error::InternalError,
-    http::StatusCode, web,
+    App, HttpServer, dev::ServerHandle, web,
 };
-use actix_web_actors::ws::{self, WebsocketContext};
 use futures_channel::oneshot;
 use futures_util::TryFutureExt;
 use hashbrown::HashMap;
@@ -16,7 +14,6 @@ use serde_json::Value as JsonValue;
 use smallvec::SmallVec;
 use std::{
     collections::VecDeque,
-    fmt::Display,
     marker::PhantomData,
     net::{SocketAddr, ToSocketAddrs},
 };
@@ -414,55 +411,6 @@ impl actix::Handler<RemoveService> for Server {
         )
     }
 }
-struct WsActor {
-    server: actix::Addr<Server>,
-}
-
-impl actix::Actor for WsActor {
-    type Context = WebsocketContext<Self>;
-}
-
-impl Response {
-    fn error<E: Display>(envelope: String) -> impl FnOnce(E) -> Self {
-        |error: E| Self {
-            envelope,
-            success: false,
-            data: JsonValue::String(error.to_string()),
-        }
-    }
-    fn to_json(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|error| {
-            serde_json::to_string(&Self::error(self.envelope.clone())(error)).unwrap()
-        })
-    }
-}
-
-impl actix::StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
-    fn handle(&mut self, item: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
-        match item {
-            Ok(ws::Message::Text(text)) => match serde_json::from_str::<Request>(&text) {
-                Ok(req) => {
-                    let envelope = req.envelope.clone();
-                    let resp = self.server.send(req).into_actor(&*self);
-                    let resp = resp.map(move |result, _, ctx| {
-                        let response = match result {
-                            Ok(Ok(resp)) => resp,
-                            Err(error) => Response::error(envelope.clone())(error),
-                            Ok(Err(error)) => Response::error(envelope.clone())(error),
-                        };
-                        ctx.text(response.to_json());
-                    });
-                    ctx.spawn(resp);
-                }
-                Err(error) => ctx.text(Response::error(String::new())(error).to_json()),
-            },
-            Ok(ws::Message::Ping(msg)) => {
-                ctx.pong(&msg);
-            }
-            _ => {}
-        }
-    }
-}
 
 async fn call(
     body: web::Json<Request>,
@@ -501,21 +449,9 @@ async fn call(
     })
 }
 
-async fn handle_ws(
-    req: HttpRequest,
-    stream: web::Payload,
-    addr: web::Data<actix::WeakAddr<Server>>,
-) -> Result<HttpResponse, actix_web::Error> {
-    let server = addr
-        .upgrade()
-        .ok_or_else(|| InternalError::new("server stopped", StatusCode::INTERNAL_SERVER_ERROR))?;
-    actix_web_actors::ws::start(WsActor { server }, &req, stream)
-}
-
 pub fn configure_server(s: &mut web::ServiceConfig, addr: actix::WeakAddr<Server>) {
     s.app_data(web::Data::new(addr))
-        .route("/call", web::post().to(call))
-        .route("/ws", web::get().to(handle_ws));
+        .route("/call", web::post().to(call));
 }
 
 #[cfg(test)]

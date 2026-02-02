@@ -5,7 +5,6 @@ exclude = [
     "vendor/mpl-bubblegum",
     "vendor/mpl-core",
     "vendor/mpl-token-metadata",
-    "vendor/actix-web-actors",
 ]
 resolver = "3"
 

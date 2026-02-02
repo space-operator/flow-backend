@@ -11034,7 +11034,6 @@ version = "0.1.0"
 dependencies = [
  "actix",
  "actix-web",
- "actix-web-actors",
  "criterion 0.5.1",
  "futures-channel",
  "futures-util",
