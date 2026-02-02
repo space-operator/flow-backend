@@ -108,7 +108,7 @@ available packages:
     flow-value
     space-lib
     cmds-deno
-    command-rpc
+    flow-rpc
     tower-rpc
     cmds-pdg
     pdg-common

@@ -4,7 +4,7 @@ use crate::{
 };
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
-use command_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
+use flow_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
     command::{

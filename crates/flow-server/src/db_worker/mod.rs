@@ -3,7 +3,7 @@ use actix::{
     Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context, ResponseActFuture,
     ResponseFuture, WrapFuture, fut::wrap_future,
 };
-use command_rpc::flow_side::address_book::BaseAddressBook;
+use flow_rpc::flow_side::address_book::BaseAddressBook;
 use db::{FlowRunLogsRow, pool::DbPool};
 use flow_lib::{
     FlowRunId, UserId,

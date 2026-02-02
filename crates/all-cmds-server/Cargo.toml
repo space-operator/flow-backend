@@ -7,4 +7,4 @@ edition = "2024"
 cmds-std.workspace = true
 cmds-pdg.workspace = true
 cmds-solana.workspace = true
-command-rpc.workspace = true
+flow-rpc.workspace = true

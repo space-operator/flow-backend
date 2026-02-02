@@ -8,7 +8,7 @@ default = []
 local-deps = []
 
 [dependencies]
-command-rpc.workspace = true
+flow-rpc.workspace = true
 flow-lib.workspace = true
 
 serde_json = { version = "1", features = ["preserve_order"] }

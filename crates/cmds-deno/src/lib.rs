@@ -1,5 +1,5 @@
 use anyhow::Context as _;
-use command_rpc::client::RpcCommandClient;
+use flow_rpc::client::RpcCommandClient;
 use flow_lib::{
     command::{
         CommandDescription, CommandError, CommandTrait, MatchCommand, default_node_data,
