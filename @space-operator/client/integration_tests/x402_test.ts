@@ -1,6 +1,6 @@
 import { bs58, Value, web3 } from "../src/deps.ts";
-import * as client from "../src/mod.ts";
 import * as dotenv from "@std/dotenv";
+import * as client from "../src/mod.ts";
 import { createClient } from "@supabase/supabase-js";
 import { assertEquals } from "@std/assert";
 import { createKeyPairSignerFromBytes } from "@solana/kit";

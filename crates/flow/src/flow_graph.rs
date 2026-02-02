@@ -1,4 +1,7 @@
-use crate::{command::flow_output::FLOW_OUTPUT, flow_registry::FlowRegistry};
+use crate::{
+    command::{flow_output::FLOW_OUTPUT, interflow_instructions::instruction_to_output},
+    flow_registry::FlowRegistry,
+};
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
 use command_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
@@ -1570,6 +1573,9 @@ impl FlowGraph {
         if let Some(ins) = s.result.instructions.clone() {
             let fee_payer = ins.fee_payer;
             if !s.result.output.contains_key("transaction") {
+                let interflow_output = instruction_to_output(ins.clone())
+                    .inspect_err(|error| tracing::error!("{}", error))
+                    .unwrap_or_default();
                 match ins
                     .build_for_solana_action(
                         fee_payer,
@@ -1586,9 +1592,9 @@ impl FlowGraph {
                     Ok(tx) => {
                         let tx_bytes = tx.0.serialize();
                         let tx_base64 = BASE64_STANDARD.encode(&tx_bytes);
-                        s.result
-                            .output
-                            .insert("transaction".into(), Value::String(tx_base64));
+                        let output = &mut s.result.output;
+                        output.insert("transaction".into(), tx_base64.into());
+                        output.extend(interflow_output);
                     }
                     Err(error) => {
                         s.flow_error(error.to_string());

@@ -73,6 +73,14 @@
       "passthrough": false
     },
     {
+      "name": "memo_signers",
+      "type_bounds": ["array"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "",
+      "passthrough": false
+    },
+    {
       "name": "submit",
       "type_bounds": ["bool"],
       "required": false,
