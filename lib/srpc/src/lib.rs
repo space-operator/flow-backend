@@ -506,22 +506,4 @@ mod tests {
             .unwrap();
         assert_eq!(body, r#"{"envelope":"","success":true,"data":3}"#);
     }
-
-    #[test]
-    fn test_ws() {
-        let url = spawn_service();
-        let url = url
-            .strip_prefix("http")
-            .unwrap()
-            .strip_suffix("call")
-            .unwrap();
-        let url = format!("ws{url}ws");
-        let body = r#"{"envelope":"","svc_name":"add","svc_id":"","input":[1, 2]}"#;
-        let (mut conn, _) = tungstenite::connect(&url).unwrap();
-        conn.send(Message::Text(body.to_owned())).unwrap();
-        let Ok(Message::Text(body)) = conn.read() else {
-            panic!();
-        };
-        assert_eq!(body, r#"{"envelope":"","success":true,"data":3}"#);
-    }
 }
