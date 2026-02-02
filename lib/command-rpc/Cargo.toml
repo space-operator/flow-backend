@@ -1,14 +1,10 @@
 [package]
 name = "flow-rpc"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "RPC interfaces for Space Operator"
 license = "AGPL-3.0-only"
 repository = "https://github.com/space-operator/flow-backend"
-
-[[bench]]
-name = "serialize"
-harness = false
 
 [build-dependencies]
 capnpc = "0.21.4"
@@ -52,8 +48,6 @@ bytes = "1.10.1"
 jsonc-parser = { version = "0.26.3", features = ["preserve_order", "serde"] }
 
 [dev-dependencies]
-cmds-std.workspace = true
-
 criterion = "0.5.1"
 rust_decimal = "1.37.1"
 rust_decimal_macros = "1.37.1"
