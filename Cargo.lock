@@ -424,7 +424,7 @@ dependencies = [
  "cmds-pdg",
  "cmds-solana",
  "cmds-std",
- "command-rpc",
+ "flow-rpc",
 ]
 
 [[package]]
@@ -1920,15 +1920,15 @@ version = "0.0.0"
 dependencies = [
  "actix-web",
  "anyhow",
- "command-rpc",
  "flow-lib",
+ "flow-rpc",
  "flow-value",
  "home",
  "serde",
  "serde_json",
- "spo-srpc",
  "tempfile",
  "tokio",
+ "tower-rpc",
  "tracing",
  "tracing-subscriber",
  "url",
@@ -2111,52 +2111,6 @@ dependencies = [
  "crossterm",
  "unicode-segmentation",
  "unicode-width",
-]
-
-[[package]]
-name = "command-rpc"
-version = "0.1.0"
-dependencies = [
- "actix",
- "ahash 0.8.12",
- "anyhow",
- "async-trait",
- "bincode 2.0.1",
- "bytes",
- "capnp",
- "capnp-rpc",
- "capnpc",
- "cmds-std",
- "criterion 0.5.1",
- "features",
- "flow-lib",
- "flow-tracing",
- "futures",
- "inventory",
- "iroh",
- "iroh-quinn",
- "jsonc-parser 0.26.3",
- "pin-project-lite",
- "rand 0.8.5",
- "reqwest 0.12.28",
- "rust_decimal",
- "rust_decimal_macros",
- "schemars 1.2.0",
- "semver 1.0.27",
- "serde",
- "serde_json",
- "serde_with",
- "simd-json",
- "spo-srpc",
- "thiserror 1.0.69",
- "tokio",
- "tokio-tungstenite 0.24.0",
- "tokio-util 0.7.18",
- "tower",
- "tracing",
- "tracing-subscriber",
- "url",
- "uuid1",
 ]
 
 [[package]]
@@ -3489,12 +3443,12 @@ dependencies = [
  "chrono",
  "cmds-solana",
  "cmds-std",
- "command-rpc",
  "criterion 0.7.0",
  "crossbeam-channel",
  "derive_more 0.99.20",
  "flow-lib",
  "flow-lib-solana",
+ "flow-rpc",
  "flow-value",
  "futures",
  "getset",
@@ -3512,12 +3466,12 @@ dependencies = [
  "serde_json",
  "serde_with",
  "solana-system-interface",
- "spo-srpc",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
  "tokio-util 0.7.18",
  "tower",
+ "tower-rpc",
  "tracing",
  "tracing-subscriber",
  "url",
@@ -3623,6 +3577,52 @@ dependencies = [
 ]
 
 [[package]]
+name = "flow-rpc"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "ahash 0.8.12",
+ "anyhow",
+ "async-trait",
+ "bincode 2.0.1",
+ "bytes",
+ "capnp",
+ "capnp-rpc",
+ "capnpc",
+ "cmds-std",
+ "criterion 0.5.1",
+ "features",
+ "flow-lib",
+ "flow-tracing",
+ "futures",
+ "inventory",
+ "iroh",
+ "iroh-quinn",
+ "jsonc-parser 0.26.3",
+ "pin-project-lite",
+ "rand 0.8.5",
+ "reqwest 0.12.28",
+ "rust_decimal",
+ "rust_decimal_macros",
+ "schemars 1.2.0",
+ "semver 1.0.27",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "simd-json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-tungstenite 0.24.0",
+ "tokio-util 0.7.18",
+ "tower",
+ "tower-rpc",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid1",
+]
+
+[[package]]
 name = "flow-server"
 version = "0.0.0"
 dependencies = [
@@ -3645,7 +3645,6 @@ dependencies = [
  "cmds-pdg",
  "cmds-solana",
  "cmds-std",
- "command-rpc",
  "criterion 0.5.1",
  "db",
  "ed25519-dalek 2.2.0",
@@ -3653,6 +3652,7 @@ dependencies = [
  "flow",
  "flow-lib",
  "flow-lib-solana",
+ "flow-rpc",
  "flow-tracing",
  "flow-value",
  "futures-channel",
@@ -11029,28 +11029,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "spo-srpc"
-version = "0.1.0"
-dependencies = [
- "actix",
- "actix-web",
- "criterion 0.5.1",
- "futures-channel",
- "futures-util",
- "hashbrown 0.14.5",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "smallvec",
- "thiserror 1.0.69",
- "tokio",
- "tower",
- "tracing",
- "tungstenite 0.24.0",
- "url",
-]
-
-[[package]]
 name = "sqlparser"
 version = "0.53.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11864,6 +11842,28 @@ name = "tower-layer"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "121c2a6cda46980bb0fcd1647ffaf6cd3fc79a013de288782836f6df9c48780e"
+
+[[package]]
+name = "tower-rpc"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-web",
+ "criterion 0.5.1",
+ "futures-channel",
+ "futures-util",
+ "hashbrown 0.14.5",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "thiserror 1.0.69",
+ "tokio",
+ "tower",
+ "tracing",
+ "tungstenite 0.24.0",
+ "url",
+]
 
 [[package]]
 name = "tower-service"
