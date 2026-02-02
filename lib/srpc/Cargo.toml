@@ -1,6 +1,6 @@
 [package]
 name = "tower-rpc"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "RPC for tower service"
 license = "AGPL-3.0-only"
@@ -25,7 +25,6 @@ url = { version = "2.5.0", features = ["serde"] }
 [dev-dependencies]
 criterion = "0.5.0"
 reqwest = { version = "0.12", default-features = false, features = ["blocking"] }
-tungstenite = "0.24.0"
 tokio = { version = "1", features = ["sync"] }
 
 [[bench]]

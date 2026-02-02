@@ -457,7 +457,6 @@ pub fn configure_server(s: &mut web::ServiceConfig, addr: actix::WeakAddr<Server
 #[cfg(test)]
 mod tests {
     use std::convert::Infallible;
-    use tungstenite::Message;
 
     use super::*;
 
