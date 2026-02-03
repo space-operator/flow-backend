@@ -1340,6 +1340,11 @@ fn find_parent_module<P: AsRef<Path>>(path: P) -> Result<PathBuf, Report<Error>>
         return Ok(lib_rs);
     }
 
+    let main_rs = parent.join("main.rs");
+    if main_rs.is_file() {
+        return Ok(main_rs);
+    }
+
     Err(Report::new(Error::Io("find parent module")))
 }
 
