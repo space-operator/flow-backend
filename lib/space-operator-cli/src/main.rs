@@ -1,7 +1,7 @@
 #![allow(clippy::print_stdout, clippy::print_stderr)]
 
 use cargo_metadata::{Metadata, Package, Target};
-use chrono::Utc;
+use chrono::{DateTime, TimeDelta, Utc};
 use clap::{ColorChoice, CommandFactory, Parser, Subcommand, ValueEnum};
 use console::style;
 use directories::ProjectDirs;
@@ -1567,6 +1567,7 @@ impl<'a> Prompt<'a> {
 
 async fn upload_node(path: &Path, dry_run: bool, no_confirm: bool) -> Result<(), Report<Error>> {
     let mut client = ApiClient::load().await.change_context(Error::NotLogin)?;
+
     let text = read_file(path).await?;
     let def = serde_json::from_str::<schema::CommandDefinition>(&text)
         .change_context(Error::ParseNodeDefinition)?;
@@ -1836,7 +1837,37 @@ async fn get_latest_version() -> Result<Version, Report<Error>> {
     Version::parse(&latest.vers).change_context(Error::Version)
 }
 
+fn should_check() -> Result<bool, Report<Error>> {
+    let data_dir = ApiClient::data_dir()?;
+    let last_check_file = data_dir.join("last_version_check");
+    let time = std::fs::read_to_string(&last_check_file)
+        .ok()
+        .and_then(|s| DateTime::parse_from_rfc3339(&s).ok());
+    let now = Utc::now().fixed_offset();
+    let check = match time {
+        Some(last) => {
+            let duration = now - &last;
+            duration > TimeDelta::hours(24)
+        }
+        None => true,
+    };
+    if check {
+        let new_time = now.to_rfc3339();
+        std::fs::write(&last_check_file, &new_time)
+            .change_context_lazy(|| Error::WriteFile(last_check_file.clone()))?;
+    }
+    Ok(check)
+}
+
 async fn check_latest_version() -> Result<(), Report<Error>> {
+    if !should_check()
+        .inspect_err(|error| {
+            eprintln!("{:?}", error);
+        })
+        .unwrap_or(true)
+    {
+        return Ok(());
+    }
     let name = env!("CARGO_PKG_NAME");
     assert!(name == "space-operator-cli");
     let version = Version::parse(env!("CARGO_PKG_VERSION")).change_context(Error::Version)?;
