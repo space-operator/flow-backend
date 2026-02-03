@@ -1430,22 +1430,31 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
     } else if let Some(member) = find_target_crate(&meta)? {
         member
     } else {
-        eprintln!("could not determine which package to update");
-        eprintln!("use `-p` option to specify a package");
-        let list = meta
-            .workspace_packages()
-            .iter()
-            .filter(|p| p.targets.iter().any(|t| t.is_lib()))
-            .map(|p| format!("\n    {}", p.name))
-            .collect::<String>();
-        eprintln!("available packages: {}", list);
-        return Ok(());
+        let members = meta.workspace_packages();
+        if members.len() == 1 {
+            members[0]
+        } else {
+            eprintln!("could not determine which package to update");
+            eprintln!("use `-p` option to specify a package");
+            let list = meta
+                .workspace_packages()
+                .iter()
+                .map(|p| format!("\n    {}", p.name))
+                .collect::<String>();
+            eprintln!("available packages: {}", list);
+            return Ok(());
+        }
     };
-    let lib_target = member
-        .targets
-        .iter()
-        .find(|p| p.is_lib())
-        .ok_or_else(|| Error::NotLib(member.name.as_str().to_owned()))?;
+    let mut target = member.targets.iter().find(|p| p.is_lib());
+    if target.is_none() {
+        target = member
+            .targets
+            .iter()
+            .find(|p| p.is_bin() && p.src_path.file_name() == Some("main.rs"));
+    }
+    let Some(target) = target else {
+        return Err(Error::NotLib(String::new()).into());
+    };
     println!("using package: {}", member.name);
 
     println!("enter ? for help");
@@ -1468,7 +1477,7 @@ async fn new_node(allow_dirty: bool, package: &Option<String>) -> Result<(), Rep
     let def = prompt_node_definition().await?;
 
     if let Some(nd) = write_node_definition(&def, member, &modules).await? {
-        write_code(&def, lib_target, &modules).await?;
+        write_code(&def, target, &modules).await?;
 
         let upload = ask("upload node").await;
         if upload {
