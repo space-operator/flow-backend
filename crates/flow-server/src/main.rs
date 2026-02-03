@@ -4,7 +4,7 @@ use actix_web::{
     middleware::{Compress, Logger},
     web,
 };
-use command_rpc::flow_side::address_book::BaseAddressBook;
+use flow_rpc::flow_side::address_book::BaseAddressBook;
 use db::{LocalStorage, WasmStorage, pool::DbPool};
 use flow_lib::{command::CommandFactory, utils::TowerClient};
 use flow_server::{
@@ -135,7 +135,7 @@ async fn main() {
     let base_book = {
         let auth = auth_v1::AuthV1::new(&config, &db).unwrap();
         BaseAddressBook::new(
-            command_rpc::flow_side::address_book::ServerConfig {
+            flow_rpc::flow_side::address_book::ServerConfig {
                 secret_key: config.iroh.secret_key.clone(),
             },
             TowerClient::new(

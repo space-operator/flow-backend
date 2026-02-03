@@ -38,8 +38,10 @@ pub mod withdraw_governing_tokens;
 // CHAT
 pub mod post_message;
 
-pub const SPL_GOVERNANCE_ID: &str = "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw";
-pub const SPL_GOVERNANCE_CHAT_ID: &str = "gCHAtYKrUUktTVzE4hEnZdLV4LXrdBf6Hh9qMaJALET";
+pub const SPL_GOVERNANCE_ID: Pubkey =
+    Pubkey::from_str_const("GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw");
+pub const SPL_GOVERNANCE_CHAT_ID: Pubkey =
+    Pubkey::from_str_const("gCHAtYKrUUktTVzE4hEnZdLV4LXrdBf6Hh9qMaJALET");
 
 /// Instructions supported by the GovernanceChat program
 #[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize)]

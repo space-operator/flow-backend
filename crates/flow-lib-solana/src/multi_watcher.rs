@@ -112,11 +112,11 @@ where
 
     fn call(&mut self, req: ()) -> Self::Future {
         let mut fetch_time = self.fetch_time.lock().unwrap();
-        if let Some(instant) = *fetch_time {
-            if instant.elapsed() > self.time {
-                *fetch_time = None;
-                *self.value.lock().unwrap() = None;
-            }
+        if let Some(instant) = *fetch_time
+            && instant.elapsed() > self.time
+        {
+            *fetch_time = None;
+            *self.value.lock().unwrap() = None;
         }
 
         if let Some(value) = self.value.lock().unwrap().clone() {
@@ -157,10 +157,10 @@ impl Confirmer {
     }
 
     fn spawn(&mut self) {
-        if let Some(task) = &self.task {
-            if task.is_finished() {
-                self.task = None;
-            }
+        if let Some(task) = &self.task
+            && task.is_finished()
+        {
+            self.task = None;
         }
         if self.task.is_none() {
             let map = self.need_confirm.clone();
@@ -175,8 +175,7 @@ impl Confirmer {
                         let mut data = map.lock().unwrap();
                         let index = data
                             .len()
-                            .checked_sub(MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS)
-                            .unwrap_or(0);
+                            .saturating_sub(MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS);
                         let mut query = data.split_off(index);
                         // serve old request first
                         std::mem::swap(&mut query, &mut data);

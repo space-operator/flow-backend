@@ -52,7 +52,10 @@ async fn start_flow(
 
     let db_worker = DBWorker::from_registry();
     let flow_run_id = db_worker
-        .send(GetUserWorker { user_id, base_url: Some(base_url) })
+        .send(GetUserWorker {
+            user_id,
+            base_url: Some(base_url),
+        })
         .await?
         .send(StartFlowFresh {
             user: flow_lib::User { id: user_id },

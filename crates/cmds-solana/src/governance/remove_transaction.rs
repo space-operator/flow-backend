@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use solana_program::instruction::AccountMeta;
 
 use crate::prelude::*;
@@ -69,7 +67,7 @@ pub fn remove_transaction(
     }
 }
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
+    let program_id = SPL_GOVERNANCE_ID;
 
     let ix = remove_transaction(
         &program_id,

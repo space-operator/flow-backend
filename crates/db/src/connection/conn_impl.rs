@@ -152,7 +152,7 @@ impl UserConnectionTrait for UserConnection {
             }
         }
 
-        self.run_auto_cache::<FlowDeploymentCache>(&id, async |this| {
+        self.run_auto_cache::<FlowDeploymentCache>(id, async |this| {
             this.get_deployment_impl(id).await
         })
         .await
@@ -518,12 +518,12 @@ impl UserConnection {
     where
         C: CacheBucket,
     {
-        if let Some(cached) = self.local.get_cache::<C>(&self.user_id, &key) {
+        if let Some(cached) = self.local.get_cache::<C>(&self.user_id, key) {
             return Ok(cached);
         }
         let result = run(self).await;
         if let Ok(result) = &result
-            && let Err(error) = self.local.set_cache::<C>(&key, result.clone())
+            && let Err(error) = self.local.set_cache::<C>(key, result.clone())
         {
             tracing::error!("set_cache error: {}", error);
         }

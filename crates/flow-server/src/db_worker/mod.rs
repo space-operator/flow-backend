@@ -3,7 +3,7 @@ use actix::{
     Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context, ResponseActFuture,
     ResponseFuture, WrapFuture, fut::wrap_future,
 };
-use command_rpc::flow_side::address_book::BaseAddressBook;
+use flow_rpc::flow_side::address_book::BaseAddressBook;
 use db::{FlowRunLogsRow, pool::DbPool};
 use flow_lib::{
     FlowRunId, UserId,
@@ -125,7 +125,7 @@ impl DBWorker {
         let helius = config
             .helius_api_key
             .as_ref()
-            .map(|key| Arc::new(Helius::new(crate::HTTP.clone(), &key)));
+            .map(|key| Arc::new(Helius::new(crate::HTTP.clone(), key)));
 
         Self {
             db,

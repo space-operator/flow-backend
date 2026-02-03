@@ -8,8 +8,8 @@ flow-lib = { workspace = true }
 value = { workspace = true }
 utils = { workspace = true }
 rhai-script.workspace = true
-command-rpc.workspace = true
-srpc.workspace = true
+flow-rpc.workspace = true
+tower-rpc.workspace = true
 
 anyhow = "1.0"
 bs58 = "0.4"

@@ -1,6 +1,6 @@
 [package]
 name = "flow-lib"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 description = "Library for implementing Space Operator nodes."
 license = "AGPL-3.0-only"

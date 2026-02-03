@@ -1,5 +1,5 @@
 use anyhow::Context as _;
-use command_rpc::client::RpcCommandClient;
+use flow_rpc::client::RpcCommandClient;
 use flow_lib::{
     command::{
         CommandDescription, CommandError, CommandTrait, MatchCommand, default_node_data,
@@ -276,7 +276,7 @@ mod tests {
         let mut ctx = CommandContext::test_context();
         ctx.extensions_mut()
             .unwrap()
-            .insert(srpc::Server::start_http_server().unwrap());
+            .insert(tower_rpc::Server::start_http_server().unwrap());
         let output = cmd
             .run(ctx, value::map! { "a" => 12, "b" => 13 })
             .await

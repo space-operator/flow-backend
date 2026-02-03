@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use solana_program::instruction::AccountMeta;
 use tracing::info;
 
@@ -70,7 +68,7 @@ pub fn refund_proposal_deposit(
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
+    let program_id = SPL_GOVERNANCE_ID;
 
     let (ix, proposal_deposit_address) =
         refund_proposal_deposit(&program_id, &input.proposal, &input.proposal_deposit_payer);

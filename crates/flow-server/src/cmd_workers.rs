@@ -3,7 +3,7 @@ use std::{
     future::{Ready, ready},
 };
 
-use command_rpc::flow_side::address_book::authenticate;
+use flow_rpc::flow_side::address_book::authenticate;
 use futures_util::future::{self, BoxFuture};
 use tower::Service;
 

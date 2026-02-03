@@ -1,14 +1,16 @@
 [package]
-name = "srpc"
-version = "0.0.0"
+name = "tower-rpc"
+version = "0.1.1"
 edition = "2024"
+description = "RPC for tower service"
+license = "AGPL-3.0-only"
+repository = "https://github.com/space-operator/flow-backend"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 actix = "0.13.5"
 actix-web = { version = "4.9.0", default-features = false }
-actix-web-actors = "4.3.0"
 futures-channel = "0.3.30"
 futures-util = "0.3.30"
 hashbrown = "0.14"
@@ -23,7 +25,6 @@ url = { version = "2.5.0", features = ["serde"] }
 [dev-dependencies]
 criterion = "0.5.0"
 reqwest = { version = "0.12", default-features = false, features = ["blocking"] }
-tungstenite = "0.24.0"
 tokio = { version = "1", features = ["sync"] }
 
 [[bench]]

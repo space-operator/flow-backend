@@ -108,8 +108,8 @@ available packages:
     flow-value
     space-lib
     cmds-deno
-    command-rpc
-    srpc
+    flow-rpc
+    tower-rpc
     cmds-pdg
     pdg-common
     cmds-solana

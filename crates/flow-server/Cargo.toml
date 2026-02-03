@@ -22,10 +22,10 @@ cmds-std = { workspace = true, optional = true }
 cmds-solana = { workspace = true, optional = true }
 cmds-deno = { workspace = true, optional = true }
 rhai-script = { workspace = true }
-command-rpc = { workspace = true }
+flow-rpc = { workspace = true }
 futures-metrics = { workspace = true }
 flow-lib-solana = { workspace = true }
-flow-tracing = { version = "0.1.0", path = "../flow-tracing" }
+flow-tracing = { workspace = true }
 
 actix = "0.13"
 actix-web = "4"

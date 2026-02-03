@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use solana_program::instruction::AccountMeta;
 use solana_sdk_ids::system_program;
 use tracing::info;
@@ -74,7 +72,7 @@ pub fn add_required_signatory(
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let program_id = Pubkey::from_str(SPL_GOVERNANCE_ID).unwrap();
+    let program_id = SPL_GOVERNANCE_ID;
 
     let (ix, required_signatory_address) = add_required_signatory(
         &program_id,

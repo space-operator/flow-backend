@@ -84,12 +84,12 @@ impl CommandTraitImpl {
                         helius: None,
                         extensions: Arc::new({
                             let mut ex = Extensions::new();
-                            match srpc::Server::start_http_server() {
+                            match tower_rpc::Server::start_http_server() {
                                 Ok(server) => {
                                     ex.insert(server);
                                 }
                                 Err(error) => {
-                                    tracing::error!("could not start srpc::Server: {error}");
+                                    tracing::error!("could not start tower_rpc::Server: {error}");
                                 }
                             }
                             ex

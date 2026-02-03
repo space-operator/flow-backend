@@ -412,7 +412,7 @@ pub struct FlowSetContext {
     #[builder(default)]
     rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,
 
-    rpc_server: Option<actix::Addr<srpc::Server>>,
+    rpc_server: Option<actix::Addr<tower_rpc::Server>>,
 
     new_flow_api_request: api_input::Svc,
 }

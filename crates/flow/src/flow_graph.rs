@@ -4,7 +4,7 @@ use crate::{
 };
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
-use command_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
+use flow_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
     command::{
@@ -378,10 +378,10 @@ pub enum BuildGraphError {
 
 fn remove_wallet_token(v: &mut value::Map, keypair_outputs: &[String]) {
     for o in keypair_outputs {
-        if let Some(v) = v.get_mut(o) {
-            if let Value::Map(v) = v {
-                v.swap_remove("token");
-            }
+        if let Some(v) = v.get_mut(o)
+            && let Value::Map(v) = v
+        {
+            v.swap_remove("token");
         }
     }
 }
@@ -981,23 +981,25 @@ impl FlowGraph {
                     .expect("bug in start_node")
                     .extend(values);
 
-                if ins.is_none() {
-                    o.resp.send(Ok(execute::Response { signature: None })).ok();
-                } else if info.instruction_info.is_some() {
-                    info.waiting = Some(Waiting {
-                        instructions: ins.expect("ins.is_none() == false"),
-                        resp: o.resp,
-                    });
+                if let Some(ins) = ins {
+                    if info.instruction_info.is_some() {
+                        info.waiting = Some(Waiting {
+                            instructions: ins,
+                            resp: o.resp,
+                        });
+                    } else {
+                        let error = "this node should not have instructions, did you forget to define instruction_info?";
+                        o.resp.send(Err(execute::Error::msg(error))).ok();
+                        node_error(
+                            &s.event_tx,
+                            &mut s.result,
+                            info.id,
+                            info.times,
+                            error.to_owned(),
+                        );
+                    }
                 } else {
-                    let error = "this node should not have instructions, did you forget to define instruction_info?";
-                    o.resp.send(Err(execute::Error::msg(error))).ok();
-                    node_error(
-                        &s.event_tx,
-                        &mut s.result,
-                        info.id,
-                        info.times,
-                        error.to_owned(),
-                    );
+                    o.resp.send(Ok(execute::Response { signature: None })).ok();
                 }
             }
             Err(error) => {

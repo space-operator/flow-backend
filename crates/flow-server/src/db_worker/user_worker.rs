@@ -11,7 +11,7 @@ use actix::{
 };
 use actix_web::{ResponseError, http::StatusCode};
 use bytes::Bytes;
-use command_rpc::flow_side::address_book::{AddressBook, BaseAddressBook};
+use flow_rpc::flow_side::address_book::{AddressBook, BaseAddressBook};
 use db::{Error as DbError, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,

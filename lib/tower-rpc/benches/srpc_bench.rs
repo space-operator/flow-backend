@@ -1,5 +1,5 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use srpc::{GetBaseUrl, RegisterJsonService};
+use tower_rpc::{GetBaseUrl, RegisterJsonService};
 use std::convert::Infallible;
 use tungstenite::Message;
 
@@ -16,7 +16,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let (url_tx, url_rx) = tokio::sync::oneshot::channel();
     std::thread::spawn(|| {
         actix::run(async move {
-            let addr = srpc::Server::start_http_server().unwrap();
+            let addr = tower_rpc::Server::start_http_server().unwrap();
             addr.send(RegisterJsonService::new(
                 "add".to_owned(),
                 "".to_owned(),

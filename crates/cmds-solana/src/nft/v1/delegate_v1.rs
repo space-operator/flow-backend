@@ -63,10 +63,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let (master_edition_account, _) = MasterEdition::find_pda(&input.mint_account);
 
     // get associated token account pda
-    let token_account = spl_associated_token_account_interface::address::get_associated_token_address(
-        &input.fee_payer.pubkey(),
-        &input.mint_account,
-    );
+    let token_account =
+        spl_associated_token_account_interface::address::get_associated_token_address(
+            &input.fee_payer.pubkey(),
+            &input.mint_account,
+        );
 
     let token_record = TokenRecord::find_pda(&input.mint_account, &token_account).0;
 
