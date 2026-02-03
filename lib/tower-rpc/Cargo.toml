@@ -26,7 +26,3 @@ url = { version = "2.5.0", features = ["serde"] }
 criterion = "0.5.0"
 reqwest = { version = "0.12", default-features = false, features = ["blocking"] }
 tokio = { version = "1", features = ["sync"] }
-
-[[bench]]
-name = "srpc_bench"
-harness = false
