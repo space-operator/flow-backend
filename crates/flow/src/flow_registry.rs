@@ -128,6 +128,7 @@ async fn get_all_flows<S>(
     user_id: UserId,
     mut get_flow: S,
     environment: HashMap<String, String>,
+    remotes: Option<AddressBook>,
 ) -> crate::Result<HashMap<FlowId, ClientConfig>>
 where
     S: Service<get_flow::Request, Response = get_flow::Response, Error = get_flow::Error>,
@@ -185,7 +186,10 @@ where
         if config.instructions_bundling != BundlingMode::Off {
             let g = FlowGraph::from_cfg(
                 FlowConfig::new(config.clone()),
-                FlowRegistry::default(),
+                FlowRegistry {
+                    remotes: remotes.clone(),
+                    ..FlowRegistry::default()
+                },
                 None,
             )
             .await?;
@@ -308,7 +312,9 @@ impl FlowRegistry {
     where
         S: Service<get_flow::Request, Response = get_flow::Response, Error = get_flow::Error>,
     {
-        let flows = get_all_flows(entrypoint, flow_owner.id, get_flow, environment).await?;
+        let flows =
+            get_all_flows(entrypoint, flow_owner.id, get_flow, environment, remotes.clone())
+                .await?;
         Ok(Self {
             depth: 0,
             flow_owner,
