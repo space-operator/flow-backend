@@ -128,11 +128,13 @@ pub async fn serve_server(
     let server_addr = match config.address {
         FlowServerAddressConfig::Info { url } => {
             let info_url = url.join("/info")?;
-            reqwest::get(info_url)
+            tracing::info!("using URL: {}", info_url);
+            let resp = reqwest::get(info_url)
                 .await?
                 .json::<InfoResponse>()
                 .await?
-                .iroh
+                .iroh;
+            resp
         }
         FlowServerAddressConfig::Direct(server) => server,
     };
