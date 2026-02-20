@@ -1,5 +1,4 @@
 use anyhow::Context as _;
-use flow_rpc::client::RpcCommandClient;
 use flow_lib::{
     command::{
         CommandDescription, CommandError, CommandTrait, MatchCommand, default_node_data,
@@ -8,6 +7,7 @@ use flow_lib::{
     config::client::{self, NodeData},
     utils::LocalBoxFuture,
 };
+use flow_rpc::client::RpcCommandClient;
 use serde::Deserialize;
 use serde::de::value::MapDeserializer;
 use std::process::Stdio;
@@ -21,6 +21,17 @@ use url::Url;
 #[derive(Deserialize)]
 struct Extra {
     source: String,
+}
+
+fn source_from_form_data(nd: &NodeData) -> Option<String> {
+    ["source", "code"].into_iter().find_map(|key| {
+        nd.targets_form.form_data.get(key).and_then(|json| {
+            match flow_lib::command::parse_value_tagged_or_json(json.clone()) {
+                flow_lib::value::Value::String(s) => Some(s),
+                _ => None,
+            }
+        })
+    })
 }
 
 #[cfg(feature = "local-deps")]
@@ -53,8 +64,12 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
     let extra = &nd.targets_form.extra.rest;
     let source = Extra::deserialize(MapDeserializer::new(
         extra.iter().map(|(k, v)| (k.as_str(), v)),
-    ))?
-    .source;
+    ))
+    .map(|extra| extra.source)
+    .or_else(|_| {
+        source_from_form_data(&nd)
+            .ok_or_else(|| CommandError::msg("deno_script source/code not found"))
+    })?;
 
     let dir = tempdir()?;
 
@@ -63,6 +78,10 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
         .context("write cmd.ts")?;
 
     let mut node_data = nd.clone();
+    if let Some(obj) = node_data.targets_form.form_data.as_object_mut() {
+        obj.remove("code");
+        obj.remove("source");
+    }
     node_data.targets_form.extra.rest.remove("source");
     let node_data_json = serde_json::to_string(&node_data).context("serialize NodeData")?;
     tokio::fs::write(dir.path().join("node-data.json"), node_data_json)

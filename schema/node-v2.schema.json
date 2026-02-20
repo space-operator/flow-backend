@@ -1,156 +1,103 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "https://schema.spaceoperator.com/node-v2.schema.json",
-    "title": "Node Definition",
+    "title": "Node Definition V2",
+    "description": "Canonical V2 node definition contract",
     "type": "object",
     "required": [
-        "type",
-        "name",
+        "id",
         "version",
-        "inputs",
-        "outputs"
+        "name",
+        "type",
+        "ports",
+        "config_schema",
+        "config",
+        "author_handle",
+        "is_published",
+        "is_admin_only",
+        "legacy_node_id",
+        "migration_status",
+        "user_id",
+        "created_at",
+        "updated_at"
     ],
+    "additionalProperties": false,
     "properties": {
+        "id": {
+            "type": "string",
+            "format": "uuid"
+        },
+        "version": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+        },
         "type": {
-            "title": "Node type",
             "type": "string",
             "enum": [
                 "native",
                 "wasm",
                 "deno",
-                "rhai",
-                "interflow",
                 "mock"
             ]
         },
-        "name": {
-            "title": "Unique name of node, used to identify the node",
-            "type": "string",
-            "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+        "ports": {
+            "$ref": "#/definitions/node_ports"
         },
-        "version": {
-            "title": "Semver version",
-            "type": "string",
-            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
-        },
-        "display_name": {
-            "title": "Display name of node",
-            "type": "string"
-        },
-        "description": {
-            "title": "Description",
-            "type": "string"
-        },
-        "tags": {
-            "title": "List of tags",
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
-        "inputs": {
-            "title": "Inputs",
-            "type": "array",
-            "items": {
-                "$ref": "#/definitions/input"
-            }
-        },
-        "outputs": {
-            "title": "Outputs",
-            "type": "array",
-            "items": {
-                "$ref": "#/definitions/output"
-            }
-        },
-        "instruction_info": {
-            "description": "Tell the flow graph this node will emit Solana instructions, and specify the order of outputs:\n- 'before': list of output names returned before instructions are sent.\n- 'signature': name of the signature output port.\n- 'after': list of output names returned after instructions are sent.\nNode only have to declare 'signature' and 'after', 'before' is the rest of the output.",
+        "config_schema": {
             "type": "object",
-            "properties": {
-                "signature": {
-                    "title": "Name of signature output, flow will use default value if not specified.",
-                    "type": "string",
-                    "default": "signature"
-                },
-                "after": {
-                    "title": "Name of outputs that will be available after the signature output",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "default": []
-                }
-            }
+            "additionalProperties": true
+        },
+        "config": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "author_handle": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "is_published": {
+            "type": "boolean"
+        },
+        "is_admin_only": {
+            "type": "boolean"
+        },
+        "legacy_node_id": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "migration_status": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "tested",
+                "published"
+            ]
+        },
+        "user_id": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "format": "uuid"
+        },
+        "created_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "updated_at": {
+            "type": "string",
+            "format": "date-time"
         }
     },
     "definitions": {
-        "input": {
-            "title": "Input port",
-            "type": "object",
-            "required": [
-                "name",
-                "type_bounds"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Name of this input port",
-                    "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
-                },
-                "type_bounds": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/type_bound"
-                    }
-                },
-                "required": {
-                    "type": "boolean",
-                    "default": true
-                },
-                "passthrough": {
-                    "type": "boolean",
-                    "description": "Passthrough input will also be available as output of the node",
-                    "default": false
-                },
-                "value": {
-                    "$ref": "https://schema.spaceoperator.com/value.schema.json",
-                    "description": "Constant value to use as input for this port"
-                },
-                "tooltip": {
-                    "type": "string"
-                }
-            }
-        },
-        "output": {
-            "title": "Output port",
-            "type": "object",
-            "required": [
-                "name",
-                "type"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Name of this input port",
-                    "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "required": {
-                    "type": "boolean",
-                    "default": true
-                },
-                "tooltip": {
-                    "type": "string"
-                },
-                "value": {
-                    "$ref": "https://schema.spaceoperator.com/value.schema.json",
-                    "description": "Hard-coded output value"
-                }
-            }
-        },
-        "type_bound": {
-            "title": "Type bound for inputs and outputs",
+        "value_type": {
             "enum": [
                 "bool",
                 "u8",
@@ -176,6 +123,91 @@
                 "object",
                 "free"
             ]
+        },
+        "input_port": {
+            "type": "object",
+            "required": [
+                "id",
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type_bounds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/value_type"
+                    },
+                    "default": []
+                },
+                "required": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "passthrough": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "tooltip": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+        "output_port": {
+            "type": "object",
+            "required": [
+                "id",
+                "name",
+                "type"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/value_type"
+                },
+                "optional": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "tooltip": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+        "node_ports": {
+            "type": "object",
+            "required": [
+                "inputs",
+                "outputs"
+            ],
+            "properties": {
+                "inputs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/input_port"
+                    }
+                },
+                "outputs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/output_port"
+                    }
+                }
+            },
+            "additionalProperties": false
         }
     }
 }

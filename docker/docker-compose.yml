@@ -42,7 +42,7 @@ services:
     secrets:
       - flow-server-config
     volumes:
-      - ./supabase:/space-operator/supabase:ro
+      - ./docker/supabase:/space-operator/supabase:ro
       - flow-server-data:/data
 
   webhook:

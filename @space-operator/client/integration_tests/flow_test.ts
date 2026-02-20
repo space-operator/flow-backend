@@ -3,21 +3,22 @@ import * as client from "../src/mod.ts";
 import * as dotenv from "@std/dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { assert, assertEquals } from "@std/assert";
-import { checkNoErrors } from "./utils.ts";
+import { checkNoErrors, getEnv, getUuidEnv } from "./utils.ts";
 
 dotenv.loadSync({
   export: true,
 });
 
-function getEnv(key: string): string {
-  const env = Deno.env.get(key);
-  if (env === undefined) throw new Error(`no env ${key}`);
-  return env;
-}
-
 const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
 const supabaseUrl = "http://localhost:8000";
+const START_FLOW_ID = getUuidEnv("FLOW_TEST_START_FLOW_ID");
+const DENO_FLOW_ID = getUuidEnv("FLOW_TEST_DENO_FLOW_ID");
+const INTERFLOW_FLOW_ID = getUuidEnv("FLOW_TEST_INTERFLOW_FLOW_ID");
+const INTERFLOW_INSTRUCTIONS_FLOW_ID = getUuidEnv(
+  "FLOW_TEST_INTERFLOW_INSTRUCTIONS_FLOW_ID",
+);
+const CONSTS_FLOW_ID = getUuidEnv("FLOW_TEST_CONSTS_FLOW_ID");
 
 Deno.test("start flow", async () => {
   const owner = new client.Client({
@@ -26,8 +27,7 @@ Deno.test("start flow", async () => {
     token: apiKey,
   });
 
-  const flowId = 3675;
-  const { flow_run_id } = await owner.startFlow(flowId, {
+  const { flow_run_id } = await owner.startFlow(START_FLOW_ID, {
     inputs: new Value({
       a: 1,
       b: 2,
@@ -53,8 +53,7 @@ Deno.test("test deno node", async () => {
     token: apiKey,
   });
 
-  const flowId = 3743;
-  const { flow_run_id } = await owner.startFlow(flowId, {});
+  const { flow_run_id } = await owner.startFlow(DENO_FLOW_ID, {});
 
   const result = await owner.getFlowOutput(flow_run_id);
   const c = result.toJSObject().pi;
@@ -75,8 +74,7 @@ Deno.test("interflow", async () => {
     token: apiKey,
   });
 
-  const flowId = 3623;
-  const { flow_run_id } = await owner.startFlow(flowId, {
+  const { flow_run_id } = await owner.startFlow(INTERFLOW_FLOW_ID, {
     inputs: new Value({
       n: 54,
     }).M!,
@@ -102,8 +100,10 @@ Deno.test("interflow_instructions", async () => {
     token: apiKey,
   });
 
-  const flowId = 3755;
-  const { flow_run_id } = await owner.startFlow(flowId, {});
+  const { flow_run_id } = await owner.startFlow(
+    INTERFLOW_INSTRUCTIONS_FLOW_ID,
+    {},
+  );
 
   const result = await owner.getFlowOutput(flow_run_id);
   const { ins } = result.toJSObject();
@@ -125,8 +125,7 @@ Deno.test("consts", async () => {
     token: apiKey,
   });
 
-  const flowId = 3739;
-  const { flow_run_id } = await owner.startFlow(flowId, {});
+  const { flow_run_id } = await owner.startFlow(CONSTS_FLOW_ID, {});
 
   await owner.getFlowOutput(flow_run_id);
 

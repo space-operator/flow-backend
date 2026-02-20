@@ -19,7 +19,7 @@ use anyhow::anyhow;
 use flow::flow_set::{DeploymentId, FlowStarter, StartFlowDeploymentOptions, X402Network};
 use flow_lib::solana::Pubkey;
 use serde_with::serde_as;
-use std::{collections::BTreeMap, num::ParseIntError};
+use std::collections::BTreeMap;
 use value::{Decimal, with::AsPubkey};
 use x402_kit::{
     core::Resource,
@@ -48,7 +48,7 @@ enum QueryDe {
 }
 
 impl TryFrom<QueryDe> for Query {
-    type Error = ParseIntError;
+    type Error = uuid::Error;
 
     fn try_from(value: QueryDe) -> Result<Self, Self::Error> {
         Ok(match value {
@@ -64,7 +64,7 @@ impl TryFrom<QueryDe> for Query {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(try_from = "QueryDe")]
 pub enum Query {
-    FlowTag { flow: i32, tag: String },
+    FlowTag { flow: FlowId, tag: String },
     Id { id: DeploymentId },
 }
 
@@ -288,24 +288,24 @@ mod tests {
 
     #[actix_web::test]
     async fn test_query() {
-        let req = TestRequest::with_uri("/start?flow=123&tag=latest").to_http_request();
-        let query = web::Query::<Query>::extract(&req).await.unwrap();
-        assert_eq!(
-            query.0,
-            Query::FlowTag {
-                flow: 123,
-                tag: "latest".to_owned()
-            }
-        );
+        let flow_id = "63e9d4a3-97f5-4516-8c8f-541614d3326f";
+        let expected_flow = match flow_id.parse::<FlowId>() {
+            Ok(id) => id,
+            Err(error) => panic!("invalid test flow uuid: {error}"),
+        };
+        let req =
+            TestRequest::with_uri(&format!("/start?flow={flow_id}&tag=latest")).to_http_request();
+        let query = web::Query::<Query>::extract(&req).await;
+        assert!(matches!(
+            query.map(|q| q.0),
+            Ok(Query::FlowTag { flow, tag }) if flow == expected_flow && tag == "latest"
+        ));
 
-        let req = TestRequest::with_uri("/start?flow=123").to_http_request();
-        let query = web::Query::<Query>::extract(&req).await.unwrap();
-        assert_eq!(
-            query.0,
-            Query::FlowTag {
-                flow: 123,
-                tag: "latest".to_owned()
-            }
-        );
+        let req = TestRequest::with_uri(&format!("/start?flow={flow_id}")).to_http_request();
+        let query = web::Query::<Query>::extract(&req).await;
+        assert!(matches!(
+            query.map(|q| q.0),
+            Ok(Query::FlowTag { flow, tag }) if flow == expected_flow && tag == "latest"
+        ));
     }
 }

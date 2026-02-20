@@ -1,47 +1,73 @@
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
-    "type": "native",
+    "id": "00000000-0000-4000-8000-000000000004",
+    "version": "2.0.0",
     "name": "transfer_sol",
-    "display_name": "Transfer SOLs",
-    "description": "Transfer SOLs",
-    "inputs": [
-        {
-            "name": "fee_payer",
-            "type_bounds": [
-                "keypair"
-            ],
-            "required": false,
-            "tooltip": "Transaction fee payer, default is sender"
-        },
-        {
-            "name": "sender",
-            "type_bounds": [
-                "keypair"
-            ]
-        },
-        {
-            "name": "recipient",
-            "type_bounds": [
-                "pubkey"
-            ]
-        },
-        {
-            "name": "amount",
-            "type_bounds": [
-                "decimal"
-            ],
-            "tooltip": "Amount in SOLs"
-        }
-    ],
-    "outputs": [
-        {
-            "name": "signature",
-            "type": "signature",
-            "tooltip": "Signature of the transaction"
-        }
-    ],
-    "instruction_info": {
-        "signature": "signature",
-        "after": []
-    }
+    "type": "native",
+    "ports": {
+        "inputs": [
+            {
+                "id": "44444444-4444-4444-8444-444444444441",
+                "name": "fee_payer",
+                "type_bounds": [
+                    "keypair"
+                ],
+                "required": false,
+                "passthrough": false,
+                "tooltip": "Transaction fee payer, default is sender"
+            },
+            {
+                "id": "44444444-4444-4444-8444-444444444442",
+                "name": "sender",
+                "type_bounds": [
+                    "keypair"
+                ],
+                "required": true,
+                "passthrough": false
+            },
+            {
+                "id": "44444444-4444-4444-8444-444444444443",
+                "name": "recipient",
+                "type_bounds": [
+                    "pubkey"
+                ],
+                "required": true,
+                "passthrough": false
+            },
+            {
+                "id": "44444444-4444-4444-8444-444444444444",
+                "name": "amount",
+                "type_bounds": [
+                    "decimal"
+                ],
+                "required": true,
+                "passthrough": false,
+                "tooltip": "Amount in SOLs"
+            }
+        ],
+        "outputs": [
+            {
+                "id": "44444444-4444-4444-8444-444444444445",
+                "name": "signature",
+                "type": "signature",
+                "optional": false,
+                "tooltip": "Signature of the transaction"
+            }
+        ]
+    },
+    "config_schema": {
+        "type": "object",
+        "additionalProperties": false
+    },
+    "config": {
+        "form_data": {}
+    },
+    "author_handle": "spo",
+    "is_published": true,
+    "is_admin_only": false,
+    "legacy_node_id": null,
+    "migration_status": "published",
+    "user_id": null,
+    "created_at": "2026-02-20T00:00:00Z",
+    "updated_at": "2026-02-20T00:00:00Z"
 }

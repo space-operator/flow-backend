@@ -1,20 +1,46 @@
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
-    "type": "native",
+    "id": "00000000-0000-4000-8000-000000000002",
+    "version": "2.0.0",
     "name": "flow_output",
-    "display_name": "Flow Output",
-    "description": "Use this node to return output for flow",
-    "inputs": [
-        {
-            // flow's output name, change as needed
-            "name": "output",
-            "type_bounds": [
-                "free"
-            ],
-            "required": true,
-            "passthrough": true,
-            "tooltip": "Output of flow, change the \"name\" value to change output's name"
+    "type": "native",
+    "ports": {
+        "inputs": [
+            {
+                "id": "22222222-2222-4222-8222-222222222222",
+                "name": "output",
+                "type_bounds": [
+                    "free"
+                ],
+                "required": true,
+                "passthrough": false,
+                "tooltip": "Output of flow. Rename this input port to rename the exposed flow output."
+            }
+        ],
+        "outputs": []
+    },
+    "config_schema": {
+        "type": "object",
+        "properties": {
+            "label": {
+                "type": "string"
+            }
+        },
+        "additionalProperties": false
+    },
+    "config": {
+        "form_data": {
+            "label": {
+                "S": "output"
+            }
         }
-    ],
-    "outputs": []
+    },
+    "author_handle": "spo",
+    "is_published": true,
+    "is_admin_only": false,
+    "legacy_node_id": null,
+    "migration_status": "published",
+    "user_id": null,
+    "created_at": "2026-02-20T00:00:00Z",
+    "updated_at": "2026-02-20T00:00:00Z"
 }

@@ -81,22 +81,44 @@ struct FormData {
 fn read_form_data(form: FormData) -> Result<Inner, Error> {
     match form.r#type {
         FormType::Json => {
-            let s: String = serde_json::from_value(form.value)?;
-            let value: JsonValue = serde_json::from_str(&s)?;
+            let value = match form.value {
+                JsonValue::String(s) => {
+                    let value: JsonValue = serde_json::from_str(&s)?;
+                    Value::from(value)
+                }
+                other => flow_lib::command::parse_value_tagged_or_json(other),
+            };
             Ok(Inner {
-                value: FormValue::Value(value.into()),
+                value: FormValue::Value(value),
                 r#type: ValueType::Free,
             })
         }
         FormType::File => {
-            let urls: Vec<String> = serde_json::from_value(form.value)?;
+            let urls: Vec<String> = serde_json::from_value(form.value.clone()).or_else(|_| {
+                match flow_lib::command::parse_value_tagged_or_json(form.value) {
+                    Value::Array(values) => values
+                        .into_iter()
+                        .map(|value| match value {
+                            Value::String(s) => Ok(s),
+                            _ => Err(serde_json::Error::io(std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "const.file.value must be array<string>",
+                            ))),
+                        })
+                        .collect(),
+                    _ => Err(serde_json::Error::io(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        "const.file.value must be array<string>",
+                    ))),
+                }
+            })?;
             Ok(Inner {
                 value: FormValue::Urls(urls),
                 r#type: ValueType::Free,
             })
         }
         FormType::Other(_) => {
-            let value = serde_json::from_value::<Value>(form.value)?;
+            let value = flow_lib::command::parse_value_tagged_or_json(form.value);
             Ok(Inner {
                 value: FormValue::Value(value),
                 r#type: ValueType::Free,
@@ -105,9 +127,27 @@ fn read_form_data(form: FormData) -> Result<Inner, Error> {
     }
 }
 
+fn decode_form_data(value: JsonValue) -> Result<FormData, Error> {
+    if let Ok(form) = serde_json::from_value::<FormData>(value.clone()) {
+        return Ok(form);
+    }
+
+    let r#type = value
+        .get("type")
+        .map(
+            |json| match flow_lib::command::parse_value_tagged_or_json(json.clone()) {
+                Value::String(s) => s.into(),
+                _ => FormType::Other("".to_owned()),
+            },
+        )
+        .unwrap_or(FormType::Other("".to_owned()));
+    let value = value.get("value").cloned().unwrap_or(JsonValue::Null);
+    Ok(FormData { r#type, value })
+}
+
 impl ConstCommand {
     fn new(data: &NodeData) -> Result<Self, CommandError> {
-        let form: FormData = serde_json::from_value(data.targets_form.form_data.clone())?;
+        let form = decode_form_data(data.targets_form.form_data.clone())?;
         let inner = read_form_data(form)?;
         Ok(Self { inner })
     }

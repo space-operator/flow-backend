@@ -1,46 +1,56 @@
-use client::FlowRow;
+use client::{ClientConfigV2, FlowRow, FlowRowV2};
+use serde_json::json;
 
 use super::super::*;
 
 #[track_caller]
 fn row_to_flow_row(r: tokio_postgres::Row) -> crate::Result<FlowRow> {
-    Ok(FlowRow {
-        id: r.try_get("id").map_err(Error::data("flows.id"))?,
-        user_id: r.try_get("user_id").map_err(Error::data("flows.user_id"))?,
-        nodes: r
-            .try_get::<_, Vec<Json<client::Node>>>("nodes")
-            .map_err(Error::data("flows.nodes"))?
-            .into_iter()
-            .map(|x| x.0)
-            .collect(),
-        edges: r
-            .try_get::<_, Vec<Json<client::Edge>>>("edges")
-            .map_err(Error::data("flows.edges"))?
-            .into_iter()
-            .map(|x| x.0)
-            .collect(),
-        environment: r
-            .try_get::<_, Json<std::collections::HashMap<String, String>>>("environment")
-            .map_err(Error::data("flows.environment"))?
-            .0,
-        current_network: r
-            .try_get::<_, Json<client::Network>>("current_network")
-            .map_err(Error::data("flows.current_network"))?
-            .0,
-        instructions_bundling: r
-            .try_get::<_, Json<client::BundlingMode>>("instructions_bundling")
-            .map_err(Error::data("flows.instructions_bundling"))?
-            .0,
-        is_public: r
-            .try_get::<_, bool>("isPublic")
-            .map_err(Error::data("flows.isPublic"))?,
-        start_shared: r
-            .try_get::<_, bool>("start_shared")
-            .map_err(Error::data("flows.start_shared"))?,
-        start_unverified: r
-            .try_get::<_, bool>("start_unverified")
-            .map_err(Error::data("flows.start_unverified"))?,
-    })
+    let Json(flow_v2) = r
+        .try_get::<_, Json<FlowRowV2>>("flow")
+        .map_err(Error::data("flows_v2.flow"))?;
+    Ok(flow_v2.into())
+}
+
+fn is_interflow_node(node_id: &str) -> bool {
+    matches!(
+        node_id,
+        "interflow" | "interflow_instructions" | "@spo/interflow" | "@spo/interflow_instructions"
+    )
+}
+
+fn is_wallet_node(node_id: &str) -> bool {
+    matches!(node_id, "wallet" | "@spo/wallet")
+}
+
+fn parse_flow_id(value: &JsonValue) -> Option<FlowId> {
+    flow_lib::command::parse_value_tagged(value.clone())
+        .ok()
+        .and_then(|value| match value {
+            value::Value::String(id) => Uuid::parse_str(&id).ok(),
+            _ => None,
+        })
+}
+
+fn set_flow_id(value: &mut JsonValue, flow_id: FlowId) {
+    *value = json!({ "S": flow_id.to_string() });
+}
+
+fn parse_wallet_id(value: &JsonValue) -> Option<i64> {
+    flow_lib::command::parse_value_tagged(value.clone())
+        .ok()
+        .and_then(|value| match value {
+            value::Value::I64(id) => Some(id),
+            value::Value::U64(id) => i64::try_from(id).ok(),
+            _ => None,
+        })
+}
+
+fn set_wallet_id(value: &mut JsonValue, wallet_id: i64) {
+    *value = json!({ "U": wallet_id.to_string() });
+}
+
+fn set_public_key(value: &mut JsonValue, public_key: &str) {
+    *value = json!({ "B3": public_key });
 }
 
 impl UserConnection {
@@ -48,18 +58,21 @@ impl UserConnection {
         let conn = self.pool.get_conn().await?;
         let flow = conn
             .do_query_opt(
-                r#"SELECT id,
-                        user_id,
-                        nodes,
-                        edges,
-                        environment,
-                        current_network,
-                        instructions_bundling,
-                        "isPublic",
-                        start_shared,
-                        start_unverified
-                FROM flows
-                WHERE id = $1 AND user_id = $2"#,
+                r#"SELECT jsonb_build_object(
+                        'id', uuid,
+                        'user_id', user_id,
+                        'nodes', nodes,
+                        'edges', edges,
+                        'environment', environment,
+                        'current_network', current_network,
+                        'instructions_bundling', instructions_bundling,
+                        'is_public', "isPublic",
+                        'start_shared', start_shared,
+                        'start_unverified', start_unverified,
+                        'current_branch_id', current_branch_id
+                    ) AS flow
+                FROM flows_v2
+                WHERE uuid = $1 AND user_id = $2"#,
                 &[&id, &self.user_id],
             )
             .await
@@ -103,8 +116,8 @@ impl UserConnection {
     pub(crate) async fn get_flow_info_impl(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
         let conn = self.pool.get_conn().await?;
         conn.do_query_opt(
-            r#"SELECT user_id, start_shared, start_unverified, "isPublic" FROM flows
-                WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
+            r#"SELECT user_id, start_shared, start_unverified, "isPublic" FROM flows_v2
+                WHERE uuid = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
             &[&flow_id, &self.user_id],
         )
         .await
@@ -120,61 +133,26 @@ impl UserConnection {
         let conn = self.pool.get_conn().await?;
         let row = conn
             .do_query_opt(
-                "SELECT nodes,
-                        edges,
-                        environment,
-                        (current_network->>'url')::TEXT AS network_url,
-                        (current_network->>'cluster')::TEXT AS network_cluster,
-                        instructions_bundling
-                FROM flows
-                WHERE id = $1 AND user_id = $2",
+                r#"SELECT jsonb_build_object(
+                        'user_id', user_id,
+                        'id', uuid,
+                        'nodes', nodes,
+                        'edges', edges,
+                        'environment', environment,
+                        'sol_network', current_network,
+                        'instructions_bundling', instructions_bundling
+                    ) AS config
+                FROM flows_v2
+                WHERE uuid = $1 AND user_id = $2"#,
                 &[&id, &self.user_id],
             )
             .await
             .map_err(Error::exec("get_flow_config"))?
             .ok_or_else(|| Error::not_found("flow", id))?;
-
-        let nodes = row
-            .try_get::<_, Vec<JsonValue>>(0)
-            .map_err(Error::data("flows.nodes"))?;
-
-        let edges = row
-            .try_get::<_, Vec<JsonValue>>(1)
-            .map_err(Error::data("flows.edges"))?;
-
-        let environment = row
-            .try_get::<_, Json<HashMap<String, String>>>(2)
-            .unwrap_or_else(|_| Json(HashMap::new()))
-            .0;
-
-        let network_url = row
-            .try_get::<_, &str>(3)
-            .map_err(Error::data("network_url"))?;
-
-        let cluster = row
-            .try_get::<_, &str>(4)
-            .map_err(Error::data("network_cluster"))?;
-
-        let instructions_bundling = row
-            .try_get::<_, Json<client::BundlingMode>>(5)
-            .map_err(Error::data("flows.instructions_bundling"))?
-            .0;
-
-        let config = serde_json::json!({
-            "user_id": self.user_id,
-            "id": id,
-            "nodes": nodes,
-            "edges": edges,
-            "sol_network": {
-                "url": network_url,
-                "cluster": cluster,
-            },
-            "environment": environment,
-            "instructions_bundling": instructions_bundling,
-        });
-
-        let mut config =
-            serde_json::from_value::<client::ClientConfig>(config).map_err(Error::Deserialize)?;
+        let Json(config_v2) = row
+            .try_get::<_, Json<ClientConfigV2>>("config")
+            .map_err(Error::data("flows_v2.config"))?;
+        let mut config: client::ClientConfig = config_v2.into();
 
         for node in &mut config.nodes {
             if node.data.r#type == CommandType::Wasm
@@ -232,14 +210,14 @@ impl UserConnection {
         let flow_owner = {
             let owner: UserId = tx
                 .do_query_one(
-                    r#"SELECT user_id FROM flows
-                    WHERE id = $1 AND (user_id = $2 OR "isPublic")"#,
+                    r#"SELECT user_id FROM flows_v2
+                    WHERE uuid = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
                     &[&flow_id, &self.user_id],
                 )
                 .await
                 .map_err(Error::exec("get flow's owner"))?
                 .try_get(0)
-                .map_err(Error::data("flows.user_id"))?;
+                .map_err(Error::data("flows_v2.user_id"))?;
             owner
         };
 
@@ -280,154 +258,221 @@ impl UserConnection {
 
         let wallet_map = {
             let mut res = HashMap::with_capacity(owner_wallets.len());
-            for wallet in &owner_wallets {
-                let (id, owner_pk) = wallet;
-                let value = is_same_user
-                    .then_some(wallet)
-                    .or_else(|| user_wallet.iter().find(|(_, pk)| pk == owner_pk));
-                if let Some(value) = value {
-                    res.insert(id, value);
+            for (owner_wallet_id, owner_pk) in &owner_wallets {
+                let mapped = if is_same_user {
+                    Some((*owner_wallet_id, owner_pk.clone()))
+                } else {
+                    user_wallet
+                        .iter()
+                        .find(|(_, pk)| pk == owner_pk)
+                        .map(|(id, pk)| (*id, pk.clone()))
+                };
+                if let Some(mapped) = mapped {
+                    res.insert(*owner_wallet_id, mapped);
                 }
             }
             res
         };
         let default_wallet_id = user_wallet[0].0;
-        let default_wallet_pubkey = user_wallet[0].1.as_str();
+        let default_wallet_pubkey = user_wallet[0].1.clone();
 
         let mut ids = HashSet::<FlowId>::new();
         let mut queue = vec![flow_id];
-        let get_interflows = r#"WITH nodes AS
-                (
-                    SELECT unnest(nodes) AS node
-                    FROM flows WHERE id = $1
-                )
-                SELECT CAST(node #>> '{data,targets_form,form_data,id}' AS INT) AS id
-                FROM nodes WHERE
-                    node #>> '{data,node_id}' IN ('interflow', 'interflow_instructions')
-                    AND node->>'type' = 'native'"#;
-        let check_flow = r#"SELECT id FROM flows WHERE id = $1 AND (user_id = $2 OR "isPublic")"#;
+        let check_flow = r#"SELECT nodes FROM flows_v2
+                WHERE uuid = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#;
         while let Some(id) = queue.pop() {
-            if tx
+            if !ids.insert(id) {
+                continue;
+            }
+
+            let row = tx
                 .do_query_opt(check_flow, &[&id, &self.user_id])
                 .await
                 .map_err(Error::exec("check flow"))?
-                .is_some()
-            {
-                ids.insert(id);
-            } else {
+                .ok_or_else(|| {
+                    Error::LogicError(anyhow::anyhow!("flow {:?} not found or not public", id))
+                })?;
+
+            let nodes: JsonValue = row
+                .try_get("nodes")
+                .map_err(Error::data("flows_v2.nodes"))?;
+            let Some(nodes) = nodes.as_array() else {
                 return Err(Error::LogicError(anyhow::anyhow!(
-                    "flow {:?} not found or not public",
+                    "flow {:?} has invalid nodes payload",
                     id
                 )));
-            }
+            };
 
-            let rows = tx
-                .do_query(get_interflows, &[&id])
-                .await
-                .map_err(Error::exec("get interflows"))?;
-            for row in rows {
-                let id: i32 = row
-                    .try_get(0)
-                    .map_err(Error::data("data.targets_form.form_data.id"))?;
-                if !ids.contains(&id) {
-                    queue.push(id);
+            for node in nodes {
+                let node_type = node
+                    .get("type")
+                    .and_then(JsonValue::as_str)
+                    .unwrap_or("native");
+                if node_type != "native" {
+                    continue;
+                }
+
+                let Some(node_id) = node.pointer("/data/node_id").and_then(JsonValue::as_str)
+                else {
+                    continue;
+                };
+                if !is_interflow_node(node_id) {
+                    continue;
+                }
+
+                let Some(raw_interflow_id) = node.pointer("/data/config/flow_id") else {
+                    continue;
+                };
+                let interflow_id = parse_flow_id(raw_interflow_id).ok_or_else(|| {
+                    Error::LogicError(anyhow::anyhow!(
+                        "invalid interflow flow_id in {:?}: {}",
+                        id,
+                        raw_interflow_id
+                    ))
+                })?;
+                if !ids.contains(&interflow_id) {
+                    queue.push(interflow_id);
                 }
             }
         }
-        let ids: Vec<i32> = ids.into_iter().collect();
+        let ids: Vec<FlowId> = ids.into_iter().collect();
 
-        let copy_flow = r#"INSERT INTO flows (
-                        guide,
-                        name,
-                        mosaic,
-                        description,
-                        tags,
-                        custom_networks,
-                        current_network,
-                        instructions_bundling,
-                        environment,
-                        nodes,
-                        edges,
+        let copy_flow = r#"INSERT INTO flows_v2 (
                         user_id,
-                        parent_flow
-                    ) SELECT
-                        guide,
                         name,
-                        mosaic,
                         description,
-                        tags,
-                        custom_networks,
-                        current_network,
-                        instructions_bundling,
-                        environment,
                         nodes,
                         edges,
+                        viewport,
+                        environment,
+                        guide,
+                        instructions_bundling,
+                        backend_endpoint,
+                        current_network,
+                        start_shared,
+                        start_unverified,
+                        current_branch_id,
+                        parent_flow,
+                        linked_flows,
+                        lifecycle,
+                        meta_nodes,
+                        default_viewport
+                    ) SELECT
                         $2 AS user_id,
-                        id as parent_flow
-                        FROM flows WHERE id = $1
-                    RETURNING id"#;
+                        name,
+                        description,
+                        nodes,
+                        edges,
+                        viewport,
+                        environment,
+                        guide,
+                        instructions_bundling,
+                        backend_endpoint,
+                        current_network,
+                        start_shared,
+                        start_unverified,
+                        current_branch_id,
+                        id as parent_flow,
+                        linked_flows,
+                        lifecycle,
+                        meta_nodes,
+                        default_viewport
+                        FROM flows_v2 WHERE uuid = $1
+                    RETURNING uuid, nodes"#;
         let mut flow_id_map = HashMap::new();
-        let mut new_ids = Vec::new();
+        let mut copied_nodes = HashMap::new();
         for id in &ids {
-            let new_id: i32 = tx
+            let row = tx
                 .do_query_one(copy_flow, &[id, &self.user_id])
                 .await
-                .map_err(Error::exec("copy flow"))?
-                .try_get(0)
-                .map_err(Error::data("flows.id"))?;
+                .map_err(Error::exec("copy flow"))?;
+            let new_id: FlowId = row.try_get("uuid").map_err(Error::data("flows_v2.uuid"))?;
+            let nodes: JsonValue = row
+                .try_get("nodes")
+                .map_err(Error::data("flows_v2.nodes"))?;
             flow_id_map.insert(*id, new_id);
-            new_ids.push(new_id);
+            copied_nodes.insert(new_id, nodes);
         }
-        let update_flow =
-                "UPDATE flows SET nodes = q.nodes FROM (
-                    SELECT
-                        f.id,
-                        ARRAY_AGG(
-                            CASE
-                                WHEN
-                                    node #>> '{data,node_id}' IN ('interflow', 'interflow_instructions')
-                                    AND node->>'type' = 'native'
-                                THEN jsonb_set(
-                                        node,
-                                        '{data,targets_form,form_data,id}',
-                                        $2::JSONB->(node #>> '{data,targets_form,form_data,id}')
-                                    )
 
-                                WHEN
-                                    node #>> '{data,node_id}' IN ('wallet')
-                                    AND node->>'type' = 'native'
-                                THEN jsonb_set(
-                                        jsonb_set(
-                                            node,
-                                            '{data,targets_form,form_data,public_key}',
-                                            COALESCE($3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->1, $5::JSONB)
-                                        ),
-                                        '{data,targets_form,form_data,wallet_id}',
-                                        COALESCE($3::JSONB->(node #>> '{data,targets_form,form_data,wallet_id}')->0, $4::JSONB)
-                                    )
+        for (new_id, mut nodes) in copied_nodes {
+            if let Some(node_list) = nodes.as_array_mut() {
+                for node in node_list {
+                    let node_type = node
+                        .get("type")
+                        .and_then(JsonValue::as_str)
+                        .unwrap_or("native");
+                    if node_type != "native" {
+                        continue;
+                    }
 
-                                ELSE node
-                            END
+                    let Some(node_id) = node.pointer("/data/node_id").and_then(JsonValue::as_str)
+                    else {
+                        continue;
+                    };
+                    let node_id = node_id.to_owned();
 
-                            ORDER BY idx
-                        ) AS nodes
-                    FROM flows f CROSS JOIN unnest(f.nodes) WITH ORDINALITY AS n(node, idx)
-                    WHERE f.id = ANY($1::INT[])
-                    GROUP BY f.id
-                ) AS q
-                WHERE flows.id = q.id";
-        tx.do_execute(
-            update_flow,
-            &[
-                &new_ids,
-                &Json(&flow_id_map),
-                &Json(&wallet_map),
-                &Json(default_wallet_id),
-                &Json(default_wallet_pubkey),
-            ],
-        )
-        .await
-        .map_err(Error::exec("update interflow IDs"))?;
+                    let Some(config) = node
+                        .pointer_mut("/data/config")
+                        .and_then(JsonValue::as_object_mut)
+                    else {
+                        continue;
+                    };
+
+                    if is_interflow_node(&node_id)
+                        && let Some(flow_id_value) = config.get_mut("flow_id")
+                    {
+                        let old_interflow_id = parse_flow_id(flow_id_value).ok_or_else(|| {
+                            Error::LogicError(anyhow::anyhow!(
+                                "invalid interflow flow_id in cloned flow {:?}",
+                                new_id
+                            ))
+                        })?;
+                        let mapped_interflow_id =
+                            flow_id_map.get(&old_interflow_id).ok_or_else(|| {
+                                Error::LogicError(anyhow::anyhow!(
+                                    "missing cloned interflow target {:?}",
+                                    old_interflow_id
+                                ))
+                            })?;
+                        set_flow_id(flow_id_value, *mapped_interflow_id);
+                    }
+
+                    if is_wallet_node(&node_id)
+                        && let Some(old_wallet_id) =
+                            config.get("wallet_id").and_then(parse_wallet_id)
+                    {
+                        let (new_wallet_id, new_wallet_pubkey) = wallet_map
+                            .get(&old_wallet_id)
+                            .cloned()
+                            .unwrap_or((default_wallet_id, default_wallet_pubkey.clone()));
+                        if let Some(wallet_id_value) = config.get_mut("wallet_id") {
+                            set_wallet_id(wallet_id_value, new_wallet_id);
+                        } else {
+                            config.insert(
+                                "wallet_id".to_owned(),
+                                json!({ "U": new_wallet_id.to_string() }),
+                            );
+                        }
+                        if let Some(public_key_value) = config.get_mut("public_key") {
+                            set_public_key(public_key_value, &new_wallet_pubkey);
+                        } else {
+                            config.insert(
+                                "public_key".to_owned(),
+                                json!({ "B3": new_wallet_pubkey }),
+                            );
+                        }
+                    }
+                }
+            }
+
+            tx.do_execute(
+                "UPDATE flows_v2 SET nodes = $2 WHERE uuid = $1",
+                &[&new_id, &Json(&nodes)],
+            )
+            .await
+            .map_err(Error::exec("update cloned flow nodes"))?;
+        }
+
         tx.commit()
             .await
             .map_err(Error::exec("commit clone_flow"))?;

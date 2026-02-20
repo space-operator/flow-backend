@@ -32,6 +32,10 @@ use tracing::Instrument;
 
 pub const MAX_CALL_DEPTH: u32 = 1024;
 
+fn is_spo_builtin_node(node_id: &str, builtin: &str) -> bool {
+    node_id == builtin || node_id.strip_prefix("@spo/").is_some_and(|name| name == builtin)
+}
+
 #[derive(Debug, ThisError)]
 pub enum StopError {
     #[error("flow not found")]
@@ -157,8 +161,11 @@ where
             .iter()
             .filter(|n| {
                 n.data.r#type == CommandType::Native
-                    && (n.data.node_id == interflow::INTERFLOW
-                        || n.data.node_id == interflow_instructions::INTERFLOW_INSTRUCTIONS)
+                    && (is_spo_builtin_node(&n.data.node_id, interflow::INTERFLOW)
+                        || is_spo_builtin_node(
+                            &n.data.node_id,
+                            interflow_instructions::INTERFLOW_INSTRUCTIONS,
+                        ))
             })
             .map(|n| (n.id, interflow::get_interflow_id(&n.data)));
         for (node_id, result) in interflow_nodes {
@@ -204,7 +211,8 @@ where
 
     for (parent_flow, config) in flows.iter_mut() {
         let interflows = config.nodes.iter_mut().filter(|n| {
-            n.data.r#type == CommandType::Native && n.data.node_id == interflow::INTERFLOW
+            n.data.r#type == CommandType::Native
+                && is_spo_builtin_node(&n.data.node_id, interflow::INTERFLOW)
         });
 
         for n in interflows {

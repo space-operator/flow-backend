@@ -20,7 +20,7 @@ use std::{
 use tokio::{sync::Semaphore, task::JoinHandle};
 use tower::ServiceExt;
 use uuid::Uuid;
-use value::Decimal;
+use value::{Decimal, Value};
 
 use crate::{
     command::{interflow, interflow_instructions},
@@ -37,6 +37,20 @@ pub enum StartPermission {
     Authenticated,
     /// Any unauthenticated user
     Anonymous,
+}
+
+fn is_spo_builtin_node(node_id: &str, builtin: &str) -> bool {
+    node_id == builtin || node_id.strip_prefix("@spo/").is_some_and(|name| name == builtin)
+}
+
+fn parse_wallet_id(value: &JsonValue) -> Option<i64> {
+    flow_lib::command::parse_value_tagged(value.clone())
+        .ok()
+        .and_then(|value| match value {
+            Value::I64(v) => Some(v),
+            Value::U64(v) => i64::try_from(v).ok(),
+            _ => None,
+        })
 }
 
 #[derive(bon::Builder, Clone, Debug, Serialize, Deserialize)]
@@ -63,13 +77,14 @@ impl Flow {
             .nodes
             .iter()
             .filter_map(|n| {
-                (n.data.r#type == CommandType::Native && n.data.node_id == "wallet")
+                (n.data.r#type == CommandType::Native
+                    && is_spo_builtin_node(&n.data.node_id, "wallet"))
                     .then(|| {
                         n.data
                             .targets_form
                             .form_data
                             .get("wallet_id")
-                            .and_then(|v| v.as_i64())
+                            .and_then(parse_wallet_id)
                     })
                     .flatten()
             })
@@ -82,8 +97,11 @@ impl Flow {
             .iter()
             .filter_map(|n| {
                 let is_interflow = n.data.r#type == CommandType::Native
-                    && (n.data.node_id == interflow::INTERFLOW
-                        || n.data.node_id == interflow_instructions::INTERFLOW_INSTRUCTIONS);
+                    && (is_spo_builtin_node(&n.data.node_id, interflow::INTERFLOW)
+                        || is_spo_builtin_node(
+                            &n.data.node_id,
+                            interflow_instructions::INTERFLOW_INSTRUCTIONS,
+                        ));
                 is_interflow
                     .then(|| interflow::get_interflow_id(&n.data).ok())
                     .flatten()
@@ -329,7 +347,9 @@ impl FlowSet {
         options: StartFlowDeploymentOptions,
     ) -> Result<(FlowRunId, JoinHandle<FlowRunResult>), new_flow_run::Error> {
         let flow_id = self.deployment.entrypoint;
-        let flow = self.deployment.flows.get(&flow_id).unwrap().clone();
+        let Some(flow) = self.deployment.flows.get(&flow_id).cloned() else {
+            return Err(new_flow_run::Error::NotFound);
+        };
         let shared_with = if flow.row.user_id != options.starter.user_id {
             [options.starter.user_id].into()
         } else {

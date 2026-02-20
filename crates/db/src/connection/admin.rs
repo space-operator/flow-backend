@@ -484,8 +484,8 @@ impl AdminConn {
         copy_in(&tx, "kvstore_metadata", &mut data.kvstore_metadata).await?;
         copy_in(&tx, "kvstore", &mut data.kvstore).await?;
 
-        copy_in(&tx, "flows", &mut data.flows).await?;
-        update_id_sequence(&tx, "flows", "id", "flows_id_seq").await?;
+        copy_in(&tx, "flows_v2", &mut data.flows).await?;
+        update_id_sequence(&tx, "flows_v2", "id", "flows_v2_id_seq").await?;
 
         copy_in(&tx, "nodes", &mut data.nodes).await?;
         update_id_sequence(&tx, "nodes", "id", "nodes_id_seq").await?;
@@ -545,8 +545,7 @@ async fn copy_in(tx: &Transaction<'_>, table: &str, df: &mut DataFrame) -> crate
             .get_columns()
             .iter()
             .fold(String::new(), |mut result, c| {
-                use std::fmt::Write;
-                write!(&mut result, "{:?},", c.name()).unwrap();
+                result.push_str(&format!("{:?},", c.name()));
                 result
             });
         header.pop();

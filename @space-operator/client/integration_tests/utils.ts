@@ -2,6 +2,23 @@ import type { FlowRunId } from "../src/mod.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type * as client from "../src/mod.ts";
 
+export function getEnv(key: string): string {
+  const env = Deno.env.get(key);
+  if (env === undefined) throw new Error(`no env ${key}`);
+  return env;
+}
+
+export function getUuidEnv(key: string): string {
+  const value = getEnv(key);
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      .test(value)
+  ) {
+    throw new Error(`${key} must be a UUID, got: ${value}`);
+  }
+  return value;
+}
+
 export async function checkNoErrors(
   sup: SupabaseClient<client.Database>,
   runId: FlowRunId,

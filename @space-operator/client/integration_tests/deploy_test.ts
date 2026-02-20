@@ -6,7 +6,7 @@ import { assert, assertEquals } from "@std/assert";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import * as nacl from "tweetnacl";
 import { decodeBase64 } from "@std/encoding/base64";
-import { checkNoErrors } from "./utils.ts";
+import { checkNoErrors, getEnv, getUuidEnv } from "./utils.ts";
 import { encodeBase58 } from "@std/encoding/base58";
 
 dotenv.loadSync({
@@ -20,15 +20,13 @@ function ed25519SignText(keypair: web3.Keypair, message: string): Uint8Array {
   );
 }
 
-function getEnv(key: string): string {
-  const env = Deno.env.get(key);
-  if (env === undefined) throw new Error(`no env ${key}`);
-  return env;
-}
-
 const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
 const supabaseUrl = "http://localhost:8000";
+const DEPLOY_RUN_FLOW_ID = getUuidEnv("DEPLOY_TEST_RUN_FLOW_ID");
+const DEPLOY_DELETE_FLOW_ID = getUuidEnv("DEPLOY_TEST_DELETE_FLOW_ID");
+const DEPLOY_ACTION_FLOW_ID = getUuidEnv("DEPLOY_TEST_ACTION_FLOW_ID");
+const DEPLOY_SIMPLE_FLOW_ID = getUuidEnv("DEPLOY_TEST_SIMPLE_FLOW_ID");
 
 Deno.test("deploy and run", async () => {
   const owner = new client.Client({
@@ -40,8 +38,7 @@ Deno.test("deploy and run", async () => {
     bs58.decodeBase58(getEnv("KEYPAIR")),
   );
 
-  const flowId = 3643;
-  const id = await owner.deployFlow(flowId);
+  const id = await owner.deployFlow(DEPLOY_RUN_FLOW_ID);
 
   const starterKeypair = web3.Keypair.generate();
   const starter = new client.Client({
@@ -110,8 +107,6 @@ Deno.test("deploy and delete", async (t) => {
   });
   await sup.auth.setSession(jwt);
 
-  const flowId = 3625;
-
   const getLatest = async (
     flowId: client.FlowId,
   ): Promise<client.DeploymentId> => {
@@ -125,14 +120,14 @@ Deno.test("deploy and delete", async (t) => {
     return result.data.deployment_id;
   };
 
-  const first = await owner.deployFlow(flowId);
-  const firstFromTag = await getLatest(flowId);
+  const first = await owner.deployFlow(DEPLOY_DELETE_FLOW_ID);
+  const firstFromTag = await getLatest(DEPLOY_DELETE_FLOW_ID);
   await t.step("assert first", () => {
     assertEquals(first, firstFromTag);
   });
 
-  const second = await owner.deployFlow(flowId);
-  const secondFromTag = await getLatest(flowId);
+  const second = await owner.deployFlow(DEPLOY_DELETE_FLOW_ID);
+  const secondFromTag = await getLatest(DEPLOY_DELETE_FLOW_ID);
   await t.step("assert second", () => {
     assertEquals(second, secondFromTag);
   });
@@ -148,27 +143,27 @@ Deno.test("deploy and delete", async (t) => {
   });
 
   await t.step("assert after delete", async () => {
-    const currentLatest = await getLatest(flowId);
+    const currentLatest = await getLatest(DEPLOY_DELETE_FLOW_ID);
     assertEquals(first, currentLatest);
   });
 
   const count = 10;
   for (let i = 0; i < count; i += 1) {
-    await owner.deployFlow(flowId);
+    await owner.deployFlow(DEPLOY_DELETE_FLOW_ID);
   }
 
   await t.step("batch delete", async () => {
     const deleteResult = await sup
       .from("flow_deployments")
       .delete({ count: "exact" })
-      .eq("entrypoint", flowId)
+      .eq("entrypoint", DEPLOY_DELETE_FLOW_ID)
       .neq("id", first);
     if (deleteResult.error) throw new Error(JSON.stringify(deleteResult.error));
     assertEquals(deleteResult.count, count);
   });
 
   await t.step("assert after batch", async () => {
-    const currentLatest = await getLatest(flowId);
+    const currentLatest = await getLatest(DEPLOY_DELETE_FLOW_ID);
     assertEquals(first, currentLatest);
   });
 });
@@ -185,7 +180,7 @@ Deno.test("output instructions", async () => {
   });
   await sup.auth.setSession(jwt);
 
-  const flowId = 3674;
+  const flowId = DEPLOY_ACTION_FLOW_ID;
   const id = await owner.deployFlow(flowId);
 
   const updateResult = await sup
@@ -235,7 +230,7 @@ Deno.test("fees", async () => {
   });
   await sup.auth.setSession(jwt);
 
-  const flowId = 3674;
+  const flowId = DEPLOY_ACTION_FLOW_ID;
   const id = await owner.deployFlow(flowId);
   const feeRecipient = new web3.PublicKey(
     "J8mdVB7duENExHwKgyHnK3gve8CvUgFsmwWkJ55LWgZj",
@@ -294,7 +289,7 @@ Deno.test("action identity", async () => {
   });
   await sup.auth.setSession(jwt);
 
-  const flowId = 3674;
+  const flowId = DEPLOY_ACTION_FLOW_ID;
   const id = await owner.deployFlow(flowId);
   const identity = web3.Keypair.generate();
   owner.setToken(`Bearer ${jwt.access_token}`);
@@ -358,7 +353,7 @@ Deno.test("execute on action", async () => {
   owner.setToken(`Bearer ${jwt.access_token}`);
   const user_id = (await sup.auth.getSession()).data.session?.user.id;
 
-  const flowId = 3674;
+  const flowId = DEPLOY_ACTION_FLOW_ID;
   const id = await owner.deployFlow(flowId);
   const identity = web3.Keypair.generate();
   await owner.upsertWallet({
@@ -442,7 +437,7 @@ Deno.test("start authenticated by flow", async () => {
     token: apiKey,
   });
 
-  const flowId = 3675;
+  const flowId = DEPLOY_SIMPLE_FLOW_ID;
   const id = await owner.deployFlow(flowId);
   const ownerSup = createClient<client.Database>(supabaseUrl, anonKey, {
     auth: { autoRefreshToken: false },
@@ -506,7 +501,7 @@ Deno.test("start by flow + tag", async () => {
     token: apiKey,
   });
 
-  const flowId = 3675;
+  const flowId = DEPLOY_SIMPLE_FLOW_ID;
   await owner.deployFlow(flowId);
 
   const { flow_run_id } = await owner.startDeployment(
@@ -547,7 +542,7 @@ Deno.test("start custom tag", async () => {
   await sup.auth.setSession(jwt);
   const user_id = (await sup.auth.getUser()).data.user?.id!;
 
-  const flowId = 3675;
+  const flowId = DEPLOY_SIMPLE_FLOW_ID;
   const id = await owner.deployFlow(flowId);
   await sup.from("flow_deployments_tags").upsert({
     deployment_id: id,

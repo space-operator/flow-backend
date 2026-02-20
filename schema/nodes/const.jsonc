@@ -1,18 +1,62 @@
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
-    "type": "native",
+    "id": "00000000-0000-4000-8000-000000000003",
+    "version": "2.0.0",
     "name": "const",
-    "display_name": "Cosnt",
-    "description": "Constant value",
-    "outputs": [
-        {
-            "name": "output",
-            "type": "free",
-            "required": true,
+    "type": "native",
+    "ports": {
+        "inputs": [],
+        "outputs": [
+            {
+                "id": "33333333-3333-4333-8333-333333333333",
+                "name": "output",
+                "type": "free",
+                "optional": false
+            }
+        ]
+    },
+    "config_schema": {
+        "type": "object",
+        "properties": {
+            "type": {
+                "type": "string",
+                "enum": [
+                    "JSON",
+                    "File"
+                ]
+            },
+            "value": {
+                "$ref": "https://schema.spaceoperator.com/value.schema.json"
+            },
+            "static": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "type",
+            "value"
+        ],
+        "additionalProperties": false
+    },
+    "config": {
+        "form_data": {
+            "type": {
+                "S": "JSON"
+            },
             "value": {
                 "S": ""
+            },
+            "static": {
+                "B": true
             }
         }
-    ],
-    "inputs": []
+    },
+    "author_handle": "spo",
+    "is_published": true,
+    "is_admin_only": false,
+    "legacy_node_id": null,
+    "migration_status": "published",
+    "user_id": null,
+    "created_at": "2026-02-20T00:00:00Z",
+    "updated_at": "2026-02-20T00:00:00Z"
 }

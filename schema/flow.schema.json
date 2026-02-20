@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://schema.spaceoperator.com/value.schema.json",
+    "$id": "https://schema.spaceoperator.com/flow.schema.json",
     "type": "object",
-    "description": "JSON flow definition",
+    "description": "Strict V2 flow definition",
     "properties": {
         "name": {
             "type": "string",
@@ -10,18 +10,26 @@
         },
         "description": {
             "type": "string",
-            "description": "Flow's description"
+            "description": "Flow description"
+        },
+        "environment": {
+            "type": "object",
+            "description": "Runtime environment variables",
+            "additionalProperties": {
+                "type": "string"
+            },
+            "default": {}
         },
         "nodes": {
             "type": "array",
-            "description": "List of nodes",
+            "description": "List of V2 nodes",
             "items": {
                 "$ref": "#/definitions/node"
             }
         },
         "edges": {
             "type": "array",
-            "description": "List of edges",
+            "description": "List of V2 edges",
             "items": {
                 "$ref": "#/definitions/edge"
             }
@@ -32,41 +40,224 @@
         "nodes",
         "edges"
     ],
+    "additionalProperties": false,
     "definitions": {
-        "node": {
+        "uuid": {
+            "type": "string",
+            "format": "uuid"
+        },
+        "value_type": {
+            "enum": [
+                "bool",
+                "u8",
+                "u16",
+                "u32",
+                "u64",
+                "u128",
+                "i8",
+                "i16",
+                "i32",
+                "i64",
+                "i128",
+                "f32",
+                "f64",
+                "decimal",
+                "pubkey",
+                "keypair",
+                "signature",
+                "address",
+                "string",
+                "bytes",
+                "array",
+                "object",
+                "free"
+            ]
+        },
+        "input_port": {
             "type": "object",
+            "required": [
+                "id",
+                "name"
+            ],
             "properties": {
                 "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Unique ID of this node, randomly generated UUIDv4"
+                    "$ref": "#/definitions/uuid"
                 },
-                "definition": {
-                    "$ref": "https://schema.spaceoperator.com/node-v2.schema.json",
-                    "description": "Node's definition"
+                "name": {
+                    "type": "string"
+                },
+                "type_bounds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/value_type"
+                    },
+                    "default": []
+                },
+                "required": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "passthrough": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "tooltip": {
+                    "type": "string"
                 }
-            }
+            },
+            "additionalProperties": false
+        },
+        "output_port": {
+            "type": "object",
+            "required": [
+                "id",
+                "name",
+                "type"
+            ],
+            "properties": {
+                "id": {
+                    "$ref": "#/definitions/uuid"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/value_type"
+                },
+                "optional": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "tooltip": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+        "node_ports": {
+            "type": "object",
+            "required": [
+                "inputs",
+                "outputs"
+            ],
+            "properties": {
+                "inputs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/input_port"
+                    }
+                },
+                "outputs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/output_port"
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "node": {
+            "type": "object",
+            "required": [
+                "id",
+                "type",
+                "data"
+            ],
+            "properties": {
+                "id": {
+                    "$ref": "#/definitions/uuid"
+                },
+                "type": {
+                    "const": "native"
+                },
+                "position": {
+                    "type": "object",
+                    "required": [
+                        "x",
+                        "y"
+                    ],
+                    "properties": {
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "width": {
+                    "type": "number"
+                },
+                "height": {
+                    "type": "number"
+                },
+                "data": {
+                    "type": "object",
+                    "required": [
+                        "node_id",
+                        "ports",
+                        "config"
+                    ],
+                    "properties": {
+                        "node_id": {
+                            "type": "string",
+                            "pattern": "^@[a-zA-Z0-9_-]+/[a-zA-Z][a-zA-Z0-9_-]*$"
+                        },
+                        "version": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "ports": {
+                            "$ref": "#/definitions/node_ports"
+                        },
+                        "config": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "https://schema.spaceoperator.com/value.schema.json"
+                            },
+                            "default": {}
+                        },
+                        "style": {}
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
         },
         "edge": {
             "type": "object",
+            "required": [
+                "id",
+                "source",
+                "target",
+                "sourceHandle",
+                "targetHandle"
+            ],
             "properties": {
+                "id": {
+                    "type": "string"
+                },
                 "source": {
-                    "type": "string",
-                    "description": "ID of source node"
+                    "$ref": "#/definitions/uuid"
+                },
+                "target": {
+                    "$ref": "#/definitions/uuid"
                 },
                 "sourceHandle": {
                     "type": "string",
-                    "description": "Name of output port in source node"
-                },
-                "target": {
-                    "type": "string",
-                    "description": "ID of target node"
+                    "pattern": "^(passthrough-)?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
                 },
                 "targetHandle": {
-                    "type": "string",
-                    "description": "Name of input port in target node"
+                    "$ref": "#/definitions/uuid"
+                },
+                "type": {
+                    "type": "string"
                 }
-            }
+            },
+            "additionalProperties": false
         }
     }
 }

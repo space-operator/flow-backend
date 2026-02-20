@@ -72,7 +72,7 @@ pub enum ValueType {
 }
 
 pub type WalletId = i64;
-pub type FlowId = i32;
+pub type FlowId = Uuid;
 pub type NodeId = Uuid;
 pub type FlowRunId = Uuid;
 
@@ -172,7 +172,7 @@ impl Default for ContextConfig {
     fn default() -> Self {
         ContextConfig {
             http_client: HttpClientConfig {
-                timeout_in_secs: NonZeroU64::new(100).unwrap(),
+                timeout_in_secs: default_http_timeout_in_secs(),
                 gzip: true,
             },
             solana_client: SolanaClientConfig {
@@ -189,6 +189,10 @@ impl Default for ContextConfig {
 pub struct HttpClientConfig {
     pub timeout_in_secs: NonZeroU64,
     pub gzip: bool,
+}
+
+fn default_http_timeout_in_secs() -> NonZeroU64 {
+    NonZeroU64::new(100).unwrap_or(NonZeroU64::MIN)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -340,7 +344,78 @@ impl FlowConfig {
             id: config.id,
             ctx: ContextConfig {
                 http_client: HttpClientConfig {
-                    timeout_in_secs: NonZeroU64::new(100).unwrap(),
+                    timeout_in_secs: default_http_timeout_in_secs(),
+                    gzip: true,
+                },
+                solana_client: SolanaClientConfig {
+                    url: config.sol_network.url,
+                    cluster: config.sol_network.cluster,
+                },
+                environment: config.environment,
+                endpoints: <_>::default(),
+            },
+            nodes,
+            edges,
+            instructions_bundling: config.instructions_bundling,
+        }
+    }
+
+    pub fn from_v2(config: client::ClientConfigV2) -> Self {
+        fn get_name_from_id(names: &HashMap<Uuid, String>, id: &Uuid) -> Option<String> {
+            match names.get(id) {
+                Some(name) => Some(name.clone()),
+                None => {
+                    tracing::warn!("name not found for edge {}", id);
+                    None
+                }
+            }
+        }
+
+        let source_names = config.nodes.iter().flat_map(|n| {
+            n.data
+                .ports
+                .outputs
+                .iter()
+                .map(|s| (s.id, s.name.clone()))
+        });
+        let target_names = config.nodes.iter().flat_map(|n| {
+            n.data
+                .ports
+                .inputs
+                .iter()
+                .map(|t| (t.id, t.name.clone()))
+        });
+        let names = source_names.chain(target_names).collect::<HashMap<_, _>>();
+
+        let edges = config
+            .edges
+            .iter()
+            .filter_map(|e| {
+                let from: Gate = (e.source, get_name_from_id(&names, &e.source_handle.id)?);
+                let to: Gate = (e.target, get_name_from_id(&names, &e.target_handle)?);
+                Some((from, to))
+            })
+            .collect();
+
+        let nodes = config
+            .nodes
+            .into_iter()
+            .map(|n| {
+                let node_data: client::NodeData = n.data.into();
+                NodeConfig {
+                    id: n.id,
+                    command_name: node_data.node_id.clone(),
+                    form_data: node_data.targets_form.form_data.clone(),
+                    client_node_data: node_data,
+                }
+            })
+            .collect();
+
+        Self {
+            id: config.id,
+            ctx: ContextConfig {
+                http_client: HttpClientConfig {
+                    timeout_in_secs: default_http_timeout_in_secs(),
                     gzip: true,
                 },
                 solana_client: SolanaClientConfig {

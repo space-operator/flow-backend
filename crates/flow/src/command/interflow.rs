@@ -15,13 +15,28 @@ pub struct Interflow {
     instruction_info: Option<InstructionInfo>,
 }
 
+fn parse_flow_id(value: &JsonValue) -> Option<FlowId> {
+    flow_lib::command::parse_value_tagged(value.clone())
+        .ok()
+        .and_then(|value| match value {
+            Value::String(s) => s.parse::<FlowId>().ok(),
+            _ => None,
+        })
+}
+
 pub fn get_interflow_id(n: &NodeData) -> Result<FlowId, serde_json::Error> {
-    let id = n
+    let flow_id = n
         .targets_form
         .form_data
-        .get("id")
-        .unwrap_or(&JsonValue::Null);
-    FlowId::deserialize(id)
+        .get("flow_id")
+        .and_then(parse_flow_id);
+
+    flow_id.ok_or_else(|| {
+        serde_json::Error::io(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "interflow.flow_id missing or invalid",
+        ))
+    })
 }
 
 impl Interflow {
@@ -118,3 +133,51 @@ impl CommandTrait for Interflow {
 flow_lib::submit!(CommandDescription::new(INTERFLOW, |data: &NodeData| {
     Ok(Box::new(Interflow::new(data)?))
 }));
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use flow_lib::config::client::{Extra, Source, Target, TargetsForm};
+    use serde_json::json;
+    use uuid::Uuid;
+
+    fn node_with_form(form_data: JsonValue) -> NodeData {
+        NodeData {
+            r#type: flow_lib::CommandType::Native,
+            node_id: INTERFLOW.into(),
+            sources: vec![Source {
+                id: Uuid::new_v4(),
+                name: "output".into(),
+                r#type: ValueType::Free,
+                optional: false,
+            }],
+            targets: vec![Target {
+                id: Uuid::new_v4(),
+                name: "input".into(),
+                type_bounds: vec![ValueType::Free],
+                required: false,
+                passthrough: false,
+            }],
+            targets_form: TargetsForm {
+                form_data,
+                extra: Extra::default(),
+                wasm_bytes: None,
+            },
+            instruction_info: None,
+        }
+    }
+
+    #[test]
+    fn parse_v2_uuid_flow_id_ivalue() {
+        let id = Uuid::new_v4();
+        let node = node_with_form(json!({ "flow_id": { "S": id.to_string() } }));
+        assert!(matches!(get_interflow_id(&node), Ok(parsed) if parsed == id));
+    }
+
+    #[test]
+    fn reject_plain_flow_id_string() {
+        let id = Uuid::new_v4();
+        let node = node_with_form(json!({ "flow_id": id.to_string() }));
+        assert!(get_interflow_id(&node).is_err());
+    }
+}
