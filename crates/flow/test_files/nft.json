@@ -1,6 +1,6 @@
 {
   "flow": {
-    "id": 0,
+    "id": "00000000-0000-0000-0000-000000000000",
     "user_id": "3b93d159-b9d1-4230-ad4b-e498d7f1b796",
     "name": "Bundling NFT",
     "mosaic": {
@@ -61,7 +61,7 @@
           "name": "Wallet",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#baf2b1",
-          "sources": [
+          "outputs": [
             {
               "name": "pubkey",
               "type": "string",
@@ -77,10 +77,12 @@
               "id": "a5355d4b-c499-4a73-9f0a-8fefa8112d83"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "name",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": false,
               "defaultValue": "",
               "tooltip": "",
@@ -88,16 +90,9 @@
               "id": "66b476c8-4698-40c5-80e4-1a6bf1094b42"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "public_key": "HJbqSuV94woJfyxFNnJyfQdACvvJYaNWsW1x6wmJ8kiq",
-              "wallet_type": "ADAPTER"
-            },
-            "extra": {
-              "supabase_id": 152
-            }
+          "config": {
+            "public_key": "HJbqSuV94woJfyxFNnJyfQdACvvJYaNWsW1x6wmJ8kiq",
+            "wallet_type": "ADAPTER"
           }
         },
         "positionAbsolute": {
@@ -134,28 +129,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "decimal",
               "defaultValue": "",
               "tooltip": "",
               "id": "1bc18588-c866-4c15-a676-f419707c6481"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "D": "0"
-              },
-              "type": "Decimal"
+          "inputs": [],
+          "config": {
+            "value": {
+              "D": "0"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "Decimal"
           }
         },
         "positionAbsolute": {
@@ -193,7 +181,7 @@
           "name": "Generate Keypair",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "pubkey",
               "type": "pubkey",
@@ -209,10 +197,12 @@
               "id": "06d0b4d1-3a3c-4074-8f26-b97a35ece188"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "seed",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "12 word BIP39 mnemonic seed phrase",
@@ -221,7 +211,9 @@
             },
             {
               "name": "private_key",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "Load using a base 58 string, ignores seed/passphrase",
@@ -230,7 +222,9 @@
             },
             {
               "name": "passphrase",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "",
@@ -238,14 +232,7 @@
               "id": "d9f51c3c-a798-4710-97ff-f23b921d9853"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 110
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": -1380,
@@ -281,7 +268,7 @@
           "name": "Create Mint Account",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "signature",
               "type": "signature",
@@ -290,10 +277,12 @@
               "id": "066a0c4f-77a1-493c-9d7f-a60542ad23a7"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "fee_payer",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "Who pays for account rent and transaction fees",
@@ -302,7 +291,9 @@
             },
             {
               "name": "decimals",
-              "type_bounds": ["u8"],
+              "type_bounds": [
+                "u8"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "NFTs should have decimal = 0\nUS dollars have 2 decimals\nFrom Metaplex documentation:\n'If the token has a master edition it is a NonFungible. If the token has no master edition(ensuring its supply can be > 1) and decimals of 0 it is a FungibleAsset. If the token has no master edition(ensuring its supply can be > 1) and decimals of > 0 it is a Fungible. If the token is a limited edition of a MasterEditon it is a NonFungibleEdition.'",
@@ -311,7 +302,9 @@
             },
             {
               "name": "mint_authority",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "Mint authority - who can mint more tokens",
@@ -320,7 +313,9 @@
             },
             {
               "name": "freeze_authority",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "",
@@ -329,7 +324,9 @@
             },
             {
               "name": "mint_account",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -338,7 +335,9 @@
             },
             {
               "name": "memo",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": false,
               "defaultValue": "",
               "tooltip": "Additional notes",
@@ -347,7 +346,9 @@
             },
             {
               "name": "submit",
-              "type_bounds": ["bool"],
+              "type_bounds": [
+                "bool"
+              ],
               "required": false,
               "defaultValue": true,
               "tooltip": "",
@@ -355,14 +356,7 @@
               "id": "a8b14cfb-3d9e-47ec-8174-2200794d98c7"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 107
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": -960,
@@ -398,7 +392,7 @@
           "name": "Associated Token Account",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "associated_token_account",
               "type": "pubkey",
@@ -414,10 +408,12 @@
               "id": "3bf3b99d-0a07-4417-a117-589e92742acf"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "owner",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -426,7 +422,9 @@
             },
             {
               "name": "fee_payer",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -435,7 +433,9 @@
             },
             {
               "name": "mint_account",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -444,7 +444,9 @@
             },
             {
               "name": "submit",
-              "type_bounds": ["bool"],
+              "type_bounds": [
+                "bool"
+              ],
               "required": false,
               "defaultValue": true,
               "tooltip": "",
@@ -452,14 +454,7 @@
               "id": "b40e5b52-daad-428d-bdf7-99f1d361ee92"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 386
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": -570,
@@ -495,28 +490,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "decimal",
               "defaultValue": "",
               "tooltip": "",
               "id": "ef9affce-2589-4d01-9b42-a8e1b6081de5"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "D": "1"
-              },
-              "type": "Decimal"
+          "inputs": [],
+          "config": {
+            "value": {
+              "D": "1"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "Decimal"
           }
         },
         "positionAbsolute": {
@@ -554,7 +542,7 @@
           "name": "Mint Token",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "signature",
               "type": "signature",
@@ -563,10 +551,12 @@
               "id": "7699caf5-c436-4d6b-b879-29fcc18a5f90"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "fee_payer",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -575,7 +565,9 @@
             },
             {
               "name": "mint_authority",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -584,7 +576,9 @@
             },
             {
               "name": "mint_account",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -593,7 +587,9 @@
             },
             {
               "name": "recipient",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -602,7 +598,9 @@
             },
             {
               "name": "amount",
-              "type_bounds": ["f64"],
+              "type_bounds": [
+                "f64"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "NFTs should have amount = 1",
@@ -611,7 +609,9 @@
             },
             {
               "name": "decimals",
-              "type_bounds": ["u8"],
+              "type_bounds": [
+                "u8"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "NFTs should have decimals = 0",
@@ -620,7 +620,9 @@
             },
             {
               "name": "submit",
-              "type_bounds": ["bool"],
+              "type_bounds": [
+                "bool"
+              ],
               "required": false,
               "defaultValue": true,
               "tooltip": "",
@@ -628,14 +630,7 @@
               "id": "e86a5a01-b5f8-456d-a633-ac7d4ed45fd6"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 113
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": -30,
@@ -671,28 +666,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "pubkey",
               "defaultValue": "",
               "tooltip": "",
               "id": "db4486e2-7973-4f6f-963d-36ba44913622"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "B3": "thisdoesntmatteriiiiiiiiiiiiiiiiiiiiiiiiiii"
-              },
-              "type": "Pubkey"
+          "inputs": [],
+          "config": {
+            "value": {
+              "B3": "thisdoesntmatteriiiiiiiiiiiiiiiiiiiiiiiiiii"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "Pubkey"
           }
         },
         "dragging": false,
@@ -730,28 +718,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "bool",
               "defaultValue": "",
               "tooltip": "",
               "id": "0ed9dbcc-5d76-46f7-8330-f8112549079c"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "B": true
-              },
-              "type": "BoolTrue"
+          "inputs": [],
+          "config": {
+            "value": {
+              "B": true
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "BoolTrue"
           }
         },
         "positionAbsolute": {
@@ -788,26 +769,19 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "free",
               "defaultValue": "",
               "tooltip": "",
               "id": "1de4f7d3-5f86-43bf-b552-a52f0d3885a7"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": "{\n    \"name\": \"SO #11111\",\n    \"symbol\": \"SPOP\",\n    \"description\": \"Space Operator is a dynamic PFP collection\",\n    \"seller_fee_basis_points\": 250,\n    \"image\": \"https://arweave.net/vb1tD7tfAyrhZceA1MOYvvyqzZWgzHGDVZF37yDNH1Q\",\n    \"attributes\": [\n        {\n            \"trait_type\": \"Season\",\n            \"value\": \"Fall\"\n        },\n        {\n            \"trait_type\": \"Light Color\",\n            \"value\": \"Orange\"\n        }\n    ],\n    \"properties\": {\n        \"files\": [\n            {\n                \"uri\": \"https://arweave.net/vb1tD7tfAyrhZceA1MOYvvyqzZWgzHGDVZF37yDNH1Q\",\n                \"type\": \"image/jpeg\"\n            }\n        ],\n        \"category\": null\n    }\n}",
-              "type": "JSON"
-            },
-            "extra": {
-              "supabase_id": 117
-            }
+          "inputs": [],
+          "config": {
+            "value": "{\n    \"name\": \"SO #11111\",\n    \"symbol\": \"SPOP\",\n    \"description\": \"Space Operator is a dynamic PFP collection\",\n    \"seller_fee_basis_points\": 250,\n    \"image\": \"https://arweave.net/vb1tD7tfAyrhZceA1MOYvvyqzZWgzHGDVZF37yDNH1Q\",\n    \"attributes\": [\n        {\n            \"trait_type\": \"Season\",\n            \"value\": \"Fall\"\n        },\n        {\n            \"trait_type\": \"Light Color\",\n            \"value\": \"Orange\"\n        }\n    ],\n    \"properties\": {\n        \"files\": [\n            {\n                \"uri\": \"https://arweave.net/vb1tD7tfAyrhZceA1MOYvvyqzZWgzHGDVZF37yDNH1Q\",\n                \"type\": \"image/jpeg\"\n            }\n        ],\n        \"category\": null\n    }\n}",
+            "type": "JSON"
           }
         },
         "dragging": false,
@@ -845,28 +819,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "string",
               "defaultValue": "",
               "tooltip": "",
               "id": "2280b59d-4232-479f-8330-b5558de154e2"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "S": "https://arweave.net/3FxpIIbpySnfTTXIrpojhF2KHHjevI8Mrt3pACmEbSY"
-              },
-              "type": "String"
+          "inputs": [],
+          "config": {
+            "value": {
+              "S": "https://arweave.net/3FxpIIbpySnfTTXIrpojhF2KHHjevI8Mrt3pACmEbSY"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "String"
           }
         },
         "positionAbsolute": {
@@ -904,26 +871,19 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "free",
               "defaultValue": "",
               "tooltip": "",
               "id": "0a64a373-ea8c-4e57-89ff-174fe26dcefa"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": "{\n\"use_method\":\"Burn\", \"remaining\":500,\n\"total\":500\n}",
-              "type": "JSON"
-            },
-            "extra": {
-              "supabase_id": 117
-            }
+          "inputs": [],
+          "config": {
+            "value": "{\n\"use_method\":\"Burn\", \"remaining\":500,\n\"total\":500\n}",
+            "type": "JSON"
           }
         },
         "positionAbsolute": {
@@ -961,26 +921,19 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "free",
               "defaultValue": "",
               "tooltip": "",
               "id": "8eb7708d-386e-4b5d-8d45-17b22d3d528e"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": "[{\n\"address\":\"DpfvhHU7z1CK8eP5xbEz8c4WBNHUfqUVtAE7opP2kJBc\",\"share\":100\n}]",
-              "type": "JSON"
-            },
-            "extra": {
-              "supabase_id": 117
-            }
+          "inputs": [],
+          "config": {
+            "value": "[{\n\"address\":\"DpfvhHU7z1CK8eP5xbEz8c4WBNHUfqUVtAE7opP2kJBc\",\"share\":100\n}]",
+            "type": "JSON"
           }
         },
         "positionAbsolute": {
@@ -1018,7 +971,7 @@
           "name": "Create Metadata Account",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "signature",
               "type": "signature",
@@ -1034,10 +987,12 @@
               "id": "8922ffd8-3694-4fdd-a98d-d74a72680825"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "proxy_as_update_authority",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "Whether a Proxy Authority is signing the Update Authority",
@@ -1046,7 +1001,9 @@
             },
             {
               "name": "update_authority",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "Who can update the on-chain metadata",
@@ -1055,7 +1012,9 @@
             },
             {
               "name": "is_mutable",
-              "type_bounds": ["bool"],
+              "type_bounds": [
+                "bool"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "Whether Metadata Account can be updated",
@@ -1064,7 +1023,9 @@
             },
             {
               "name": "mint_account",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "Token Mint Account",
@@ -1073,7 +1034,9 @@
             },
             {
               "name": "mint_authority",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -1082,7 +1045,9 @@
             },
             {
               "name": "fee_payer",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -1091,7 +1056,9 @@
             },
             {
               "name": "metadata",
-              "type_bounds": ["json"],
+              "type_bounds": [
+                "json"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -1100,7 +1067,9 @@
             },
             {
               "name": "metadata_uri",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -1109,7 +1078,9 @@
             },
             {
               "name": "uses",
-              "type_bounds": ["json"],
+              "type_bounds": [
+                "json"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "How many and which type of uses each NFT will have.\nUses:\nBurn is a single-time use and is burned after use.\nSingle is a single-time use and does not burn the token.\nMultiple allows up to the specified number of uses",
@@ -1118,7 +1089,9 @@
             },
             {
               "name": "collection_mint_account",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "",
@@ -1127,7 +1100,9 @@
             },
             {
               "name": "collection_details",
-              "type_bounds": ["u64"],
+              "type_bounds": [
+                "u64"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "Only applies to Collection NFTs and is automatically set. To facility migration, set the collection size manually.",
@@ -1136,7 +1111,9 @@
             },
             {
               "name": "creators",
-              "type_bounds": ["json"],
+              "type_bounds": [
+                "json"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "Creators and their share of royalties. Limited to 5 creators",
@@ -1145,7 +1122,9 @@
             },
             {
               "name": "submit",
-              "type_bounds": ["bool"],
+              "type_bounds": [
+                "bool"
+              ],
               "required": false,
               "defaultValue": true,
               "tooltip": "",
@@ -1153,14 +1132,7 @@
               "id": "06049348-e56f-45f6-b558-13d9dc68499d"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 124
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": 510,
@@ -1196,7 +1168,7 @@
           "name": "Create Master Edition",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "signature",
               "type": "signature",
@@ -1219,10 +1191,12 @@
               "id": "a05a3810-00d5-4d23-9ac5-c5b6c581722f"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "proxy_as_update_authority",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "Whether a Proxy Authority is signing the Update Authority",
@@ -1231,7 +1205,9 @@
             },
             {
               "name": "update_authority",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "",
@@ -1240,7 +1216,9 @@
             },
             {
               "name": "mint_account",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -1249,7 +1227,9 @@
             },
             {
               "name": "mint_authority",
-              "type_bounds": ["pubkey"],
+              "type_bounds": [
+                "pubkey"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -1258,7 +1238,9 @@
             },
             {
               "name": "fee_payer",
-              "type_bounds": ["keypair"],
+              "type_bounds": [
+                "keypair"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -1267,7 +1249,9 @@
             },
             {
               "name": "max_supply",
-              "type_bounds": ["u64"],
+              "type_bounds": [
+                "u64"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "How many copies you can print. Leave empty for unlimited\n1/1 NFTs should have supply 0",
@@ -1276,7 +1260,9 @@
             },
             {
               "name": "submit",
-              "type_bounds": ["bool"],
+              "type_bounds": [
+                "bool"
+              ],
               "required": false,
               "defaultValue": true,
               "tooltip": "",
@@ -1284,14 +1270,7 @@
               "id": "dd84bc4a-e337-42e0-ba0d-ef72527c3d04"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 123
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": 1005,
@@ -1327,28 +1306,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "decimal",
               "defaultValue": "",
               "tooltip": "",
               "id": "b44b8f0a-fc2d-4cce-96ec-8a299a9f7062"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "D": "0"
-              },
-              "type": "Decimal"
+          "inputs": [],
+          "config": {
+            "value": {
+              "D": "0"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "Decimal"
           }
         },
         "dragging": false,
@@ -1385,11 +1357,13 @@
           "name": "Flow Output",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#f2fcff",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -1397,28 +1371,8 @@
               "id": "c8af03a3-36ae-4480-aac3-744a4e64dac3"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Output Label",
-                  "default": ""
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "pubkey"
-            },
-            "extra": {
-              "supabase_id": 137
-            }
+          "config": {
+            "label": "pubkey"
           }
         },
         "positionAbsolute": {
@@ -1455,11 +1409,13 @@
           "name": "Flow Output",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#f2fcff",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -1467,28 +1423,8 @@
               "id": "34b10d45-56e1-41c6-bc8e-d03fda5be5ea"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Output Label",
-                  "default": ""
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "master_edition"
-            },
-            "extra": {
-              "supabase_id": 137
-            }
+          "config": {
+            "label": "master_edition"
           }
         },
         "positionAbsolute": {
@@ -1525,11 +1461,13 @@
           "name": "Flow Output",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#f2fcff",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -1537,28 +1475,8 @@
               "id": "5f4072b3-33a9-4362-a567-23defb402dca"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Output Label",
-                  "default": ""
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "metadata_account"
-            },
-            "extra": {
-              "supabase_id": 137
-            }
+          "config": {
+            "label": "metadata_account"
           }
         },
         "positionAbsolute": {

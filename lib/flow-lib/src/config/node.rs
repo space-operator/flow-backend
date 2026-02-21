@@ -1,8 +1,6 @@
 //! Node-definition transport parsing used by command builders.
 //!
-//! This module supports both:
-//! - legacy command definitions (`data/sources/targets` aliased to `outputs/inputs`)
-//! - V2 node definitions (`name/ports/config_schema/config/...`)
+//! Supports V2 node definitions (`name/ports/config_schema/config/...`).
 //!
 //! Note: only add fields that are needed in backend execution.
 use crate::command::InstructionInfo;
@@ -14,9 +12,7 @@ use std::io;
 pub struct Definition {
     pub r#type: super::CommandType,
     pub data: Data,
-    #[serde(alias = "sources")]
     pub outputs: Vec<Source>,
-    #[serde(alias = "targets")]
     pub inputs: Vec<Target>,
     #[serde(default)]
     pub permissions: Permissions,
@@ -143,17 +139,18 @@ fn parse_jsonc_value(def: &str) -> Result<JsonValue, serde_json::Error> {
         })
 }
 
-/// Parse a node definition that may be either legacy format or V2 format.
+/// Parse a V2 node definition (JSONC or JSON).
 ///
-/// Input may be JSON or JSONC.
+/// Tries the V2 `ports`-based format first, then falls back to the flat
+/// `outputs`/`inputs` format used by the DB wire layer.
 pub fn parse_definition(def: &str) -> Result<Definition, serde_json::Error> {
     let value = parse_jsonc_value(def)?;
 
-    if let Ok(legacy) = serde_json::from_value::<Definition>(value.clone()) {
-        return Ok(legacy);
+    if let Ok(v2) = serde_json::from_value::<DefinitionV2>(value.clone()) {
+        return Ok(v2.into());
     }
 
-    serde_json::from_value::<DefinitionV2>(value).map(Into::into)
+    serde_json::from_value::<Definition>(value)
 }
 
 #[cfg(test)]
@@ -162,15 +159,15 @@ mod tests {
     use crate::config::ValueType;
 
     #[test]
-    fn parses_legacy_definition() {
+    fn parses_flat_definition() {
         let input = r#"{
           "type": "native",
           "data": { "node_id": "const", "instruction_info": null },
-          "sources": [{ "name": "output", "type": "free", "optional": false }],
-          "targets": []
+          "outputs": [{ "name": "output", "type": "free", "optional": false }],
+          "inputs": []
         }"#;
 
-        let parsed = parse_definition(input).expect("legacy definition should parse");
+        let parsed = parse_definition(input).expect("flat definition should parse");
         assert_eq!(parsed.data.node_id, "const");
         assert_eq!(parsed.outputs.len(), 1);
         assert!(parsed.inputs.is_empty());

@@ -225,7 +225,7 @@ mod tests {
     use flow_lib::{
         config::{
             client::{InputPort, OutputPort},
-            node::Definition,
+            node::parse_definition,
         },
         context::CommandContext,
     };
@@ -234,7 +234,7 @@ mod tests {
     use super::*;
 
     fn node_data(def: &str, source: &str) -> NodeData {
-        let def = serde_json::from_str::<Definition>(def).unwrap();
+        let def = parse_definition(def).unwrap();
         NodeData {
             r#type: def.r#type,
             node_id: def.data.node_id,
@@ -271,7 +271,7 @@ mod tests {
     async fn test_run() {
         tracing_subscriber::fmt::try_init().ok();
         const SOURCE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/add.ts"));
-        const JSON: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/add.json"));
+        const JSON: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/add.jsonc"));
         let nd = node_data(JSON, SOURCE);
         let cmd = new(&nd).await.unwrap();
         let mut ctx = CommandContext::test_context();

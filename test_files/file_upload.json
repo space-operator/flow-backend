@@ -1,6 +1,6 @@
 {
   "flow": {
-    "id": 111,
+    "id": "00000000-0000-0000-0000-00000000006f",
     "user_id": "ad3dedf8-7b31-4baf-85a2-c336db90ad7f",
     "name": "file_upload",
     "mosaic": {
@@ -53,7 +53,7 @@
           "unique_node_id": "arweave_file_upload.0.1",
           "node_id": "arweave_file_upload",
           "name": "Arweave File Upload",
-          "sources": [
+          "outputs": [
             {
               "name": "file_url",
               "type": "string",
@@ -62,10 +62,13 @@
               "id": "e431b4e9-80a7-447f-8a9e-b8a6c83c9052"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "fee_payer",
-              "type_bounds": ["keypair", "string"],
+              "type_bounds": [
+                "keypair",
+                "string"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -74,7 +77,9 @@
             },
             {
               "name": "file_path",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -83,7 +88,9 @@
             },
             {
               "name": "fund_bundlr",
-              "type_bounds": ["bool"],
+              "type_bounds": [
+                "bool"
+              ],
               "required": true,
               "defaultValue": true,
               "tooltip": "",
@@ -91,14 +98,7 @@
               "id": "66e196c5-8b30-4764-b02a-854d0e0fe2aa"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 120
-            }
-          }
+          "config": {}
         },
         "position": {
           "x": 45,
@@ -130,7 +130,7 @@
           "unique_node_id": null,
           "node_id": "foreach",
           "name": "Foreach",
-          "sources": [
+          "outputs": [
             {
               "name": "element",
               "type": "json",
@@ -139,10 +139,12 @@
               "id": "eb503929-71dd-4f93-9aad-a9e323e2e137"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "array",
-              "type_bounds": ["json"],
+              "type_bounds": [
+                "json"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -150,30 +152,8 @@
               "id": "c0722160-34b4-4558-828c-c6625237c336"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "title": "Foreach",
-              "properties": {
-                "array": {
-                  "title": "array",
-                  "type": "string",
-                  "default": "[]"
-                }
-              }
-            },
-            "ui_schema": {
-              "array": {
-                "ui:widget": "textarea"
-              },
-              "ui:order": ["array"]
-            },
-            "form_data": {
-              "array": "[]"
-            },
-            "extra": {
-              "supabase_id": 302
-            }
+          "config": {
+            "array": "[]"
           }
         },
         "position": {
@@ -206,9 +186,9 @@
           "unique_node_id": "const.0.1",
           "node_id": "const",
           "name": "Const",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "string",
               "defaultValue": "",
               "tooltip": "",
@@ -216,16 +196,12 @@
               "value": ""
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "S": "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu"
-              },
-              "type": "String"
-            }
+          "inputs": [],
+          "config": {
+            "value": {
+              "S": "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu"
+            },
+            "type": "String"
           }
         },
         "position": {
@@ -258,26 +234,22 @@
           "unique_node_id": "const.0.1",
           "node_id": "const",
           "name": "Const",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "free",
               "defaultValue": "",
               "tooltip": "",
               "id": "7e9703bf-1531-4edb-9c1b-43094d4be124"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": [
-                "https://hyjboblkjeevkzaqsyxe.supabase.co/storage/v1/object/public/flow-files/24b18410-1f44-42d0-813d-bd00b62e5370/file_upload.json",
-                "https://hyjboblkjeevkzaqsyxe.supabase.co/storage/v1/object/public/flow-files/24b18410-1f44-42d0-813d-bd00b62e5370/subflow.json"
-              ],
-              "type": "File"
-            }
+          "inputs": [],
+          "config": {
+            "value": [
+              "https://hyjboblkjeevkzaqsyxe.supabase.co/storage/v1/object/public/flow-files/24b18410-1f44-42d0-813d-bd00b62e5370/file_upload.json",
+              "https://hyjboblkjeevkzaqsyxe.supabase.co/storage/v1/object/public/flow-files/24b18410-1f44-42d0-813d-bd00b62e5370/subflow.json"
+            ],
+            "type": "File"
           }
         },
         "position": {

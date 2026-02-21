@@ -1,6 +1,6 @@
 {
   "flow": {
-    "id": 94,
+    "id": "00000000-0000-0000-0000-00000000005e",
     "user_id": "ad3dedf8-7b31-4baf-85a2-c336db90ad7f",
     "name": "subflow",
     "mosaic": {
@@ -52,7 +52,7 @@
           "id": "db65cd84-6a44-4b0b-859a-b75c0e92f69d",
           "node_id": "flow_input",
           "name": "Flow Input",
-          "sources": [
+          "outputs": [
             {
               "name": "",
               "type": "free",
@@ -61,33 +61,9 @@
               "id": "7ef80a10-7a88-4fa1-8d6c-77a7ab3da5c2"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Label the input parameter",
-                  "default": ""
-                },
-                "form_label": {
-                  "type": "string",
-                  "title": "pubkey"
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "pubkey"
-            },
-            "extra": {
-              "supabase_id": 138
-            }
+          "inputs": [],
+          "config": {
+            "label": "pubkey"
           }
         },
         "position": {
@@ -119,7 +95,7 @@
           "id": "576fdf9a-eea7-4de9-b3a6-9e7712f168c3",
           "node_id": "get_balance",
           "name": "Get Balance",
-          "sources": [
+          "outputs": [
             {
               "name": "balance",
               "type": "u64",
@@ -128,10 +104,14 @@
               "id": "c2f88f3e-ab6b-4da8-8a61-6085db89f0bd"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "pubkey",
-              "type_bounds": ["pubkey", "keypair", "string"],
+              "type_bounds": [
+                "pubkey",
+                "keypair",
+                "string"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -139,14 +119,7 @@
               "id": "bea1e69a-1d94-442f-85be-4c9aaccac2fc"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 112
-            }
-          }
+          "config": {}
         },
         "position": {
           "x": 540,
@@ -177,11 +150,13 @@
           "id": "96f4e22f-279e-4200-a7bb-ea011c4c737e",
           "node_id": "flow_output",
           "name": "Flow Output",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -189,28 +164,8 @@
               "id": "0a95ba13-9ff8-4136-b492-0a9df3029a69"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Output Label",
-                  "default": ""
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "balance"
-            },
-            "extra": {
-              "supabase_id": 137
-            }
+          "config": {
+            "label": "balance"
           }
         },
         "position": {

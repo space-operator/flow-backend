@@ -1,6 +1,6 @@
 {
   "flow": {
-    "id": 0,
+    "id": "00000000-0000-0000-0000-000000000000",
     "user_id": "3b93d159-b9d1-4230-ad4b-e498d7f1b796",
     "name": "uneven_loop",
     "mosaic": {
@@ -61,26 +61,19 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "free",
               "defaultValue": "",
               "tooltip": "",
               "id": "ca77ccdb-069d-472f-9189-3eab39605d00"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": "[1, 2, 3]",
-              "type": "JSON"
-            },
-            "extra": {
-              "supabase_id": 117
-            }
+          "inputs": [],
+          "config": {
+            "value": "[1, 2, 3]",
+            "type": "JSON"
           }
         },
         "dragging": false,
@@ -118,26 +111,19 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "free",
               "defaultValue": "",
               "tooltip": "",
               "id": "8afe950d-12f4-426c-bb10-ff70fe4e1277"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": "[\n[\"0,0\", \"0,1\"],\n[\"1,0\", \"1,1\"]\n]",
-              "type": "JSON"
-            },
-            "extra": {
-              "supabase_id": 117
-            }
+          "inputs": [],
+          "config": {
+            "value": "[\n[\"0,0\", \"0,1\"],\n[\"1,0\", \"1,1\"]\n]",
+            "type": "JSON"
           }
         },
         "positionAbsolute": {
@@ -175,7 +161,7 @@
           "name": "Foreach",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "element",
               "type": "json",
@@ -184,10 +170,12 @@
               "id": "4a877a69-5fdc-4902-b507-fabb348df57c"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "array",
-              "type_bounds": ["json"],
+              "type_bounds": [
+                "json"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -195,30 +183,8 @@
               "id": "99e3591c-fabf-4ffd-8fb6-5b788f7e6c4f"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "title": "Foreach",
-              "properties": {
-                "array": {
-                  "title": "array",
-                  "type": "string",
-                  "default": "[]"
-                }
-              }
-            },
-            "ui_schema": {
-              "array": {
-                "ui:widget": "textarea"
-              },
-              "ui:order": ["array"]
-            },
-            "form_data": {
-              "array": "[]"
-            },
-            "extra": {
-              "supabase_id": 302
-            }
+          "config": {
+            "array": "[]"
           }
         },
         "positionAbsolute": {
@@ -255,7 +221,7 @@
           "name": "Foreach",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "element",
               "type": "json",
@@ -264,10 +230,12 @@
               "id": "84db1dfa-400b-4298-9249-cb43e9706f50"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "array",
-              "type_bounds": ["json"],
+              "type_bounds": [
+                "json"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -275,30 +243,8 @@
               "id": "dbd7a2b0-9bc7-4072-a327-386523e0f671"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "title": "Foreach",
-              "properties": {
-                "array": {
-                  "title": "array",
-                  "type": "string",
-                  "default": "[]"
-                }
-              }
-            },
-            "ui_schema": {
-              "array": {
-                "ui:widget": "textarea"
-              },
-              "ui:order": ["array"]
-            },
-            "form_data": {
-              "array": "[]"
-            },
-            "extra": {
-              "supabase_id": 302
-            }
+          "config": {
+            "array": "[]"
           }
         },
         "positionAbsolute": {
@@ -335,7 +281,7 @@
           "name": "Foreach",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "element",
               "type": "json",
@@ -344,10 +290,12 @@
               "id": "fc299529-abc9-4ebd-bf94-093a38536cef"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "array",
-              "type_bounds": ["json"],
+              "type_bounds": [
+                "json"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -355,30 +303,8 @@
               "id": "c3a9ad1e-45e1-4584-b23a-64580bfb551c"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "title": "Foreach",
-              "properties": {
-                "array": {
-                  "title": "array",
-                  "type": "string",
-                  "default": "[]"
-                }
-              }
-            },
-            "ui_schema": {
-              "array": {
-                "ui:widget": "textarea"
-              },
-              "ui:order": ["array"]
-            },
-            "form_data": {
-              "array": "[]"
-            },
-            "extra": {
-              "supabase_id": 302
-            }
+          "config": {
+            "array": "[]"
           }
         },
         "positionAbsolute": {
@@ -415,11 +341,13 @@
           "name": "Wait",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#ffd9b3",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "value",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "passthrough value",
@@ -428,7 +356,9 @@
             },
             {
               "name": "wait_for",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "output to wait for",
@@ -436,14 +366,7 @@
               "id": "1f24f08b-aa59-4668-bd58-fd5512cc1793"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 280
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": -270,
@@ -479,7 +402,7 @@
           "name": "Collect",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "array",
               "type": "free",
@@ -488,10 +411,12 @@
               "id": "ddaa3006-c7ef-4994-a034-9c3caa0dfd1b"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "element",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "",
@@ -499,14 +424,7 @@
               "id": "7a36ca6d-bb20-42f3-a0fa-c15e54f8091a"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 303
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": 30,
@@ -542,7 +460,7 @@
           "name": "Collect",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "array",
               "type": "free",
@@ -551,10 +469,12 @@
               "id": "0620aacc-398f-4209-8fde-910a0a9a2e41"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "element",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "",
@@ -562,14 +482,7 @@
               "id": "0af7143f-057a-4e74-b24a-fa078529c0ce"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 303
-            }
-          }
+          "config": {}
         },
         "dragging": false,
         "positionAbsolute": {
@@ -605,11 +518,13 @@
           "name": "Flow Output",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#f2fcff",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "1",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -617,28 +532,8 @@
               "id": "d6dc1c31-100e-4fe6-8c28-26f515068010"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Output Label",
-                  "default": ""
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "1"
-            },
-            "extra": {
-              "supabase_id": 137
-            }
+          "config": {
+            "label": "1"
           }
         },
         "positionAbsolute": {
@@ -675,11 +570,13 @@
           "name": "Flow Output",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#f2fcff",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "2",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -687,28 +584,8 @@
               "id": "9d02d108-d1f4-41d1-bc93-97343e93a81a"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Output Label",
-                  "default": ""
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "2"
-            },
-            "extra": {
-              "supabase_id": 137
-            }
+          "config": {
+            "label": "2"
           }
         },
         "positionAbsolute": {
