@@ -6,7 +6,7 @@ const NAME: &str = "update_render_params";
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(flow_lib::node_definition!("update_render_params.json"))?.check_name(NAME)
+        CmdBuilder::new(flow_lib::node_definition!("update_render_params.jsonc"))?.check_name(NAME)
     });
     Ok(CACHE.clone()?.build(run))
 }
