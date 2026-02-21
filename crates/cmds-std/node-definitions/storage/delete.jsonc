@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "storage_delete",
+  "description": "Deletes a file from Supabase Storage.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/storage/delete.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "key",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Full storage key (bucket/path)"
+      },
+      {
+        "name": "bucket",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Bucket name (used with path)"
+      },
+      {
+        "name": "path",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "File path within the bucket"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "key",
+        "type": "string",
+        "optional": false,
+        "tooltip": "Storage key of the deleted file"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

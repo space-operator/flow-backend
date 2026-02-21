@@ -7,7 +7,7 @@ use std::borrow::Cow;
 
 pub const NAME: &str = "storage_create_signed_url";
 
-const DEFINITION: &str = flow_lib::node_definition!("storage/create_signed_url.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/create_signed_url.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

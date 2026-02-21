@@ -4,7 +4,7 @@ const NAME: &str = "chunk_string";
 
 fn build() -> BuildResult {
     Ok(
-        CmdBuilder::new(flow_lib::node_definition!("string/chunk_string.json"))?
+        CmdBuilder::new(flow_lib::node_definition!("string/chunk_string.jsonc"))?
             .check_name(NAME)?
             .build(run),
     )

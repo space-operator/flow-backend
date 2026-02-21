@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "postgrest_execute_query",
+  "description": "Executes a PostgREST query and returns the result.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/postgrest/execute_query.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "query",
+        "type_bounds": ["object"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Query builder object to execute"
+      },
+      {
+        "name": "headers",
+        "type_bounds": ["free"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Additional HTTP headers"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "free",
+        "optional": false,
+        "tooltip": "Query result data"
+      },
+      {
+        "name": "headers",
+        "type": "object",
+        "optional": false,
+        "tooltip": "Response headers"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

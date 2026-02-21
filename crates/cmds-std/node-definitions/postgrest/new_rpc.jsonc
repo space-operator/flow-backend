@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "postgrest_new_rpc",
+  "description": "Creates a new PostgREST RPC (stored procedure) call.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/postgrest/new_rpc.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "PostgREST base URL"
+      },
+      {
+        "name": "schema",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Database schema (default: public)"
+      },
+      {
+        "name": "function",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Name of the stored procedure"
+      },
+      {
+        "name": "params",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Parameters to pass to the function"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "query",
+        "type": "object",
+        "optional": false,
+        "tooltip": "Query builder object"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

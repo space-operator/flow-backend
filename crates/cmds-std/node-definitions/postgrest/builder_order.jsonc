@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "postgrest_builder_order",
+  "description": "Adds an ORDER BY clause to a PostgREST query.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/postgrest/builder_order.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "query",
+        "type_bounds": ["object"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Query builder object"
+      },
+      {
+        "name": "columns",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Column(s) to order by"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "query",
+        "type": "object",
+        "optional": false,
+        "tooltip": "Updated query builder"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

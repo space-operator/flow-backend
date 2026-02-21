@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "storage_download",
+  "description": "Downloads a file from Supabase Storage.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/storage/download.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "key",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Full storage key (bucket/path)"
+      },
+      {
+        "name": "bucket",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Bucket name (used with path)"
+      },
+      {
+        "name": "path",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "File path within the bucket"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "content",
+        "type": "free",
+        "optional": false,
+        "tooltip": "Downloaded file content"
+      },
+      {
+        "name": "content_type",
+        "type": "string",
+        "optional": false,
+        "tooltip": "MIME type of the file"
+      },
+      {
+        "name": "size",
+        "type": "u64",
+        "optional": false,
+        "tooltip": "File size in bytes"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

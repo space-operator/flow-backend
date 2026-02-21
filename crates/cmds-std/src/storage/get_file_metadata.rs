@@ -9,7 +9,7 @@ use reqwest::{
 
 pub const NAME: &str = "storage_get_file_metadata";
 
-const DEFINITION: &str = flow_lib::node_definition!("storage/get_file_metadata.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/get_file_metadata.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

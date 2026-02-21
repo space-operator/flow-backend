@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "postgrest_builder_insert",
+  "description": "Adds an INSERT body to a PostgREST query.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/postgrest/builder_insert.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "query",
+        "type_bounds": ["object"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Query builder object"
+      },
+      {
+        "name": "body",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Row(s) to insert (object or array of objects)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "query",
+        "type": "object",
+        "optional": false,
+        "tooltip": "Updated query builder"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

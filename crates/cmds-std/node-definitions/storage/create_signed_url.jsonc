@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "storage_create_signed_url",
+  "description": "Creates a time-limited signed URL for a file in Supabase Storage.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/storage/create_signed_url.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "key",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Full storage key (bucket/path)"
+      },
+      {
+        "name": "bucket",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Bucket name (used with path)"
+      },
+      {
+        "name": "path",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "File path within the bucket"
+      },
+      {
+        "name": "expires_in",
+        "type_bounds": ["number"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "URL expiry time in seconds"
+      },
+      {
+        "name": "transform",
+        "type_bounds": ["json"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Image transformation options"
+      },
+      {
+        "name": "download",
+        "type_bounds": ["free"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Set to true or a filename to force download"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "url",
+        "type": "string",
+        "optional": false,
+        "tooltip": "Signed URL with expiry"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

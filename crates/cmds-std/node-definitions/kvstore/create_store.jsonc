@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "kv_create_store",
+  "description": "Creates a new key-value store.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/kvstore/create_store.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "store",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Name of the store to create"
+      }
+    ],
+    "outputs": []
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

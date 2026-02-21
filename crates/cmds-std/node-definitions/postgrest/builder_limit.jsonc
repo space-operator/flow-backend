@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "postgrest_builder_limit",
+  "description": "Adds a LIMIT clause to a PostgREST query.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/postgrest/builder_limit.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "query",
+        "type_bounds": ["object"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Query builder object"
+      },
+      {
+        "name": "count",
+        "type_bounds": ["u64"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Maximum number of rows to return"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "query",
+        "type": "object",
+        "optional": false,
+        "tooltip": "Updated query builder"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

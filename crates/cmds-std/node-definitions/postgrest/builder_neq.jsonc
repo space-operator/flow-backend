@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "postgrest_builder_neq",
+  "description": "Adds an inequality filter (column != value) to a PostgREST query.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/postgrest/builder_neq.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "query",
+        "type_bounds": ["object"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Query builder object"
+      },
+      {
+        "name": "column",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Column name to filter on"
+      },
+      {
+        "name": "filter",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Value to exclude"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "query",
+        "type": "object",
+        "optional": false,
+        "tooltip": "Updated query builder"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

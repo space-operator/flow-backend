@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "kv_read_item",
+  "description": "Reads a value by key from a key-value store.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/kvstore/read_item.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "store",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Name of the store"
+      },
+      {
+        "name": "key",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Key to read"
+      },
+      {
+        "name": "default",
+        "type_bounds": ["free"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Default value if key is not found"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "value",
+        "type": "free",
+        "optional": false,
+        "tooltip": "Value stored at the key"
+      },
+      {
+        "name": "found",
+        "type": "bool",
+        "optional": false,
+        "tooltip": "Whether the key was found in the store"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

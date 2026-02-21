@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "storage_get_public_url",
+  "description": "Gets the public URL of a file in Supabase Storage.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/storage/get_public_url.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "key",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Full storage key (bucket/path)"
+      },
+      {
+        "name": "bucket",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Bucket name (used with path)"
+      },
+      {
+        "name": "path",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "File path within the bucket"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "url",
+        "type": "string",
+        "optional": false,
+        "tooltip": "Public URL of the file"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 pub const NAME: &str = "storage_list";
 
-const DEFINITION: &str = flow_lib::node_definition!("storage/list.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/list.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "storage_list",
+  "description": "Lists files in a Supabase Storage bucket.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/storage/list.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "bucket",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Storage bucket name"
+      },
+      {
+        "name": "path",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Directory path to list (default: root)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "files",
+        "type": "array",
+        "optional": false,
+        "tooltip": "Array of file metadata objects"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

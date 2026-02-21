@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "storage_upload",
+  "description": "Uploads content to Supabase Storage.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/storage/upload.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "bucket",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Storage bucket name (default: user-storages)"
+      },
+      {
+        "name": "path",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "File path within the bucket"
+      },
+      {
+        "name": "content_type",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "MIME type (e.g. image/png, application/json)"
+      },
+      {
+        "name": "overwrite",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to overwrite existing files (default: false)"
+      },
+      {
+        "name": "content",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "File content as string or bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "key",
+        "type": "string",
+        "optional": false,
+        "tooltip": "Storage key of the uploaded file"
+      },
+      {
+        "name": "content_type",
+        "type": "string",
+        "optional": false,
+        "tooltip": "MIME type of the uploaded file"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

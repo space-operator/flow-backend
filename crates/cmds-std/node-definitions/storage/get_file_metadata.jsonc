@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "storage_get_file_metadata",
+  "description": "Gets metadata of a file in Supabase Storage.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/storage/get_file_metadata.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "key",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Full storage key (bucket/path)"
+      },
+      {
+        "name": "bucket",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Bucket name (used with path)"
+      },
+      {
+        "name": "path",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "File path within the bucket"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "key",
+        "type": "string",
+        "optional": false,
+        "tooltip": "Storage key of the file"
+      },
+      {
+        "name": "content_type",
+        "type": "string",
+        "optional": false,
+        "tooltip": "MIME type of the file"
+      },
+      {
+        "name": "last_modified",
+        "type": "string",
+        "optional": false,
+        "tooltip": "Last modified timestamp"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}
