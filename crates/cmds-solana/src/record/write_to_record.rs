@@ -6,7 +6,7 @@ use crate::{prelude::*, record::record_program_id};
 
 const NAME: &str = "write_to_record";
 
-const DEFINITION: &str = flow_lib::node_definition!("/record/write_to_record.json");
+const DEFINITION: &str = flow_lib::node_definition!("/record/write_to_record.jsonc");
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 

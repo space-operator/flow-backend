@@ -9,7 +9,7 @@ use std::io::Write;
 // Command Name
 const NAME: &str = "verify_signatures";
 
-const DEFINITION: &str = flow_lib::node_definition!("wormhole/verify_signatures.json");
+const DEFINITION: &str = flow_lib::node_definition!("wormhole/verify_signatures.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

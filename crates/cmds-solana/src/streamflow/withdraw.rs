@@ -12,7 +12,7 @@ use super::{STRM_TREASURY, WithdrawData, WithdrawDataInput};
 
 const NAME: &str = "withdraw_streamflow_timelock";
 
-const DEFINITION: &str = flow_lib::node_definition!("streamflow/withdraw.json");
+const DEFINITION: &str = flow_lib::node_definition!("streamflow/withdraw.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

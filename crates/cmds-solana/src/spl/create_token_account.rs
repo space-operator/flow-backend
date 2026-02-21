@@ -4,7 +4,7 @@ use solana_system_interface::instruction::create_account;
 
 const NAME: &str = "create_token_account";
 
-const DEFINITION: &str = flow_lib::node_definition!("spl_token/create_token_account.json");
+const DEFINITION: &str = flow_lib::node_definition!("spl_token/create_token_account.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

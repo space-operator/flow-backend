@@ -5,7 +5,7 @@ const NAME: &str = "update_metadata_account";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("NFT/update_metadata_account.json");
+    const DEFINITION: &str = flow_lib::node_definition!("nft/update_metadata_account.jsonc");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?

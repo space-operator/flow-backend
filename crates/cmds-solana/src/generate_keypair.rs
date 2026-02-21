@@ -6,7 +6,7 @@ use solana_keypair::{Keypair, keypair_from_seed};
 
 const GENERATE_KEYPAIR: &str = "generate_keypair";
 
-const DEFINITION: &str = flow_lib::node_definition!("generate_keypair.json");
+const DEFINITION: &str = flow_lib::node_definition!("generate_keypair.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

@@ -1,10 +1,18 @@
 use crate::prelude::*;
-use async_trait::async_trait;
 use mpl_token_metadata::state::Metadata;
 use solana_program::pubkey::Pubkey;
 
-#[derive(Debug, Clone)]
-pub struct GetLeftUses;
+const NAME: &str = "get_left_uses";
+
+const DEFINITION: &str = flow_lib::node_definition!("nft/get_left_uses.jsonc");
+
+fn build() -> BuildResult {
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
+    Ok(CACHE.clone()?.build(run))
+}
+
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
@@ -17,57 +25,19 @@ pub struct Output {
     pub left_uses: Option<u64>,
 }
 
-const GET_LEFT_USES: &str = "get_left_uses";
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    let (metadata_account, _) = Metadata::find_pda(&input.mint_account);
 
-// Inputs
-const MINT_ACCOUNT: &str = "mint_account";
+    let account_data = ctx
+        .solana_client()
+        .get_account_data(&metadata_account)
+        .await?;
 
-// Outputs
-const LEFT_USES: &str = "left_uses";
+    let mut account_data_ptr = account_data.as_slice();
 
-#[async_trait(?Send)]
-impl CommandTrait for GetLeftUses {
-    fn name(&self) -> Name {
-        GET_LEFT_USES.into()
-    }
+    let metadata = <Metadata as borsh::BorshDeserialize>::deserialize(&mut account_data_ptr)?;
 
-    fn inputs(&self) -> Vec<CmdInput> {
-        [CmdInput {
-            name: MINT_ACCOUNT.into(),
-            type_bounds: [ValueType::Pubkey].to_vec(),
-            required: true,
-            passthrough: false,
-        }]
-        .to_vec()
-    }
-    fn outputs(&self) -> Vec<CmdOutput> {
-        [CmdOutput {
-            name: LEFT_USES.into(),
-            r#type: ValueType::String,
-        }]
-        .to_vec()
-    }
+    let left_uses = metadata.uses.map(|v| v.remaining);
 
-    async fn run(&self, ctx: CommandContext, inputs: ValueSet) -> Result<ValueSet, CommandError> {
-        let Input { mint_account } = value::from_map(inputs)?;
-
-        let (metadata_account, _) = Metadata::find_pda(&mint_account);
-
-        let account_data = ctx
-            .solana_client()
-            .get_account_data(&metadata_account)
-            .await?;
-
-        let mut account_data_ptr = account_data.as_slice();
-
-        let metadata = <Metadata as borsh::BorshDeserialize>::deserialize(&mut account_data_ptr)?;
-
-        let left_uses = metadata.uses.map(|v| v.remaining);
-
-        Ok(value::to_map(&Output { left_uses })?)
-    }
+    Ok(Output { left_uses })
 }
-
-flow_lib::submit!(CommandDescription::new(GET_LEFT_USES, |_| Ok(Box::new(
-    GetLeftUses
-))));

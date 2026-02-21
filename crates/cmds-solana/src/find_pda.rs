@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 const FIND_PDA: &str = "find_pda";
-const DEFINITION: &str = flow_lib::node_definition!("find_pda.json");
+const DEFINITION: &str = flow_lib::node_definition!("find_pda.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

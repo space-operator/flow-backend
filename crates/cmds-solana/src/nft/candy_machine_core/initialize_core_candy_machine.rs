@@ -10,7 +10,7 @@ use solana_system_interface::instruction::create_account;
 const NAME: &str = "initialize_candy_machine_core";
 
 const DEFINITION: &str =
-    flow_lib::node_definition!("nft/candy_machine_core/initialize_candy_machine_core.json");
+    flow_lib::node_definition!("nft/candy_machine_core/initialize_candy_machine_core.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

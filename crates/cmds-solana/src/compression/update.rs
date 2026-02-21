@@ -10,7 +10,7 @@ use std::str::FromStr;
 // Command Name
 const NAME: &str = "update_cNFT";
 
-const DEFINITION: &str = flow_lib::node_definition!("compression/update_cNFT.json");
+const DEFINITION: &str = flow_lib::node_definition!("compression/update_cNFT.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

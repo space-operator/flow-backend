@@ -6,7 +6,7 @@ use solana_sdk_ids::system_program;
 // Command Name
 const NAME: &str = "verify_creator_v1";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/v1/verify_creator_v1.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/v1/verify_creator_v1.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

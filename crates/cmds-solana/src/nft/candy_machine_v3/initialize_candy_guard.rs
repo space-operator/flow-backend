@@ -9,7 +9,7 @@ use solana_program::pubkey::Pubkey;
 const INITIALIZE_CANDY_GUARD: &str = "initialize_candy_guard";
 
 const DEFINITION: &str =
-    flow_lib::node_definition!("nft/candy_machine/initialize_candy_guard.json");
+    flow_lib::node_definition!("nft/candy_machine/initialize_candy_guard.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

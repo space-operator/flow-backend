@@ -5,7 +5,7 @@ const NAME: &str = "set_authority_2022";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("/spl_token_2022/set_authority.json");
+    const DEFINITION: &str = flow_lib::node_definition!("/spl_token_2022/set_authority.jsonc");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?

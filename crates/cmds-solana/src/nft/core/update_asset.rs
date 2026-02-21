@@ -5,7 +5,7 @@ use crate::prelude::*;
 // Command Name
 const NAME: &str = "update_core_v1";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/core/mpl_core_update_asset.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/core/mpl_core_update_asset.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

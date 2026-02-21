@@ -1,8 +1,17 @@
 use super::arweave_nft_upload::Uploader;
 use crate::prelude::*;
 
-#[derive(Debug)]
-pub struct ArweaveFileUpload;
+const NAME: &str = "arweave_file_upload";
+
+const DEFINITION: &str = flow_lib::node_definition!("nft/arweave_file_upload.jsonc");
+
+fn build() -> BuildResult {
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
+    Ok(CACHE.clone()?.build(run))
+}
+
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
@@ -17,82 +26,18 @@ pub struct Output {
     pub file_url: String,
 }
 
-const ARWEAVE_FILE_UPLOAD: &str = "arweave_file_upload";
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    let mut uploader = Uploader::new(
+        ctx.solana_client().clone(),
+        ctx.solana_config().cluster,
+        input.fee_payer,
+    )?;
 
-// Inputs
-const FEE_PAYER: &str = "fee_payer";
-const FILE_PATH: &str = "file_path";
-const FUND_BUNDLR: &str = "fund_bundlr";
-
-// Outputs
-const FILE_URL: &str = "file_url";
-
-#[async_trait(?Send)]
-impl CommandTrait for ArweaveFileUpload {
-    fn name(&self) -> Name {
-        ARWEAVE_FILE_UPLOAD.into()
+    if input.fund_bundlr {
+        uploader.lazy_fund(&input.file_path, &mut ctx).await?;
     }
 
-    fn inputs(&self) -> Vec<CmdInput> {
-        [
-            CmdInput {
-                name: FEE_PAYER.into(),
-                type_bounds: [ValueType::Keypair].to_vec(),
-                required: true,
-                passthrough: true,
-            },
-            CmdInput {
-                name: FILE_PATH.into(),
-                type_bounds: [ValueType::String].to_vec(),
-                required: true,
-                passthrough: false,
-            },
-            CmdInput {
-                name: FUND_BUNDLR.into(),
-                type_bounds: [ValueType::Bool].to_vec(),
-                required: true,
-                passthrough: false,
-            },
-        ]
-        .to_vec()
-    }
+    let file_url = uploader.upload_file(ctx, &input.file_path).await?;
 
-    fn outputs(&self) -> Vec<CmdOutput> {
-        [CmdOutput {
-            name: FILE_URL.into(),
-            r#type: ValueType::String,
-            optional: false,
-        }]
-        .to_vec()
-    }
-
-    async fn run(
-        &self,
-        mut ctx: CommandContext,
-        inputs: ValueSet,
-    ) -> Result<ValueSet, CommandError> {
-        let Input {
-            fee_payer,
-            file_path,
-            fund_bundlr,
-        } = value::from_map(inputs)?;
-
-        let mut uploader = Uploader::new(
-            ctx.solana_client().clone(),
-            ctx.solana_config().cluster,
-            fee_payer,
-        )?;
-
-        if fund_bundlr {
-            uploader.lazy_fund(&file_path, &mut ctx).await?;
-        }
-
-        let file_url = uploader.upload_file(ctx, &file_path).await?;
-
-        Ok(value::to_map(&Output { file_url })?)
-    }
+    Ok(Output { file_url })
 }
-
-flow_lib::submit!(CommandDescription::new(ARWEAVE_FILE_UPLOAD, |_| Ok(
-    Box::new(ArweaveFileUpload)
-)));

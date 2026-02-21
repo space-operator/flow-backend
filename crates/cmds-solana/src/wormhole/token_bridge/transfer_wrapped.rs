@@ -10,7 +10,7 @@ use tracing::info;
 // Command Name
 const NAME: &str = "transfer_wrapped";
 
-const DEFINITION: &str = flow_lib::node_definition!("wormhole/token_bridge/transfer_wrapped.json");
+const DEFINITION: &str = flow_lib::node_definition!("wormhole/token_bridge/transfer_wrapped.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

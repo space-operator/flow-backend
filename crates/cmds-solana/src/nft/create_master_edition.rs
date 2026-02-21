@@ -8,7 +8,7 @@ use solana_sdk_ids::system_program;
 // Command Name
 const NAME: &str = "create_master_edition";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/create_master_edition.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/create_master_edition.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

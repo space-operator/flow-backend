@@ -6,7 +6,7 @@ use spl_token_interface::state::Mint;
 
 const NAME: &str = "create_mint_account";
 
-const DEFINITION: &str = flow_lib::node_definition!("spl_token/create_mint_account.json");
+const DEFINITION: &str = flow_lib::node_definition!("spl_token/create_mint_account.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

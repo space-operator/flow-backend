@@ -3,7 +3,7 @@ use crate::prelude::*;
 // Command Name
 const NAME: &str = "set_token_standard";
 
-const DEFINITION: &str = flow_lib::node_definition!("NFT/set_token_standard.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/set_token_standard.jsonc");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

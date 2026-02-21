@@ -9,7 +9,7 @@ use spl_record::instruction as record_instruction;
 
 const NAME: &str = "reallocate";
 
-const DEFINITION: &str = flow_lib::node_definition!("/record/reallocate.json");
+const DEFINITION: &str = flow_lib::node_definition!("/record/reallocate.jsonc");
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 

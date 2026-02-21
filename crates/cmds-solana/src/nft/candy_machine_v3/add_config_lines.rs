@@ -10,7 +10,7 @@ use super::ConfigLine;
 // Command Name
 const ADD_CONFIG_LINES: &str = "add_config_lines";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/candy_machine/add_config_lines.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/candy_machine/add_config_lines.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

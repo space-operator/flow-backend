@@ -16,7 +16,7 @@ use mpl_token_metadata::{
 // Command Name
 const INITIALIZE_CANDY_MACHINE: &str = "initialize_candy_machine";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/candy_machine/initialize.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/candy_machine/initialize.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

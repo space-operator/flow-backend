@@ -10,7 +10,7 @@ use wormhole_sdk::token::Message;
 // Command Name
 const NAME: &str = "create_wrapped";
 
-const DEFINITION: &str = flow_lib::node_definition!("wormhole/token_bridge/create_wrapped.json");
+const DEFINITION: &str = flow_lib::node_definition!("wormhole/token_bridge/create_wrapped.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

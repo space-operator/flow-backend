@@ -9,7 +9,7 @@ use tracing::info;
 
 const SOLANA_TRANSFER_TOKEN: &str = "transfer_token";
 
-const DEFINITION: &str = flow_lib::node_definition!("transfer_token.json");
+const DEFINITION: &str = flow_lib::node_definition!("transfer_token.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

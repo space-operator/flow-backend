@@ -11,7 +11,7 @@ use super::{BridgeData, PostMessageData, token_bridge::get_sequence_number_from_
 // Command Name
 const NAME: &str = "post_message";
 
-const DEFINITION: &str = flow_lib::node_definition!("wormhole/post_message.json");
+const DEFINITION: &str = flow_lib::node_definition!("wormhole/post_message.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

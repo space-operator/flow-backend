@@ -7,7 +7,7 @@ use solana_sdk_ids::system_program;
 // Command Name
 const NAME: &str = "create_metadata_account";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/create_metadata_account.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/create_metadata_account.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

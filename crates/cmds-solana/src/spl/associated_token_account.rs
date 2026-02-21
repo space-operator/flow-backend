@@ -6,7 +6,7 @@ use spl_associated_token_account_interface::{
 
 const SOLANA_ASSOCIATED_TOKEN_ACCOUNT: &str = "associated_token_account";
 
-const DEFINITION: &str = flow_lib::node_definition!("spl_token/associated_token_account.json");
+const DEFINITION: &str = flow_lib::node_definition!("spl_token/associated_token_account.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

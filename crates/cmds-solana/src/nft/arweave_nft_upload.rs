@@ -53,8 +53,17 @@ impl bundlr_sdk::Signer for BundlrSigner {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct ArweaveNftUpload;
+const NAME: &str = "arweave_nft_upload";
+
+const DEFINITION: &str = flow_lib::node_definition!("nft/arweave_nft_upload.jsonc");
+
+fn build() -> BuildResult {
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
+    Ok(CACHE.clone()?.build(run))
+}
+
+flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
@@ -70,112 +79,41 @@ pub struct Output {
     pub updated_metadata: NftMetadata,
 }
 
-const ARWEAVE_NFT_UPLOAD: &str = "arweave_nft_upload";
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    let mut uploader = Uploader::new(
+        ctx.solana_client().clone(),
+        ctx.solana_config().cluster,
+        input.fee_payer,
+    )?;
 
-// Inputs
-const FEE_PAYER: &str = "fee_payer";
-const METADATA: &str = "metadata";
-const FUND_BUNDLR: &str = "fund_bundlr";
-
-// Outputs
-const METADATA_URL: &str = "metadata_url";
-const UPDATED_METADATA: &str = "updated_metadata";
-
-#[async_trait(?Send)]
-impl CommandTrait for ArweaveNftUpload {
-    fn name(&self) -> Name {
-        ARWEAVE_NFT_UPLOAD.into()
+    if input.fund_bundlr {
+        uploader.lazy_fund_metadata(&input.metadata, &mut ctx).await?;
     }
 
-    fn inputs(&self) -> Vec<CmdInput> {
-        [
-            CmdInput {
-                name: FEE_PAYER.into(),
-                type_bounds: [ValueType::Keypair].to_vec(),
-                required: true,
-                passthrough: true,
-            },
-            CmdInput {
-                name: METADATA.into(),
-                type_bounds: [ValueType::Free].to_vec(),
-                required: true,
-                passthrough: false,
-            },
-            CmdInput {
-                name: FUND_BUNDLR.into(),
-                type_bounds: [ValueType::Bool].to_vec(),
-                required: true,
-                passthrough: false,
-            },
-        ]
-        .to_vec()
-    }
+    let mut metadata = input.metadata;
+    metadata.image = uploader.upload_file(ctx.clone(), &metadata.image).await?;
 
-    fn outputs(&self) -> Vec<CmdOutput> {
-        [
-            CmdOutput {
-                name: METADATA_URL.into(),
-                r#type: ValueType::String,
-                optional: false,
-            },
-            CmdOutput {
-                name: UPDATED_METADATA.into(),
-                r#type: ValueType::Free,
-                optional: false,
-            },
-        ]
-        .to_vec()
-    }
-
-    async fn run(
-        &self,
-        mut ctx: CommandContext,
-        inputs: ValueSet,
-    ) -> Result<ValueSet, CommandError> {
-        let Input {
-            fee_payer,
-            mut metadata,
-            fund_bundlr,
-        } = value::from_map(inputs)?;
-
-        let mut uploader = Uploader::new(
-            ctx.solana_client().clone(),
-            ctx.solana_config().cluster,
-            fee_payer,
-        )?;
-
-        if fund_bundlr {
-            uploader.lazy_fund_metadata(&metadata, &mut ctx).await?;
+    if let Some(properties) = metadata.properties.as_mut()
+        && let Some(files) = properties.files.as_mut()
+    {
+        for file in files.iter_mut() {
+            file.uri = uploader.upload_file(ctx.clone(), &file.uri).await?;
         }
-
-        metadata.image = uploader.upload_file(ctx.clone(), &metadata.image).await?;
-
-        if let Some(properties) = metadata.properties.as_mut()
-            && let Some(files) = properties.files.as_mut()
-        {
-            for file in files.iter_mut() {
-                file.uri = uploader.upload_file(ctx.clone(), &file.uri).await?;
-            }
-        }
-
-        let metadata_url = uploader
-            .upload(
-                ctx,
-                serde_json::to_vec(&metadata).unwrap().into(),
-                "application/json".to_owned(),
-            )
-            .await?;
-
-        Ok(value::to_map(&Output {
-            metadata_url,
-            updated_metadata: metadata,
-        })?)
     }
+
+    let metadata_url = uploader
+        .upload(
+            ctx,
+            serde_json::to_vec(&metadata).unwrap().into(),
+            "application/json".to_owned(),
+        )
+        .await?;
+
+    Ok(Output {
+        metadata_url,
+        updated_metadata: metadata,
+    })
 }
-
-flow_lib::submit!(CommandDescription::new(ARWEAVE_NFT_UPLOAD, |_| Ok(
-    Box::new(ArweaveNftUpload)
-)));
 
 pub(crate) struct Uploader {
     cache: HashMap<String, String>,

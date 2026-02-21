@@ -4,7 +4,7 @@ use super::{RecordData, pod_from_bytes};
 
 pub const NAME: &str = "read_record";
 
-const DEFINITION: &str = flow_lib::node_definition!("/record/read_record.json");
+const DEFINITION: &str = flow_lib::node_definition!("/record/read_record.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

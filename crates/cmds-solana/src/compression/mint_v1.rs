@@ -9,7 +9,7 @@ use super::MetadataBubblegum;
 // Command Name
 const NAME: &str = "mint_compressed_NFT";
 
-const DEFINITION: &str = flow_lib::node_definition!("compression/mint_compressed_NFT.json");
+const DEFINITION: &str = flow_lib::node_definition!("compression/mint_compressed_NFT.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

@@ -9,7 +9,7 @@ use solana_sdk_ids::system_program;
 // Command Name
 const NAME: &str = "mint_candy_machine_core";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/candy_machine_core/mint_core.json");
+const DEFINITION: &str = flow_lib::node_definition!("nft/candy_machine_core/mint_core.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
