@@ -38,7 +38,7 @@
       },
       {
         "name": "content",
-        "type_bounds": ["free"],
+        "type_bounds": ["string", "bytes"],
         "required": true,
         "passthrough": false,
         "tooltip": "File content as string or bytes"
@@ -48,20 +48,18 @@
       {
         "name": "key",
         "type": "string",
-        "optional": false,
         "tooltip": "Storage key of the uploaded file"
       },
       {
         "name": "content_type",
         "type": "string",
-        "optional": false,
         "tooltip": "MIME type of the uploaded file"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
-  "config": {}
+  "config_schema": {},
+  "config": {
+    "bucket": { "S": "user-storages" },
+    "overwrite": { "B": false }
+  }
 }

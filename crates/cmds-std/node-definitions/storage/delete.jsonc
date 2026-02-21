@@ -34,14 +34,10 @@
       {
         "name": "key",
         "type": "string",
-        "optional": false,
         "tooltip": "Storage key of the deleted file"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
+  "config_schema": {},
   "config": {}
 }

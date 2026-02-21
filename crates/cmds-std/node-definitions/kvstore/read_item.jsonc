@@ -34,20 +34,15 @@
       {
         "name": "value",
         "type": "free",
-        "optional": false,
         "tooltip": "Value stored at the key"
       },
       {
         "name": "found",
         "type": "bool",
-        "optional": false,
         "tooltip": "Whether the key was found in the store"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
+  "config_schema": {},
   "config": {}
 }

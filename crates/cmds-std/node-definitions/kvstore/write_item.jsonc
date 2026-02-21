@@ -39,9 +39,6 @@
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
+  "config_schema": {},
   "config": {}
 }

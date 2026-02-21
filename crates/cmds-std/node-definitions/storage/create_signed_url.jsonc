@@ -31,7 +31,7 @@
       },
       {
         "name": "expires_in",
-        "type_bounds": ["number"],
+        "type_bounds": ["decimal"],
         "required": true,
         "passthrough": false,
         "tooltip": "URL expiry time in seconds"
@@ -45,7 +45,7 @@
       },
       {
         "name": "download",
-        "type_bounds": ["free"],
+        "type_bounds": ["bool", "string"],
         "required": false,
         "passthrough": false,
         "tooltip": "Set to true or a filename to force download"
@@ -55,14 +55,12 @@
       {
         "name": "url",
         "type": "string",
-        "optional": false,
         "tooltip": "Signed URL with expiry"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
-  "config": {}
+  "config_schema": {},
+  "config": {
+    "download": { "B": false }
+  }
 }

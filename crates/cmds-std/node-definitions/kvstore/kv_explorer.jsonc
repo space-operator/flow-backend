@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "kvexplorer",
+  "description": "Browse key-value store contents",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/kvstore/explorer.rs",
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "Values",
+        "type": "array",
+        "tooltip": "All values in the store"
+      },
+      {
+        "name": "KVS",
+        "type": "array",
+        "tooltip": "All key-value pairs"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

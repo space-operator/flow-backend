@@ -41,14 +41,17 @@
       {
         "name": "query",
         "type": "object",
-        "optional": false,
         "tooltip": "Query builder object"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
-  "config": {}
+  "config_schema": {},
+  "config": {
+    "url": {
+      "S": "https://base.spaceoperator.com/rest/v1/"
+    },
+    "schema": {
+      "S": "public"
+    }
+  }
 }

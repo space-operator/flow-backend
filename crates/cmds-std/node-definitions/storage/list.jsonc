@@ -27,14 +27,10 @@
       {
         "name": "files",
         "type": "array",
-        "optional": false,
         "tooltip": "Array of file metadata objects"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
+  "config_schema": {},
   "config": {}
 }

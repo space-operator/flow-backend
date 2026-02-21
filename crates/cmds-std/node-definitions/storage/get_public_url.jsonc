@@ -34,14 +34,10 @@
       {
         "name": "url",
         "type": "string",
-        "optional": false,
         "tooltip": "Public URL of the file"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
+  "config_schema": {},
   "config": {}
 }

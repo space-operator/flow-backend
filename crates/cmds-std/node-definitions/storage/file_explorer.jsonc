@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "fileexplorer",
+  "description": "Browse storage files and URLs",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/storage/explorer.rs",
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "Files",
+        "type": "array",
+        "tooltip": "List of files in storage"
+      },
+      {
+        "name": "URLs",
+        "type": "array",
+        "tooltip": "Public URLs for the files"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

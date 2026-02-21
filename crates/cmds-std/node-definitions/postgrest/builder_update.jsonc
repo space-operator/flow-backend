@@ -27,14 +27,10 @@
       {
         "name": "query",
         "type": "object",
-        "optional": false,
         "tooltip": "Updated query builder"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
+  "config_schema": {},
   "config": {}
 }

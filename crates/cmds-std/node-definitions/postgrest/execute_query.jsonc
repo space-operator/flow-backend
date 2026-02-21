@@ -27,20 +27,15 @@
       {
         "name": "result",
         "type": "free",
-        "optional": false,
         "tooltip": "Query result data"
       },
       {
         "name": "headers",
         "type": "object",
-        "optional": false,
         "tooltip": "Response headers"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
+  "config_schema": {},
   "config": {}
 }

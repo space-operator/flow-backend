@@ -34,26 +34,20 @@
       {
         "name": "content",
         "type": "free",
-        "optional": false,
         "tooltip": "Downloaded file content"
       },
       {
         "name": "content_type",
         "type": "string",
-        "optional": false,
         "tooltip": "MIME type of the file"
       },
       {
         "name": "size",
         "type": "u64",
-        "optional": false,
         "tooltip": "File size in bytes"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
+  "config_schema": {},
   "config": {}
 }
