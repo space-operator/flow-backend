@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "to_bytes",
+  "description": "Converts a value to its raw byte representation.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/std/to_bytes.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "input",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Value to convert (string -> UTF-8, number -> little-endian, bytes -> passthrough)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "bytes",
+        "type": "bytes",
+        "optional": false,
+        "tooltip": "Raw byte array"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

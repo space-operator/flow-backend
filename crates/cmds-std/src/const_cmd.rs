@@ -46,7 +46,7 @@ pub struct ConstCommand {
 
 pub const CONST_CMD: &str = "const";
 
-const SOURCE: &str = "Source";
+const SOURCE: &str = "output";
 
 #[derive(Debug)]
 enum FormValue {

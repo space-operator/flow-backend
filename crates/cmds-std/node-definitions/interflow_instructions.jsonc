@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "interflow_instructions",
+  "description": "Runs another flow and collects its Solana instructions without executing them.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/flow/src/command/interflow_instructions.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "flow",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Flow ID or name of the sub-flow to collect instructions from"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "fee_payer",
+        "type": "pubkey",
+        "optional": false,
+        "tooltip": "Public key of the fee payer"
+      },
+      {
+        "name": "signers",
+        "type": "array",
+        "optional": false,
+        "tooltip": "Array of keypairs that signed the instructions"
+      },
+      {
+        "name": "instructions",
+        "type": "array",
+        "optional": false,
+        "tooltip": "Array of Solana instructions"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "flow_id": {
+        "type": "string"
+      },
+      "flow_name": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "config": {}
+}

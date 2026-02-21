@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "interflow",
+  "description": "Runs another flow as a sub-flow, passing inputs and collecting outputs.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/flow/src/command/interflow.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "flow",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Flow ID or name of the sub-flow to execute"
+      }
+    ],
+    "outputs": []
+  },
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "flow_id": {
+        "type": "string"
+      },
+      "flow_name": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "config": {}
+}

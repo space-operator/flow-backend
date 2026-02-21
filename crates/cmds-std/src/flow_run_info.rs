@@ -4,7 +4,7 @@ const NAME: &str = "flow_run_info";
 
 fn build() -> BuildResult {
     Ok(
-        CmdBuilder::new(flow_lib::node_definition!("flow_run_info.json"))?
+        CmdBuilder::new(flow_lib::node_definition!("flow_run_info.jsonc"))?
             .check_name(NAME)?
             .build(run),
     )

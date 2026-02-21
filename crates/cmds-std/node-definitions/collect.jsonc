@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "collect",
+  "description": "Collects values from a foreach loop into an array.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/flow/src/command/collect.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "element",
+        "type_bounds": ["free"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Element to collect from each iteration"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "array",
+        "type": "free",
+        "optional": false,
+        "tooltip": "Collected array of all elements"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

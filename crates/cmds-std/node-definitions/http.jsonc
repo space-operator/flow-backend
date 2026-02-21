@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "http_request",
+  "description": "Sends an HTTP request and returns the response body and headers.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/http_request.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Request URL"
+      },
+      {
+        "name": "method",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "HTTP method: GET, POST, PUT, PATCH, DELETE, etc."
+      },
+      {
+        "name": "headers",
+        "type_bounds": ["object"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Key-value object of request headers"
+      },
+      {
+        "name": "basic_auth",
+        "type_bounds": ["object"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "e.g. {\"user\": \"<username>\", \"password\": \"<password>\"}"
+      },
+      {
+        "name": "query_params",
+        "type_bounds": ["array"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Array of [key, value] pairs appended to the URL"
+      },
+      {
+        "name": "body",
+        "type_bounds": ["free"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Request JSON body"
+      },
+      {
+        "name": "form",
+        "type_bounds": ["object"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Multipart form data (content-type set automatically)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "body",
+        "type": "free",
+        "optional": false,
+        "tooltip": "Response body (parsed as JSON when possible)"
+      },
+      {
+        "name": "headers",
+        "type": "object",
+        "optional": false,
+        "tooltip": "Response headers"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "method": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "config": {
+    "method": { "S": "GET" }
+  }
+}

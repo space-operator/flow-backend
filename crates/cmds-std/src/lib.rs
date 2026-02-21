@@ -4,17 +4,15 @@ pub mod const_cmd;
 pub mod error;
 pub mod flow_run_info;
 pub mod http_request;
-pub mod json_extract;
-pub mod json_insert;
+pub mod json;
 pub mod kvstore;
 pub mod note;
 pub mod postgrest;
-pub mod print_cmd;
+pub mod print;
 pub mod std;
 pub mod storage;
 pub mod string;
-pub mod supabase;
-pub mod wait_cmd;
+pub mod wait;
 
 pub mod prelude {
     pub use async_trait::async_trait;

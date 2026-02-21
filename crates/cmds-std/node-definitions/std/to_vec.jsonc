@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "to_vec",
+  "description": "Combines up to 8 values into a single array, skipping unconnected slots.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/std/to_vec.rs",
+  "ports": {
+    "inputs": [
+      { "name": "v0", "type_bounds": ["free"], "required": true, "passthrough": false, "tooltip": "First element (required)" },
+      { "name": "v1", "type_bounds": ["free"], "required": false, "passthrough": false, "tooltip": "Additional element" },
+      { "name": "v2", "type_bounds": ["free"], "required": false, "passthrough": false, "tooltip": "Additional element" },
+      { "name": "v3", "type_bounds": ["free"], "required": false, "passthrough": false, "tooltip": "Additional element" },
+      { "name": "v4", "type_bounds": ["free"], "required": false, "passthrough": false, "tooltip": "Additional element" },
+      { "name": "v5", "type_bounds": ["free"], "required": false, "passthrough": false, "tooltip": "Additional element" },
+      { "name": "v6", "type_bounds": ["free"], "required": false, "passthrough": false, "tooltip": "Additional element" },
+      { "name": "v7", "type_bounds": ["free"], "required": false, "passthrough": false, "tooltip": "Additional element" }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "array",
+        "optional": false,
+        "tooltip": "Array of all provided values"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

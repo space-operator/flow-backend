@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "json_insert",
+  "description": "Inserts or replaces a value in a JSON object or array at the given path.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/json/insert.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "json_input",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "JSON object or array to modify"
+      },
+      {
+        "name": "path",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "e.g. /data/records/0/fields/url to insert into url field's value\nnote the /0/ to select [0] in an array"
+      },
+      {
+        "name": "value",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Value to insert at the path"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "updated_json",
+        "type": "json",
+        "optional": false,
+        "tooltip": "Modified JSON with the value inserted"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

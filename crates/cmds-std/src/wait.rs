@@ -4,7 +4,7 @@ use tokio::time;
 
 pub const NAME: &str = "wait";
 
-const DEFINITION: &str = flow_lib::node_definition!("wait.json");
+const DEFINITION: &str = flow_lib::node_definition!("wait.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

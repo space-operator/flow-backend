@@ -8,7 +8,7 @@ const HTTP_REQUEST: &str = "http_request";
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(flow_lib::node_definition!("http.json"))?.check_name(HTTP_REQUEST)
+        CmdBuilder::new(flow_lib::node_definition!("http.jsonc"))?.check_name(HTTP_REQUEST)
     });
     Ok(CACHE.clone()?.build(run))
 }

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "flow_run_info",
+  "description": "Outputs metadata about the current flow run.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/flow_run_info.rs",
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "flow_owner",
+        "type": "string",
+        "optional": false,
+        "tooltip": "User ID of the flow owner"
+      },
+      {
+        "name": "started_by",
+        "type": "string",
+        "optional": false,
+        "tooltip": "User ID of who started this run"
+      },
+      {
+        "name": "solana_net",
+        "type": "string",
+        "optional": false,
+        "tooltip": "Solana network (devnet, testnet, mainnet-beta)"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

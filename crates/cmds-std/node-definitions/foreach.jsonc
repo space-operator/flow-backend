@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "foreach",
+  "description": "Iterates over an array, running downstream nodes once per element.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/flow/src/command/foreach.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "array",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Array to iterate over"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "element",
+        "type": "free",
+        "optional": false,
+        "tooltip": "Current element in the iteration"
+      },
+      {
+        "name": "index",
+        "type": "free",
+        "optional": false,
+        "tooltip": "Zero-based index of the current element"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "title": "Foreach",
+    "properties": {
+      "array": {
+        "title": "array",
+        "type": "string",
+        "default": "[]"
+      }
+    }
+  },
+  "config": {}
+}

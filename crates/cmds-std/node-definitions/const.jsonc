@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "2.0.0",
+  "name": "const",
+  "description": "Outputs a constant value configured in the node properties.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/const_cmd.rs",
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "output",
+        "type": "free",
+        "optional": false,
+        "tooltip": "The constant value"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "type": {
+        "type": "string",
+        "enum": ["JSON", "File"]
+      },
+      "value": {
+        "$ref": "https://schema.spaceoperator.com/value.schema.json"
+      },
+      "static": {
+        "type": "boolean"
+      }
+    },
+    "required": ["type", "value"],
+    "additionalProperties": false
+  },
+  "config": {
+    "type": { "S": "JSON" },
+    "value": { "S": "" },
+    "static": { "B": true }
+  }
+}

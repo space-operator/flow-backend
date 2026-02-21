@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "range",
+  "description": "Generates a sequence of numbers from start (inclusive) to end (exclusive).",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/std/range.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "start",
+        "type_bounds": ["number"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Start of range (inclusive)"
+      },
+      {
+        "name": "end",
+        "type_bounds": ["number"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "End of range (exclusive)"
+      },
+      {
+        "name": "step_by",
+        "type_bounds": ["number"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Step size (always treated as positive, direction is inferred from start/end)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "array",
+        "optional": false,
+        "tooltip": "Array of numbers in the range"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

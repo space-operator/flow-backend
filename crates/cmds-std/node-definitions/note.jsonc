@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "note",
+  "description": "A text annotation node with no inputs or outputs.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/note.rs",
+  "ports": {
+    "inputs": [],
+    "outputs": []
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}
