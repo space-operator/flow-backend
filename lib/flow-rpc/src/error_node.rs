@@ -2,7 +2,7 @@ use flow_lib::{command::prelude::*, context::execute};
 const NAME: &str = "error_node";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 pub fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("error_node.json");
+    const DEFINITION: &str = flow_lib::node_definition!("error_node.jsonc");
     static CACHE: BuilderCache =
         BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))

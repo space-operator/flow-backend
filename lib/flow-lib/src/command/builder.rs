@@ -1,6 +1,8 @@
 //! Helper for building command from node-definition files.
 //!
-//! Node-definition files are JSON files matching the [`Definition`] struct.
+//! Node-definition files can be JSON or JSONC and may use either:
+//! - legacy backend shape matching [`Definition`]
+//! - V2 node-definition shape (converted internally into [`Definition`])
 //!
 //! # Example
 //!
@@ -67,7 +69,7 @@ use super::{CommandError, CommandTrait, FnNewResult};
 use crate::{
     Name,
     command::InstructionInfo,
-    config::node::{Definition, Permissions},
+    config::node::{Definition, Permissions, parse_definition},
     context::CommandContext,
     utils::LocalBoxFuture,
 };
@@ -108,7 +110,7 @@ impl CmdBuilder {
     /// Start building command with a JSON node-definition.
     /// Most of the time you would use [`include_str`] to get the file content and pass to this.
     pub fn new(def: &str) -> Result<Self, serde_json::Error> {
-        let def = serde_json::from_str(def)?;
+        let def = parse_definition(def)?;
         Ok(Self {
             def,
             signature_name: None,
@@ -118,7 +120,16 @@ impl CmdBuilder {
     /// Check that the command name in node-definition is equal to this name, to prevent accidentally
     /// using the wrong node-definition.
     pub fn check_name(self, name: &str) -> Result<Self, BuilderError> {
-        if self.def.data.node_id == name {
+        fn strip_spo_scope(s: &str) -> Option<&str> {
+            s.strip_prefix("@spo/")
+        }
+
+        let actual = self.def.data.node_id.as_str();
+        let matches = actual == name
+            || strip_spo_scope(actual).is_some_and(|unscoped| unscoped == name)
+            || strip_spo_scope(name).is_some_and(|unscoped| unscoped == actual);
+
+        if matches {
             Ok(self)
         } else {
             Err(BuilderError::WrongName(self.def.data.node_id))

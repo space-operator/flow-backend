@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "error_node",
+  "description": "Always returns an error. Used for testing error handling.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "lib/flow-rpc/src/error_node.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "x",
+        "type_bounds": ["u64"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Unused input (node always errors)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "type": "u64",
+        "optional": false,
+        "tooltip": "Never produced (node always errors)"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

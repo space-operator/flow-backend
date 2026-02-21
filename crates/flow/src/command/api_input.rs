@@ -5,7 +5,7 @@ use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 const NAME: &str = "api_input";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("command/api_input.json");
+    const DEFINITION: &str = flow_lib::node_definition!("command/api_input.jsonc");
     static CACHE: BuilderCache =
         BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))

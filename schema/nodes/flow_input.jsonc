@@ -1,14 +1,14 @@
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
-    "id": "00000000-0000-4000-8000-000000000001",
     "version": "2.0.0",
     "name": "flow_input",
     "type": "native",
+    "author_handle": "spo",
+    "source_code": "crates/flow/src/command/flow_input.rs",
     "ports": {
         "inputs": [],
         "outputs": [
             {
-                "id": "11111111-1111-4111-8111-111111111111",
                 "name": "input",
                 "type": "free",
                 "optional": false,
@@ -19,6 +19,9 @@
     "config_schema": {
         "type": "object",
         "properties": {
+            "type": {
+                "type": "string"
+            },
             "label": {
                 "type": "string"
             },
@@ -32,24 +35,17 @@
         "additionalProperties": false
     },
     "config": {
-        "form_data": {
-            "label": {
-                "S": "input"
-            },
-            "value": {
-                "N": 0
-            },
-            "static": {
-                "B": false
-            }
+        "type": {
+            "S": "free"
+        },
+        "label": {
+            "S": "input"
+        },
+        "value": {
+            "N": 0
+        },
+        "static": {
+            "B": false
         }
-    },
-    "author_handle": "spo",
-    "is_published": true,
-    "is_admin_only": false,
-    "legacy_node_id": null,
-    "migration_status": "published",
-    "user_id": null,
-    "created_at": "2026-02-20T00:00:00Z",
-    "updated_at": "2026-02-20T00:00:00Z"
+    }
 }

@@ -3496,6 +3496,7 @@ dependencies = [
  "flow-value",
  "futures",
  "inventory",
+ "jsonc-parser 0.28.0",
  "pin-project-lite",
  "regex",
  "reqwest 0.12.28",

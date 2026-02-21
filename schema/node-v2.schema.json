@@ -5,30 +5,27 @@
     "description": "Canonical V2 node definition contract",
     "type": "object",
     "required": [
-        "id",
         "version",
         "name",
         "type",
+        "author_handle",
+        "source_code",
         "ports",
         "config_schema",
-        "config",
-        "author_handle",
-        "is_published",
-        "is_admin_only",
-        "legacy_node_id",
-        "migration_status",
-        "user_id",
-        "created_at",
-        "updated_at"
+        "config"
     ],
     "additionalProperties": false,
     "properties": {
-        "id": {
+        "$schema": {
             "type": "string",
-            "format": "uuid"
+            "description": "JSON Schema URI for editor validation."
         },
         "version": {
             "type": "string"
+        },
+        "description": {
+            "type": "string",
+            "description": "Human-readable summary of what this node does."
         },
         "name": {
             "type": "string",
@@ -43,6 +40,14 @@
                 "mock"
             ]
         },
+        "author_handle": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+        },
+        "source_code": {
+            "type": "string",
+            "description": "Path or URL pointing to the command source implementation."
+        },
         "ports": {
             "$ref": "#/definitions/node_ports"
         },
@@ -53,47 +58,6 @@
         "config": {
             "type": "object",
             "additionalProperties": true
-        },
-        "author_handle": {
-            "type": [
-                "string",
-                "null"
-            ]
-        },
-        "is_published": {
-            "type": "boolean"
-        },
-        "is_admin_only": {
-            "type": "boolean"
-        },
-        "legacy_node_id": {
-            "type": [
-                "integer",
-                "null"
-            ]
-        },
-        "migration_status": {
-            "type": "string",
-            "enum": [
-                "pending",
-                "tested",
-                "published"
-            ]
-        },
-        "user_id": {
-            "type": [
-                "string",
-                "null"
-            ],
-            "format": "uuid"
-        },
-        "created_at": {
-            "type": "string",
-            "format": "date-time"
-        },
-        "updated_at": {
-            "type": "string",
-            "format": "date-time"
         }
     },
     "definitions": {
@@ -113,11 +77,13 @@
                 "f32",
                 "f64",
                 "decimal",
+                "number",
                 "pubkey",
                 "keypair",
                 "signature",
                 "address",
                 "string",
+                "json",
                 "bytes",
                 "array",
                 "object",
@@ -127,14 +93,9 @@
         "input_port": {
             "type": "object",
             "required": [
-                "id",
                 "name"
             ],
             "properties": {
-                "id": {
-                    "type": "string",
-                    "format": "uuid"
-                },
                 "name": {
                     "type": "string"
                 },
@@ -162,15 +123,10 @@
         "output_port": {
             "type": "object",
             "required": [
-                "id",
                 "name",
                 "type"
             ],
             "properties": {
-                "id": {
-                    "type": "string",
-                    "format": "uuid"
-                },
                 "name": {
                     "type": "string"
                 },
