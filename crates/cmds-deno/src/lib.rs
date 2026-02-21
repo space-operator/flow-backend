@@ -8,8 +8,6 @@ use flow_lib::{
     utils::LocalBoxFuture,
 };
 use flow_rpc::client::RpcCommandClient;
-use serde::Deserialize;
-use serde::de::value::MapDeserializer;
 use std::process::Stdio;
 use tempfile::tempdir;
 use tokio::{
@@ -18,14 +16,9 @@ use tokio::{
 };
 use url::Url;
 
-#[derive(Deserialize)]
-struct Extra {
-    source: String,
-}
-
-fn source_from_form_data(nd: &NodeData) -> Option<String> {
+fn source_from_config(nd: &NodeData) -> Option<String> {
     ["source", "code"].into_iter().find_map(|key| {
-        nd.targets_form.form_data.get(key).and_then(|json| {
+        nd.config.get(key).and_then(|json| {
             match flow_lib::command::parse_value_tagged_or_json(json.clone()) {
                 flow_lib::value::Value::String(s) => Some(s),
                 _ => None,
@@ -61,15 +54,8 @@ macro_rules! include {
 }
 
 async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
-    let extra = &nd.targets_form.extra.rest;
-    let source = Extra::deserialize(MapDeserializer::new(
-        extra.iter().map(|(k, v)| (k.as_str(), v)),
-    ))
-    .map(|extra| extra.source)
-    .or_else(|_| {
-        source_from_form_data(&nd)
-            .ok_or_else(|| CommandError::msg("deno_script source/code not found"))
-    })?;
+    let source = source_from_config(&nd)
+        .ok_or_else(|| CommandError::msg("deno_script source/code not found"))?;
 
     let dir = tempdir()?;
 
@@ -78,11 +64,10 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
         .context("write cmd.ts")?;
 
     let mut node_data = nd.clone();
-    if let Some(obj) = node_data.targets_form.form_data.as_object_mut() {
+    if let Some(obj) = node_data.config.as_object_mut() {
         obj.remove("code");
         obj.remove("source");
     }
-    node_data.targets_form.extra.rest.remove("source");
     let node_data_json = serde_json::to_string(&node_data).context("serialize NodeData")?;
     tokio::fs::write(dir.path().join("node-data.json"), node_data_json)
         .await
@@ -228,7 +213,9 @@ impl CommandTrait for DenoCommand {
     }
     fn node_data(&self) -> client::NodeData {
         let mut data = default_node_data(self);
-        data.targets_form.extra.rest = [("source".to_owned(), self.source.clone().into())].into();
+        if let Some(obj) = data.config.as_object_mut() {
+            obj.insert("source".to_owned(), self.source.clone().into());
+        }
         data
     }
 }
@@ -237,12 +224,11 @@ impl CommandTrait for DenoCommand {
 mod tests {
     use flow_lib::{
         config::{
-            client::{Extra, Source, Target, TargetsForm},
+            client::{InputPort, OutputPort},
             node::Definition,
         },
         context::CommandContext,
     };
-    use serde_json::Value as JsonValue;
     use uuid::Uuid;
 
     use super::*;
@@ -252,35 +238,31 @@ mod tests {
         NodeData {
             r#type: def.r#type,
             node_id: def.data.node_id,
-            sources: def
-                .sources
+            outputs: def
+                .outputs
                 .into_iter()
-                .map(|x| Source {
+                .map(|x| OutputPort {
                     id: Uuid::new_v4(),
                     name: x.name,
                     optional: x.optional,
                     r#type: x.r#type,
+                    tooltip: None,
                 })
                 .collect(),
-            targets: def
-                .targets
+            inputs: def
+                .inputs
                 .into_iter()
-                .map(|x| Target {
+                .map(|x| InputPort {
                     id: Uuid::new_v4(),
                     name: x.name,
                     required: x.required,
                     passthrough: x.passthrough,
                     type_bounds: x.type_bounds,
+                    tooltip: None,
                 })
                 .collect(),
-            targets_form: TargetsForm {
-                form_data: JsonValue::Null,
-                wasm_bytes: None,
-                extra: Extra {
-                    supabase_id: None,
-                    rest: [("source".to_owned(), source.into())].into(),
-                },
-            },
+            config: serde_json::json!({ "source": source }),
+            wasm: None,
             instruction_info: None,
         }
     }

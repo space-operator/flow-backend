@@ -81,8 +81,7 @@ impl Flow {
                     && is_spo_builtin_node(&n.data.node_id, "wallet"))
                     .then(|| {
                         n.data
-                            .targets_form
-                            .form_data
+                            .config
                             .get("wallet_id")
                             .and_then(parse_wallet_id)
                     })

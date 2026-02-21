@@ -26,8 +26,7 @@ fn parse_flow_id(value: &JsonValue) -> Option<FlowId> {
 
 pub fn get_interflow_id(n: &NodeData) -> Result<FlowId, serde_json::Error> {
     let flow_id = n
-        .targets_form
-        .form_data
+        .config
         .get("flow_id")
         .and_then(parse_flow_id);
 
@@ -43,7 +42,7 @@ impl Interflow {
     fn new(n: &NodeData) -> Result<Self, CommandError> {
         let id = get_interflow_id(n)?;
         let inputs = n
-            .targets
+            .inputs
             .iter()
             .map(|x| Input {
                 name: x.name.clone(),
@@ -54,7 +53,7 @@ impl Interflow {
             .collect();
 
         let outputs = n
-            .sources
+            .outputs
             .iter()
             .map(|x| Output {
                 name: x.name.clone(),
@@ -137,32 +136,31 @@ flow_lib::submit!(CommandDescription::new(INTERFLOW, |data: &NodeData| {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow_lib::config::client::{Extra, Source, Target, TargetsForm};
+    use flow_lib::config::client::{InputPort, OutputPort};
     use serde_json::json;
     use uuid::Uuid;
 
-    fn node_with_form(form_data: JsonValue) -> NodeData {
+    fn test_node(config: JsonValue) -> NodeData {
         NodeData {
             r#type: flow_lib::CommandType::Native,
             node_id: INTERFLOW.into(),
-            sources: vec![Source {
+            outputs: vec![OutputPort {
                 id: Uuid::new_v4(),
                 name: "output".into(),
                 r#type: ValueType::Free,
                 optional: false,
+                tooltip: None,
             }],
-            targets: vec![Target {
+            inputs: vec![InputPort {
                 id: Uuid::new_v4(),
                 name: "input".into(),
                 type_bounds: vec![ValueType::Free],
                 required: false,
                 passthrough: false,
+                tooltip: None,
             }],
-            targets_form: TargetsForm {
-                form_data,
-                extra: Extra::default(),
-                wasm_bytes: None,
-            },
+            config,
+            wasm: None,
             instruction_info: None,
         }
     }
@@ -170,14 +168,14 @@ mod tests {
     #[test]
     fn parse_v2_uuid_flow_id_ivalue() {
         let id = Uuid::new_v4();
-        let node = node_with_form(json!({ "flow_id": { "S": id.to_string() } }));
+        let node = test_node(json!({ "flow_id": { "S": id.to_string() } }));
         assert!(matches!(get_interflow_id(&node), Ok(parsed) if parsed == id));
     }
 
     #[test]
     fn reject_plain_flow_id_string() {
         let id = Uuid::new_v4();
-        let node = node_with_form(json!({ "flow_id": id.to_string() }));
+        let node = test_node(json!({ "flow_id": id.to_string() }));
         assert!(get_interflow_id(&node).is_err());
     }
 }

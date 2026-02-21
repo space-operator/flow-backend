@@ -146,7 +146,7 @@ impl CmdBuilder {
 
     /// Use an [`InstructionInfo::simple`] for this command.
     pub fn simple_instruction_info(mut self, signature_name: &str) -> Result<Self, BuilderError> {
-        if self.def.sources.iter().any(|x| x.name == signature_name) {
+        if self.def.outputs.iter().any(|x| x.name == signature_name) {
             self.signature_name = Some(signature_name.to_owned());
             Ok(self)
         } else {
@@ -221,7 +221,7 @@ impl CmdBuilder {
             run: Box::new(f),
             inputs: self
                 .def
-                .targets
+                .inputs
                 .into_iter()
                 .map(|x| crate::CmdInputDescription {
                     name: x.name,
@@ -232,7 +232,7 @@ impl CmdBuilder {
                 .collect(),
             outputs: self
                 .def
-                .sources
+                .outputs
                 .into_iter()
                 .map(|x| crate::CmdOutputDescription {
                     name: x.name,

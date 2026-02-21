@@ -119,8 +119,8 @@ pub trait CommandTrait: 'static {
     /// Async `Drop` method.
     async fn destroy(&mut self) {}
 
-    /// Specify how [`form_data`][crate::config::NodeConfig::form_data] are read.
-    fn read_form_data(&self, data: serde_json::Value) -> ValueSet {
+    /// Specify how [`config`][crate::config::NodeConfig::config] values are read.
+    fn read_config(&self, data: serde_json::Value) -> ValueSet {
         let mut result = ValueSet::new();
         for i in self.inputs() {
             if let Some(json) = data.get(&i.name) {
@@ -171,8 +171,8 @@ pub fn passthrough_outputs<T: CommandTrait + ?Sized>(cmd: &T, inputs: &ValueSet)
     res
 }
 
-/// Specify how [`form_data`][crate::config::NodeConfig::form_data] are read.
-pub fn default_read_form_data<T: CommandTrait + ?Sized>(
+/// Specify how [`config`][crate::config::NodeConfig::config] values are read.
+pub fn default_read_config<T: CommandTrait + ?Sized>(
     cmd: &T,
     data: serde_json::Value,
 ) -> ValueSet {
@@ -196,28 +196,31 @@ pub fn default_node_data<T: CommandTrait + ?Sized>(cmd: &T) -> NodeData {
     NodeData {
         r#type: cmd.r#type(),
         node_id: cmd.name(),
-        sources: cmd
+        outputs: cmd
             .outputs()
             .into_iter()
-            .map(|output| client::Source {
+            .map(|output| client::OutputPort {
                 id: Uuid::nil(),
                 name: output.name,
                 r#type: output.r#type,
                 optional: output.optional,
+                tooltip: None,
             })
             .collect(),
-        targets: cmd
+        inputs: cmd
             .inputs()
             .into_iter()
-            .map(|input| client::Target {
+            .map(|input| client::InputPort {
                 id: Uuid::nil(),
                 name: input.name,
                 type_bounds: input.type_bounds,
                 required: input.required,
                 passthrough: input.passthrough,
+                tooltip: None,
             })
             .collect(),
-        targets_form: client::TargetsForm::default(),
+        config: serde_json::Value::Object(<_>::default()),
+        wasm: None,
         instruction_info: cmd.instruction_info(),
     }
 }

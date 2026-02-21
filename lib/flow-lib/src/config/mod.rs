@@ -139,7 +139,7 @@ pub struct FlowConfig {
 pub struct NodeConfig {
     pub id: NodeId,
     pub command_name: Name,
-    pub form_data: JsonValue,
+    pub config: JsonValue,
     pub client_node_data: client::NodeData,
 }
 
@@ -311,11 +311,11 @@ impl FlowConfig {
         let source_names = config
             .nodes
             .iter()
-            .flat_map(|n| n.data.sources.iter().map(|s| (s.id, s.name.clone())));
+            .flat_map(|n| n.data.outputs.iter().map(|s| (s.id, s.name.clone())));
         let target_names = config
             .nodes
             .iter()
-            .flat_map(|n| n.data.targets.iter().map(|s| (s.id, s.name.clone())));
+            .flat_map(|n| n.data.inputs.iter().map(|s| (s.id, s.name.clone())));
         let names = source_names.chain(target_names).collect::<HashMap<_, _>>();
 
         let edges = config
@@ -335,7 +335,7 @@ impl FlowConfig {
             .map(|n| NodeConfig {
                 id: n.id,
                 command_name: n.data.node_id.clone(),
-                form_data: n.data.targets_form.form_data.clone(),
+                config: n.data.config.clone(),
                 client_node_data: n.data,
             })
             .collect();
@@ -405,7 +405,7 @@ impl FlowConfig {
                 NodeConfig {
                     id: n.id,
                     command_name: node_data.node_id.clone(),
-                    form_data: node_data.targets_form.form_data.clone(),
+                    config: node_data.config.clone(),
                     client_node_data: node_data,
                 }
             })

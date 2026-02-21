@@ -142,10 +142,12 @@ pub struct Target {
 pub struct CommandDefinition {
     pub r#type: String,
     pub data: Data,
-    pub sources: Vec<Source>,
-    pub targets: Vec<Target>,
+    #[serde(rename = "sources", alias = "outputs")]
+    pub outputs: Vec<Source>,
+    #[serde(rename = "targets", alias = "inputs")]
+    pub inputs: Vec<Target>,
     #[serde(rename = "targets_form.ui_schema")]
     pub ui_schema: JsonValue,
     #[serde(rename = "targets_form.json_schema")]
-    pub json_schema: JsonValue,
+    pub config_schema: JsonValue,
 }

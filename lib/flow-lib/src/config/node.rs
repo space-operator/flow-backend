@@ -1,7 +1,7 @@
 //! Node-definition transport parsing used by command builders.
 //!
 //! This module supports both:
-//! - legacy command definitions (`data/sources/targets`)
+//! - legacy command definitions (`data/sources/targets` aliased to `outputs/inputs`)
 //! - V2 node definitions (`name/ports/config_schema/config/...`)
 //!
 //! Note: only add fields that are needed in backend execution.
@@ -14,8 +14,10 @@ use std::io;
 pub struct Definition {
     pub r#type: super::CommandType,
     pub data: Data,
-    pub sources: Vec<Source>,
-    pub targets: Vec<Target>,
+    #[serde(alias = "sources")]
+    pub outputs: Vec<Source>,
+    #[serde(alias = "targets")]
+    pub inputs: Vec<Target>,
     #[serde(default)]
     pub permissions: Permissions,
 }
@@ -90,7 +92,7 @@ const fn default_free_type() -> super::ValueType {
 
 impl From<DefinitionV2> for Definition {
     fn from(v2: DefinitionV2) -> Self {
-        let sources = v2
+        let outputs = v2
             .ports
             .outputs
             .into_iter()
@@ -100,7 +102,7 @@ impl From<DefinitionV2> for Definition {
                 optional: o.optional,
             })
             .collect();
-        let targets = v2
+        let inputs = v2
             .ports
             .inputs
             .into_iter()
@@ -118,8 +120,8 @@ impl From<DefinitionV2> for Definition {
                 node_id: format!("@{}/{}", v2.author_handle, v2.name),
                 instruction_info: None,
             },
-            sources,
-            targets,
+            outputs,
+            inputs,
             permissions: v2.permissions,
         }
     }
@@ -170,8 +172,8 @@ mod tests {
 
         let parsed = parse_definition(input).expect("legacy definition should parse");
         assert_eq!(parsed.data.node_id, "const");
-        assert_eq!(parsed.sources.len(), 1);
-        assert!(parsed.targets.is_empty());
+        assert_eq!(parsed.outputs.len(), 1);
+        assert!(parsed.inputs.is_empty());
     }
 
     #[test]
@@ -194,8 +196,8 @@ mod tests {
 
         let parsed = parse_definition(input).expect("v2 jsonc definition should parse");
         assert_eq!(parsed.data.node_id, "@spo/const");
-        assert_eq!(parsed.sources.len(), 1);
-        assert!(parsed.targets.is_empty());
+        assert_eq!(parsed.outputs.len(), 1);
+        assert!(parsed.inputs.is_empty());
     }
 
     // ── Test 10: All input fields survive V2 conversion ────────────────
@@ -218,22 +220,22 @@ mod tests {
         }"#;
 
         let parsed = parse_definition(input).unwrap();
-        assert_eq!(parsed.targets.len(), 3);
+        assert_eq!(parsed.inputs.len(), 3);
 
-        assert_eq!(parsed.targets[0].name, "fee_payer");
-        assert_eq!(parsed.targets[0].type_bounds, vec![ValueType::Keypair]);
-        assert!(parsed.targets[0].required);
-        assert!(parsed.targets[0].passthrough);
+        assert_eq!(parsed.inputs[0].name, "fee_payer");
+        assert_eq!(parsed.inputs[0].type_bounds, vec![ValueType::Keypair]);
+        assert!(parsed.inputs[0].required);
+        assert!(parsed.inputs[0].passthrough);
 
-        assert_eq!(parsed.targets[1].name, "amount");
-        assert_eq!(parsed.targets[1].type_bounds, vec![ValueType::U64, ValueType::Decimal]);
-        assert!(parsed.targets[1].required);
-        assert!(!parsed.targets[1].passthrough);
+        assert_eq!(parsed.inputs[1].name, "amount");
+        assert_eq!(parsed.inputs[1].type_bounds, vec![ValueType::U64, ValueType::Decimal]);
+        assert!(parsed.inputs[1].required);
+        assert!(!parsed.inputs[1].passthrough);
 
-        assert_eq!(parsed.targets[2].name, "note");
-        assert_eq!(parsed.targets[2].type_bounds, vec![ValueType::String]);
-        assert!(!parsed.targets[2].required);
-        assert!(!parsed.targets[2].passthrough);
+        assert_eq!(parsed.inputs[2].name, "note");
+        assert_eq!(parsed.inputs[2].type_bounds, vec![ValueType::String]);
+        assert!(!parsed.inputs[2].required);
+        assert!(!parsed.inputs[2].passthrough);
     }
 
     // ── Test 11: Optional output survives conversion ───────────────────
@@ -255,15 +257,15 @@ mod tests {
         }"#;
 
         let parsed = parse_definition(input).unwrap();
-        assert_eq!(parsed.sources.len(), 2);
+        assert_eq!(parsed.outputs.len(), 2);
 
-        assert_eq!(parsed.sources[0].name, "required_out");
-        assert_eq!(parsed.sources[0].r#type, ValueType::Signature);
-        assert!(!parsed.sources[0].optional);
+        assert_eq!(parsed.outputs[0].name, "required_out");
+        assert_eq!(parsed.outputs[0].r#type, ValueType::Signature);
+        assert!(!parsed.outputs[0].optional);
 
-        assert_eq!(parsed.sources[1].name, "optional_out");
-        assert_eq!(parsed.sources[1].r#type, ValueType::Free);
-        assert!(parsed.sources[1].optional);
+        assert_eq!(parsed.outputs[1].name, "optional_out");
+        assert_eq!(parsed.outputs[1].r#type, ValueType::Free);
+        assert!(parsed.outputs[1].optional);
     }
 
     // ── Test 12: node_id = @{author}/{name} ────────────────────────────

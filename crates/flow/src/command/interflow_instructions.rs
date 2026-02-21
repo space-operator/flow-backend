@@ -19,7 +19,7 @@ impl Interflow {
     fn new(n: &NodeData) -> Result<Self, CommandError> {
         let id = get_interflow_id(n)?;
         let inputs = n
-            .targets
+            .inputs
             .iter()
             .map(|x| Input {
                 name: x.name.clone(),

@@ -39,9 +39,9 @@ impl CommandTrait for Command {
 }
 
 pub fn build(nd: &NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
-    let inputs: Vec<Input> = nd.targets.iter().cloned().map(Into::into).collect();
+    let inputs: Vec<Input> = nd.inputs.iter().cloned().map(Into::into).collect();
     let outputs: Vec<Output> = nd
-        .sources
+        .outputs
         .iter()
         .cloned()
         .map(|s| Output {

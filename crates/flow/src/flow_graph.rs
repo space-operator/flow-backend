@@ -496,7 +496,7 @@ impl FlowGraph {
             let node = Node {
                 id,
                 idx,
-                form_inputs: command.read_form_data(n.form_data),
+                form_inputs: command.read_config(n.config),
                 command,
                 use_previous_values: <_>::default(),
             };

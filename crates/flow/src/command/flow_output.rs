@@ -9,22 +9,22 @@ pub const FLOW_OUTPUT: &str = "flow_output";
 
 impl FlowOutputCommand {
     fn new(data: &NodeData) -> Self {
-        let form = &data.targets_form.form_data;
+        let config = &data.config;
 
         let rename = data
-            .targets
+            .inputs
             .first()
             .map(|t| t.name.clone())
             .filter(|name| !name.is_empty())
             .or_else(|| {
-                form.get("label")
+                config.get("label")
                     .and_then(|v| flow_lib::command::parse_value_tagged(v.clone()).ok())
                     .and_then(|v| match v {
                         Value::String(s) => Some(s),
                         _ => None,
                     })
             })
-            .or_else(|| data.sources.first().map(|s| s.name.clone()))
+            .or_else(|| data.outputs.first().map(|s| s.name.clone()))
             .unwrap_or_default();
 
         Self { rename }
@@ -71,53 +71,52 @@ flow_lib::submit!(CommandDescription::new(FLOW_OUTPUT, |data: &NodeData| {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow_lib::config::client::{Extra, Source, Target, TargetsForm};
+    use flow_lib::config::client::{InputPort, OutputPort};
     use serde_json::json;
     use uuid::Uuid;
 
-    fn node_with_data(form_data: JsonValue, target_name: &str, source_name: &str) -> NodeData {
+    fn test_node(config: JsonValue, target_name: &str, source_name: &str) -> NodeData {
         NodeData {
             r#type: flow_lib::CommandType::Native,
             node_id: FLOW_OUTPUT.into(),
-            sources: vec![Source {
+            outputs: vec![OutputPort {
                 id: Uuid::new_v4(),
                 name: source_name.to_owned(),
                 r#type: ValueType::Free,
                 optional: false,
+                tooltip: None,
             }],
-            targets: vec![Target {
+            inputs: vec![InputPort {
                 id: Uuid::new_v4(),
                 name: target_name.to_owned(),
                 type_bounds: vec![ValueType::Free],
                 required: true,
                 passthrough: false,
+                tooltip: None,
             }],
-            targets_form: TargetsForm {
-                form_data,
-                extra: Extra::default(),
-                wasm_bytes: None,
-            },
+            config,
+            wasm: None,
             instruction_info: None,
         }
     }
 
     #[test]
     fn target_name_has_priority_for_rename() {
-        let node = node_with_data(json!({ "label": { "S": "ignored" } }), "Result", "Old");
+        let node = test_node(json!({ "label": { "S": "ignored" } }), "Result", "Old");
         let cmd = FlowOutputCommand::new(&node);
         assert_eq!(cmd.rename, "Result");
     }
 
     #[test]
     fn reads_ivalue_label_when_target_missing() {
-        let node = node_with_data(json!({ "label": { "S": "Renamed" } }), "", "Old");
+        let node = test_node(json!({ "label": { "S": "Renamed" } }), "", "Old");
         let cmd = FlowOutputCommand::new(&node);
         assert_eq!(cmd.rename, "Renamed");
     }
 
     #[test]
     fn falls_back_to_source_name() {
-        let node = node_with_data(json!({}), "", "Output A");
+        let node = test_node(json!({}), "", "Output A");
         let cmd = FlowOutputCommand::new(&node);
         assert_eq!(cmd.rename, "Output A");
     }

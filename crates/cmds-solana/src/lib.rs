@@ -12,7 +12,6 @@ pub mod das;
 pub mod find_pda;
 pub mod generate_keypair;
 pub mod get_balance;
-pub mod governance;
 pub mod memo;
 pub mod nft;
 pub mod pyth_price;

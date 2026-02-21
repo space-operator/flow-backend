@@ -24,7 +24,7 @@ pub struct ExplorerCommand {
 impl ExplorerCommand {
     fn new(data: &NodeData) -> Result<Self, CommandError> {
         let outputs = data
-            .sources
+            .outputs
             .iter()
             .map(|o| Output {
                 name: o.name.clone(),
@@ -33,9 +33,7 @@ impl ExplorerCommand {
             })
             .collect();
         let pinned = serde_json::from_value::<Vec<String>>(
-            data.targets_form
-                .extra
-                .rest
+            data.config
                 .get("pinned")
                 .cloned()
                 .unwrap_or_default(),

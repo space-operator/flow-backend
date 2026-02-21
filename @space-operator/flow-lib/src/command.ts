@@ -66,9 +66,9 @@ export interface Target {
 export interface NodeData {
   type: CommandType;
   node_id: string;
-  sources: Source[];
-  targets: Target[];
-  // targets_form: any;
+  outputs: Source[];
+  inputs: Target[];
+  config: Record<string, any>;
 }
 
 export function deserializeInput(
@@ -193,7 +193,7 @@ export class BaseCommand implements CommandTrait {
   deserializeInputs(inputs: Record<string, Value>): Record<string, any> {
     return Object.fromEntries(
       Object.entries(inputs).map(([k, v]) => {
-        const port = this.nd.targets.find((v) => v.name === k);
+        const port = this.nd.inputs.find((v) => v.name === k);
         if (port !== undefined) {
           const de = deserializeInput(port, v);
           if (de !== undefined) {
@@ -210,7 +210,7 @@ export class BaseCommand implements CommandTrait {
   serializeOutputs(outputs: Record<string, any>): Record<string, Value> {
     return Object.fromEntries(
       Object.entries(outputs).map(([k, v]) => {
-        const port = this.nd.sources.find((v) => v.name === k);
+        const port = this.nd.outputs.find((v) => v.name === k);
         if (port !== undefined) {
           const ser = serializeOutput(port, v);
           if (ser !== undefined) {

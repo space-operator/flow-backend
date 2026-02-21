@@ -28,7 +28,7 @@ pub(crate) struct FormData {
 
 impl WalletCmd {
     fn new(nd: &NodeData) -> Self {
-        let form = parse_wallet_form(nd.targets_form.form_data.clone());
+        let form = parse_wallet_form(nd.config.clone());
         Self { form }
     }
 }
@@ -183,7 +183,6 @@ flow_lib::submit!(CommandDescription::new(WALLET, |nd| {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow_lib::config::client::{Extra, TargetsForm};
     use serde_json::json;
 
     const PUBKEY_STR: &str = "DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY";
@@ -193,16 +192,13 @@ mod tests {
         let nd = NodeData {
             r#type: flow_lib::CommandType::Native,
             node_id: WALLET.into(),
-            sources: Vec::new(),
-            targets: Vec::new(),
-            targets_form: TargetsForm {
-                form_data: json!({
-                    "public_key": PUBKEY_STR,
-                    "wallet_id": 0,
-                }),
-                extra: Extra::default(),
-                wasm_bytes: None,
-            },
+            outputs: Vec::new(),
+            inputs: Vec::new(),
+            config: json!({
+                "public_key": PUBKEY_STR,
+                "wallet_id": 0,
+            }),
+            wasm: None,
             instruction_info: None,
         };
         assert!(WalletCmd::new(&nd).form.is_err());
@@ -213,16 +209,13 @@ mod tests {
         let nd = NodeData {
             r#type: flow_lib::CommandType::Native,
             node_id: WALLET.into(),
-            sources: Vec::new(),
-            targets: Vec::new(),
-            targets_form: TargetsForm {
-                form_data: json!({
-                    "public_key": { "B3": PUBKEY_STR },
-                    "wallet_id": { "U": "7" }
-                }),
-                extra: Extra::default(),
-                wasm_bytes: None,
-            },
+            outputs: Vec::new(),
+            inputs: Vec::new(),
+            config: json!({
+                "public_key": { "B3": PUBKEY_STR },
+                "wallet_id": { "U": "7" }
+            }),
+            wasm: None,
             instruction_info: None,
         };
 

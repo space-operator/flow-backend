@@ -9,7 +9,6 @@ use serde_json::{Map as JsonMap, Value as JsonValue, value::RawValue};
 use serde_with::serde_as;
 use std::collections::HashMap;
 use uuid::Uuid;
-use value::default::bool_false;
 
 fn default_interflow_instruction_info() -> Result<InstructionInfo, String> {
     Err("not available".to_string())
@@ -175,7 +174,7 @@ pub struct InputPort {
     pub required: bool,
     #[serde(default)]
     pub passthrough: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tooltip: Option<String>,
 }
 
@@ -187,8 +186,29 @@ pub struct OutputPort {
     pub r#type: ValueType,
     #[serde(default)]
     pub optional: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tooltip: Option<String>,
+}
+
+impl From<OutputPort> for CmdOutputDescription {
+    fn from(p: OutputPort) -> Self {
+        Self {
+            name: p.name,
+            r#type: p.r#type,
+            optional: p.optional,
+        }
+    }
+}
+
+impl From<InputPort> for CmdInputDescription {
+    fn from(p: InputPort) -> Self {
+        Self {
+            name: p.name,
+            type_bounds: p.type_bounds,
+            required: p.required,
+            passthrough: p.passthrough,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -267,134 +287,33 @@ pub struct FlowRowV2 {
     pub current_branch_id: Option<i32>,
 }
 
+/// Runtime state for WASM nodes: DB row ID + cached bytes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WasmNode {
+    pub supabase_id: i64,
+    pub bytes: Option<bytes::Bytes>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NodeData {
     pub r#type: CommandType,
     pub node_id: String,
-    pub sources: Vec<Source>,
-    pub targets: Vec<Target>,
-    pub targets_form: TargetsForm,
+    pub outputs: Vec<OutputPort>,
+    pub inputs: Vec<InputPort>,
+    #[serde(default)]
+    pub config: JsonValue,
+    #[serde(skip)]
+    pub wasm: Option<WasmNode>,
+    #[serde(default)]
     pub instruction_info: Option<InstructionInfo>,
 }
 
 impl NodeData {
-    pub fn inputs(&self) -> Vec<CmdInputDescription> {
-        self.targets.iter().cloned().map(Into::into).collect()
+    pub fn cmd_inputs(&self) -> Vec<CmdInputDescription> {
+        self.inputs.iter().cloned().map(Into::into).collect()
     }
-    pub fn outputs(&self) -> Vec<CmdOutputDescription> {
-        self.sources.iter().cloned().map(Into::into).collect()
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct NodeDataSkipWasm {
-    pub r#type: CommandType,
-    pub node_id: String,
-    pub sources: Vec<Source>,
-    pub targets: Vec<Target>,
-    pub targets_form: TargetsFormSkipWasm,
-    pub instruction_info: Option<InstructionInfo>,
-}
-
-impl From<NodeData> for NodeDataSkipWasm {
-    fn from(
-        NodeData {
-            r#type,
-            node_id,
-            sources,
-            targets,
-            targets_form,
-            instruction_info,
-        }: NodeData,
-    ) -> Self {
-        let TargetsForm {
-            form_data, extra, ..
-        } = targets_form;
-        NodeDataSkipWasm {
-            r#type,
-            node_id,
-            sources,
-            targets,
-            targets_form: TargetsFormSkipWasm { form_data, extra },
-            instruction_info,
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Source {
-    pub id: Uuid,
-    pub name: String,
-    pub r#type: ValueType,
-    #[serde(default = "bool_false")]
-    pub optional: bool,
-}
-
-impl From<Source> for CmdOutputDescription {
-    fn from(
-        Source {
-            name,
-            r#type,
-            optional,
-            ..
-        }: Source,
-    ) -> Self {
-        Self {
-            name,
-            r#type,
-            optional,
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Target {
-    pub id: Uuid,
-    pub name: String,
-    pub type_bounds: Vec<ValueType>,
-    pub required: bool,
-    pub passthrough: bool,
-}
-
-impl From<Target> for CmdInputDescription {
-    fn from(
-        Target {
-            name,
-            type_bounds,
-            required,
-            passthrough,
-            ..
-        }: Target,
-    ) -> Self {
-        Self {
-            name,
-            type_bounds,
-            required,
-            passthrough,
-        }
-    }
-}
-
-impl From<InputPort> for Target {
-    fn from(p: InputPort) -> Self {
-        Self {
-            id: p.id,
-            name: p.name,
-            type_bounds: p.type_bounds,
-            required: p.required,
-            passthrough: p.passthrough,
-        }
-    }
-}
-
-impl From<OutputPort> for Source {
-    fn from(p: OutputPort) -> Self {
-        Self {
-            id: p.id,
-            name: p.name,
-            r#type: p.r#type,
-            optional: p.optional,
-        }
+    pub fn cmd_outputs(&self) -> Vec<CmdOutputDescription> {
+        self.outputs.iter().cloned().map(Into::into).collect()
     }
 }
 
@@ -409,17 +328,14 @@ fn infer_command_type(node_id: &str) -> CommandType {
 
 impl From<NodeDataV2> for NodeData {
     fn from(v2: NodeDataV2) -> Self {
-        let form_data = JsonValue::Object(v2.config.into_iter().collect::<JsonMap<_, _>>());
+        let config = JsonValue::Object(v2.config.into_iter().collect::<JsonMap<_, _>>());
         Self {
             r#type: infer_command_type(&v2.node_id),
             node_id: v2.node_id,
-            sources: v2.ports.outputs.into_iter().map(Into::into).collect(),
-            targets: v2.ports.inputs.into_iter().map(Into::into).collect(),
-            targets_form: TargetsForm {
-                form_data,
-                extra: Extra::default(),
-                wasm_bytes: None,
-            },
+            outputs: v2.ports.outputs,
+            inputs: v2.ports.inputs,
+            config,
+            wasm: None,
             instruction_info: None,
         }
     }
@@ -471,57 +387,8 @@ impl From<FlowRowV2> for FlowRow {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct TargetsForm {
-    pub form_data: JsonValue,
-    #[serde(default)]
-    pub extra: Extra,
 
-    pub wasm_bytes: Option<bytes::Bytes>,
-}
 
-impl Default for TargetsForm {
-    fn default() -> Self {
-        Self {
-            form_data: JsonValue::Object(<_>::default()),
-            extra: Extra::default(),
-            wasm_bytes: None,
-        }
-    }
-}
-
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct TargetsFormSkipWasm {
-    pub form_data: JsonValue,
-    #[serde(default)]
-    pub extra: Extra,
-}
-
-impl std::fmt::Debug for TargetsForm {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("TargetsForm")
-            .field("form_data", &self.form_data)
-            .field("extra", &self.extra)
-            .finish_non_exhaustive()
-    }
-}
-
-impl std::fmt::Debug for TargetsFormSkipWasm {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("TargetsForm")
-            .field("form_data", &self.form_data)
-            .field("extra", &self.extra)
-            .finish_non_exhaustive()
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub struct Extra {
-    // for WASM node
-    pub supabase_id: Option<i64>,
-    #[serde(flatten)]
-    pub rest: HashMap<String, JsonValue>,
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SourceHandle {
@@ -570,4 +437,130 @@ pub struct Edge {
     pub target: Uuid,
     #[serde(rename = "targetHandle")]
     pub target_handle: Uuid,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Verify that serializing NodeData with OutputPort/InputPort (tooltip: None)
+    /// does NOT emit "tooltip" in the JSON — preserving wire-format compatibility
+    /// with Deno subprocesses and CapNP-RPC.
+    #[test]
+    fn node_data_serialization_omits_tooltip() {
+        let nd = NodeData {
+            r#type: CommandType::Native,
+            node_id: "test".into(),
+            outputs: vec![OutputPort {
+                id: Uuid::nil(),
+                name: "out".into(),
+                r#type: ValueType::Free,
+                optional: false,
+                tooltip: None,
+            }],
+            inputs: vec![InputPort {
+                id: Uuid::nil(),
+                name: "in".into(),
+                type_bounds: vec![ValueType::Free],
+                required: true,
+                passthrough: false,
+                tooltip: None,
+            }],
+            config: JsonValue::Object(<_>::default()),
+            wasm: None,
+            instruction_info: None,
+        };
+        let json = serde_json::to_string(&nd).unwrap();
+        assert!(
+            !json.contains("tooltip"),
+            "tooltip must not appear in wire format, got: {json}"
+        );
+    }
+
+    /// Verify round-trip: serialize then deserialize produces identical NodeData.
+    #[test]
+    fn node_data_serde_round_trip() {
+        let nd = NodeData {
+            r#type: CommandType::Native,
+            node_id: "round_trip".into(),
+            outputs: vec![OutputPort {
+                id: Uuid::nil(),
+                name: "sig".into(),
+                r#type: ValueType::Signature,
+                optional: false,
+                tooltip: None,
+            }],
+            inputs: vec![InputPort {
+                id: Uuid::nil(),
+                name: "fee_payer".into(),
+                type_bounds: vec![ValueType::Keypair],
+                required: true,
+                passthrough: true,
+                tooltip: None,
+            }],
+            config: JsonValue::Object(<_>::default()),
+            wasm: None,
+            instruction_info: None,
+        };
+        let json = serde_json::to_string(&nd).unwrap();
+        let deserialized: NodeData = serde_json::from_str(&json).unwrap();
+        assert_eq!(nd, deserialized);
+    }
+
+    /// Verify V2 wire format: direct field names, no legacy nesting.
+    #[test]
+    fn wire_format_uses_v2_keys() {
+        let nd = NodeData {
+            r#type: CommandType::Native,
+            node_id: "wire_test".into(),
+            outputs: vec![OutputPort {
+                id: Uuid::nil(),
+                name: "out".into(),
+                r#type: ValueType::Free,
+                optional: false,
+                tooltip: None,
+            }],
+            inputs: vec![InputPort {
+                id: Uuid::nil(),
+                name: "in".into(),
+                type_bounds: vec![ValueType::Free],
+                required: true,
+                passthrough: false,
+                tooltip: None,
+            }],
+            config: JsonValue::Object(<_>::default()),
+            wasm: None,
+            instruction_info: None,
+        };
+        let json = serde_json::to_string(&nd).unwrap();
+
+        // V2 wire format uses direct field names
+        assert!(json.contains("\"outputs\""), "missing 'outputs' key: {json}");
+        assert!(json.contains("\"inputs\""), "missing 'inputs' key: {json}");
+        assert!(json.contains("\"config\""), "missing 'config' key: {json}");
+
+        // Legacy V1 keys must NOT appear
+        assert!(
+            !json.contains("\"sources\""),
+            "'sources' must not be a JSON key: {json}"
+        );
+        assert!(
+            !json.contains("\"targets\""),
+            "'targets' must not be a JSON key: {json}"
+        );
+        assert!(
+            !json.contains("\"form_data\""),
+            "'form_data' must not be a JSON key: {json}"
+        );
+        assert!(
+            !json.contains("\"targets_form\""),
+            "'targets_form' must not be a JSON key: {json}"
+        );
+
+        // wasm fields must not appear (runtime-only, serde(skip))
+        assert!(
+            !json.contains("wasm"),
+            "wasm must not appear: {json}"
+        );
+    }
 }

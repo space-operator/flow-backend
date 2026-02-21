@@ -1019,10 +1019,10 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
             options: None,
             design: None,
         },
-        sources: outputs,
-        targets: inputs,
+        outputs,
+        inputs,
         ui_schema: serde_json::Value::Object(<_>::default()),
-        json_schema: serde_json::Value::Object(<_>::default()),
+        config_schema: serde_json::Value::Object(<_>::default()),
     };
 
     Ok(def)
@@ -1261,8 +1261,8 @@ fn fmt_code(code: TokenStream) -> String {
 fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
     let node_id = &def.data.node_id;
     let node_definition_path = modules.join("/") + "/" + node_id + ".json";
-    let input_struct = make_input_struct(&def.targets);
-    let output_struct = make_output_struct(&def.sources);
+    let input_struct = make_input_struct(&def.inputs);
+    let output_struct = make_output_struct(&def.outputs);
     let execute = if def.data.instruction_info.is_some() {
         quote! {
             // call ctx.execute to emit Solana instructions
@@ -1641,7 +1641,7 @@ async fn generate_input_struct(path: impl AsRef<Path>) -> Result<(), Report<Erro
     let nd = serde_json::from_str::<CommandDefinition>(&nd)
         .change_context(Error::Json)
         .attach_printable("not a valid node definition file")?;
-    let input_struct = make_input_struct(&nd.targets);
+    let input_struct = make_input_struct(&nd.inputs);
     let code = fmt_code(input_struct);
     println!("{}", code);
     Ok(())
@@ -1652,7 +1652,7 @@ async fn generate_output_struct(path: impl AsRef<Path>) -> Result<(), Report<Err
     let nd = serde_json::from_str::<CommandDefinition>(&nd)
         .change_context(Error::Json)
         .attach_printable("not a valid node definition file")?;
-    let output_struct = make_output_struct(&nd.sources);
+    let output_struct = make_output_struct(&nd.outputs);
     let code = fmt_code(output_struct);
     println!("{}", code);
     Ok(())

@@ -1,7 +1,7 @@
 use flow_lib::command::prelude::*;
 
 #[derive(Debug)]
-pub enum FormType {
+pub enum ConfigType {
     Json,
     File,
     // Doesn't need special handling,
@@ -9,27 +9,27 @@ pub enum FormType {
     Other(String),
 }
 
-impl From<String> for FormType {
+impl From<String> for ConfigType {
     fn from(value: String) -> Self {
         match value.as_str() {
-            "JSON" => FormType::Json,
-            "File" => FormType::File,
-            _ => FormType::Other(value),
+            "JSON" => ConfigType::Json,
+            "File" => ConfigType::File,
+            _ => ConfigType::Other(value),
         }
     }
 }
 
-impl From<&str> for FormType {
+impl From<&str> for ConfigType {
     fn from(value: &str) -> Self {
         match value {
-            "JSON" => FormType::Json,
-            "File" => FormType::File,
-            _ => FormType::Other(value.to_owned()),
+            "JSON" => ConfigType::Json,
+            "File" => ConfigType::File,
+            _ => ConfigType::Other(value.to_owned()),
         }
     }
 }
 
-impl<'de> serde::Deserialize<'de> for FormType {
+impl<'de> serde::Deserialize<'de> for ConfigType {
     fn deserialize<D>(d: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -49,14 +49,14 @@ pub const CONST_CMD: &str = "const";
 const SOURCE: &str = "output";
 
 #[derive(Debug)]
-enum FormValue {
+enum ConfigValue {
     Value(Value),
     Urls(Vec<String>),
 }
 
 #[derive(Debug)]
 struct Inner {
-    value: FormValue,
+    value: ConfigValue,
     r#type: ValueType,
 }
 
@@ -73,15 +73,15 @@ impl From<serde_json::Error> for Error {
 }
 
 #[derive(Deserialize)]
-struct FormData {
-    r#type: FormType,
+struct ConstConfig {
+    r#type: ConfigType,
     value: JsonValue,
 }
 
-fn read_form_data(form: FormData) -> Result<Inner, Error> {
-    match form.r#type {
-        FormType::Json => {
-            let value = match form.value {
+fn read_config(config: ConstConfig) -> Result<Inner, Error> {
+    match config.r#type {
+        ConfigType::Json => {
+            let value = match config.value {
                 JsonValue::String(s) => {
                     let value: JsonValue = serde_json::from_str(&s)?;
                     Value::from(value)
@@ -89,13 +89,13 @@ fn read_form_data(form: FormData) -> Result<Inner, Error> {
                 other => flow_lib::command::parse_value_tagged_or_json(other),
             };
             Ok(Inner {
-                value: FormValue::Value(value),
+                value: ConfigValue::Value(value),
                 r#type: ValueType::Free,
             })
         }
-        FormType::File => {
-            let urls: Vec<String> = serde_json::from_value(form.value.clone()).or_else(|_| {
-                match flow_lib::command::parse_value_tagged_or_json(form.value) {
+        ConfigType::File => {
+            let urls: Vec<String> = serde_json::from_value(config.value.clone()).or_else(|_| {
+                match flow_lib::command::parse_value_tagged_or_json(config.value) {
                     Value::Array(values) => values
                         .into_iter()
                         .map(|value| match value {
@@ -113,23 +113,23 @@ fn read_form_data(form: FormData) -> Result<Inner, Error> {
                 }
             })?;
             Ok(Inner {
-                value: FormValue::Urls(urls),
+                value: ConfigValue::Urls(urls),
                 r#type: ValueType::Free,
             })
         }
-        FormType::Other(_) => {
-            let value = flow_lib::command::parse_value_tagged_or_json(form.value);
+        ConfigType::Other(_) => {
+            let value = flow_lib::command::parse_value_tagged_or_json(config.value);
             Ok(Inner {
-                value: FormValue::Value(value),
+                value: ConfigValue::Value(value),
                 r#type: ValueType::Free,
             })
         }
     }
 }
 
-fn decode_form_data(value: JsonValue) -> Result<FormData, Error> {
-    if let Ok(form) = serde_json::from_value::<FormData>(value.clone()) {
-        return Ok(form);
+fn parse_config(value: JsonValue) -> Result<ConstConfig, Error> {
+    if let Ok(config) = serde_json::from_value::<ConstConfig>(value.clone()) {
+        return Ok(config);
     }
 
     let r#type = value
@@ -137,18 +137,18 @@ fn decode_form_data(value: JsonValue) -> Result<FormData, Error> {
         .map(
             |json| match flow_lib::command::parse_value_tagged_or_json(json.clone()) {
                 Value::String(s) => s.into(),
-                _ => FormType::Other("".to_owned()),
+                _ => ConfigType::Other("".to_owned()),
             },
         )
-        .unwrap_or(FormType::Other("".to_owned()));
+        .unwrap_or(ConfigType::Other("".to_owned()));
     let value = value.get("value").cloned().unwrap_or(JsonValue::Null);
-    Ok(FormData { r#type, value })
+    Ok(ConstConfig { r#type, value })
 }
 
 impl ConstCommand {
     fn new(data: &NodeData) -> Result<Self, CommandError> {
-        let form = decode_form_data(data.targets_form.form_data.clone())?;
-        let inner = read_form_data(form)?;
+        let config = parse_config(data.config.clone())?;
+        let inner = read_config(config)?;
         Ok(Self { inner })
     }
 }
@@ -174,10 +174,10 @@ impl CommandTrait for ConstCommand {
 
     async fn run(&self, _ctx: CommandContext, _inputs: ValueSet) -> Result<ValueSet, CommandError> {
         match &self.inner.value {
-            FormValue::Value(value) => Ok(value::map! {
+            ConfigValue::Value(value) => Ok(value::map! {
                 SOURCE => value.clone(),
             }),
-            FormValue::Urls(urls) => {
+            ConfigValue::Urls(urls) => {
                 // TODO: download the file
                 let urls: Vec<Value> = urls.iter().map(|url| Value::String(url.clone())).collect();
                 Ok(value::map! {
@@ -211,13 +211,13 @@ mod tests {
           }
         }"#;
 
-        let res = read_form_data(FormData {
-            r#type: FormType::Json,
+        let res = read_config(ConstConfig {
+            r#type: ConfigType::Json,
             value: JsonValue::String(JSON.to_owned()),
         })
         .unwrap();
         let val = match res.value {
-            FormValue::Value(val) => val,
+            ConfigValue::Value(val) => val,
             _ => panic!("wrong type"),
         };
         assert_eq!(

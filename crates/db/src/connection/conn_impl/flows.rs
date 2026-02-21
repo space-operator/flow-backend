@@ -155,12 +155,10 @@ impl UserConnection {
         let mut config: client::ClientConfig = config_v2.into();
 
         for node in &mut config.nodes {
-            if node.data.r#type == CommandType::Wasm
-                && let Err(error) = self
-                    .fetch_wasm_bytes(&mut node.data.targets_form, &conn)
-                    .await
-            {
-                tracing::warn!("{}", error);
+            if let Some(wasm) = &mut node.data.wasm {
+                if let Err(error) = self.fetch_wasm_bytes(wasm, &conn).await {
+                    tracing::warn!("{}", error);
+                }
             }
         }
 
@@ -169,33 +167,28 @@ impl UserConnection {
 
     async fn fetch_wasm_bytes(
         &self,
-        data: &mut client::TargetsForm,
+        wasm: &mut client::WasmNode,
         conn: &Connection,
     ) -> crate::Result<()> {
-        if data.wasm_bytes.is_some() {
+        if wasm.bytes.is_some() {
             return Ok(());
         }
-
-        let id = data
-            .extra
-            .supabase_id
-            .ok_or_else(|| Error::not_found("json", "supabase_id"))?;
 
         let path: String = conn
             .do_query_opt(
                 r#"SELECT storage_path FROM nodes
                 WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
-                &[&id, &self.user_id],
+                &[&wasm.supabase_id, &self.user_id],
             )
             .await
             .map_err(Error::exec("get storage_path"))?
-            .ok_or_else(|| Error::not_found("node", id))?
+            .ok_or_else(|| Error::not_found("node", wasm.supabase_id))?
             .try_get(0)
             .map_err(Error::data("nodes.storage_path"))?;
 
         let bytes = self.wasm_storage.download(&path).await?;
 
-        data.wasm_bytes = Some(bytes);
+        wasm.bytes = Some(bytes);
 
         Ok(())
     }
