@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transfer_nft_from_eth",
+  "description": "Transfer an NFT from Ethereum to Solana via the Wormhole NFT bridge",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/nft_bridge/eth/transfer_nft_from_eth.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "keypair",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Ethereum private key for signing the transfer transaction"
+      },
+      {
+        "name": "network_name",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Ethereum network name (e.g. mainnet, goerli)"
+      },
+      {
+        "name": "token",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Ethereum NFT contract address"
+      },
+      {
+        "name": "token_id",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Token ID of the NFT to transfer"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Solana recipient public key"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "response",
+        "type": "json",
+        "tooltip": "Ethereum transaction response"
+      },
+      {
+        "name": "emitter",
+        "type": "address",
+        "tooltip": "Wormhole emitter address on Ethereum"
+      },
+      {
+        "name": "sequence",
+        "type": "u32",
+        "tooltip": "Wormhole message sequence number"
+      },
+      {
+        "name": "recipient_ata",
+        "type": "pubkey",
+        "tooltip": "Recipient associated token account on Solana"
+      },
+      {
+        "name": "mint",
+        "type": "pubkey",
+        "tooltip": "Wrapped NFT mint address on Solana"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

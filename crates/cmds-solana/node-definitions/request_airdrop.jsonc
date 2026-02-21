@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "request_airdrop",
+  "description": "Airdrop SOL for testing purposes. Currently takes ~30s to complete.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/request_airdrop.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "pubkey",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account to receive the airdrop"
+      },
+      {
+        "name": "amount",
+        "type_bounds": ["u64"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Amount in lamports (default: 1000000000 = 1 SOL)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Airdrop transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "amount": { "U": "1000000000" }
+  }
+}

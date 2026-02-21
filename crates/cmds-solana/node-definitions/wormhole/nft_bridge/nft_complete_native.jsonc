@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "nft_complete_native",
+  "description": "Complete a native NFT transfer on Solana via the Wormhole NFT bridge",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/nft_bridge/complete_native.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair that pays for the transaction fees"
+      },
+      {
+        "name": "vaa",
+        "type_bounds": ["bytes"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "VAA bytes authorizing the NFT transfer"
+      },
+      {
+        "name": "payload",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Decoded VAA payload containing transfer details"
+      },
+      {
+        "name": "vaa_hash",
+        "type_bounds": ["bytes"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Hash of the VAA body"
+      },
+      {
+        "name": "to_authority",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Authority of the destination token account"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "token",
+        "type": "pubkey",
+        "tooltip": "Public key of the received token account"
+      },
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

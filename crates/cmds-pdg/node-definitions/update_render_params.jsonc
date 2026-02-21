@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "update_render_params",
+  "description": "Apply an effect to render parameters",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-pdg/src/update_render_params.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "params",
+        "type_bounds": ["object"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Current render parameters"
+      },
+      {
+        "name": "effect",
+        "type_bounds": ["object"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Effect to apply"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "params",
+        "type": "object",
+        "tooltip": "Updated render parameters"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

@@ -65,6 +65,14 @@
       "passthrough": false
     },
     {
+      "name": "seeds",
+      "type_bounds": ["array"],
+      "required": false,
+      "defaultValue": null,
+      "tooltip": "Array of seeds. If provided, seed_1..5 are ignored.",
+      "passthrough": false
+    },
+    {
       "name": "seed_1",
       "type_bounds": ["string", "pubkey"],
       "required": false,

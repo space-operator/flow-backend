@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "initialize_inscription",
+  "description": "Initialize a new inscription account",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/inscriptions/initialize.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "inscription_account",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair for the new inscription account"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["keypair"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Authority keypair for the inscription"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

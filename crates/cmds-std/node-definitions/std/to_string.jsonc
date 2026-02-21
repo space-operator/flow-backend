@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "to_string",
+  "description": "Convert any value to its string representation",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/string/to_string.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "stringify",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Value to convert to string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "string",
+        "tooltip": "String representation of the input"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

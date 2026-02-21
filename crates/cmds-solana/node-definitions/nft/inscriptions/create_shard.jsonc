@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_shard",
+  "description": "Create an inscription shard account",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/inscriptions/create_shard.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "shard_number",
+        "type_bounds": ["u8"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Shard number to create"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

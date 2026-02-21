@@ -89,20 +89,12 @@
       "passthrough": false
     },
     {
-      "name": "owner_pubkey",
-      "type_bounds": ["pubkey"],
+      "name": "owner",
+      "type_bounds": ["keypair"],
       "required": true,
       "defaultValue": null,
       "tooltip": "",
       "passthrough": true
-    },
-    {
-      "name": "signer_pubkeys",
-      "type_bounds": ["json"],
-      "required": false,
-      "defaultValue": null,
-      "tooltip": "",
-      "passthrough": false
     },
     {
       "name": "submit",

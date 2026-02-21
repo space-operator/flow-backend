@@ -16,23 +16,21 @@ fn build() -> BuildResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    pub fee_payer: Wallet,
+    fee_payer: Wallet,
     #[serde(with = "value::pubkey")]
-    pub owned_pubkey: Pubkey,
-    #[serde(with = "value::pubkey::opt")]
-    pub new_authority: Option<Pubkey>,
-    pub authority_type: AuthorityType,
-    #[serde(with = "value::pubkey")]
-    pub owner_pubkey: Pubkey,
-    pub signer_pubkeys: Vec<Pubkey>,
+    owned_pubkey: Pubkey,
+    #[serde(default, with = "value::pubkey::opt")]
+    new_authority: Option<Pubkey>,
+    authority_type: AuthorityType,
+    owner: Wallet,
     #[serde(default = "value::default::bool_true")]
-    pub submit: bool,
+    submit: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
-    pub signature: Option<Signature>,
+    signature: Option<Signature>,
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
@@ -41,19 +39,24 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         &input.owned_pubkey,
         input.new_authority.as_ref(),
         input.authority_type.into(),
-        &input.owner_pubkey,
-        &input.signer_pubkeys.iter().collect::<Vec<_>>(),
+        &input.owner.pubkey(),
+        &[],
     )?;
 
-    // TODO if signers not empty, add signers as signer
-
-    let instructions = Instructions {
+    let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer].into(),
+        signers: [input.fee_payer, input.owner].into(),
         instructions: [ix].into(),
     };
-    let signature = ctx.execute(instructions, <_>::default()).await?.signature;
+
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
+
+    let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })
 }

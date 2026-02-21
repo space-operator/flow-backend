@@ -1,0 +1,102 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transfer_wrapped",
+  "description": "Transfer wrapped tokens from Solana to another chain via the Wormhole token bridge",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/token_bridge/transfer_wrapped.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair that pays for the transaction fees"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Mint address of the wrapped token"
+      },
+      {
+        "name": "amount",
+        "type_bounds": ["u64"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Amount of tokens to transfer (in smallest unit)"
+      },
+      {
+        "name": "fee",
+        "type_bounds": ["u64"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Relayer fee amount"
+      },
+      {
+        "name": "target_address",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Recipient address on the target chain"
+      },
+      {
+        "name": "target_chain",
+        "type_bounds": ["u16"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Wormhole chain ID of the destination chain"
+      },
+      {
+        "name": "message",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair for the Wormhole message account"
+      },
+      {
+        "name": "from_owner",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the owner of the source token account"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "wrapped_meta_key",
+        "type": "pubkey",
+        "tooltip": "Public key of the wrapped token metadata account"
+      },
+      {
+        "name": "emitter",
+        "type": "pubkey",
+        "tooltip": "Wormhole emitter address"
+      },
+      {
+        "name": "sequence",
+        "type": "string",
+        "tooltip": "Wormhole message sequence number"
+      },
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

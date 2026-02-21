@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "add_config_lines",
+  "description": "Add config lines to a Candy Machine",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/candy_machine_v3/add_config_lines.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "candy_machine",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Candy Machine keypair"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Authority of the Candy Machine"
+      },
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "index",
+        "type_bounds": ["u32"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Starting index for the config lines"
+      },
+      {
+        "name": "config_lines",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Array of config lines (name, URI pairs) to add"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

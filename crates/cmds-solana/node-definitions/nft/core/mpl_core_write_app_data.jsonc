@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "write_app_data",
+  "description": "Write application data to an MPL Core asset or collection",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/core/write_data.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "asset",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Public key of the asset to write data to"
+      },
+      {
+        "name": "collection",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Public key of the collection to write data to"
+      },
+      {
+        "name": "buffer",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Buffer account for large data writes"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["keypair"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Authority keypair for writing data"
+      },
+      {
+        "name": "data",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Application data string to write"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_core_collection_v2",
+  "description": "Create a new MPL Core collection",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/core/create_collection.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "collection",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Collection keypair"
+      },
+      {
+        "name": "verified_creator",
+        "type_bounds": ["keypair"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Verified creator keypair to sign the collection"
+      },
+      {
+        "name": "update_authority",
+        "type_bounds": ["keypair"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Update authority keypair for the collection"
+      },
+      {
+        "name": "name",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Name of the collection"
+      },
+      {
+        "name": "uri",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "URI pointing to the collection metadata"
+      },
+      {
+        "name": "plugins",
+        "type_bounds": ["json"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Plugins to attach to the collection"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      },
+      {
+        "name": "collection",
+        "type": "pubkey",
+        "tooltip": "Public key of the created collection"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

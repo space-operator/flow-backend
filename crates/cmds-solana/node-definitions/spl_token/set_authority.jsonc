@@ -1,0 +1,75 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "set_authority",
+  "description": "Set or change the authority on an SPL token account or mint",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl/set_authority.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction fees"
+      },
+      {
+        "name": "owned_pubkey",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Public key of the token account or mint to change authority on"
+      },
+      {
+        "name": "new_authority",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Public key of the new authority, or none to revoke"
+      },
+      {
+        "name": "authority_type",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Type of authority to set (e.g. MintTokens, FreezeAccount, AccountOwner, CloseAccount)"
+      },
+      {
+        "name": "owner_pubkey",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Public key of the current authority owner"
+      },
+      {
+        "name": "signer_pubkeys",
+        "type_bounds": ["json"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Additional signer public keys for multisig authorities"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature of the set authority operation"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  }
+}

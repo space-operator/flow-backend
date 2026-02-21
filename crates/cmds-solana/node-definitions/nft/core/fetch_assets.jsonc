@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "fetch_assets",
+  "description": "Fetch all assets belonging to an MPL Core collection",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/core/fetch_assets.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "collection",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the collection to fetch assets from"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "assets",
+        "type": "json",
+        "tooltip": "JSON array of assets in the collection"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

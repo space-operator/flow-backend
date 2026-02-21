@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "parse_vaa",
+  "description": "Parse a Wormhole VAA into its constituent fields including signatures, body, hash, and payload",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/parse_vaa.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "vaa",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "VAA data in JSON format to parse"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "parsed_vaa",
+        "type": "json",
+        "tooltip": "Fully parsed VAA as a JSON object"
+      },
+      {
+        "name": "vaa_bytes",
+        "type": "bytes",
+        "tooltip": "Raw VAA bytes"
+      },
+      {
+        "name": "signatures",
+        "type": "json",
+        "tooltip": "Guardian signatures from the VAA"
+      },
+      {
+        "name": "guardian_set_index",
+        "type": "u32",
+        "tooltip": "Index of the guardian set that signed the VAA"
+      },
+      {
+        "name": "body",
+        "type": "bytes",
+        "tooltip": "VAA body bytes"
+      },
+      {
+        "name": "vaa_hash",
+        "type": "bytes",
+        "tooltip": "Hash of the VAA body"
+      },
+      {
+        "name": "vaa_secp256k_hash",
+        "type": "bytes",
+        "tooltip": "Secp256k1 hash used for signature verification"
+      },
+      {
+        "name": "payload",
+        "type": "json",
+        "tooltip": "Decoded VAA payload data"
+      },
+      {
+        "name": "nft_token_id",
+        "type": "string",
+        "tooltip": "NFT token ID if the VAA contains an NFT transfer payload"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

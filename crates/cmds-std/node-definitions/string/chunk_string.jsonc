@@ -2,7 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "chunk_string",
-  "description": "Splits a string into an array of chunks with a maximum byte size.",
+  "description": "Chunk a string into an array of strings",
   "type": "native",
   "author_handle": "spo",
   "source_code": "crates/cmds-std/src/string/chunk.rs",
@@ -20,21 +20,17 @@
         "type_bounds": ["number"],
         "required": true,
         "passthrough": false,
-        "tooltip": "Maximum byte size of each chunk"
+        "tooltip": "Maximum character count per chunk"
       }
     ],
     "outputs": [
       {
         "name": "chunks",
         "type": "array",
-        "optional": false,
         "tooltip": "Array of string chunks"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
+  "config_schema": {},
   "config": {}
 }

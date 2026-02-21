@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "get_effect_list",
+  "description": "Get effects list from PDG render parameters",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-pdg/src/get_effect_list.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "attributes",
+        "type_bounds": ["object"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "PDG attributes containing effect data"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "effects",
+        "type": "array",
+        "tooltip": "Extracted list of effects"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

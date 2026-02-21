@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "attest_from_eth",
+  "description": "Attest a token from Ethereum via the Wormhole token bridge",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/token_bridge/eth/attest_from_eth.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "keypair",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Ethereum keypair for signing the attestation transaction"
+      },
+      {
+        "name": "network_name",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Ethereum network name (e.g. mainnet, goerli)"
+      },
+      {
+        "name": "token",
+        "type_bounds": ["address"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Ethereum token contract address to attest"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "response",
+        "type": "json",
+        "tooltip": "Ethereum transaction response"
+      },
+      {
+        "name": "emitter",
+        "type": "address",
+        "tooltip": "Wormhole emitter address on Ethereum"
+      },
+      {
+        "name": "sequence",
+        "type": "u32",
+        "tooltip": "Wormhole message sequence number"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

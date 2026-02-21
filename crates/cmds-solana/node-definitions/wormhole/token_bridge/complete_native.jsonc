@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "complete_native",
+  "description": "Complete a native token transfer on Solana via the Wormhole token bridge",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/token_bridge/complete_native.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair that pays for the transaction fees"
+      },
+      {
+        "name": "vaa",
+        "type_bounds": ["bytes"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "VAA bytes authorizing the token transfer"
+      },
+      {
+        "name": "payload",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Decoded VAA payload containing transfer details"
+      },
+      {
+        "name": "vaa_hash",
+        "type_bounds": ["bytes"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Hash of the VAA body"
+      },
+      {
+        "name": "fee_recipient",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Optional fee recipient account for relayer fees"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "mint",
+        "type": "pubkey",
+        "tooltip": "Mint address of the transferred token"
+      },
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

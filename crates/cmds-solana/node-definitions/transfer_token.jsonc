@@ -1,0 +1,108 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transfer_token",
+  "description": "Transfer SPL tokens between accounts",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/transfer_token.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Pays for transaction fees and ATA creation if needed"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Token mint address"
+      },
+      {
+        "name": "amount",
+        "type_bounds": ["f64"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Number of tokens to transfer (UI amount)"
+      },
+      {
+        "name": "decimals",
+        "type_bounds": ["u8"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Token decimals (0 for NFTs); fetched from mint if omitted"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Recipient wallet or token account address"
+      },
+      {
+        "name": "sender_token_account",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Sender token account; derived from sender_owner if omitted"
+      },
+      {
+        "name": "sender_owner",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Owner keypair of the sender token account"
+      },
+      {
+        "name": "allow_unfunded",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Allow sending to an unfunded recipient address (default: true)"
+      },
+      {
+        "name": "fund_recipient",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Create recipient ATA if it doesn't exist (default: true)"
+      },
+      {
+        "name": "memo",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Memo attached to the transaction"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      },
+      {
+        "name": "recipient_token_account",
+        "type": "pubkey",
+        "tooltip": "Resolved recipient token account address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "allow_unfunded": { "B": true },
+    "fund_recipient": { "B": true },
+    "submit": { "B": true }
+  }
+}

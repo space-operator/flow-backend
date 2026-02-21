@@ -1,0 +1,144 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_v1",
+  "description": "Create an NFT using Metaplex Token Metadata V1",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/v1/create_v1.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "update_authority",
+        "type_bounds": ["keypair"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Update authority keypair of the NFT"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Mint account keypair for the new NFT"
+      },
+      {
+        "name": "mint_authority",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Mint authority of the token"
+      },
+      {
+        "name": "data",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "DataV2"
+      },
+      {
+        "name": "print_supply",
+        "type_bounds": ["u64"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "0, u64, or none"
+      },
+      {
+        "name": "collection_mint_account",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Collection mint account to associate the NFT with"
+      },
+      {
+        "name": "collection_details",
+        "type_bounds": ["json"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Only applies to Collection NFTs and is automatically set. To facility migration, set the collection size manually."
+      },
+      {
+        "name": "is_mutable",
+        "type_bounds": ["bool"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Whether Metadata Account can be updated"
+      },
+      {
+        "name": "token_standard",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "non_fungible, fungible_asset, fungible, non_fungible_edition, programmable_non_fungible, programmable_non_fungible_edition"
+      },
+      {
+        "name": "decimals",
+        "type_bounds": ["u64"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Number of decimals for the token"
+      },
+      {
+        "name": "creators",
+        "type_bounds": ["json"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Creators and their share of royalties. Limited to 5 creators"
+      },
+      {
+        "name": "uses",
+        "type_bounds": ["json"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "How many and which type of uses each NFT will have. Uses: Burn is a single-time use and is burned after use. Single is a single-time use and does not burn the token. Multiple allows up to the specified number of uses"
+      },
+      {
+        "name": "rule_set",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Programmable rule set configuration (only applicable to Programmable asset types)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      },
+      {
+        "name": "mint_account",
+        "type": "pubkey",
+        "tooltip": "Public key of the created mint account"
+      },
+      {
+        "name": "metadata_account",
+        "type": "pubkey",
+        "tooltip": "Derived metadata account address"
+      },
+      {
+        "name": "master_edition_account",
+        "type": "pubkey",
+        "tooltip": "Derived master edition account address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

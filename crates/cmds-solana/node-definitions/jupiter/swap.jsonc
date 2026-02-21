@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "jupiter_swap",
+  "description": "Perform a token swap using Jupiter aggregator",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/jupiter/swap.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the account paying for the transaction fees"
+      },
+      {
+        "name": "input_mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the input token mint to swap from"
+      },
+      {
+        "name": "output_mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the output token mint to swap to"
+      },
+      {
+        "name": "auto_slippage",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to use automatic slippage calculation"
+      },
+      {
+        "name": "slippage_percent",
+        "type_bounds": ["u16"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Slippage tolerance percentage for the swap"
+      },
+      {
+        "name": "amount",
+        "type_bounds": ["u64"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Amount of input tokens to swap"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature of the swap operation"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "auto_slippage": {
+      "B": true
+    },
+    "submit": {
+      "B": true
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "arweave_file_upload",
+  "description": "Upload a file to Arweave via Bundlr",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/arweave_file_upload.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair that pays for the upload"
+      },
+      {
+        "name": "file_path",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Path to the file to upload"
+      },
+      {
+        "name": "fund_bundlr",
+        "type_bounds": ["bool"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Whether to fund the Bundlr node before uploading"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "file_url",
+        "type": "string",
+        "tooltip": "URL of the uploaded file on Arweave"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "fund_bundlr": { "B": true }
+  }
+}

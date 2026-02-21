@@ -1,0 +1,95 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "nft_transfer_native",
+  "description": "Transfer a native NFT from Solana to another chain via the Wormhole NFT bridge",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/nft_bridge/transfer_native.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair that pays for the transaction fees"
+      },
+      {
+        "name": "token_chain",
+        "type_bounds": ["u16"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Wormhole chain ID of the token's origin chain"
+      },
+      {
+        "name": "target_address",
+        "type_bounds": ["address"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Recipient address on the target chain"
+      },
+      {
+        "name": "target_chain",
+        "type_bounds": ["u16"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Wormhole chain ID of the destination chain"
+      },
+      {
+        "name": "message",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair for the Wormhole message account"
+      },
+      {
+        "name": "from",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Source token account holding the NFT"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Mint address of the NFT being transferred"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "metadata",
+        "type": "pubkey",
+        "tooltip": "Public key of the NFT metadata account"
+      },
+      {
+        "name": "sequence",
+        "type": "string",
+        "tooltip": "Wormhole message sequence number"
+      },
+      {
+        "name": "emitter",
+        "type": "string",
+        "tooltip": "Wormhole emitter address"
+      },
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

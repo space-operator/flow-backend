@@ -2,7 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "api_input",
-  "description": "Pauses execution and waits for external input via API or webhook.",
+  "description": "Wait for external input via API or webhook",
   "type": "native",
   "author_handle": "spo",
   "source_code": "crates/flow/src/command/api_input.rs",
@@ -13,7 +13,7 @@
         "type_bounds": ["f64"],
         "required": false,
         "passthrough": false,
-        "tooltip": "Timeout (seconds)"
+        "tooltip": "Timeout in seconds"
       },
       {
         "name": "webhook_url",
@@ -41,14 +41,10 @@
       {
         "name": "value",
         "type": "free",
-        "optional": false,
-        "tooltip": "Value received from the external API call"
+        "tooltip": "Value received from the API call"
       }
     ]
   },
-  "config_schema": {
-    "type": "object",
-    "additionalProperties": false
-  },
+  "config_schema": {},
   "config": {}
 }

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "redeem_on_eth",
+  "description": "Redeem tokens on Ethereum using a signed Wormhole VAA",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/token_bridge/eth/redeem_on_eth.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "keypair",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Ethereum private key for signing the redemption transaction"
+      },
+      {
+        "name": "network_name",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Ethereum network name (e.g. mainnet, goerli)"
+      },
+      {
+        "name": "signed_vaa",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Signed VAA bytes authorizing the token redemption"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "receipt",
+        "type": "json",
+        "tooltip": "Ethereum transaction receipt"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

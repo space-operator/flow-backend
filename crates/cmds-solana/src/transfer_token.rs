@@ -1,7 +1,5 @@
 use crate::get_decimals;
 use crate::{prelude::*, utils::ui_amount_to_amount};
-use solana_commitment_config::CommitmentConfig;
-use solana_program::instruction::Instruction;
 use solana_program::program_pack::Pack;
 use solana_sdk_ids::system_program;
 use spl_associated_token_account_interface::address::get_associated_token_address;
@@ -23,141 +21,6 @@ fn build() -> BuildResult {
 }
 
 flow_lib::submit!(CommandDescription::new(SOLANA_TRANSFER_TOKEN, |_| build()));
-
-#[allow(clippy::too_many_arguments)]
-async fn command_transfer_token(
-    client: &RpcClient,
-    fee_payer: &Pubkey,
-    token_mint: Pubkey,
-    ui_amount: Decimal,
-    decimals: Option<u8>,
-    recipient: Pubkey,
-    sender: Option<Pubkey>,
-    sender_owner: Pubkey,
-    allow_unfunded_recipient: bool,
-    fund_recipient: bool,
-    memo: String,
-) -> crate::Result<(Vec<Instruction>, Pubkey)> {
-    let sender_token_acc = if let Some(sender) = sender {
-        sender
-    } else {
-        get_associated_token_address(&sender_owner, &token_mint)
-    };
-
-    let decimals = if let Some(d) = decimals {
-        d
-    } else {
-        get_decimals(client, token_mint).await?
-    };
-
-    let commitment = CommitmentConfig::confirmed();
-
-    let transfer_balance = {
-        // TODO error handling
-        let sender_token_amount = client
-            .get_token_account_balance_with_commitment(&sender_token_acc, commitment)
-            .await?
-            .value;
-
-        info!("sender_token_amount: {:?}", sender_token_amount);
-
-        // TODO error handling
-        let sender_balance = sender_token_amount
-            .amount
-            .parse::<u64>()
-            .map_err(crate::Error::custom)?;
-
-        let transfer_balance = ui_amount_to_amount(ui_amount, decimals)?;
-        if transfer_balance > sender_balance {
-            // TODO: discuss if this error appropriate for token semantically?
-            return Err(crate::Error::InsufficientSolanaBalance {
-                needed: transfer_balance,
-                balance: sender_balance,
-            });
-        }
-        transfer_balance
-    };
-
-    let mut recipient_token_account = recipient;
-
-    let recipient_is_token_account = {
-        let recipient_account_info = client
-            .get_account_with_commitment(&recipient, commitment)
-            .await?
-            .value
-            .map(|account| {
-                spl_token_interface::check_id(&account.owner)
-                    && account.data.len() == spl_token_interface::state::Account::LEN
-            });
-
-        if recipient_account_info.is_none() && !allow_unfunded_recipient {
-            return Err(crate::Error::RecipientAddressNotFunded);
-        }
-        recipient_account_info.unwrap_or(false)
-    };
-
-    info!(
-        "recipient_is_token_account: {:?}",
-        recipient_is_token_account
-    );
-
-    let mut instructions = vec![];
-    if !recipient_is_token_account {
-        recipient_token_account = get_associated_token_address(&recipient, &token_mint);
-
-        let needs_funding = {
-            match client
-                .get_account_with_commitment(&recipient_token_account, commitment)
-                .await?
-                .value
-            {
-                Some(recipient_token_account_data) => match recipient_token_account_data.owner {
-                    x if x == system_program::ID => true,
-                    y if y == spl_token_interface::ID => false,
-                    _ => {
-                        return Err(crate::Error::UnsupportedRecipientAddress(
-                            recipient.to_string(),
-                        ));
-                    }
-                },
-                _ => true,
-            }
-        };
-
-        if needs_funding {
-            if fund_recipient {
-                instructions.push(instruction::create_associated_token_account(
-                    fee_payer,
-                    &recipient,
-                    &token_mint,
-                    &spl_token_interface::ID,
-                ));
-            } else {
-                // TODO: discuss the logic of this error
-                return Err(crate::Error::AssociatedTokenAccountDoesntExist);
-            }
-        }
-    }
-
-    instructions.push(transfer_checked(
-        &spl_token_interface::ID,
-        &sender_token_acc,
-        &token_mint,
-        &recipient_token_account,
-        &sender_owner,
-        &[&sender_owner, fee_payer],
-        transfer_balance,
-        decimals,
-    )?);
-
-    instructions.push(spl_memo_interface::instruction::build_memo(
-        &spl_memo_interface::v3::ID,
-        memo.as_bytes(),
-        &[fee_payer],
-    ));
-
-    Ok((instructions, recipient_token_account))
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
@@ -189,33 +52,120 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let (instructions, recipient_token_account) = command_transfer_token(
-        ctx.solana_client(),
-        &input.fee_payer.pubkey(),
-        input.mint_account,
-        input.amount,
-        input.decimals,
-        input.recipient,
-        input.sender_token_account,
-        input.sender_owner.pubkey(),
-        input.allow_unfunded,
-        input.fund_recipient,
-        input.memo,
-    )
-    .await?;
+    let client = ctx.solana_client();
+    let fee_payer = input.fee_payer.pubkey();
+    let sender_owner = input.sender_owner.pubkey();
+    let commitment = client.commitment();
+
+    let sender_token_acc = input
+        .sender_token_account
+        .unwrap_or_else(|| get_associated_token_address(&sender_owner, &input.mint_account));
+
+    let decimals = match input.decimals {
+        Some(d) => d,
+        None => get_decimals(client, input.mint_account).await?,
+    };
+
+    let sender_token_amount = client
+        .get_token_account_balance_with_commitment(&sender_token_acc, commitment)
+        .await?
+        .value;
+    info!("sender_token_amount: {:?}", sender_token_amount);
+
+    let sender_balance = sender_token_amount
+        .amount
+        .parse::<u64>()
+        .map_err(crate::Error::custom)?;
+
+    let transfer_balance = ui_amount_to_amount(input.amount, decimals)?;
+    if transfer_balance > sender_balance {
+        return Err(crate::Error::InsufficientSolanaBalance {
+            needed: transfer_balance,
+            balance: sender_balance,
+        }
+        .into());
+    }
+
+    let recipient_is_token_account = client
+        .get_account_with_commitment(&input.recipient, commitment)
+        .await?
+        .value
+        .map(|account| {
+            spl_token_interface::check_id(&account.owner)
+                && account.data.len() == spl_token_interface::state::Account::LEN
+        });
+
+    if recipient_is_token_account.is_none() && !input.allow_unfunded {
+        return Err(crate::Error::RecipientAddressNotFunded.into());
+    }
+    let recipient_is_token_account = recipient_is_token_account.unwrap_or(false);
+    info!("recipient_is_token_account: {:?}", recipient_is_token_account);
+
+    let mut instructions = vec![];
+
+    let recipient_token_account = if recipient_is_token_account {
+        input.recipient
+    } else {
+        let ata = get_associated_token_address(&input.recipient, &input.mint_account);
+
+        let needs_funding = match client
+            .get_account_with_commitment(&ata, commitment)
+            .await?
+            .value
+        {
+            Some(account) if account.owner == system_program::ID => true,
+            Some(account) if account.owner == spl_token_interface::ID => false,
+            Some(_) => {
+                return Err(crate::Error::UnsupportedRecipientAddress(
+                    input.recipient.to_string(),
+                )
+                .into());
+            }
+            None => true,
+        };
+
+        if needs_funding {
+            if !input.fund_recipient {
+                return Err(crate::Error::AssociatedTokenAccountDoesntExist.into());
+            }
+            instructions.push(instruction::create_associated_token_account(
+                &fee_payer,
+                &input.recipient,
+                &input.mint_account,
+                &spl_token_interface::ID,
+            ));
+        }
+
+        ata
+    };
+
+    instructions.push(transfer_checked(
+        &spl_token_interface::ID,
+        &sender_token_acc,
+        &input.mint_account,
+        &recipient_token_account,
+        &sender_owner,
+        &[],
+        transfer_balance,
+        decimals,
+    )?);
+
+    if !input.memo.is_empty() {
+        instructions.push(spl_memo_interface::instruction::build_memo(
+            &spl_memo_interface::v3::ID,
+            input.memo.as_bytes(),
+            &[&fee_payer],
+        ));
+    }
 
     let ins = Instructions {
         lookup_tables: None,
-        fee_payer: input.fee_payer.pubkey(),
+        fee_payer,
         signers: [input.fee_payer, input.sender_owner].into(),
         instructions,
     };
 
-    let instructions = if input.submit {
-        ins
-    } else {
-        Default::default()
-    };
+    let instructions = if input.submit { ins } else { Default::default() };
 
     let signature = ctx
         .execute(

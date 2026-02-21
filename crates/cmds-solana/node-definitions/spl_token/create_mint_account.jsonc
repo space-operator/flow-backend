@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_mint_account",
+  "description": "Create a new SPL token mint account",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/create_mint_account.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Pays for account rent and transaction fees"
+      },
+      {
+        "name": "decimals",
+        "type_bounds": ["u8"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Token decimal places (0 for NFTs, 2 for USD-like, >0 for fungible tokens)"
+      },
+      {
+        "name": "mint_authority",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Authority that can mint new tokens"
+      },
+      {
+        "name": "freeze_authority",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Optional authority that can freeze token accounts"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair for the new mint account"
+      },
+      {
+        "name": "memo",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Additional memo attached to the transaction"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

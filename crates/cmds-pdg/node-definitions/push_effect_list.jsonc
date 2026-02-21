@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "push_effect_list",
+  "description": "Push an effect onto an effects list",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-pdg/src/push_effect_list.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "effects",
+        "type_bounds": ["array"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Current effects list"
+      },
+      {
+        "name": "element",
+        "type_bounds": ["array"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Effect element to append"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "effects",
+        "type": "array",
+        "tooltip": "Updated effects list"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

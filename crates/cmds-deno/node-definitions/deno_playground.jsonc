@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "deno_playground",
+  "description": "Run custom Deno/TypeScript code in a sandboxed environment",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-deno/src/lib.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "input_one",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "First input value"
+      },
+      {
+        "name": "input_two",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Second input value"
+      },
+      {
+        "name": "input_three",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Third input value"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "type": "free",
+        "tooltip": "Script output value"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

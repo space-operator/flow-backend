@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "arweave_nft_upload",
+  "description": "Upload NFT metadata to Arweave via Bundlr",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/arweave_nft_upload.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair that pays for the upload"
+      },
+      {
+        "name": "metadata",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "NFT metadata JSON to upload"
+      },
+      {
+        "name": "fund_bundlr",
+        "type_bounds": ["bool"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Whether to fund the Bundlr node before uploading"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "metadata_url",
+        "type": "string",
+        "tooltip": "URL of the uploaded metadata on Arweave"
+      },
+      {
+        "name": "updated_metadata",
+        "type": "json",
+        "tooltip": "Updated metadata with Arweave URLs"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "fund_bundlr": { "B": true }
+  }
+}

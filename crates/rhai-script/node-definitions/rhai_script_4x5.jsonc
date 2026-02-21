@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "rhai_script_4x5",
+  "description": "",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/rhai-script/src/lib.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "source",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Rhai script source code"
+      },
+      {
+        "name": "a",
+        "type_bounds": ["free"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Script input 1"
+      },
+      {
+        "name": "b",
+        "type_bounds": ["free"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Script input 2"
+      },
+      {
+        "name": "c",
+        "type_bounds": ["free"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Script input 3"
+      },
+      {
+        "name": "d",
+        "type_bounds": ["free"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Script input 4"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "u",
+        "type": "free",
+        "optional": true,
+        "tooltip": "Script output 1"
+      },
+      {
+        "name": "v",
+        "type": "free",
+        "optional": true,
+        "tooltip": "Script output 2"
+      },
+      {
+        "name": "x",
+        "type": "free",
+        "optional": true,
+        "tooltip": "Script output 3"
+      },
+      {
+        "name": "y",
+        "type": "free",
+        "optional": true,
+        "tooltip": "Script output 4"
+      },
+      {
+        "name": "z",
+        "type": "free",
+        "optional": true,
+        "tooltip": "Script output 5"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "title": "RHAI script",
+    "properties": {
+      "source": {
+        "title": "source",
+        "type": "string"
+      }
+    }
+  },
+  "config": {}
+}

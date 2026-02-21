@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "execute_instruction",
+  "description": "Execute an instruction on an MPL Core asset with lifecycle hooks",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/core/execute.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "asset",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the asset to execute instructions on"
+      },
+      {
+        "name": "collection",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Collection the asset belongs to"
+      },
+      {
+        "name": "instructions",
+        "type_bounds": ["instructions"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Instructions to execute on the asset"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

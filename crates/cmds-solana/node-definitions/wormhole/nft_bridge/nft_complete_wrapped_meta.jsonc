@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "nft_complete_wrapped_meta",
+  "description": "Complete wrapped NFT metadata on Solana via the Wormhole NFT bridge",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/nft_bridge/complete_wrapped_meta.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair that pays for the transaction fees"
+      },
+      {
+        "name": "vaa",
+        "type_bounds": ["bytes"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "VAA bytes authorizing the metadata update"
+      },
+      {
+        "name": "payload",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Decoded VAA payload containing metadata details"
+      },
+      {
+        "name": "vaa_hash",
+        "type_bounds": ["bytes"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Hash of the VAA body"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "mint",
+        "type": "pubkey",
+        "tooltip": "Public key of the wrapped NFT mint account"
+      },
+      {
+        "name": "mint_metadata",
+        "type": "pubkey",
+        "tooltip": "Public key of the wrapped NFT mint metadata account"
+      },
+      {
+        "name": "spl_metadata",
+        "type": "pubkey",
+        "tooltip": "Public key of the SPL token metadata account"
+      },
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "auction_house_sell",
+  "description": "List an NFT for sale on an Auction House",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/mod.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "treasury_mint_account",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Treasury mint account of the Auction House"
+      },
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "auction_house_authority",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Authority keypair of the Auction House"
+      },
+      {
+        "name": "seller",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Seller keypair listing the NFT"
+      },
+      {
+        "name": "seller_token_account",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Token account of the seller holding the NFT"
+      },
+      {
+        "name": "seller_token_mint_authority",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Mint authority of the seller's token"
+      },
+      {
+        "name": "sale_price",
+        "type_bounds": ["u64"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Sale price in the treasury mint's smallest unit"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

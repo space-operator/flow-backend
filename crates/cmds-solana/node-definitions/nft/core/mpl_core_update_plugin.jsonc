@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "mpl_core_update_plugin",
+  "description": "Update a plugin on an MPL Core asset",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/core/update_plugin.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "asset",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the asset to update the plugin on"
+      },
+      {
+        "name": "update_authority",
+        "type_bounds": ["keypair"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Update authority keypair of the asset"
+      },
+      {
+        "name": "collection",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Collection the asset belongs to"
+      },
+      {
+        "name": "plugin",
+        "type_bounds": ["json"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Plugin configuration JSON to update"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

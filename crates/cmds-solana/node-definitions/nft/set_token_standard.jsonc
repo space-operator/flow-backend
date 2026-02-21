@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "set_token_standard",
+  "description": "Set the token standard for an NFT metadata account",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/set_token_standard.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "update_authority",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Update authority keypair of the metadata"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Mint account of the NFT"
+      },
+      {
+        "name": "edition_account",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Edition account of the NFT, if applicable"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "verify_signatures",
+  "description": "Verify guardian signatures for a Wormhole VAA on Solana",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/verify_signatures.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair that pays for the transaction fees"
+      },
+      {
+        "name": "signature_set",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair for the signature set account"
+      },
+      {
+        "name": "guardian_set_index",
+        "type_bounds": ["u32"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Index of the guardian set to verify against"
+      },
+      {
+        "name": "signatures",
+        "type_bounds": ["array"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Array of guardian signatures to verify"
+      },
+      {
+        "name": "vaa_body",
+        "type_bounds": ["bytes"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "VAA body bytes used for verification"
+      },
+      {
+        "name": "vaa_hash",
+        "type_bounds": ["bytes"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Hash of the VAA body used for verification"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "signatures": { "B": true },
+    "vaa_body": { "B": true },
+    "vaa_hash": { "B": true }
+  }
+}

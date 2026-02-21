@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transfer_sol",
+  "description": "Transfer SOL between accounts",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/transfer_sol.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Transaction fee payer (defaults to sender)"
+      },
+      {
+        "name": "sender",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Sender keypair that signs and sends SOL"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Recipient wallet address"
+      },
+      {
+        "name": "amount",
+        "type_bounds": ["decimal"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Amount in SOL"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

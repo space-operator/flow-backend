@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "parse_pdg_attrs",
+  "description": "Parse and validate PDG attributes",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-pdg/src/parse_pdg_attrs.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "attributes",
+        "type_bounds": ["object"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "PDG attributes to parse"
+      },
+      {
+        "name": "check_human_readable",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Validate human-readable attributes match (default: true)"
+      },
+      {
+        "name": "defaults",
+        "type_bounds": ["object"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Default values for missing attributes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "attributes",
+        "type": "object",
+        "tooltip": "Parsed and validated attributes"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "check_human_readable": { "B": true }
+  }
+}

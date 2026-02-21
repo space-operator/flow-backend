@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "memo",
+  "description": "Adds a memo to a transaction",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/memo.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer and first signer"
+      },
+      {
+        "name": "memo",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Memo text to attach to the transaction"
+      },
+      {
+        "name": "memo_signers",
+        "type_bounds": ["array"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Additional signers for the memo instruction"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

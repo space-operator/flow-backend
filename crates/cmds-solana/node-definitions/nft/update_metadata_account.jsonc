@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "update_metadata_account",
+  "description": "Update the metadata account of an NFT",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/update_metadata_account.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Mint account of the NFT"
+      },
+      {
+        "name": "update_authority",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Current update authority keypair"
+      },
+      {
+        "name": "new_update_authority",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "New update authority to transfer to"
+      },
+      {
+        "name": "data",
+        "type_bounds": ["object"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "New metadata data object to set"
+      },
+      {
+        "name": "primary_sale_happen",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether the primary sale has happened"
+      },
+      {
+        "name": "is_mutable",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether the metadata account should remain mutable"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "metadata_account",
+        "type": "pubkey",
+        "tooltip": "Derived metadata account address"
+      },
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

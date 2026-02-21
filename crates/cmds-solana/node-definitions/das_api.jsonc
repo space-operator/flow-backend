@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "das_api",
+  "description": "Call Metaplex Digital Asset Standard (DAS) API methods",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/das.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DAS-compatible RPC endpoint URL"
+      },
+      {
+        "name": "id",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "JSON-RPC request ID (defaults to current timestamp)"
+      },
+      {
+        "name": "method",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DAS method: GetAsset, GetAssetProof, GetAssetsByOwner, GetAssetsByCreator, GetAssetsByAuthority, GetAssetsByGroup, SearchAssets, GetSignaturesForAsset, GetTokenAccounts"
+      },
+      {
+        "name": "params",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "JSON-RPC params object for the chosen method"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "response",
+        "type": "json",
+        "tooltip": "JSON-RPC response body"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

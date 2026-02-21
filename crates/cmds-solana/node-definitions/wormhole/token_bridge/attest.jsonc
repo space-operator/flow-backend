@@ -1,0 +1,72 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "attest_token",
+  "description": "Attest a Solana SPL token to the Wormhole token bridge for cross-chain transfers",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/token_bridge/attest.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair that pays for the transaction fees"
+      },
+      {
+        "name": "message",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair for the Wormhole message account"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Mint address of the token to attest"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "spl_metadata",
+        "type": "pubkey",
+        "tooltip": "Public key of the SPL token metadata account"
+      },
+      {
+        "name": "mint_metadata",
+        "type": "pubkey",
+        "tooltip": "Public key of the Wormhole mint metadata account"
+      },
+      {
+        "name": "emitter",
+        "type": "string",
+        "tooltip": "Wormhole emitter address"
+      },
+      {
+        "name": "sequence",
+        "type": "string",
+        "tooltip": "Wormhole message sequence number"
+      },
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

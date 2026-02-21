@@ -4,7 +4,7 @@ const NAME: &str = "to_string";
 
 fn build() -> BuildResult {
     Ok(
-        CmdBuilder::new(flow_lib::node_definition!("string/to_string.jsonc"))?
+        CmdBuilder::new(flow_lib::node_definition!("std/to_string.jsonc"))?
             .check_name(NAME)?
             .build(run),
     )

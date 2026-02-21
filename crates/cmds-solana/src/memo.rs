@@ -32,6 +32,24 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let mut memo_signers = input.memo_signers.unwrap_or_default();
+
+    // Validate memo fits in a single transaction.
+    // overhead = 168 (fixed) + 97 per memo_signer
+    // compact-u16 encoding of data length: 1 byte if < 128, 2 bytes otherwise
+    let overhead = 168 + 97 * memo_signers.len();
+    let compact_len = if input.memo.len() < 128 { 1 } else { 2 };
+    let max_memo = 1232_usize
+        .saturating_sub(overhead)
+        .saturating_sub(compact_len);
+    if input.memo.len() > max_memo {
+        return Err(CommandError::msg(format!(
+            "memo too large: {} bytes, max is {} bytes with {} signer(s)",
+            input.memo.len(),
+            max_memo,
+            memo_signers.len(),
+        )));
+    }
+
     let memo_signers_pubkey = memo_signers.iter().map(|s| s.pubkey()).collect::<Vec<_>>();
     let instruction = spl_memo_interface::instruction::build_memo(
         &spl_memo_interface::v3::ID,

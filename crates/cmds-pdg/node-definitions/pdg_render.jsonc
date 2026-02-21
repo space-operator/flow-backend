@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "pdg_render",
+  "description": "Render an image with the PDG pipeline",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-pdg/src/pdg_render.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Render service WebSocket URL"
+      },
+      {
+        "name": "rand_seed",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Random seed for reproducible renders"
+      },
+      {
+        "name": "attributes",
+        "type_bounds": ["object"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Render attribute overrides"
+      },
+      {
+        "name": "headers",
+        "type_bounds": ["object"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Additional HTTP headers"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "metadata",
+        "type": "json",
+        "tooltip": "Render metadata"
+      },
+      {
+        "name": "metadata_url",
+        "type": "string",
+        "tooltip": "URL to metadata file"
+      },
+      {
+        "name": "main_image_url",
+        "type": "string",
+        "tooltip": "URL to the rendered main image"
+      },
+      {
+        "name": "sketch_image_url",
+        "type": "string",
+        "tooltip": "URL to the rendered sketch image"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "url": { "S": "wss://api.spaceoperator.com/pdg/render" }
+  }
+}

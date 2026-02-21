@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "initialize_record_with_seed",
+  "description": "Initialize a new on-chain record account using a seed",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/record/initialize_record_with_seed.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction fees"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the record authority"
+      },
+      {
+        "name": "seed",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Seed string used to derive the record account address"
+      },
+      {
+        "name": "data",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Initial data to write to the record"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature of the initialization"
+      },
+      {
+        "name": "account",
+        "type": "pubkey",
+        "tooltip": "Public key of the created record account"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  }
+}

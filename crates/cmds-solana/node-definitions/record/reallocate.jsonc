@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "reallocate",
+  "description": "Resize an on-chain record account to fit new data",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/record/reallocate.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction fees"
+      },
+      {
+        "name": "account",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Public key of the record account to reallocate"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the record authority"
+      },
+      {
+        "name": "data",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "New data to determine the required account size"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature of the reallocation"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  }
+}

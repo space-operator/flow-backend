@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "burn_v1",
+  "description": "Burn an NFT using Metaplex Token Metadata V1",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/v1/burn_v1.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["keypair"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Authority keypair for the burn operation"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Mint account of the NFT to burn"
+      },
+      {
+        "name": "amount",
+        "type_bounds": ["u64"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "1 by default"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "amount": { "U": "1" },
+    "submit": { "B": true }
+  }
+}

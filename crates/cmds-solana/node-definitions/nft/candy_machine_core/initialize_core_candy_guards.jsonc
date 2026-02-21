@@ -1,0 +1,64 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "initialize_core_candy_guards",
+  "description": "Initialize Candy Guards for a Candy Machine Core",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/candy_machine_core/initialize_core_candy_guards.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "base",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Base keypair used to derive the Candy Guard address"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Authority of the Candy Guard"
+      },
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "candy_guards",
+        "type_bounds": ["json"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Guard configuration JSON"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Signature of the submitted transaction"
+      },
+      {
+        "name": "candy_guard",
+        "type": "pubkey",
+        "tooltip": "Derived Candy Guard address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

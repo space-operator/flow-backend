@@ -1,0 +1,101 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "mint_candy_machine_core",
+  "description": "Mint an NFT from a Candy Machine Core",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/candy_machine_core/mint_core.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "candy_machine",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Candy Machine account address"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Authority of the Candy Machine"
+      },
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "minter",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Minter keypair performing the mint"
+      },
+      {
+        "name": "owner",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Owner of the minted NFT"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Mint account keypair for the new NFT"
+      },
+      {
+        "name": "collection_mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Collection mint account"
+      },
+      {
+        "name": "collection_update_authority",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Update authority of the collection"
+      },
+      {
+        "name": "candy_guards",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Guard configuration to satisfy during mint"
+      },
+      {
+        "name": "group_label",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Guard group label to use for minting"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  }
+}

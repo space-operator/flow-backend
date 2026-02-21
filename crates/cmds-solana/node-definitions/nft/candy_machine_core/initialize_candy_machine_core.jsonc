@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "initialize_candy_machine_core",
+  "description": "Initialize a new Candy Machine Core",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/nft/candy_machine_core/initialize_core_candy_machine.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "candy_machine",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Candy Machine keypair"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Authority of the Candy Machine"
+      },
+      {
+        "name": "payer",
+        "type_bounds": ["keypair", "string"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "rule_set",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Default is Metaplex Rule Set"
+      },
+      {
+        "name": "collection_mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Collection mint account for the Candy Machine"
+      },
+      {
+        "name": "collection_update_authority",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Update authority keypair of the collection"
+      },
+      {
+        "name": "candy_machine_data",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Candy Machine configuration data"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "rule_set": { "S": "eBJLFYPxJmMGKuFwpDWkzxZeUrad92kZRC5BJLpzyT9" },
+    "submit": { "B": true }
+  }
+}

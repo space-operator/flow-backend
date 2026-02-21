@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "pyth_price",
+  "description": "Get Pyth price",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/pyth_price.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "price_feed_id",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Pyth price feed account address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "price",
+        "type": "i64",
+        "tooltip": "Current price from the Pyth oracle"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

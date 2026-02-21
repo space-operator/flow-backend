@@ -1,0 +1,131 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "mint_cNFT_to_collection",
+  "description": "Mint a compressed NFT into an existing collection",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/compression/mint_to_collection_v1.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction"
+      },
+      {
+        "name": "collection_mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the collection mint"
+      },
+      {
+        "name": "collection_authority",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the collection authority"
+      },
+      {
+        "name": "creator_or_delegate",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the tree creator or delegate authority"
+      },
+      {
+        "name": "is_delegate_authority",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether the creator_or_delegate is a delegate authority"
+      },
+      {
+        "name": "tree_config",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the tree configuration account"
+      },
+      {
+        "name": "merkle_tree",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the Merkle tree account"
+      },
+      {
+        "name": "leaf_owner",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the new leaf owner"
+      },
+      {
+        "name": "leaf_delegate",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Public key of the leaf delegate"
+      },
+      {
+        "name": "metadata",
+        "type_bounds": ["json"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "JSON metadata for the compressed NFT"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Transaction signature of the mint operation"
+      },
+      {
+        "name": "id",
+        "type": "pubkey",
+        "tooltip": "Asset ID of the minted compressed NFT"
+      },
+      {
+        "name": "nonce",
+        "type": "u64",
+        "tooltip": "Nonce value of the minted leaf"
+      },
+      {
+        "name": "creator_hash",
+        "type": "bytes",
+        "tooltip": "Creator hash of the minted compressed NFT"
+      },
+      {
+        "name": "data_hash",
+        "type": "bytes",
+        "tooltip": "Data hash of the minted compressed NFT"
+      },
+      {
+        "name": "leaf_hash",
+        "type": "bytes",
+        "tooltip": "Leaf hash of the minted compressed NFT"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "is_delegate_authority": {
+      "B": false
+    },
+    "submit": {
+      "B": true
+    }
+  }
+}
