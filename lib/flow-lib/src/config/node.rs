@@ -157,6 +157,7 @@ pub fn parse_definition(def: &str) -> Result<Definition, serde_json::Error> {
 #[cfg(test)]
 mod tests {
     use super::parse_definition;
+    use crate::config::ValueType;
 
     #[test]
     fn parses_legacy_definition() {
@@ -195,5 +196,125 @@ mod tests {
         assert_eq!(parsed.data.node_id, "@spo/const");
         assert_eq!(parsed.sources.len(), 1);
         assert!(parsed.targets.is_empty());
+    }
+
+    // ── Test 10: All input fields survive V2 conversion ────────────────
+
+    #[test]
+    fn v2_all_input_fields_survive_conversion() {
+        let input = r#"{
+          "version": "0.1",
+          "name": "rich",
+          "type": "native",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [
+              { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": true },
+              { "name": "amount", "type_bounds": ["u64", "decimal"], "required": true, "passthrough": false },
+              { "name": "note", "type_bounds": ["string"], "required": false, "passthrough": false }
+            ],
+            "outputs": []
+          }
+        }"#;
+
+        let parsed = parse_definition(input).unwrap();
+        assert_eq!(parsed.targets.len(), 3);
+
+        assert_eq!(parsed.targets[0].name, "fee_payer");
+        assert_eq!(parsed.targets[0].type_bounds, vec![ValueType::Keypair]);
+        assert!(parsed.targets[0].required);
+        assert!(parsed.targets[0].passthrough);
+
+        assert_eq!(parsed.targets[1].name, "amount");
+        assert_eq!(parsed.targets[1].type_bounds, vec![ValueType::U64, ValueType::Decimal]);
+        assert!(parsed.targets[1].required);
+        assert!(!parsed.targets[1].passthrough);
+
+        assert_eq!(parsed.targets[2].name, "note");
+        assert_eq!(parsed.targets[2].type_bounds, vec![ValueType::String]);
+        assert!(!parsed.targets[2].required);
+        assert!(!parsed.targets[2].passthrough);
+    }
+
+    // ── Test 11: Optional output survives conversion ───────────────────
+
+    #[test]
+    fn v2_optional_output_survives_conversion() {
+        let input = r#"{
+          "version": "0.1",
+          "name": "opt_test",
+          "type": "native",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [],
+            "outputs": [
+              { "name": "required_out", "type": "signature" },
+              { "name": "optional_out", "type": "free", "optional": true }
+            ]
+          }
+        }"#;
+
+        let parsed = parse_definition(input).unwrap();
+        assert_eq!(parsed.sources.len(), 2);
+
+        assert_eq!(parsed.sources[0].name, "required_out");
+        assert_eq!(parsed.sources[0].r#type, ValueType::Signature);
+        assert!(!parsed.sources[0].optional);
+
+        assert_eq!(parsed.sources[1].name, "optional_out");
+        assert_eq!(parsed.sources[1].r#type, ValueType::Free);
+        assert!(parsed.sources[1].optional);
+    }
+
+    // ── Test 12: node_id = @{author}/{name} ────────────────────────────
+
+    #[test]
+    fn v2_node_id_format_with_custom_author() {
+        let input = r#"{
+          "version": "0.1",
+          "name": "my_tool",
+          "type": "native",
+          "author_handle": "myorg",
+          "ports": { "inputs": [], "outputs": [] }
+        }"#;
+
+        let parsed = parse_definition(input).unwrap();
+        assert_eq!(parsed.data.node_id, "@myorg/my_tool");
+    }
+
+    // ── Test 13: V2 conversion always sets instruction_info to None ────
+
+    #[test]
+    fn v2_instruction_info_always_none() {
+        let input = r#"{
+          "version": "0.1",
+          "name": "no_instr",
+          "type": "native",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [],
+            "outputs": [{ "name": "sig", "type": "signature" }]
+          }
+        }"#;
+
+        let parsed = parse_definition(input).unwrap();
+        assert!(parsed.data.instruction_info.is_none());
+    }
+
+    // ── Test 14: Permissions from JSONC ─────────────────────────────────
+
+    #[test]
+    fn v2_permissions_from_jsonc() {
+        let input = r#"{
+          "version": "0.1",
+          "name": "perm_test",
+          "type": "native",
+          "author_handle": "spo",
+          "permissions": { "user_tokens": true },
+          "ports": { "inputs": [], "outputs": [] }
+        }"#;
+
+        let parsed = parse_definition(input).unwrap();
+        assert!(parsed.permissions.user_tokens);
     }
 }
