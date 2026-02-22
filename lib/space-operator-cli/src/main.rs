@@ -470,29 +470,12 @@ impl ApiClient {
         &mut self,
         id: CommandId,
         def: &CommandDefinition,
-    ) -> Result<(CommandId, String), Report<Error>> {
-        #[derive(Serialize)]
-        struct UpdateNode<'a> {
-            #[serde(flatten)]
-            def: &'a CommandDefinition,
-            unique_node_id: &'a str,
-            name: &'a str,
-        }
-
-        let unique_node_id = format!(
-            "{}.{}.{}",
-            self.config.jwt.user_id, def.data.node_id, def.data.version
-        );
-        let body = serde_json::to_string_pretty(&UpdateNode {
-            def,
-            unique_node_id: &unique_node_id,
-            name: &def.data.node_id,
-        })
-        .change_context(Error::Json)?;
+    ) -> Result<CommandId, Report<Error>> {
+        let body = serde_json::to_string_pretty(def).change_context(Error::Json)?;
 
         let resp = self
             .pg
-            .from("nodes")
+            .from("node_definitions")
             .auth(self.get_access_token().await?)
             .eq("id", id.to_string())
             .update(body)
@@ -509,38 +492,18 @@ impl ApiClient {
 
         let resp = read_json_response::<Resp, PostgrestErrorBody>(resp).await?;
 
-        Ok((resp.id, unique_node_id))
+        Ok(resp.id)
     }
 
     pub async fn insert_node(
         &mut self,
         def: &CommandDefinition,
-    ) -> Result<(CommandId, String), Report<Error>> {
-        #[derive(Serialize)]
-        struct InsertNode<'a> {
-            #[serde(flatten)]
-            def: &'a CommandDefinition,
-            #[serde(rename = "isPublic")]
-            is_public: bool,
-            unique_node_id: &'a str,
-            name: &'a str,
-        }
-
-        let unique_node_id = format!(
-            "{}.{}.{}",
-            self.config.jwt.user_id, def.data.node_id, def.data.version
-        );
-        let body = serde_json::to_string(&InsertNode {
-            def,
-            is_public: false,
-            unique_node_id: &unique_node_id,
-            name: &def.data.node_id,
-        })
-        .change_context(Error::Json)?;
+    ) -> Result<CommandId, Report<Error>> {
+        let body = serde_json::to_string(def).change_context(Error::Json)?;
 
         let resp = self
             .pg
-            .from("nodes")
+            .from("node_definitions")
             .auth(self.get_access_token().await?)
             .insert(body)
             .select("id")
@@ -556,39 +519,32 @@ impl ApiClient {
 
         let resp = read_json_response::<Resp, PostgrestErrorBody>(resp).await?;
 
-        Ok((resp.id, unique_node_id))
+        Ok(resp.id)
     }
 
     pub async fn get_my_native_node(
         &mut self,
-        node_id: &str,
+        name: &str,
     ) -> Result<Option<(CommandId, CommandDefinition)>, Report<Error>> {
-        #[derive(Serialize)]
-        struct Query<'a> {
-            node_id: &'a str,
-        }
         let resp = self
             .pg
-            .from("nodes")
+            .from("node_definitions")
             .auth(self.get_access_token().await?)
             .eq("user_id", self.config.jwt.user_id.to_string())
             .eq("type", "native")
-            .cs(
-                "data",
-                serde_json::to_string(&Query { node_id }).change_context(Error::Json)?,
-            )
+            .eq("name", name)
             .select("*")
             .execute()
             .await
             .change_context(Error::Postgrest)?;
-        let mut nodes =
+        let mut rows =
             read_json_response::<Vec<serde_json::Value>, PostgrestErrorBody>(resp).await?;
         error_stack::ensure!(
-            nodes.len() <= 1,
-            Error::ErrorResponse("more than 1 native nodes".to_owned())
+            rows.len() <= 1,
+            Error::ErrorResponse("more than 1 native node definition".to_owned())
         );
 
-        match nodes.pop() {
+        match rows.pop() {
             Some(json) => {
                 #[derive(Deserialize)]
                 struct Row {
@@ -973,56 +929,22 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
         None
     };
 
+    let mut config = serde_json::json!({
+        "display_name": display_name,
+        "description": description,
+    });
+    if let Some(info) = info {
+        config["instruction_info"] = serde_json::to_value(&info).unwrap();
+    }
+
     let def = schema::CommandDefinition {
         r#type: "native".to_owned(),
-        data: schema::Data {
-            node_definition_version: Some("0.1".to_owned()),
-            unique_id: Some(String::new()),
-            node_id,
-            version: "0.1".to_owned(),
-            display_name,
-            description,
-            tags: Some(Vec::new()),
-            related_to: Some(
-                [schema::RelatedTo {
-                    id: String::new(),
-                    r#type: String::new(),
-                    relationship: String::new(),
-                }]
-                .into(),
-            ),
-            resources: Some(schema::Resources {
-                source_code_url: String::new(),
-                documentation_url: String::new(),
-            }),
-            usage: Some(schema::Usage {
-                license: "Apache-2.0".to_owned(),
-                license_url: String::new(),
-                pricing: schema::Pricing {
-                    currency: "USDC".to_owned(),
-                    purchase_price: 0,
-                    price_per_run: 0,
-                    custom: Some(schema::CustomPricing {
-                        unit: "monthly".to_owned(),
-                        value: "0".to_owned(),
-                    }),
-                },
-            }),
-            authors: Some(
-                [schema::Author {
-                    name: "Space Operator".to_owned(),
-                    contact: String::new(),
-                }]
-                .into(),
-            ),
-            instruction_info: info,
-            options: None,
-            design: None,
-        },
-        outputs,
-        inputs,
-        ui_schema: serde_json::Value::Object(<_>::default()),
+        name: node_id,
+        version: "0.1".to_owned(),
+        ports: schema::Ports { inputs, outputs },
+        config,
         config_schema: serde_json::Value::Object(<_>::default()),
+        author_handle: None,
     };
 
     Ok(def)
@@ -1063,7 +985,7 @@ async fn write_node_definition(
 
     let mut path = root.join("node-definitions");
     path.extend(modules);
-    path.push(&format!("{}.json", def.data.node_id));
+    path.push(&format!("{}.jsonc", def.name));
     let path = relative_to_pwd(path);
 
     println!("writing node definition to {}", path.display());
@@ -1259,11 +1181,17 @@ fn fmt_code(code: TokenStream) -> String {
 }
 
 fn code_template(def: &CommandDefinition, modules: &[&str]) -> String {
-    let node_id = &def.data.node_id;
-    let node_definition_path = modules.join("/") + "/" + node_id + ".json";
-    let input_struct = make_input_struct(&def.inputs);
-    let output_struct = make_output_struct(&def.outputs);
-    let execute = if def.data.instruction_info.is_some() {
+    let slug = def.slug();
+    let node_id = &slug;
+    let node_definition_path = modules.join("/") + "/" + &def.name + ".jsonc";
+    let input_struct = make_input_struct(&def.ports.inputs);
+    let output_struct = make_output_struct(&def.ports.outputs);
+    let has_instruction_info = def
+        .config
+        .get("instruction_info")
+        .map(|v| !v.is_null())
+        .unwrap_or(false);
+    let execute = if has_instruction_info {
         quote! {
             // call ctx.execute to emit Solana instructions
             let signature = ctx.execute(Instructions::default(), value::map! {}).await?.signature;
@@ -1360,7 +1288,7 @@ async fn update_parent_module(
         syn::parse_file(&parent_module).change_context(Error::Io("invalid rust code"))?;
     let has_module = parsed_parent_module.items.iter().any(|item| {
         if let syn::Item::Mod(m) = item {
-            return m.ident.to_string() == def.data.node_id;
+            return m.ident.to_string() == def.name;
         } else {
             false
         }
@@ -1369,7 +1297,7 @@ async fn update_parent_module(
     if !has_module {
         std::fmt::write(
             &mut parent_module,
-            format_args!("\npub mod {};\n", def.data.node_id),
+            format_args!("\npub mod {};\n", def.name),
         )
         .unwrap();
         println!("updating module {}", parent_module_path.display());
@@ -1394,7 +1322,7 @@ async fn write_code(
     tokio::fs::create_dir_all(&path)
         .await
         .change_context_lazy(|| Error::CreateDir(path.to_owned()))?;
-    path.push(format!("{}.rs", def.data.node_id));
+    path.push(format!("{}.rs", def.name));
     let path = relative_to_pwd(path);
 
     println!("writing code to {}", path.display());
@@ -1590,10 +1518,21 @@ async fn upload_node(path: &Path, dry_run: bool, no_confirm: bool) -> Result<(),
             Error::Unimplemented("we only support uploading native nodes at the moment").into(),
         );
     }
-    println!("node: {}", def.data.node_id);
-    match client.get_my_native_node(&def.data.node_id).await? {
+    // Resolve author_handle from user profile if not set in the definition file.
+    let mut def = def;
+    if def.author_handle.is_none() {
+        if let Some(username) = client.get_username().await? {
+            def.author_handle = Some(username);
+        }
+    }
+
+    println!("node: {}", def.slug());
+    match client.get_my_native_node(&def.name).await? {
         Some((id, db)) => {
-            if print_diff(&def, &db) {
+            // Compare without author_handle to avoid spurious diffs when DB has NULL.
+            let mut def_for_diff = def.clone();
+            def_for_diff.author_handle = db.author_handle.clone();
+            if print_diff(&def_for_diff, &db) {
                 if dry_run {
                     return Ok(());
                 }
@@ -1603,9 +1542,9 @@ async fn upload_node(path: &Path, dry_run: bool, no_confirm: bool) -> Result<(),
                         return Ok(());
                     }
                 }
-                let (_, url_path) = client.update_node(id, &def).await?;
+                let id = client.update_node(id, &def).await?;
                 println!("updated node, id={}", id);
-                let url = format!("https://spaceoperator.com/dashboard/nodes/{}", url_path);
+                let url = format!("https://spaceoperator.com/dashboard/node-definitions/{}", id);
                 println!("view your node:\n{}", url);
             }
         }
@@ -1620,9 +1559,9 @@ async fn upload_node(path: &Path, dry_run: bool, no_confirm: bool) -> Result<(),
                     return Ok(());
                 }
             }
-            let (id, url_path) = client.insert_node(&def).await?;
+            let id = client.insert_node(&def).await?;
             println!("inserted new node, id={}", id);
-            let url = format!("https://spaceoperator.com/dashboard/nodes/{}", url_path);
+            let url = format!("https://spaceoperator.com/dashboard/node-definitions/{}", id);
             println!("view your node:\n{}", url);
         }
     }
@@ -1641,7 +1580,7 @@ async fn generate_input_struct(path: impl AsRef<Path>) -> Result<(), Report<Erro
     let nd = serde_json::from_str::<CommandDefinition>(&nd)
         .change_context(Error::Json)
         .attach_printable("not a valid node definition file")?;
-    let input_struct = make_input_struct(&nd.inputs);
+    let input_struct = make_input_struct(&nd.ports.inputs);
     let code = fmt_code(input_struct);
     println!("{}", code);
     Ok(())
@@ -1652,7 +1591,7 @@ async fn generate_output_struct(path: impl AsRef<Path>) -> Result<(), Report<Err
     let nd = serde_json::from_str::<CommandDefinition>(&nd)
         .change_context(Error::Json)
         .attach_printable("not a valid node definition file")?;
-    let output_struct = make_output_struct(&nd.outputs);
+    let output_struct = make_output_struct(&nd.ports.outputs);
     let code = fmt_code(output_struct);
     println!("{}", code);
     Ok(())
