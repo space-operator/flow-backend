@@ -1,61 +1,133 @@
+// --- External deps re-exported for consumer convenience ---
 export { type IValue, Value } from "./deps.ts";
-export { Client } from "./client.ts";
-export type { ClaimTokenOutput, ClientOptions } from "./client.ts";
-export { type WcClientOptions, WsClient } from "./ws.ts";
-export type {
-  DeploymentId,
-  ErrorBody,
+
+// --- Config ---
+export {
+  SpaceOperatorConfig,
+  SpaceOperatorConfigFromEnv,
+  makeConfig,
+  type SpaceOperatorConfigShape,
+} from "./Config.ts";
+
+// --- Errors (Data.TaggedError) ---
+export {
+  AuthTokenError,
+  HttpApiError,
+  WsProtocolError,
+  WsConnectionError,
+  WsTimeoutError,
+} from "./Errors.ts";
+
+// --- Schemas: Common ---
+export {
   FlowId,
   FlowRunId,
   NodeId,
-  RestResult,
   UserId,
-} from "./types/common.ts";
-export { DeploymentSpecifier } from "./types/rest.ts";
+  DeploymentId,
+  ErrorBody,
+  IValueSchema,
+} from "./Schema/Common.ts";
 export type {
-  ConfirmAuthOutput,
-  GetFlowOutputOutput,
-  IDeploymentSpecifier,
-  InitAuthOutput,
-  PartialConfig,
-  SolanaActionConfig,
-  StartDeploymentOutput,
-  StartDeploymentParams,
-  StartFlowOutput,
-  StartFlowParams,
-  StartFlowSharedOutput,
-  StartFlowSharedParams,
-  StartFlowUnverifiedOutput,
-  StartFlowUnverifiedParams,
-  StopFlowOutput,
-  StopFlowParams,
-  SubmitSignatureOutput,
-  SubmitSignatureParams,
-  ValuesConfig,
-} from "./types/rest.ts";
+  FlowId as FlowIdType,
+  FlowRunId as FlowRunIdType,
+  NodeId as NodeIdType,
+  UserId as UserIdType,
+  DeploymentId as DeploymentIdType,
+} from "./Schema/Common.ts";
+
+// --- Schemas: REST ---
 export {
-  type ApiInput,
-  type AuthenticateRequest,
-  type AuthenticateResponse,
-  type FlowError,
-  type FlowFinish,
-  type FlowLog,
+  InitAuthOutput,
+  ConfirmAuthOutput,
+  ClaimTokenOutput,
+  StartFlowParams,
+  StartFlowOutput,
+  StartFlowSharedParams,
+  StartFlowSharedOutput,
+  SolanaActionConfig,
+  StartFlowUnverifiedParams,
+  StartFlowUnverifiedOutput,
+  StopFlowParams,
+  StopFlowOutput,
+  SubmitSignatureParams,
+  SubmitSignatureOutput,
+  DeploymentSpecifier,
+  formatDeploymentQuery,
+  StartDeploymentParams,
+  StartDeploymentOutput,
+  DeployFlowOutput,
+  ServerInfo,
+  CreateApiKeyOutput,
+  ApiKeyInfoOutput,
+  KvWriteItemOutput,
+  KvDeleteItemOutput,
+  KvReadItemOutput,
+  ExportOutput,
+} from "./Schema/Rest.ts";
+
+// --- Schemas: WebSocket ---
+export {
+  SignatureRequest,
+  SignatureRequestSchema,
+  type ISignatureRequest,
+  type AuthenticateResponseOk,
   type FlowRunEvent,
   type FlowRunEventEnum,
-  type FlowStart,
-  type ISignatureRequest,
+  FlowStart,
+  FlowError,
+  FlowLog,
+  FlowFinish,
+  NodeStart,
+  NodeOutput,
+  NodeError,
+  NodeLog,
+  NodeFinish,
+  ApiInput,
   type LogLevel,
-  type NodeError,
-  type NodeFinish,
-  type NodeLog,
-  type NodeOutput,
-  type NodeStart,
-  SignatureRequest,
   type SignatureRequestsEvent,
-  type SubscribeFlowRunEventsRequest,
-  type SubscribeFlowRunEventsResponse,
-  type SubscribeSignatureRequestsRequest,
-  type SubscribeSignatureRequestsResponse,
-  type WsResponse,
-} from "./types/ws.ts";
+  makeAuthenticateRequest,
+  makeSubscribeFlowRunEventsRequest,
+  makeSubscribeSignatureRequestsRequest,
+} from "./Schema/Ws.ts";
+
+// --- Schemas: Wallet ---
+export {
+  UpsertWalletBody,
+  UpsertWalletResponse,
+} from "./Schema/Wallet.ts";
+
+// --- HTTP Layer ---
+export { SpaceHttpClient, SpaceHttpClientLive } from "./HttpApi.ts";
+
+// --- Services ---
+export { AuthService, AuthServiceLive } from "./AuthService.ts";
+export { FlowService, FlowServiceLive } from "./FlowService.ts";
+export { KvService, KvServiceLive } from "./KvService.ts";
+export { ApiKeyService, ApiKeyServiceLive } from "./ApiKeyService.ts";
+export { WalletService, WalletServiceLive } from "./WalletService.ts";
+export {
+  WsService,
+  WsServiceLive,
+  type WsConnectionState,
+  type WsServiceOptions,
+} from "./WsService.ts";
+
+// --- Facade ---
+export {
+  SpaceOperatorLive,
+  SpaceOperatorFromEnv,
+  type SpaceOperatorServices,
+} from "./SpaceOperator.ts";
+
+// --- Convenience Functions ---
+export {
+  runFlow,
+  runFlowWs,
+  type RunFlowOptions,
+  type RunFlowWsOptions,
+  type RunFlowWsResult,
+} from "./Convenience.ts";
+
+// --- Supabase (generated, keep as-is) ---
 export type { Database } from "./supabase.ts";

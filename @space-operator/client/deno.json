@@ -15,6 +15,8 @@
         "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.86.2",
         "@x402/fetch": "npm:@x402/fetch@^2.2.0",
         "@x402/svm": "npm:@x402/svm@^2.2.0",
+        "effect": "npm:effect@^3.12",
+        "@effect/platform": "npm:@effect/platform@^0.94",
         "tweetnacl": "npm:tweetnacl@^1.0.3",
         "x402": "npm:x402@^0.7.3"
     }
