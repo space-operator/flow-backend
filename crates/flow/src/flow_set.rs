@@ -426,7 +426,7 @@ pub struct FlowSetContext {
     new_flow_run: new_flow_run::Svc,
     parent_flow_execute: Option<execute::Svc>,
 
-    #[builder(default = Arc::new(Semaphore::new(1)))]
+    #[builder(default = Arc::new(Semaphore::new(crate::flow_registry::rhai_pool_size())))]
     rhai_permit: Arc<Semaphore>,
     #[builder(default)]
     rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,

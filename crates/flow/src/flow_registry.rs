@@ -118,7 +118,7 @@ impl Default for FlowRegistry {
             signers_info: <_>::default(),
             parent_flow_execute: None,
             backend: BackendServices::unimplemented(),
-            rhai_permit: Arc::new(Semaphore::new(1)),
+            rhai_permit: Arc::new(Semaphore::new(rhai_pool_size())),
             rhai_tx: <_>::default(),
             rpc_server: None, // TODO: try this
             remotes: None,
@@ -230,6 +230,17 @@ where
     Ok(flows)
 }
 
+pub fn rhai_pool_size() -> usize {
+    static POOL_SIZE: OnceLock<usize> = OnceLock::new();
+    *POOL_SIZE.get_or_init(|| {
+        std::env::var("RHAI_POOL_SIZE")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1)
+            .max(1)
+    })
+}
+
 fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) {
     tokio::task::spawn_blocking(move || {
         let mut engine = rhai_script::setup_engine();
@@ -333,7 +344,7 @@ impl FlowRegistry {
             parent_flow_execute: None,
             endpoints,
             backend,
-            rhai_permit: Arc::new(Semaphore::new(1)),
+            rhai_permit: Arc::new(Semaphore::new(rhai_pool_size())),
             rhai_tx: <_>::default(),
             rpc_server: tower_rpc::Server::start_http_server()
                 .inspect_err(|error| tracing::error!("tower_rpc error: {}", error))
@@ -374,7 +385,9 @@ impl FlowRegistry {
             .rhai_tx
             .get_or_init(|| {
                 let (new_tx, rx) = crossbeam_channel::unbounded();
-                spawn_rhai_thread(rx);
+                for _ in 0..rhai_pool_size() {
+                    spawn_rhai_thread(rx.clone());
+                }
                 new_tx
             })
             .clone();

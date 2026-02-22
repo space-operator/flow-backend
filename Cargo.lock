@@ -8264,6 +8264,7 @@ dependencies = [
  "bs58 0.4.0",
  "chrono",
  "flow-lib",
+ "hex",
  "rhai",
  "rhai-rand",
  "rust_decimal",
