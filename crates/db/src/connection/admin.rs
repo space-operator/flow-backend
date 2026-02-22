@@ -159,7 +159,7 @@ impl AdminConn {
     pub async fn get_natives_commands(self) -> crate::Result<Vec<String>> {
         let conn = self.pool.get_conn().await?;
         conn.query(
-            r#"SELECT data->>'node_id' FROM nodes WHERE type = 'native' AND "isPublic""#,
+            r#"SELECT concat('@', author_handle, '/', name) FROM node_definitions WHERE type = 'native' AND is_published = true AND author_handle IS NOT NULL"#,
             &[],
         )
         .await
@@ -167,7 +167,7 @@ impl AdminConn {
         .into_iter()
         .map(|r| r.try_get::<_, String>(0))
         .collect::<Result<Vec<_>, _>>()
-        .map_err(Error::data("nodes.data->>'node_id'"))
+        .map_err(Error::data("node_definitions.name"))
     }
 
     pub async fn copy_in_flow_run_logs<I>(&self, rows: I) -> crate::Result<u64>
@@ -487,8 +487,7 @@ impl AdminConn {
         copy_in(&tx, "flows_v2", &mut data.flows).await?;
         update_id_sequence(&tx, "flows_v2", "id", "flows_v2_id_seq").await?;
 
-        copy_in(&tx, "nodes", &mut data.nodes).await?;
-        update_id_sequence(&tx, "nodes", "id", "nodes_id_seq").await?;
+        copy_in(&tx, "node_definitions", &mut data.node_definitions).await?;
 
         tx.execute("SELECT auth.enable_users_triggers()", &[])
             .await

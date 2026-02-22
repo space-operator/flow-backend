@@ -575,21 +575,17 @@ impl UserConnection {
         csv_export::clear_column(&mut users, "encrypted_password")?;
         users.drop_in_place("confirmed_at")?;
 
-        let mut nodes = copy_out(
+        let node_definitions = copy_out(
             &tx,
             &format!(
-                r#"SELECT * FROM nodes WHERE
+                r#"SELECT id, version, name, type, ports, config, config_schema, author_handle, user_id
+                    FROM node_definitions WHERE
                     user_id = '{}'
-                    OR (user_id IS NULL AND "isPublic")"#,
+                    OR (user_id IS NULL AND is_published = true)"#,
                 self.user_id
             ),
         )
         .await?;
-        nodes.drop_in_place("provider").ok();
-        nodes.drop_in_place("category").ok();
-        nodes.drop_in_place("icon_url").ok();
-        nodes.drop_in_place("vendor").ok();
-        nodes.drop_in_place("author_handle").ok();
 
         let mut identities = copy_out(
             &tx,
@@ -688,7 +684,7 @@ impl UserConnection {
             kvstore_metadata,
             apikeys,
             flows,
-            nodes,
+            node_definitions,
         })
     }
 }
