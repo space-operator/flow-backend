@@ -21,7 +21,8 @@ alter table public.flow_x402_fees
     drop constraint if exists flow_x402_fees_flow_id_fkey;
 
 alter table public.flow_x402_fees
-    drop column flow_id,
+    drop column flow_id;
+alter table public.flow_x402_fees
     rename column flow_id_v2 to flow_id;
 
 alter table public.flow_x402_fees

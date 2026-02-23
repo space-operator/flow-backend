@@ -9,7 +9,7 @@ insert into public.flows_v2 (
     slug,
     "isPublic",
     gg_marketplace,
-    visibility_profile,
+    visibility_profile_id,
     nodes,
     edges,
     viewport,
@@ -20,9 +20,7 @@ insert into public.flows_v2 (
     current_network,
     start_shared,
     start_unverified,
-    parent_flow,
-    linked_flows,
-    lifecycle
+    parent_flow
 )
 select
     f.uuid,
@@ -32,20 +30,18 @@ select
     f.slug,
     f."isPublic",
     f.gg_marketplace,
-    f.visibility_profile,
+    f.visibility_profile_id,
     to_jsonb(f.nodes),
     to_jsonb(f.edges),
-    coalesce(f.viewport, '{"x":0,"y":0,"zoom":1}'::jsonb),
+    coalesce(f.viewport::jsonb, '{"x":0,"y":0,"zoom":1}'::jsonb),
     coalesce(f.environment, '{}'::jsonb),
-    f.guide,
-    coalesce(f.instructions_bundling, '"Off"'::jsonb),
+    f.guide::jsonb,
+    coalesce(f.instructions_bundling #>> '{}', 'Off'),
     f.backend_endpoint,
     f.current_network,
     f.start_shared,
     f.start_unverified,
-    case when f.parent_flow is null then null else f.parent_flow::integer end,
-    f.linked_flows,
-    f.lifecycle
+    (select pf.uuid from public.flows pf where pf.id = f.parent_flow)
 from public.flows f
 where not exists (
     select 1 from public.flows_v2 v2 where v2.uuid = f.uuid
@@ -74,7 +70,9 @@ alter table public.flow_run drop constraint if exists "fk-flow_id";
 drop index if exists public.idx_flow_run_flow_id;
 
 alter table public.flow_run
-    drop column flow_id,
+    drop column flow_id;
+
+alter table public.flow_run
     rename column flow_id_v2 to flow_id;
 
 alter table public.flow_run

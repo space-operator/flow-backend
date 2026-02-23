@@ -1,5 +1,15 @@
 -- Convert deployment flow identifiers from INTEGER to UUID.
 
+-- Clean up orphaned rows referencing flows that no longer exist.
+delete from public.flow_deployments_tags t
+  where not exists (select 1 from public.flows f where f.id = t.entrypoint);
+
+delete from public.flow_deployments_flows df
+  where not exists (select 1 from public.flows f where f.id = df.flow_id);
+
+delete from public.flow_deployments d
+  where not exists (select 1 from public.flows f where f.id = d.entrypoint);
+
 alter table public.flow_deployments
     add column if not exists entrypoint_v2 uuid;
 
@@ -54,15 +64,18 @@ alter table public.flow_deployments_tags drop constraint if exists flow_deployme
 alter table public.flow_deployments_tags drop constraint if exists flow_deployments_tags_deployment_id_entrypoint_fkey;
 
 alter table public.flow_deployments
-    drop column entrypoint,
+    drop column entrypoint;
+alter table public.flow_deployments
     rename column entrypoint_v2 to entrypoint;
 
 alter table public.flow_deployments_flows
-    drop column flow_id,
+    drop column flow_id;
+alter table public.flow_deployments_flows
     rename column flow_id_v2 to flow_id;
 
 alter table public.flow_deployments_tags
-    drop column entrypoint,
+    drop column entrypoint;
+alter table public.flow_deployments_tags
     rename column entrypoint_v2 to entrypoint;
 
 alter table public.flow_deployments
