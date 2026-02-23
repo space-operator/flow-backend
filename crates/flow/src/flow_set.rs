@@ -53,6 +53,25 @@ fn parse_wallet_id(value: &JsonValue) -> Option<i64> {
         })
 }
 
+fn parse_string_value(value: &JsonValue) -> Option<String> {
+    flow_lib::command::parse_value_tagged(value.clone())
+        .ok()
+        .and_then(|value| match value {
+            Value::String(s) => Some(s),
+            _ => None,
+        })
+}
+
+/// Info about a SWIG session wallet extracted from a wallet node config.
+/// Used to look up session secret keys from the database for server-side signing.
+#[derive(Debug, Clone)]
+pub struct SwigSessionInfo {
+    /// Session public key (base58)
+    pub session_pubkey: Pubkey,
+    /// Swig wallet UUID from the swig_wallets table
+    pub swig_wallet_id: String,
+}
+
 #[derive(bon::Builder, Clone, Debug, Serialize, Deserialize)]
 pub struct Flow {
     pub row: FlowRow,
@@ -86,6 +105,38 @@ impl Flow {
                             .and_then(parse_wallet_id)
                     })
                     .flatten()
+            })
+            .collect()
+    }
+
+    /// Extract SWIG session info from wallet nodes.
+    /// Returns pubkey + swig_wallet_id for each SWIG wallet node that has a session pubkey.
+    pub fn swig_sessions(&self) -> Vec<SwigSessionInfo> {
+        self.row
+            .nodes
+            .iter()
+            .filter_map(|n| {
+                if n.data.r#type != CommandType::Native
+                    || !is_spo_builtin_node(&n.data.node_id, "wallet")
+                {
+                    return None;
+                }
+                let wallet_type = n.data.config.get("wallet_type").and_then(parse_string_value)?;
+                if wallet_type != "SWIG" {
+                    return None;
+                }
+                let swig_wallet_id =
+                    n.data.config.get("swig_wallet_id").and_then(parse_string_value)?;
+                let pubkey_str =
+                    n.data.config.get("public_key").and_then(|v| {
+                        flow_lib::command::parse_value_tagged(v.clone())
+                            .ok()
+                            .and_then(|val| value::pubkey::deserialize(val).ok())
+                    })?;
+                Some(SwigSessionInfo {
+                    session_pubkey: pubkey_str,
+                    swig_wallet_id,
+                })
             })
             .collect()
     }
@@ -173,6 +224,14 @@ impl FlowDeployment {
             .output_instructions(false)
             .fees(Vec::new())
             .build()
+    }
+
+    /// Collect all SWIG session info from wallet nodes across all flows.
+    pub fn swig_sessions(&self) -> Vec<SwigSessionInfo> {
+        self.flows
+            .values()
+            .flat_map(|f| f.swig_sessions())
+            .collect()
     }
 
     pub fn user_can_read(&self, user_id: &UserId) -> bool {

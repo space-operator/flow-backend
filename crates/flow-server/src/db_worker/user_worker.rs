@@ -155,6 +155,7 @@ impl UserWorker {
         let user_id = self.user_id;
         let addr = ctx.address().recipient();
         let wallets_id = d.wallets_id.clone();
+        let swig_sessions = d.swig_sessions();
         let endpoints = self.endpoints.clone();
         let base_url = endpoints.flow_server.clone();
         let starter = options.starter;
@@ -209,6 +210,56 @@ impl UserWorker {
                 let wallet = conn.get_wallet_by_pubkey(&pk.to_bytes()).await?;
                 signer.add_wallet(&starter.user_id, &addr, wallet)?;
             }
+
+            // Register SWIG session keypairs for server-side signing.
+            // For each SWIG wallet node, look up the session secret key from DB.
+            for session in &swig_sessions {
+                // Skip if we already have a keypair for this pubkey
+                if matches!(
+                    signer.signers.get(&session.session_pubkey),
+                    Some(super::signer::SignerType::Keypair(_))
+                ) {
+                    continue;
+                }
+                match db
+                    .get_swig_session_secret_key(
+                        &session.swig_wallet_id,
+                        &session.session_pubkey.to_string(),
+                    )
+                    .await
+                {
+                    Ok(Some(secret_key)) => {
+                        if let Err(e) =
+                            signer.add_swig_session(session.session_pubkey, &secret_key)
+                        {
+                            tracing::warn!(
+                                "failed to register swig session keypair for {}: {}",
+                                session.session_pubkey,
+                                e
+                            );
+                        } else {
+                            tracing::info!(
+                                "registered swig session keypair for {}",
+                                session.session_pubkey
+                            );
+                        }
+                    }
+                    Ok(None) => {
+                        tracing::debug!(
+                            "no stored secret key for swig session {}",
+                            session.session_pubkey
+                        );
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            "failed to query swig session key for {}: {}",
+                            session.session_pubkey,
+                            e
+                        );
+                    }
+                }
+            }
+
             let signer = signer.start();
             let signer = TowerClient::new(ActixService::from(signer.recipient()));
 

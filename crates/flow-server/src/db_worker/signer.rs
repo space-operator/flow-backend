@@ -191,6 +191,41 @@ impl SignerWorker {
         Ok(())
     }
 
+    /// Register a keypair for a SWIG session wallet.
+    /// The secret key bytes are decoded from base58 and used to create a signing keypair.
+    pub fn add_swig_session(
+        &mut self,
+        pubkey: Pubkey,
+        secret_key_base58: &str,
+    ) -> Result<(), AddWalletError> {
+        let key_bytes = bs58::decode(secret_key_base58)
+            .into_vec()
+            .map_err(|_| AddWalletError::InvalidKeypair)?;
+        let keypair = Keypair::try_from(key_bytes.as_slice())
+            .map_err(|_| AddWalletError::InvalidKeypair)?;
+        if keypair.pubkey() != pubkey {
+            tracing::warn!(
+                "swig session keypair mismatch: expected {}, got {}",
+                pubkey,
+                keypair.pubkey()
+            );
+            return Err(AddWalletError::InvalidKeypair);
+        }
+        match self.signers.entry(pubkey) {
+            Entry::Vacant(slot) => {
+                slot.insert(SignerType::Keypair(Box::new(keypair)));
+            }
+            Entry::Occupied(mut slot) => {
+                // Keypair always wins over UserWallet
+                if matches!(slot.get(), SignerType::UserWallet { .. }) {
+                    tracing::info!("replacing UserWallet with swig session keypair for {}", pubkey);
+                    slot.insert(SignerType::Keypair(Box::new(keypair)));
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub async fn fetch_wallets_from_ids(
         db: &DbPool,
         user_id: UserId,

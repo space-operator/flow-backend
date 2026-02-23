@@ -195,6 +195,36 @@ impl DbPool {
     pub fn get_local(&self) -> &LocalStorage {
         &self.local
     }
+
+    /// Look up a SWIG session secret key from the swig_wallet_sessions table.
+    ///
+    /// Returns the base58-encoded secret key if a matching active session exists
+    /// with a stored secret_key_encrypted value.
+    pub async fn get_swig_session_secret_key(
+        &self,
+        swig_wallet_id: &str,
+        session_pubkey: &str,
+    ) -> crate::Result<Option<String>> {
+        use crate::connection::DbClient;
+
+        let conn = self.get_conn().await?;
+        let swig_wallet_uuid = uuid::Uuid::parse_str(swig_wallet_id)
+            .map_err(|e| crate::Error::LogicError(e.into()))?;
+        let row = conn
+            .do_query_opt(
+                "SELECT secret_key_encrypted
+                 FROM swig_wallet_sessions
+                 WHERE swig_wallet_id = $1
+                   AND session_pubkey = $2
+                   AND status = 'active'
+                   AND (expires_at IS NULL OR expires_at > NOW())
+                 LIMIT 1",
+                &[&swig_wallet_uuid, &session_pubkey],
+            )
+            .await
+            .map_err(crate::Error::exec("get_swig_session_secret_key"))?;
+        Ok(row.and_then(|r| r.get::<_, Option<String>>(0)))
+    }
 }
 
 async fn ping(conn: &Connection) -> crate::Result<(f64, f64)> {
