@@ -321,10 +321,10 @@ fn test_type_templates() {
 
     // parse_float
     let mut scope = rhai::Scope::new();
-    scope.push_dynamic("input", value_to_dynamic(Value::from("3.14")));
+    scope.push_dynamic("input", value_to_dynamic(Value::from("3.19")));
     let res = eval("parse_float(input)", &mut scope);
     let f = res.as_float().unwrap();
-    assert!((f - 3.14).abs() < f64::EPSILON);
+    assert!((f - 3.19).abs() < f64::EPSILON);
 
     // to_string
     let mut scope = rhai::Scope::new();
