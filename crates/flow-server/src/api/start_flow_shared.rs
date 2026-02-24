@@ -69,6 +69,8 @@ async fn start_flow_shared(
         .send(StartFlowShared {
             flow_id,
             input: inputs,
+            partial_config: None,
+            environment: <_>::default(),
             output_instructions,
             action_identity: None,
             action_config: None,

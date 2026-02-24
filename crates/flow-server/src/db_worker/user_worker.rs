@@ -40,8 +40,9 @@ use flow_lib_solana::is_same_message_logic;
 use futures_channel::{mpsc, oneshot};
 use futures_metrics::FutureExt;
 use futures_util::{TryFutureExt, future::BoxFuture};
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 use metrics::histogram;
+use serde_json::{Value as JsonValue, json};
 use solana_signature::Signature;
 use std::{
     future::{Future, ready},
@@ -49,6 +50,164 @@ use std::{
 };
 use thiserror::Error as ThisError;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
+
+fn is_wallet_node(node_id: &str) -> bool {
+    matches!(node_id, "wallet" | "@spo/wallet")
+}
+
+fn parse_wallet_id(value: &JsonValue) -> Option<i64> {
+    flow_lib::command::parse_value_tagged(value.clone())
+        .ok()
+        .and_then(|value| match value {
+            value::Value::I64(id) => Some(id),
+            value::Value::U64(id) => i64::try_from(id).ok(),
+            _ => None,
+        })
+}
+
+fn parse_string_value(value: &JsonValue) -> Option<String> {
+    flow_lib::command::parse_value_tagged(value.clone())
+        .ok()
+        .and_then(|value| match value {
+            value::Value::String(s) => Some(s),
+            _ => None,
+        })
+}
+
+fn set_wallet_id(value: &mut JsonValue, wallet_id: i64) {
+    *value = json!({ "U": wallet_id.to_string() });
+}
+
+fn set_public_key(value: &mut JsonValue, public_key: &str) {
+    *value = json!({ "B3": public_key });
+}
+
+#[derive(Clone)]
+struct SharedWalletRemap {
+    by_owner_wallet_id: HashMap<i64, (i64, String)>,
+    owner_adapter_wallet_ids: HashSet<i64>,
+    default: (i64, String),
+}
+
+impl SharedWalletRemap {
+    fn map_wallet(&self, owner_wallet_id: i64) -> (i64, String) {
+        self.by_owner_wallet_id
+            .get(&owner_wallet_id)
+            .cloned()
+            .unwrap_or_else(|| self.default.clone())
+    }
+
+    fn apply_to_nodes(&self, nodes: &mut [flow_lib::config::client::Node]) {
+        for node in nodes {
+            if !is_wallet_node(&node.data.node_id) {
+                continue;
+            }
+
+            let Some(node_config) = node.data.config.as_object_mut() else {
+                continue;
+            };
+            let wallet_type = node_config
+                .get("wallet_type")
+                .and_then(parse_string_value);
+            let has_swig_wallet_id = node_config
+                .get("swig_wallet_id")
+                .and_then(parse_string_value)
+                .is_some();
+            // SWIG wallets carry wallet_id=0 for adapter-compatible wire format.
+            // Never remap them to user adapters.
+            if wallet_type.as_deref() == Some("SWIG") || has_swig_wallet_id {
+                continue;
+            }
+
+            let owner_wallet_id = node_config.get("wallet_id").and_then(parse_wallet_id);
+            let Some(owner_wallet_id) = owner_wallet_id else {
+                continue;
+            };
+            let should_remap = owner_wallet_id == 0
+                || wallet_type.as_deref() == Some("ADAPTER")
+                || self.owner_adapter_wallet_ids.contains(&owner_wallet_id);
+            if !should_remap {
+                continue;
+            }
+
+            let (wallet_id, public_key) = self.map_wallet(owner_wallet_id);
+
+            if let Some(wallet_id_value) = node_config.get_mut("wallet_id") {
+                set_wallet_id(wallet_id_value, wallet_id);
+            } else {
+                node_config.insert("wallet_id".to_owned(), json!({ "U": wallet_id.to_string() }));
+            }
+
+            if let Some(public_key_value) = node_config.get_mut("public_key") {
+                set_public_key(public_key_value, &public_key);
+            } else {
+                node_config.insert("public_key".to_owned(), json!({ "B3": public_key }));
+            }
+        }
+    }
+
+    fn apply(&self, config: &mut flow_lib::config::client::ClientConfig) {
+        self.apply_to_nodes(&mut config.nodes);
+    }
+
+    fn apply_flow_row(&self, row: &mut flow_lib::config::client::FlowRow) {
+        self.apply_to_nodes(&mut row.nodes);
+    }
+}
+
+async fn build_shared_wallet_remap(
+    db: &DbPool,
+    owner_user_id: UserId,
+    starter_user_id: UserId,
+) -> Result<Option<SharedWalletRemap>, DbError> {
+    if owner_user_id == starter_user_id {
+        return Ok(None);
+    }
+
+    let owner_wallets = db.get_user_conn(owner_user_id).await?.get_wallets().await?;
+    let starter_wallets = db.get_user_conn(starter_user_id).await?.get_wallets().await?;
+
+    let Some(default_wallet) = starter_wallets
+        .iter()
+        .find(|wallet| wallet.keypair.is_none())
+        .or_else(|| starter_wallets.first())
+    else {
+        return Ok(None);
+    };
+
+    let starter_wallets_by_pubkey = starter_wallets
+        .iter()
+        .map(|wallet| {
+            (
+                wallet.pubkey,
+                (wallet.id, bs58::encode(wallet.pubkey).into_string()),
+            )
+        })
+        .collect::<HashMap<_, _>>();
+
+    let by_owner_wallet_id = owner_wallets
+        .iter()
+        .filter_map(|owner_wallet| {
+            starter_wallets_by_pubkey
+                .get(&owner_wallet.pubkey)
+                .cloned()
+                .map(|starter_wallet| (owner_wallet.id, starter_wallet))
+        })
+        .collect::<HashMap<_, _>>();
+    let owner_adapter_wallet_ids = owner_wallets
+        .iter()
+        .filter_map(|wallet| wallet.keypair.is_none().then_some(wallet.id))
+        .collect::<HashSet<_>>();
+
+    Ok(Some(SharedWalletRemap {
+        by_owner_wallet_id,
+        owner_adapter_wallet_ids,
+        default: (
+            default_wallet.id,
+            bs58::encode(default_wallet.pubkey).into_string(),
+        ),
+    }))
+}
 
 #[derive(bon::Builder)]
 pub struct UserWorker {
@@ -223,6 +382,7 @@ impl UserWorker {
                 }
                 match db
                     .get_swig_session_secret_key(
+                        user_id,
                         &session.swig_wallet_id,
                         &session.session_pubkey.to_string(),
                     )
@@ -782,6 +942,8 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
 pub struct StartFlowShared {
     pub flow_id: FlowId,
     pub input: value::Map,
+    pub partial_config: Option<PartialConfig>,
+    pub environment: HashMap<String, String>,
     pub output_instructions: bool,
     pub action_identity: Option<Pubkey>,
     pub action_config: Option<SolanaActionConfig>,
@@ -803,12 +965,12 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     user: User { id: self.user_id },
                     flow_id: msg.flow_id,
                     input: msg.input,
+                    partial_config: msg.partial_config,
+                    environment: msg.environment,
                     output_instructions: msg.output_instructions,
                     action_identity: msg.action_identity,
                     action_config: msg.action_config,
                     fees: msg.fees,
-                    partial_config: None,
-                    environment: <_>::default(),
                 },
                 ctx,
             );
@@ -824,15 +986,31 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let remotes = AddressBook::new(self.remote_command_address_book.clone(), Some(user_id));
         Box::pin(async move {
             let wrk = root.send(GetTokenWorker { user_id }).await??;
+            let shared_wallet_remap = build_shared_wallet_remap(&db, user_id, msg.started_by.0).await?;
 
             let (signer, signers_info) = SignerWorker::fetch_all_and_start(
-                db,
+                db.clone(),
                 &[
                     (msg.started_by.0, msg.started_by.1.recipient()),
                     (user_id, addr.clone().recipient()),
                 ],
             )
             .await?;
+            let get_flow = if let Some(shared_wallet_remap) = shared_wallet_remap {
+                let owner_addr = addr.clone();
+                let shared_wallet_remap = Arc::new(shared_wallet_remap);
+                TowerClient::new(tower::service_fn(move |req: get_flow::Request| {
+                    let owner_addr = owner_addr.clone();
+                    let shared_wallet_remap = shared_wallet_remap.clone();
+                    async move {
+                        let mut response = owner_addr.send(req).await??;
+                        shared_wallet_remap.apply(&mut response.config);
+                        Ok(response)
+                    }
+                }))
+            } else {
+                addr_to_service(&addr)
+            };
 
             let mut r = FlowRegistry::fetch()
                 .flow_owner(User { id: user_id })
@@ -841,7 +1019,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                 })
                 .shared_with([msg.started_by.0].into())
                 .entrypoint(msg.flow_id)
-                .environment(<_>::default())
+                .environment(msg.environment)
                 .endpoints(endpoints)
                 .signers_info(signers_info)
                 .backend(BackendServices {
@@ -852,7 +1030,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     get_previous_values: addr_to_service(&addr),
                     helius,
                 })
-                .get_flow(addr_to_service(&addr))
+                .get_flow(get_flow)
                 .remotes(remotes)
                 .http(crate::HTTP.clone())
                 .call()
@@ -863,6 +1041,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     msg.flow_id,
                     msg.input,
                     StartFlowOptions {
+                        partial_config: msg.partial_config,
                         collect_instructions: msg.output_instructions,
                         action_identity: msg.action_identity,
                         action_config: msg.action_config,
@@ -948,13 +1127,25 @@ impl actix::Handler<StartDeployment> for UserWorker {
     type Result = ResponseActFuture<Self, <StartDeployment as actix::Message>::Result>;
 
     fn handle(&mut self, msg: StartDeployment, ctx: &mut Self::Context) -> Self::Result {
+        let db = self.db.clone();
+        let owner_user_id = self.user_id;
         self.make_flow_set_context(&msg.deployment, &msg.options, ctx)
             .map_err(StartError::from)
             .into_actor(&*self)
             .and_then(move |context, _, _| {
                 wrap_future::<_, Self>(async move {
+                    let mut deployment = msg.deployment;
+                    if msg.options.starter.authenticated && msg.options.starter.user_id != owner_user_id {
+                        if let Some(remap) =
+                            build_shared_wallet_remap(&db, owner_user_id, msg.options.starter.user_id).await?
+                        {
+                            for flow in deployment.flows.values_mut() {
+                                remap.apply_flow_row(&mut flow.row);
+                            }
+                        }
+                    }
                     let id = FlowSet::builder()
-                        .deployment(msg.deployment)
+                        .deployment(deployment)
                         .context(context)
                         .build()
                         .start(msg.options)
