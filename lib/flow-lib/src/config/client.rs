@@ -27,6 +27,8 @@ pub struct FlowRow {
     #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
     pub environment: HashMap<String, String>,
     pub current_network: Network,
+    #[serde(default)]
+    #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
     pub instructions_bundling: BundlingMode,
     pub is_public: bool,
     pub start_shared: bool,
@@ -54,6 +56,7 @@ pub struct ClientConfig {
     #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
     pub sol_network: Network,
     #[serde(default)]
+    #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
     pub instructions_bundling: BundlingMode,
     #[serde(default)]
     pub partial_config: Option<PartialConfig>,
@@ -254,6 +257,7 @@ pub struct ClientConfigV2 {
     #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
     pub sol_network: Network,
     #[serde(default)]
+    #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
     pub instructions_bundling: BundlingMode,
     #[serde(default)]
     pub partial_config: Option<PartialConfig>,
@@ -279,6 +283,7 @@ pub struct FlowRowV2 {
     pub environment: HashMap<String, String>,
     pub current_network: Network,
     #[serde(default)]
+    #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
     pub instructions_bundling: BundlingMode,
     pub is_public: bool,
     pub start_shared: bool,
