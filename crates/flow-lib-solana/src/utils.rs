@@ -277,8 +277,14 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<v0::Message, anyhow::
         "different blockhash"
     );
 
-    // Swig-wrapped messages restructure instructions — skip strict checks.
+    // Swig-wrapped messages restructure instructions. We only allow this path
+    // if the original message already referenced Swig; otherwise a non-Swig
+    // request could inject a Swig instruction and bypass structural checks.
     if contains_swig_program(&r) {
+        ensure!(
+            contains_swig_program(&l),
+            "swig instruction introduced in modified message"
+        );
         tracing::info!("Swig program detected in modified message, skipping strict structural checks");
         return Ok(r);
     }
