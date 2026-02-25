@@ -6,7 +6,7 @@
   "description": "Wrap a Candy Machine Core with a Candy Guard",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/candy_machine_core/wrap_core.rs",
+  "source_code": "crates/cmds-solana/src/mpl_core_candy_machine/wrap_core.rs",
   "ports": {
     "inputs": [
       {
@@ -100,7 +100,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/candy_machine_core/wrap_core.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core_candy_machine/wrap_core.jsonc",
     "repo": "flow-backend"
   }
 }

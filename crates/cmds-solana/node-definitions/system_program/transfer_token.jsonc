@@ -6,7 +6,7 @@
   "description": "Transfer SPL tokens between accounts",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/transfer_token.rs",
+  "source_code": "crates/cmds-solana/src/system_program/transfer_token.rs",
   "ports": {
     "inputs": [
       {
@@ -155,7 +155,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/transfer_token.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/system_program/transfer_token.jsonc",
     "repo": "flow-backend"
   }
 }

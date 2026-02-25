@@ -6,7 +6,7 @@
   "description": "Verify a creator on an NFT using Token Metadata V1",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/v1/verify_creator_v1.rs",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/verify_creator_v1.rs",
   "ports": {
     "inputs": [
       {
@@ -96,7 +96,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/v1/verify_creator_v1.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/verify_creator_v1.jsonc",
     "repo": "flow-backend"
   }
 }

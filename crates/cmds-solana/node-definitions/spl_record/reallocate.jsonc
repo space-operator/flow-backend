@@ -6,7 +6,7 @@
   "description": "Resize an on-chain record account to fit new data",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/record/reallocate.rs",
+  "source_code": "crates/cmds-solana/src/spl_record/reallocate.rs",
   "ports": {
     "inputs": [
       {
@@ -90,7 +90,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/record/reallocate.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/spl_record/reallocate.jsonc",
     "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "description": "Add config lines to a Candy Machine Core",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/candy_machine_core/add_config_lines_core.rs",
+  "source_code": "crates/cmds-solana/src/mpl_core_candy_machine/add_config_lines_core.rs",
   "ports": {
     "inputs": [
       {
@@ -102,7 +102,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/candy_machine_core/add_config_lines_core.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core_candy_machine/add_config_lines_core.jsonc",
     "repo": "flow-backend"
   }
 }

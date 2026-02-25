@@ -6,7 +6,7 @@
   "description": "Approve a use authority for an NFT",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/approve_collection_authority.rs",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/approve_collection_authority.rs",
   "ports": {
     "inputs": [
       {
@@ -118,7 +118,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/approve_use_authority.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/approve_use_authority.jsonc",
     "repo": "flow-backend"
   }
 }

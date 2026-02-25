@@ -6,7 +6,7 @@
   "description": "Set the token standard for an NFT metadata account",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/set_token_standard.rs",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/set_token_standard.rs",
   "ports": {
     "inputs": [
       {
@@ -87,7 +87,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/set_token_standard.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/set_token_standard.jsonc",
     "repo": "flow-backend"
   }
 }

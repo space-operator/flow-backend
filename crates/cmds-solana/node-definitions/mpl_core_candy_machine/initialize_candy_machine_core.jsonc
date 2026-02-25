@@ -6,7 +6,7 @@
   "description": "Initialize a new Candy Machine Core",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/candy_machine_core/initialize_core_candy_machine.rs",
+  "source_code": "crates/cmds-solana/src/mpl_core_candy_machine/initialize_core_candy_machine.rs",
   "ports": {
     "inputs": [
       {
@@ -124,7 +124,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/candy_machine_core/initialize_candy_machine_core.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core_candy_machine/initialize_candy_machine_core.jsonc",
     "repo": "flow-backend"
   }
 }

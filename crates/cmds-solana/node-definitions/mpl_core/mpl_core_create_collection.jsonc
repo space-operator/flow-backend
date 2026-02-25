@@ -6,7 +6,7 @@
   "description": "Create a new MPL Core collection",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/core/create_collection.rs",
+  "source_code": "crates/cmds-solana/src/mpl_core/create_collection.rs",
   "ports": {
     "inputs": [
       {
@@ -122,7 +122,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/core/mpl_core_create_collection.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core/mpl_core_create_collection.jsonc",
     "repo": "flow-backend"
   }
 }

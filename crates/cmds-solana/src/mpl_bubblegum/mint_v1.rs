@@ -1,4 +1,4 @@
-use crate::{compression::get_leaf_schema_event, prelude::*};
+use crate::{mpl_bubblegum::get_leaf_schema_event, prelude::*};
 use bytes::Bytes;
 use mpl_bubblegum::instructions::MintV1Builder;
 use solana_program::pubkey::Pubkey;

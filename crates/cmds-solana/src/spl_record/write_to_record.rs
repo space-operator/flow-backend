@@ -2,7 +2,7 @@ use solana_program::instruction::AccountMeta;
 use spl_record::instruction::RecordInstruction;
 use tracing::info;
 
-use crate::{prelude::*, record::record_program_id};
+use crate::{prelude::*, spl_record::record_program_id};
 
 const NAME: &str = "write_to_record";
 

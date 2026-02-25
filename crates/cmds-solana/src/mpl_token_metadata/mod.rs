@@ -1,14 +1,25 @@
 use crate::prelude::Pubkey;
-use mpl_token_metadata::types::{Collection, DataV2, UseMethod, Uses};
+use ::mpl_token_metadata::types::{Collection, DataV2, UseMethod, Uses};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-pub mod arweave_file_upload;
-pub mod arweave_nft_upload;
-pub mod candy_machine_core;
-pub mod core;
-pub mod v1;
+// command modules
+pub mod approve_collection_authority;
+pub mod burn_v1;
+pub mod create_master_edition;
+pub mod create_metadata_account;
+pub mod create_v1;
+pub mod delegate_v1;
+pub mod get_left_uses;
+pub mod mint_v1;
+pub mod set_token_standard;
+pub mod update_metadata_account;
+pub mod update_v1;
+pub mod verify_collection;
+pub mod verify_collection_v1;
+pub mod verify_creator_v1;
 
-pub mod inscriptions;
+// --- Shared types (from former nft/mod.rs) ---
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NftDataV2 {
@@ -125,25 +136,15 @@ impl From<NftUseMethod> for UseMethod {
     }
 }
 
-impl From<NftCreator> for mpl_token_metadata::types::Creator {
+impl From<NftCreator> for ::mpl_token_metadata::types::Creator {
     fn from(v: NftCreator) -> Self {
-        mpl_token_metadata::types::Creator {
+        ::mpl_token_metadata::types::Creator {
             address: v.address,
             verified: v.verified.unwrap_or(false),
             share: v.share,
         }
     }
 }
-
-// impl From<NftCreator> for mpl_candy_machine_core::Creator {
-//     fn from(v: NftCreator) -> Self {
-//         mpl_candy_machine_core::Creator {
-//             address: v.address,
-//             verified: v.verified.unwrap_or(false),
-//             percentage_share: v.share,
-//         }
-//     }
-// }
 
 // Candy machine configuration data.
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -166,21 +167,6 @@ pub struct CandyMachineDataAlias {
     pub hidden_settings: Option<HiddenSettingsAlias>,
 }
 
-// impl From<CandyMachineDataAlias> for MPLCandyMachineData {
-//     fn from(v: CandyMachineDataAlias) -> Self {
-//         MPLCandyMachineData {
-//             items_available: v.items_available,
-//             symbol: v.symbol,
-//             seller_fee_basis_points: v.seller_fee_basis_points,
-//             max_supply: v.max_supply,
-//             is_mutable: v.is_mutable,
-//             creators: v.creators.into_iter().map(|c| c.into()).collect(),
-//             config_line_settings: v.config_line_settings.map(|c| c.into()),
-//             hidden_settings: v.hidden_settings.map(|h| h.into()),
-//         }
-//     }
-// }
-
 /// Hidden settings for large mints used with off-chain data.
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct HiddenSettingsAlias {
@@ -191,17 +177,6 @@ pub struct HiddenSettingsAlias {
     /// Hash of the hidden settings file
     pub hash: [u8; 32],
 }
-
-// // implement From for HiddenSettingsAlias
-// impl From<HiddenSettingsAlias> for HiddenSettings {
-//     fn from(v: HiddenSettingsAlias) -> Self {
-//         HiddenSettings {
-//             name: v.name,
-//             uri: v.uri,
-//             hash: v.hash,
-//         }
-//     }
-// }
 
 /// Config line settings to allocate space for individual name + URI.
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -218,30 +193,17 @@ pub struct ConfigLineSettingsAlias {
     pub is_sequential: bool,
 }
 
-// // implement From for ConfigLineSettingsAlias
-// impl From<ConfigLineSettingsAlias> for mpl_candy_machine_core::ConfigLineSettings {
-//     fn from(v: ConfigLineSettingsAlias) -> Self {
-//         mpl_candy_machine_core::ConfigLineSettings {
-//             prefix_name: v.prefix_name,
-//             name_length: v.name_length,
-//             prefix_uri: v.prefix_uri,
-//             uri_length: v.uri_length,
-//             is_sequential: v.is_sequential,
-//         }
-//     }
-// }
-
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub enum CollectionDetails {
     V1 { size: u64 },
 }
 
 // implement From for CollectionDetails
-impl From<CollectionDetails> for mpl_token_metadata::types::CollectionDetails {
+impl From<CollectionDetails> for ::mpl_token_metadata::types::CollectionDetails {
     fn from(v: CollectionDetails) -> Self {
         match v {
             CollectionDetails::V1 { size } => {
-                mpl_token_metadata::types::CollectionDetails::V1 { size }
+                ::mpl_token_metadata::types::CollectionDetails::V1 { size }
             }
         }
     }
@@ -273,20 +235,20 @@ impl From<String> for TokenStandard {
 }
 
 // implement From for TokenStandard
-impl From<TokenStandard> for mpl_token_metadata::types::TokenStandard {
+impl From<TokenStandard> for ::mpl_token_metadata::types::TokenStandard {
     fn from(v: TokenStandard) -> Self {
         match v {
-            TokenStandard::NonFungible => mpl_token_metadata::types::TokenStandard::NonFungible,
-            TokenStandard::FungibleAsset => mpl_token_metadata::types::TokenStandard::FungibleAsset,
-            TokenStandard::Fungible => mpl_token_metadata::types::TokenStandard::Fungible,
+            TokenStandard::NonFungible => ::mpl_token_metadata::types::TokenStandard::NonFungible,
+            TokenStandard::FungibleAsset => ::mpl_token_metadata::types::TokenStandard::FungibleAsset,
+            TokenStandard::Fungible => ::mpl_token_metadata::types::TokenStandard::Fungible,
             TokenStandard::NonFungibleEdition => {
-                mpl_token_metadata::types::TokenStandard::NonFungibleEdition
+                ::mpl_token_metadata::types::TokenStandard::NonFungibleEdition
             }
             TokenStandard::ProgrammableNonFungible => {
-                mpl_token_metadata::types::TokenStandard::ProgrammableNonFungible
+                ::mpl_token_metadata::types::TokenStandard::ProgrammableNonFungible
             }
             TokenStandard::ProgrammableNonFungibleEdition => {
-                mpl_token_metadata::types::TokenStandard::ProgrammableNonFungibleEdition
+                ::mpl_token_metadata::types::TokenStandard::ProgrammableNonFungibleEdition
             }
         }
     }
@@ -311,12 +273,87 @@ impl From<Option<u64>> for PrintSupply {
 }
 
 // implement From for PrintSupply
-impl From<PrintSupply> for mpl_token_metadata::types::PrintSupply {
+impl From<PrintSupply> for ::mpl_token_metadata::types::PrintSupply {
     fn from(v: PrintSupply) -> Self {
         match v {
-            PrintSupply::Zero => mpl_token_metadata::types::PrintSupply::Zero,
-            PrintSupply::Limited(supply) => mpl_token_metadata::types::PrintSupply::Limited(supply),
-            PrintSupply::Unlimited => mpl_token_metadata::types::PrintSupply::Unlimited,
+            PrintSupply::Zero => ::mpl_token_metadata::types::PrintSupply::Zero,
+            PrintSupply::Limited(supply) => ::mpl_token_metadata::types::PrintSupply::Limited(supply),
+            PrintSupply::Unlimited => ::mpl_token_metadata::types::PrintSupply::Unlimited,
+        }
+    }
+}
+
+// --- Shared types (from former nft/v1/mod.rs) ---
+
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+pub struct AuthorizationData {
+    pub payload: Payload,
+}
+
+impl From<AuthorizationData> for ::mpl_token_metadata::types::AuthorizationData {
+    fn from(authorization_data: AuthorizationData) -> Self {
+        Self {
+            payload: authorization_data.payload.into(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+pub struct Payload {
+    pub map: HashMap<String, PayloadType>,
+}
+
+impl From<Payload> for ::mpl_token_metadata::types::Payload {
+    fn from(payload: Payload) -> Self {
+        let mut map = std::collections::HashMap::new();
+        for (key, value) in payload.map {
+            map.insert(key, value.into());
+        }
+        Self { map }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+pub enum PayloadType {
+    Pubkey(Pubkey),
+    Seeds(SeedsVec),
+    MerkleProof(ProofInfo),
+    Number(u64),
+}
+
+impl From<PayloadType> for ::mpl_token_metadata::types::PayloadType {
+    fn from(payload_type: PayloadType) -> Self {
+        match payload_type {
+            PayloadType::Pubkey(pubkey) => Self::Pubkey(pubkey),
+            PayloadType::Seeds(seeds_vec) => Self::Seeds(seeds_vec.into()),
+            PayloadType::MerkleProof(proof_info) => Self::MerkleProof(proof_info.into()),
+            PayloadType::Number(number) => Self::Number(number),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+pub struct SeedsVec {
+    pub seeds: Vec<Vec<u8>>,
+}
+
+impl From<SeedsVec> for ::mpl_token_metadata::types::SeedsVec {
+    fn from(seeds_vec: SeedsVec) -> Self {
+        Self {
+            seeds: seeds_vec.seeds,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+pub struct ProofInfo {
+    pub proof: Vec<[u8; 32]>,
+}
+
+impl From<ProofInfo> for ::mpl_token_metadata::types::ProofInfo {
+    fn from(proof_info: ProofInfo) -> Self {
+        Self {
+            proof: proof_info.proof,
         }
     }
 }

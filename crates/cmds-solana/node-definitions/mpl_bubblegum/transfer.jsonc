@@ -6,7 +6,7 @@
   "description": "Transfer a compressed NFT to a new owner",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/compression/transfer.rs",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/transfer.rs",
   "ports": {
     "inputs": [
       {
@@ -163,7 +163,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/compression/transfer.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/transfer.jsonc",
     "repo": "flow-backend"
   }
 }

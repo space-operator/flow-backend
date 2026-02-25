@@ -17,10 +17,10 @@ pub const RECORD_DEVNET: Pubkey = pubkey!("recr1L3PCGKLbckBqMNcJhuuyU1zgo8nBhfLV
 
 pub const fn record_program_id(net: SolanaNet) -> Pubkey {
     match net {
-        SolanaNet::Mainnet => crate::record::RECORD_MAINNET,
-        SolanaNet::Devnet => crate::record::RECORD_DEVNET,
+        SolanaNet::Mainnet => crate::spl_record::RECORD_MAINNET,
+        SolanaNet::Devnet => crate::spl_record::RECORD_DEVNET,
         // TODO testnet not deployed yet
-        SolanaNet::Testnet => crate::record::RECORD_DEVNET,
+        SolanaNet::Testnet => crate::spl_record::RECORD_DEVNET,
     }
 }
 

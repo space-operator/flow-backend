@@ -6,7 +6,7 @@
   "description": "Sign metadata as a verified creator of an NFT",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/mod.rs",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/mod.rs",
   "ports": {
     "inputs": [
       {
@@ -81,7 +81,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/sign_metadata.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/sign_metadata.jsonc",
     "repo": "flow-backend"
   }
 }

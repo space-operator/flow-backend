@@ -6,7 +6,7 @@
   "description": "Execute an instruction on an MPL Core asset with lifecycle hooks",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/core/execute.rs",
+  "source_code": "crates/cmds-solana/src/mpl_core/execute.rs",
   "ports": {
     "inputs": [
       {
@@ -90,7 +90,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/core/mpl_core_execute_instruction.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core/mpl_core_execute_instruction.jsonc",
     "repo": "flow-backend"
   }
 }

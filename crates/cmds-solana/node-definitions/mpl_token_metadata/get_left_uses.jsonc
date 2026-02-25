@@ -6,7 +6,7 @@
   "description": "Get the remaining number of uses for an NFT",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/get_left_uses.rs",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/get_left_uses.rs",
   "ports": {
     "inputs": [
       {
@@ -51,7 +51,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/get_left_uses.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/get_left_uses.jsonc",
     "repo": "flow-backend"
   }
 }

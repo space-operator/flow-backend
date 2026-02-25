@@ -4,7 +4,7 @@ use rand::Rng;
 use solana_sdk_ids::system_program;
 use tracing::info;
 
-use crate::{nft::inscriptions::INSCRIPTION_PROGRAM_ID, prelude::*};
+use crate::{mpl_inscription::INSCRIPTION_PROGRAM_ID, prelude::*};
 
 // Command Name
 const NAME: &str = "initialize_inscription";

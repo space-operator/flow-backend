@@ -6,7 +6,7 @@
   "description": "Initialize a new on-chain record account using a seed",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/record/initialize_record_with_seed.rs",
+  "source_code": "crates/cmds-solana/src/spl_record/initialize_record_with_seed.rs",
   "ports": {
     "inputs": [
       {
@@ -96,7 +96,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/record/initialize_record_with_seed.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/spl_record/initialize_record_with_seed.jsonc",
     "repo": "flow-backend"
   }
 }

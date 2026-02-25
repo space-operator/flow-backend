@@ -6,7 +6,7 @@
   "description": "Verify that an NFT belongs to a collection",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/verify_collection.rs",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/verify_collection.rs",
   "ports": {
     "inputs": [
       {
@@ -95,7 +95,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/verify_collection.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/verify_collection.jsonc",
     "repo": "flow-backend"
   }
 }

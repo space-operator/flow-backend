@@ -6,7 +6,7 @@
   "description": "Create a new MPL Core asset",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/core/create_asset.rs",
+  "source_code": "crates/cmds-solana/src/mpl_core/create_asset.rs",
   "ports": {
     "inputs": [
       {
@@ -125,7 +125,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/core/mpl_core_create_asset.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core/mpl_core_create_asset.jsonc",
     "repo": "flow-backend"
   }
 }

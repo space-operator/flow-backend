@@ -6,7 +6,7 @@
   "description": "Mint a new compressed NFT to a Merkle tree",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/compression/mint_v1.rs",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/mint_v1.rs",
   "ports": {
     "inputs": [
       {
@@ -143,7 +143,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/compression/mint_compressed_NFT.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/mint_compressed_NFT.jsonc",
     "repo": "flow-backend"
   }
 }

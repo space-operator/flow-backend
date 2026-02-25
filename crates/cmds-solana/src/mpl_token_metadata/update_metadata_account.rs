@@ -1,4 +1,6 @@
 use crate::prelude::*;
+use ::mpl_token_metadata::accounts::Metadata;
+use ::mpl_token_metadata::instructions::UpdateMetadataAccountV2Builder;
 
 const NAME: &str = "update_metadata_account";
 
@@ -40,7 +42,26 @@ struct Output1 {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output1, CommandError> {
-    let (metadata_account, _) = mpl_token_metadata::pda::find_metadata_account(&input.mint_account);
+    let (metadata_account, _) = Metadata::find_pda(&input.mint_account);
+
+    let mut builder = UpdateMetadataAccountV2Builder::new();
+    builder
+        .metadata(metadata_account)
+        .update_authority(input.update_authority.pubkey());
+    if let Some(data) = input.data {
+        builder.data(data.into());
+    }
+    if let Some(key) = input.new_update_authority {
+        builder.new_update_authority(key);
+    }
+    if let Some(v) = input.primary_sale_happen {
+        builder.primary_sale_happened(v);
+    }
+    if let Some(v) = input.is_mutable {
+        builder.is_mutable(v);
+    }
+    let instruction = builder.instruction();
+
     let signature = ctx
         .execute(
             Instructions {
@@ -51,19 +72,7 @@ lookup_tables: None,
                     input.update_authority,
                 ]
                 .into(),
-
-                instructions: [
-                    mpl_token_metadata::instruction::update_metadata_accounts_v2(
-                        mpl_token_metadata::id(),
-                        metadata_account,
-                        input.update_authority.pubkey(),
-                        input.new_update_authority,
-                        input.data.map(Into::into),
-                        input.primary_sale_happen,
-                        input.is_mutable,
-                    ),
-                ]
-                .into(),
+                instructions: [instruction].into(),
             },
             value::to_map(&Output0 { metadata_account }).unwrap(),
         )

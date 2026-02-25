@@ -1,5 +1,5 @@
 use super::MetadataBubblegum;
-use crate::compression::get_leaf_schema_event;
+use crate::mpl_bubblegum::get_leaf_schema_event;
 use crate::prelude::*;
 
 use bytes::Bytes;
@@ -164,7 +164,7 @@ mod tests {
     };
     use mpl_bubblegum::LeafSchemaEvent;
 
-    // use crate::compression::get_leaf_schema_event;
+    // use crate::mpl_bubblegum::get_leaf_schema_event;
 
     /*
      * devnet resetted

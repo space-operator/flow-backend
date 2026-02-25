@@ -1,6 +1,5 @@
 use crate::prelude::*;
-use mpl_token_metadata::state::Metadata;
-use solana_program::pubkey::Pubkey;
+use ::mpl_token_metadata::accounts::Metadata;
 
 const NAME: &str = "get_left_uses";
 

@@ -6,7 +6,7 @@
   "description": "Fetch all assets belonging to an MPL Core collection",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/core/fetch_assets.rs",
+  "source_code": "crates/cmds-solana/src/mpl_core/fetch_assets.rs",
   "ports": {
     "inputs": [
       {
@@ -50,7 +50,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/core/fetch_assets.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core/fetch_assets.jsonc",
     "repo": "flow-backend"
   }
 }

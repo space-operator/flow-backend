@@ -6,7 +6,7 @@
   "description": "Call Metaplex Digital Asset Standard (DAS) API methods",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/das.rs",
+  "source_code": "crates/cmds-solana/src/das/das_api.rs",
   "ports": {
     "inputs": [
       {
@@ -77,7 +77,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/das_api.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/das/das_api.jsonc",
     "repo": "flow-backend"
   }
 }

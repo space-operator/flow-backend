@@ -6,7 +6,7 @@
   "description": "Adds a memo to a transaction",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/memo.rs",
+  "source_code": "crates/cmds-solana/src/spl_memo/memo.rs",
   "ports": {
     "inputs": [
       {
@@ -80,7 +80,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/memo.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/spl_memo/memo.jsonc",
     "repo": "flow-backend"
   }
 }

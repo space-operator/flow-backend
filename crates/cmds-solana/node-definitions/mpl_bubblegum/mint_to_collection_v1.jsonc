@@ -6,7 +6,7 @@
   "description": "Mint a compressed NFT into an existing collection",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/compression/mint_to_collection_v1.rs",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/mint_to_collection_v1.rs",
   "ports": {
     "inputs": [
       {
@@ -173,7 +173,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/compression/mint_to_collection_v1.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/mint_to_collection_v1.jsonc",
     "repo": "flow-backend"
   }
 }

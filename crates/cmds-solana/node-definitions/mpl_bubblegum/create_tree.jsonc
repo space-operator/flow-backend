@@ -6,7 +6,7 @@
   "description": "Create a new Merkle tree for compressed NFTs",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/compression/create_tree.rs",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/create_tree.rs",
   "ports": {
     "inputs": [
       {
@@ -125,7 +125,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/compression/create_tree.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/create_tree.jsonc",
     "repo": "flow-backend"
   }
 }

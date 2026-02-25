@@ -6,7 +6,7 @@
   "description": "Upload a file to Arweave via Bundlr",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/arweave_file_upload.rs",
+  "source_code": "crates/cmds-solana/src/arweave/arweave_file_upload.rs",
   "ports": {
     "inputs": [
       {
@@ -73,7 +73,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/arweave_file_upload.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/arweave/arweave_file_upload.jsonc",
     "repo": "flow-backend"
   }
 }

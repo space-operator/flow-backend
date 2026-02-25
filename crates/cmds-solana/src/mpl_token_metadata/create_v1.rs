@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use mpl_token_metadata::{
+use ::mpl_token_metadata::{
     accounts::{MasterEdition, Metadata},
     instructions::CreateV1InstructionArgs,
     types::Collection,
@@ -7,7 +7,7 @@ use mpl_token_metadata::{
 use solana_program::sysvar;
 use solana_sdk_ids::system_program;
 
-use crate::nft::{
+use super::{
     CollectionDetails, NftCollection, NftCreator, NftDataV2, NftUses, PrintSupply, TokenStandard,
 };
 
@@ -67,7 +67,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     //     &input.mint_account.pubkey(),
     // );
 
-    let create_ix = mpl_token_metadata::instructions::CreateV1 {
+    let create_ix = ::mpl_token_metadata::instructions::CreateV1 {
         metadata: metadata_account,
         master_edition: Some(master_edition_account),
         mint: (input.mint_account.pubkey(), true),
@@ -84,14 +84,14 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         creators
             .into_iter()
             .map(|creator| creator.into())
-            .collect::<Vec<mpl_token_metadata::types::Creator>>()
+            .collect::<Vec<::mpl_token_metadata::types::Creator>>()
     });
 
     let creators_data = input.data.creators.map(|creators| {
         creators
             .into_iter()
             .map(|creator| creator.into())
-            .collect::<Vec<mpl_token_metadata::types::Creator>>()
+            .collect::<Vec<::mpl_token_metadata::types::Creator>>()
     });
 
     let creators = creators_input.or(creators_data);
@@ -104,7 +104,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     // Token Standard
     let token_standard: TokenStandard = input.token_standard.into();
-    let token_standard: mpl_token_metadata::types::TokenStandard = token_standard.into();
+    let token_standard: ::mpl_token_metadata::types::TokenStandard = token_standard.into();
 
     // Collection
     let collection = input
@@ -121,7 +121,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let print_supply = match input.print_supply {
         Some(_) => {
             let print_supply: PrintSupply = input.print_supply.into();
-            let print_supply: mpl_token_metadata::types::PrintSupply = print_supply.into();
+            let print_supply: ::mpl_token_metadata::types::PrintSupply = print_supply.into();
             Some(print_supply)
         }
         None => None,

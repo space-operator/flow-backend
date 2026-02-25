@@ -1,4 +1,4 @@
-use super::NftMetadata;
+use crate::mpl_token_metadata::NftMetadata;
 use crate::prelude::*;
 use bundlr_sdk::{Bundlr, Ed25519Signer, error::BundlrError, tags::Tag};
 use flow_lib::solana::SIGNATURE_TIMEOUT;

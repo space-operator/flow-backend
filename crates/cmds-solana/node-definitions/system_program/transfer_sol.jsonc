@@ -6,7 +6,7 @@
   "description": "Transfer SOL between accounts",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/transfer_sol.rs",
+  "source_code": "crates/cmds-solana/src/system_program/transfer_sol.rs",
   "ports": {
     "inputs": [
       {
@@ -90,7 +90,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/transfer_sol.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/system_program/transfer_sol.jsonc",
     "repo": "flow-backend"
   }
 }

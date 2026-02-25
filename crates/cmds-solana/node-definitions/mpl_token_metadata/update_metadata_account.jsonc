@@ -6,7 +6,7 @@
   "description": "Update the metadata account of an NFT",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/update_metadata_account.rs",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/update_metadata_account.rs",
   "ports": {
     "inputs": [
       {
@@ -110,7 +110,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/update_metadata_account.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/update_metadata_account.jsonc",
     "repo": "flow-backend"
   }
 }

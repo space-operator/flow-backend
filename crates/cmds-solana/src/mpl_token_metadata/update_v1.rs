@@ -1,11 +1,9 @@
 use std::str::FromStr;
 
-use crate::{
-    nft::{CollectionDetails, NftCreator, NftUses, TokenStandard},
-    prelude::*,
-};
+use super::{CollectionDetails, NftCreator, NftUses, TokenStandard};
+use crate::prelude::*;
 use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_token_metadata::{
+use ::mpl_token_metadata::{
     accounts::{MasterEdition, Metadata},
     instructions::{
         UpdateAsAuthorityItemDelegateV2InstructionArgs,
@@ -153,14 +151,14 @@ pub struct UpdateAsDelegateV1 {
 impl UpdateAsDelegateV1 {
     pub fn instruction(
         &self,
-        args: mpl_token_metadata::types::UpdateArgs,
+        args: ::mpl_token_metadata::types::UpdateArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: mpl_token_metadata::types::UpdateArgs,
+        args: ::mpl_token_metadata::types::UpdateArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
@@ -175,7 +173,7 @@ impl UpdateAsDelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -185,7 +183,7 @@ impl UpdateAsDelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -202,7 +200,7 @@ impl UpdateAsDelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -224,7 +222,7 @@ impl UpdateAsDelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -235,7 +233,7 @@ impl UpdateAsDelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -244,7 +242,7 @@ impl UpdateAsDelegateV1 {
             .for_each(|remaining_account| accounts.push(remaining_account.clone()));
 
         let (mut args, mut data) = match args {
-            mpl_token_metadata::types::UpdateArgs::AsAuthorityItemDelegateV2 {
+            ::mpl_token_metadata::types::UpdateArgs::AsAuthorityItemDelegateV2 {
                 new_update_authority,
                 primary_sale_happened,
                 is_mutable,
@@ -264,7 +262,7 @@ impl UpdateAsDelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::UpdateArgs::AsCollectionDelegateV2 {
+            ::mpl_token_metadata::types::UpdateArgs::AsCollectionDelegateV2 {
                 collection,
                 authorization_data,
             } => (
@@ -278,7 +276,7 @@ impl UpdateAsDelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::UpdateArgs::AsDataDelegateV2 {
+            ::mpl_token_metadata::types::UpdateArgs::AsDataDelegateV2 {
                 data,
                 authorization_data,
             } => (
@@ -292,7 +290,7 @@ impl UpdateAsDelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::UpdateArgs::AsProgrammableConfigDelegateV2 {
+            ::mpl_token_metadata::types::UpdateArgs::AsProgrammableConfigDelegateV2 {
                 rule_set,
                 authorization_data,
             } => (
@@ -306,7 +304,7 @@ impl UpdateAsDelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::UpdateArgs::AsDataItemDelegateV2 {
+            ::mpl_token_metadata::types::UpdateArgs::AsDataItemDelegateV2 {
                 data,
                 authorization_data,
             } => (
@@ -320,7 +318,7 @@ impl UpdateAsDelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::UpdateArgs::AsCollectionItemDelegateV2 {
+            ::mpl_token_metadata::types::UpdateArgs::AsCollectionItemDelegateV2 {
                 collection,
                 authorization_data,
             } => (
@@ -334,7 +332,7 @@ impl UpdateAsDelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::UpdateArgs::AsProgrammableConfigItemDelegateV2 {
+            ::mpl_token_metadata::types::UpdateArgs::AsProgrammableConfigItemDelegateV2 {
                 rule_set,
                 authorization_data,
             } => (
@@ -348,7 +346,7 @@ impl UpdateAsDelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::UpdateArgs::V1 {
+            ::mpl_token_metadata::types::UpdateArgs::V1 {
                 new_update_authority,
                 data,
                 primary_sale_happened,
@@ -374,7 +372,7 @@ impl UpdateAsDelegateV1 {
                 .unwrap(),
                 UpdateV1InstructionData::new().try_to_vec().unwrap(),
             ),
-            mpl_token_metadata::types::UpdateArgs::AsUpdateAuthorityV2 {
+            ::mpl_token_metadata::types::UpdateArgs::AsUpdateAuthorityV2 {
                 new_update_authority,
                 data,
                 primary_sale_happened,
@@ -409,7 +407,7 @@ impl UpdateAsDelegateV1 {
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
-            program_id: mpl_token_metadata::ID,
+            program_id: ::mpl_token_metadata::ID,
             accounts,
             data,
         }
@@ -609,7 +607,7 @@ pub enum UpdateArgs {
     },
 }
 
-impl From<UpdateArgs> for mpl_token_metadata::types::UpdateArgs {
+impl From<UpdateArgs> for ::mpl_token_metadata::types::UpdateArgs {
     fn from(args: UpdateArgs) -> Self {
         match args {
             UpdateArgs::AsAuthorityItemDelegateV2 {
@@ -725,7 +723,7 @@ pub struct Data {
     pub creators: Option<Vec<NftCreator>>,
 }
 
-impl From<Data> for mpl_token_metadata::types::Data {
+impl From<Data> for ::mpl_token_metadata::types::Data {
     fn from(data: Data) -> Self {
         Self {
             name: data.name,
@@ -746,7 +744,7 @@ pub enum CollectionToggle {
     Set(Collection),
 }
 
-impl From<CollectionToggle> for mpl_token_metadata::types::CollectionToggle {
+impl From<CollectionToggle> for ::mpl_token_metadata::types::CollectionToggle {
     fn from(toggle: CollectionToggle) -> Self {
         match toggle {
             CollectionToggle::None => Self::None,
@@ -763,7 +761,7 @@ pub struct Collection {
     pub key: Pubkey,
 }
 
-impl From<Collection> for mpl_token_metadata::types::Collection {
+impl From<Collection> for ::mpl_token_metadata::types::Collection {
     fn from(collection: Collection) -> Self {
         Self {
             verified: collection.verified,
@@ -779,7 +777,7 @@ pub enum CollectionDetailsToggle {
     Set(CollectionDetails),
 }
 
-impl From<CollectionDetailsToggle> for mpl_token_metadata::types::CollectionDetailsToggle {
+impl From<CollectionDetailsToggle> for ::mpl_token_metadata::types::CollectionDetailsToggle {
     fn from(toggle: CollectionDetailsToggle) -> Self {
         match toggle {
             CollectionDetailsToggle::None => Self::None,
@@ -796,7 +794,7 @@ pub enum UsesToggle {
     Set(NftUses),
 }
 
-impl From<UsesToggle> for mpl_token_metadata::types::UsesToggle {
+impl From<UsesToggle> for ::mpl_token_metadata::types::UsesToggle {
     fn from(toggle: UsesToggle) -> Self {
         match toggle {
             UsesToggle::None => Self::None,
@@ -813,7 +811,7 @@ pub enum RuleSetToggle {
     Set(Pubkey),
 }
 
-impl From<RuleSetToggle> for mpl_token_metadata::types::RuleSetToggle {
+impl From<RuleSetToggle> for ::mpl_token_metadata::types::RuleSetToggle {
     fn from(toggle: RuleSetToggle) -> Self {
         match toggle {
             RuleSetToggle::None => Self::None,

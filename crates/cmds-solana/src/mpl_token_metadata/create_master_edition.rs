@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use mpl_token_metadata::{
+use ::mpl_token_metadata::{
     accounts::{MasterEdition, Metadata},
     instructions::CreateMasterEditionV3InstructionArgs,
 };
@@ -45,7 +45,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let (master_edition_account, _) = MasterEdition::find_pda(&input.mint_account);
 
-    let create_ix = mpl_token_metadata::instructions::CreateMasterEditionV3 {
+    let create_ix = ::mpl_token_metadata::instructions::CreateMasterEditionV3 {
         edition: master_edition_account,
         mint: input.mint_account,
         update_authority: input.update_authority.pubkey(),

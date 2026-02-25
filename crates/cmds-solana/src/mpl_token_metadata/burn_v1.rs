@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use mpl_token_metadata::{
+use ::mpl_token_metadata::{
     accounts::{Metadata, TokenRecord},
     types::TokenStandard,
 };
@@ -47,7 +47,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             &input.mint_account,
         );
 
-    let mut create_ix_builder = mpl_token_metadata::instructions::BurnV1Builder::new();
+    let mut create_ix_builder = ::mpl_token_metadata::instructions::BurnV1Builder::new();
     create_ix_builder
         .authority(input.authority.pubkey())
         .mint(input.mint_account)

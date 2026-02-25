@@ -6,7 +6,7 @@
   "description": "Write application data to an MPL Core asset or collection",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/core/write_data.rs",
+  "source_code": "crates/cmds-solana/src/mpl_core/write_data.rs",
   "ports": {
     "inputs": [
       {
@@ -109,7 +109,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/core/mpl_core_write_app_data.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core/mpl_core_write_app_data.jsonc",
     "repo": "flow-backend"
   }
 }

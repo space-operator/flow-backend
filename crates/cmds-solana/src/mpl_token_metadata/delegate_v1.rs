@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_token_metadata::{
+use ::mpl_token_metadata::{
     accounts::{MasterEdition, Metadata, MetadataDelegateRecord, TokenRecord},
     instructions::{
         DelegateAuthorityItemV1InstructionArgs, DelegateCollectionItemV1InstructionArgs,
@@ -194,14 +194,14 @@ pub struct DelegateV1 {
 impl DelegateV1 {
     pub fn instruction(
         &self,
-        args: mpl_token_metadata::types::DelegateArgs,
+        args: ::mpl_token_metadata::types::DelegateArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: mpl_token_metadata::types::DelegateArgs,
+        args: ::mpl_token_metadata::types::DelegateArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
@@ -212,7 +212,7 @@ impl DelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -231,7 +231,7 @@ impl DelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -242,7 +242,7 @@ impl DelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -253,7 +253,7 @@ impl DelegateV1 {
             accounts.push(solana_program::instruction::AccountMeta::new(token, false));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -279,7 +279,7 @@ impl DelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -290,7 +290,7 @@ impl DelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -301,7 +301,7 @@ impl DelegateV1 {
             ));
         } else {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                mpl_token_metadata::ID,
+                ::mpl_token_metadata::ID,
                 false,
             ));
         }
@@ -310,7 +310,7 @@ impl DelegateV1 {
             .for_each(|remaining_account| accounts.push(remaining_account.clone()));
 
         let (mut args, mut data) = match args {
-            mpl_token_metadata::types::DelegateArgs::AuthorityItemV1 { authorization_data } => (
+            ::mpl_token_metadata::types::DelegateArgs::AuthorityItemV1 { authorization_data } => (
                 DelegateAuthorityItemV1InstructionArgs { authorization_data }
                     .try_to_vec()
                     .unwrap(),
@@ -318,7 +318,7 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::CollectionItemV1 { authorization_data } => (
+            ::mpl_token_metadata::types::DelegateArgs::CollectionItemV1 { authorization_data } => (
                 DelegateCollectionItemV1InstructionArgs { authorization_data }
                     .try_to_vec()
                     .unwrap(),
@@ -326,7 +326,7 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::DataItemV1 { authorization_data } => (
+            ::mpl_token_metadata::types::DelegateArgs::DataItemV1 { authorization_data } => (
                 DelegateDataItemV1InstructionArgs { authorization_data }
                     .try_to_vec()
                     .unwrap(),
@@ -334,7 +334,7 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::ProgrammableConfigItemV1 {
+            ::mpl_token_metadata::types::DelegateArgs::ProgrammableConfigItemV1 {
                 authorization_data,
             } => (
                 DelegateProgrammableConfigItemV1InstructionArgs { authorization_data }
@@ -344,7 +344,7 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::CollectionV1 { authorization_data } => (
+            ::mpl_token_metadata::types::DelegateArgs::CollectionV1 { authorization_data } => (
                 DelegateCollectionV1InstructionArgs { authorization_data }
                     .try_to_vec()
                     .unwrap(),
@@ -352,7 +352,7 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::SaleV1 {
+            ::mpl_token_metadata::types::DelegateArgs::SaleV1 {
                 amount,
                 authorization_data,
             } => (
@@ -364,7 +364,7 @@ impl DelegateV1 {
                 .unwrap(),
                 DelegateSaleV1InstructionData::new().try_to_vec().unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::TransferV1 {
+            ::mpl_token_metadata::types::DelegateArgs::TransferV1 {
                 amount,
                 authorization_data,
             } => (
@@ -378,13 +378,13 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::DataV1 { authorization_data } => (
+            ::mpl_token_metadata::types::DelegateArgs::DataV1 { authorization_data } => (
                 DelegateDataV1InstructionArgs { authorization_data }
                     .try_to_vec()
                     .unwrap(),
                 DelegateDataV1InstructionData::new().try_to_vec().unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::UtilityV1 {
+            ::mpl_token_metadata::types::DelegateArgs::UtilityV1 {
                 amount,
                 authorization_data,
             } => (
@@ -398,7 +398,7 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::StakingV1 {
+            ::mpl_token_metadata::types::DelegateArgs::StakingV1 {
                 amount,
                 authorization_data,
             } => (
@@ -412,7 +412,7 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::StandardV1 { amount } => (
+            ::mpl_token_metadata::types::DelegateArgs::StandardV1 { amount } => (
                 DelegateStandardV1InstructionArgs { amount }
                     .try_to_vec()
                     .unwrap(),
@@ -420,7 +420,7 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::LockedTransferV1 {
+            ::mpl_token_metadata::types::DelegateArgs::LockedTransferV1 {
                 amount,
                 locked_address,
                 authorization_data,
@@ -436,7 +436,7 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::ProgrammableConfigV1 {
+            ::mpl_token_metadata::types::DelegateArgs::ProgrammableConfigV1 {
                 authorization_data,
             } => (
                 DelegateProgrammableConfigV1InstructionArgs { authorization_data }
@@ -446,7 +446,7 @@ impl DelegateV1 {
                     .try_to_vec()
                     .unwrap(),
             ),
-            mpl_token_metadata::types::DelegateArgs::PrintDelegateV1 {
+            ::mpl_token_metadata::types::DelegateArgs::PrintDelegateV1 {
                 authorization_data: _,
             } => {
                 todo!()
@@ -456,7 +456,7 @@ impl DelegateV1 {
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
-            program_id: mpl_token_metadata::ID,
+            program_id: ::mpl_token_metadata::ID,
             accounts,
             data,
         }
@@ -708,8 +708,8 @@ pub enum DelegateArgs {
     },
 }
 
-// implement from for DelegateArgs to mpl_token_metadata::types::DelegateArgs
-impl From<DelegateArgs> for mpl_token_metadata::types::DelegateArgs {
+// implement from for DelegateArgs to ::mpl_token_metadata::types::DelegateArgs
+impl From<DelegateArgs> for ::mpl_token_metadata::types::DelegateArgs {
     fn from(args: DelegateArgs) -> Self {
         match args {
             DelegateArgs::CollectionV1 { authorization_data } => Self::CollectionV1 {

@@ -6,7 +6,7 @@
   "description": "Create an inscription shard account",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/inscriptions/create_shard.rs",
+  "source_code": "crates/cmds-solana/src/mpl_inscription/create_shard.rs",
   "ports": {
     "inputs": [
       {
@@ -73,7 +73,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/inscriptions/create_shard.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_inscription/create_shard.jsonc",
     "repo": "flow-backend"
   }
 }

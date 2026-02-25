@@ -1,6 +1,6 @@
 use super::{CollectionDetails, NftDataV2};
 use crate::prelude::*;
-use mpl_token_metadata::accounts::Metadata;
+use ::mpl_token_metadata::accounts::Metadata;
 use solana_program::pubkey::Pubkey;
 use solana_sdk_ids::system_program;
 
@@ -44,7 +44,7 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (metadata_account, _) = Metadata::find_pda(&input.mint_account);
 
-    let create_ix = mpl_token_metadata::instructions::CreateMetadataAccountV3 {
+    let create_ix = ::mpl_token_metadata::instructions::CreateMetadataAccountV3 {
         metadata: metadata_account,
         mint: input.mint_account,
         mint_authority: input.mint_authority,
@@ -56,7 +56,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         rent: Some(input.fee_payer.pubkey()),
     };
 
-    let args = mpl_token_metadata::instructions::CreateMetadataAccountV3InstructionArgs {
+    let args = ::mpl_token_metadata::instructions::CreateMetadataAccountV3InstructionArgs {
         data: input.metadata.into(),
         is_mutable: input.is_mutable,
         collection_details: input.collection_details.map(|details| details.into()),

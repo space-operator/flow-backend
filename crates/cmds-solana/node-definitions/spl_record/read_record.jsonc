@@ -6,7 +6,7 @@
   "description": "Read data from an on-chain record account",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/record/read_record.rs",
+  "source_code": "crates/cmds-solana/src/spl_record/read_record.rs",
   "ports": {
     "inputs": [
       {
@@ -73,7 +73,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/record/read_record.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/spl_record/read_record.jsonc",
     "repo": "flow-backend"
   }
 }

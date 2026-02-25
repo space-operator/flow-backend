@@ -6,7 +6,7 @@
   "description": "Update the metadata of a compressed NFT",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/compression/update.rs",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/update.rs",
   "ports": {
     "inputs": [
       {
@@ -163,7 +163,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/compression/update_cNFT.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/update_cNFT.jsonc",
     "repo": "flow-backend"
   }
 }

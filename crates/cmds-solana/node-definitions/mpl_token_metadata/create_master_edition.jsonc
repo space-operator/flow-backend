@@ -6,7 +6,7 @@
   "description": "Create a master edition for an NFT",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/create_master_edition.rs",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/create_master_edition.rs",
   "ports": {
     "inputs": [
       {
@@ -119,7 +119,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/create_master_edition.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/create_master_edition.jsonc",
     "repo": "flow-backend"
   }
 }

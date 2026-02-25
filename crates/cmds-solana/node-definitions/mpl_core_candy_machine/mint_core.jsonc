@@ -6,7 +6,7 @@
   "description": "Mint an NFT from a Candy Machine Core",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/candy_machine_core/mint_core.rs",
+  "source_code": "crates/cmds-solana/src/mpl_core_candy_machine/mint_core.rs",
   "ports": {
     "inputs": [
       {
@@ -147,7 +147,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/candy_machine_core/mint_core.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core_candy_machine/mint_core.jsonc",
     "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "description": "Update a plugin on an MPL Core asset",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/core/update_plugin.rs",
+  "source_code": "crates/cmds-solana/src/mpl_core/update_plugin.rs",
   "ports": {
     "inputs": [
       {
@@ -100,7 +100,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/core/mpl_core_update_plugin.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core/mpl_core_update_plugin.jsonc",
     "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "description": "Set or change the authority on an SPL token account or mint",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/spl/set_authority.rs",
+  "source_code": "crates/cmds-solana/src/spl_token/set_authority.rs",
   "ports": {
     "inputs": [
       {

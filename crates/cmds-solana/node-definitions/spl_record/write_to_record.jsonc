@@ -6,7 +6,7 @@
   "description": "Write data to an existing on-chain record account",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/record/write_to_record.rs",
+  "source_code": "crates/cmds-solana/src/spl_record/write_to_record.rs",
   "ports": {
     "inputs": [
       {
@@ -99,7 +99,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/record/write_to_record.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/spl_record/write_to_record.jsonc",
     "repo": "flow-backend"
   }
 }

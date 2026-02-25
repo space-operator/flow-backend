@@ -6,7 +6,7 @@
   "description": "Initialize a new inscription account",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/nft/inscriptions/initialize.rs",
+  "source_code": "crates/cmds-solana/src/mpl_inscription/initialize.rs",
   "ports": {
     "inputs": [
       {
@@ -82,7 +82,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/nft/inscriptions/initialize_inscription.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_inscription/initialize_inscription.jsonc",
     "repo": "flow-backend"
   }
 }

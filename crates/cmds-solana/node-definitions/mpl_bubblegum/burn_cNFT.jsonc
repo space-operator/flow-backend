@@ -6,7 +6,7 @@
   "description": "Burn a compressed NFT from a Merkle tree",
   "type": "native",
   "author_handle": "spo",
-  "source_code": "crates/cmds-solana/src/compression/burn.rs",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/burn.rs",
   "ports": {
     "inputs": [
       {
@@ -136,7 +136,7 @@
   },
   "internal": {
     "source": "crates",
-    "source_code": "crates/cmds-solana/node-definitions/compression/burn_cNFT.jsonc",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/burn_cNFT.jsonc",
     "repo": "flow-backend"
   }
 }

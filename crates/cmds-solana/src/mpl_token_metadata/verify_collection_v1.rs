@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use mpl_token_metadata::accounts::{MasterEdition, Metadata};
+use ::mpl_token_metadata::accounts::{MasterEdition, Metadata};
 use solana_program::sysvar;
 use solana_sdk_ids::system_program;
 
@@ -45,7 +45,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let (collection_master_edition, _) = MasterEdition::find_pda(&input.collection_mint_account);
 
-    let accounts = mpl_token_metadata::instructions::VerifyCollectionV1 {
+    let accounts = ::mpl_token_metadata::instructions::VerifyCollectionV1 {
         authority: input.collection_authority.pubkey(),
         delegate_record: input.delegate_record,
         metadata: metadata_account,

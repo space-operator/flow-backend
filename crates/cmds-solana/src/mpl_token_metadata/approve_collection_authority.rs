@@ -1,4 +1,6 @@
 use crate::prelude::*;
+use ::mpl_token_metadata::accounts::{CollectionAuthorityRecord, Metadata};
+use ::mpl_token_metadata::instructions::ApproveCollectionAuthorityBuilder;
 
 const NAME: &str = "approve_collection_authority";
 
@@ -33,45 +35,27 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let program_id = mpl_token_metadata::id();
+    let (metadata_pubkey, _) = Metadata::find_pda(&input.mint_account);
 
-    let metadata_seeds = &[
-        mpl_token_metadata::state::PREFIX.as_bytes(),
-        program_id.as_ref(),
-        input.mint_account.as_ref(),
-    ];
-
-    let (metadata_pubkey, _) = Pubkey::find_program_address(metadata_seeds, &program_id);
-
-    let (collection_authority_record, _) =
-        mpl_token_metadata::pda::find_collection_authority_account(
-            &input.mint_account,
-            &input.new_collection_authority,
-        );
-
-    let minimum_balance_for_rent_exemption = ctx
-        .solana_client()
-        .get_minimum_balance_for_rent_exemption(std::mem::size_of::<
-            mpl_token_metadata::state::CollectionAuthorityRecord,
-        >())
-        .await?;
-
-    let instruction = mpl_token_metadata::instruction::approve_collection_authority(
-        mpl_token_metadata::id(),
-        collection_authority_record,
-        input.new_collection_authority,
-        input.update_authority.pubkey(),
-        input.fee_payer.pubkey(),
-        metadata_pubkey,
-        input.mint_account,
+    let (collection_authority_record, _) = CollectionAuthorityRecord::find_pda(
+        &input.mint_account,
+        &input.new_collection_authority,
     );
+
+    let instruction = ApproveCollectionAuthorityBuilder::new()
+        .collection_authority_record(collection_authority_record)
+        .new_collection_authority(input.new_collection_authority)
+        .update_authority(input.update_authority.pubkey())
+        .payer(input.fee_payer.pubkey())
+        .metadata(metadata_pubkey)
+        .mint(input.mint_account)
+        .instruction();
 
     let instructions = if input.submit {
         Instructions {
 lookup_tables: None,
             fee_payer: input.fee_payer.pubkey(),
             signers: [input.fee_payer, input.update_authority].into(),
-            minimum_balance_for_rent_exemption,
             instructions: [instruction].into(),
         }
     } else {
