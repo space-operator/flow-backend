@@ -11,28 +11,36 @@
     "inputs": [
       {
         "name": "url",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "DAS-compatible RPC endpoint URL"
       },
       {
         "name": "id",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": true,
         "tooltip": "JSON-RPC request ID (defaults to current timestamp)"
       },
       {
         "name": "method",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "DAS method: GetAsset, GetAssetProof, GetAssetsByOwner, GetAssetsByCreator, GetAssetsByAuthority, GetAssetsByGroup, SearchAssets, GetSignaturesForAsset, GetTokenAccounts"
       },
       {
         "name": "params",
-        "type_bounds": ["json"],
+        "type_bounds": [
+          "json"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "JSON-RPC params object for the chosen method"
@@ -47,5 +55,29 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Solana",
+    "program": "solana",
+    "category": "solana",
+    "icon_url": null,
+    "tags": [
+      "solana",
+      "das",
+      "api"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/das_api.jsonc",
+    "repo": "flow-backend"
+  }
 }

@@ -11,49 +11,63 @@
     "inputs": [
       {
         "name": "fee_payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Pays for account rent and transaction fees"
       },
       {
         "name": "decimals",
-        "type_bounds": ["u8"],
+        "type_bounds": [
+          "u8"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Token decimal places (0 for NFTs, 2 for USD-like, >0 for fungible tokens)"
       },
       {
         "name": "mint_authority",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Authority that can mint new tokens"
       },
       {
         "name": "freeze_authority",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": true,
         "tooltip": "Optional authority that can freeze token accounts"
       },
       {
         "name": "mint_account",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Keypair for the new mint account"
       },
       {
         "name": "memo",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Additional memo attached to the transaction"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction (default: true)"
@@ -69,6 +83,34 @@
   },
   "config_schema": {},
   "config": {
-    "submit": { "B": true }
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "spl_token",
+    "category": "token",
+    "icon_url": null,
+    "tags": [
+      "token",
+      "spl token",
+      "create",
+      "mint",
+      "account"
+    ]
+  },
+  "external_version": {
+    "program_id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_token/create_mint_account.jsonc",
+    "repo": "flow-backend"
   }
 }

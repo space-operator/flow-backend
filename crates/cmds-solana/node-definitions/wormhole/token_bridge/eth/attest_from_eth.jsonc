@@ -11,21 +11,27 @@
     "inputs": [
       {
         "name": "keypair",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Ethereum keypair for signing the attestation transaction"
       },
       {
         "name": "network_name",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Ethereum network name (e.g. mainnet, goerli)"
       },
       {
         "name": "token",
-        "type_bounds": ["address"],
+        "type_bounds": [
+          "address"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Ethereum token contract address to attest"
@@ -50,5 +56,30 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Wormhole",
+    "program": "eth",
+    "category": "bridge",
+    "icon_url": null,
+    "tags": [
+      "bridge",
+      "eth",
+      "attest",
+      "from"
+    ]
+  },
+  "external_version": {
+    "program_id": "eth_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/wormhole/token_bridge/eth/attest_from_eth.jsonc",
+    "repo": "flow-backend"
+  }
 }

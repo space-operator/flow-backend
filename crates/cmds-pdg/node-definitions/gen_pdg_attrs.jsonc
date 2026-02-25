@@ -11,21 +11,27 @@
     "inputs": [
       {
         "name": "attributes",
-        "type_bounds": ["object"],
+        "type_bounds": [
+          "object"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Input attributes to transform"
       },
       {
         "name": "gen_human_readable",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Generate human-readable attributes (default: true)"
       },
       {
         "name": "flag",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Generation mode: base, pose, or effect_lottery"
@@ -41,6 +47,33 @@
   },
   "config_schema": {},
   "config": {
-    "gen_human_readable": { "B": true }
+    "gen_human_readable": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "pdg",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "pdg",
+      "gen",
+      "attrs"
+    ]
+  },
+  "external_version": {
+    "program_id": "pdg_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-pdg/node-definitions/gen_pdg_attrs.jsonc",
+    "repo": "flow-backend"
   }
 }

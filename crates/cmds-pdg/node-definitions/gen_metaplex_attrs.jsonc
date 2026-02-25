@@ -11,7 +11,9 @@
     "inputs": [
       {
         "name": "attributes",
-        "type_bounds": ["object"],
+        "type_bounds": [
+          "object"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "PDG attributes to convert to Metaplex format"
@@ -26,5 +28,31 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "pdg",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "pdg",
+      "gen",
+      "metaplex",
+      "attrs"
+    ]
+  },
+  "external_version": {
+    "program_id": "pdg_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-pdg/node-definitions/gen_metaplex_attrs.jsonc",
+    "repo": "flow-backend"
+  }
 }

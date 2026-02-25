@@ -11,21 +11,27 @@
     "inputs": [
       {
         "name": "store",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Name of the store"
       },
       {
         "name": "key",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Key to write"
       },
       {
         "name": "value",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Value to store"
@@ -41,5 +47,30 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "kvstore",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "kvstore",
+      "write",
+      "item"
+    ]
+  },
+  "external_version": {
+    "program_id": "kvstore_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/kvstore/write_item.jsonc",
+    "repo": "flow-backend"
+  }
 }

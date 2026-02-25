@@ -11,21 +11,27 @@
     "inputs": [
       {
         "name": "attributes",
-        "type_bounds": ["object"],
+        "type_bounds": [
+          "object"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "PDG attributes to parse"
       },
       {
         "name": "check_human_readable",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Validate human-readable attributes match (default: true)"
       },
       {
         "name": "defaults",
-        "type_bounds": ["object"],
+        "type_bounds": [
+          "object"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Default values for missing attributes"
@@ -41,6 +47,33 @@
   },
   "config_schema": {},
   "config": {
-    "check_human_readable": { "B": true }
+    "check_human_readable": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "pdg",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "pdg",
+      "parse",
+      "attrs"
+    ]
+  },
+  "external_version": {
+    "program_id": "pdg_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-pdg/node-definitions/parse_pdg_attrs.jsonc",
+    "repo": "flow-backend"
   }
 }

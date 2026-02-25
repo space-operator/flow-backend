@@ -11,56 +11,73 @@
     "inputs": [
       {
         "name": "candy_machine",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Candy Machine keypair"
       },
       {
         "name": "authority",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Authority of the Candy Machine"
       },
       {
         "name": "payer",
-        "type_bounds": ["keypair", "string"],
+        "type_bounds": [
+          "keypair",
+          "string"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Transaction fee payer"
       },
       {
         "name": "rule_set",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Default is Metaplex Rule Set"
       },
       {
         "name": "collection_mint",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Collection mint account for the Candy Machine"
       },
       {
         "name": "collection_update_authority",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Update authority keypair of the collection"
       },
       {
         "name": "candy_machine_data",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Candy Machine configuration data"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction (default: true)"
@@ -76,7 +93,38 @@
   },
   "config_schema": {},
   "config": {
-    "rule_set": { "S": "eBJLFYPxJmMGKuFwpDWkzxZeUrad92kZRC5BJLpzyT9" },
-    "submit": { "B": true }
+    "rule_set": {
+      "S": "eBJLFYPxJmMGKuFwpDWkzxZeUrad92kZRC5BJLpzyT9"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "candy_machine_core",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "candy machine core",
+      "initialize",
+      "candy",
+      "machine",
+      "core"
+    ]
+  },
+  "external_version": {
+    "program_id": "CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/nft/candy_machine_core/initialize_candy_machine_core.jsonc",
+    "repo": "flow-backend"
   }
 }

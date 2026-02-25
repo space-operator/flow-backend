@@ -11,7 +11,9 @@
     "inputs": [
       {
         "name": "mint_account",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Mint account of the NFT to check uses for"
@@ -26,5 +28,30 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "nft",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "get",
+      "left",
+      "uses"
+    ]
+  },
+  "external_version": {
+    "program_id": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/nft/get_left_uses.jsonc",
+    "repo": "flow-backend"
+  }
 }

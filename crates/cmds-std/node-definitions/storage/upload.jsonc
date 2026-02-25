@@ -11,35 +11,46 @@
     "inputs": [
       {
         "name": "bucket",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Storage bucket name (default: user-storages)"
       },
       {
         "name": "path",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "File path within the bucket"
       },
       {
         "name": "content_type",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "MIME type (e.g. image/png, application/json)"
       },
       {
         "name": "overwrite",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to overwrite existing files (default: false)"
       },
       {
         "name": "content",
-        "type_bounds": ["string", "bytes"],
+        "type_bounds": [
+          "string",
+          "bytes"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "File content as string or bytes"
@@ -60,7 +71,34 @@
   },
   "config_schema": {},
   "config": {
-    "bucket": { "S": "user-storages" },
-    "overwrite": { "B": false }
+    "bucket": {
+      "S": "user-storages"
+    },
+    "overwrite": {
+      "B": false
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "storage",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "upload"
+    ]
+  },
+  "external_version": {
+    "program_id": "storage_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/storage/upload.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -11,42 +11,55 @@
     "inputs": [
       {
         "name": "key",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Full storage key (bucket/path)"
       },
       {
         "name": "bucket",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Bucket name (used with path)"
       },
       {
         "name": "path",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "File path within the bucket"
       },
       {
         "name": "expires_in",
-        "type_bounds": ["decimal"],
+        "type_bounds": [
+          "decimal"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "URL expiry time in seconds"
       },
       {
         "name": "transform",
-        "type_bounds": ["json"],
+        "type_bounds": [
+          "json"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Image transformation options"
       },
       {
         "name": "download",
-        "type_bounds": ["bool", "string"],
+        "type_bounds": [
+          "bool",
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Set to true or a filename to force download"
@@ -62,6 +75,33 @@
   },
   "config_schema": {},
   "config": {
-    "download": { "B": false }
+    "download": {
+      "B": false
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "storage",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "create",
+      "signed",
+      "url"
+    ]
+  },
+  "external_version": {
+    "program_id": "storage_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/storage/create_signed_url.jsonc",
+    "repo": "flow-backend"
   }
 }

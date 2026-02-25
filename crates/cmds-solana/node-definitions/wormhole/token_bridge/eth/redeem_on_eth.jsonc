@@ -11,21 +11,27 @@
     "inputs": [
       {
         "name": "keypair",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Ethereum private key for signing the redemption transaction"
       },
       {
         "name": "network_name",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Ethereum network name (e.g. mainnet, goerli)"
       },
       {
         "name": "signed_vaa",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Signed VAA bytes authorizing the token redemption"
@@ -40,5 +46,29 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Wormhole",
+    "program": "eth",
+    "category": "bridge",
+    "icon_url": null,
+    "tags": [
+      "bridge",
+      "eth",
+      "redeem"
+    ]
+  },
+  "external_version": {
+    "program_id": "eth_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/wormhole/token_bridge/eth/redeem_on_eth.jsonc",
+    "repo": "flow-backend"
+  }
 }

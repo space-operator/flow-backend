@@ -11,21 +11,27 @@
     "inputs": [
       {
         "name": "emitter",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Emitter address that published the message"
       },
       {
         "name": "sequence",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Sequence number of the VAA message"
       },
       {
         "name": "chain_id",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Wormhole chain ID of the source chain"
@@ -45,5 +51,30 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Wormhole",
+    "program": "wormhole",
+    "category": "bridge",
+    "icon_url": null,
+    "tags": [
+      "bridge",
+      "wormhole",
+      "get",
+      "vaa"
+    ]
+  },
+  "external_version": {
+    "program_id": "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/wormhole/get_vaa.jsonc",
+    "repo": "flow-backend"
+  }
 }

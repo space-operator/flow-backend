@@ -11,21 +11,27 @@
     "inputs": [
       {
         "name": "input_one",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "First input value"
       },
       {
         "name": "input_two",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Second input value"
       },
       {
         "name": "input_three",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Third input value"
@@ -40,5 +46,29 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "deno",
+    "category": "scripting",
+    "icon_url": null,
+    "tags": [
+      "scripting",
+      "deno",
+      "playground"
+    ]
+  },
+  "external_version": {
+    "program_id": "deno_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-deno/node-definitions/deno_playground.jsonc",
+    "repo": "flow-backend"
+  }
 }

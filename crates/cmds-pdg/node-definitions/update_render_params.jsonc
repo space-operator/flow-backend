@@ -11,14 +11,18 @@
     "inputs": [
       {
         "name": "params",
-        "type_bounds": ["object"],
+        "type_bounds": [
+          "object"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Current render parameters"
       },
       {
         "name": "effect",
-        "type_bounds": ["object"],
+        "type_bounds": [
+          "object"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Effect to apply"
@@ -33,5 +37,31 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "pdg",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "pdg",
+      "update",
+      "render",
+      "params"
+    ]
+  },
+  "external_version": {
+    "program_id": "pdg_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-pdg/node-definitions/update_render_params.jsonc",
+    "repo": "flow-backend"
+  }
 }

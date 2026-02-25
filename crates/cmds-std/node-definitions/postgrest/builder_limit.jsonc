@@ -11,14 +11,18 @@
     "inputs": [
       {
         "name": "query",
-        "type_bounds": ["object"],
+        "type_bounds": [
+          "object"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Query builder object"
       },
       {
         "name": "count",
-        "type_bounds": ["u64"],
+        "type_bounds": [
+          "u64"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Maximum number of rows to return"
@@ -33,5 +37,30 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "postgrest",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "postgrest",
+      "builder",
+      "limit"
+    ]
+  },
+  "external_version": {
+    "program_id": "postgrest_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/postgrest/builder_limit.jsonc",
+    "repo": "flow-backend"
+  }
 }

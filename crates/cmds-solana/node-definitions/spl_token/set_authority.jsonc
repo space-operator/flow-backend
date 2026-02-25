@@ -11,49 +11,63 @@
     "inputs": [
       {
         "name": "fee_payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Keypair of the account paying for the transaction fees"
       },
       {
         "name": "owned_pubkey",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Public key of the token account or mint to change authority on"
       },
       {
         "name": "new_authority",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": true,
         "tooltip": "Public key of the new authority, or none to revoke"
       },
       {
         "name": "authority_type",
-        "type_bounds": ["json"],
+        "type_bounds": [
+          "json"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Type of authority to set (e.g. MintTokens, FreezeAccount, AccountOwner, CloseAccount)"
       },
       {
         "name": "owner_pubkey",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Public key of the current authority owner"
       },
       {
         "name": "signer_pubkeys",
-        "type_bounds": ["json"],
+        "type_bounds": [
+          "json"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Additional signer public keys for multisig authorities"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction to the network"
@@ -72,5 +86,30 @@
     "submit": {
       "B": true
     }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "spl_token",
+    "category": "token",
+    "icon_url": null,
+    "tags": [
+      "token",
+      "spl token",
+      "set",
+      "authority"
+    ]
+  },
+  "external_version": {
+    "program_id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_token/set_authority.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -11,14 +11,18 @@
     "inputs": [
       {
         "name": "string",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "String to split into chunks"
       },
       {
         "name": "chunk_size",
-        "type_bounds": ["number"],
+        "type_bounds": [
+          "number"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Maximum character count per chunk"
@@ -33,5 +37,29 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "string",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "string",
+      "chunk"
+    ]
+  },
+  "external_version": {
+    "program_id": "string_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/string/chunk_string.jsonc",
+    "repo": "flow-backend"
+  }
 }

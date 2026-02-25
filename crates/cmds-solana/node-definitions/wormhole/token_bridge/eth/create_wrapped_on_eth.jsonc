@@ -11,28 +11,36 @@
     "inputs": [
       {
         "name": "keypair",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Ethereum private key for signing the transaction"
       },
       {
         "name": "network_name",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Ethereum network name (e.g. mainnet, goerli)"
       },
       {
         "name": "signed_vaa",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Signed VAA bytes containing the attestation"
       },
       {
         "name": "token",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Solana token mint address that was attested"
@@ -52,5 +60,30 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Wormhole",
+    "program": "eth",
+    "category": "bridge",
+    "icon_url": null,
+    "tags": [
+      "bridge",
+      "eth",
+      "create",
+      "wrapped"
+    ]
+  },
+  "external_version": {
+    "program_id": "eth_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/wormhole/token_bridge/eth/create_wrapped_on_eth.jsonc",
+    "repo": "flow-backend"
+  }
 }

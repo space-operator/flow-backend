@@ -11,98 +11,126 @@
     "inputs": [
       {
         "name": "candy_machine",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Candy Machine account address"
       },
       {
         "name": "authority",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Authority of the Candy Machine"
       },
       {
         "name": "payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Transaction fee payer"
       },
       {
         "name": "minter",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Minter keypair performing the mint"
       },
       {
         "name": "mint_authority",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Mint authority keypair"
       },
       {
         "name": "mint_account",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Mint account for the new NFT"
       },
       {
         "name": "collection_mint",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Collection mint account"
       },
       {
         "name": "collection_update_authority",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Update authority keypair of the collection"
       },
       {
         "name": "candy_guards",
-        "type_bounds": ["json"],
+        "type_bounds": [
+          "json"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Guard configuration to satisfy during mint"
       },
       {
         "name": "group_label",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": true,
         "tooltip": "Guard group label to use for minting"
       },
       {
         "name": "rule_set",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Default is Metaplex Rule Set"
       },
       {
         "name": "authorization_rules_program",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Authorization rules program address"
       },
       {
         "name": "authorization_rules",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Authorization rules account address"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction (default: true)"
@@ -118,7 +146,35 @@
   },
   "config_schema": {},
   "config": {
-    "rule_set": { "S": "eBJLFYPxJmMGKuFwpDWkzxZeUrad92kZRC5BJLpzyT9" },
-    "submit": { "B": true }
+    "rule_set": {
+      "S": "eBJLFYPxJmMGKuFwpDWkzxZeUrad92kZRC5BJLpzyT9"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "candy_machine",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "candy machine",
+      "mint"
+    ]
+  },
+  "external_version": {
+    "program_id": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/nft/candy_machine/mint.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -11,14 +11,18 @@
     "inputs": [
       {
         "name": "pubkey",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Account to receive the airdrop"
       },
       {
         "name": "amount",
-        "type_bounds": ["u64"],
+        "type_bounds": [
+          "u64"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Amount in lamports (default: 1000000000 = 1 SOL)"
@@ -34,6 +38,32 @@
   },
   "config_schema": {},
   "config": {
-    "amount": { "U": "1000000000" }
+    "amount": {
+      "U": "1000000000"
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "solana",
+    "category": "solana",
+    "icon_url": null,
+    "tags": [
+      "solana",
+      "request",
+      "airdrop"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/request_airdrop.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -11,7 +11,9 @@
     "inputs": [
       {
         "name": "flow",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Flow ID or name of the sub-flow to execute"
@@ -31,5 +33,29 @@
     },
     "additionalProperties": false
   },
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "interflow"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/interflow.jsonc",
+    "repo": "flow-backend"
+  }
 }

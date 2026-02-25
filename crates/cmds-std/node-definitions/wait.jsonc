@@ -11,21 +11,27 @@
     "inputs": [
       {
         "name": "value",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Passthrough value"
       },
       {
         "name": "wait_for",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Output to wait for before continuing"
       },
       {
         "name": "duration_ms",
-        "type_bounds": ["u64"],
+        "type_bounds": [
+          "u64"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Additional delay in milliseconds"
@@ -43,6 +49,32 @@
     "additionalProperties": false
   },
   "config": {
-    "duration_ms": { "U": "0" }
+    "duration_ms": {
+      "U": "0"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "wait"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/wait.jsonc",
+    "repo": "flow-backend"
   }
 }

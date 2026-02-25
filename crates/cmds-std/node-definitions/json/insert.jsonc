@@ -11,21 +11,27 @@
     "inputs": [
       {
         "name": "json_input",
-        "type_bounds": ["json"],
+        "type_bounds": [
+          "json"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "JSON object or array to modify"
       },
       {
         "name": "path",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "e.g. /data/records/0/fields/url to insert into url field's value\nnote the /0/ to select [0] in an array"
       },
       {
         "name": "value",
-        "type_bounds": ["json"],
+        "type_bounds": [
+          "json"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Value to insert at the path"
@@ -44,5 +50,29 @@
     "type": "object",
     "additionalProperties": false
   },
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "json",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "json",
+      "insert"
+    ]
+  },
+  "external_version": {
+    "program_id": "json_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/json/insert.jsonc",
+    "repo": "flow-backend"
+  }
 }

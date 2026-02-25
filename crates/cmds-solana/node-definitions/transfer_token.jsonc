@@ -11,77 +11,99 @@
     "inputs": [
       {
         "name": "fee_payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Pays for transaction fees and ATA creation if needed"
       },
       {
         "name": "mint_account",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Token mint address"
       },
       {
         "name": "amount",
-        "type_bounds": ["f64"],
+        "type_bounds": [
+          "f64"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Number of tokens to transfer (UI amount)"
       },
       {
         "name": "decimals",
-        "type_bounds": ["u8"],
+        "type_bounds": [
+          "u8"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Token decimals (0 for NFTs); fetched from mint if omitted"
       },
       {
         "name": "recipient",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Recipient wallet or token account address"
       },
       {
         "name": "sender_token_account",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": true,
         "tooltip": "Sender token account; derived from sender_owner if omitted"
       },
       {
         "name": "sender_owner",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Owner keypair of the sender token account"
       },
       {
         "name": "allow_unfunded",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Allow sending to an unfunded recipient address (default: true)"
       },
       {
         "name": "fund_recipient",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Create recipient ATA if it doesn't exist (default: true)"
       },
       {
         "name": "memo",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Memo attached to the transaction"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction (default: true)"
@@ -102,8 +124,38 @@
   },
   "config_schema": {},
   "config": {
-    "allow_unfunded": { "B": true },
-    "fund_recipient": { "B": true },
-    "submit": { "B": true }
+    "allow_unfunded": {
+      "B": true
+    },
+    "fund_recipient": {
+      "B": true
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "solana",
+    "category": "solana",
+    "icon_url": null,
+    "tags": [
+      "solana",
+      "transfer",
+      "token"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/transfer_token.jsonc",
+    "repo": "flow-backend"
   }
 }

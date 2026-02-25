@@ -11,7 +11,9 @@
     "inputs": [
       {
         "name": "array",
-        "type_bounds": ["json"],
+        "type_bounds": [
+          "json"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Array to iterate over"
@@ -43,5 +45,29 @@
       }
     }
   },
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "foreach"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/foreach.jsonc",
+    "repo": "flow-backend"
+  }
 }

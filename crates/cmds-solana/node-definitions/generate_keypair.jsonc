@@ -11,28 +11,37 @@
     "inputs": [
       {
         "name": "seed",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "12 word BIP39 mnemonic seed phrase"
       },
       {
         "name": "private_key",
-        "type_bounds": ["keypair", "pubkey"],
+        "type_bounds": [
+          "keypair",
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Load from a base58 private key string; overrides seed/passphrase"
       },
       {
         "name": "passphrase",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Optional passphrase for the seed phrase"
       },
       {
         "name": "check_new_account",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Check that the generated keypair is a new account (default: false)"
@@ -53,6 +62,32 @@
   },
   "config_schema": {},
   "config": {
-    "check_new_account": { "B": false }
+    "check_new_account": {
+      "B": false
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "solana",
+    "category": "solana",
+    "icon_url": null,
+    "tags": [
+      "solana",
+      "generate",
+      "keypair"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/generate_keypair.jsonc",
+    "repo": "flow-backend"
   }
 }

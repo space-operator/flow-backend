@@ -11,14 +11,18 @@
     "inputs": [
       {
         "name": "json_input",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "JSON object, array, or JSON string to extract from"
       },
       {
         "name": "field_path",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "e.g. /data/records/0/fields/url to select the url field value\nnote the /0/ is equivalent to [0], to select the first index in an array"
@@ -53,5 +57,29 @@
       }
     }
   },
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "json",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "json",
+      "extract"
+    ]
+  },
+  "external_version": {
+    "program_id": "json_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/json/extract.jsonc",
+    "repo": "flow-backend"
+  }
 }

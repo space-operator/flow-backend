@@ -11,28 +11,36 @@
     "inputs": [
       {
         "name": "payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Keypair that pays for the transaction fees"
       },
       {
         "name": "emitter",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Keypair of the message emitter"
       },
       {
         "name": "message",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Keypair for the message account"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction (default: true)"
@@ -58,6 +66,33 @@
   },
   "config_schema": {},
   "config": {
-    "submit": { "B": true }
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Wormhole",
+    "program": "wormhole",
+    "category": "bridge",
+    "icon_url": null,
+    "tags": [
+      "bridge",
+      "wormhole",
+      "post",
+      "message"
+    ]
+  },
+  "external_version": {
+    "program_id": "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/wormhole/post_message.jsonc",
+    "repo": "flow-backend"
   }
 }

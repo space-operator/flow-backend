@@ -11,56 +11,72 @@
     "inputs": [
       {
         "name": "use_authority",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Public key of the use authority to approve"
       },
       {
         "name": "owner",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Owner keypair of the NFT"
       },
       {
         "name": "fee_payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Transaction fee payer"
       },
       {
         "name": "token_account",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Token account holding the NFT"
       },
       {
         "name": "mint_account",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Mint account of the NFT"
       },
       {
         "name": "burner",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Burner program-derived address"
       },
       {
         "name": "number_of_uses",
-        "type_bounds": ["u64"],
+        "type_bounds": [
+          "u64"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Number of uses to approve"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction (default: true)"
@@ -76,6 +92,33 @@
   },
   "config_schema": {},
   "config": {
-    "submit": { "B": true }
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "nft",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "approve",
+      "use",
+      "authority"
+    ]
+  },
+  "external_version": {
+    "program_id": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/nft/approve_use_authority.jsonc",
+    "repo": "flow-backend"
   }
 }

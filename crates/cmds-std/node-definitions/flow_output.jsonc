@@ -11,7 +11,9 @@
     "inputs": [
       {
         "name": "output",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Output of flow. Rename this input port to rename the exposed flow output."
@@ -32,5 +34,30 @@
     "label": {
       "S": "output"
     }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "flow",
+      "output"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/flow_output.jsonc",
+    "repo": "flow-backend"
   }
 }

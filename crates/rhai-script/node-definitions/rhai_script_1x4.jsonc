@@ -11,14 +11,18 @@
     "inputs": [
       {
         "name": "source",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Rhai script source code"
       },
       {
         "name": "a",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Script input 1"
@@ -61,5 +65,31 @@
       }
     }
   },
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "rhai_script",
+    "category": "scripting",
+    "icon_url": null,
+    "tags": [
+      "scripting",
+      "rhai script",
+      "rhai",
+      "script",
+      "1x4"
+    ]
+  },
+  "external_version": {
+    "program_id": "rhai_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/rhai-script/node-definitions/rhai_script_1x4.jsonc",
+    "repo": "flow-backend"
+  }
 }

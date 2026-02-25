@@ -11,14 +11,18 @@
     "inputs": [
       {
         "name": "bucket",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Storage bucket name"
       },
       {
         "name": "path",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Directory path to list (default: root)"
@@ -33,5 +37,28 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "storage",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "list"
+    ]
+  },
+  "external_version": {
+    "program_id": "storage_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/storage/list.jsonc",
+    "repo": "flow-backend"
+  }
 }

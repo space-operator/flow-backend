@@ -11,42 +11,59 @@
     "inputs": [
       {
         "name": "program_id",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Program ID to derive the PDA from"
       },
       {
         "name": "seed_1",
-        "type_bounds": ["string", "pubkey"],
+        "type_bounds": [
+          "string",
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "First seed (string or pubkey bytes)"
       },
       {
         "name": "seed_2",
-        "type_bounds": ["string", "pubkey"],
+        "type_bounds": [
+          "string",
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Second seed (string or pubkey bytes)"
       },
       {
         "name": "seed_3",
-        "type_bounds": ["string", "pubkey"],
+        "type_bounds": [
+          "string",
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Third seed (string or pubkey bytes)"
       },
       {
         "name": "seed_4",
-        "type_bounds": ["string", "pubkey"],
+        "type_bounds": [
+          "string",
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Fourth seed (string or pubkey bytes)"
       },
       {
         "name": "seed_5",
-        "type_bounds": ["string", "pubkey"],
+        "type_bounds": [
+          "string",
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Fifth seed (string or pubkey bytes)"
@@ -61,5 +78,29 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Solana",
+    "program": "solana",
+    "category": "solana",
+    "icon_url": null,
+    "tags": [
+      "solana",
+      "find",
+      "pda"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/find_pda.jsonc",
+    "repo": "flow-backend"
+  }
 }

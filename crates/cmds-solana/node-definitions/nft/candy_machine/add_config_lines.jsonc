@@ -11,42 +11,54 @@
     "inputs": [
       {
         "name": "candy_machine",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Candy Machine keypair"
       },
       {
         "name": "authority",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Authority of the Candy Machine"
       },
       {
         "name": "payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Transaction fee payer"
       },
       {
         "name": "index",
-        "type_bounds": ["u32"],
+        "type_bounds": [
+          "u32"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Starting index for the config lines"
       },
       {
         "name": "config_lines",
-        "type_bounds": ["free"],
+        "type_bounds": [
+          "free"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Array of config lines (name, URI pairs) to add"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction (default: true)"
@@ -62,6 +74,34 @@
   },
   "config_schema": {},
   "config": {
-    "submit": { "B": true }
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "candy_machine",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "candy machine",
+      "add",
+      "config",
+      "lines"
+    ]
+  },
+  "external_version": {
+    "program_id": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/nft/candy_machine/add_config_lines.jsonc",
+    "repo": "flow-backend"
   }
 }

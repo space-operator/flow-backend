@@ -11,42 +11,54 @@
     "inputs": [
       {
         "name": "fee_payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Transaction fee payer"
       },
       {
         "name": "mint_account",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Mint account of the NFT to verify"
       },
       {
         "name": "collection_authority",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Collection authority keypair"
       },
       {
         "name": "collection_mint_account",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Mint account of the collection NFT"
       },
       {
         "name": "delegate_record",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Delegate record account if verifying via delegate"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction"
@@ -61,5 +73,30 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "v1",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "v1",
+      "verify",
+      "collection"
+    ]
+  },
+  "external_version": {
+    "program_id": "v1_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/nft/v1/verify_collection_v1.jsonc",
+    "repo": "flow-backend"
+  }
 }

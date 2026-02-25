@@ -11,14 +11,19 @@
     "inputs": [
       {
         "name": "query",
-        "type_bounds": ["object"],
+        "type_bounds": [
+          "object"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Query builder object"
       },
       {
         "name": "body",
-        "type_bounds": ["array", "object"],
+        "type_bounds": [
+          "array",
+          "object"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Row(s) to insert (object or array of objects)"
@@ -33,5 +38,30 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "postgrest",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "postgrest",
+      "builder",
+      "insert"
+    ]
+  },
+  "external_version": {
+    "program_id": "postgrest_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/postgrest/builder_insert.jsonc",
+    "repo": "flow-backend"
+  }
 }

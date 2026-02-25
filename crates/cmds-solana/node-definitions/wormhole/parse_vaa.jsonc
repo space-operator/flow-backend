@@ -11,7 +11,9 @@
     "inputs": [
       {
         "name": "vaa",
-        "type_bounds": ["json"],
+        "type_bounds": [
+          "json"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "VAA data in JSON format to parse"
@@ -66,5 +68,30 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Wormhole",
+    "program": "wormhole",
+    "category": "bridge",
+    "icon_url": null,
+    "tags": [
+      "bridge",
+      "wormhole",
+      "parse",
+      "vaa"
+    ]
+  },
+  "external_version": {
+    "program_id": "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/wormhole/parse_vaa.jsonc",
+    "repo": "flow-backend"
+  }
 }

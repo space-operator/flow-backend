@@ -11,35 +11,45 @@
     "inputs": [
       {
         "name": "fee_payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Transaction fee payer"
       },
       {
         "name": "authority",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": false,
         "passthrough": true,
         "tooltip": "Authority keypair for the burn operation"
       },
       {
         "name": "mint_account",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Mint account of the NFT to burn"
       },
       {
         "name": "amount",
-        "type_bounds": ["u64"],
+        "type_bounds": [
+          "u64"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "1 by default"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction (default: true)"
@@ -55,7 +65,35 @@
   },
   "config_schema": {},
   "config": {
-    "amount": { "U": "1" },
-    "submit": { "B": true }
+    "amount": {
+      "U": "1"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "v1",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "v1",
+      "burn"
+    ]
+  },
+  "external_version": {
+    "program_id": "v1_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/nft/v1/burn_v1.jsonc",
+    "repo": "flow-backend"
   }
 }

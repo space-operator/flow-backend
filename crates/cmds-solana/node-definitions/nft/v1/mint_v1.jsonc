@@ -11,70 +11,90 @@
     "inputs": [
       {
         "name": "fee_payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Transaction fee payer"
       },
       {
         "name": "authority",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Mint authority keypair"
       },
       {
         "name": "mint_account",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Mint account of the NFT"
       },
       {
         "name": "token_owner",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Recipient of the mint"
       },
       {
         "name": "amount",
-        "type_bounds": ["u64"],
+        "type_bounds": [
+          "u64"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Amount of tokens to mint"
       },
       {
         "name": "delegate_record",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Delegate record account if minting via delegate"
       },
       {
         "name": "authorization_rules_program",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Authorization rules program address"
       },
       {
         "name": "authorization_rules",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Authorization rules account address"
       },
       {
         "name": "authorization_data",
-        "type_bounds": ["json"],
+        "type_bounds": [
+          "json"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Authorization data payload for programmable NFTs"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction (default: true)"
@@ -95,6 +115,32 @@
   },
   "config_schema": {},
   "config": {
-    "submit": { "B": true }
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "v1",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "v1",
+      "mint"
+    ]
+  },
+  "external_version": {
+    "program_id": "v1_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/nft/v1/mint_v1.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -11,21 +11,27 @@
     "inputs": [
       {
         "name": "key",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Full storage key (bucket/path)"
       },
       {
         "name": "bucket",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Bucket name (used with path)"
       },
       {
         "name": "path",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "File path within the bucket"
@@ -50,5 +56,30 @@
     ]
   },
   "config_schema": {},
-  "config": {}
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "storage",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "get",
+      "file",
+      "metadata"
+    ]
+  },
+  "external_version": {
+    "program_id": "storage_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/storage/get_file_metadata.jsonc",
+    "repo": "flow-backend"
+  }
 }

@@ -11,28 +11,36 @@
     "inputs": [
       {
         "name": "token",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Token address on the origin chain"
       },
       {
         "name": "is_nft",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether the asset is an NFT (default: false)"
       },
       {
         "name": "chain_id",
-        "type_bounds": ["number"],
+        "type_bounds": [
+          "number"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Wormhole chain ID of the token's origin chain"
       },
       {
         "name": "network",
-        "type_bounds": ["string"],
+        "type_bounds": [
+          "string"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Ethereum network name to query"
@@ -48,6 +56,35 @@
   },
   "config_schema": {},
   "config": {
-    "is_nft": { "B": false }
+    "is_nft": {
+      "B": false
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "utils",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "utils",
+      "get",
+      "foreign",
+      "asset",
+      "eth"
+    ]
+  },
+  "external_version": {
+    "program_id": "utils_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/wormhole/utils/get_foreign_asset_eth.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -11,28 +11,36 @@
     "inputs": [
       {
         "name": "fee_payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Transaction fee payer"
       },
       {
         "name": "inscription_account",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": false,
         "tooltip": "Keypair for the new inscription account"
       },
       {
         "name": "authority",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Authority keypair for the inscription"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "required": false,
         "passthrough": false,
         "tooltip": "Whether to submit the transaction (default: true)"
@@ -48,6 +56,33 @@
   },
   "config_schema": {},
   "config": {
-    "submit": { "B": true }
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "inscriptions",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "inscriptions",
+      "initialize",
+      "inscription"
+    ]
+  },
+  "external_version": {
+    "program_id": "1NSCRfGeyo7wPUazGbaPBUsTM49e1k2aXewHGARfzSo",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/nft/inscriptions/initialize_inscription.jsonc",
+    "repo": "flow-backend"
   }
 }
