@@ -6,7 +6,7 @@ use crate::prelude::*;
 // Command Name
 const NAME: &str = "execute_instruction";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/core/mpl_core_execute_instruction.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_core/mpl_core_execute_instruction.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

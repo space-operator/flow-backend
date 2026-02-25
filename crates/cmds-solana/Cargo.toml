@@ -69,7 +69,8 @@ spl-record = { version = "0.4.0" }
 
 
 # metaplex
-mpl-token-metadata = { path = "../../vendor/mpl-token-metadata" }
+mpl-token-metadata = { version = "5.1.0", features = ["serde"] }
+# mpl-token-metadata = { path = "../../vendor/mpl-token-metadata" }
 
 # mpl-candy-machine-core = { version = "=3.0.1", features = ["no-entrypoint"] }
 # mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }

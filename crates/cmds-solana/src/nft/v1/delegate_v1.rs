@@ -21,7 +21,7 @@ use super::AuthorizationData;
 // Command Name
 const NAME: &str = "delegate_v1";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/v1/delegate_v1.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_token_metadata/delegate_v1.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

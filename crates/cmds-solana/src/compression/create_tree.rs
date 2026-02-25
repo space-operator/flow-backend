@@ -10,7 +10,7 @@ const CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1: usize = 2 + 54;
 // Command Name
 const NAME: &str = "create_tree";
 
-const DEFINITION: &str = flow_lib::node_definition!("compression/create_tree.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_bubblegum/create_tree.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

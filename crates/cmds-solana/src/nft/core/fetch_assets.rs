@@ -10,7 +10,7 @@ use crate::prelude::*;
 // Command Name
 const NAME: &str = "fetch_assets";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/core/fetch_assets.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_core/fetch_assets.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

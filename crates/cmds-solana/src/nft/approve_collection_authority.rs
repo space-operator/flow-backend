@@ -5,7 +5,7 @@ const NAME: &str = "approve_collection_authority";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("nft/approve_collection_authority.jsonc");
+    const DEFINITION: &str = flow_lib::node_definition!("mpl_token_metadata/approve_collection_authority.jsonc");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         Ok(CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?

@@ -11,7 +11,7 @@ use super::{
 // Command Name
 const NAME: &str = "burn_cNFT";
 
-const DEFINITION: &str = flow_lib::node_definition!("compression/burn_cNFT.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_bubblegum/burn_cNFT.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

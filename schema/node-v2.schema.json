@@ -7,6 +7,7 @@
     "required": [
         "version",
         "name",
+        "prefix",
         "type",
         "author_handle",
         "source_code",
@@ -34,7 +35,7 @@
         "prefix": {
             "type": "string",
             "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
-            "description": "Program-scoped prefix for node IDs. Combined with name to form the scoped ID: @{author_handle}/{prefix}_{name}"
+            "description": "Program-scoped prefix for node IDs. Combined with name and version to form the scoped ID: @{author_handle}/{prefix}.{name}.{version}"
         },
         "type": {
             "type": "string",
@@ -63,6 +64,9 @@
         "config": {
             "type": "object",
             "additionalProperties": true
+        },
+        "permissions": {
+            "$ref": "#/definitions/permissions"
         },
         "classification": {
             "$ref": "#/definitions/classification"
@@ -178,6 +182,18 @@
                 }
             },
             "additionalProperties": false
+        },
+        "permissions": {
+            "type": "object",
+            "description": "Runtime permissions required by this command.",
+            "additionalProperties": false,
+            "properties": {
+                "user_tokens": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether the command needs access to the user's token accounts."
+                }
+            }
         },
         "classification": {
             "type": "object",

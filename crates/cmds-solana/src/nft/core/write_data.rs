@@ -8,7 +8,7 @@ use crate::prelude::*;
 // Command Name
 const NAME: &str = "write_app_data";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/core/mpl_core_write_app_data.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_core/mpl_core_write_app_data.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

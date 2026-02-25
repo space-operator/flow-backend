@@ -3,7 +3,7 @@ use crate::prelude::*;
 // Command Name
 const NAME: &str = "verify_collection";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/verify_collection.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_token_metadata/verify_collection.jsonc");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

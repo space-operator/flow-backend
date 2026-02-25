@@ -1,23 +1,13 @@
 use crate::prelude::Pubkey;
-// use mpl_candy_machine_core::{CandyMachineData as MPLCandyMachineData, HiddenSettings};
 use mpl_token_metadata::types::{Collection, DataV2, UseMethod, Uses};
 use serde::{Deserialize, Serialize};
 
-// pub mod approve_collection_authority;
-// pub mod approve_use_authority;
 pub mod arweave_file_upload;
 pub mod arweave_nft_upload;
 pub mod candy_machine_core;
-// pub mod candy_machine_v3;
 pub mod core;
-pub mod create_master_edition;
-pub mod create_metadata_account;
 pub mod v1;
-// pub mod get_left_uses;
-// pub mod set_token_standard;
-// pub mod sign_metadata;
-// pub mod update_metadata_account;
-// pub mod verify_collection;
+
 pub mod inscriptions;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

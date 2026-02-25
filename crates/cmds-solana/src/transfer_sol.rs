@@ -5,7 +5,7 @@ const NAME: &str = "transfer_sol";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("transfer_sol.jsonc");
+    const DEFINITION: &str = flow_lib::node_definition!("system_program/transfer_sol.jsonc");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?

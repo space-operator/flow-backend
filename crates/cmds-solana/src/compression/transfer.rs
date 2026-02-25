@@ -11,7 +11,7 @@ use std::str::FromStr;
 // Command Name
 const NAME: &str = "transfer_cNFT";
 
-const DEFINITION: &str = flow_lib::node_definition!("compression/transfer.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_bubblegum/transfer.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

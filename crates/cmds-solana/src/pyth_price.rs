@@ -6,7 +6,7 @@ const NAME: &str = "pyth_price";
 
 fn build() -> BuildResult {
     Ok(
-        CmdBuilder::new(flow_lib::node_definition!("pyth_price.jsonc"))?
+        CmdBuilder::new(flow_lib::node_definition!("pyth/get_price.jsonc"))?
             .check_name(NAME)?
             .build(run),
     )

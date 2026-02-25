@@ -4,7 +4,7 @@ use solana_program::pubkey::Pubkey;
 
 const NAME: &str = "get_left_uses";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/get_left_uses.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_token_metadata/get_left_uses.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

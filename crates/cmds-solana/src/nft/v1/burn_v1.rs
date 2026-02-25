@@ -7,7 +7,7 @@ use mpl_token_metadata::{
 // Command Name
 const NAME: &str = "burn_v1";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/v1/burn_v1.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_token_metadata/burn_v1.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

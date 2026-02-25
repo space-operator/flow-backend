@@ -55,7 +55,7 @@ impl bundlr_sdk::Signer for BundlrSigner {
 
 const NAME: &str = "arweave_nft_upload";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/arweave_nft_upload.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("arweave/arweave_nft_upload.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

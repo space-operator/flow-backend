@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 const NAME: &str = "memo";
 
-const DEFINITION: &str = flow_lib::node_definition!("memo.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("spl_memo/memo.jsonc");
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 

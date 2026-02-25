@@ -7,7 +7,7 @@ use super::{RecordData, RecordInstruction, record_program_id};
 
 const NAME: &str = "initialize_record_with_seed";
 
-const DEFINITION: &str = flow_lib::node_definition!("/record/initialize_record_with_seed.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("spl_record/initialize_record_with_seed.jsonc");
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 

@@ -4,7 +4,7 @@ use spl_record::instruction as record_instruction;
 
 const NAME: &str = "set_authority_record";
 
-const DEFINITION: &str = flow_lib::node_definition!("/record/set_authority.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("spl_record/set_authority.jsonc");
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 

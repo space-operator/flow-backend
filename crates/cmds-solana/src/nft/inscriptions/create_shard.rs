@@ -10,7 +10,7 @@ use crate::{nft::inscriptions::INSCRIPTION_PROGRAM_ID, prelude::*};
 // Command Name
 const NAME: &str = "create_shard";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/inscriptions/create_shard.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_inscription/create_shard.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

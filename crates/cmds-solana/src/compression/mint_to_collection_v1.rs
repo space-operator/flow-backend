@@ -10,7 +10,7 @@ use tracing::info;
 // Command Name
 const MINT_COMPRESSED_NFT: &str = "mint_cNFT_to_collection";
 
-const DEFINITION: &str = flow_lib::node_definition!("compression/mint_to_collection_v1.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_bubblegum/mint_to_collection_v1.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

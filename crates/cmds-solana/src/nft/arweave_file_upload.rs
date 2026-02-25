@@ -3,7 +3,7 @@ use crate::prelude::*;
 
 const NAME: &str = "arweave_file_upload";
 
-const DEFINITION: &str = flow_lib::node_definition!("nft/arweave_file_upload.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("arweave/arweave_file_upload.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

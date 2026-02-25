@@ -7,7 +7,7 @@ use solana_program::instruction::Instruction;
 const NAME: &str = "add_config_lines_core";
 
 const DEFINITION: &str =
-    flow_lib::node_definition!("nft/candy_machine_core/add_config_lines_core.jsonc");
+    flow_lib::node_definition!("mpl_core_candy_machine/add_config_lines_core.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

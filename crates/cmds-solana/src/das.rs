@@ -5,7 +5,7 @@ use serde_json::json;
 
 pub const NAME: &str = "das_api";
 
-const DEFINITION: &str = flow_lib::node_definition!("das_api.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("das/das_api.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
