@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "json_insert",
+  "prefix": "json",
   "description": "Inserts or replaces a value in a JSON object or array at the given path.",
   "type": "native",
   "author_handle": "spo",

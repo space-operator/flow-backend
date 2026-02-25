@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "verify_collection",
+  "prefix": "nft",
   "description": "Verify that an NFT belongs to a collection",
   "type": "native",
   "author_handle": "spo",

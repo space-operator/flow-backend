@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "collect",
+  "prefix": "std",
   "description": "Collects values from a foreach loop into an array.",
   "type": "native",
   "author_handle": "spo",

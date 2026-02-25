@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "foreach",
+  "prefix": "std",
   "description": "Iterates over an array, running downstream nodes once per element.",
   "type": "native",
   "author_handle": "spo",

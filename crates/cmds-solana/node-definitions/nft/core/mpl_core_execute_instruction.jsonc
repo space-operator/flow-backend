@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "execute_instruction",
+  "prefix": "nft",
   "description": "Execute an instruction on an MPL Core asset with lifecycle hooks",
   "type": "native",
   "author_handle": "spo",

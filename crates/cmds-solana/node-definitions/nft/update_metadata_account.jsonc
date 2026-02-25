@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "update_metadata_account",
+  "prefix": "nft",
   "description": "Update the metadata account of an NFT",
   "type": "native",
   "author_handle": "spo",

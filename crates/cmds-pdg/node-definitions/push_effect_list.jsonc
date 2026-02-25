@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "push_effect_list",
+  "prefix": "pdg",
   "description": "Push an effect onto an effects list",
   "type": "native",
   "author_handle": "spo",

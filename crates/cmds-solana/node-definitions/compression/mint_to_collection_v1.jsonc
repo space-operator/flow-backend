@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "mint_cNFT_to_collection",
+  "prefix": "compression",
   "description": "Mint a compressed NFT into an existing collection",
   "type": "native",
   "author_handle": "spo",

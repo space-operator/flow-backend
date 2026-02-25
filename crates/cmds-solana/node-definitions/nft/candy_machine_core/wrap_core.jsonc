@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "wrap_core",
+  "prefix": "nft",
   "description": "Wrap a Candy Machine Core with a Candy Guard",
   "type": "native",
   "author_handle": "spo",

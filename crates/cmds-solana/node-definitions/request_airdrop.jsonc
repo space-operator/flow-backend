@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "request_airdrop",
+  "prefix": "solana",
   "description": "Airdrop SOL for testing purposes. Currently takes ~30s to complete.",
   "type": "native",
   "author_handle": "spo",

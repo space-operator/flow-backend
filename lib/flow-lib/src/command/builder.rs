@@ -16,6 +16,7 @@
 //! {
 //!   "version": "0.1",
 //!   "name": "add",
+//!   "prefix": "std",
 //!   "type": "native",
 //!   "author_handle": "spo",
 //!   "ports": {
@@ -121,15 +122,30 @@ impl CmdBuilder {
 
     /// Check that the command name in node-definition is equal to this name, to prevent accidentally
     /// using the wrong node-definition.
+    ///
+    /// Matches exactly, with `@spo/` prefix stripped, or by the name component
+    /// extracted from the `prefix.name.version` format.
     pub fn check_name(self, name: &str) -> Result<Self, BuilderError> {
         fn strip_spo_scope(s: &str) -> Option<&str> {
             s.strip_prefix("@spo/")
         }
 
+        /// Extract the name component from `prefix.name.version` format.
+        /// e.g. `"solana.transfer_sol.0.1"` → `Some("transfer_sol")`
+        fn extract_name(s: &str) -> Option<&str> {
+            let (_, rest) = s.split_once('.')?;
+            let (name, _) = rest.split_once('.')?;
+            Some(name)
+        }
+
         let actual = self.def.data.node_id.as_str();
         let matches = actual == name
             || strip_spo_scope(actual).is_some_and(|unscoped| unscoped == name)
-            || strip_spo_scope(name).is_some_and(|unscoped| unscoped == actual);
+            || strip_spo_scope(name).is_some_and(|unscoped| unscoped == actual)
+            // Match by name component: @spo/solana.transfer_sol.0.1 matches "transfer_sol"
+            || strip_spo_scope(actual)
+                .and_then(extract_name)
+                .is_some_and(|n| n == name);
 
         if matches {
             Ok(self)
@@ -269,6 +285,7 @@ mod tests {
         // V2 definition with varied port attributes
         "version": "0.1",
         "name": "test_ports",
+        "prefix": "test",
         "type": "native",
         "author_handle": "tester",
         "ports": {
@@ -314,11 +331,11 @@ mod tests {
     fn v2_port_round_trip() {
         let cmd = CmdBuilder::new(V2_RICH)
             .unwrap()
-            .check_name("@tester/test_ports")
+            .check_name("@tester/test.test_ports.0.1")
             .unwrap()
             .build(noop);
 
-        assert_eq!(cmd.name(), "@tester/test_ports");
+        assert_eq!(cmd.name(), "@tester/test.test_ports.0.1");
 
         // Inputs
         let inputs = cmd.inputs();
@@ -361,7 +378,7 @@ mod tests {
     fn v2_permissions_default_false() {
         let cmd = CmdBuilder::new(V2_RICH)
             .unwrap()
-            .check_name("@tester/test_ports")
+            .check_name("@tester/test.test_ports.0.1")
             .unwrap()
             .build(noop);
 
@@ -372,7 +389,7 @@ mod tests {
     fn v2_permissions_survive_build() {
         let cmd = CmdBuilder::new(V2_RICH)
             .unwrap()
-            .check_name("@tester/test_ports")
+            .check_name("@tester/test.test_ports.0.1")
             .unwrap()
             .permissions(Permissions { user_tokens: true })
             .build(noop);
@@ -386,7 +403,7 @@ mod tests {
     fn v2_simple_instruction_info() {
         let cmd = CmdBuilder::new(V2_RICH)
             .unwrap()
-            .check_name("@tester/test_ports")
+            .check_name("@tester/test.test_ports.0.1")
             .unwrap()
             .simple_instruction_info("signature")
             .unwrap()
@@ -408,6 +425,7 @@ mod tests {
         let minimal = r#"{
             "version": "0.1",
             "name": "defaults_test",
+            "prefix": "std",
             "type": "native",
             "author_handle": "spo",
             "ports": {
@@ -418,7 +436,7 @@ mod tests {
 
         let cmd = CmdBuilder::new(minimal)
             .unwrap()
-            .check_name("defaults_test")
+            .check_name("std.defaults_test.0.1")
             .unwrap()
             .build(noop);
 
@@ -451,21 +469,28 @@ mod tests {
         let spo_def = r#"{
             "version": "0.1",
             "name": "my_cmd",
+            "prefix": "std",
             "type": "native",
             "author_handle": "spo",
             "ports": { "inputs": [], "outputs": [] }
         }"#;
 
-        // Plain name matches @spo/my_cmd via prefix stripping
+        // Unscoped dotted name matches @spo/std.my_cmd.0.1 via @spo/ prefix stripping
         CmdBuilder::new(spo_def)
             .unwrap()
-            .check_name("my_cmd")
+            .check_name("std.my_cmd.0.1")
             .unwrap();
 
         // Fully qualified also matches
         CmdBuilder::new(spo_def)
             .unwrap()
-            .check_name("@spo/my_cmd")
+            .check_name("@spo/std.my_cmd.0.1")
+            .unwrap();
+
+        // Bare name matches via name-component extraction
+        CmdBuilder::new(spo_def)
+            .unwrap()
+            .check_name("my_cmd")
             .unwrap();
     }
 
@@ -474,12 +499,13 @@ mod tests {
         let alice_def = r#"{
             "version": "0.1",
             "name": "my_cmd",
+            "prefix": "std",
             "type": "native",
             "author_handle": "alice",
             "ports": { "inputs": [], "outputs": [] }
         }"#;
 
-        // Plain name should NOT match @alice/my_cmd
+        // Bare name should NOT match @alice/std.my_cmd.0.1 (only @spo/ is stripped)
         let err = CmdBuilder::new(alice_def)
             .unwrap()
             .check_name("my_cmd")
@@ -499,7 +525,7 @@ mod tests {
 
     #[test]
     fn v2_malformed_missing_name() {
-        let bad = r#"{ "type": "native", "author_handle": "spo", "ports": { "inputs": [], "outputs": [] } }"#;
+        let bad = r#"{ "type": "native", "prefix": "std", "author_handle": "spo", "ports": { "inputs": [], "outputs": [] } }"#;
         // Missing "name" — should fail to parse as either legacy or V2
         assert!(CmdBuilder::new(bad).is_err());
     }
@@ -515,7 +541,7 @@ mod tests {
     fn v2_instruction_info_none_without_simple_instruction_info() {
         let cmd = CmdBuilder::new(V2_RICH)
             .unwrap()
-            .check_name("@tester/test_ports")
+            .check_name("@tester/test.test_ports.0.1")
             .unwrap()
             .build(noop);
 
@@ -528,6 +554,7 @@ mod tests {
         let def = r#"{
             "version": "0.1",
             "name": "no_pt",
+            "prefix": "std",
             "type": "native",
             "author_handle": "spo",
             "ports": {
@@ -560,6 +587,7 @@ mod tests {
         let def = r#"{
             "version": "0.1",
             "name": "sig_only",
+            "prefix": "std",
             "type": "native",
             "author_handle": "spo",
             "ports": {
@@ -590,6 +618,7 @@ mod tests {
         let def = r#"{
             "version": "0.1",
             "name": "override_test",
+            "prefix": "std",
             "type": "native",
             "author_handle": "spo",
             "permissions": { "user_tokens": true },
@@ -609,6 +638,7 @@ mod tests {
         let def = r#"{
             "version": "0.1",
             "name": "other_type",
+            "prefix": "std",
             "type": "native",
             "author_handle": "spo",
             "ports": {
@@ -631,6 +661,7 @@ mod tests {
         let def = r#"{
             "version": "0.1",
             "name": "deno_cmd",
+            "prefix": "std",
             "type": "deno",
             "author_handle": "spo",
             "ports": { "inputs": [], "outputs": [] }

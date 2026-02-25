@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "redeem_on_eth",
+  "prefix": "wormhole",
   "description": "Redeem tokens on Ethereum using a signed Wormhole VAA",
   "type": "native",
   "author_handle": "spo",

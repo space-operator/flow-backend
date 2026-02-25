@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "write_to_record",
+  "prefix": "record",
   "description": "Write data to an existing on-chain record account",
   "type": "native",
   "author_handle": "spo",

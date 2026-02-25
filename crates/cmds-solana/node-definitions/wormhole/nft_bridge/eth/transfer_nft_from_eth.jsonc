@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "transfer_nft_from_eth",
+  "prefix": "wormhole",
   "description": "Transfer an NFT from Ethereum to Solana via the Wormhole NFT bridge",
   "type": "native",
   "author_handle": "spo",

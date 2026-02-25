@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "kv_read_item",
+  "prefix": "kvstore",
   "description": "Reads a value by key from a key-value store.",
   "type": "native",
   "author_handle": "spo",

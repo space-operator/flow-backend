@@ -70,17 +70,31 @@ fn scoped_builtin_alias<'a>(id: &'a str) -> Option<Cow<'a, str>> {
     }
 
     let base = &id["@spo/".len()..];
-    Some(match base {
+
+    // Extract the name component from prefix.name.version format.
+    // e.g. "std.kv_explorer.0.1" → "kv_explorer"
+    let name = base
+        .split_once('.')
+        .and_then(|(_, rest)| rest.split_once('.'))
+        .map(|(name, _)| name)
+        .unwrap_or(base);
+
+    Some(match name {
         "kv_explorer" => Cow::Borrowed("kvexplorer"),
         "file_explorer" => Cow::Borrowed("fileexplorer"),
-        other => Cow::Borrowed(other),
+        _ => Cow::Borrowed(name),
     })
 }
 
 fn command_name_candidates<'a>(name: &'a str) -> Vec<Cow<'a, str>> {
     let mut candidates = vec![Cow::Borrowed(name)];
+    // Strip @spo/ scope to add the base form (e.g. "std.transfer_sol.0.1")
+    if let Some(base) = name.strip_prefix("@spo/") {
+        candidates.push(Cow::Borrowed(base));
+    }
+    // Add name-component alias (e.g. "transfer_sol", or "kvexplorer" for remapped names)
     if let Some(alias) = scoped_builtin_alias(name)
-        && alias.as_ref() != name
+        && !candidates.iter().any(|c| c.as_ref() == alias.as_ref())
     {
         candidates.push(alias);
     }
@@ -555,15 +569,21 @@ mod tests {
 
     #[test]
     fn scoped_builtin_alias_only_applies_to_spo_scope() {
+        // New dot-separated format
+        assert_eq!(
+            scoped_builtin_alias("@spo/std.kv_explorer.0.1").map(|s| s.into_owned()),
+            Some("kvexplorer".to_owned())
+        );
+        assert_eq!(
+            scoped_builtin_alias("@spo/std.file_explorer.0.1").map(|s| s.into_owned()),
+            Some("fileexplorer".to_owned())
+        );
+        // Legacy format still works (base passed through as-is)
         assert_eq!(
             scoped_builtin_alias("@spo/kv_explorer").map(|s| s.into_owned()),
             Some("kvexplorer".to_owned())
         );
-        assert_eq!(
-            scoped_builtin_alias("@spo/file_explorer").map(|s| s.into_owned()),
-            Some("fileexplorer".to_owned())
-        );
-        assert_eq!(scoped_builtin_alias("@alice/kv_explorer"), None);
+        assert_eq!(scoped_builtin_alias("@alice/std.kv_explorer.0.1"), None);
         assert_eq!(scoped_builtin_alias("transfer_sol"), None);
     }
 
@@ -571,17 +591,17 @@ mod tests {
     fn match_command_uses_spo_alias_without_collapsing_other_scopes() {
         let exact = MatchCommand {
             r#type: CommandType::Native,
-            name: MatchName::Exact("transfer_sol".into()),
+            name: MatchName::Exact("std.transfer_sol.0.1".into()),
         };
-        assert!(exact.is_match(CommandType::Native, "@spo/transfer_sol"));
-        assert!(!exact.is_match(CommandType::Native, "@alice/transfer_sol"));
-        assert!(exact.is_match(CommandType::Native, "transfer_sol"));
+        assert!(exact.is_match(CommandType::Native, "@spo/std.transfer_sol.0.1"));
+        assert!(!exact.is_match(CommandType::Native, "@alice/std.transfer_sol.0.1"));
+        assert!(exact.is_match(CommandType::Native, "std.transfer_sol.0.1"));
 
         let kv = MatchCommand {
             r#type: CommandType::Native,
             name: MatchName::Exact("kvexplorer".into()),
         };
-        assert!(kv.is_match(CommandType::Native, "@spo/kv_explorer"));
-        assert!(!kv.is_match(CommandType::Native, "@alice/kv_explorer"));
+        assert!(kv.is_match(CommandType::Native, "@spo/std.kv_explorer.0.1"));
+        assert!(!kv.is_match(CommandType::Native, "@alice/std.kv_explorer.0.1"));
     }
 }

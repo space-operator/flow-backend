@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "parse_vaa",
+  "prefix": "wormhole",
   "description": "Parse a Wormhole VAA into its constituent fields including signatures, body, hash, and payload",
   "type": "native",
   "author_handle": "spo",

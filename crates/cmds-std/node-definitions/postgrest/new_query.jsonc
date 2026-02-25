@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "postgrest_new_query",
+  "prefix": "postgrest",
   "description": "Creates a new PostgREST query builder for a table.",
   "type": "native",
   "author_handle": "spo",

@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "associated_token_account",
+  "prefix": "spl_token",
   "description": "Create or get the associated token account for an owner and mint",
   "type": "native",
   "author_handle": "spo",

@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "find_pda",
+  "prefix": "solana",
   "description": "Find the PDA address for a given program ID and seeds",
   "type": "native",
   "author_handle": "spo",

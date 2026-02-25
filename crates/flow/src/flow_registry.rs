@@ -33,7 +33,14 @@ use tracing::Instrument;
 pub const MAX_CALL_DEPTH: u32 = 1024;
 
 fn is_spo_builtin_node(node_id: &str, builtin: &str) -> bool {
-    node_id == builtin || node_id.strip_prefix("@spo/").is_some_and(|name| name == builtin)
+    node_id == builtin
+        || node_id.strip_prefix("@spo/").is_some_and(|name| name == builtin)
+        // New format: extract name from @spo/{prefix}.{name}.{version}
+        || node_id
+            .strip_prefix("@spo/")
+            .and_then(|rest| rest.split_once('.'))
+            .and_then(|(_, rest)| rest.split_once('.'))
+            .is_some_and(|(name, _)| name == builtin)
 }
 
 #[derive(Debug, ThisError)]

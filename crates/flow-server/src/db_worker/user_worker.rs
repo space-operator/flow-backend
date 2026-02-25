@@ -52,7 +52,7 @@ use thiserror::Error as ThisError;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
 
 fn is_wallet_node(node_id: &str) -> bool {
-    matches!(node_id, "wallet" | "@spo/wallet")
+    matches!(node_id, "wallet" | "@spo/wallet" | "@spo/std.wallet.0.1")
 }
 
 fn parse_wallet_id(value: &JsonValue) -> Option<i64> {

@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "postgrest_builder_is",
+  "prefix": "postgrest",
   "description": "Adds an IS filter (column IS value) to a PostgREST query.",
   "type": "native",
   "author_handle": "spo",

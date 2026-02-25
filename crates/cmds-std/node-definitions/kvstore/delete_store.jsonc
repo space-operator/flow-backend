@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "kv_delete_store",
+  "prefix": "kvstore",
   "description": "Deletes a key-value store and all its data.",
   "type": "native",
   "author_handle": "spo",

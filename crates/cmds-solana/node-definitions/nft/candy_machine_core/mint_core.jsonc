@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "mint_candy_machine_core",
+  "prefix": "nft",
   "description": "Mint an NFT from a Candy Machine Core",
   "type": "native",
   "author_handle": "spo",

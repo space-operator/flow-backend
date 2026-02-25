@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "memo",
+  "prefix": "solana",
   "description": "Adds a memo to a transaction",
   "type": "native",
   "author_handle": "spo",

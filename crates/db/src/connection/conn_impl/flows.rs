@@ -14,12 +14,17 @@ fn row_to_flow_row(r: tokio_postgres::Row) -> crate::Result<FlowRow> {
 fn is_interflow_node(node_id: &str) -> bool {
     matches!(
         node_id,
-        "interflow" | "interflow_instructions" | "@spo/interflow" | "@spo/interflow_instructions"
+        "interflow"
+            | "interflow_instructions"
+            | "@spo/interflow"
+            | "@spo/interflow_instructions"
+            | "@spo/std.interflow.0.1"
+            | "@spo/std.interflow_instructions.0.1"
     )
 }
 
 fn is_wallet_node(node_id: &str) -> bool {
-    matches!(node_id, "wallet" | "@spo/wallet")
+    matches!(node_id, "wallet" | "@spo/wallet" | "@spo/std.wallet.0.1")
 }
 
 fn parse_flow_id(value: &JsonValue) -> Option<FlowId> {

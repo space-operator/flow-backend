@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "create_token_account",
+  "prefix": "spl_token",
   "description": "Create a new SPL token account for a given mint and owner",
   "type": "native",
   "author_handle": "spo",

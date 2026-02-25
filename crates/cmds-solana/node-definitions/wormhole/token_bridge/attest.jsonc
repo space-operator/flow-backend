@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "attest_token",
+  "prefix": "wormhole",
   "description": "Attest a Solana SPL token to the Wormhole token bridge for cross-chain transfers",
   "type": "native",
   "author_handle": "spo",

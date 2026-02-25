@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "arweave_nft_upload",
+  "prefix": "nft",
   "description": "Upload NFT metadata to Arweave via Bundlr",
   "type": "native",
   "author_handle": "spo",

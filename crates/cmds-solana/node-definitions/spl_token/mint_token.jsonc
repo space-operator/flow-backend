@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "mint_token",
+  "prefix": "spl_token",
   "description": "Mint tokens to a recipient's token account",
   "type": "native",
   "author_handle": "spo",

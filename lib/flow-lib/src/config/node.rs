@@ -49,8 +49,12 @@ pub struct Target {
 #[derive(Deserialize, Debug, Clone)]
 struct DefinitionV2 {
     pub r#type: super::CommandType,
+    pub version: String,
     pub name: String,
     pub author_handle: String,
+    /// Program prefix for scoped node IDs. The node_id becomes
+    /// `@{author_handle}/{prefix}.{name}.{version}`.
+    pub prefix: String,
     pub ports: PortsV2,
     #[serde(default)]
     pub permissions: Permissions,
@@ -113,7 +117,10 @@ impl From<DefinitionV2> for Definition {
         Self {
             r#type: v2.r#type,
             data: Data {
-                node_id: format!("@{}/{}", v2.author_handle, v2.name),
+                node_id: format!(
+                    "@{}/{}.{}.{}",
+                    v2.author_handle, v2.prefix, v2.name, v2.version
+                ),
                 instruction_info: None,
             },
             outputs,
@@ -179,6 +186,7 @@ mod tests {
           // V2 node definition
           "version": "2.0.0",
           "name": "const",
+          "prefix": "std",
           "author_handle": "spo",
           "type": "native",
           "ports": {
@@ -192,7 +200,7 @@ mod tests {
         }"#;
 
         let parsed = parse_definition(input).expect("v2 jsonc definition should parse");
-        assert_eq!(parsed.data.node_id, "@spo/const");
+        assert_eq!(parsed.data.node_id, "@spo/std.const.2.0.0");
         assert_eq!(parsed.outputs.len(), 1);
         assert!(parsed.inputs.is_empty());
     }
@@ -204,6 +212,7 @@ mod tests {
         let input = r#"{
           "version": "0.1",
           "name": "rich",
+          "prefix": "std",
           "type": "native",
           "author_handle": "spo",
           "ports": {
@@ -242,6 +251,7 @@ mod tests {
         let input = r#"{
           "version": "0.1",
           "name": "opt_test",
+          "prefix": "std",
           "type": "native",
           "author_handle": "spo",
           "ports": {
@@ -272,13 +282,14 @@ mod tests {
         let input = r#"{
           "version": "0.1",
           "name": "my_tool",
+          "prefix": "std",
           "type": "native",
           "author_handle": "myorg",
           "ports": { "inputs": [], "outputs": [] }
         }"#;
 
         let parsed = parse_definition(input).unwrap();
-        assert_eq!(parsed.data.node_id, "@myorg/my_tool");
+        assert_eq!(parsed.data.node_id, "@myorg/std.my_tool.0.1");
     }
 
     // ── Test 13: V2 conversion always sets instruction_info to None ────
@@ -288,6 +299,7 @@ mod tests {
         let input = r#"{
           "version": "0.1",
           "name": "no_instr",
+          "prefix": "std",
           "type": "native",
           "author_handle": "spo",
           "ports": {
@@ -307,6 +319,7 @@ mod tests {
         let input = r#"{
           "version": "0.1",
           "name": "perm_test",
+          "prefix": "std",
           "type": "native",
           "author_handle": "spo",
           "permissions": { "user_tokens": true },
@@ -315,5 +328,37 @@ mod tests {
 
         let parsed = parse_definition(input).unwrap();
         assert!(parsed.permissions.user_tokens);
+    }
+
+    // ── Test 15: Prefix-based scoped node_id ────────────────────────────
+
+    #[test]
+    fn v2_node_id_with_prefix() {
+        let input = r#"{
+          "version": "0.1",
+          "name": "swap",
+          "prefix": "damm_v2",
+          "type": "native",
+          "author_handle": "spo",
+          "ports": { "inputs": [], "outputs": [] }
+        }"#;
+
+        let parsed = parse_definition(input).unwrap();
+        assert_eq!(parsed.data.node_id, "@spo/damm_v2.swap.0.1");
+    }
+
+    #[test]
+    fn v2_node_id_with_std_prefix() {
+        let input = r#"{
+          "version": "0.1",
+          "name": "wallet",
+          "prefix": "std",
+          "type": "native",
+          "author_handle": "spo",
+          "ports": { "inputs": [], "outputs": [] }
+        }"#;
+
+        let parsed = parse_definition(input).unwrap();
+        assert_eq!(parsed.data.node_id, "@spo/std.wallet.0.1");
     }
 }

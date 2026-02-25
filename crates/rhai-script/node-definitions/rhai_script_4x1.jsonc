@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "rhai_script_4x1",
+  "prefix": "rhai",
   "description": "",
   "type": "native",
   "author_handle": "spo",

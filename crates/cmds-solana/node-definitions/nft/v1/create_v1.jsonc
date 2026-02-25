@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "create_v1",
+  "prefix": "nft",
   "description": "Create an NFT using Metaplex Token Metadata V1",
   "type": "native",
   "author_handle": "spo",

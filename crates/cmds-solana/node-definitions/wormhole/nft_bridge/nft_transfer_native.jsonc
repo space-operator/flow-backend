@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "nft_transfer_native",
+  "prefix": "wormhole",
   "description": "Transfer a native NFT from Solana to another chain via the Wormhole NFT bridge",
   "type": "native",
   "author_handle": "spo",

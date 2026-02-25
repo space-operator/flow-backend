@@ -112,6 +112,9 @@ pub struct NodeDefinition {
     pub schema_uri: Option<String>,
     pub version: String,
     pub name: String,
+    /// Program prefix for scoped node IDs. The slug becomes
+    /// `@{author_handle}/{prefix}.{name}.{version}`.
+    pub prefix: String,
     pub r#type: NodeType,
     pub author_handle: String,
     pub source_code: String,
@@ -135,9 +138,12 @@ fn permissions_is_default(p: &Permissions) -> bool {
 }
 
 impl NodeDefinition {
-    /// Returns the `@author/name` slug used as the runtime node identifier.
+    /// Returns the `@author/prefix.name.version` slug used as the runtime node identifier.
     pub fn slug(&self) -> String {
-        format!("@{}/{}", self.author_handle, self.name)
+        format!(
+            "@{}/{}.{}.{}",
+            self.author_handle, self.prefix, self.name, self.version
+        )
     }
 }
 
@@ -159,6 +165,7 @@ mod tests {
           "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
           "version": "2.0.0",
           "name": "const",
+          "prefix": "std",
           "type": "native",
           "author_handle": "spo",
           "source_code": "crates/cmds-std/src/const_cmd.rs",
@@ -187,7 +194,7 @@ mod tests {
         assert_eq!(def.name, "const");
         assert_eq!(def.r#type, NodeType::Native);
         assert_eq!(def.author_handle, "spo");
-        assert_eq!(def.slug(), "@spo/const");
+        assert_eq!(def.slug(), "@spo/std.const.2.0.0");
         assert_eq!(def.ports.outputs.len(), 1);
         assert_eq!(def.ports.outputs[0].r#type, ValueType::Free);
         assert!(!def.ports.outputs[0].optional);
@@ -196,7 +203,7 @@ mod tests {
         // Re-serialize and re-parse
         let reserialized = serde_json::to_string_pretty(&def).unwrap();
         let def2: NodeDefinition = serde_json::from_str(&reserialized).unwrap();
-        assert_eq!(def2.slug(), "@spo/const");
+        assert_eq!(def2.slug(), "@spo/std.const.2.0.0");
     }
 
     #[test]
@@ -204,6 +211,7 @@ mod tests {
         let json = r#"{
           "version": "2.0.0",
           "name": "transfer_sol",
+          "prefix": "std",
           "type": "native",
           "author_handle": "spo",
           "source_code": "crates/cmds-solana/src/transfer_sol.rs",
@@ -255,6 +263,7 @@ mod tests {
         let json = r#"{
           "version": "2.0.0",
           "name": "perm_test",
+          "prefix": "std",
           "type": "native",
           "author_handle": "spo",
           "source_code": "src/perm.rs",

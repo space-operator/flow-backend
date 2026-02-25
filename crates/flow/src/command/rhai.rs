@@ -71,7 +71,7 @@ inventory::submit!(CommandDescription {
     matcher: MatchCommand {
         r#type: flow_lib::CommandType::Native,
         name: flow_lib::command::MatchName::Regex(std::borrow::Cow::Borrowed(
-            "^(?:@spo/)?rhai_script(?:_|$)",
+            "^(?:@spo/[^.]*\\.)?rhai_script(?:[_.]|$)",
         ))
     },
     fn_new: futures::future::Either::Left(build)

@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "interflow_instructions",
+  "prefix": "std",
   "description": "Runs another flow and collects its Solana instructions without executing them.",
   "type": "native",
   "author_handle": "spo",

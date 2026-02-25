@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "create_core_v2",
+  "prefix": "nft",
   "description": "Create a new MPL Core asset",
   "type": "native",
   "author_handle": "spo",

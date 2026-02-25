@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "generate_keypair",
+  "prefix": "solana",
   "description": "Generate or load a keypair. Generates a random keypair every run if no inputs are provided.",
   "type": "native",
   "author_handle": "spo",

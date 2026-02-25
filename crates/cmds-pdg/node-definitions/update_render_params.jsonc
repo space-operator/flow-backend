@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "update_render_params",
+  "prefix": "pdg",
   "description": "Apply an effect to render parameters",
   "type": "native",
   "author_handle": "spo",

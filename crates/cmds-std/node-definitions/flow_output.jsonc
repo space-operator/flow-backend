@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "flow_output",
+  "prefix": "std",
   "description": "Defines an output value exposed on the flow's external interface.",
   "type": "native",
   "author_handle": "spo",

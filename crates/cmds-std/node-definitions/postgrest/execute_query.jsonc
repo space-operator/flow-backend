@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "postgrest_execute_query",
+  "prefix": "postgrest",
   "description": "Executes a PostgREST query and returns the result.",
   "type": "native",
   "author_handle": "spo",

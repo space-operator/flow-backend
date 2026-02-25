@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "set_authority_2022",
+  "prefix": "spl_token_2022",
   "description": "Set or change the authority on an SPL Token 2022 account or mint",
   "type": "native",
   "author_handle": "spo",

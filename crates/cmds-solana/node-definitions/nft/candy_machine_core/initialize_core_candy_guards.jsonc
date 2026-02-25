@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "initialize_core_candy_guards",
+  "prefix": "nft",
   "description": "Initialize Candy Guards for a Candy Machine Core",
   "type": "native",
   "author_handle": "spo",

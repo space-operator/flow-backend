@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "delegate_v1",
+  "prefix": "nft",
   "description": "Delegate authority over an NFT using Metaplex Token Metadata V1",
   "type": "native",
   "author_handle": "spo",

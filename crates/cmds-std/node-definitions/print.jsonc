@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "print",
+  "prefix": "std",
   "description": "Logs its input value and passes it through.",
   "type": "native",
   "author_handle": "spo",

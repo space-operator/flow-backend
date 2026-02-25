@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "initialize_record_with_seed",
+  "prefix": "record",
   "description": "Initialize a new on-chain record account using a seed",
   "type": "native",
   "author_handle": "spo",

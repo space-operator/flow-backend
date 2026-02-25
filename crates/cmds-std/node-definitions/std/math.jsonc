@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "math",
+  "prefix": "std",
   "description": "Performs arithmetic on two numbers using the selected operator.",
   "type": "native",
   "author_handle": "spo",

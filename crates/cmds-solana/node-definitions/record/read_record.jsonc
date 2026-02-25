@@ -2,6 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "read_record",
+  "prefix": "record",
   "description": "Read data from an on-chain record account",
   "type": "native",
   "author_handle": "spo",
