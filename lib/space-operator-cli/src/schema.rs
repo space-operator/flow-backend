@@ -59,8 +59,12 @@ pub struct Ports {
 pub struct CommandDefinition {
     pub r#type: String,
     pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prefix: Option<String>,
     #[serde(default = "default_version")]
     pub version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     pub ports: Ports,
     #[serde(default)]
     pub config: JsonValue,
@@ -68,6 +72,12 @@ pub struct CommandDefinition {
     pub config_schema: JsonValue,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub author_handle: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub classification: Option<JsonValue>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub external_version: Option<JsonValue>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub internal: Option<JsonValue>,
 }
 
 impl CommandDefinition {

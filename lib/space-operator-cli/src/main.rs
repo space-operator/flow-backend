@@ -940,11 +940,16 @@ async fn prompt_node_definition() -> Result<CommandDefinition, Report<Error>> {
     let def = schema::CommandDefinition {
         r#type: "native".to_owned(),
         name: node_id,
+        prefix: None,
         version: "0.1".to_owned(),
+        description: None,
         ports: schema::Ports { inputs, outputs },
         config,
         config_schema: serde_json::Value::Object(<_>::default()),
         author_handle: None,
+        classification: None,
+        external_version: None,
+        internal: None,
     };
 
     Ok(def)

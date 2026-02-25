@@ -106,6 +106,49 @@ pub struct Permissions {
     pub user_tokens: bool,
 }
 
+/// Vendor, program, and category metadata for catalog classification.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Classification {
+    #[serde(default)]
+    pub vendor: String,
+    #[serde(default)]
+    pub program: String,
+    #[serde(default)]
+    pub category: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_url: Option<String>,
+    #[serde(default)]
+    pub tags: Vec<String>,
+}
+
+/// Version and provenance metadata linking the node to its on-chain program or API.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ExternalVersionInfo {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub program_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sdk_crate: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sdk_version: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub api_base_url: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub api_version: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_repo: Option<String>,
+}
+
+/// Internal metadata tracking the node's source location within the monorepo.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct InternalInfo {
+    #[serde(default)]
+    pub source: String,
+    #[serde(default)]
+    pub source_code: String,
+    #[serde(default)]
+    pub repo: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeDefinition {
     #[serde(rename = "$schema", default, skip_serializing_if = "Option::is_none")]
@@ -127,6 +170,12 @@ pub struct NodeDefinition {
     pub config: JsonValue,
     #[serde(default, skip_serializing_if = "permissions_is_default")]
     pub permissions: Permissions,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub classification: Option<Classification>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub external_version: Option<ExternalVersionInfo>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub internal: Option<InternalInfo>,
 }
 
 fn default_empty_object() -> JsonValue {
@@ -275,5 +324,83 @@ mod tests {
 
         let def: NodeDefinition = serde_json::from_str(json).unwrap();
         assert!(def.permissions.user_tokens);
+    }
+
+    #[test]
+    fn metadata_fields_parsed() {
+        let json = r#"{
+          "version": "0.1",
+          "name": "claim",
+          "prefix": "jup_lock",
+          "type": "native",
+          "author_handle": "spo",
+          "source_code": "lib/jup_lock/src/claim.rs",
+          "ports": { "inputs": [], "outputs": [] },
+          "config_schema": {},
+          "config": {},
+          "classification": {
+            "vendor": "Jupiter",
+            "program": "jup_lock",
+            "category": "defi",
+            "icon_url": "https://static.jup.ag/jup/icon.png",
+            "tags": ["defi", "jupiter", "vesting"]
+          },
+          "external_version": {
+            "program_id": "LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn",
+            "sdk_crate": null,
+            "sdk_version": null,
+            "api_base_url": null,
+            "api_version": null,
+            "source_repo": "https://github.com/jup-ag/jup-lock"
+          },
+          "internal": {
+            "source": "lib",
+            "source_code": "lib/jup_lock/node-definitions/jup_lock/claim.jsonc",
+            "repo": "node-builder"
+          }
+        }"#;
+
+        let def: NodeDefinition = serde_json::from_str(json).unwrap();
+        let cls = def.classification.as_ref().unwrap();
+        assert_eq!(cls.vendor, "Jupiter");
+        assert_eq!(cls.program, "jup_lock");
+        assert_eq!(cls.category, "defi");
+        assert_eq!(cls.icon_url.as_deref(), Some("https://static.jup.ag/jup/icon.png"));
+        assert_eq!(cls.tags, vec!["defi", "jupiter", "vesting"]);
+
+        let ext = def.external_version.as_ref().unwrap();
+        assert_eq!(ext.program_id.as_deref(), Some("LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn"));
+        assert!(ext.sdk_crate.is_none());
+        assert_eq!(ext.source_repo.as_deref(), Some("https://github.com/jup-ag/jup-lock"));
+
+        let int = def.internal.as_ref().unwrap();
+        assert_eq!(int.source, "lib");
+        assert_eq!(int.repo, "node-builder");
+
+        // Re-serialize omits None fields
+        let reserialized = serde_json::to_string_pretty(&def).unwrap();
+        assert!(!reserialized.contains("\"sdk_crate\""));
+        let def2: NodeDefinition = serde_json::from_str(&reserialized).unwrap();
+        assert_eq!(def2.classification.unwrap().vendor, "Jupiter");
+    }
+
+    #[test]
+    fn metadata_fields_default_to_none() {
+        let json = r#"{
+          "version": "2.0.0",
+          "name": "simple",
+          "prefix": "std",
+          "type": "native",
+          "author_handle": "spo",
+          "source_code": "src/simple.rs",
+          "ports": { "inputs": [], "outputs": [] },
+          "config_schema": {},
+          "config": {}
+        }"#;
+
+        let def: NodeDefinition = serde_json::from_str(json).unwrap();
+        assert!(def.classification.is_none());
+        assert!(def.external_version.is_none());
+        assert!(def.internal.is_none());
     }
 }

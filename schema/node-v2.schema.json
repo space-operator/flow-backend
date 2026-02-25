@@ -31,6 +31,11 @@
             "type": "string",
             "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
         },
+        "prefix": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+            "description": "Program-scoped prefix for node IDs. Combined with name to form the scoped ID: @{author_handle}/{prefix}_{name}"
+        },
         "type": {
             "type": "string",
             "enum": [
@@ -58,6 +63,15 @@
         "config": {
             "type": "object",
             "additionalProperties": true
+        },
+        "classification": {
+            "$ref": "#/definitions/classification"
+        },
+        "external_version": {
+            "$ref": "#/definitions/external_version"
+        },
+        "internal": {
+            "$ref": "#/definitions/internal"
         }
     },
     "definitions": {
@@ -164,6 +178,98 @@
                 }
             },
             "additionalProperties": false
+        },
+        "classification": {
+            "type": "object",
+            "description": "Vendor, program, and category metadata for catalog classification.",
+            "required": ["vendor", "program", "category", "tags"],
+            "additionalProperties": false,
+            "properties": {
+                "vendor": {
+                    "type": "string",
+                    "description": "Organization or protocol that owns the program.",
+                    "examples": ["Jupiter", "Metaplex", "Solana", "Meteora", "Kamino", "Native"]
+                },
+                "program": {
+                    "type": "string",
+                    "description": "On-chain program or API module this node targets.",
+                    "examples": ["jup_lock", "mpl_core", "damm_v2", "klend", "bridge"]
+                },
+                "category": {
+                    "type": "string",
+                    "description": "Functional category for grouping nodes in the catalog.",
+                    "examples": ["defi", "nft", "token", "governance", "infrastructure", "core", "data"]
+                },
+                "icon_url": {
+                    "type": ["string", "null"],
+                    "description": "URL to the vendor or program icon image."
+                },
+                "tags": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Free-form tags for search and filtering."
+                }
+            }
+        },
+        "external_version": {
+            "type": "object",
+            "description": "Version and provenance metadata linking the node to its on-chain program, SDK crate, or external API.",
+            "required": ["program_id", "sdk_crate", "sdk_version", "api_base_url", "api_version", "source_repo"],
+            "additionalProperties": false,
+            "properties": {
+                "program_id": {
+                    "type": ["string", "null"],
+                    "description": "Base58 program address, API identifier string, or null.",
+                    "examples": ["LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn", "reflect_api"]
+                },
+                "sdk_crate": {
+                    "type": ["string", "null"],
+                    "description": "Rust crate name providing the program's builder or interface.",
+                    "examples": ["mpl-core", "klend-interface", "damm-v2-interface"]
+                },
+                "sdk_version": {
+                    "type": ["string", "null"],
+                    "description": "Semantic version of the SDK crate in use.",
+                    "examples": ["0.4.1", "1.2.0"]
+                },
+                "api_base_url": {
+                    "type": ["string", "null"],
+                    "description": "Base URL for API-backed nodes.",
+                    "examples": ["https://api.jup.ag", "https://prod.api.reflect.money"]
+                },
+                "api_version": {
+                    "type": ["string", "null"],
+                    "description": "API version path segment or identifier.",
+                    "examples": ["v0", "v1", "v6"]
+                },
+                "source_repo": {
+                    "type": ["string", "null"],
+                    "description": "GitHub or source repository URL for the program.",
+                    "examples": ["https://github.com/jup-ag/jup-lock"]
+                }
+            }
+        },
+        "internal": {
+            "type": "object",
+            "description": "Internal metadata tracking the node's source location within the monorepo.",
+            "required": ["source", "source_code", "repo"],
+            "additionalProperties": false,
+            "properties": {
+                "source": {
+                    "type": "string",
+                    "description": "Top-level source directory the node belongs to.",
+                    "examples": ["private-cmds", "lib"]
+                },
+                "source_code": {
+                    "type": "string",
+                    "description": "Relative path to this JSONC definition file from the repo root."
+                },
+                "repo": {
+                    "type": "string",
+                    "description": "Repository name containing this node definition.",
+                    "examples": ["node-builder", "flow-backend"]
+                }
+            }
         }
     }
 }
