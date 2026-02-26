@@ -484,6 +484,11 @@ impl AdminConn {
         copy_in(&tx, "kvstore_metadata", &mut data.kvstore_metadata).await?;
         copy_in(&tx, "kvstore", &mut data.kvstore).await?;
 
+        // Drop legacy columns from old `flows` table exports.
+        data.flows.drop_in_place("tags").ok();
+        data.flows.drop_in_place("custom_networks").ok();
+        data.flows.drop_in_place("mosaic").ok();
+        data.flows.drop_in_place("lastest_flow_run_id").ok();
         copy_in(&tx, "flows_v2", &mut data.flows).await?;
         update_id_sequence(&tx, "flows_v2", "id", "flows_v2_id_seq").await?;
 
