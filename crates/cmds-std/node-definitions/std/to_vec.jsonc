@@ -1,0 +1,65 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "to_vec",
+  "prefix": "std",
+  "description": "Create an array from two values",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/std/to_vec.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "first",
+        "type_bounds": [
+          "free"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "First element of the array"
+      },
+      {
+        "name": "second",
+        "type_bounds": [
+          "free"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Second element of the array"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "free",
+        "tooltip": "Array containing the input values"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "vec"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/std/to_vec.jsonc",
+    "repo": "flow-backend"
+  }
+}

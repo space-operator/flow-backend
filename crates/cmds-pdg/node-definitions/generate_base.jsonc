@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "generate_base",
+  "prefix": "pdg",
+  "description": "Generate base attributes for PDG rendering",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-pdg/src/generate_base.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "seed",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Optional random seed"
+      },
+      {
+        "name": "defaults",
+        "type_bounds": [
+          "object"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Default values to override random generation"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "attributes",
+        "type": "object",
+        "tooltip": "Generated base attributes"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "pdg",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "pdg",
+      "generate",
+      "base"
+    ]
+  },
+  "external_version": {
+    "program_id": "pdg_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-pdg/node-definitions/generate_base.jsonc",
+    "repo": "flow-backend"
+  }
+}

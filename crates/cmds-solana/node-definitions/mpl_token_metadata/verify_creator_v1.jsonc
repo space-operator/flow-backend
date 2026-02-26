@@ -1,0 +1,102 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "verify_creator_v1",
+  "prefix": "nft",
+  "description": "Verify a creator on an NFT using Token Metadata V1",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/verify_creator_v1.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Creator to verify, collection update authority or delegate"
+      },
+      {
+        "name": "delegate_record",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Delegate record account if verifying via delegate"
+      },
+      {
+        "name": "metadata",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Metadata account of the NFT"
+      },
+      {
+        "name": "collection_mint_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Collection mint account if verifying collection creator"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "v1",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "v1",
+      "verify",
+      "creator"
+    ]
+  },
+  "external_version": {
+    "program_id": "v1_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/verify_creator_v1.jsonc",
+    "repo": "flow-backend"
+  }
+}

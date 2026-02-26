@@ -1,0 +1,125 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_master_edition",
+  "prefix": "nft",
+  "description": "Create a master edition for an NFT",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/create_master_edition.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "proxy_as_update_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Whether a Proxy Authority is signing the Update Authority"
+      },
+      {
+        "name": "update_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Update authority keypair of the NFT"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Mint account of the NFT"
+      },
+      {
+        "name": "mint_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Mint authority of the token"
+      },
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "max_supply",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "How many copies you can print. Leave empty for unlimited. 1/1 NFTs should have supply 0"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      },
+      {
+        "name": "metadata_account",
+        "type": "pubkey",
+        "tooltip": "Derived metadata account address"
+      },
+      {
+        "name": "master_edition_account",
+        "type": "pubkey",
+        "tooltip": "Derived master edition account address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "nft",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "create",
+      "master",
+      "edition"
+    ]
+  },
+  "external_version": {
+    "program_id": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/create_master_edition.jsonc",
+    "repo": "flow-backend"
+  }
+}

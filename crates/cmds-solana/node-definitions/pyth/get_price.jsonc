@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "pyth_price",
+  "prefix": "solana",
+  "description": "Get Pyth price",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/pyth/get_price.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "price_feed_id",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Pyth price feed account address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "price",
+        "type": "i64",
+        "tooltip": "Current price from the Pyth oracle"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Solana",
+    "program": "solana",
+    "category": "solana",
+    "icon_url": null,
+    "tags": [
+      "solana",
+      "pyth",
+      "price"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/pyth/get_price.jsonc",
+    "repo": "flow-backend"
+  }
+}

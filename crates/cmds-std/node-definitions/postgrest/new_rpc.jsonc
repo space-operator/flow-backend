@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "postgrest_new_rpc",
+  "prefix": "postgrest",
+  "description": "Creates a new PostgREST RPC (stored procedure) call.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/postgrest/new_rpc.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "PostgREST base URL"
+      },
+      {
+        "name": "schema",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Database schema (default: public)"
+      },
+      {
+        "name": "function",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Name of the stored procedure"
+      },
+      {
+        "name": "params",
+        "type_bounds": [
+          "free"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Parameters to pass to the function"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "query",
+        "type": "object",
+        "tooltip": "Query builder object"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "url": {
+      "S": "https://base.spaceoperator.com/rest/v1/"
+    },
+    "schema": {
+      "S": "public"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "postgrest",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "postgrest",
+      "new",
+      "rpc"
+    ]
+  },
+  "external_version": {
+    "program_id": "postgrest_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/postgrest/new_rpc.jsonc",
+    "repo": "flow-backend"
+  }
+}

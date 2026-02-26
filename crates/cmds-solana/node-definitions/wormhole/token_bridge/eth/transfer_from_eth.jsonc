@@ -1,0 +1,113 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transfer_from_eth",
+  "prefix": "wormhole",
+  "description": "Transfer tokens from Ethereum to Solana via the Wormhole token bridge",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/token_bridge/eth/transfer_from_eth.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "keypair",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Ethereum wallet private key"
+      },
+      {
+        "name": "network_name",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Wormhole network name"
+      },
+      {
+        "name": "token",
+        "type_bounds": [
+          "address"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Ethereum token contract address"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Solana recipient associated token address"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "f64"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Amount of tokens to transfer"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "response",
+        "type": "json",
+        "tooltip": "Ethereum transaction response"
+      },
+      {
+        "name": "emitter",
+        "type": "address",
+        "tooltip": "Wormhole emitter address on Ethereum"
+      },
+      {
+        "name": "sequence",
+        "type": "u32",
+        "tooltip": "Wormhole message sequence number"
+      },
+      {
+        "name": "recipient_ata",
+        "type": "pubkey",
+        "tooltip": "Recipient associated token account on Solana"
+      },
+      {
+        "name": "mint",
+        "type": "pubkey",
+        "tooltip": "Wrapped token mint address on Solana"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Wormhole",
+    "program": "eth",
+    "category": "bridge",
+    "icon_url": null,
+    "tags": [
+      "bridge",
+      "eth",
+      "transfer",
+      "from"
+    ]
+  },
+  "external_version": {
+    "program_id": "eth_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/wormhole/token_bridge/eth/transfer_from_eth.jsonc",
+    "repo": "flow-backend"
+  }
+}

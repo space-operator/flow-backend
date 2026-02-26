@@ -1,0 +1,169 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transfer_cNFT",
+  "prefix": "compression",
+  "description": "Transfer a compressed NFT to a new owner",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/transfer.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction"
+      },
+      {
+        "name": "leaf_owner",
+        "type_bounds": [
+          "keypair",
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Current owner of the compressed NFT leaf"
+      },
+      {
+        "name": "new_leaf_owner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the new leaf owner"
+      },
+      {
+        "name": "leaf_delegate",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Delegate authority for the compressed NFT leaf"
+      },
+      {
+        "name": "tree_config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Public key of the tree configuration account"
+      },
+      {
+        "name": "merkle_tree",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Public key of the Merkle tree account"
+      },
+      {
+        "name": "root",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Current root hash of the Merkle tree"
+      },
+      {
+        "name": "data_hash",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Data hash of the compressed NFT"
+      },
+      {
+        "name": "creator_hash",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Creator hash of the compressed NFT"
+      },
+      {
+        "name": "leaf_id",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Asset ID of the compressed NFT leaf"
+      },
+      {
+        "name": "index",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Index of the leaf in the Merkle tree"
+      },
+      {
+        "name": "proof",
+        "type_bounds": [
+          "json"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Merkle proof for the transfer"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Transaction signature of the transfer operation"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "compression",
+    "category": "compression",
+    "icon_url": null,
+    "tags": [
+      "compression",
+      "transfer",
+      "cnft"
+    ]
+  },
+  "external_version": {
+    "program_id": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/transfer.jsonc",
+    "repo": "flow-backend"
+  }
+}

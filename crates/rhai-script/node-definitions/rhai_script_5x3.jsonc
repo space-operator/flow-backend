@@ -1,0 +1,125 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "rhai_script_5x3",
+  "prefix": "rhai",
+  "description": "",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/rhai-script/src/lib.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "source",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Rhai script source code"
+      },
+      {
+        "name": "a",
+        "type_bounds": [
+          "free"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Script input 1"
+      },
+      {
+        "name": "b",
+        "type_bounds": [
+          "free"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Script input 2"
+      },
+      {
+        "name": "c",
+        "type_bounds": [
+          "free"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Script input 3"
+      },
+      {
+        "name": "d",
+        "type_bounds": [
+          "free"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Script input 4"
+      },
+      {
+        "name": "e",
+        "type_bounds": [
+          "free"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Script input 5"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "u",
+        "type": "free",
+        "optional": true,
+        "tooltip": "Script output 1"
+      },
+      {
+        "name": "v",
+        "type": "free",
+        "optional": true,
+        "tooltip": "Script output 2"
+      },
+      {
+        "name": "x",
+        "type": "free",
+        "optional": true,
+        "tooltip": "Script output 3"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "title": "RHAI script",
+    "properties": {
+      "source": {
+        "title": "source",
+        "type": "string"
+      }
+    }
+  },
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "rhai_script",
+    "category": "scripting",
+    "icon_url": null,
+    "tags": [
+      "scripting",
+      "rhai script",
+      "rhai",
+      "script",
+      "5x3"
+    ]
+  },
+  "external_version": {
+    "program_id": "rhai_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/rhai-script/node-definitions/rhai_script_5x3.jsonc",
+    "repo": "flow-backend"
+  }
+}

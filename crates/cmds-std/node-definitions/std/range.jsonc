@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "range",
+  "prefix": "std",
+  "description": "Create an array of numbers from start to end",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/std/range.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "start",
+        "type_bounds": [
+          "number"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Start of the range (inclusive)"
+      },
+      {
+        "name": "end",
+        "type_bounds": [
+          "number"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "End of the range (exclusive)"
+      },
+      {
+        "name": "step_by",
+        "type_bounds": [
+          "number"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Step increment (default: 1)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "array",
+        "tooltip": "Generated array of numbers"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "step_by": {
+      "U": "1"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "range"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/std/range.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "add",
+  "description": "Adds two decimal numbers. (Test node)",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "lib/flow-rpc/src/add.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "a",
+        "type_bounds": ["decimal"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "First addend"
+      },
+      {
+        "name": "b",
+        "type_bounds": ["decimal"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Second addend"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "c",
+        "type": "decimal",
+        "optional": false,
+        "tooltip": "Sum of a + b"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {}
+}

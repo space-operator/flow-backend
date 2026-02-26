@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "flow_output",
+  "prefix": "std",
+  "description": "Defines an output value exposed on the flow's external interface.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/flow/src/command/flow_output.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "output",
+        "type_bounds": [
+          "free"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Output of flow. Rename this input port to rename the exposed flow output."
+      }
+    ],
+    "outputs": []
+  },
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "label": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "config": {
+    "label": {
+      "S": "output"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "flow",
+      "output"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/flow_output.jsonc",
+    "repo": "flow-backend"
+  }
+}

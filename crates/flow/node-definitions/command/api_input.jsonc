@@ -1,0 +1,84 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "api_input",
+  "prefix": "command",
+  "description": "Wait for external input via API or webhook",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/flow/src/command/api_input.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "timeout",
+        "type_bounds": [
+          "f64"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Timeout in seconds"
+      },
+      {
+        "name": "webhook_url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Webhook URL to notify when the node is ready to receive input"
+      },
+      {
+        "name": "webhook_headers",
+        "type_bounds": [
+          "free"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Headers to send to the webhook (e.g. authorization headers)"
+      },
+      {
+        "name": "extra",
+        "type_bounds": [
+          "object"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Extra data to be sent to the webhook"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "value",
+        "type": "free",
+        "tooltip": "Value received from the API call"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "command",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "command",
+      "api",
+      "input"
+    ]
+  },
+  "external_version": {
+    "program_id": "command_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/flow/node-definitions/command/api_input.jsonc",
+    "repo": "flow-backend"
+  }
+}

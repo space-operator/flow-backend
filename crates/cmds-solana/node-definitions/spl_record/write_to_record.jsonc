@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "write_to_record",
+  "prefix": "record",
+  "description": "Write data to an existing on-chain record account",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_record/write_to_record.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction fees"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the record authority"
+      },
+      {
+        "name": "seed",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Seed string used to derive the record account address"
+      },
+      {
+        "name": "offset",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Byte offset at which to start writing data"
+      },
+      {
+        "name": "data",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Data to write to the record"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature of the write operation"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "record",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "record",
+      "write"
+    ]
+  },
+  "external_version": {
+    "program_id": "record_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_record/write_to_record.jsonc",
+    "repo": "flow-backend"
+  }
+}

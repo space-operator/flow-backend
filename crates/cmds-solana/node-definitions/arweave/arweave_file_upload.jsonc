@@ -1,0 +1,79 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "arweave_file_upload",
+  "prefix": "nft",
+  "description": "Upload a file to Arweave via Bundlr",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/arweave/arweave_file_upload.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair that pays for the upload"
+      },
+      {
+        "name": "file_path",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Path to the file to upload"
+      },
+      {
+        "name": "fund_bundlr",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Whether to fund the Bundlr node before uploading"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "file_url",
+        "type": "string",
+        "tooltip": "URL of the uploaded file on Arweave"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "fund_bundlr": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "nft",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "arweave",
+      "file",
+      "upload"
+    ]
+  },
+  "external_version": {
+    "program_id": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/arweave/arweave_file_upload.jsonc",
+    "repo": "flow-backend"
+  }
+}

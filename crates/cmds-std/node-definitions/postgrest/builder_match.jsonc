@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "postgrest_builder_match",
+  "prefix": "postgrest",
+  "description": "Adds a match filter (multiple column = value) to a PostgREST query.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/postgrest/builder_match.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "query",
+        "type_bounds": [
+          "object"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Query builder object"
+      },
+      {
+        "name": "body",
+        "type_bounds": [
+          "object"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Object of column-value pairs to match"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "query",
+        "type": "object",
+        "tooltip": "Updated query builder"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "postgrest",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "postgrest",
+      "builder",
+      "match"
+    ]
+  },
+  "external_version": {
+    "program_id": "postgrest_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/postgrest/builder_match.jsonc",
+    "repo": "flow-backend"
+  }
+}

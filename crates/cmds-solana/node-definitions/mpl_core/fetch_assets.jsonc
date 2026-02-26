@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "fetch_assets",
+  "prefix": "nft",
+  "description": "Fetch all assets belonging to an MPL Core collection",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_core/fetch_assets.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "collection",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the collection to fetch assets from"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "assets",
+        "type": "json",
+        "tooltip": "JSON array of assets in the collection"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "core",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "fetch",
+      "assets"
+    ]
+  },
+  "external_version": {
+    "program_id": "core_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core/fetch_assets.jsonc",
+    "repo": "flow-backend"
+  }
+}

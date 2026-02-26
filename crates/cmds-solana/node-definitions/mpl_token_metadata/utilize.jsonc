@@ -1,0 +1,118 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "utilize",
+  "prefix": "nft",
+  "description": "Use (utilize) an NFT, decrementing its available uses",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/mod.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "mint_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Mint account of the NFT"
+      },
+      {
+        "name": "use_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Use authority keypair authorized to utilize the NFT"
+      },
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Token account holding the NFT"
+      },
+      {
+        "name": "owner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Owner of the token account"
+      },
+      {
+        "name": "burner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Burner program-derived address"
+      },
+      {
+        "name": "number_of_uses",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Number of uses to consume"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "nft",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "utilize"
+    ]
+  },
+  "external_version": {
+    "program_id": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/utilize.jsonc",
+    "repo": "flow-backend"
+  }
+}

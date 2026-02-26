@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "to_string",
+  "prefix": "std",
+  "description": "Convert any value to its string representation",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/string/to_string.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "stringify",
+        "type_bounds": [
+          "free"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Value to convert to string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "string",
+        "tooltip": "String representation of the input"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "string"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/std/to_string.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "get_balance",
+  "prefix": "solana",
+  "description": "Get the SOL balance of an account",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/get_balance.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "pubkey",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Account address to query the balance of"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "balance",
+        "type": "u64",
+        "tooltip": "Account balance in lamports"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Solana",
+    "program": "solana",
+    "category": "solana",
+    "icon_url": null,
+    "tags": [
+      "solana",
+      "get",
+      "balance"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/get_balance.jsonc",
+    "repo": "flow-backend"
+  }
+}

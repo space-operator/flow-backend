@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "fileexplorer",
+  "prefix": "storage",
+  "description": "Browse storage files and URLs",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/storage/explorer.rs",
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "Files",
+        "type": "array",
+        "tooltip": "List of files in storage"
+      },
+      {
+        "name": "URLs",
+        "type": "array",
+        "tooltip": "Public URLs for the files"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "storage",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "fileexplorer"
+    ]
+  },
+  "external_version": {
+    "program_id": "storage_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/storage/file_explorer.jsonc",
+    "repo": "flow-backend"
+  }
+}
