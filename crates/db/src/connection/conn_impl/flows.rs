@@ -181,7 +181,7 @@ impl UserConnection {
 
         let path: String = conn
             .do_query_opt(
-                r#"SELECT storage_path FROM nodes
+                r#"SELECT storage_path FROM node_definitions
                 WHERE id = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
                 &[&wasm.supabase_id, &self.user_id],
             )
