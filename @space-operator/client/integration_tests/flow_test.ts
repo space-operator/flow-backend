@@ -3,7 +3,7 @@ import * as client from "../src/mod.ts";
 import * as dotenv from "@std/dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { assert, assertEquals } from "@std/assert";
-import { checkNoErrors, getEnv, getUuidEnv } from "./utils.ts";
+import { checkNoErrors, getEnv } from "./utils.ts";
 
 dotenv.loadSync({
   export: true,
@@ -12,13 +12,12 @@ dotenv.loadSync({
 const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
 const supabaseUrl = "http://localhost:8000";
-const START_FLOW_ID = getUuidEnv("FLOW_TEST_START_FLOW_ID");
-const DENO_FLOW_ID = getUuidEnv("FLOW_TEST_DENO_FLOW_ID");
-const INTERFLOW_FLOW_ID = getUuidEnv("FLOW_TEST_INTERFLOW_FLOW_ID");
-const INTERFLOW_INSTRUCTIONS_FLOW_ID = getUuidEnv(
-  "FLOW_TEST_INTERFLOW_INSTRUCTIONS_FLOW_ID",
-);
-const CONSTS_FLOW_ID = getUuidEnv("FLOW_TEST_CONSTS_FLOW_ID");
+const START_FLOW_ID = "6c949718-69e2-47c1-8b93-d56b8e34ec51"; // Add
+const DENO_FLOW_ID = "c349c074-0f4f-41bd-976d-d8df32ba867a"; // Deno Add
+const INTERFLOW_FLOW_ID = "b3c95f36-2a1c-4e33-be2a-28758a0c4b9d"; // Collatz
+const INTERFLOW_INSTRUCTIONS_FLOW_ID =
+  "69401e5a-375e-49d0-bb95-33c9d70eb582"; // Interflow Instructions
+const CONSTS_FLOW_ID = "27b35933-7165-4da5-a2ea-a6342bbb3da7"; // Consts
 
 Deno.test("start flow", async () => {
   const owner = new client.Client({

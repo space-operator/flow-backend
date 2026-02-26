@@ -4,7 +4,7 @@ import * as client from "../src/mod.ts";
 import { createClient } from "@supabase/supabase-js";
 import { assertEquals } from "@std/assert";
 import { createKeyPairSignerFromBytes } from "@solana/kit";
-import { checkNoErrors, getEnv, getUuidEnv } from "./utils.ts";
+import { checkNoErrors, getEnv } from "./utils.ts";
 import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
 import { registerExactSvmScheme } from "@x402/svm/exact/client";
 
@@ -15,7 +15,7 @@ dotenv.loadSync({
 const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
 const supabaseUrl = "http://localhost:8000";
-const flowId = getUuidEnv("X402_FLOW_ID");
+const flowId = "b3c95f36-2a1c-4e33-be2a-28758a0c4b9d"; // Collatz
 
 Deno.test("run x402", async () => {
   const owner = new client.Client({
