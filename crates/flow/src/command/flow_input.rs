@@ -57,12 +57,11 @@ impl CommandTrait for FlowInputCommand {
     }
 
     fn read_config(&self, data: JsonValue) -> ValueSet {
-        if let Some(value) = data.get("value") {
-            if let Ok(parsed) = flow_lib::command::parse_value_tagged(value.clone()) {
-                return value::map! {
-                    &self.label => parsed,
-                };
-            }
+        if let Some(value) = data.get("value").or_else(|| data.get("form_label")) {
+            let parsed = flow_lib::command::parse_value_tagged_or_json(value.clone());
+            return value::map! {
+                &self.label => parsed,
+            };
         }
 
         ValueSet::new()
@@ -121,10 +120,18 @@ mod tests {
     }
 
     #[test]
-    fn read_config_rejects_plain_json_value() {
+    fn read_config_accepts_plain_json_value() {
         let node = test_node(json!({ "label": { "S": "amount" } }), "");
         let cmd = FlowInputCommand::new(&node);
         let values = cmd.read_config(json!({ "value": 1000 }));
-        assert!(values.is_empty());
+        assert_eq!(values.get("amount"), Some(&Value::U64(1000)));
+    }
+
+    #[test]
+    fn read_config_accepts_form_label() {
+        let node = test_node(json!({ "label": { "S": "password" } }), "");
+        let cmd = FlowInputCommand::new(&node);
+        let values = cmd.read_config(json!({ "form_label": "Hunter1!" }));
+        assert_eq!(values.get("password"), Some(&Value::String("Hunter1!".to_owned())));
     }
 }

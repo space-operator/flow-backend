@@ -138,14 +138,8 @@ pub trait CommandTrait: 'static {
         let mut result = ValueSet::new();
         for i in self.inputs() {
             if let Some(json) = data.get(&i.name) {
-                match parse_value_tagged(json.clone()) {
-                    Ok(value) => {
-                        result.insert(i.name.clone(), value);
-                    }
-                    Err(error) => {
-                        tracing::warn!("invalid tagged value for form input '{}': {error}", i.name);
-                    }
-                }
+                let value = parse_value_tagged_or_json(json.clone());
+                result.insert(i.name.clone(), value);
             }
         }
         result
