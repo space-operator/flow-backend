@@ -1,0 +1,84 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "postgrest_builder_not",
+  "prefix": "postgrest",
+  "description": "Adds a negated filter (NOT operator.column value) to a PostgREST query.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/postgrest/builder_not.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "query",
+        "type_bounds": [
+          "object"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Query builder object"
+      },
+      {
+        "name": "operator",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Filter operator to negate (eq, neq, gt, lt, etc.)"
+      },
+      {
+        "name": "column",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Column name to filter on"
+      },
+      {
+        "name": "filter",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Value to negate against"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "query",
+        "type": "object",
+        "tooltip": "Updated query builder"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "postgrest",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "postgrest",
+      "builder",
+      "not"
+    ]
+  },
+  "external_version": {
+    "program_id": "postgrest_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/postgrest/builder_not.jsonc",
+    "repo": "flow-backend"
+  }
+}

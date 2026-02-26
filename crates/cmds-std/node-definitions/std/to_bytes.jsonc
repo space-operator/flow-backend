@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "to_bytes",
+  "prefix": "std",
+  "description": "Convert a string to bytes",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/std/to_bytes.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "string",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "String to convert to bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "bytes",
+        "type": "bytes",
+        "tooltip": "UTF-8 byte representation"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "bytes"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/std/to_bytes.jsonc",
+    "repo": "flow-backend"
+  }
+}

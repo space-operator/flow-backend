@@ -1,0 +1,129 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_metadata_account",
+  "prefix": "nft",
+  "description": "Create a metadata account for an NFT",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_token_metadata/create_metadata_account.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "update_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "passthrough": true,
+        "tooltip": "Who can update the on-chain metadata"
+      },
+      {
+        "name": "is_mutable",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Whether Metadata Account can be updated"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Token Mint Account"
+      },
+      {
+        "name": "mint_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Mint authority of the token"
+      },
+      {
+        "name": "metadata",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "NFT metadata JSON object"
+      },
+      {
+        "name": "collection_details",
+        "type_bounds": [
+          "json"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Only applies to Collection NFTs and is automatically set. To facility migration, set the collection size manually."
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      },
+      {
+        "name": "metadata_account",
+        "type": "pubkey",
+        "tooltip": "Derived metadata account address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "nft",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "create",
+      "metadata",
+      "account"
+    ]
+  },
+  "external_version": {
+    "program_id": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_token_metadata/create_metadata_account.jsonc",
+    "repo": "flow-backend"
+  }
+}

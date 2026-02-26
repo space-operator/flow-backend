@@ -1,20 +1,36 @@
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
-    "type": "native",
+    "version": "2.0.0",
     "name": "flow_output",
-    "display_name": "Flow Output",
-    "description": "Use this node to return output for flow",
-    "inputs": [
-        {
-            // flow's output name, change as needed
-            "name": "output",
-            "type_bounds": [
-                "free"
-            ],
-            "required": true,
-            "passthrough": true,
-            "tooltip": "Output of flow, change the \"name\" value to change output's name"
+    "type": "native",
+    "author_handle": "spo",
+    "source_code": "crates/flow/src/command/flow_output.rs",
+    "ports": {
+        "inputs": [
+            {
+                "name": "output",
+                "type_bounds": [
+                    "free"
+                ],
+                "required": true,
+                "passthrough": false,
+                "tooltip": "Output of flow. Rename this input port to rename the exposed flow output."
+            }
+        ],
+        "outputs": []
+    },
+    "config_schema": {
+        "type": "object",
+        "properties": {
+            "label": {
+                "type": "string"
+            }
+        },
+        "additionalProperties": false
+    },
+    "config": {
+        "label": {
+            "S": "output"
         }
-    ],
-    "outputs": []
+    }
 }

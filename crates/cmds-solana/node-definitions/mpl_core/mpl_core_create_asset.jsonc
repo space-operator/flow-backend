@@ -1,0 +1,131 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_core_v2",
+  "prefix": "nft",
+  "description": "Create a new MPL Core asset",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_core/create_asset.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "asset",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Asset keypair (generated if not provided)"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Authority keypair for the asset"
+      },
+      {
+        "name": "name",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Name of the asset"
+      },
+      {
+        "name": "uri",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "URI pointing to the asset metadata"
+      },
+      {
+        "name": "collection",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Collection to add the asset to"
+      },
+      {
+        "name": "verified_creator",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Verified creator keypair to sign the asset"
+      },
+      {
+        "name": "plugins",
+        "type_bounds": [
+          "json"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Plugins to attach to the asset"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "core",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "create"
+    ]
+  },
+  "external_version": {
+    "program_id": "core_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core/mpl_core_create_asset.jsonc",
+    "repo": "flow-backend"
+  }
+}

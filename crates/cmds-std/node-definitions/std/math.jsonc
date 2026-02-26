@@ -1,0 +1,85 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "math",
+  "prefix": "std",
+  "description": "Performs arithmetic on two numbers using the selected operator.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/std/math.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "a",
+        "type_bounds": [
+          "number"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "First operand"
+      },
+      {
+        "name": "b",
+        "type_bounds": [
+          "number"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Second operand"
+      },
+      {
+        "name": "operator",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "+ Addition, - Subtraction, * Multiplication, / Division, % Modulo, ^ Exponentiation"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "free",
+        "optional": false,
+        "tooltip": "Result of the arithmetic operation"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "title": "Math",
+    "properties": {
+      "operator": {
+        "title": "Operator",
+        "type": "string",
+        "default": "+"
+      }
+    }
+  },
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "math"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/std/math.jsonc",
+    "repo": "flow-backend"
+  }
+}

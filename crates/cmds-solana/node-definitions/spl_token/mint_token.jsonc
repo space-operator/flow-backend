@@ -1,0 +1,114 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "mint_token",
+  "prefix": "spl_token",
+  "description": "Mint tokens to a recipient's token account",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mint_token.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Pays for transaction fees"
+      },
+      {
+        "name": "mint_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Authority allowed to mint new tokens"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Token mint address"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Recipient's token account address"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "f64"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Number of tokens to mint (1 for NFTs)"
+      },
+      {
+        "name": "decimals",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Token decimals (0 for NFTs); fetched from mint if omitted"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "spl_token",
+    "category": "token",
+    "icon_url": null,
+    "tags": [
+      "token",
+      "spl token",
+      "mint"
+    ]
+  },
+  "external_version": {
+    "program_id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_token/mint_token.jsonc",
+    "repo": "flow-backend"
+  }
+}

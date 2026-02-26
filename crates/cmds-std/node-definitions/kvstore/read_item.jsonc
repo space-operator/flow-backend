@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "kv_read_item",
+  "prefix": "kvstore",
+  "description": "Reads a value by key from a key-value store.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/kvstore/read_item.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "store",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Name of the store"
+      },
+      {
+        "name": "key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Key to read"
+      },
+      {
+        "name": "default",
+        "type_bounds": [
+          "free"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Default value if key is not found"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "value",
+        "type": "free",
+        "tooltip": "Value stored at the key"
+      },
+      {
+        "name": "found",
+        "type": "bool",
+        "tooltip": "Whether the key was found in the store"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "kvstore",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "kvstore",
+      "read",
+      "item"
+    ]
+  },
+  "external_version": {
+    "program_id": "kvstore_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/kvstore/read_item.jsonc",
+    "repo": "flow-backend"
+  }
+}

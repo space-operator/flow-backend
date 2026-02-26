@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "print",
+  "prefix": "std",
+  "description": "Logs its input value and passes it through.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/print.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "print",
+        "type_bounds": [
+          "free"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Value to log"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "__print_output",
+        "type": "string",
+        "optional": false,
+        "tooltip": "String representation of the logged value"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "print"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/print.jsonc",
+    "repo": "flow-backend"
+  }
+}

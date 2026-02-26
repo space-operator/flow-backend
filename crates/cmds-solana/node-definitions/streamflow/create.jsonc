@@ -1,0 +1,144 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_streamflow_timelock",
+  "prefix": "streamflow",
+  "description": "Create a new Streamflow vesting/payment stream with timelock",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/streamflow/create.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the account paying for the transaction fees"
+      },
+      {
+        "name": "sender",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the token sender"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the stream recipient"
+      },
+      {
+        "name": "metadata",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair for the stream metadata account"
+      },
+      {
+        "name": "mint_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the token mint for the stream"
+      },
+      {
+        "name": "data",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "JSON configuration for the stream (amount, period, cliff, etc.)"
+      },
+      {
+        "name": "partner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Public key of the partner account for fee sharing"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature of the stream creation"
+      },
+      {
+        "name": "escrow_tokens",
+        "type": "pubkey",
+        "tooltip": "Public key of the escrow token account"
+      },
+      {
+        "name": "sender_tokens",
+        "type": "pubkey",
+        "tooltip": "Public key of the sender's token account"
+      },
+      {
+        "name": "recipient_tokens",
+        "type": "pubkey",
+        "tooltip": "Public key of the recipient's token account"
+      },
+      {
+        "name": "metadata",
+        "type": "pubkey",
+        "tooltip": "Public key of the stream metadata account"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Streamflow",
+    "program": "streamflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "streamflow",
+      "create",
+      "timelock"
+    ]
+  },
+  "external_version": {
+    "program_id": "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/streamflow/create.jsonc",
+    "repo": "flow-backend"
+  }
+}

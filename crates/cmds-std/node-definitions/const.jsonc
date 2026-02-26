@@ -1,0 +1,79 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "2.0.0",
+  "name": "const",
+  "prefix": "std",
+  "description": "Outputs a constant value configured in the node properties.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/const_cmd.rs",
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "output",
+        "type": "free",
+        "optional": false,
+        "tooltip": "The constant value"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "type": {
+        "type": "string",
+        "enum": [
+          "JSON",
+          "File"
+        ]
+      },
+      "value": {
+        "$ref": "https://schema.spaceoperator.com/value.schema.json"
+      },
+      "static": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "type",
+      "value"
+    ],
+    "additionalProperties": false
+  },
+  "config": {
+    "type": {
+      "S": "JSON"
+    },
+    "value": {
+      "S": ""
+    },
+    "static": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "std",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "std",
+      "const"
+    ]
+  },
+  "external_version": {
+    "program_id": "std_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/const.jsonc",
+    "repo": "flow-backend"
+  }
+}

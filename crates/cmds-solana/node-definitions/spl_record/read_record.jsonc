@@ -1,0 +1,79 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "read_record",
+  "prefix": "record",
+  "description": "Read data from an on-chain record account",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_record/read_record.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Public key of the record account to read"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "authority",
+        "type": "pubkey",
+        "tooltip": "Public key of the record's authority"
+      },
+      {
+        "name": "version",
+        "type": "number",
+        "tooltip": "Version number of the record"
+      },
+      {
+        "name": "data",
+        "type": "string",
+        "tooltip": "Data stored in the record"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "record",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "record",
+      "read"
+    ]
+  },
+  "external_version": {
+    "program_id": "record_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_record/read_record.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_shard",
+  "prefix": "nft",
+  "description": "Create an inscription shard account",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_inscription/create_shard.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "shard_number",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Shard number to create"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "inscriptions",
+    "category": "nft",
+    "icon_url": null,
+    "tags": [
+      "nft",
+      "inscriptions",
+      "create",
+      "shard"
+    ]
+  },
+  "external_version": {
+    "program_id": "1NSCRfGeyo7wPUazGbaPBUsTM49e1k2aXewHGARfzSo",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_inscription/create_shard.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "gen_metaplex_attrs",
+  "prefix": "pdg",
+  "description": "Generate Metaplex attributes from PDG render parameters",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-pdg/src/gen_metaplex_attrs.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "attributes",
+        "type_bounds": [
+          "object"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "PDG attributes to convert to Metaplex format"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "attributes",
+        "type": "object",
+        "tooltip": "Metaplex-formatted attributes"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "pdg",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "pdg",
+      "gen",
+      "metaplex",
+      "attrs"
+    ]
+  },
+  "external_version": {
+    "program_id": "pdg_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-pdg/node-definitions/gen_metaplex_attrs.jsonc",
+    "repo": "flow-backend"
+  }
+}

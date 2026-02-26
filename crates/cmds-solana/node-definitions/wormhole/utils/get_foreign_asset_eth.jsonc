@@ -1,0 +1,90 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "get_foreign_asset_eth",
+  "prefix": "wormhole",
+  "description": "Look up the wrapped token address on Ethereum for a foreign asset via Wormhole",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/utils/get_foreign_asset_eth.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "token",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Token address on the origin chain"
+      },
+      {
+        "name": "is_nft",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether the asset is an NFT (default: false)"
+      },
+      {
+        "name": "chain_id",
+        "type_bounds": [
+          "number"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Wormhole chain ID of the token's origin chain"
+      },
+      {
+        "name": "network",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Ethereum network name to query"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "address",
+        "type": "string",
+        "tooltip": "Wrapped token address on Ethereum"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "is_nft": {
+      "B": false
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "utils",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "utils",
+      "get",
+      "foreign",
+      "asset",
+      "eth"
+    ]
+  },
+  "external_version": {
+    "program_id": "utils_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/wormhole/utils/get_foreign_asset_eth.jsonc",
+    "repo": "flow-backend"
+  }
+}

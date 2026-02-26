@@ -1,0 +1,142 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "burn_cNFT",
+  "prefix": "compression",
+  "description": "Burn a compressed NFT from a Merkle tree",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/burn.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction"
+      },
+      {
+        "name": "leaf_owner",
+        "type_bounds": [
+          "keypair",
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Owner of the compressed NFT leaf"
+      },
+      {
+        "name": "leaf_delegate",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Delegate authority for the compressed NFT leaf"
+      },
+      {
+        "name": "merkle_tree",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Public key of the Merkle tree account"
+      },
+      {
+        "name": "root",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Current root hash of the Merkle tree"
+      },
+      {
+        "name": "data_hash",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Data hash of the compressed NFT"
+      },
+      {
+        "name": "creator_hash",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Creator hash of the compressed NFT"
+      },
+      {
+        "name": "leaf_id",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Asset ID of the compressed NFT leaf"
+      },
+      {
+        "name": "index",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Index of the leaf in the Merkle tree"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Transaction signature of the burn operation"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "compression",
+    "category": "compression",
+    "icon_url": null,
+    "tags": [
+      "compression",
+      "burn",
+      "cnft"
+    ]
+  },
+  "external_version": {
+    "program_id": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/burn_cNFT.jsonc",
+    "repo": "flow-backend"
+  }
+}

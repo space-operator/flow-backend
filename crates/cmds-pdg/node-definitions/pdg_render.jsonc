@@ -1,0 +1,102 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "pdg_render",
+  "prefix": "pdg",
+  "description": "Render an image with the PDG pipeline",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-pdg/src/pdg_render.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Render service WebSocket URL"
+      },
+      {
+        "name": "rand_seed",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Random seed for reproducible renders"
+      },
+      {
+        "name": "attributes",
+        "type_bounds": [
+          "object"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Render attribute overrides"
+      },
+      {
+        "name": "headers",
+        "type_bounds": [
+          "object"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Additional HTTP headers"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "metadata",
+        "type": "json",
+        "tooltip": "Render metadata"
+      },
+      {
+        "name": "metadata_url",
+        "type": "string",
+        "tooltip": "URL to metadata file"
+      },
+      {
+        "name": "main_image_url",
+        "type": "string",
+        "tooltip": "URL to the rendered main image"
+      },
+      {
+        "name": "sketch_image_url",
+        "type": "string",
+        "tooltip": "URL to the rendered sketch image"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "url": {
+      "S": "wss://api.spaceoperator.com/pdg/render"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "pdg",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "pdg",
+      "render"
+    ]
+  },
+  "external_version": {
+    "program_id": "pdg_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-pdg/node-definitions/pdg_render.jsonc",
+    "repo": "flow-backend"
+  }
+}

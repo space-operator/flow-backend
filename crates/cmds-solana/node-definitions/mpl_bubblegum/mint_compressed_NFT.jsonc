@@ -1,0 +1,149 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "mint_compressed_NFT",
+  "prefix": "compression",
+  "description": "Mint a new compressed NFT to a Merkle tree",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/mint_v1.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction"
+      },
+      {
+        "name": "creator_or_delegate",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the tree creator or delegate authority"
+      },
+      {
+        "name": "tree_config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the tree configuration account"
+      },
+      {
+        "name": "merkle_tree",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the Merkle tree account"
+      },
+      {
+        "name": "leaf_owner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the new leaf owner"
+      },
+      {
+        "name": "leaf_delegate",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Public key of the leaf delegate"
+      },
+      {
+        "name": "metadata",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "JSON metadata for the compressed NFT"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Transaction signature of the mint operation"
+      },
+      {
+        "name": "id",
+        "type": "pubkey",
+        "tooltip": "Asset ID of the minted compressed NFT"
+      },
+      {
+        "name": "nonce",
+        "type": "u64",
+        "tooltip": "Nonce value of the minted leaf"
+      },
+      {
+        "name": "creator_hash",
+        "type": "bytes",
+        "tooltip": "Creator hash of the minted compressed NFT"
+      },
+      {
+        "name": "data_hash",
+        "type": "bytes",
+        "tooltip": "Data hash of the minted compressed NFT"
+      },
+      {
+        "name": "leaf_hash",
+        "type": "bytes",
+        "tooltip": "Leaf hash of the minted compressed NFT"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "compression",
+    "category": "compression",
+    "icon_url": null,
+    "tags": [
+      "compression",
+      "mint",
+      "compressed",
+      "nft"
+    ]
+  },
+  "external_version": {
+    "program_id": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/mint_compressed_NFT.jsonc",
+    "repo": "flow-backend"
+  }
+}

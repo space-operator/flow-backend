@@ -1,0 +1,85 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "json_extract",
+  "prefix": "json",
+  "description": "Extracts a value from a JSON object or array at the given path.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/json/extract.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "json_input",
+        "type_bounds": [
+          "free"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "JSON object, array, or JSON string to extract from"
+      },
+      {
+        "name": "field_path",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "e.g. /data/records/0/fields/url to select the url field value\nnote the /0/ is equivalent to [0], to select the first index in an array"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "value",
+        "type": "free",
+        "optional": false,
+        "tooltip": "Extracted value at the path"
+      },
+      {
+        "name": "trimmed_json",
+        "type": "json",
+        "optional": false,
+        "tooltip": "Input with the extracted value removed"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "title": "JSON Extract",
+    "properties": {
+      "json_input": {
+        "title": "JSON Input",
+        "type": "string"
+      },
+      "field_path": {
+        "title": "Field Path",
+        "type": "string"
+      }
+    }
+  },
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "json",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "json",
+      "extract"
+    ]
+  },
+  "external_version": {
+    "program_id": "json_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/json/extract.jsonc",
+    "repo": "flow-backend"
+  }
+}

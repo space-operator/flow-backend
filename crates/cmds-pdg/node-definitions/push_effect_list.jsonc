@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "push_effect_list",
+  "prefix": "pdg",
+  "description": "Push an effect onto an effects list",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-pdg/src/push_effect_list.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "effects",
+        "type_bounds": [
+          "array"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Current effects list"
+      },
+      {
+        "name": "element",
+        "type_bounds": [
+          "array"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Effect element to append"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "effects",
+        "type": "array",
+        "tooltip": "Updated effects list"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "pdg",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "pdg",
+      "push",
+      "effect",
+      "list"
+    ]
+  },
+  "external_version": {
+    "program_id": "pdg_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-pdg/node-definitions/push_effect_list.jsonc",
+    "repo": "flow-backend"
+  }
+}

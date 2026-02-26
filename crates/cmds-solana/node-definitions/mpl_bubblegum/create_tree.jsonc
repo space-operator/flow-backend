@@ -1,0 +1,131 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_tree",
+  "prefix": "compression",
+  "description": "Create a new Merkle tree for compressed NFTs",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/create_tree.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction"
+      },
+      {
+        "name": "creator",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the tree creator"
+      },
+      {
+        "name": "merkle_tree",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Keypair of the Merkle tree account to create"
+      },
+      {
+        "name": "max_depth",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Maximum depth of the Merkle tree"
+      },
+      {
+        "name": "max_buffer",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Maximum buffer size of the Merkle tree"
+      },
+      {
+        "name": "canopy_levels",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Number of canopy levels to cache on-chain"
+      },
+      {
+        "name": "is_public",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "If public, anyone will be able to mint Compressed NFTs from it. Otherwise, only the Tree Creator or the Tree Delegate can."
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Transaction signature of the tree creation"
+      },
+      {
+        "name": "tree_config",
+        "type": "pubkey",
+        "tooltip": "Public key of the tree configuration account"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "is_public": {
+      "B": true
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "compression",
+    "category": "compression",
+    "icon_url": null,
+    "tags": [
+      "compression",
+      "create",
+      "tree"
+    ]
+  },
+  "external_version": {
+    "program_id": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/create_tree.jsonc",
+    "repo": "flow-backend"
+  }
+}

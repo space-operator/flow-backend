@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "kvexplorer",
+  "prefix": "kvstore",
+  "description": "Browse key-value store contents",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/kvstore/explorer.rs",
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "Values",
+        "type": "array",
+        "tooltip": "All values in the store"
+      },
+      {
+        "name": "KVS",
+        "type": "array",
+        "tooltip": "All key-value pairs"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "kvstore",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "kvstore",
+      "kvexplorer"
+    ]
+  },
+  "external_version": {
+    "program_id": "kvstore_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/kvstore/kv_explorer.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,18 +1,52 @@
 {
     "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
-    "type": "native",
+    "version": "2.0.0",
     "name": "const",
-    "display_name": "Cosnt",
-    "description": "Constant value",
-    "outputs": [
-        {
-            "name": "output",
-            "type": "free",
-            "required": true,
-            "value": {
-                "S": ""
+    "type": "native",
+    "author_handle": "spo",
+    "source_code": "crates/cmds-std/src/const_cmd.rs",
+    "ports": {
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "output",
+                "type": "free",
+                "optional": false
             }
+        ]
+    },
+    "config_schema": {
+        "type": "object",
+        "properties": {
+            "type": {
+                "type": "string",
+                "enum": [
+                    "JSON",
+                    "File"
+                ]
+            },
+            "value": {
+                "$ref": "https://schema.spaceoperator.com/value.schema.json"
+            },
+            "static": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "type",
+            "value"
+        ],
+        "additionalProperties": false
+    },
+    "config": {
+        "type": {
+            "S": "JSON"
+        },
+        "value": {
+            "S": ""
+        },
+        "static": {
+            "B": true
         }
-    ],
-    "inputs": []
+    }
 }

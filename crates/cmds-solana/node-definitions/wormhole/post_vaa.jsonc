@@ -1,0 +1,111 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "post_vaa",
+  "prefix": "wormhole",
+  "description": "Post a verified VAA to the Wormhole bridge on Solana",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/wormhole/post_vaa.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair that pays for the transaction fees"
+      },
+      {
+        "name": "signature_set",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the signature set account"
+      },
+      {
+        "name": "guardian_set_index",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Index of the guardian set used to verify the VAA"
+      },
+      {
+        "name": "vaa_hash",
+        "type_bounds": [
+          "bytes"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Hash of the VAA body"
+      },
+      {
+        "name": "vaa",
+        "type_bounds": [
+          "bytes"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "VAA body bytes to post"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "vaa_address",
+        "type": "pubkey",
+        "tooltip": "On-chain address of the posted VAA account"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Wormhole",
+    "program": "wormhole",
+    "category": "bridge",
+    "icon_url": null,
+    "tags": [
+      "bridge",
+      "wormhole",
+      "post",
+      "vaa"
+    ]
+  },
+  "external_version": {
+    "program_id": "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/wormhole/post_vaa.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "mpl_core_update_plugin",
+  "prefix": "nft",
+  "description": "Update a plugin on an MPL Core asset",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_core/update_plugin.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "asset",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the asset to update the plugin on"
+      },
+      {
+        "name": "update_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Update authority keypair of the asset"
+      },
+      {
+        "name": "collection",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Collection the asset belongs to"
+      },
+      {
+        "name": "plugin",
+        "type_bounds": [
+          "json"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Plugin configuration JSON to update"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "core",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "mpl",
+      "update",
+      "plugin"
+    ]
+  },
+  "external_version": {
+    "program_id": "core_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_core/mpl_core_update_plugin.jsonc",
+    "repo": "flow-backend"
+  }
+}

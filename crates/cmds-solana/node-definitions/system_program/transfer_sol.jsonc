@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transfer_sol",
+  "prefix": "solana",
+  "description": "Transfer SOL between accounts",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/system_program/transfer_sol.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Transaction fee payer (defaults to sender)"
+      },
+      {
+        "name": "sender",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Sender keypair that signs and sends SOL"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Recipient wallet address"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "decimal"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Amount in SOL"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Signature of the submitted transaction"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "solana",
+    "category": "solana",
+    "icon_url": null,
+    "tags": [
+      "solana",
+      "transfer",
+      "sol"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/system_program/transfer_sol.jsonc",
+    "repo": "flow-backend"
+  }
+}
