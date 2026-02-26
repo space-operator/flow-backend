@@ -58,10 +58,10 @@ drop trigger if exists flow_deployments_delete on public.flow_deployments;
 drop function if exists public.flow_deployments_insert();
 drop function if exists public.flow_deployments_delete();
 
+alter table public.flow_deployments_tags drop constraint if exists flow_deployments_tags_deployment_id_entrypoint_fkey;
 alter table public.flow_deployments drop constraint if exists flow_deployments_id_entrypoint_key;
 alter table public.flow_deployments_flows drop constraint if exists flow_deployments_flows_pkey;
 alter table public.flow_deployments_tags drop constraint if exists flow_deployments_tags_pkey;
-alter table public.flow_deployments_tags drop constraint if exists flow_deployments_tags_deployment_id_entrypoint_fkey;
 
 alter table public.flow_deployments
     drop column entrypoint;

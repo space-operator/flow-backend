@@ -32,7 +32,7 @@ create table if not exists public.flows_v2 (
     start_unverified boolean not null default false,
     current_branch_id integer,
 
-    parent_flow integer,
+    parent_flow uuid,
     linked_flows jsonb,
     lifecycle jsonb,
 

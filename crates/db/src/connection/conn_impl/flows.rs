@@ -370,7 +370,7 @@ impl UserConnection {
                         start_shared,
                         start_unverified,
                         current_branch_id,
-                        id as parent_flow,
+                        uuid as parent_flow,
                         linked_flows,
                         lifecycle,
                         meta_nodes,
