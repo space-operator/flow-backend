@@ -3,3 +3,4 @@
 -- include grants for the flow_runner role used by the Rust backend.
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.flows_v2 TO flow_runner;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE public.flows_v2_id_seq TO flow_runner;
