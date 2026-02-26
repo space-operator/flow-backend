@@ -5,6 +5,7 @@
   "description": "Adds two decimal numbers. (Test node)",
   "type": "native",
   "author_handle": "spo",
+  "prefix": "std",
   "source_code": "lib/flow-rpc/src/add.rs",
   "ports": {
     "inputs": [

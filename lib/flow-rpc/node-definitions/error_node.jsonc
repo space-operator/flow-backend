@@ -5,6 +5,7 @@
   "description": "Always returns an error. Used for testing error handling.",
   "type": "native",
   "author_handle": "spo",
+  "prefix": "std",
   "source_code": "lib/flow-rpc/src/error_node.rs",
   "ports": {
     "inputs": [
