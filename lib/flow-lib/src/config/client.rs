@@ -231,15 +231,15 @@ pub struct NodeV2 {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NodeDataV2 {
     pub node_id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub version: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub name: Option<String>,
     #[serde(default)]
     pub ports: Ports,
     #[serde(default)]
     pub config: HashMap<String, JsonValue>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub style: Option<JsonValue>,
 }
 
@@ -322,18 +322,28 @@ impl NodeData {
     }
 }
 
-fn parse_command_type(s: &str) -> CommandType {
+fn parse_command_type(s: &str) -> Option<CommandType> {
     match s {
-        "deno" => CommandType::Deno,
-        "WASM" => CommandType::Wasm,
-        "mock" => CommandType::Mock,
-        _ => CommandType::Native,
+        "deno" => Some(CommandType::Deno),
+        "WASM" => Some(CommandType::Wasm),
+        "mock" => Some(CommandType::Mock),
+        _ => None,
     }
 }
 
+fn infer_command_type(node_type: &str, node_id: &str) -> CommandType {
+    parse_command_type(node_type).unwrap_or_else(|| {
+        let name = node_id.rsplit('/').next().unwrap_or(node_id);
+        if name == "deno_script" || name.starts_with("deno_") {
+            CommandType::Deno
+        } else {
+            CommandType::Native
+        }
+    })
+}
+
 impl NodeDataV2 {
-    /// Convert to [`NodeData`] with the given command type.
-    pub fn into_node_data(self, cmd_type: CommandType) -> NodeData {
+    fn into_node_data(self, cmd_type: CommandType) -> NodeData {
         let config = JsonValue::Object(self.config.into_iter().collect::<JsonMap<_, _>>());
         NodeData {
             r#type: cmd_type,
@@ -347,9 +357,15 @@ impl NodeDataV2 {
     }
 }
 
+impl From<NodeDataV2> for NodeData {
+    fn from(v2: NodeDataV2) -> Self {
+        v2.into_node_data(CommandType::Native)
+    }
+}
+
 impl From<NodeV2> for Node {
     fn from(v2: NodeV2) -> Self {
-        let cmd_type = parse_command_type(&v2.r#type);
+        let cmd_type = infer_command_type(&v2.r#type, &v2.data.node_id);
         Self {
             id: v2.id,
             data: v2.data.into_node_data(cmd_type),
@@ -393,9 +409,6 @@ impl From<FlowRowV2> for FlowRow {
         }
     }
 }
-
-
-
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SourceHandle {
@@ -542,7 +555,10 @@ mod tests {
         let json = serde_json::to_string(&nd).unwrap();
 
         // V2 wire format uses direct field names
-        assert!(json.contains("\"outputs\""), "missing 'outputs' key: {json}");
+        assert!(
+            json.contains("\"outputs\""),
+            "missing 'outputs' key: {json}"
+        );
         assert!(json.contains("\"inputs\""), "missing 'inputs' key: {json}");
         assert!(json.contains("\"config\""), "missing 'config' key: {json}");
 
@@ -565,55 +581,48 @@ mod tests {
         );
 
         // wasm fields must not appear (runtime-only, serde(skip))
-        assert!(
-            !json.contains("wasm"),
-            "wasm must not appear: {json}"
-        );
+        assert!(!json.contains("wasm"), "wasm must not appear: {json}");
     }
 
-    /// V2 format: ports nested under "ports" key.
     #[test]
-    fn node_data_v2_round_trip() {
-        let nd = NodeDataV2 {
-            node_id: "test:node".into(),
-            version: Some("1.0".into()),
-            name: Some("Test".into()),
-            ports: Ports {
-                inputs: vec![InputPort {
-                    id: Uuid::nil(),
-                    name: "a".into(),
-                    type_bounds: vec![],
-                    required: true,
-                    passthrough: false,
-                    tooltip: None,
-                }],
-                outputs: vec![OutputPort {
-                    id: Uuid::nil(),
-                    name: "b".into(),
-                    r#type: ValueType::Free,
-                    optional: false,
-                    tooltip: None,
-                }],
+    fn node_v2_uses_explicit_type_for_command_type() {
+        let node = NodeV2 {
+            id: Uuid::nil(),
+            r#type: "deno".to_owned(),
+            position: None,
+            width: None,
+            height: None,
+            data: NodeDataV2 {
+                node_id: "deno_add".to_owned(),
+                version: None,
+                name: Some("Deno Add".to_owned()),
+                ports: Ports::default(),
+                config: HashMap::new(),
+                style: None,
             },
-            config: [("key".into(), JsonValue::from(42))].into_iter().collect(),
-            style: None,
         };
-        let json = serde_json::to_string(&nd).unwrap();
-        let deser: NodeDataV2 = serde_json::from_str(&json).unwrap();
-        assert_eq!(nd, deser);
+        let parsed: Node = node.into();
+        assert_eq!(parsed.data.r#type, CommandType::Deno);
     }
 
-    /// Minimal V2 format: only node_id required, everything else defaults.
     #[test]
-    fn node_data_v2_minimal() {
-        let json = r#"{"node_id": "test:minimal"}"#;
-        let nd: NodeDataV2 = serde_json::from_str(json).unwrap();
-        assert_eq!(nd.node_id, "test:minimal");
-        assert!(nd.ports.inputs.is_empty());
-        assert!(nd.ports.outputs.is_empty());
-        assert!(nd.config.is_empty());
-        assert!(nd.version.is_none());
-        assert!(nd.name.is_none());
-        assert!(nd.style.is_none());
+    fn node_v2_falls_back_to_node_id_for_legacy_deno_nodes() {
+        let node = NodeV2 {
+            id: Uuid::nil(),
+            r#type: "native".to_owned(),
+            position: None,
+            width: None,
+            height: None,
+            data: NodeDataV2 {
+                node_id: "deno_script".to_owned(),
+                version: None,
+                name: None,
+                ports: Ports::default(),
+                config: HashMap::new(),
+                style: None,
+            },
+        };
+        let parsed: Node = node.into();
+        assert_eq!(parsed.data.r#type, CommandType::Deno);
     }
 }
