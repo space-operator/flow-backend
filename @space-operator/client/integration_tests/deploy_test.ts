@@ -26,7 +26,7 @@ const supabaseUrl = "http://localhost:8000";
 const DEPLOY_RUN_FLOW_ID = "92b480ad-1a18-4a52-a459-4d5420890272"; // Transfer SOL
 const DEPLOY_DELETE_FLOW_ID = "102244df-74aa-4f77-a556-d9d279c64655"; // Collatz-Core
 const DEPLOY_ACTION_FLOW_ID = "9647ba16-de20-4209-9056-1a3dd8c2d6ab"; // Simple Transfer
-const DEPLOY_SIMPLE_FLOW_ID = "9647ba16-de20-4209-9056-1a3dd8c2d6ab"; // Simple Transfer
+const DEPLOY_SIMPLE_FLOW_ID = "6c949718-69e2-47c1-8b93-d56b8e34ec51"; // Add
 
 Deno.test("deploy and run", async () => {
   const owner = new client.Client({
