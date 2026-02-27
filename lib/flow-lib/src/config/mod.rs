@@ -401,12 +401,12 @@ impl FlowConfig {
             .nodes
             .into_iter()
             .map(|n| {
-                let node_data: client::NodeData = n.data.into();
+                let node: client::Node = n.into();
                 NodeConfig {
-                    id: n.id,
-                    command_name: node_data.node_id.clone(),
-                    config: node_data.config.clone(),
-                    client_node_data: node_data,
+                    id: node.id,
+                    command_name: node.data.node_id.clone(),
+                    config: node.data.config.clone(),
+                    client_node_data: node.data,
                 }
             })
             .collect();

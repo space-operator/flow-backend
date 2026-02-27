@@ -228,96 +228,19 @@ pub struct NodeV2 {
     pub data: NodeDataV2,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NodeDataV2 {
     pub node_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    #[serde(default)]
     pub ports: Ports,
+    #[serde(default)]
     pub config: HashMap<String, JsonValue>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub style: Option<JsonValue>,
-}
-
-impl<'de> Deserialize<'de> for NodeDataV2 {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        use serde::de::Error;
-
-        /// Deserialize from `JsonValue`, treating `null` as `T::default()`.
-        fn or_default<T: Default + serde::de::DeserializeOwned>(
-            v: JsonValue,
-        ) -> Result<T, serde_json::Error> {
-            if v.is_null() {
-                Ok(T::default())
-            } else {
-                serde_json::from_value(v)
-            }
-        }
-
-        let mut obj: JsonMap<String, JsonValue> = JsonMap::deserialize(deserializer)?;
-
-        let node_id: String = obj
-            .remove("node_id")
-            .ok_or_else(|| Error::missing_field("node_id"))
-            .and_then(|v| serde_json::from_value(v).map_err(Error::custom))?;
-
-        let version: Option<String> = obj
-            .remove("version")
-            .and_then(|v| serde_json::from_value(v).ok());
-
-        let name: Option<String> = obj
-            .remove("name")
-            .and_then(|v| serde_json::from_value(v).ok());
-
-        let style: Option<JsonValue> = obj
-            .remove("style")
-            .and_then(|v| if v.is_null() { None } else { Some(v) });
-
-        // Ports: V2 "ports" > V1-rust "outputs"/"inputs" > old-frontend "sources"/"targets"
-        let ports: Ports = if let Some(ports_val) = obj.remove("ports") {
-            or_default(ports_val).map_err(Error::custom)?
-        } else {
-            let outputs_val = obj
-                .remove("outputs")
-                .or_else(|| obj.remove("sources"))
-                .unwrap_or_default();
-            let inputs_val = obj
-                .remove("inputs")
-                .or_else(|| obj.remove("targets"))
-                .unwrap_or_default();
-            Ports {
-                outputs: or_default(outputs_val).map_err(Error::custom)?,
-                inputs: or_default(inputs_val).map_err(Error::custom)?,
-            }
-        };
-
-        // Config: V2/V1-rust "config" > old-frontend "targets_form"."form_data"
-        let config: HashMap<String, JsonValue> =
-            if let Some(config_val) = obj.remove("config") {
-                or_default(config_val).map_err(Error::custom)?
-            } else if let Some(form_data) = obj.remove("targets_form").and_then(|v| match v {
-                JsonValue::Object(mut m) => m.remove("form_data"),
-                _ => None,
-            }) {
-                or_default(form_data).map_err(Error::custom)?
-            } else {
-                HashMap::new()
-            };
-
-        Ok(NodeDataV2 {
-            node_id,
-            version,
-            name,
-            ports,
-            config,
-            style,
-        })
-    }
 }
 
 #[serde_as]
@@ -399,23 +322,24 @@ impl NodeData {
     }
 }
 
-fn infer_command_type(node_id: &str) -> CommandType {
-    let name = node_id.rsplit('/').next().unwrap_or(node_id);
-    if name == "deno_script" {
-        CommandType::Deno
-    } else {
-        CommandType::Native
+fn parse_command_type(s: &str) -> CommandType {
+    match s {
+        "deno" => CommandType::Deno,
+        "WASM" => CommandType::Wasm,
+        "mock" => CommandType::Mock,
+        _ => CommandType::Native,
     }
 }
 
-impl From<NodeDataV2> for NodeData {
-    fn from(v2: NodeDataV2) -> Self {
-        let config = JsonValue::Object(v2.config.into_iter().collect::<JsonMap<_, _>>());
-        Self {
-            r#type: infer_command_type(&v2.node_id),
-            node_id: v2.node_id,
-            outputs: v2.ports.outputs,
-            inputs: v2.ports.inputs,
+impl NodeDataV2 {
+    /// Convert to [`NodeData`] with the given command type.
+    pub fn into_node_data(self, cmd_type: CommandType) -> NodeData {
+        let config = JsonValue::Object(self.config.into_iter().collect::<JsonMap<_, _>>());
+        NodeData {
+            r#type: cmd_type,
+            node_id: self.node_id,
+            outputs: self.ports.outputs,
+            inputs: self.ports.inputs,
             config,
             wasm: None,
             instruction_info: None,
@@ -425,9 +349,10 @@ impl From<NodeDataV2> for NodeData {
 
 impl From<NodeV2> for Node {
     fn from(v2: NodeV2) -> Self {
+        let cmd_type = parse_command_type(&v2.r#type);
         Self {
             id: v2.id,
-            data: v2.data.into(),
+            data: v2.data.into_node_data(cmd_type),
         }
     }
 }
@@ -676,45 +601,6 @@ mod tests {
         let json = serde_json::to_string(&nd).unwrap();
         let deser: NodeDataV2 = serde_json::from_str(&json).unwrap();
         assert_eq!(nd, deser);
-    }
-
-    /// V1 Rust format: flat "outputs"/"inputs" keys (no "ports" wrapper).
-    #[test]
-    fn node_data_v2_from_v1_rust_format() {
-        let json = r#"{
-            "node_id": "spl:transfer",
-            "outputs": [{"id": "00000000-0000-0000-0000-000000000000", "name": "sig"}],
-            "inputs": [{"id": "00000000-0000-0000-0000-000000000000", "name": "amt", "required": true}],
-            "config": {"amount": 100}
-        }"#;
-        let nd: NodeDataV2 = serde_json::from_str(json).unwrap();
-        assert_eq!(nd.node_id, "spl:transfer");
-        assert_eq!(nd.ports.outputs.len(), 1);
-        assert_eq!(nd.ports.outputs[0].name, "sig");
-        assert_eq!(nd.ports.inputs.len(), 1);
-        assert_eq!(nd.ports.inputs[0].name, "amt");
-        assert_eq!(nd.config.get("amount"), Some(&JsonValue::from(100)));
-    }
-
-    /// Old frontend format: "sources"/"targets" keys + "targets_form.form_data".
-    #[test]
-    fn node_data_v2_from_old_frontend_format() {
-        let json = r#"{
-            "node_id": "solana:transfer-sol",
-            "sources": [{"id": "00000000-0000-0000-0000-000000000000", "name": "signature"}],
-            "targets": [{"id": "00000000-0000-0000-0000-000000000001", "name": "sender", "required": true}],
-            "targets_form": {
-                "form_data": {"amount": 1.5}
-            },
-            "defaultValue": "ignored"
-        }"#;
-        let nd: NodeDataV2 = serde_json::from_str(json).unwrap();
-        assert_eq!(nd.node_id, "solana:transfer-sol");
-        assert_eq!(nd.ports.outputs.len(), 1);
-        assert_eq!(nd.ports.outputs[0].name, "signature");
-        assert_eq!(nd.ports.inputs.len(), 1);
-        assert_eq!(nd.ports.inputs[0].name, "sender");
-        assert_eq!(nd.config.get("amount"), Some(&JsonValue::from(1.5)));
     }
 
     /// Minimal V2 format: only node_id required, everything else defaults.
