@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_series_sum",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Compute the sum of all values in a Series",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_series_sum.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "series",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Series in IPC format"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "value",
+        "type": "json",
+        "tooltip": "Sum of all values in the Series"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "series",
+      "sum"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/series_sum.jsonc",
+    "repo": "node-builder"
+  }
+}

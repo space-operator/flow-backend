@@ -1,0 +1,65 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_schema",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Get the schema, column names, and data types of a DataFrame",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_schema.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "polars_schema",
+        "type": "json",
+        "tooltip": "Schema as {column_name: dtype_string, ...}"
+      },
+      {
+        "name": "column_names",
+        "type": "json",
+        "tooltip": "Array of column names"
+      },
+      {
+        "name": "dtypes",
+        "type": "json",
+        "tooltip": "Array of data type strings"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "schema"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/schema.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -81,7 +81,7 @@ dependencies = [
  "actix-utils",
  "base64 0.22.1",
  "bitflags 2.10.0",
- "brotli",
+ "brotli 8.0.2",
  "bytes",
  "bytestring",
  "derive_more 2.1.1",
@@ -1292,6 +1292,9 @@ name = "bitflags"
 version = "2.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "812e12b5285cc515a9c72a5c1d3b6d46a19dac5acfef5265968c166106e31dd3"
+dependencies = [
+ "serde_core",
+]
 
 [[package]]
 name = "bitvec"
@@ -1448,13 +1451,34 @@ checksum = "102dbef1187b1893e6dfe05a774e79fd52265f49f214f6879c8ff49f52c8188b"
 
 [[package]]
 name = "brotli"
+version = "7.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc97b8f16f944bba54f0433f07e30be199b6dc2bd25937444bbad560bcea29bd"
+dependencies = [
+ "alloc-no-stdlib",
+ "alloc-stdlib",
+ "brotli-decompressor 4.0.3",
+]
+
+[[package]]
+name = "brotli"
 version = "8.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4bd8b9603c7aa97359dbd97ecf258968c95f3adddd6db2f7e7a5bef101c84560"
 dependencies = [
  "alloc-no-stdlib",
  "alloc-stdlib",
- "brotli-decompressor",
+ "brotli-decompressor 5.0.0",
+]
+
+[[package]]
+name = "brotli-decompressor"
+version = "4.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a334ef7c9e23abf0ce748e8cd309037da93e606ad52eb372e4ce327a0dcfbdfd"
+dependencies = [
+ "alloc-no-stdlib",
+ "alloc-stdlib",
 ]
 
 [[package]]
@@ -1996,6 +2020,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "serde_wormhole 0.1.0 (git+https://github.com/space-operator/wormhole?rev=b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1)",
+ "sha2 0.10.9",
  "solana-account",
  "solana-account-decoder",
  "solana-commitment-config",
@@ -2007,6 +2032,7 @@ dependencies = [
  "solana-rpc-client",
  "solana-rpc-client-api",
  "solana-sdk-ids",
+ "solana-secp256k1-program",
  "solana-signer",
  "solana-system-interface",
  "solana-transaction",
@@ -2032,6 +2058,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "base64 0.22.1",
  "bs58 0.4.0",
  "bytes",
  "criterion 0.5.1",
@@ -2042,6 +2069,7 @@ dependencies = [
  "hyper 0.14.32",
  "mime_guess",
  "once_cell",
+ "polars",
  "reqwest 0.12.28",
  "rust_decimal",
  "serde",
@@ -2134,7 +2162,7 @@ version = "0.4.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00828ba6fd27b45a448e57dbfe84f1029d4c9f26b368157e9a448a5f49a2ec2a"
 dependencies = [
- "brotli",
+ "brotli 8.0.2",
  "compression-core",
  "flate2",
  "memchr",
@@ -3086,6 +3114,9 @@ name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "elliptic-curve"
@@ -3413,6 +3444,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfe33edd8e85a12a67454e37f8c75e730830d83e313556ab9ebf9ee7fbeb3bfb"
 dependencies = [
  "crc32fast",
+ "libz-rs-sys",
  "miniz_oxide",
 ]
 
@@ -3609,7 +3641,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "simd-json",
+ "simd-json 0.15.1",
  "thiserror 1.0.69",
  "tokio",
  "tokio-tungstenite 0.24.0",
@@ -3679,7 +3711,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "sha2 0.10.9",
- "simd-json",
+ "simd-json 0.15.1",
  "solana-keypair",
  "solana-pubkey 3.0.0",
  "solana-rpc-client",
@@ -4112,6 +4144,16 @@ dependencies = [
  "cfg-if",
  "crunchy",
  "zerocopy 0.8.33",
+]
+
+[[package]]
+name = "halfbrown"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8588661a8607108a5ca69cab034063441a0413a0b041c13618a7dd348021ef6f"
+dependencies = [
+ "hashbrown 0.14.5",
+ "serde",
 ]
 
 [[package]]
@@ -5182,6 +5224,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonpath_lib_polars_vendor"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4bd9354947622f7471ff713eacaabdb683ccb13bba4edccaab9860abf480b7d"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "jsonrpc-core"
 version = "18.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5367,6 +5420,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67abfe149395e3aa1c48a2beb32b068e2334402df8181f818d3aee2b304c4f5d"
 dependencies = [
  "libsecp256k1-core",
+]
+
+[[package]]
+name = "libz-rs-sys"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c10501e7805cee23da17c7790e59df2870c0d4043ec6d03f67d31e2b53e77415"
+dependencies = [
+ "zlib-rs",
 ]
 
 [[package]]
@@ -6740,8 +6802,11 @@ dependencies = [
  "polars-error",
  "polars-io",
  "polars-lazy",
+ "polars-ops",
  "polars-parquet",
+ "polars-plan",
  "polars-sql",
+ "polars-time",
  "polars-utils",
  "version_check",
 ]
@@ -6770,6 +6835,7 @@ dependencies = [
  "polars-error",
  "polars-schema",
  "polars-utils",
+ "serde",
  "simdutf8",
  "streaming-iterator",
  "strength_reduce",
@@ -6838,6 +6904,8 @@ dependencies = [
  "rand_distr",
  "rayon",
  "regex",
+ "serde",
+ "serde_json",
  "strum_macros 0.26.4",
  "thiserror 2.0.17",
  "version_check",
@@ -6890,6 +6958,7 @@ dependencies = [
  "async-trait",
  "atoi_simd",
  "bytes",
+ "chrono",
  "fast-float2",
  "futures",
  "glob",
@@ -6904,15 +6973,41 @@ dependencies = [
  "polars-arrow",
  "polars-core",
  "polars-error",
+ "polars-json",
  "polars-parquet",
  "polars-schema",
+ "polars-time",
  "polars-utils",
  "rayon",
  "regex",
  "ryu",
+ "serde",
+ "simd-json 0.14.3",
  "simdutf8",
  "tokio",
  "tokio-util 0.7.18",
+]
+
+[[package]]
+name = "polars-json"
+version = "0.46.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e30603ca81e317b66b4caac683a8325a6a82ea0489685dc37e22ae03720def98"
+dependencies = [
+ "ahash 0.8.12",
+ "chrono",
+ "fallible-streaming-iterator",
+ "hashbrown 0.15.2",
+ "indexmap 2.13.0",
+ "itoa",
+ "num-traits",
+ "polars-arrow",
+ "polars-compute",
+ "polars-error",
+ "polars-utils",
+ "ryu",
+ "simd-json 0.14.3",
+ "streaming-iterator",
 ]
 
 [[package]]
@@ -6930,6 +7025,7 @@ dependencies = [
  "polars-core",
  "polars-expr",
  "polars-io",
+ "polars-json",
  "polars-mem-engine",
  "polars-ops",
  "polars-pipe",
@@ -6953,6 +7049,7 @@ dependencies = [
  "polars-error",
  "polars-expr",
  "polars-io",
+ "polars-json",
  "polars-ops",
  "polars-plan",
  "polars-time",
@@ -6976,6 +7073,7 @@ dependencies = [
  "hashbrown 0.15.2",
  "hex",
  "indexmap 2.13.0",
+ "jsonpath_lib_polars_vendor",
  "memchr",
  "num-traits",
  "once_cell",
@@ -6983,11 +7081,16 @@ dependencies = [
  "polars-compute",
  "polars-core",
  "polars-error",
+ "polars-json",
  "polars-schema",
  "polars-utils",
+ "rand 0.8.5",
+ "rand_distr",
  "rayon",
  "regex",
  "regex-syntax",
+ "serde",
+ "serde_json",
  "strum_macros 0.26.4",
  "unicode-normalization",
  "unicode-reverse",
@@ -7003,18 +7106,24 @@ dependencies = [
  "ahash 0.8.12",
  "async-stream",
  "base64 0.22.1",
+ "brotli 7.0.0",
  "bytemuck",
  "ethnum",
+ "flate2",
  "futures",
  "hashbrown 0.15.2",
+ "lz4",
  "num-traits",
  "polars-arrow",
  "polars-compute",
  "polars-error",
  "polars-parquet-format",
  "polars-utils",
+ "serde",
  "simdutf8",
+ "snap",
  "streaming-decompression",
+ "zstd",
 ]
 
 [[package]]
@@ -7036,6 +7145,7 @@ dependencies = [
  "crossbeam-channel",
  "crossbeam-queue",
  "enum_dispatch",
+ "futures",
  "hashbrown 0.15.2",
  "num-traits",
  "once_cell",
@@ -7075,12 +7185,15 @@ dependencies = [
  "polars-compute",
  "polars-core",
  "polars-io",
+ "polars-json",
  "polars-ops",
+ "polars-parquet",
  "polars-time",
  "polars-utils",
  "rayon",
  "recursive",
  "regex",
+ "serde",
  "strum_macros 0.26.4",
  "version_check",
 ]
@@ -7108,6 +7221,7 @@ dependencies = [
  "indexmap 2.13.0",
  "polars-error",
  "polars-utils",
+ "serde",
  "version_check",
 ]
 
@@ -7182,6 +7296,7 @@ dependencies = [
  "polars-utils",
  "rayon",
  "regex",
+ "serde",
  "strum_macros 0.26.4",
 ]
 
@@ -7192,9 +7307,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f6c8166a4a7fbc15b87c81645ed9e1f0651ff2e8c96cafc40ac5bf43441a10"
 dependencies = [
  "ahash 0.8.12",
+ "bincode 1.3.3",
  "bytemuck",
  "bytes",
  "compact_str",
+ "flate2",
  "hashbrown 0.15.2",
  "indexmap 2.13.0",
  "libc",
@@ -7205,6 +7322,8 @@ dependencies = [
  "rand 0.8.5",
  "raw-cpuid",
  "rayon",
+ "serde",
+ "serde_json",
  "stacker",
  "sysinfo",
  "version_check",
@@ -9217,17 +9336,34 @@ checksum = "e320a6c5ad31d271ad523dcf3ad13e2767ad8b1cb8f047f75a8aeaf8da139da2"
 
 [[package]]
 name = "simd-json"
+version = "0.14.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa2bcf6c6e164e81bc7a5d49fc6988b3d515d9e8c07457d7b74ffb9324b9cd40"
+dependencies = [
+ "ahash 0.8.12",
+ "getrandom 0.2.17",
+ "halfbrown 0.2.5",
+ "once_cell",
+ "ref-cast",
+ "serde",
+ "serde_json",
+ "simdutf8",
+ "value-trait 0.10.1",
+]
+
+[[package]]
+name = "simd-json"
 version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c962f626b54771990066e5435ec8331d1462576cd2d1e62f24076ae014f92112"
 dependencies = [
  "getrandom 0.3.4",
- "halfbrown",
+ "halfbrown 0.3.0",
  "ref-cast",
  "serde",
  "serde_json",
  "simdutf8",
- "value-trait",
+ "value-trait 0.11.0",
 ]
 
 [[package]]
@@ -9344,6 +9480,12 @@ dependencies = [
  "quote",
  "syn 2.0.114",
 ]
+
+[[package]]
+name = "snap"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b6b67fb9a61334225b5b790716f609cd58395f895b3fe8b328786812a40bc3b"
 
 [[package]]
 name = "socket2"
@@ -10243,11 +10385,14 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8efa767b0188f577edae7080e8bf080e5db9458e2b6ee5beaa73e2e6bb54e99d"
 dependencies = [
+ "bincode 1.3.3",
  "digest 0.10.7",
  "k256",
  "serde",
  "serde_derive",
  "sha3",
+ "solana-instruction",
+ "solana-sdk-ids",
  "solana-signature",
 ]
 
@@ -12297,12 +12442,24 @@ checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 
 [[package]]
 name = "value-trait"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9170e001f458781e92711d2ad666110f153e4e50bfd5cbd02db6547625714187"
+dependencies = [
+ "float-cmp",
+ "halfbrown 0.2.5",
+ "itoa",
+ "ryu",
+]
+
+[[package]]
+name = "value-trait"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0508fce11ad19e0aab49ce20b6bec7f8f82902ded31df1c9fc61b90f0eb396b8"
 dependencies = [
  "float-cmp",
- "halfbrown",
+ "halfbrown 0.3.0",
  "itoa",
  "ryu",
 ]
@@ -13449,6 +13606,12 @@ dependencies = [
  "quote",
  "syn 2.0.114",
 ]
+
+[[package]]
+name = "zlib-rs"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "40990edd51aae2c2b6907af74ffb635029d5788228222c4bb811e9351c0caad3"
 
 [[package]]
 name = "zmij"

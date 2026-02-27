@@ -1,0 +1,62 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_create_dataframe",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Create a Polars DataFrame from column-oriented JSON data",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_create_dataframe.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "data",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Column-oriented JSON data, e.g. {\"col1\": [1,2], \"col2\": [\"a\",\"b\"]}"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "create",
+      "dataframe"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/create_dataframe.jsonc",
+    "repo": "node-builder"
+  }
+}

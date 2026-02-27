@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::utils::anchor_sighash;
+use crate::utils::anchor_discriminator;
 use solana_program::instruction::AccountMeta;
 use solana_program::sysvar;
 use solana_sdk_ids::system_program;
@@ -80,7 +80,7 @@ fn create_create_stream_instruction(
     ]
     .to_vec();
 
-    let discriminator = anchor_sighash("create");
+    let discriminator = anchor_discriminator("create");
 
     Instruction {
         program_id: *timelock_program,

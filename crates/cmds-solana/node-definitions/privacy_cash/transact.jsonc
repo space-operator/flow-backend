@@ -1,0 +1,124 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transact",
+  "prefix": "privacy_cash",
+  "type": "native",
+  "description": "Deposit or withdraw SOL using a Groth16 ZK proof. Positive ext_amount = deposit, negative = withdrawal.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/privacy_cash/transact.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying transaction fees"
+      },
+      {
+        "name": "signer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction signer (depositor for deposits)"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "SOL recipient address for withdrawals"
+      },
+      {
+        "name": "fee_recipient_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Protocol fee recipient address"
+      },
+      {
+        "name": "proof",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Groth16 proof: { proof_a, proof_b, proof_c, root, public_amount, ext_data_hash, input_nullifiers, output_commitments }"
+      },
+      {
+        "name": "ext_data_minified",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "{ ext_amount: i64 (lamports, positive=deposit, negative=withdrawal), fee: u64 (lamports) }"
+      },
+      {
+        "name": "encrypted_output1",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "First encrypted output commitment (byte array)"
+      },
+      {
+        "name": "encrypted_output2",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Second encrypted output commitment (byte array)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "privacy_cash",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "privacy cash",
+      "transact"
+    ]
+  },
+  "external_version": {
+    "program_id": "privacy_cash_program",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/privacy_cash/transact.jsonc",
+    "repo": "node-builder"
+  }
+}

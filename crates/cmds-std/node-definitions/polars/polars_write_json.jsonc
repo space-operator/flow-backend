@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_write_json",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Serialize a Polars DataFrame to JSON text",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_write_json.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "pretty",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether to pretty-print the JSON output"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "json_string",
+        "type": "string",
+        "tooltip": "DataFrame serialized as JSON text"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "pretty": {
+      "B": false
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "write",
+      "json"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/write_json.jsonc",
+    "repo": "node-builder"
+  }
+}

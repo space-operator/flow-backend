@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_shape",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Get the number of rows and columns in a DataFrame",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_shape.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "rows",
+        "type": "u64",
+        "tooltip": "Number of rows in the DataFrame"
+      },
+      {
+        "name": "columns",
+        "type": "u64",
+        "tooltip": "Number of columns in the DataFrame"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "shape"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/shape.jsonc",
+    "repo": "node-builder"
+  }
+}

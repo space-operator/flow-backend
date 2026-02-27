@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_shift",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Shift a column by a number of periods, creating a new shifted column",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_shift.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "column",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Name of the column to shift"
+      },
+      {
+        "name": "periods",
+        "type_bounds": [
+          "i64"
+        ],
+        "required": true,
+        "tooltip": "Number of periods to shift (positive = down, negative = up)"
+      },
+      {
+        "name": "fill_value",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Value to fill shifted nulls with"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "periods": {
+      "U": "1"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "shift"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/shift.jsonc",
+    "repo": "node-builder"
+  }
+}

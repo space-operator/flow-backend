@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_series_unique",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Get unique values from a Series",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_series_unique.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "series",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Series in IPC format"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "series",
+        "type": "string",
+        "tooltip": "Unique values Series in IPC format"
+      },
+      {
+        "name": "series_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Unique values Series as JSON (for viewing)"
+      },
+      {
+        "name": "n_unique",
+        "type": "u64",
+        "tooltip": "Number of unique values"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "series",
+      "unique"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/series_unique.jsonc",
+    "repo": "node-builder"
+  }
+}

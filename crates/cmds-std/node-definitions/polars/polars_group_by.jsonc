@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_group_by",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Group a DataFrame by columns and apply aggregation functions (sum, mean, min, max, count, first, last, median, std, var)",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_group_by.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "by",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Array of column names to group by"
+      },
+      {
+        "name": "agg",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Object mapping column names to aggregation functions: {\"col\": \"sum|mean|min|max|count|first|last|median|std|var\"}"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Grouped and aggregated DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Grouped DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "group"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/group_by.jsonc",
+    "repo": "node-builder"
+  }
+}

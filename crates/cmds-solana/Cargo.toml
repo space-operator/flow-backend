@@ -39,6 +39,7 @@ chrono = "0.4.33"
 bytemuck = "1.16.1"
 bytemuck_derive = "1.7.0"
 struct-convert = "1.4.0"
+sha2 = "0.10"
 
 # solana libs
 solana-rpc-client = { workspace = true }
@@ -56,12 +57,13 @@ solana-transaction = { workspace = true }
 solana-sdk-ids = { workspace = true }
 solana-system-interface = { workspace = true }
 solana-message = { workspace = true }
+solana-secp256k1-program = { workspace = true }
 
 anchor-libs.workspace = true
 
 # spl
 spl-token-interface = "2"
-spl-token-2022-interface = { version = "2", features = ["serde"] }
+spl-token-2022-interface = { version = "2.1", features = ["serde"] }
 spl-memo-interface = "2"
 spl-associated-token-account-interface = "2"
 spl-concurrent-merkle-tree = "1"

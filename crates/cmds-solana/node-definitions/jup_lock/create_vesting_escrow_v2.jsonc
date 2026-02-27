@@ -1,0 +1,181 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_vesting_escrow_v2",
+  "prefix": "jup_lock",
+  "type": "native",
+  "description": "Create a token vesting escrow v2 with memo support and Token-2022 compatibility",
+  "author_handle": "spo",
+  "source_code": "lib/jup_lock/src/create_vesting_escrow_v2.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "base",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Base keypair used to derive the escrow PDA (generate a fresh keypair)"
+      },
+      {
+        "name": "sender",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Token sender who funds the escrow"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token mint address"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Recipient wallet address who will claim vested tokens"
+      },
+      {
+        "name": "token_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "SPL Token or Token-2022 program ID"
+      },
+      {
+        "name": "start_time",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Unix timestamp when vesting begins"
+      },
+      {
+        "name": "frequency",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Seconds between each unlock period"
+      },
+      {
+        "name": "initial_unlock_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Token amount unlocked immediately at start (cliff)"
+      },
+      {
+        "name": "amount_per_period",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Token amount unlocked each period"
+      },
+      {
+        "name": "number_of_period",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Total number of vesting periods"
+      },
+      {
+        "name": "update_recipient_mode",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Who can update recipient: 0=nobody, 1=creator, 2=recipient, 3=either"
+      },
+      {
+        "name": "memo",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Memo string attached to the escrow creation"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "escrow",
+        "type": "pubkey",
+        "tooltip": "Derived escrow PDA address (for use in downstream nodes)"
+      },
+      {
+        "name": "escrow_token",
+        "type": "pubkey",
+        "tooltip": "Derived escrow token account address"
+      },
+      {
+        "name": "sender_token",
+        "type": "pubkey",
+        "tooltip": "Derived sender token account (ATA of sender for mint)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Jupiter",
+    "program": "jup_lock",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "jup lock",
+      "create",
+      "vesting",
+      "escrow"
+    ]
+  },
+  "external_version": {
+    "program_id": "LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/jup_lock/create_vesting_escrow_v2.jsonc",
+    "repo": "node-builder"
+  }
+}

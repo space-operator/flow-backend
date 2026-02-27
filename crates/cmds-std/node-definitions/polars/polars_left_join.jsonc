@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_left_join",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Left join two DataFrames, keeping all rows from the left and matching rows from the right",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_left_join.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "left",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Left DataFrame in IPC format"
+      },
+      {
+        "name": "right",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Right DataFrame in IPC format"
+      },
+      {
+        "name": "on",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Column name(s) to join on (same in both DataFrames)"
+      },
+      {
+        "name": "left_on",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Column name(s) from left DataFrame to join on"
+      },
+      {
+        "name": "right_on",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Column name(s) from right DataFrame to join on"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Joined DataFrame (IPC)"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Joined DataFrame (JSON view)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "left",
+      "join"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/left_join.jsonc",
+    "repo": "node-builder"
+  }
+}

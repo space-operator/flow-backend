@@ -1,0 +1,90 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_sort",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Sort a DataFrame by one or more columns with configurable sort order and null handling",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_sort.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "by",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "JSON array of column names to sort by"
+      },
+      {
+        "name": "descending",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Boolean or JSON array of booleans for sort direction per column"
+      },
+      {
+        "name": "nulls_last",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether to place null values last"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Sorted DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Sorted DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "descending": {
+      "B": false
+    },
+    "nulls_last": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "sort"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/sort.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,180 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "get_presale",
+  "prefix": "presale",
+  "type": "native",
+  "description": "Fetch and parse presale account data. Returns detailed presale state including mode, caps, timings, and vesting parameters.",
+  "author_handle": "spo",
+  "source_code": "https://github.com/MeteoraAg/presale-sdk",
+  "ports": {
+    "inputs": [
+      {
+        "name": "presale",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Address of the presale account to fetch"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "owner",
+        "type": "pubkey",
+        "tooltip": "Owner of the presale"
+      },
+      {
+        "name": "quote_mint",
+        "type": "pubkey",
+        "tooltip": "Quote token mint (payment token, e.g. USDC)"
+      },
+      {
+        "name": "base_mint",
+        "type": "pubkey",
+        "tooltip": "Base token mint (presale token)"
+      },
+      {
+        "name": "base_token_vault",
+        "type": "pubkey",
+        "tooltip": "Base token vault address"
+      },
+      {
+        "name": "quote_token_vault",
+        "type": "pubkey",
+        "tooltip": "Quote token vault address"
+      },
+      {
+        "name": "base",
+        "type": "pubkey",
+        "tooltip": "Base keypair used in presale PDA derivation"
+      },
+      {
+        "name": "presale_mode",
+        "type": "u8",
+        "tooltip": "Presale mode: 0=FixedPrice, 1=Prorata, 2=Fcfs"
+      },
+      {
+        "name": "whitelist_mode",
+        "type": "u8",
+        "tooltip": "Whitelist mode: 0=Permissionless, 1=MerkleProof, 2=Authority"
+      },
+      {
+        "name": "presale_maximum_cap",
+        "type": "u64",
+        "tooltip": "Maximum deposit cap"
+      },
+      {
+        "name": "presale_minimum_cap",
+        "type": "u64",
+        "tooltip": "Minimum deposit cap for presale to succeed"
+      },
+      {
+        "name": "presale_start_time",
+        "type": "u64",
+        "tooltip": "Presale start timestamp (Unix)"
+      },
+      {
+        "name": "presale_end_time",
+        "type": "u64",
+        "tooltip": "Presale end timestamp (Unix)"
+      },
+      {
+        "name": "presale_supply",
+        "type": "u64",
+        "tooltip": "Total base tokens allocated for presale"
+      },
+      {
+        "name": "total_deposit",
+        "type": "u64",
+        "tooltip": "Total quote tokens deposited"
+      },
+      {
+        "name": "total_escrow",
+        "type": "u64",
+        "tooltip": "Total number of escrow accounts created"
+      },
+      {
+        "name": "created_at",
+        "type": "u64",
+        "tooltip": "Presale creation timestamp (Unix)"
+      },
+      {
+        "name": "lock_duration",
+        "type": "u64",
+        "tooltip": "Lock duration in seconds after presale ends"
+      },
+      {
+        "name": "vest_duration",
+        "type": "u64",
+        "tooltip": "Vesting duration in seconds after lock period"
+      },
+      {
+        "name": "immediate_release_bps",
+        "type": "u16",
+        "tooltip": "Immediate release basis points (0-10000)"
+      },
+      {
+        "name": "vesting_start_time",
+        "type": "u64",
+        "tooltip": "Vesting start timestamp (Unix)"
+      },
+      {
+        "name": "vesting_end_time",
+        "type": "u64",
+        "tooltip": "Vesting end timestamp (Unix)"
+      },
+      {
+        "name": "total_claimed_token",
+        "type": "u64",
+        "tooltip": "Total base tokens claimed across all escrows"
+      },
+      {
+        "name": "total_refunded_quote_token",
+        "type": "u64",
+        "tooltip": "Total quote tokens refunded to depositors"
+      },
+      {
+        "name": "has_creator_withdrawn",
+        "type": "bool",
+        "tooltip": "Whether the creator has withdrawn funds"
+      },
+      {
+        "name": "unsold_token_action",
+        "type": "u8",
+        "tooltip": "Unsold token action: 0=Burn, 1=Return"
+      },
+      {
+        "name": "is_unsold_token_action_performed",
+        "type": "bool",
+        "tooltip": "Whether the unsold token action has been performed"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "presale",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "presale",
+      "get"
+    ]
+  },
+  "external_version": {
+    "program_id": "presSVxnf9UU8jMxhgSMqaRwNiT36qeBdNeTRKjTdbj",
+    "sdk_crate": "presale-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/presale/get_presale.jsonc",
+    "repo": "node-builder"
+  }
+}

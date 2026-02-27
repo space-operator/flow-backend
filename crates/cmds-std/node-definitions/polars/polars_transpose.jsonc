@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_transpose",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Transpose a DataFrame so that rows become columns and columns become rows",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_transpose.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "include_header",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether to include original column names as first column"
+      },
+      {
+        "name": "header_name",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Name of the header column (when include_header is true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Transposed DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Transposed DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "include_header": {
+      "B": true
+    },
+    "header_name": {
+      "S": "column"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "transpose"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/transpose.jsonc",
+    "repo": "node-builder"
+  }
+}

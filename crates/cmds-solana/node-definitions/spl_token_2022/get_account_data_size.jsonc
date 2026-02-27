@@ -1,0 +1,86 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "get_account_data_size",
+  "prefix": "token_2022",
+  "type": "native",
+  "description": "Get the required account data size for a Token-2022 account with specified extensions",
+  "author_handle": "spo",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The mint to check"
+      },
+      {
+        "name": "extension_types",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Array of extension type IDs (u16) to include in size calculation"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "token_2022",
+    "category": "token",
+    "icon_url": null,
+    "tags": [
+      "token",
+      "token 2022",
+      "get",
+      "account",
+      "data",
+      "size"
+    ]
+  },
+  "external_version": {
+    "program_id": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "sdk_crate": "spl-token-2022-interface",
+    "sdk_version": "2.1",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/token_2022/get_account_data_size.jsonc",
+    "repo": "node-builder"
+  }
+}

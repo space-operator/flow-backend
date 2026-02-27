@@ -1,0 +1,103 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "update_vesting_escrow_recipient",
+  "prefix": "jup_lock",
+  "type": "native",
+  "description": "Update the recipient of a vesting escrow (if allowed by update_recipient_mode)",
+  "author_handle": "spo",
+  "source_code": "lib/jup_lock/src/update_vesting_escrow_recipient.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "escrow",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Vesting escrow PDA address"
+      },
+      {
+        "name": "signer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Authorized signer (creator or recipient, depending on update_recipient_mode)"
+      },
+      {
+        "name": "new_recipient",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "New recipient wallet address"
+      },
+      {
+        "name": "new_recipient_email",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "New recipient email (when provided, escrow_metadata PDA is auto-derived and included)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Jupiter",
+    "program": "jup_lock",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "jup lock",
+      "update",
+      "vesting",
+      "escrow",
+      "recipient"
+    ]
+  },
+  "external_version": {
+    "program_id": "LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/jup_lock/update_vesting_escrow_recipient.jsonc",
+    "repo": "node-builder"
+  }
+}

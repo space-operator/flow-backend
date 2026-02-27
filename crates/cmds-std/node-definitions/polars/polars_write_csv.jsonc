@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_write_csv",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Serialize a DataFrame to CSV text",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_write_csv.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Input DataFrame (IPC)"
+      },
+      {
+        "name": "has_header",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Include header row"
+      },
+      {
+        "name": "separator",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Column separator character"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "csv_string",
+        "type": "string",
+        "tooltip": "CSV text output"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "has_header": {
+      "B": true
+    },
+    "separator": {
+      "S": ","
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "write",
+      "csv"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/write_csv.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "update_interest_rate",
+  "prefix": "interest_bearing",
+  "type": "native",
+  "description": "Update the interest rate on a Token-2022 mint with interest bearing extension",
+  "author_handle": "spo",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The mint to update the interest rate on"
+      },
+      {
+        "name": "rate_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Current rate authority"
+      },
+      {
+        "name": "rate",
+        "type_bounds": [
+          "i16"
+        ],
+        "required": true,
+        "tooltip": "New interest rate in basis points"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "interest_bearing",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "interest bearing",
+      "update",
+      "interest",
+      "rate"
+    ]
+  },
+  "external_version": {
+    "program_id": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/token_2022/interest_bearing/update_rate.jsonc",
+    "repo": "node-builder"
+  }
+}

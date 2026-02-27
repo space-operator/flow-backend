@@ -1,0 +1,126 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.2",
+  "name": "deposit",
+  "prefix": "presale",
+  "type": "native",
+  "description": "Deposit quote tokens (e.g. USDC) into a presale. Derives escrow and vault PDAs automatically.",
+  "author_handle": "spo",
+  "source_code": "https://github.com/MeteoraAg/presale-sdk",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "presale",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The presale account to deposit into"
+      },
+      {
+        "name": "payer_quote_token",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Payer's quote token account (e.g. USDC ATA)"
+      },
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Payer wallet (signer)"
+      },
+      {
+        "name": "max_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Maximum amount of quote tokens to deposit"
+      },
+      {
+        "name": "registry_index",
+        "type_bounds": [
+          "u8"
+        ],
+        "tooltip": "Registry index (0 for permissionless presales)"
+      },
+      {
+        "name": "slices",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Transfer hook remaining accounts (optional)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "escrow",
+        "type": "pubkey",
+        "tooltip": "Derived escrow PDA"
+      },
+      {
+        "name": "quote_token_vault",
+        "type": "pubkey",
+        "tooltip": "Derived quote token vault PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "presale",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "presale",
+      "deposit"
+    ]
+  },
+  "external_version": {
+    "program_id": "presSVxnf9UU8jMxhgSMqaRwNiT36qeBdNeTRKjTdbj",
+    "sdk_crate": "presale-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/presale/deposit.jsonc",
+    "repo": "node-builder"
+  }
+}

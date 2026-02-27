@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::streamflow::StreamContract;
-use crate::utils::anchor_sighash;
+use crate::utils::anchor_discriminator;
 use borsh::BorshDeserialize;
 use solana_account_decoder::UiAccountEncoding;
 use solana_commitment_config::CommitmentConfig;
@@ -74,7 +74,7 @@ fn create_withdraw_stream_instruction(
     ]
     .to_vec();
 
-    let discriminator = anchor_sighash("withdraw");
+    let discriminator = anchor_discriminator("withdraw");
 
     Instruction {
         program_id: *timelock_program,

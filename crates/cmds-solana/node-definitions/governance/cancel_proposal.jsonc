@@ -1,0 +1,107 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "cancel_proposal",
+  "prefix": "governance",
+  "type": "native",
+  "description": "Change proposal state to Cancelled",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/governance/cancel_proposal.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Wallet that pays for transaction fees"
+      },
+      {
+        "name": "realm",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Governance realm account"
+      },
+      {
+        "name": "governance",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Governance instance account"
+      },
+      {
+        "name": "proposal",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Proposal account"
+      },
+      {
+        "name": "proposal_owner_record",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "TokenOwnerRecord account of the  Proposal owner"
+      },
+      {
+        "name": "governance_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Governance Authority (Token Owner or Governance Delegate)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether to sign and submit the transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Realms",
+    "program": "governance",
+    "category": "governance",
+    "icon_url": null,
+    "tags": [
+      "governance",
+      "cancel",
+      "proposal"
+    ]
+  },
+  "external_version": {
+    "program_id": "GovER5Lthms3bLBqWub97yVRMmNLacFYbaaoNrextimN",
+    "sdk_crate": "spl-governance",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/governance/cancel_proposal.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_filter",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Filter DataFrame rows by comparing a column against a value using an operator (eq, neq, gt, gte, lt, lte, is_null, is_not_null, contains, is_in)",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/polars/polars_filter.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "column",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Column name to filter on"
+      },
+      {
+        "name": "operator",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Comparison operator: eq, neq, gt, gte, lt, lte, is_null, is_not_null, contains, is_in"
+      },
+      {
+        "name": "value",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Value to compare against (not needed for is_null/is_not_null; use array for is_in)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Filtered DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Filtered DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "operator": {
+      "S": "eq"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "filter"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/polars/filter.jsonc",
+    "repo": "node-builder"
+  }
+}

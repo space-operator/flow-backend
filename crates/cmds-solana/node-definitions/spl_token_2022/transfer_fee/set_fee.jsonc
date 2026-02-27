@@ -1,0 +1,101 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "set_transfer_fee",
+  "prefix": "transfer_fee",
+  "type": "native",
+  "description": "Update the transfer fee configuration on a Token-2022 mint",
+  "author_handle": "spo",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The mint to update fees on"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transfer fee config authority"
+      },
+      {
+        "name": "transfer_fee_basis_points",
+        "type_bounds": [
+          "u16"
+        ],
+        "required": true,
+        "tooltip": "New fee in basis points (1/100 of a percent)"
+      },
+      {
+        "name": "maximum_fee",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "New maximum fee per transfer in token base units"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "transfer_fee",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "transfer fee",
+      "set",
+      "transfer",
+      "fee"
+    ]
+  },
+  "external_version": {
+    "program_id": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/token_2022/transfer_fee/set_fee.jsonc",
+    "repo": "node-builder"
+  }
+}

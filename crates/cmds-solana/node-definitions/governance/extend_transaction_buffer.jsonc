@@ -1,0 +1,118 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "extend_transaction_buffer",
+  "prefix": "governance",
+  "type": "native",
+  "description": "Appends additional data to an existing transaction buffer. v3.1.2 instruction index 30.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/governance/extend_transaction_buffer.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Wallet that pays for transaction fees"
+      },
+      {
+        "name": "governance",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Governance account"
+      },
+      {
+        "name": "proposal",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Proposal account"
+      },
+      {
+        "name": "creator",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Must be the same keypair that created the buffer"
+      },
+      {
+        "name": "buffer_index",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Buffer index matching the created buffer"
+      },
+      {
+        "name": "buffer",
+        "type_bounds": [
+          "bytes"
+        ],
+        "required": true,
+        "tooltip": "Additional buffer content chunk to append"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether to sign and submit the transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "proposal_transaction_buffer_address",
+        "type": "pubkey",
+        "tooltip": "Derived buffer PDA address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "buffer_index": {
+      "U": "0"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Realms",
+    "program": "governance",
+    "category": "governance",
+    "icon_url": null,
+    "tags": [
+      "governance",
+      "extend",
+      "transaction",
+      "buffer"
+    ]
+  },
+  "external_version": {
+    "program_id": "GovER5Lthms3bLBqWub97yVRMmNLacFYbaaoNrextimN",
+    "sdk_crate": "spl-governance",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/governance/extend_transaction_buffer.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "revoke_governing_tokens",
+  "prefix": "governance",
+  "type": "native",
+  "description": "Revoke governing tokens using Governance",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/governance/revoke_governing_tokens.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Wallet that pays for transaction fees"
+      },
+      {
+        "name": "realm",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Governance realm account"
+      },
+      {
+        "name": "governing_token_owner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Governing token owner account"
+      },
+      {
+        "name": "governing_token_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Governing token token mint address"
+      },
+      {
+        "name": "revoke_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Revoke authority account"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Amount for this operation"
+      },
+      {
+        "name": "is_token_2022",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Set to true if the governing token mint is a Token-2022 mint"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether to sign and submit the transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "realm_config_address",
+        "type": "pubkey",
+        "tooltip": "Realm config address"
+      },
+      {
+        "name": "governing_token_holding_address",
+        "type": "pubkey",
+        "tooltip": "Governing token holding address"
+      },
+      {
+        "name": "token_owner_record_address",
+        "type": "pubkey",
+        "tooltip": "Token owner record address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "is_token_2022": {
+      "B": false
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Realms",
+    "program": "governance",
+    "category": "governance",
+    "icon_url": null,
+    "tags": [
+      "governance",
+      "revoke",
+      "governing",
+      "tokens"
+    ]
+  },
+  "external_version": {
+    "program_id": "GovER5Lthms3bLBqWub97yVRMmNLacFYbaaoNrextimN",
+    "sdk_crate": "spl-governance",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/governance/revoke_governing_tokens.jsonc",
+    "repo": "node-builder"
+  }
+}
