@@ -10,7 +10,7 @@ use std::{borrow::Cow, path::PathBuf};
 
 pub const NAME: &str = "storage_upload";
 
-const DEFINITION: &str = flow_lib::node_definition!("storage/upload.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/upload.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

@@ -14,7 +14,7 @@ use super::{Address, CompleteWrappedMetaData, NFTBridgeInstructions, PayloadTran
 const NAME: &str = "nft_complete_wrapped_meta";
 
 const DEFINITION: &str =
-    flow_lib::node_definition!("wormhole/nft_bridge/nft_complete_wrapped_meta.json");
+    flow_lib::node_definition!("wormhole/nft_bridge/nft_complete_wrapped_meta.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

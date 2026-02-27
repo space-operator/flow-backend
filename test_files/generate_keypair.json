@@ -1,6 +1,6 @@
 {
   "flow": {
-    "id": 0,
+    "id": "00000000-0000-0000-0000-000000000000",
     "user_id": "3b93d159-b9d1-4230-ad4b-e498d7f1b796",
     "name": "generate_keypair",
     "mosaic": {
@@ -61,28 +61,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "string",
               "defaultValue": "",
               "tooltip": "",
               "id": "2770cfa3-e1f3-4ccb-a6c0-028f6209573c"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "S": "letter advice cage absurd amount doctor acoustic avoid letter advice cage above"
-              },
-              "type": "String"
+          "inputs": [],
+          "config": {
+            "value": {
+              "S": "letter advice cage absurd amount doctor acoustic avoid letter advice cage above"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "String"
           }
         },
         "draggable": true,
@@ -120,7 +113,7 @@
           "name": "Flow Input",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#f2fcff",
-          "sources": [
+          "outputs": [
             {
               "name": "password",
               "type": "free",
@@ -129,34 +122,10 @@
               "id": "737c7b47-2b93-41d1-9d9d-49039c1a68e6"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Label the input parameter",
-                  "default": ""
-                },
-                "form_label": {
-                  "type": "string",
-                  "title": "password"
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "password",
-              "form_label": "Hunter1!"
-            },
-            "extra": {
-              "supabase_id": 138
-            }
+          "inputs": [],
+          "config": {
+            "label": "password",
+            "form_label": "Hunter1!"
           }
         },
         "positionAbsolute": {
@@ -193,7 +162,7 @@
           "name": "Generate Keypair",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "pubkey",
               "type": "pubkey",
@@ -209,10 +178,12 @@
               "id": "14c1e090-c304-4021-98f0-6ea13825a1ab"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "seed",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "12 word BIP39 mnemonic seed phrase",
@@ -221,7 +192,9 @@
             },
             {
               "name": "private_key",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "Load using a base 58 string, ignores seed/passphrase",
@@ -230,7 +203,9 @@
             },
             {
               "name": "passphrase",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "",
@@ -238,14 +213,7 @@
               "id": "700375cc-69fd-41c2-a58b-3328dc44c09e"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 110
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": -135,
@@ -281,7 +249,7 @@
           "name": "Get Balance",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "balance",
               "type": "u64",
@@ -290,10 +258,14 @@
               "id": "b7235930-7af7-4633-938b-59dd1f6be6a8"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "pubkey",
-              "type_bounds": ["pubkey", "keypair", "string"],
+              "type_bounds": [
+                "pubkey",
+                "keypair",
+                "string"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -301,14 +273,7 @@
               "id": "a97488db-10a5-4e25-bce5-5b9499aada18"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 112
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": 150,
@@ -344,11 +309,13 @@
           "name": "Flow Output",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#f2fcff",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "balance",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -356,28 +323,8 @@
               "id": "34a2873b-f9fc-4aee-bd46-1b001c9359f3"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Output Label",
-                  "default": ""
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "balance"
-            },
-            "extra": {
-              "supabase_id": 137
-            }
+          "config": {
+            "label": "balance"
           }
         },
         "positionAbsolute": {
@@ -414,11 +361,13 @@
           "name": "Flow Output",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#f2fcff",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "key",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -426,28 +375,8 @@
               "id": "0a04fa35-db60-4e38-a353-c1bffc212ff8"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Output Label",
-                  "default": ""
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "key"
-            },
-            "extra": {
-              "supabase_id": 137
-            }
+          "config": {
+            "label": "key"
           }
         },
         "positionAbsolute": {

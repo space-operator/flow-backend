@@ -70,15 +70,12 @@ spl-record = { version = "0.4.0" }
 
 # metaplex
 mpl-token-metadata = { path = "../../vendor/mpl-token-metadata" }
+mpl-core = { path = "../../vendor/mpl-core", features = ["serde"] }
+mpl-bubblegum = { path = "../../vendor/mpl-bubblegum" }
 
-# mpl-candy-machine-core = { version = "=3.0.1", features = ["no-entrypoint"] }
-# mpl-candy-guard = { version = "=3.0.0", features = ["no-entrypoint"] }
-# # core, core candy machine and candy guard
 mpl-core-candy-machine-core.workspace = true
 mpl-core-candy-guard.workspace = true
 
-mpl-core = { path = "../../vendor/mpl-core", features = ["serde"] }
-mpl-bubblegum = { path = "../../vendor/mpl-bubblegum" }
 
 # bundlr
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
@@ -90,43 +87,10 @@ reqwest11 = { package = "reqwest", version = "0.11", features = ["json"] }
 # branch: vendor
 pyth-sdk-solana = { git = "https://github.com/space-operator/pyth-sdk-rs", rev = "b26ee1ddf6dced5d4fc95ba339a6a1de76a5b1b3" }
 
-# jupiter-swap-api-client = { git = "https://github.com/jup-ag/jupiter-swap-api-client.git", package = "jupiter-swap-api-client", rev = "e3c162b921f46eacc867ca9c55e7d610eefabe25"}
-
 # anchor
 # branch: merged
 anchor-lang = { git = "https://github.com/space-operator/anchor", rev = "6469201c5399f95f9414839282ea91471bd20260" }
-# anchor-spl = "=0.31.0"
 
-
-# clockwork-client = "=2.0.1"
-# clockwork-utils = "=2.0.1"
-# clockwork-thread-program = "=2.0.1"
-# clockwork-sdk = "=2.0.1"
-
-# [dependencies.clockwork-thread-program]
-# git = "https://github.com/space-operator/clockwork.git"
-# rev = "efd73675f670bfc0aab551d89c741e18c8cfed10"
-# [dependencies.clockwork-thread-program]
-# git = "https://github.com/space-operator/clockwork.git"
-# rev = "efd73675f670bfc0aab551d89c741e18c8cfed10"
-
-# [dependencies.payments]
-# git = "https://github.com/clockwork-xyz/examples.git"
-# rev = "1b65e8185796b4eac009750c0a0b8128576201ad"
-
-# [dependencies.metaboss_utils]
-# git = "https://github.com/space-operator/metaboss_utils.git"
-# rev = "5e0a4c9bcd16d2f062549e190e928bebb135537f"
-
-# [dependencies.space-wrapper]
-# git = "https://github.com/space-operator/space-wrapper"
-# rev = "eb257a070de0545d9051d9b9bb530df3e8736570"
-# features = ["cpi"]
-
-# [dependencies.xnft]
-# git = "https://github.com/coral-xyz/xnft"
-# rev = "6ff7a8e7b1bfa0024cdea8269df92bca681d68ec"
-# features = ["no-entrypoint"]
 
 [dependencies.wormhole-sdk]
 git = "https://github.com/space-operator/wormhole"
@@ -135,10 +99,6 @@ rev = "b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1"
 [dependencies.serde_wormhole]
 git = "https://github.com/space-operator/wormhole"
 rev = "b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1"
-
-# [dependencies.wormhole-anchor-sdk]
-# git = "https://github.com/wormhole-foundation/wormhole-scaffolding.git"
-# rev = "7756f517fd63abae4be9b41ed82723def22bad09"
 
 [dev-dependencies]
 rust_decimal_macros = "1.26"

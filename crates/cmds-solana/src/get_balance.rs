@@ -5,7 +5,7 @@ const NAME: &str = "get_balance";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("get_balance.json");
+    const DEFINITION: &str = flow_lib::node_definition!("get_balance.jsonc");
     static CACHE: BuilderCache =
         BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))

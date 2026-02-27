@@ -9,7 +9,9 @@ use rhai::{
 use rhai_rand::RandomPackage;
 
 pub mod convert;
+pub mod error;
 
+pub use error::ScriptError;
 pub use rhai::Engine;
 
 fn utc_now() -> String {
@@ -24,6 +26,71 @@ fn decimal(x: Dynamic) -> Result<Decimal, Box<EvalAltResult>> {
     Ok(decimal)
 }
 
+fn rhai_err(msg: String) -> Box<EvalAltResult> {
+    EvalAltResult::ErrorRuntime(msg.into(), rhai::Position::NONE).into()
+}
+
+fn base58_encode(input: rhai::Blob) -> String {
+    bs58::encode(&input).into_string()
+}
+
+fn base58_decode(input: &str) -> Result<rhai::Blob, Box<EvalAltResult>> {
+    bs58::decode(input)
+        .into_vec()
+        .map_err(|e| rhai_err(format!("base58 decode error: {e}")))
+}
+
+fn hex_encode(input: rhai::Blob) -> String {
+    hex::encode(&input)
+}
+
+fn hex_decode(input: &str) -> Result<rhai::Blob, Box<EvalAltResult>> {
+    hex::decode(input).map_err(|e| rhai_err(format!("hex decode error: {e}")))
+}
+
+fn json_encode(input: Dynamic) -> Result<String, Box<EvalAltResult>> {
+    let value = dynamic_to_value(input)
+        .map_err(|e| rhai_err(format!("json encode error: {e}")))?;
+    let json = serde_json::Value::from(value);
+    serde_json::to_string(&json)
+        .map_err(|e| rhai_err(format!("json encode error: {e}")))
+}
+
+fn json_decode(input: &str) -> Result<Dynamic, Box<EvalAltResult>> {
+    let json: serde_json::Value = serde_json::from_str(input)
+        .map_err(|e| rhai_err(format!("json decode error: {e}")))?;
+    Ok(json_value_to_dynamic(json))
+}
+
+/// Convert serde_json::Value to Dynamic directly, keeping JSON integers as i64
+/// rather than going through flow_lib::Value which converts u64 to Decimal.
+fn json_value_to_dynamic(v: serde_json::Value) -> Dynamic {
+    match v {
+        serde_json::Value::Null => Dynamic::UNIT,
+        serde_json::Value::Bool(b) => b.into(),
+        serde_json::Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                i.into()
+            } else if let Some(f) = n.as_f64() {
+                f.into()
+            } else {
+                Dynamic::UNIT
+            }
+        }
+        serde_json::Value::String(s) => s.into(),
+        serde_json::Value::Array(arr) => arr
+            .into_iter()
+            .map(json_value_to_dynamic)
+            .collect::<rhai::Array>()
+            .into(),
+        serde_json::Value::Object(map) => map
+            .into_iter()
+            .map(|(k, v)| (k.into(), json_value_to_dynamic(v)))
+            .collect::<rhai::Map>()
+            .into(),
+    }
+}
+
 pub fn setup_engine() -> Engine {
     let mut engine = Engine::new();
     engine
@@ -31,6 +98,12 @@ pub fn setup_engine() -> Engine {
         .register_static_module("rand", RandomPackage::new().as_shared_module())
         .register_fn("utc_now", utc_now)
         .register_fn("Decimal", decimal)
+        .register_fn("base58_encode", base58_encode)
+        .register_fn("base58_decode", base58_decode)
+        .register_fn("hex_encode", hex_encode)
+        .register_fn("hex_decode", hex_decode)
+        .register_fn("json_encode", json_encode)
+        .register_fn("json_decode", json_decode)
         .set_max_expr_depths(32, 32)
         .set_max_call_levels(256)
         .set_max_operations(10_000_000)
@@ -94,7 +167,7 @@ impl Command {
         }
         let eval_result = engine
             .eval_with_scope::<Dynamic>(&mut scope, &code)
-            .map_err(|error| anyhow!(error.to_string()))?;
+            .map_err(|error| anyhow!(ScriptError::from(error)))?;
         let mut outputs = ValueSet::new();
         for o in &self.outputs {
             let dy = match scope.remove(&o.name) {
@@ -123,45 +196,4 @@ impl Command {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use rhai::Dynamic;
-
-    #[test]
-    fn test_engine() {
-        let script = r#"
-        let y = x * 2;
-        x
-        "#;
-        let mut e = rhai::Engine::new();
-        e.register_fn("*", |a: i128, b: i64| a * b as i128);
-        let mut scope = rhai::Scope::new();
-        scope.push("x", 10i128);
-        let res = e.eval_with_scope::<Dynamic>(&mut scope, script).unwrap();
-        let y = scope.get("y").unwrap();
-        let _ = dbg!(res);
-        dbg!(y);
-    }
-
-    #[test]
-    fn test_string_format() {
-        let script = r#"`http://${x}.com`"#;
-        let e = rhai::Engine::new();
-        let mut scope = rhai::Scope::new();
-        scope.push_dynamic("x", value_to_dynamic(Value::from("google")));
-        let res = e.eval_with_scope::<Dynamic>(&mut scope, script).unwrap();
-        let value = dynamic_to_value(res).unwrap();
-        dbg!(value);
-    }
-
-    #[test]
-    fn test_map() {
-        let script = r#"#{name: x, a: "12"}"#;
-        let e = rhai::Engine::new();
-        let mut scope = rhai::Scope::new();
-        scope.push_dynamic("x", value_to_dynamic(Value::from("google")));
-        let res = e.eval_with_scope::<Dynamic>(&mut scope, script).unwrap();
-        let value = dynamic_to_value(res).unwrap();
-        dbg!(value);
-    }
-}
+mod tests;

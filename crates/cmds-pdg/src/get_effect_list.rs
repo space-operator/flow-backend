@@ -9,7 +9,7 @@ const NAME: &str = "get_effect_list";
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(flow_lib::node_definition!("get_effect_list.json"))?.check_name(NAME)
+        CmdBuilder::new(flow_lib::node_definition!("get_effect_list.jsonc"))?.check_name(NAME)
     });
     Ok(CACHE.clone()?.build(run))
 }

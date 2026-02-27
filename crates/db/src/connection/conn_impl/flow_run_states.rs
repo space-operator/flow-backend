@@ -1,6 +1,5 @@
 use anyhow::anyhow;
 use bytes::Bytes;
-use flow_lib::config::client::NodeDataSkipWasm;
 use tokio_postgres::{binary_copy::BinaryCopyInWriter, types::Type};
 
 use super::super::*;
@@ -341,7 +340,7 @@ impl UserConnection {
                         .map(|n| {
                             Json(serde_json::json!({
                                 "id": n.id,
-                                "data": NodeDataSkipWasm::from(n.data.clone()),
+                                "data": &n.data,
                             }))
                         })
                         .collect::<Vec<_>>(),

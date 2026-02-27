@@ -63,8 +63,8 @@ pub struct ExportedUserData {
     pub kvstore_metadata: DataFrame,
     #[serde(with = "df_serde")]
     pub flows: DataFrame,
-    #[serde(with = "df_serde")]
-    pub nodes: DataFrame,
+    #[serde(with = "df_serde", alias = "nodes")]
+    pub node_definitions: DataFrame,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]

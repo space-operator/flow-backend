@@ -56,6 +56,51 @@ pub mod prelude {
 /// Error type of commmands.
 pub type CommandError = anyhow::Error;
 
+pub fn parse_value_tagged(json: serde_json::Value) -> Result<Value, serde_json::Error> {
+    serde_json::from_value::<Value>(json)
+}
+
+pub fn parse_value_tagged_or_json(json: serde_json::Value) -> Value {
+    parse_value_tagged(json.clone()).unwrap_or_else(|_| Value::from(json))
+}
+
+fn scoped_builtin_alias<'a>(id: &'a str) -> Option<Cow<'a, str>> {
+    if !id.starts_with("@spo/") {
+        return None;
+    }
+
+    let base = &id["@spo/".len()..];
+
+    // Extract the name component from prefix.name.version format.
+    // e.g. "std.kv_explorer.0.1" → "kv_explorer"
+    let name = base
+        .split_once('.')
+        .and_then(|(_, rest)| rest.split_once('.'))
+        .map(|(name, _)| name)
+        .unwrap_or(base);
+
+    Some(match name {
+        "kv_explorer" => Cow::Borrowed("kvexplorer"),
+        "file_explorer" => Cow::Borrowed("fileexplorer"),
+        _ => Cow::Borrowed(name),
+    })
+}
+
+fn command_name_candidates<'a>(name: &'a str) -> Vec<Cow<'a, str>> {
+    let mut candidates = vec![Cow::Borrowed(name)];
+    // Strip @spo/ scope to add the base form (e.g. "std.transfer_sol.0.1")
+    if let Some(base) = name.strip_prefix("@spo/") {
+        candidates.push(Cow::Borrowed(base));
+    }
+    // Add name-component alias (e.g. "transfer_sol", or "kvexplorer" for remapped names)
+    if let Some(alias) = scoped_builtin_alias(name)
+        && !candidates.iter().any(|c| c.as_ref() == alias.as_ref())
+    {
+        candidates.push(alias);
+    }
+    candidates
+}
+
 /// Generic trait for implementing commands.
 #[async_trait::async_trait(?Send)]
 pub trait CommandTrait: 'static {
@@ -88,12 +133,12 @@ pub trait CommandTrait: 'static {
     /// Async `Drop` method.
     async fn destroy(&mut self) {}
 
-    /// Specify how [`form_data`][crate::config::NodeConfig::form_data] are read.
-    fn read_form_data(&self, data: serde_json::Value) -> ValueSet {
+    /// Specify how [`config`][crate::config::NodeConfig::config] values are read.
+    fn read_config(&self, data: serde_json::Value) -> ValueSet {
         let mut result = ValueSet::new();
         for i in self.inputs() {
             if let Some(json) = data.get(&i.name) {
-                let value = Value::from(json.clone());
+                let value = parse_value_tagged_or_json(json.clone());
                 result.insert(i.name.clone(), value);
             }
         }
@@ -134,16 +179,22 @@ pub fn passthrough_outputs<T: CommandTrait + ?Sized>(cmd: &T, inputs: &ValueSet)
     res
 }
 
-/// Specify how [`form_data`][crate::config::NodeConfig::form_data] are read.
-pub fn default_read_form_data<T: CommandTrait + ?Sized>(
+/// Specify how [`config`][crate::config::NodeConfig::config] values are read.
+pub fn default_read_config<T: CommandTrait + ?Sized>(
     cmd: &T,
     data: serde_json::Value,
 ) -> ValueSet {
     let mut result = ValueSet::new();
     for i in cmd.inputs() {
         if let Some(json) = data.get(&i.name) {
-            let value = Value::from(json.clone());
-            result.insert(i.name.clone(), value);
+            match parse_value_tagged(json.clone()) {
+                Ok(value) => {
+                    result.insert(i.name.clone(), value);
+                }
+                Err(error) => {
+                    tracing::warn!("invalid tagged value for form input '{}': {error}", i.name);
+                }
+            }
         }
     }
     result
@@ -153,28 +204,31 @@ pub fn default_node_data<T: CommandTrait + ?Sized>(cmd: &T) -> NodeData {
     NodeData {
         r#type: cmd.r#type(),
         node_id: cmd.name(),
-        sources: cmd
+        outputs: cmd
             .outputs()
             .into_iter()
-            .map(|output| client::Source {
+            .map(|output| client::OutputPort {
                 id: Uuid::nil(),
                 name: output.name,
                 r#type: output.r#type,
                 optional: output.optional,
+                tooltip: None,
             })
             .collect(),
-        targets: cmd
+        inputs: cmd
             .inputs()
             .into_iter()
-            .map(|input| client::Target {
+            .map(|input| client::InputPort {
                 id: Uuid::nil(),
                 name: input.name,
                 type_bounds: input.type_bounds,
                 required: input.required,
                 passthrough: input.passthrough,
+                tooltip: None,
             })
             .collect(),
-        targets_form: client::TargetsForm::default(),
+        config: serde_json::Value::Object(<_>::default()),
+        wasm: None,
         instruction_info: cmd.instruction_info(),
     }
 }
@@ -321,14 +375,24 @@ impl std::fmt::Debug for MatchCommand {
 
 impl MatchCommand {
     pub fn is_match(&self, ty: CommandType, name: &str) -> bool {
-        self.r#type == ty
-            && match &self.name {
-                MatchName::Exact(cow) => cow == name,
-                MatchName::Regex(cow) => Regex::new(cow) // TODO: slow
-                    .map(|re| re.is_match(name))
-                    .ok()
-                    .unwrap_or(false),
-            }
+        if self.r#type != ty {
+            return false;
+        }
+
+        let candidates = command_name_candidates(name);
+        match &self.name {
+            MatchName::Exact(cow) => candidates
+                .iter()
+                .any(|candidate| cow.as_ref() == candidate.as_ref()),
+            MatchName::Regex(cow) => Regex::new(cow) // TODO: slow
+                .map(|re| {
+                    candidates
+                        .iter()
+                        .any(|candidate| re.is_match(candidate.as_ref()))
+                })
+                .ok()
+                .unwrap_or(false),
+        }
     }
 }
 
@@ -446,7 +510,10 @@ impl CommandFactory {
         &self,
         nd: &NodeData,
     ) -> impl Future<Output = Result<Option<Box<dyn CommandTrait>>, CommandError>> + 'static {
-        let cmd = self.index.get(nd.r#type, &nd.node_id);
+        let cmd = self.index.get(nd.r#type, &nd.node_id).or_else(|| {
+            scoped_builtin_alias(&nd.node_id)
+                .and_then(|name| self.index.get(nd.r#type, name.as_ref()))
+        });
 
         let either = cmd.map(|cmd| match cmd.fn_new {
             Either::Left(fn_new) => Either::Left(ready(fn_new(nd))),
@@ -457,5 +524,78 @@ impl CommandFactory {
 
     pub fn availables(&self) -> impl Iterator<Item = MatchCommand> {
         self.index.availables()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn parse_value_tagged_or_json_reads_ivalue_tags() {
+        assert_eq!(
+            parse_value_tagged_or_json(json!({"U": "1000"})),
+            Value::U64(1000)
+        );
+        assert_eq!(
+            parse_value_tagged_or_json(json!({"S": "hello"})),
+            Value::String("hello".into())
+        );
+    }
+
+    #[test]
+    fn parse_value_tagged_rejects_plain_json() {
+        assert!(parse_value_tagged(json!(123)).is_err());
+        assert!(parse_value_tagged(json!("hello")).is_err());
+    }
+
+    #[test]
+    fn parse_value_tagged_or_json_falls_back_to_plain_json() {
+        assert_eq!(parse_value_tagged_or_json(json!(123)), Value::U64(123));
+        assert_eq!(
+            parse_value_tagged_or_json(json!({"key": "value"})),
+            Value::Map(value::map! {
+                "key" => Value::String("value".into())
+            })
+        );
+    }
+
+    #[test]
+    fn scoped_builtin_alias_only_applies_to_spo_scope() {
+        // New dot-separated format
+        assert_eq!(
+            scoped_builtin_alias("@spo/std.kv_explorer.0.1").map(|s| s.into_owned()),
+            Some("kvexplorer".to_owned())
+        );
+        assert_eq!(
+            scoped_builtin_alias("@spo/std.file_explorer.0.1").map(|s| s.into_owned()),
+            Some("fileexplorer".to_owned())
+        );
+        // Legacy format still works (base passed through as-is)
+        assert_eq!(
+            scoped_builtin_alias("@spo/kv_explorer").map(|s| s.into_owned()),
+            Some("kvexplorer".to_owned())
+        );
+        assert_eq!(scoped_builtin_alias("@alice/std.kv_explorer.0.1"), None);
+        assert_eq!(scoped_builtin_alias("transfer_sol"), None);
+    }
+
+    #[test]
+    fn match_command_uses_spo_alias_without_collapsing_other_scopes() {
+        let exact = MatchCommand {
+            r#type: CommandType::Native,
+            name: MatchName::Exact("std.transfer_sol.0.1".into()),
+        };
+        assert!(exact.is_match(CommandType::Native, "@spo/std.transfer_sol.0.1"));
+        assert!(!exact.is_match(CommandType::Native, "@alice/std.transfer_sol.0.1"));
+        assert!(exact.is_match(CommandType::Native, "std.transfer_sol.0.1"));
+
+        let kv = MatchCommand {
+            r#type: CommandType::Native,
+            name: MatchName::Exact("kvexplorer".into()),
+        };
+        assert!(kv.is_match(CommandType::Native, "@spo/std.kv_explorer.0.1"));
+        assert!(!kv.is_match(CommandType::Native, "@alice/std.kv_explorer.0.1"));
     }
 }

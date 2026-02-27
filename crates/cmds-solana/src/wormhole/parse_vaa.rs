@@ -8,7 +8,7 @@ use super::MessageAlias;
 // Command Name
 const NAME: &str = "parse_vaa";
 
-const DEFINITION: &str = flow_lib::node_definition!("wormhole/parse_vaa.json");
+const DEFINITION: &str = flow_lib::node_definition!("wormhole/parse_vaa.jsonc");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

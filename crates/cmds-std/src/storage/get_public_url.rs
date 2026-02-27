@@ -3,7 +3,7 @@ use flow_lib::command::prelude::*;
 
 pub const NAME: &str = "storage_get_public_url";
 
-const DEFINITION: &str = flow_lib::node_definition!("storage/get_public_url.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/get_public_url.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

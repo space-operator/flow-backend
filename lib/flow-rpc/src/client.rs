@@ -174,16 +174,20 @@ const RUN_SVC: &str = "run";
 
 #[async_trait(?Send)]
 impl CommandTrait for RpcCommandClient {
+    fn r#type(&self) -> flow_lib::CommandType {
+        self.node_data.r#type
+    }
+
     fn name(&self) -> Name {
         self.node_data.node_id.clone()
     }
 
     fn inputs(&self) -> Vec<Input> {
-        self.node_data.inputs()
+        self.node_data.cmd_inputs()
     }
 
     fn outputs(&self) -> Vec<Output> {
-        self.node_data.outputs()
+        self.node_data.cmd_outputs()
     }
 
     async fn run(&self, ctx: CommandContext, params: ValueSet) -> Result<ValueSet, CommandError> {

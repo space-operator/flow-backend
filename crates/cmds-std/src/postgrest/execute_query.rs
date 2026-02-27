@@ -75,7 +75,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<ValueSet, CommandE
 
 fn build() -> BuildResult {
     Ok(
-        CmdBuilder::new(flow_lib::node_definition!("postgrest/execute_query.json"))?
+        CmdBuilder::new(flow_lib::node_definition!("postgrest/execute_query.jsonc"))?
             .check_name(NAME)?
             .permissions(Permissions { user_tokens: true })
             .build(run),

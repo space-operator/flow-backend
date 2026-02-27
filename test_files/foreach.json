@@ -1,6 +1,6 @@
 {
   "flow": {
-    "id": 0,
+    "id": "00000000-0000-0000-0000-000000000000",
     "user_id": "3b93d159-b9d1-4230-ad4b-e498d7f1b796",
     "name": "AmuseParched",
     "mosaic": {
@@ -61,26 +61,19 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "free",
               "defaultValue": "",
               "tooltip": "",
               "id": "2a391ca2-af6b-4e4b-ae4d-cd2fdee3e1e7"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": "[\n{\n\"s\": \"letter advice cage absurd amount doctor acoustic avoid letter advice cage above\",\n\"p\": \"Hunter1!\"\n},\n{\"s\": \"letter advice cage absurd amount doctor acoustic avoid letter advice cage above\",\n\"p\": \"Hunter2!\"\n},\n{\n\"s\": \"select ensure paddle panic hole install math call zero rely puppy exist\",\n\"p\": \"password\"\n}\n]",
-              "type": "JSON"
-            },
-            "extra": {
-              "supabase_id": 117
-            }
+          "inputs": [],
+          "config": {
+            "value": "[\n{\n\"s\": \"letter advice cage absurd amount doctor acoustic avoid letter advice cage above\",\n\"p\": \"Hunter1!\"\n},\n{\"s\": \"letter advice cage absurd amount doctor acoustic avoid letter advice cage above\",\n\"p\": \"Hunter2!\"\n},\n{\n\"s\": \"select ensure paddle panic hole install math call zero rely puppy exist\",\n\"p\": \"password\"\n}\n]",
+            "type": "JSON"
           }
         },
         "dragging": false,
@@ -118,7 +111,7 @@
           "name": "Foreach",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "element",
               "type": "json",
@@ -127,10 +120,12 @@
               "id": "bcb28f7a-fe7d-4027-9aad-22cbb7ac72f3"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "array",
-              "type_bounds": ["json"],
+              "type_bounds": [
+                "json"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -138,30 +133,8 @@
               "id": "705bf70b-d6b5-447b-97ad-4a0cd490e955"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "title": "Foreach",
-              "properties": {
-                "array": {
-                  "title": "array",
-                  "type": "string",
-                  "default": "[]"
-                }
-              }
-            },
-            "ui_schema": {
-              "array": {
-                "ui:widget": "textarea"
-              },
-              "ui:order": ["array"]
-            },
-            "form_data": {
-              "array": "[]"
-            },
-            "extra": {
-              "supabase_id": 302
-            }
+          "config": {
+            "array": "[]"
           }
         },
         "positionAbsolute": {
@@ -198,7 +171,7 @@
           "name": "Json Extract",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#ffd9b3",
-          "sources": [
+          "outputs": [
             {
               "name": "value",
               "type": "free",
@@ -214,10 +187,12 @@
               "id": "b2df7e74-6d29-40ef-bd46-9e51ab3abb99"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "json_input",
-              "type_bounds": ["json"],
+              "type_bounds": [
+                "json"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -226,7 +201,9 @@
             },
             {
               "name": "field_path",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "e.g. /data/records/0/fields/url to select the url field value\nnote the /0/ is equivalent to [0], to select the first index in an array",
@@ -234,33 +211,8 @@
               "id": "35c9dd67-28e0-4ae0-abaa-3d0ca7b5dea3"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "title": "JSON Extract",
-              "properties": {
-                "json_input": {
-                  "title": "JSON Input",
-                  "type": "string"
-                },
-                "field_path": {
-                  "title": "Field Path",
-                  "type": "string"
-                }
-              }
-            },
-            "ui_schema": {
-              "json_input": {
-                "ui:widget": "textarea"
-              },
-              "ui:order": ["json_input", "field_path"]
-            },
-            "form_data": {
-              "field_path": "s"
-            },
-            "extra": {
-              "supabase_id": 278
-            }
+          "config": {
+            "field_path": "s"
           }
         },
         "positionAbsolute": {
@@ -297,7 +249,7 @@
           "name": "Json Extract",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#ffd9b3",
-          "sources": [
+          "outputs": [
             {
               "name": "value",
               "type": "free",
@@ -313,10 +265,12 @@
               "id": "6a2387be-a4ec-4abc-a2f3-8730ffaa23e9"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "json_input",
-              "type_bounds": ["json"],
+              "type_bounds": [
+                "json"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -325,7 +279,9 @@
             },
             {
               "name": "field_path",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "e.g. /data/records/0/fields/url to select the url field value\nnote the /0/ is equivalent to [0], to select the first index in an array",
@@ -333,33 +289,8 @@
               "id": "62a160db-f1b5-4acf-ba58-69c167e446b1"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "title": "JSON Extract",
-              "properties": {
-                "json_input": {
-                  "title": "JSON Input",
-                  "type": "string"
-                },
-                "field_path": {
-                  "title": "Field Path",
-                  "type": "string"
-                }
-              }
-            },
-            "ui_schema": {
-              "json_input": {
-                "ui:widget": "textarea"
-              },
-              "ui:order": ["json_input", "field_path"]
-            },
-            "form_data": {
-              "field_path": "p"
-            },
-            "extra": {
-              "supabase_id": 278
-            }
+          "config": {
+            "field_path": "p"
           }
         },
         "positionAbsolute": {
@@ -396,7 +327,7 @@
           "name": "Generate Keypair",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "pubkey",
               "type": "pubkey",
@@ -412,10 +343,12 @@
               "id": "573317f8-9a41-4545-8d91-b0a2ce986118"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "seed",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "12 word BIP39 mnemonic seed phrase",
@@ -424,7 +357,9 @@
             },
             {
               "name": "private_key",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "Load using a base 58 string, ignores seed/passphrase",
@@ -433,7 +368,9 @@
             },
             {
               "name": "passphrase",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "",
@@ -441,14 +378,7 @@
               "id": "1f9354e0-453b-4d18-8182-439dcca1d7cf"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 110
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": 1125,
@@ -484,7 +414,7 @@
           "name": "Collect",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
               "name": "array",
               "type": "free",
@@ -493,10 +423,12 @@
               "id": "f1c82628-77d6-4c80-8ded-4cdae3695dd5"
             }
           ],
-          "targets": [
+          "inputs": [
             {
               "name": "element",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": false,
               "defaultValue": null,
               "tooltip": "",
@@ -504,14 +436,7 @@
               "id": "415dbba2-5e0a-451e-bd55-f82dbf8461f0"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {},
-            "extra": {
-              "supabase_id": 303
-            }
-          }
+          "config": {}
         },
         "positionAbsolute": {
           "x": 1455,
@@ -547,11 +472,13 @@
           "name": "Flow Output",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#f2fcff",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "keypairs",
-              "type_bounds": ["free"],
+              "type_bounds": [
+                "free"
+              ],
               "required": true,
               "defaultValue": "",
               "tooltip": "",
@@ -559,28 +486,8 @@
               "id": "d56ab632-1213-44a8-801e-3efa521cb4ed"
             }
           ],
-          "targets_form": {
-            "json_schema": {
-              "type": "object",
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "title": "Output Label",
-                  "default": ""
-                }
-              }
-            },
-            "ui_schema": {
-              "label": {
-                "ui:emptyValue": ""
-              }
-            },
-            "form_data": {
-              "label": "keypairs"
-            },
-            "extra": {
-              "supabase_id": 137
-            }
+          "config": {
+            "label": "keypairs"
           }
         },
         "positionAbsolute": {

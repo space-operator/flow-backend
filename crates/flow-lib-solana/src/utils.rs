@@ -229,7 +229,28 @@ pub fn verify_precompiles(tx: &Transaction, feature_set: &FeatureSet) -> Result<
     Ok(())
 }
 
-/// `l` is old, `r` is new
+const SWIG_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB");
+
+/// Check if a message references the Swig program in any of its instructions.
+fn contains_swig_program(msg: &v0::Message) -> bool {
+    msg.instructions.iter().any(|ix| {
+        msg.account_keys
+            .get(ix.program_id_index as usize)
+            .map(|pk| *pk == SWIG_PROGRAM_ID)
+            .unwrap_or(false)
+    })
+}
+
+/// Validate that a modified message is compatible with the original.
+///
+/// Always checks fee payer and blockhash. For non-Swig messages, also
+/// enforces strict structural checks (instruction count, account count,
+/// header fields). Swig SignV2 wrapping restructures the transaction to
+/// route inner instructions through the Swig program, so structural
+/// changes are expected and allowed.
+///
+/// `l` is old, `r` is new.
 pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<v0::Message, anyhow::Error> {
     let l = bincode1::deserialize::<VersionedMessage>(l)?;
     let l = if let VersionedMessage::V0(l) = l {
@@ -245,6 +266,30 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<v0::Message, anyhow::
     };
     l.sanitize()?;
     r.sanitize()?;
+    ensure!(!l.account_keys.is_empty(), "empty transaction");
+    ensure!(!r.account_keys.is_empty(), "empty transaction");
+    ensure!(
+        l.account_keys[0] == r.account_keys[0],
+        "different fee payer"
+    );
+    ensure!(
+        l.recent_blockhash == r.recent_blockhash,
+        "different blockhash"
+    );
+
+    // Swig-wrapped messages restructure instructions. We only allow this path
+    // if the original message already referenced Swig; otherwise a non-Swig
+    // request could inject a Swig instruction and bypass structural checks.
+    if contains_swig_program(&r) {
+        ensure!(
+            contains_swig_program(&l),
+            "swig instruction introduced in modified message"
+        );
+        tracing::info!("Swig program detected in modified message, skipping strict structural checks");
+        return Ok(r);
+    }
+
+    // Strict structural checks for non-Swig messages.
     ensure!(
         l.header.num_required_signatures == r.header.num_required_signatures,
         "different num_required_signatures"
@@ -277,20 +322,11 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<v0::Message, anyhow::
         l.account_keys.len(),
         r.account_keys.len()
     );
-    ensure!(!l.account_keys.is_empty(), "empty transaction");
     ensure!(
         l.instructions.len() == r.instructions.len(),
         "different instructions count, old = {}, new = {}",
         l.instructions.len(),
         r.instructions.len()
-    );
-    ensure!(
-        l.account_keys[0] == r.account_keys[0],
-        "different fee payer"
-    );
-    ensure!(
-        l.recent_blockhash == r.recent_blockhash,
-        "different blockhash"
     );
 
     /*

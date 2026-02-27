@@ -94,7 +94,7 @@ export type Database = {
         Row: {
           action_identity: string | null
           created_at: string
-          entrypoint: number
+          entrypoint: string
           fees: Json
           id: string
           output_instructions: boolean
@@ -105,7 +105,7 @@ export type Database = {
         Insert: {
           action_identity?: string | null
           created_at?: string
-          entrypoint: number
+          entrypoint: string
           fees: Json
           id: string
           output_instructions: boolean
@@ -116,7 +116,7 @@ export type Database = {
         Update: {
           action_identity?: string | null
           created_at?: string
-          entrypoint?: number
+          entrypoint?: string
           fees?: Json
           id?: string
           output_instructions?: boolean
@@ -130,19 +130,19 @@ export type Database = {
         Row: {
           data: Json
           deployment_id: string
-          flow_id: number
+          flow_id: string
           user_id: string
         }
         Insert: {
           data: Json
           deployment_id: string
-          flow_id: number
+          flow_id: string
           user_id: string
         }
         Update: {
           data?: Json
           deployment_id?: string
-          flow_id?: number
+          flow_id?: string
           user_id?: string
         }
         Relationships: [
@@ -151,6 +151,12 @@ export type Database = {
             columns: ["deployment_id"]
             referencedRelation: "flow_deployments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_deployments_flows_flow_id_fkey"
+            columns: ["flow_id"]
+            referencedRelation: "flows_v2"
+            referencedColumns: ["uuid"]
           },
           {
             foreignKeyName: "flow_deployments_flows_user_id_fkey"
@@ -164,21 +170,21 @@ export type Database = {
         Row: {
           deployment_id: string
           description: string | null
-          entrypoint: number
+          entrypoint: string
           tag: string
           user_id: string
         }
         Insert: {
           deployment_id: string
           description?: string | null
-          entrypoint: number
+          entrypoint: string
           tag: string
           user_id: string
         }
         Update: {
           deployment_id?: string
           description?: string | null
-          entrypoint?: number
+          entrypoint?: string
           tag?: string
           user_id?: string
         }
@@ -283,7 +289,7 @@ export type Database = {
           end_time: string | null
           environment: Json
           errors: string[] | null
-          flow_id: number
+          flow_id: string
           id: string
           inputs: Json
           instructions_bundling: Json
@@ -305,7 +311,7 @@ export type Database = {
           end_time?: string | null
           environment: Json
           errors?: string[] | null
-          flow_id: number
+          flow_id: string
           id: string
           inputs: Json
           instructions_bundling: Json
@@ -327,7 +333,7 @@ export type Database = {
           end_time?: string | null
           environment?: Json
           errors?: string[] | null
-          flow_id?: number
+          flow_id?: string
           id?: string
           inputs?: Json
           instructions_bundling?: Json
@@ -343,10 +349,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk-flow_id"
+            foreignKeyName: "flow_run_flow_id_fkey"
             columns: ["flow_id"]
-            referencedRelation: "flows"
-            referencedColumns: ["id"]
+            referencedRelation: "flows_v2"
+            referencedColumns: ["uuid"]
           },
           {
             foreignKeyName: "fk-user_id"
@@ -449,7 +455,7 @@ export type Database = {
         Row: {
           amount: number
           enabled: boolean
-          flow_id: number
+          flow_id: string
           id: number
           network: Database["public"]["Enums"]["x402network"]
           pay_to: number
@@ -457,7 +463,7 @@ export type Database = {
         Insert: {
           amount: number
           enabled: boolean
-          flow_id: number
+          flow_id: string
           id?: number
           network: Database["public"]["Enums"]["x402network"]
           pay_to: number
@@ -465,7 +471,7 @@ export type Database = {
         Update: {
           amount?: number
           enabled?: boolean
-          flow_id?: number
+          flow_id?: string
           id?: number
           network?: Database["public"]["Enums"]["x402network"]
           pay_to?: number
@@ -474,8 +480,8 @@ export type Database = {
           {
             foreignKeyName: "flow_x402_fees_flow_id_fkey"
             columns: ["flow_id"]
-            referencedRelation: "flows"
-            referencedColumns: ["id"]
+            referencedRelation: "flows_v2"
+            referencedColumns: ["uuid"]
           },
           {
             foreignKeyName: "flow_x402_fees_pay_to_fkey"

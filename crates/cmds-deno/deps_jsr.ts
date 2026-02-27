@@ -1,1 +1,1 @@
-export * as rpc from "jsr:@space-operator/deno-command-rpc@0.12.1";
+export * as rpc from "jsr:@space-operator/deno-command-rpc@0.13.0";

@@ -92,13 +92,15 @@ impl UserConnectionTrait for UserConnection {
             let key = self.pool.encryption_key()?;
             let wallet = decrypt::<_, Vec<Wallet>>(key, [cached.value])?
                 .pop()
-                .unwrap();
+                .ok_or_else(|| Error::LogicError(anyhow::anyhow!("wallet cache decrypt empty")))?;
             return Ok(wallet);
         }
 
         let key = self.pool.encryption_key()?;
         let w = self.get_encrypted_wallet_by_pubkey(pubkey).await?;
-        let wallet = decrypt::<_, Vec<Wallet>>(key, [w.clone()])?.pop().unwrap();
+        let wallet = decrypt::<_, Vec<Wallet>>(key, [w.clone()])?
+            .pop()
+            .ok_or_else(|| Error::LogicError(anyhow::anyhow!("wallet decrypt empty")))?;
 
         if let Err(error) = self.local.set_cache::<WalletByPubkeyCache>(
             pubkey,
@@ -233,7 +235,7 @@ impl UserConnectionTrait for UserConnection {
         struct FlowRowCache;
         impl CacheBucket for FlowRowCache {
             type Key = FlowId;
-            type EncodedKey = kv::Integer;
+            type EncodedKey = kv::Raw;
             type Object = FlowRow;
 
             fn name() -> &'static str {
@@ -245,7 +247,7 @@ impl UserConnectionTrait for UserConnection {
             }
 
             fn encode_key(key: &Self::Key) -> Self::EncodedKey {
-                kv::Integer::from(*key)
+                key.as_bytes().into()
             }
 
             fn cache_time() -> Duration {
@@ -265,7 +267,7 @@ impl UserConnectionTrait for UserConnection {
         struct FlowInfoCache;
         impl CacheBucket for FlowInfoCache {
             type Key = FlowId;
-            type EncodedKey = kv::Integer;
+            type EncodedKey = kv::Raw;
             type Object = FlowInfo;
 
             fn name() -> &'static str {
@@ -277,7 +279,7 @@ impl UserConnectionTrait for UserConnection {
             }
 
             fn encode_key(key: &Self::Key) -> Self::EncodedKey {
-                kv::Integer::from(*key)
+                key.as_bytes().into()
             }
 
             fn cache_time() -> Duration {
@@ -380,7 +382,7 @@ impl UserConnectionTrait for UserConnection {
         struct FlowConfigCache;
         impl CacheBucket for FlowConfigCache {
             type Key = FlowId;
-            type EncodedKey = kv::Integer;
+            type EncodedKey = kv::Raw;
             type Object = ClientConfig;
 
             fn name() -> &'static str {
@@ -392,7 +394,7 @@ impl UserConnectionTrait for UserConnection {
             }
 
             fn encode_key(key: &Self::Key) -> Self::EncodedKey {
-                kv::Integer::from(*key)
+                key.as_bytes().into()
             }
 
             fn cache_time() -> Duration {
@@ -573,21 +575,17 @@ impl UserConnection {
         csv_export::clear_column(&mut users, "encrypted_password")?;
         users.drop_in_place("confirmed_at")?;
 
-        let mut nodes = copy_out(
+        let node_definitions = copy_out(
             &tx,
             &format!(
-                r#"SELECT * FROM nodes WHERE
+                r#"SELECT id, version, name, type, ports, config, config_schema, author_handle, user_id
+                    FROM node_definitions WHERE
                     user_id = '{}'
-                    OR (user_id IS NULL AND "isPublic")"#,
+                    OR (user_id IS NULL AND is_published = true)"#,
                 self.user_id
             ),
         )
         .await?;
-        nodes.drop_in_place("provider").ok();
-        nodes.drop_in_place("category").ok();
-        nodes.drop_in_place("icon_url").ok();
-        nodes.drop_in_place("vendor").ok();
-        nodes.drop_in_place("author_handle").ok();
 
         let mut identities = copy_out(
             &tx,
@@ -630,7 +628,7 @@ impl UserConnection {
 
         let mut flows = copy_out(
             &tx,
-            &format!("SELECT * FROM flows WHERE user_id = '{}'", self.user_id),
+            &format!("SELECT * FROM flows_v2 WHERE user_id = '{}'", self.user_id),
         )
         .await?;
         flows.drop_in_place("current_branch_id").ok();
@@ -641,7 +639,13 @@ impl UserConnection {
         flows.drop_in_place("canvas_state").ok();
         flows.drop_in_place("variables").ok();
         flows.drop_in_place("rpc_id").ok();
-        csv_export::clear_column(&mut flows, "lastest_flow_run_id")?;
+        if flows
+            .get_column_names()
+            .iter()
+            .any(|name| name.as_str() == "lastest_flow_run_id")
+        {
+            csv_export::clear_column(&mut flows, "lastest_flow_run_id")?;
+        }
 
         let user_quotas = copy_out(
             &tx,
@@ -680,7 +684,7 @@ impl UserConnection {
             kvstore_metadata,
             apikeys,
             flows,
-            nodes,
+            node_definitions,
         })
     }
 }

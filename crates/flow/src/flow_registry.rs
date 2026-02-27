@@ -32,6 +32,17 @@ use tracing::Instrument;
 
 pub const MAX_CALL_DEPTH: u32 = 1024;
 
+fn is_spo_builtin_node(node_id: &str, builtin: &str) -> bool {
+    node_id == builtin
+        || node_id.strip_prefix("@spo/").is_some_and(|name| name == builtin)
+        // New format: extract name from @spo/{prefix}.{name}.{version}
+        || node_id
+            .strip_prefix("@spo/")
+            .and_then(|rest| rest.split_once('.'))
+            .and_then(|(_, rest)| rest.split_once('.'))
+            .is_some_and(|(name, _)| name == builtin)
+}
+
 #[derive(Debug, ThisError)]
 pub enum StopError {
     #[error("flow not found")]
@@ -114,7 +125,7 @@ impl Default for FlowRegistry {
             signers_info: <_>::default(),
             parent_flow_execute: None,
             backend: BackendServices::unimplemented(),
-            rhai_permit: Arc::new(Semaphore::new(1)),
+            rhai_permit: Arc::new(Semaphore::new(rhai_pool_size())),
             rhai_tx: <_>::default(),
             rpc_server: None, // TODO: try this
             remotes: None,
@@ -157,8 +168,11 @@ where
             .iter()
             .filter(|n| {
                 n.data.r#type == CommandType::Native
-                    && (n.data.node_id == interflow::INTERFLOW
-                        || n.data.node_id == interflow_instructions::INTERFLOW_INSTRUCTIONS)
+                    && (is_spo_builtin_node(&n.data.node_id, interflow::INTERFLOW)
+                        || is_spo_builtin_node(
+                            &n.data.node_id,
+                            interflow_instructions::INTERFLOW_INSTRUCTIONS,
+                        ))
             })
             .map(|n| (n.id, interflow::get_interflow_id(&n.data)));
         for (node_id, result) in interflow_nodes {
@@ -204,7 +218,8 @@ where
 
     for (parent_flow, config) in flows.iter_mut() {
         let interflows = config.nodes.iter_mut().filter(|n| {
-            n.data.r#type == CommandType::Native && n.data.node_id == interflow::INTERFLOW
+            n.data.r#type == CommandType::Native
+                && is_spo_builtin_node(&n.data.node_id, interflow::INTERFLOW)
         });
 
         for n in interflows {
@@ -220,6 +235,17 @@ where
     }
 
     Ok(flows)
+}
+
+pub fn rhai_pool_size() -> usize {
+    static POOL_SIZE: OnceLock<usize> = OnceLock::new();
+    *POOL_SIZE.get_or_init(|| {
+        std::env::var("RHAI_POOL_SIZE")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1)
+            .max(1)
+    })
 }
 
 fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) {
@@ -325,7 +351,7 @@ impl FlowRegistry {
             parent_flow_execute: None,
             endpoints,
             backend,
-            rhai_permit: Arc::new(Semaphore::new(1)),
+            rhai_permit: Arc::new(Semaphore::new(rhai_pool_size())),
             rhai_tx: <_>::default(),
             rpc_server: tower_rpc::Server::start_http_server()
                 .inspect_err(|error| tracing::error!("tower_rpc error: {}", error))
@@ -366,7 +392,9 @@ impl FlowRegistry {
             .rhai_tx
             .get_or_init(|| {
                 let (new_tx, rx) = crossbeam_channel::unbounded();
-                spawn_rhai_thread(rx);
+                for _ in 0..rhai_pool_size() {
+                    spawn_rhai_thread(rx.clone());
+                }
                 new_tx
             })
             .clone();

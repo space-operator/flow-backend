@@ -11,7 +11,7 @@ pub struct ExplorerCommand {
 impl ExplorerCommand {
     fn new(data: &NodeData) -> Self {
         let outputs = data
-            .sources
+            .outputs
             .iter()
             .map(|o| Output {
                 name: o.name.clone(),
@@ -22,8 +22,7 @@ impl ExplorerCommand {
         Self {
             outputs,
             result: data
-                .targets_form
-                .form_data
+                .config
                 .as_object()
                 .map(|o| {
                     o.iter()

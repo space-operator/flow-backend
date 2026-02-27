@@ -5,6 +5,7 @@ import * as nacl from "tweetnacl";
 import { createClient } from "@supabase/supabase-js";
 import type { UserResponse } from "@supabase/auth-js";
 import { assert } from "@std/assert";
+import { getEnv } from "./utils.ts";
 
 function ed25519SignText(keypair: web3.Keypair, message: string): Uint8Array {
   return nacl.default.sign.detached(
@@ -16,12 +17,6 @@ function ed25519SignText(keypair: web3.Keypair, message: string): Uint8Array {
 dotenv.loadSync({
   export: true,
 });
-
-function getEnv(key: string): string {
-  const env = Deno.env.get(key);
-  if (env === undefined) throw new Error(`no env ${key}`);
-  return env;
-}
 
 const anonKey = getEnv("ANON_KEY");
 

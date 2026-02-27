@@ -1,6 +1,6 @@
 {
   "flow": {
-    "id": 0,
+    "id": "00000000-0000-0000-0000-000000000000",
     "user_id": "3b93d159-b9d1-4230-ad4b-e498d7f1b796",
     "name": "const_form_data",
     "mosaic": {
@@ -61,28 +61,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "string",
               "defaultValue": "",
               "tooltip": "",
               "id": "56e8b7de-07ee-46eb-97b0-f58f554a14a6"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "S": "Hello"
-              },
-              "type": "String"
+          "inputs": [],
+          "config": {
+            "value": {
+              "S": "Hello"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "String"
           }
         },
         "positionAbsolute": {
@@ -120,26 +113,19 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "free",
               "defaultValue": "",
               "tooltip": "",
               "id": "c702398b-1931-4f33-8514-3f523a20e7d2"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": "{\"key\": \"value\"}",
-              "type": "JSON"
-            },
-            "extra": {
-              "supabase_id": 117
-            }
+          "inputs": [],
+          "config": {
+            "value": "{\"key\": \"value\"}",
+            "type": "JSON"
           }
         },
         "positionAbsolute": {
@@ -177,28 +163,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "pubkey",
               "defaultValue": "",
               "tooltip": "",
               "id": "8657d45c-2517-413c-b76f-b58d0a8d5eb3"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "B3": "ESxeViFP4r7THzVx9hJDkhj4HrNGSjJSFRPbGaAb97hN"
-              },
-              "type": "Pubkey"
+          "inputs": [],
+          "config": {
+            "value": {
+              "B3": "ESxeViFP4r7THzVx9hJDkhj4HrNGSjJSFRPbGaAb97hN"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "Pubkey"
           }
         },
         "positionAbsolute": {
@@ -236,28 +215,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "string",
               "defaultValue": "",
               "tooltip": "",
               "id": "e44b9c92-7802-4d12-a63b-f3956a3a0e70"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "S": "violin lock water level drift skill device cart ginger hello orange energy"
-              },
-              "type": "SeedPhrase"
+          "inputs": [],
+          "config": {
+            "value": {
+              "S": "violin lock water level drift skill device cart ginger hello orange energy"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "SeedPhrase"
           }
         },
         "positionAbsolute": {
@@ -294,28 +266,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "bool",
               "defaultValue": "",
               "tooltip": "",
               "id": "172e1b91-a3e9-44b3-b113-e95da7526005"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "B": true
-              },
-              "type": "BoolTrue"
+          "inputs": [],
+          "config": {
+            "value": {
+              "B": true
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "BoolTrue"
           }
         },
         "positionAbsolute": {
@@ -352,28 +317,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "decimal",
               "defaultValue": "",
               "tooltip": "",
               "id": "19f990fa-b0fe-4cbd-9a63-91cf7370c308"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "D": "3.1415926535897932384626433833"
-              },
-              "type": "Decimal"
+          "inputs": [],
+          "config": {
+            "value": {
+              "D": "3.1415926535897932384626433833"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "Decimal"
           }
         },
         "positionAbsolute": {
@@ -411,28 +369,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "u64",
               "defaultValue": "",
               "tooltip": "",
               "id": "aefacd17-9419-484c-b6e1-ac8d53d4372e"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "U": "18446744073709551615"
-              },
-              "type": "U64"
+          "inputs": [],
+          "config": {
+            "value": {
+              "U": "18446744073709551615"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "U64"
           }
         },
         "positionAbsolute": {
@@ -470,28 +421,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "i64",
               "defaultValue": "",
               "tooltip": "",
               "id": "86fa7df3-2e05-4ae2-90b1-c11ba66b964c"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "I": "-9223372036854775808"
-              },
-              "type": "I64"
+          "inputs": [],
+          "config": {
+            "value": {
+              "I": "-9223372036854775808"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "I64"
           }
         },
         "positionAbsolute": {
@@ -529,28 +473,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "u128",
               "defaultValue": "",
               "tooltip": "",
               "id": "3fb37c8c-aeac-4e85-b8e8-fab09abe9c20"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "U1": "340282366920938463463374607431768211455"
-              },
-              "type": "U128"
+          "inputs": [],
+          "config": {
+            "value": {
+              "U1": "340282366920938463463374607431768211455"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "U128"
           }
         },
         "positionAbsolute": {
@@ -588,28 +525,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "i128",
               "defaultValue": "",
               "tooltip": "",
               "id": "b8de3024-ca27-4df6-8cd6-c773e8117e44"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "I1": "-170141183460469231731687303715884105728"
-              },
-              "type": "I128"
+          "inputs": [],
+          "config": {
+            "value": {
+              "I1": "-170141183460469231731687303715884105728"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "I128"
           }
         },
         "positionAbsolute": {
@@ -647,28 +577,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "f64",
               "defaultValue": "",
               "tooltip": "",
               "id": "41574a05-652e-4d95-9aaf-efa8a350c62e"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "F": "1.7976931348623157E308"
-              },
-              "type": "F64"
+          "inputs": [],
+          "config": {
+            "value": {
+              "F": "1.7976931348623157E308"
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "F64"
           }
         },
         "positionAbsolute": {
@@ -706,28 +629,21 @@
           "name": "Const",
           "backgroundColorDark": "#000000",
           "backgroundColor": "#fff",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "bool",
               "defaultValue": "",
               "tooltip": "",
               "id": "dde483dc-24cd-4c45-a4a9-d379bfff2baf"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "value": {
-                "B": false
-              },
-              "type": "BoolFalse"
+          "inputs": [],
+          "config": {
+            "value": {
+              "B": false
             },
-            "extra": {
-              "supabase_id": 117
-            }
+            "type": "BoolFalse"
           }
         },
         "positionAbsolute": {

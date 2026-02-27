@@ -5,7 +5,7 @@ use reqwest::{StatusCode, header::AUTHORIZATION};
 
 pub const NAME: &str = "kv_delete_store";
 
-const DEFINITION: &str = flow_lib::node_definition!("kvstore/delete_store.json");
+const DEFINITION: &str = flow_lib::node_definition!("kvstore/delete_store.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

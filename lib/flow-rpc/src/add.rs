@@ -2,7 +2,7 @@ use flow_lib::command::prelude::*;
 const NAME: &str = "add";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 pub(crate) fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("add.json");
+    const DEFINITION: &str = flow_lib::node_definition!("add.jsonc");
     static CACHE: BuilderCache =
         BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))

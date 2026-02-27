@@ -74,6 +74,26 @@ pub enum AddWalletError {
 }
 
 impl SignerWorker {
+    fn keypair_from_secret_bytes(bytes: &[u8]) -> Result<Keypair, AddWalletError> {
+        match bytes.len() {
+            64 => {
+                let keypair_bytes: [u8; 64] = bytes.try_into().map_err(|_| AddWalletError::InvalidKeypair)?;
+                // Guard against mismatched secret/public halves (GHSA-w5vr-6qhr-36cc).
+                if ed25519_dalek::SigningKey::from_keypair_bytes(&keypair_bytes).is_err() {
+                    return Err(AddWalletError::InvalidKeypair);
+                }
+                Keypair::try_from(&keypair_bytes[..]).map_err(|_| AddWalletError::InvalidKeypair)
+            }
+            32 => {
+                let secret_bytes: [u8; 32] = bytes.try_into().map_err(|_| AddWalletError::InvalidKeypair)?;
+                let signing_key = ed25519_dalek::SigningKey::from_bytes(&secret_bytes);
+                Keypair::try_from(&signing_key.to_keypair_bytes()[..])
+                    .map_err(|_| AddWalletError::InvalidKeypair)
+            }
+            _ => Err(AddWalletError::InvalidKeypair),
+        }
+    }
+
     pub async fn fetch<'a, I>(db: DbPool, users: I) -> Result<Self, DbError>
     where
         I: IntoIterator<Item = &'a (UserId, actix::Recipient<SignatureRequest>)>,
@@ -165,8 +185,7 @@ impl SignerWorker {
             return Err(AddWalletError::NotOnCurve);
         }
         let s = if let Some(keypair) = w.keypair {
-            let keypair =
-                Keypair::try_from(&keypair[..]).map_err(|_| AddWalletError::InvalidKeypair)?;
+            let keypair = Self::keypair_from_secret_bytes(&keypair)?;
             SignerType::Keypair(Box::new(keypair))
         } else {
             SignerType::UserWallet {
@@ -191,6 +210,40 @@ impl SignerWorker {
         Ok(())
     }
 
+    /// Register a keypair for a SWIG session wallet.
+    /// The secret key bytes are decoded from base58 and used to create a signing keypair.
+    pub fn add_swig_session(
+        &mut self,
+        pubkey: Pubkey,
+        secret_key_base58: &str,
+    ) -> Result<(), AddWalletError> {
+        let key_bytes = bs58::decode(secret_key_base58)
+            .into_vec()
+            .map_err(|_| AddWalletError::InvalidKeypair)?;
+        let keypair = Self::keypair_from_secret_bytes(&key_bytes)?;
+        if keypair.pubkey() != pubkey {
+            tracing::warn!(
+                "swig session keypair mismatch: expected {}, got {}",
+                pubkey,
+                keypair.pubkey()
+            );
+            return Err(AddWalletError::InvalidKeypair);
+        }
+        match self.signers.entry(pubkey) {
+            Entry::Vacant(slot) => {
+                slot.insert(SignerType::Keypair(Box::new(keypair)));
+            }
+            Entry::Occupied(mut slot) => {
+                // Keypair always wins over UserWallet
+                if matches!(slot.get(), SignerType::UserWallet { .. }) {
+                    tracing::info!("replacing UserWallet with swig session keypair for {}", pubkey);
+                    slot.insert(SignerType::Keypair(Box::new(keypair)));
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub async fn fetch_wallets_from_ids(
         db: &DbPool,
         user_id: UserId,
@@ -208,5 +261,58 @@ impl SignerWorker {
             }
         }
         Ok(signer)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use solana_signer::Signer;
+
+    #[test]
+    fn add_swig_session_accepts_valid_64_byte_keypair() {
+        let keypair = Keypair::new();
+        let mut signer = SignerWorker {
+            signers: HashMap::new(),
+        };
+        signer
+            .add_swig_session(keypair.pubkey(), &keypair.to_base58_string())
+            .unwrap();
+        assert!(matches!(
+            signer.signers.get(&keypair.pubkey()),
+            Some(SignerType::Keypair(_))
+        ));
+    }
+
+    #[test]
+    fn add_swig_session_accepts_32_byte_secret() {
+        let keypair = Keypair::new();
+        let full = bs58::decode(keypair.to_base58_string()).into_vec().unwrap();
+        let secret_only = bs58::encode(&full[..32]).into_string();
+        let mut signer = SignerWorker {
+            signers: HashMap::new(),
+        };
+        signer
+            .add_swig_session(keypair.pubkey(), &secret_only)
+            .unwrap();
+        assert!(matches!(
+            signer.signers.get(&keypair.pubkey()),
+            Some(SignerType::Keypair(_))
+        ));
+    }
+
+    #[test]
+    fn add_swig_session_rejects_mismatched_keypair_halves() {
+        let keypair = Keypair::new();
+        let mut bytes = bs58::decode(keypair.to_base58_string()).into_vec().unwrap();
+        bytes[63] ^= 0x01;
+        let malformed = bs58::encode(bytes).into_string();
+        let mut signer = SignerWorker {
+            signers: HashMap::new(),
+        };
+        assert!(matches!(
+            signer.add_swig_session(keypair.pubkey(), &malformed),
+            Err(AddWalletError::InvalidKeypair)
+        ));
     }
 }

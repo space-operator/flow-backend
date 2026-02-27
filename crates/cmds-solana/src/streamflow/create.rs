@@ -9,7 +9,7 @@ use super::{CreateData, CreateDataInput, FEE_ORACLE_ADDRESS, STRM_TREASURY, WITH
 
 const NAME: &str = "create_streamflow_timelock";
 
-const DEFINITION: &str = flow_lib::node_definition!("streamflow/create.json");
+const DEFINITION: &str = flow_lib::node_definition!("streamflow/create.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

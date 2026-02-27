@@ -44,26 +44,57 @@ pub enum ValueType {
     Free,
 }
 
-// ID in database
-pub type CommandId = i64;
+// ID in node_definitions table (UUID)
+pub type CommandId = uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct Data {
-    pub node_definition_version: Option<String>,
-    pub unique_id: Option<String>,
-    pub node_id: String,
-    pub version: String,
-    pub display_name: String,
-    pub description: String,
-    pub tags: Option<Vec<String>>,
-    pub related_to: Option<Vec<RelatedTo>>,
-    pub resources: Option<Resources>,
-    pub usage: Option<Usage>,
-    pub authors: Option<Vec<Author>>,
-    pub design: Option<Design>,
-    pub options: Option<serde_json::Value>,
-    pub instruction_info: Option<InstructionInfo>,
+pub struct Ports {
+    #[serde(default)]
+    pub inputs: Vec<Target>,
+    #[serde(default)]
+    pub outputs: Vec<Source>,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct CommandDefinition {
+    pub r#type: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prefix: Option<String>,
+    #[serde(default = "default_version")]
+    pub version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub ports: Ports,
+    #[serde(default)]
+    pub config: JsonValue,
+    #[serde(default)]
+    pub config_schema: JsonValue,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub author_handle: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub classification: Option<JsonValue>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub external_version: Option<JsonValue>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub internal: Option<JsonValue>,
+}
+
+impl CommandDefinition {
+    /// Returns the `@author/name` slug used as the runtime node identifier.
+    pub fn slug(&self) -> String {
+        match &self.author_handle {
+            Some(author) => format!("@{}/{}", author, self.name),
+            None => self.name.clone(),
+        }
+    }
+}
+
+fn default_version() -> String {
+    "0.1".to_owned()
+}
+
+// --- Metadata types used when constructing config JSON ---
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct RelatedTo {
@@ -120,8 +151,9 @@ pub struct Design {
 pub struct Source {
     pub name: String,
     pub r#type: String,
-    #[serde(rename = "defaultValue")]
+    #[serde(rename = "defaultValue", default)]
     pub default_value: JsonValue,
+    #[serde(default)]
     pub tooltip: String,
     #[serde(default)]
     pub optional: bool,
@@ -130,22 +162,14 @@ pub struct Source {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Target {
     pub name: String,
+    #[serde(default)]
     pub type_bounds: Vec<String>,
+    #[serde(default)]
     pub required: bool,
-    #[serde(rename = "defaultValue")]
+    #[serde(rename = "defaultValue", default)]
     pub default_value: JsonValue,
+    #[serde(default)]
     pub tooltip: String,
+    #[serde(default)]
     pub passthrough: bool,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct CommandDefinition {
-    pub r#type: String,
-    pub data: Data,
-    pub sources: Vec<Source>,
-    pub targets: Vec<Target>,
-    #[serde(rename = "targets_form.ui_schema")]
-    pub ui_schema: JsonValue,
-    #[serde(rename = "targets_form.json_schema")]
-    pub json_schema: JsonValue,
 }

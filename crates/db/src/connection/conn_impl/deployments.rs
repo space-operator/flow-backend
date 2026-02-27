@@ -280,13 +280,14 @@ impl UserConnection {
             .await
             .map_err(Error::exec("copy in"))?;
         let writer =
-            BinaryCopyInWriter::new(sink, &[Type::UUID, Type::INT4, Type::UUID, Type::JSONB]);
+            BinaryCopyInWriter::new(sink, &[Type::UUID, Type::UUID, Type::UUID, Type::JSONB]);
         futures_util::pin_mut!(writer);
         for f in d.flows.values() {
             let f = &f.row;
+            let flow_data = f.data().map_err(Error::json("flow_deployments_flows.data"))?;
             writer
                 .as_mut()
-                .write(&[&id, &f.id, &f.user_id, &Json(f.data())])
+                .write(&[&id, &f.id, &f.user_id, &Json(flow_data)])
                 .await
                 .map_err(Error::exec("copy in write"))?;
         }
@@ -297,7 +298,7 @@ impl UserConnection {
         if written != d.flows.len() as u64 {
             return Err(Error::LogicError(anyhow!(
                 "size={}; written={}",
-                d.wallets_id.len(),
+                d.flows.len(),
                 written
             )));
         }

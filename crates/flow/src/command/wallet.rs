@@ -28,9 +28,48 @@ pub(crate) struct FormData {
 
 impl WalletCmd {
     fn new(nd: &NodeData) -> Self {
-        let form = serde_json::from_value::<FormData>(nd.targets_form.form_data.clone());
+        let form = parse_wallet_form(nd.config.clone());
         Self { form }
     }
+}
+
+fn invalid_data_error(message: &str) -> serde_json::Error {
+    serde_json::Error::io(std::io::Error::new(
+        std::io::ErrorKind::InvalidData,
+        message.to_owned(),
+    ))
+}
+
+fn parse_pubkey(json: &JsonValue) -> Option<Pubkey> {
+    flow_lib::command::parse_value_tagged(json.clone())
+        .ok()
+        .and_then(|value| value::pubkey::deserialize(value).ok())
+}
+
+fn parse_wallet_id(json: &JsonValue) -> Option<i64> {
+    flow_lib::command::parse_value_tagged(json.clone())
+        .ok()
+        .and_then(|value| match value {
+            Value::I64(v) => Some(v),
+            Value::U64(v) => i64::try_from(v).ok(),
+            _ => None,
+        })
+}
+
+fn parse_wallet_form(json: JsonValue) -> Result<FormData, serde_json::Error> {
+    let public_key = json
+        .get("public_key")
+        .and_then(parse_pubkey)
+        .ok_or_else(|| invalid_data_error("wallet.public_key"))?;
+    let wallet_id = json
+        .get("wallet_id")
+        .and_then(parse_wallet_id)
+        .ok_or_else(|| invalid_data_error("wallet.wallet_id"))?;
+
+    Ok(FormData {
+        public_key,
+        wallet_id,
+    })
 }
 
 #[derive(ZeroizeOnDrop)]
@@ -53,18 +92,18 @@ impl WalletPermit {
         }
     }
 
-    fn encrypt(&self, wallet_id: WalletId) -> String {
+    fn encrypt(&self, wallet_id: WalletId) -> Result<String, CommandError> {
         let nonce = ChaCha20Poly1305::generate_nonce(&mut rand_core::OsRng);
-        let borsh_form = borsh::to_vec(&wallet_id).unwrap();
-        let ciphertext = self
-            .encryption_key
-            .encrypt(&nonce, borsh_form.as_slice())
-            .unwrap();
+        let mut nonce_bytes = [0u8; 12];
+        nonce_bytes.copy_from_slice(nonce.as_slice());
+        let borsh_form = borsh::to_vec(&wallet_id)?;
+        let ciphertext = self.encryption_key.encrypt(&nonce, borsh_form.as_slice())?;
         let permit = Permit {
-            nonce: *nonce.as_array().unwrap(),
+            nonce: nonce_bytes,
             ciphertext,
         };
-        BASE64_STANDARD_NO_PAD.encode(borsh::to_vec(&permit).unwrap())
+        let encoded = borsh::to_vec(&permit)?;
+        Ok(BASE64_STANDARD_NO_PAD.encode(encoded))
     }
 
     pub(crate) fn decrypt(&self, base64_permit: &str) -> Result<WalletId, CommandError> {
@@ -144,31 +183,48 @@ flow_lib::submit!(CommandDescription::new(WALLET, |nd| {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow_lib::config::client::{Extra, TargetsForm};
     use serde_json::json;
 
     const PUBKEY_STR: &str = "DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY";
 
     #[test]
-    fn adapter() {
+    fn rejects_plain_json_form() {
         let nd = NodeData {
             r#type: flow_lib::CommandType::Native,
             node_id: WALLET.into(),
-            sources: Vec::new(),
-            targets: Vec::new(),
-            targets_form: TargetsForm {
-                form_data: json!({
-                    "public_key": PUBKEY_STR,
-                    "wallet_id": 0,
-                }),
-                extra: Extra::default(),
-                wasm_bytes: None,
-            },
+            outputs: Vec::new(),
+            inputs: Vec::new(),
+            config: json!({
+                "public_key": PUBKEY_STR,
+                "wallet_id": 0,
+            }),
+            wasm: None,
             instruction_info: None,
         };
-        assert_eq!(
-            WalletCmd::new(&nd).form.unwrap().public_key,
-            Pubkey::from_str_const(PUBKEY_STR)
-        );
+        assert!(WalletCmd::new(&nd).form.is_err());
+    }
+
+    #[test]
+    fn adapter_accepts_ivalue_config() {
+        let nd = NodeData {
+            r#type: flow_lib::CommandType::Native,
+            node_id: WALLET.into(),
+            outputs: Vec::new(),
+            inputs: Vec::new(),
+            config: json!({
+                "public_key": { "B3": PUBKEY_STR },
+                "wallet_id": { "U": "7" }
+            }),
+            wasm: None,
+            instruction_info: None,
+        };
+
+        assert!(matches!(
+            WalletCmd::new(&nd).form,
+            Ok(FormData {
+                public_key,
+                wallet_id: 7
+            }) if public_key == Pubkey::from_str_const(PUBKEY_STR)
+        ));
     }
 }

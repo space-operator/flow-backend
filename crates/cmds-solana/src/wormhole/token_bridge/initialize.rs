@@ -6,7 +6,7 @@ use solana_program::pubkey::Pubkey;
 // Command Name
 const NAME: &str = "initialize_token_bridge";
 
-const DEFINITION: &str = flow_lib::node_definition!("wormhole/token_bridge/initialize.json");
+const DEFINITION: &str = flow_lib::node_definition!("wormhole/token_bridge/initialize.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

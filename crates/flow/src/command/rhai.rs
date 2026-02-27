@@ -39,9 +39,9 @@ impl CommandTrait for Command {
 }
 
 pub fn build(nd: &NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
-    let inputs: Vec<Input> = nd.targets.iter().cloned().map(Into::into).collect();
+    let inputs: Vec<Input> = nd.inputs.iter().cloned().map(Into::into).collect();
     let outputs: Vec<Output> = nd
-        .sources
+        .outputs
         .iter()
         .cloned()
         .map(|s| Output {
@@ -70,7 +70,9 @@ pub fn build(nd: &NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
 inventory::submit!(CommandDescription {
     matcher: MatchCommand {
         r#type: flow_lib::CommandType::Native,
-        name: flow_lib::command::MatchName::Regex(std::borrow::Cow::Borrowed("^rhai_script_"))
+        name: flow_lib::command::MatchName::Regex(std::borrow::Cow::Borrowed(
+            "^(?:@spo/[^.]*\\.)?rhai_script(?:[_.]|$)",
+        ))
     },
     fn_new: futures::future::Either::Left(build)
 });

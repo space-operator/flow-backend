@@ -35,7 +35,7 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
 
 fn build() -> BuildResult {
     Ok(
-        CmdBuilder::new(flow_lib::node_definition!("postgrest/builder_match.json"))?
+        CmdBuilder::new(flow_lib::node_definition!("postgrest/builder_match.jsonc"))?
             .check_name(NAME)?
             .build(run),
     )

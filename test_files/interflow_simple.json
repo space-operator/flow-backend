@@ -1,6 +1,6 @@
 {
   "flow": {
-    "id": 95,
+    "id": "00000000-0000-0000-0000-00000000005f",
     "user_id": "ad3dedf8-7b31-4baf-85a2-c336db90ad7f",
     "name": "interflow_simple",
     "mosaic": {
@@ -52,11 +52,13 @@
           "id": "37d42c3a-4e5c-4739-b87c-d656f82ecf31",
           "node_id": "interflow",
           "name": "Interflow",
-          "sources": [],
-          "targets": [
+          "outputs": [],
+          "inputs": [
             {
               "name": "flow",
-              "type_bounds": ["string"],
+              "type_bounds": [
+                "string"
+              ],
               "required": true,
               "defaultValue": null,
               "tooltip": "",
@@ -64,12 +66,8 @@
               "id": "0ae558e5-96c1-49da-8bf5-5e19f15da898"
             }
           ],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": {
-              "id": 94
-            }
+          "config": {
+            "id": 94
           }
         },
         "position": {
@@ -101,9 +99,9 @@
           "id": "703cbb24-7439-495c-a121-5f6626d07947",
           "node_id": "const",
           "name": "Const",
-          "sources": [
+          "outputs": [
             {
-              "name": "Source",
+              "name": "output",
               "type": "string",
               "defaultValue": "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu",
               "tooltip": "",
@@ -111,12 +109,8 @@
               "value": "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu"
             }
           ],
-          "targets": [],
-          "targets_form": {
-            "json_schema": {},
-            "ui_schema": {},
-            "form_data": "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu"
-          }
+          "inputs": [],
+          "config": "56Ngo8EY5ZWmYKDZAmKYcUf2y2LZVRSMMnptGp9JtQuSZHyU3Pwhhkmj5YVf89VTQZqrzkabhybWdWwJWCa74aYu"
         },
         "position": {
           "x": -390,

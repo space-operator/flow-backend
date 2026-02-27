@@ -11,6 +11,7 @@ flow-lib.workspace = true
 
 anyhow = "1"
 bs58 = "0.4"
+hex = "0.4"
 rhai = { version = "1.17.2", features = ["decimal", "indexmap"] }
 rhai-rand = { version = "0.1.6", features = ["decimal"] }
 serde = { version = "1", features = ["derive"] }

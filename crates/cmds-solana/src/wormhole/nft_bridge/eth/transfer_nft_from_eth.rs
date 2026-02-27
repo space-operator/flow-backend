@@ -5,7 +5,7 @@ use tracing::info;
 const NAME: &str = "transfer_nft_from_eth";
 
 const DEFINITION: &str =
-    flow_lib::node_definition!("wormhole/nft_bridge/eth/transfer_nft_from_eth.json");
+    flow_lib::node_definition!("wormhole/nft_bridge/eth/transfer_nft_from_eth.jsonc");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

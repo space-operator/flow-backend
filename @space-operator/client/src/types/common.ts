@@ -1,4 +1,4 @@
-export type FlowId = number;
+export type FlowId = string;
 export type DeploymentId = string;
 export type FlowRunId = string;
 export type NodeId = string;

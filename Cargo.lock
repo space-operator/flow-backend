@@ -3496,6 +3496,7 @@ dependencies = [
  "flow-value",
  "futures",
  "inventory",
+ "jsonc-parser 0.28.0",
  "pin-project-lite",
  "regex",
  "reqwest 0.12.28",
@@ -8263,6 +8264,7 @@ dependencies = [
  "bs58 0.4.0",
  "chrono",
  "flow-lib",
+ "hex",
  "rhai",
  "rhai-rand",
  "rust_decimal",
@@ -8710,10 +8712,8 @@ dependencies = [
 
 [[package]]
 name = "schema"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
- "flow-value",
- "semver 1.0.27",
  "serde",
  "serde_json",
  "strum 0.27.2",

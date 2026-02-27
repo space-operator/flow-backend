@@ -1,0 +1,90 @@
+use crate::prelude::*;
+use solana_program::program_pack::Pack;
+use solana_system_interface::instruction::create_account;
+
+use spl_token_interface::state::Mint;
+
+const NAME: &str = "create_mint_account";
+
+const DEFINITION: &str = flow_lib::node_definition!("spl_token/create_mint_account.jsonc");
+
+fn build() -> BuildResult {
+    static CACHE: BuilderCache = BuilderCache::new(|| {
+        CmdBuilder::new(DEFINITION)?
+            .check_name(NAME)?
+            .simple_instruction_info("signature")
+    });
+    Ok(CACHE.clone()?.build(run))
+}
+
+flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Input {
+    fee_payer: Wallet,
+    decimals: u8,
+    mint_authority: Wallet,
+    #[serde(default, with = "value::pubkey::opt")]
+    freeze_authority: Option<Pubkey>,
+    mint_account: Wallet,
+    #[serde(default = "value::default::bool_true")]
+    submit: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Output {
+    #[serde(default, with = "value::signature::opt")]
+    signature: Option<Signature>,
+}
+
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    let lamports = ctx
+        .solana_client()
+        .get_minimum_balance_for_rent_exemption(Mint::LEN)
+        .await?;
+
+    let instructions = [
+        create_account(
+            &input.fee_payer.pubkey(),
+            &input.mint_account.pubkey(),
+            lamports,
+            Mint::LEN as u64,
+            &spl_token_interface::ID,
+        ),
+        spl_token_interface::instruction::initialize_mint2(
+            &spl_token_interface::ID,
+            &input.mint_account.pubkey(),
+            &input.mint_authority.pubkey(),
+            input.freeze_authority.as_ref(),
+            input.decimals,
+        )?,
+    ]
+    .into();
+
+    let ins = Instructions {
+        lookup_tables: None,
+        fee_payer: input.fee_payer.pubkey(),
+        signers: [input.fee_payer, input.mint_authority, input.mint_account].into(),
+        instructions,
+    };
+
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
+
+    let signature = ctx.execute(ins, <_>::default()).await?.signature;
+
+    Ok(Output { signature })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_build() {
+        build().unwrap();
+    }
+}

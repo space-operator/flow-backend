@@ -1,15 +1,10 @@
 import * as client from "../src/mod.ts";
 import * as dotenv from "@std/dotenv";
+import { getEnv } from "./utils.ts";
 
 dotenv.loadSync({
     export: true,
 });
-
-function getEnv(key: string): string {
-    const env = Deno.env.get(key);
-    if (env === undefined) throw new Error(`no env ${key}`);
-    return env;
-}
 
 const anonKey = getEnv("ANON_KEY");
 

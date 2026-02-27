@@ -20,7 +20,7 @@ use std::{
 use tokio::{sync::Semaphore, task::JoinHandle};
 use tower::ServiceExt;
 use uuid::Uuid;
-use value::Decimal;
+use value::{Decimal, Value};
 
 use crate::{
     command::{interflow, interflow_instructions},
@@ -37,6 +37,46 @@ pub enum StartPermission {
     Authenticated,
     /// Any unauthenticated user
     Anonymous,
+}
+
+fn is_spo_builtin_node(node_id: &str, builtin: &str) -> bool {
+    node_id == builtin
+        || node_id.strip_prefix("@spo/").is_some_and(|name| name == builtin)
+        // New format: extract name from @spo/{prefix}.{name}.{version}
+        || node_id
+            .strip_prefix("@spo/")
+            .and_then(|rest| rest.split_once('.'))
+            .and_then(|(_, rest)| rest.split_once('.'))
+            .is_some_and(|(name, _)| name == builtin)
+}
+
+fn parse_wallet_id(value: &JsonValue) -> Option<i64> {
+    flow_lib::command::parse_value_tagged(value.clone())
+        .ok()
+        .and_then(|value| match value {
+            Value::I64(v) => Some(v),
+            Value::U64(v) => i64::try_from(v).ok(),
+            _ => None,
+        })
+}
+
+fn parse_string_value(value: &JsonValue) -> Option<String> {
+    flow_lib::command::parse_value_tagged(value.clone())
+        .ok()
+        .and_then(|value| match value {
+            Value::String(s) => Some(s),
+            _ => None,
+        })
+}
+
+/// Info about a SWIG session wallet extracted from a wallet node config.
+/// Used to look up session secret keys from the database for server-side signing.
+#[derive(Debug, Clone)]
+pub struct SwigSessionInfo {
+    /// Session public key (base58)
+    pub session_pubkey: Pubkey,
+    /// Swig wallet UUID from the swig_wallets table
+    pub swig_wallet_id: String,
 }
 
 #[derive(bon::Builder, Clone, Debug, Serialize, Deserialize)]
@@ -63,15 +103,47 @@ impl Flow {
             .nodes
             .iter()
             .filter_map(|n| {
-                (n.data.r#type == CommandType::Native && n.data.node_id == "wallet")
+                (n.data.r#type == CommandType::Native
+                    && is_spo_builtin_node(&n.data.node_id, "wallet"))
                     .then(|| {
                         n.data
-                            .targets_form
-                            .form_data
+                            .config
                             .get("wallet_id")
-                            .and_then(|v| v.as_i64())
+                            .and_then(parse_wallet_id)
                     })
                     .flatten()
+            })
+            .collect()
+    }
+
+    /// Extract SWIG session info from wallet nodes.
+    /// Returns pubkey + swig_wallet_id for each SWIG wallet node that has a session pubkey.
+    pub fn swig_sessions(&self) -> Vec<SwigSessionInfo> {
+        self.row
+            .nodes
+            .iter()
+            .filter_map(|n| {
+                if n.data.r#type != CommandType::Native
+                    || !is_spo_builtin_node(&n.data.node_id, "wallet")
+                {
+                    return None;
+                }
+                let wallet_type = n.data.config.get("wallet_type").and_then(parse_string_value)?;
+                if wallet_type != "SWIG" {
+                    return None;
+                }
+                let swig_wallet_id =
+                    n.data.config.get("swig_wallet_id").and_then(parse_string_value)?;
+                let pubkey_str =
+                    n.data.config.get("public_key").and_then(|v| {
+                        flow_lib::command::parse_value_tagged(v.clone())
+                            .ok()
+                            .and_then(|val| value::pubkey::deserialize(val).ok())
+                    })?;
+                Some(SwigSessionInfo {
+                    session_pubkey: pubkey_str,
+                    swig_wallet_id,
+                })
             })
             .collect()
     }
@@ -82,8 +154,11 @@ impl Flow {
             .iter()
             .filter_map(|n| {
                 let is_interflow = n.data.r#type == CommandType::Native
-                    && (n.data.node_id == interflow::INTERFLOW
-                        || n.data.node_id == interflow_instructions::INTERFLOW_INSTRUCTIONS);
+                    && (is_spo_builtin_node(&n.data.node_id, interflow::INTERFLOW)
+                        || is_spo_builtin_node(
+                            &n.data.node_id,
+                            interflow_instructions::INTERFLOW_INSTRUCTIONS,
+                        ));
                 is_interflow
                     .then(|| interflow::get_interflow_id(&n.data).ok())
                     .flatten()
@@ -156,6 +231,14 @@ impl FlowDeployment {
             .output_instructions(false)
             .fees(Vec::new())
             .build()
+    }
+
+    /// Collect all SWIG session info from wallet nodes across all flows.
+    pub fn swig_sessions(&self) -> Vec<SwigSessionInfo> {
+        self.flows
+            .values()
+            .flat_map(|f| f.swig_sessions())
+            .collect()
     }
 
     pub fn user_can_read(&self, user_id: &UserId) -> bool {
@@ -329,7 +412,9 @@ impl FlowSet {
         options: StartFlowDeploymentOptions,
     ) -> Result<(FlowRunId, JoinHandle<FlowRunResult>), new_flow_run::Error> {
         let flow_id = self.deployment.entrypoint;
-        let flow = self.deployment.flows.get(&flow_id).unwrap().clone();
+        let Some(flow) = self.deployment.flows.get(&flow_id).cloned() else {
+            return Err(new_flow_run::Error::NotFound);
+        };
         let shared_with = if flow.row.user_id != options.starter.user_id {
             [options.starter.user_id].into()
         } else {
@@ -407,7 +492,7 @@ pub struct FlowSetContext {
     new_flow_run: new_flow_run::Svc,
     parent_flow_execute: Option<execute::Svc>,
 
-    #[builder(default = Arc::new(Semaphore::new(1)))]
+    #[builder(default = Arc::new(Semaphore::new(crate::flow_registry::rhai_pool_size())))]
     rhai_permit: Arc<Semaphore>,
     #[builder(default)]
     rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,

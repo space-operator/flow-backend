@@ -1,137 +1,169 @@
 use crate::prelude::*;
 
-#[derive(Debug, Clone)]
-pub struct FindPDA;
-
 const FIND_PDA: &str = "find_pda";
-#[derive(Serialize, Deserialize, Debug)]
+const DEFINITION: &str = flow_lib::node_definition!("find_pda.jsonc");
 
+fn build() -> BuildResult {
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(FIND_PDA));
+    Ok(CACHE.clone()?.build(run))
+}
+
+flow_lib::submit!(CommandDescription::new(FIND_PDA, |_| build()));
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
     #[serde(with = "value::pubkey")]
     pub program_id: Pubkey,
+    #[serde(default)]
+    pub seeds: Vec<Value>,
+    pub seed_1: Option<Value>,
+    pub seed_2: Option<Value>,
+    pub seed_3: Option<Value>,
+    pub seed_4: Option<Value>,
+    pub seed_5: Option<Value>,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
     #[serde(with = "value::pubkey")]
     pub pda: Pubkey,
 }
 
-const PROGRAM_ID: &str = "program_id";
-const SEED_1: &str = "seed_1";
-const SEED_2: &str = "seed_2";
-const SEED_3: &str = "seed_3";
-const SEED_4: &str = "seed_4";
-const SEED_5: &str = "seed_5";
-
-const PDA: &str = "pda";
-
-#[async_trait(?Send)]
-impl CommandTrait for FindPDA {
-    fn name(&self) -> Name {
-        FIND_PDA.into()
-    }
-
-    fn inputs(&self) -> Vec<CmdInput> {
-        [
-            CmdInput {
-                name: PROGRAM_ID.into(),
-                type_bounds: [ValueType::Pubkey].to_vec(),
-                required: false,
-                passthrough: false,
-            },
-            CmdInput {
-                name: SEED_1.into(),
-                type_bounds: [ValueType::Free].to_vec(),
-                required: false,
-                passthrough: false,
-            },
-            CmdInput {
-                name: SEED_2.into(),
-                type_bounds: [ValueType::Free].to_vec(),
-                required: false,
-                passthrough: false,
-            },
-            CmdInput {
-                name: SEED_3.into(),
-                type_bounds: [ValueType::Free].to_vec(),
-                required: false,
-                passthrough: false,
-            },
-            CmdInput {
-                name: SEED_4.into(),
-                type_bounds: [ValueType::Free].to_vec(),
-                required: false,
-                passthrough: false,
-            },
-            CmdInput {
-                name: SEED_5.into(),
-                type_bounds: [ValueType::Free].to_vec(),
-                required: false,
-                passthrough: false,
-            },
-        ]
-        .to_vec()
-    }
-
-    fn outputs(&self) -> Vec<CmdOutput> {
-        [CmdOutput {
-            name: PDA.into(),
-            r#type: ValueType::Pubkey,
-            optional: false,
-        }]
-        .to_vec()
-    }
-
-    async fn run(&self, _: CommandContext, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
-        let Input { program_id } = value::from_map(inputs.clone())?;
-
-        let seed_1: Option<Value> = inputs.swap_remove(SEED_1);
-        let seed_1 = match seed_1 {
-            Some(Value::B32(v)) => v.to_vec(),
-            Some(Value::String(v)) => v.as_bytes().to_vec(),
-            _ => vec![],
-        };
-
-        let seed_2: Option<Value> = inputs.swap_remove(SEED_2);
-        let seed_2 = match seed_2 {
-            Some(Value::B32(v)) => v.to_vec(),
-            Some(Value::String(v)) => v.as_bytes().to_vec(),
-            _ => vec![],
-        };
-        let seed_3: Option<Value> = inputs.swap_remove(SEED_3);
-        let seed_3 = match seed_3 {
-            Some(Value::B32(v)) => v.to_vec(),
-            Some(Value::String(v)) => v.as_bytes().to_vec(),
-            _ => vec![],
-        };
-        let seed_4: Option<Value> = inputs.swap_remove(SEED_4);
-        let seed_4 = match seed_4 {
-            Some(Value::B32(v)) => v.to_vec(),
-            Some(Value::String(v)) => v.as_bytes().to_vec(),
-            _ => vec![],
-        };
-        let seed_5: Option<Value> = inputs.swap_remove(SEED_5);
-        let seed_5 = match seed_5 {
-            Some(Value::B32(v)) => v.to_vec(),
-            Some(Value::String(v)) => v.as_bytes().to_vec(),
-            _ => vec![],
-        };
-
-        let seeds = vec![seed_1, seed_2, seed_3, seed_4, seed_5];
-
-        let seeds = seeds
-            .into_iter()
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<Vec<u8>>>();
-
-        let seeds = seeds.iter().map(|s| &s[..]).collect::<Vec<&[u8]>>();
-
-        let seeds = &seeds[..];
-
-        let pda = Pubkey::find_program_address(seeds, &program_id).0;
-
-        Ok(value::to_map(&Output { pda })?)
+fn seed_bytes(value: &Value) -> Vec<u8> {
+    match value {
+        Value::B32(v) => v.to_vec(),
+        Value::String(v) => v.as_bytes().to_vec(),
+        _ => vec![],
     }
 }
 
-flow_lib::submit!(CommandDescription::new(FIND_PDA, |_| Ok(Box::new(FindPDA))));
+async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    let seed_values: Vec<Value> = if !input.seeds.is_empty() {
+        input.seeds
+    } else {
+        [
+            input.seed_1,
+            input.seed_2,
+            input.seed_3,
+            input.seed_4,
+            input.seed_5,
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
+    };
+
+    let seeds: Vec<Vec<u8>> = seed_values
+        .iter()
+        .map(seed_bytes)
+        .filter(|s| !s.is_empty())
+        .collect();
+
+    let seeds: Vec<&[u8]> = seeds.iter().map(|s| &s[..]).collect();
+    let pda = Pubkey::find_program_address(&seeds, &input.program_id).0;
+
+    Ok(Output { pda })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_build() {
+        build().unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_string_seeds() {
+        let program_id = Pubkey::new_unique();
+        let expected = Pubkey::find_program_address(&[b"hello", b"world"], &program_id).0;
+
+        let output = build()
+            .unwrap()
+            .run(
+                CommandContext::default(),
+                value::map! {
+                    "program_id" => program_id,
+                    "seed_1" => Value::String("hello".to_owned()),
+                    "seed_2" => Value::String("world".to_owned()),
+                },
+            )
+            .await
+            .unwrap();
+
+        let output = value::from_map::<Output>(output).unwrap();
+        assert_eq!(output.pda, expected);
+    }
+
+    #[tokio::test]
+    async fn test_pubkey_seed() {
+        let program_id = Pubkey::new_unique();
+        let mint = Pubkey::new_unique();
+        let expected =
+            Pubkey::find_program_address(&[b"seed", mint.as_ref()], &program_id).0;
+
+        let output = build()
+            .unwrap()
+            .run(
+                CommandContext::default(),
+                value::map! {
+                    "program_id" => program_id,
+                    "seed_1" => Value::String("seed".to_owned()),
+                    "seed_2" => mint,
+                },
+            )
+            .await
+            .unwrap();
+
+        let output = value::from_map::<Output>(output).unwrap();
+        assert_eq!(output.pda, expected);
+    }
+
+    #[tokio::test]
+    async fn test_no_seeds() {
+        let program_id = Pubkey::new_unique();
+        let expected = Pubkey::find_program_address(&[], &program_id).0;
+
+        let output = build()
+            .unwrap()
+            .run(
+                CommandContext::default(),
+                value::map! {
+                    "program_id" => program_id,
+                },
+            )
+            .await
+            .unwrap();
+
+        let output = value::from_map::<Output>(output).unwrap();
+        assert_eq!(output.pda, expected);
+    }
+
+    #[tokio::test]
+    async fn test_seeds_array() {
+        let program_id = Pubkey::new_unique();
+        let mint = Pubkey::new_unique();
+        let expected =
+            Pubkey::find_program_address(&[b"token", mint.as_ref()], &program_id).0;
+
+        let output = build()
+            .unwrap()
+            .run(
+                CommandContext::default(),
+                value::map! {
+                    "program_id" => program_id,
+                    "seeds" => Value::Array(vec![
+                        Value::String("token".to_owned()),
+                        Value::B32(mint.to_bytes()),
+                    ]),
+                },
+            )
+            .await
+            .unwrap();
+
+        let output = value::from_map::<Output>(output).unwrap();
+        assert_eq!(output.pda, expected);
+    }
+}

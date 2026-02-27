@@ -8,7 +8,7 @@ use reqwest::{
 
 pub const NAME: &str = "storage_download";
 
-const DEFINITION: &str = flow_lib::node_definition!("storage/download.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/download.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

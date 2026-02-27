@@ -5,7 +5,7 @@ use reqwest::{StatusCode, header::AUTHORIZATION};
 
 pub const NAME: &str = "storage_delete";
 
-const DEFINITION: &str = flow_lib::node_definition!("storage/delete.json");
+const DEFINITION: &str = flow_lib::node_definition!("storage/delete.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

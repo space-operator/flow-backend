@@ -3,22 +3,17 @@ import * as client from "../src/mod.ts";
 import * as dotenv from "@std/dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { assertEquals } from "@std/assert";
-import { checkNoErrors } from "./utils.ts";
+import { checkNoErrors, getEnv } from "./utils.ts";
 // import { Application, Router } from "@oak/oak";
 
 dotenv.loadSync({
   export: true,
 });
 
-function getEnv(key: string): string {
-  const env = Deno.env.get(key);
-  if (env === undefined) throw new Error(`no env ${key}`);
-  return env;
-}
-
 const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
 const supabaseUrl = "http://localhost:8000";
+const API_INPUT_FLOW_ID = "78a7e826-7697-48cb-a2c0-67ad1be4e970"; // API Input
 
 function fixUrl(url: string) {
   return url.replace("flow-server", "localhost");
@@ -31,11 +26,10 @@ Deno.test("submit", async () => {
     token: apiKey,
   });
 
-  const flowId = 3730;
   const ws = owner.ws();
   await ws.authenticate();
   console.log(ws.getIdentity());
-  const { flow_run_id } = await owner.startFlow(flowId, {});
+  const { flow_run_id } = await owner.startFlow(API_INPUT_FLOW_ID, {});
   ws.subscribeFlowRunEvents(
     async (ev) => {
       // console.log(ev);
@@ -71,10 +65,9 @@ Deno.test("cancel", async () => {
     token: apiKey,
   });
 
-  const flowId = 3730;
   const ws = owner.ws();
   await ws.authenticate();
-  const { flow_run_id } = await owner.startFlow(flowId, {});
+  const { flow_run_id } = await owner.startFlow(API_INPUT_FLOW_ID, {});
   let setNodeError: (value: unknown) => void;
   const nodeError = new Promise((resolve) => {
     setNodeError = resolve;
@@ -104,10 +97,9 @@ Deno.test("timeout", async () => {
     token: apiKey,
   });
 
-  const flowId = 3730;
   const ws = owner.ws();
   await ws.authenticate();
-  const { flow_run_id } = await owner.startFlow(flowId, {});
+  const { flow_run_id } = await owner.startFlow(API_INPUT_FLOW_ID, {});
   let setNodeError: (value: unknown) => void;
   const nodeError = new Promise((resolve) => {
     setNodeError = resolve;
@@ -166,8 +158,7 @@ Deno.test("webhook", async () => {
   const ws = owner.ws();
   await ws.authenticate();
 
-  const flowId = 3730;
-  const { flow_run_id } = await owner.startFlow(flowId, {
+  const { flow_run_id } = await owner.startFlow(API_INPUT_FLOW_ID, {
     inputs: new Value({
       "webhook_url": `http://webhook/webhook`,
     }).M!,

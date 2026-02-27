@@ -3,6 +3,7 @@ use crate::{
     config::{DbConfig, Encrypted, EncryptionKey},
     connection::{AdminConn, UserConnection, UserConnectionTrait},
 };
+use std::borrow::Cow;
 use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, PoolConfig, SslMode};
 use flow_lib::{UserId, solana::Keypair};
 use futures_util::FutureExt;
@@ -194,6 +195,72 @@ impl DbPool {
 
     pub fn get_local(&self) -> &LocalStorage {
         &self.local
+    }
+
+    fn swig_session_encryption_key(&self) -> crate::Result<Cow<'_, EncryptionKey>> {
+        const ENV: &str = "SWIG_SESSION_ENCRYPTION_KEY";
+        // Dedicated SWIG key takes precedence; otherwise we reuse DB encryption_key.
+        match std::env::var(ENV) {
+            Ok(value) => {
+                let key = serde_json::from_value::<EncryptionKey>(serde_json::Value::String(value))
+                    .map_err(|e| crate::Error::LogicError(e.into()))?;
+                Ok(Cow::Owned(key))
+            }
+            Err(_) => Ok(Cow::Borrowed(self.encryption_key()?)),
+        }
+    }
+
+    /// Look up and decrypt a SWIG session secret key from swig_wallet_sessions.
+    ///
+    /// The lookup is scoped to the owning user and only returns active, non-expired
+    /// sessions. `secret_key_encrypted` must be JSON in the same encrypted format we
+    /// use for wallet keypairs; plaintext values are ignored.
+    pub async fn get_swig_session_secret_key(
+        &self,
+        owner_user_id: UserId,
+        swig_wallet_id: &str,
+        session_pubkey: &str,
+    ) -> crate::Result<Option<String>> {
+        use crate::connection::DbClient;
+
+        let conn = self.get_conn().await?;
+        let swig_wallet_uuid = uuid::Uuid::parse_str(swig_wallet_id)
+            .map_err(|e| crate::Error::LogicError(e.into()))?;
+        let row = conn
+            .do_query_opt(
+                "SELECT s.secret_key_encrypted
+                 FROM swig_wallet_sessions s
+                 JOIN swig_wallets w
+                   ON w.id = s.swig_wallet_id
+                 WHERE s.swig_wallet_id = $1
+                   AND s.session_pubkey = $2
+                   AND w.user_id = $3
+                   AND s.status = 'active'
+                   AND (s.expires_at IS NULL OR s.expires_at > NOW())
+                 LIMIT 1",
+                &[&swig_wallet_uuid, &session_pubkey, &owner_user_id],
+            )
+            .await
+            .map_err(crate::Error::exec("get_swig_session_secret_key"))?;
+        let Some(encrypted_raw) = row.and_then(|r| r.get::<_, Option<String>>(0)) else {
+            return Ok(None);
+        };
+
+        let encrypted = match serde_json::from_str::<crate::config::Encrypted>(&encrypted_raw) {
+            Ok(v) => v,
+            Err(_) => {
+                tracing::warn!(
+                    "ignoring non-encrypted swig session secret for wallet {} / session {}",
+                    swig_wallet_id,
+                    session_pubkey
+                );
+                return Ok(None);
+            }
+        };
+
+        let decrypted = self.swig_session_encryption_key()?.decrypt(&encrypted)?;
+        let secret = String::from_utf8(decrypted).map_err(|e| crate::Error::LogicError(e.into()))?;
+        Ok(Some(secret))
     }
 }
 

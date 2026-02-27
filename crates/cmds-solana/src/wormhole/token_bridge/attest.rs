@@ -10,7 +10,7 @@ use super::{AttestTokenData, TokenBridgeInstructions, get_sequence_number_from_m
 // Command Name
 const NAME: &str = "attest_token";
 
-const DEFINITION: &str = flow_lib::node_definition!("wormhole/token_bridge/attest.json");
+const DEFINITION: &str = flow_lib::node_definition!("wormhole/token_bridge/attest.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
