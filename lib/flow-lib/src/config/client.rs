@@ -228,19 +228,96 @@ pub struct NodeV2 {
     pub data: NodeDataV2,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct NodeDataV2 {
     pub node_id: String,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default)]
     pub ports: Ports,
-    #[serde(default)]
     pub config: HashMap<String, JsonValue>,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub style: Option<JsonValue>,
+}
+
+impl<'de> Deserialize<'de> for NodeDataV2 {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        /// Deserialize from `JsonValue`, treating `null` as `T::default()`.
+        fn or_default<T: Default + serde::de::DeserializeOwned>(
+            v: JsonValue,
+        ) -> Result<T, serde_json::Error> {
+            if v.is_null() {
+                Ok(T::default())
+            } else {
+                serde_json::from_value(v)
+            }
+        }
+
+        let mut obj: JsonMap<String, JsonValue> = JsonMap::deserialize(deserializer)?;
+
+        let node_id: String = obj
+            .remove("node_id")
+            .ok_or_else(|| Error::missing_field("node_id"))
+            .and_then(|v| serde_json::from_value(v).map_err(Error::custom))?;
+
+        let version: Option<String> = obj
+            .remove("version")
+            .and_then(|v| serde_json::from_value(v).ok());
+
+        let name: Option<String> = obj
+            .remove("name")
+            .and_then(|v| serde_json::from_value(v).ok());
+
+        let style: Option<JsonValue> = obj
+            .remove("style")
+            .and_then(|v| if v.is_null() { None } else { Some(v) });
+
+        // Ports: V2 "ports" > V1-rust "outputs"/"inputs" > old-frontend "sources"/"targets"
+        let ports: Ports = if let Some(ports_val) = obj.remove("ports") {
+            or_default(ports_val).map_err(Error::custom)?
+        } else {
+            let outputs_val = obj
+                .remove("outputs")
+                .or_else(|| obj.remove("sources"))
+                .unwrap_or_default();
+            let inputs_val = obj
+                .remove("inputs")
+                .or_else(|| obj.remove("targets"))
+                .unwrap_or_default();
+            Ports {
+                outputs: or_default(outputs_val).map_err(Error::custom)?,
+                inputs: or_default(inputs_val).map_err(Error::custom)?,
+            }
+        };
+
+        // Config: V2/V1-rust "config" > old-frontend "targets_form"."form_data"
+        let config: HashMap<String, JsonValue> =
+            if let Some(config_val) = obj.remove("config") {
+                or_default(config_val).map_err(Error::custom)?
+            } else if let Some(form_data) = obj.remove("targets_form").and_then(|v| match v {
+                JsonValue::Object(mut m) => m.remove("form_data"),
+                _ => None,
+            }) {
+                or_default(form_data).map_err(Error::custom)?
+            } else {
+                HashMap::new()
+            };
+
+        Ok(NodeDataV2 {
+            node_id,
+            version,
+            name,
+            ports,
+            config,
+            style,
+        })
+    }
 }
 
 #[serde_as]
@@ -567,5 +644,90 @@ mod tests {
             !json.contains("wasm"),
             "wasm must not appear: {json}"
         );
+    }
+
+    /// V2 format: ports nested under "ports" key.
+    #[test]
+    fn node_data_v2_round_trip() {
+        let nd = NodeDataV2 {
+            node_id: "test:node".into(),
+            version: Some("1.0".into()),
+            name: Some("Test".into()),
+            ports: Ports {
+                inputs: vec![InputPort {
+                    id: Uuid::nil(),
+                    name: "a".into(),
+                    type_bounds: vec![],
+                    required: true,
+                    passthrough: false,
+                    tooltip: None,
+                }],
+                outputs: vec![OutputPort {
+                    id: Uuid::nil(),
+                    name: "b".into(),
+                    r#type: ValueType::Free,
+                    optional: false,
+                    tooltip: None,
+                }],
+            },
+            config: [("key".into(), JsonValue::from(42))].into_iter().collect(),
+            style: None,
+        };
+        let json = serde_json::to_string(&nd).unwrap();
+        let deser: NodeDataV2 = serde_json::from_str(&json).unwrap();
+        assert_eq!(nd, deser);
+    }
+
+    /// V1 Rust format: flat "outputs"/"inputs" keys (no "ports" wrapper).
+    #[test]
+    fn node_data_v2_from_v1_rust_format() {
+        let json = r#"{
+            "node_id": "spl:transfer",
+            "outputs": [{"id": "00000000-0000-0000-0000-000000000000", "name": "sig"}],
+            "inputs": [{"id": "00000000-0000-0000-0000-000000000000", "name": "amt", "required": true}],
+            "config": {"amount": 100}
+        }"#;
+        let nd: NodeDataV2 = serde_json::from_str(json).unwrap();
+        assert_eq!(nd.node_id, "spl:transfer");
+        assert_eq!(nd.ports.outputs.len(), 1);
+        assert_eq!(nd.ports.outputs[0].name, "sig");
+        assert_eq!(nd.ports.inputs.len(), 1);
+        assert_eq!(nd.ports.inputs[0].name, "amt");
+        assert_eq!(nd.config.get("amount"), Some(&JsonValue::from(100)));
+    }
+
+    /// Old frontend format: "sources"/"targets" keys + "targets_form.form_data".
+    #[test]
+    fn node_data_v2_from_old_frontend_format() {
+        let json = r#"{
+            "node_id": "solana:transfer-sol",
+            "sources": [{"id": "00000000-0000-0000-0000-000000000000", "name": "signature"}],
+            "targets": [{"id": "00000000-0000-0000-0000-000000000001", "name": "sender", "required": true}],
+            "targets_form": {
+                "form_data": {"amount": 1.5}
+            },
+            "defaultValue": "ignored"
+        }"#;
+        let nd: NodeDataV2 = serde_json::from_str(json).unwrap();
+        assert_eq!(nd.node_id, "solana:transfer-sol");
+        assert_eq!(nd.ports.outputs.len(), 1);
+        assert_eq!(nd.ports.outputs[0].name, "signature");
+        assert_eq!(nd.ports.inputs.len(), 1);
+        assert_eq!(nd.ports.inputs[0].name, "sender");
+        assert_eq!(nd.config.get("amount"), Some(&JsonValue::from(1.5)));
+    }
+
+    /// Minimal V2 format: only node_id required, everything else defaults.
+    #[test]
+    fn node_data_v2_minimal() {
+        let json = r#"{"node_id": "test:minimal"}"#;
+        let nd: NodeDataV2 = serde_json::from_str(json).unwrap();
+        assert_eq!(nd.node_id, "test:minimal");
+        assert!(nd.ports.inputs.is_empty());
+        assert!(nd.ports.outputs.is_empty());
+        assert!(nd.config.is_empty());
+        assert!(nd.version.is_none());
+        assert!(nd.name.is_none());
+        assert!(nd.style.is_none());
     }
 }
