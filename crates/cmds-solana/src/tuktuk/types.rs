@@ -7,19 +7,14 @@ use serde::{Deserialize, Serialize};
 use solana_pubkey::Pubkey;
 
 /// Trigger type for when a task should execute
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum TriggerV0 {
     /// Execute at a specific Unix timestamp
     Timestamp { unix_timestamp: i64 },
     /// Execute immediately when cranked
+    #[default]
     Now,
-}
-
-impl Default for TriggerV0 {
-    fn default() -> Self {
-        TriggerV0::Now
-    }
 }
 
 /// Transaction source - where to get the instructions to execute

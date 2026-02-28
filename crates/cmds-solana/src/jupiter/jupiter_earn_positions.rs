@@ -29,8 +29,7 @@ pub struct Output {
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let url = "https://api.jup.ag/lend/v1/earn/positions".to_string();
 
-    let mut query: Vec<(&str, String)> = Vec::new();
-    query.push(("user", input.user.clone()));
+    let query: Vec<(&str, String)> = vec![("user", input.user.clone())];
 
     let req = ctx
         .http()

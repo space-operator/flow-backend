@@ -89,10 +89,10 @@ pub fn parse_strings(json: &serde_json::Value) -> Vec<String> {
                         return Some(s.to_string());
                     }
                     // Try Space Operator Value format: [{"S": "a"}, {"S": "b"}]
-                    if let Some(s_val) = v.get("S") {
-                        if let Some(s) = s_val.as_str() {
-                            return Some(s.to_string());
-                        }
+                    if let Some(s_val) = v.get("S")
+                        && let Some(s) = s_val.as_str()
+                    {
+                        return Some(s.to_string());
                     }
                     None
                 })
@@ -181,10 +181,10 @@ fn extract_string(v: &serde_json::Value) -> Option<String> {
     if let Some(s) = v.as_str() {
         return Some(s.to_string());
     }
-    if let Some(s_val) = v.get("S") {
-        if let Some(s) = s_val.as_str() {
-            return Some(s.to_string());
-        }
+    if let Some(s_val) = v.get("S")
+        && let Some(s) = s_val.as_str()
+    {
+        return Some(s.to_string());
     }
     None
 }
@@ -226,10 +226,10 @@ fn extract_bool(v: &serde_json::Value) -> Option<bool> {
     if let Some(b) = v.as_bool() {
         return Some(b);
     }
-    if let Some(b_val) = v.get("B") {
-        if let Some(b) = b_val.as_bool() {
-            return Some(b);
-        }
+    if let Some(b_val) = v.get("B")
+        && let Some(b) = b_val.as_bool()
+    {
+        return Some(b);
     }
     None
 }
@@ -622,7 +622,7 @@ mod tests {
             "https://example.com/attestation/metadata.json",
             51,
         );
-        assert!(size >= 400 && size <= 1200, "Size {} should be in range 400-1200", size);
+        assert!((400..=1200).contains(&size), "Size {} should be in range 400-1200", size);
     }
 
     #[test]
@@ -633,14 +633,12 @@ mod tests {
             "https://example.com/metadata.json",
             0,
         );
-        assert!(size >= 300 && size <= 1000, "Size {} should be in range 300-1000", size);
+        assert!((300..=1000).contains(&size), "Size {} should be in range 300-1000", size);
     }
 }
 
 #[cfg(test)]
 mod flow_tests {
-    use super::*;
-
     #[test]
     fn test_standard_attestation_flow_documented() {
         let flow_nodes = [

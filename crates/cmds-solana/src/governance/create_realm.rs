@@ -93,11 +93,11 @@ pub fn with_governing_token_config_args(
 /// 5. `[]` System program
 /// 6. `[]` SPL Token program (Token or Token-2022 based on is_token_2022_for_community)
 /// 7. `[]` Rent sysvar
-/// (if council):
+///    (if council):
 /// 8. `[]` Council token mint
 /// 9. `[writable]` Council token holding (PDA)
 /// 10. `[]` SPL Token program for council (Token or Token-2022)
-/// Then: realm_config, voter_weight_addins...
+///     Then: realm_config, voter_weight_addins...
 #[allow(clippy::too_many_arguments)]
 pub fn create_realm(
     program_id: &Pubkey,

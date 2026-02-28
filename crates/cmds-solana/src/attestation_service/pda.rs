@@ -137,7 +137,7 @@ mod tests {
         let authority = Pubkey::new_unique();
         let (pda, bump) = find_credential(&authority, "test_credential");
         assert_ne!(pda, Pubkey::default());
-        assert!(bump <= 255);
+        let _ = bump;
     }
 
     #[test]
@@ -145,7 +145,7 @@ mod tests {
         let credential = Pubkey::new_unique();
         let (pda, bump) = find_schema(&credential, "test_schema", 1);
         assert_ne!(pda, Pubkey::default());
-        assert!(bump <= 255);
+        let _ = bump;
     }
 
     #[test]
@@ -155,7 +155,7 @@ mod tests {
         let nonce = Pubkey::new_unique();
         let (pda, bump) = find_attestation(&credential, &schema, &nonce);
         assert_ne!(pda, Pubkey::default());
-        assert!(bump <= 255);
+        let _ = bump;
     }
 
     #[test]
@@ -163,7 +163,7 @@ mod tests {
         let schema = Pubkey::new_unique();
         let (pda, bump) = find_schema_mint(&schema);
         assert_ne!(pda, Pubkey::default());
-        assert!(bump <= 255);
+        let _ = bump;
     }
 
     #[test]
@@ -171,21 +171,21 @@ mod tests {
         let attestation = Pubkey::new_unique();
         let (pda, bump) = find_attestation_mint(&attestation);
         assert_ne!(pda, Pubkey::default());
-        assert!(bump <= 255);
+        let _ = bump;
     }
 
     #[test]
     fn test_find_event_authority() {
         let (pda, bump) = find_event_authority();
         assert_ne!(pda, Pubkey::default());
-        assert!(bump <= 255);
+        let _ = bump;
     }
 
     #[test]
     fn test_derive_sas_authority_address() {
         let (pda, bump) = derive_sas_authority_address();
         assert_ne!(pda, Pubkey::default());
-        assert!(bump <= 255);
+        let _ = bump;
     }
 
     #[test]
@@ -194,7 +194,7 @@ mod tests {
         let attestation_mint = Pubkey::new_unique();
         let (pda, bump) = find_recipient_token_account(&recipient, &attestation_mint);
         assert_ne!(pda, Pubkey::default());
-        assert!(bump <= 255);
+        let _ = bump;
     }
 
     #[test]

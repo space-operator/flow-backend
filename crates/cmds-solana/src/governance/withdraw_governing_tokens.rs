@@ -50,7 +50,7 @@ pub struct Output {
 /// 4. `[writable]` TokenOwnerRecord (PDA)
 /// 5. `[]` SPL Token program (Token or Token-2022)
 /// 6. `[]` Realm config (PDA)
-/// (if is_token_2022):
+///    (if is_token_2022):
 /// 7. `[writable]` Governing token mint
 pub fn withdraw_governing_tokens(
     program_id: &Pubkey,

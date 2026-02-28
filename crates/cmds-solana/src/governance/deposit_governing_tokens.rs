@@ -55,7 +55,7 @@ pub struct Output {
 /// 7. `[]` System program
 /// 8. `[]` SPL Token program (Token or Token-2022)
 /// 9. `[]` Realm config (PDA)
-/// (if is_token_2022):
+///    (if is_token_2022):
 /// 10. `[writable]` Governing token mint
 #[allow(clippy::too_many_arguments)]
 pub fn deposit_governing_tokens(

@@ -31,9 +31,10 @@ pub struct Output {
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let url = "https://quote-api.dflow.net/prediction-market-init".to_string();
 
-    let mut query: Vec<(&str, String)> = Vec::new();
-    query.push(("payer", input.payer.to_string()));
-    query.push(("outcome_mint", input.outcome_mint.to_string()));
+    let query: Vec<(&str, String)> = vec![
+        ("payer", input.payer.to_string()),
+        ("outcome_mint", input.outcome_mint.to_string()),
+    ];
 
     let resp = ctx
         .http()

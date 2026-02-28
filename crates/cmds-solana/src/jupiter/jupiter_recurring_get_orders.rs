@@ -37,11 +37,12 @@ pub struct Output {
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let url = "https://api.jup.ag/recurring/v1/getRecurringOrders".to_string();
 
-    let mut query: Vec<(&str, String)> = Vec::new();
-    query.push(("user", input.user.clone()));
-    query.push(("recurringType", input.recurring_type.clone()));
-    query.push(("orderStatus", input.order_status.clone()));
-    query.push(("includeFailedTx", input.include_failed_tx.clone()));
+    let mut query: Vec<(&str, String)> = vec![
+        ("user", input.user.clone()),
+        ("recurringType", input.recurring_type.clone()),
+        ("orderStatus", input.order_status.clone()),
+        ("includeFailedTx", input.include_failed_tx.clone()),
+    ];
     if let Some(ref v) = input.page {
         query.push(("page", v.clone()));
     }

@@ -81,7 +81,7 @@ mod tests {
     fn test_find_tuktuk_config() {
         let (pda, bump) = find_tuktuk_config();
         assert_ne!(pda, Pubkey::default());
-        assert!(bump <= 255);
+        let _ = bump;
     }
 
     #[test]
@@ -90,7 +90,7 @@ mod tests {
         let authority = Pubkey::new_unique();
         let (pda, bump) = find_task_queue_authority(&task_queue, &authority);
         assert_ne!(pda, Pubkey::default());
-        assert!(bump <= 255);
+        let _ = bump;
     }
 
     #[test]

@@ -29,8 +29,7 @@ pub struct Output {
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let url = "https://api.jup.ag/price/v3".to_string();
 
-    let mut query: Vec<(&str, String)> = Vec::new();
-    query.push(("ids", input.ids.clone()));
+    let query: Vec<(&str, String)> = vec![("ids", input.ids.clone())];
 
     let req = ctx
         .http()

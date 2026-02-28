@@ -44,7 +44,7 @@ pub async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, Comman
         .authority(to_pubkey_v2(&input.authority.pubkey()))
         .credential(to_pubkey_v2(&input.credential))
         .schema(to_pubkey_v2(&input.schema))
-        .is_paused(input.is_paused.clone())
+        .is_paused(input.is_paused)
         .instruction();
     let instruction = to_instruction_v3(instruction);
 

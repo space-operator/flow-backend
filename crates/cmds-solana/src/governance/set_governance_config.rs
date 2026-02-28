@@ -104,6 +104,6 @@ mod tests {
 
         assert_eq!(ix.program_id, SPL_GOVERNANCE_ID);
         assert!(!ix.data.is_empty());
-        assert!(ix.accounts.len() >= 1);
+        assert!(!ix.accounts.is_empty());
     }
 }

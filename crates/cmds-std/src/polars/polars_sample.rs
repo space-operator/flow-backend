@@ -39,7 +39,7 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
         df.sample_n_literal(n as usize, input.with_replacement, shuffle, input.seed)
             .map_err(|e| CommandError::msg(format!("Sample error: {e}")))?
     } else if let Some(frac) = input.fraction {
-        if frac < 0.0 || frac > 1.0 {
+        if !(0.0..=1.0).contains(&frac) {
             return Err(CommandError::msg(
                 "fraction must be between 0.0 and 1.0",
             ));

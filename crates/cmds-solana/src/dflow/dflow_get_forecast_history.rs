@@ -34,11 +34,12 @@ pub struct Output {
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let url = format!("https://dev-prediction-markets-api.dflow.net/api/v1/event/{}/{}/forecast_percentile_history", input.series_ticker, input.event_id);
 
-    let mut query: Vec<(&str, String)> = Vec::new();
-    query.push(("percentiles", input.percentiles.to_string()));
-    query.push(("start_ts", input.start_ts.to_string()));
-    query.push(("end_ts", input.end_ts.to_string()));
-    query.push(("period_interval", input.period_interval.to_string()));
+    let query: Vec<(&str, String)> = vec![
+        ("percentiles", input.percentiles.to_string()),
+        ("start_ts", input.start_ts.to_string()),
+        ("end_ts", input.end_ts.to_string()),
+        ("period_interval", input.period_interval.to_string()),
+    ];
 
     let resp = ctx
         .http()

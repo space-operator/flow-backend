@@ -178,7 +178,7 @@ mod tests {
             CommandContext::default(),
             Input {
                 name: "temps".to_string(),
-                values: serde_json::json!([1.5, 2.7, 3.14]),
+                values: serde_json::json!([1.5, 2.7, 3.15]),
                 dtype: "f64".to_string(),
             },
         )
