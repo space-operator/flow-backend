@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transfer_authority",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Transfer mint authority of an integration to a new address",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/reflect/reflect_transfer_authority.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Solana cluster: mainnet or devnet (default: mainnet)"
+      },
+      {
+        "name": "branded_mint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Branded token mint address"
+      },
+      {
+        "name": "signer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Current authority's Solana address"
+      },
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Fee payer Solana address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "transfer",
+      "authority"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/reflect/transfer_authority.jsonc",
+    "repo": "node-builder"
+  }
+}

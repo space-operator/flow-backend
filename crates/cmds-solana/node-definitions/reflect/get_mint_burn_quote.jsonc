@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "get_mint_burn_quote",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Get a price quote for a mint or redeem operation",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/reflect/reflect_get_mint_burn_quote.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "quote_type",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Operation type: mint or redeem"
+      },
+      {
+        "name": "stablecoin_index",
+        "type_bounds": [
+          "i64"
+        ],
+        "required": true,
+        "tooltip": "Stablecoin index (0 = USDC+)"
+      },
+      {
+        "name": "deposit_amount",
+        "type_bounds": [
+          "f64"
+        ],
+        "required": true,
+        "tooltip": "Amount to quote"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "get",
+      "mint",
+      "burn",
+      "quote"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/reflect/get_mint_burn_quote.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "ardrive_get_rate",
+  "prefix": "ardrive",
+  "type": "native",
+  "description": "Get the conversion rate for a single currency (1 AR equivalent)",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/ardrive/ardrive_get_rate.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "currency",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Currency code (e.g. usd, eur, gbp)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Currency name and conversion rate"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "ArDrive",
+    "program": "ardrive",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "ardrive",
+      "get",
+      "rate"
+    ]
+  },
+  "external_version": {
+    "program_id": "ardrive_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/ardrive/get_rate.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "pubkey": "VaultPubkey123",
+  "data": {
+    "authority": "AuthPubkey456",
+    "totalDeposits": "1000000000",
+    "totalShares": "950000000"
+  },
+  "vaultBalance": "1050000000"
+}

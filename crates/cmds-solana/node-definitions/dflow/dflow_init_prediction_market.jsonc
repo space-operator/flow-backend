@@ -1,0 +1,79 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_init_prediction_market",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Initialize a prediction market and get transaction to sign.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/dflow/dflow_init_prediction_market.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DFlow API key"
+      },
+      {
+        "name": "payer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Base58 payer address"
+      },
+      {
+        "name": "outcome_mint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Base58 outcome mint address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "transaction",
+        "type": "string",
+        "tooltip": "Base64 transaction to initialize the market"
+      },
+      {
+        "name": "last_valid_block_height",
+        "type": "u64",
+        "tooltip": "Last valid block height"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "init",
+      "prediction",
+      "market"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/dflow/init_prediction_market.jsonc",
+    "repo": "node-builder"
+  }
+}

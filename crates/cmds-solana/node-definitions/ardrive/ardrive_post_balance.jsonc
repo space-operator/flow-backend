@@ -1,0 +1,64 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "ardrive_post_balance",
+  "prefix": "ardrive",
+  "type": "native",
+  "description": "Record a pending payment transaction to credit an ArDrive Turbo account",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/ardrive/ardrive_post_balance.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "token",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Blockchain token name (e.g. 'solana', 'ethereum', 'matic', 'kyve')"
+      },
+      {
+        "name": "tx_id",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Transaction ID to report for credit processing"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Transaction status (credited/pending/failed) with details"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "ArDrive",
+    "program": "ardrive",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "ardrive",
+      "post",
+      "balance"
+    ]
+  },
+  "external_version": {
+    "program_id": "ardrive_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/ardrive/post_balance.jsonc",
+    "repo": "node-builder"
+  }
+}

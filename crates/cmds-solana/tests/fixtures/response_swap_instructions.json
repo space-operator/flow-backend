@@ -1,0 +1,20 @@
+{
+  "computeBudgetInstructions": [
+    {
+      "programId": "ComputeBudget111111111111111111111111111111",
+      "accounts": [],
+      "data": "AQAAAA=="
+    }
+  ],
+  "setupInstructions": [],
+  "swapInstruction": {
+    "programId": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "accounts": [
+      { "pubkey": "So11111111111111111111111111111111111111112", "isSigner": false, "isWritable": true }
+    ],
+    "data": "AQAAAA=="
+  },
+  "cleanupInstruction": null,
+  "otherInstructions": [],
+  "addressLookupTableAddresses": ["ALTaddress1"]
+}

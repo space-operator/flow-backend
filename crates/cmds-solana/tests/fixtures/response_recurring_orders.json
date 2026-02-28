@@ -1,0 +1,28 @@
+{
+  "user": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+  "orderStatus": "active",
+  "time": [
+    {
+      "userPubkey": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+      "orderKey": "RecKey456def",
+      "inputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "outputMint": "So11111111111111111111111111111111111111112",
+      "inDeposited": "100000000",
+      "inWithdrawn": "0",
+      "cycleFrequency": 86400,
+      "inAmountPerCycle": "10000000",
+      "minOutAmount": "0",
+      "maxOutAmount": "999999999999",
+      "inUsed": "30000000",
+      "outReceived": "200000000",
+      "openTx": "5xFakeRecurOpenTx",
+      "closeTx": "",
+      "userClosed": false,
+      "createdAt": "2025-01-10T08:00:00Z",
+      "updatedAt": "2025-01-13T08:00:00Z",
+      "trades": []
+    }
+  ],
+  "totalPages": 1,
+  "page": 1
+}

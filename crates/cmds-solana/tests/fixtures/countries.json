@@ -1,0 +1,209 @@
+{
+    "count": 3,
+    "data": [
+        {
+            "name": "Afghanistan",
+            "alpha3": "AFG",
+            "postal_code_format": "\\A\\d{4}\\Z",
+            "subdivisions": [
+                {
+                    "name": "Balkh",
+                    "code": "BAL"
+                },
+                {
+                    "name": "Bamian",
+                    "code": "BAM"
+                },
+                {
+                    "name": "Badghis",
+                    "code": "BDG"
+                },
+                {
+                    "name": "Badakhshan",
+                    "code": "BDS"
+                },
+                {
+                    "name": "Baghlan",
+                    "code": "BGL"
+                },
+                {
+                    "name": "Daykondi",
+                    "code": "DAY"
+                },
+                {
+                    "name": "Farah",
+                    "code": "FRA"
+                },
+                {
+                    "name": "Faryab",
+                    "code": "FYB"
+                },
+                {
+                    "name": "Ghazni",
+                    "code": "GHA"
+                },
+                {
+                    "name": "Ghowr",
+                    "code": "GHO"
+                },
+                {
+                    "name": "Helmand",
+                    "code": "HEL"
+                },
+                {
+                    "name": "Herat",
+                    "code": "HER"
+                },
+                {
+                    "name": "Jowzjan",
+                    "code": "JOW"
+                },
+                {
+                    "name": "Kabul [Kabol]",
+                    "code": "KAB"
+                },
+                {
+                    "name": "Kandahar",
+                    "code": "KAN"
+                },
+                {
+                    "name": "Kapisa",
+                    "code": "KAP"
+                },
+                {
+                    "name": "Kondoz [Kunduz]",
+                    "code": "KDZ"
+                },
+                {
+                    "name": "Khowst",
+                    "code": "KHO"
+                },
+                {
+                    "name": "Konar [Kunar]",
+                    "code": "KNR"
+                },
+                {
+                    "name": "Laghman",
+                    "code": "LAG"
+                },
+                {
+                    "name": "\u0644\u0648\u06ab\u0631 \u0648\u0644\u0627\u064a\u062a",
+                    "code": "LOG"
+                },
+                {
+                    "name": "Nangrahar [Nangarhar]",
+                    "code": "NAN"
+                },
+                {
+                    "name": "Nimruz",
+                    "code": "NIM"
+                },
+                {
+                    "name": "Nurestan",
+                    "code": "NUR"
+                },
+                {
+                    "name": "Panjshir",
+                    "code": "PAN"
+                },
+                {
+                    "name": "Parwan",
+                    "code": "PAR"
+                },
+                {
+                    "name": "Paktia",
+                    "code": "PIA"
+                },
+                {
+                    "name": "Paktika",
+                    "code": "PKA"
+                },
+                {
+                    "name": "Samangan",
+                    "code": "SAM"
+                },
+                {
+                    "name": "Sar-e Pol",
+                    "code": "SAR"
+                },
+                {
+                    "name": "Takhar",
+                    "code": "TAK"
+                },
+                {
+                    "name": "\u0631\u0648\u0632\u06ab\u0627\u0646 \u0648\u0644\u0627\u064a\u062a",
+                    "code": "URU"
+                },
+                {
+                    "name": "Wardak [Wardag]",
+                    "code": "WAR"
+                },
+                {
+                    "name": "Zabol [Zabul]",
+                    "code": "ZAB"
+                }
+            ]
+        },
+        {
+            "name": "\u00c5land Islands",
+            "alpha3": "ALA",
+            "postal_code_format": "\\A22\\d{3}\\Z",
+            "subdivisions": []
+        },
+        {
+            "name": "Albania",
+            "alpha3": "ALB",
+            "postal_code_format": "\\A\\d{4}\\Z",
+            "subdivisions": [
+                {
+                    "name": "Berat",
+                    "code": "01"
+                },
+                {
+                    "name": "Durr\u00ebs",
+                    "code": "02"
+                },
+                {
+                    "name": "Elbasan",
+                    "code": "03"
+                },
+                {
+                    "name": "Fier",
+                    "code": "04"
+                },
+                {
+                    "name": "Gjirokast\u00ebr",
+                    "code": "05"
+                },
+                {
+                    "name": "Kor\u00e7\u00eb",
+                    "code": "06"
+                },
+                {
+                    "name": "Kuk\u00ebs",
+                    "code": "07"
+                },
+                {
+                    "name": "Lezh\u00eb",
+                    "code": "08"
+                },
+                {
+                    "name": "Dib\u00ebr",
+                    "code": "09"
+                },
+                {
+                    "name": "Shkod\u00ebr",
+                    "code": "10"
+                },
+                {
+                    "name": "Tiran\u00eb",
+                    "code": "11"
+                },
+                {
+                    "name": "Vlor\u00eb",
+                    "code": "12"
+                }
+            ]
+        }
+    ]
+}

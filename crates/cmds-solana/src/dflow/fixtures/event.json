@@ -1,0 +1,29 @@
+{
+    "ticker": "KXSB-26",
+    "seriesTicker": "KXSB",
+    "strikeDate": null,
+    "strikePeriod": null,
+    "title": "Championship: Seattle vs New England",
+    "subtitle": "On Feb 8, 2026",
+    "imageUrl": "https://kalshi-public-docs.s3.amazonaws.com/series-images-webp/KXSB.webp",
+    "competition": "NFL",
+    "competitionScope": "Future",
+    "settlementSources": [
+        {
+            "name": "AP",
+            "url": "https://apnews.com/"
+        },
+        {
+            "name": "Fox Sports",
+            "url": "https://www.foxsports.com/"
+        },
+        {
+            "name": "ESPN",
+            "url": "https://www.espn.com/"
+        }
+    ],
+    "volume": 358758507,
+    "volume24h": 477018,
+    "liquidity": 0,
+    "openInterest": 258692692
+}

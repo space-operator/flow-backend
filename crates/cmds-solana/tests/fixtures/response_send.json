@@ -1,0 +1,5 @@
+{
+  "tx": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfake-send-tx",
+  "expiry": "2025-12-31T23:59:59.000Z",
+  "totalFeeLamports": "5000"
+}

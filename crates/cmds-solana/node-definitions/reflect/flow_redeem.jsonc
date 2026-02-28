@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "flow_redeem",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Unwrap branded token + redeem stablecoin in a single transaction",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/reflect/reflect_flow_redeem.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Solana cluster: mainnet or devnet (default: mainnet)"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "f64"
+        ],
+        "required": true,
+        "tooltip": "Redemption quantity"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Recipient Solana wallet address"
+      },
+      {
+        "name": "integration_id",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Integration ID (proxy state address)"
+      },
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Fee payer Solana address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "flow",
+      "redeem"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/reflect/flow_redeem.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transfer_many",
+  "prefix": "system_program",
+  "type": "native",
+  "description": "Transfer SOL (lamports) from one account to multiple recipients in a single transaction",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/system_program/transfer_many.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "from",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Source account (must be system-owned)"
+      },
+      {
+        "name": "recipients",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Array of {address, lamports} objects specifying each recipient and amount"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "system_program",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "system program",
+      "transfer",
+      "many"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/system_program/transfer_many.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "data": {
+    "dammv2PoolAddress": null,
+    "dbcPoolAddress": "PoolAddr123",
+    "configKey": "CfgKey123"
+  }
+}

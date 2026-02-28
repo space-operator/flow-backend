@@ -1,0 +1,89 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "update_integration_config",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Update an integration's fee configuration",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/reflect/reflect_update_integration_config.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "integration_id",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Integration ID"
+      },
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Solana cluster: mainnet or devnet (default: mainnet)"
+      },
+      {
+        "name": "signer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Authority Solana address"
+      },
+      {
+        "name": "fee_bps",
+        "type_bounds": [
+          "i64"
+        ],
+        "required": true,
+        "tooltip": "Fee in basis points (0-10000)"
+      },
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Fee payer Solana address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "update",
+      "integration",
+      "config"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/reflect/update_integration_config.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "ardrive_list_countries",
+  "prefix": "ardrive",
+  "type": "native",
+  "description": "List supported countries for ArDrive Turbo payments",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/ardrive/ardrive_list_countries.rs",
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Array of supported country names"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "ArDrive",
+    "program": "ardrive",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "ardrive",
+      "list",
+      "countries"
+    ]
+  },
+  "external_version": {
+    "program_id": "ardrive_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/ardrive/list_countries.jsonc",
+    "repo": "node-builder"
+  }
+}

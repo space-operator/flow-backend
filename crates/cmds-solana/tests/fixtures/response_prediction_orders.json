@@ -1,0 +1,35 @@
+{
+  "data": [
+    {
+      "pubkey": "OrdPubkey123",
+      "owner": "OwnerPubkey456",
+      "ownerPubkey": "OwnerPubkey456",
+      "market": "mkt_xyz789",
+      "marketId": "mkt_xyz789",
+      "marketIdHash": "hash123",
+      "eventId": "evt_abc123",
+      "position": "PosPubkey789",
+      "status": "open",
+      "isYes": true,
+      "isBuy": true,
+      "createdAt": "2025-01-15T10:00:00Z",
+      "updatedAt": "2025-01-15T10:00:00Z",
+      "contracts": 10,
+      "maxFillPriceUsd": "0.40",
+      "maxBuyPriceUsd": "0.40",
+      "minSellPriceUsd": null,
+      "filledAt": null,
+      "filledContracts": 0,
+      "avgFillPriceUsd": null,
+      "settled": false,
+      "orderId": "ord_001",
+      "sizeUsd": "4.00"
+    }
+  ],
+  "pagination": {
+    "start": 0,
+    "end": 1,
+    "total": 1,
+    "hasNext": false
+  }
+}

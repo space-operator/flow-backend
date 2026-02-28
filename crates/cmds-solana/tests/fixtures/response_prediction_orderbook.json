@@ -1,0 +1,13 @@
+{
+  "marketId": "mkt_xyz789",
+  "bids": [
+    { "price": "0.34", "size": 50 },
+    { "price": "0.33", "size": 100 },
+    { "price": "0.30", "size": 200 }
+  ],
+  "asks": [
+    { "price": "0.36", "size": 75 },
+    { "price": "0.38", "size": 120 },
+    { "price": "0.40", "size": 150 }
+  ]
+}

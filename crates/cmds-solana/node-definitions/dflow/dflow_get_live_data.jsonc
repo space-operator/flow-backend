@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_get_live_data",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Get live data by milestone IDs.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/dflow/dflow_get_live_data.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DFlow API key"
+      },
+      {
+        "name": "milestone_ids",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Array of milestone IDs (max 100)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "live_data",
+        "type": "json",
+        "tooltip": "Live data for requested milestones"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "get",
+      "live",
+      "data"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/dflow/get_live_data.jsonc",
+    "repo": "node-builder"
+  }
+}

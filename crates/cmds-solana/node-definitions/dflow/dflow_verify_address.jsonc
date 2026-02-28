@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_verify_address",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Check if a wallet address has been KYC verified.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/dflow/dflow_verify_address.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "address",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Wallet address to check (32-44 chars)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "verified",
+        "type": "bool",
+        "tooltip": "Whether the address is verified"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "verify",
+      "address"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/dflow/verify_address.jsonc",
+    "repo": "node-builder"
+  }
+}

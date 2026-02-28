@@ -8,13 +8,20 @@ use tracing::info;
 
 pub mod error;
 
+pub mod ardrive;
 pub mod arweave;
+pub mod attestation_service;
+pub mod bridge;
 pub mod das;
+pub mod dflow;
+pub mod dynamic_bonding_curve;
 pub mod find_pda;
 pub mod generate_keypair;
 pub mod get_balance;
 pub mod governance;
 pub mod jup_lock;
+pub mod kfarms;
+pub mod klend;
 pub mod mpl_bubblegum;
 pub mod mpl_core;
 pub mod mpl_core_candy_machine;
@@ -23,13 +30,17 @@ pub mod mpl_token_metadata;
 pub mod presale;
 pub mod privacy_cash;
 pub mod pyth;
+pub mod reflect;
 pub mod secp256k1;
 pub mod spl_memo;
 pub mod spl_record;
 pub mod spl_token;
 pub mod spl_token_2022;
 pub mod streamflow;
+pub mod switchboard;
+pub mod swig;
 pub mod system_program;
+pub mod tuktuk;
 pub mod utils;
 pub mod wormhole;
 

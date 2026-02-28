@@ -10,6 +10,7 @@ resolver = "3"
 
 [patch.crates-io]
 rhai = { git = "https://github.com/space-operator/rhai", rev = "b39d2bfb" }
+anchor-lang = { git = "https://github.com/space-operator/anchor", rev = "6469201c5399f95f9414839282ea91471bd20260" }
 
 [profile.dev]
 debug = 0

@@ -1,0 +1,125 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_partner_metadata",
+  "prefix": "dynamic_bonding_curve",
+  "type": "native",
+  "description": "PARTNER FUNCTIONS ///",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/dynamic_bonding_curve/create_partner_metadata.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "fee_claimer",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Fee claimer for partner"
+      },
+      {
+        "name": "creator",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Creator (signer)"
+      },
+      {
+        "name": "system_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "System program"
+      },
+      {
+        "name": "name",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Partner name"
+      },
+      {
+        "name": "website",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Partner website"
+      },
+      {
+        "name": "logo",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Partner logo"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "partner_metadata",
+        "type": "pubkey",
+        "tooltip": "Derived partner_metadata PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "dynamic_bonding_curve",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dynamic bonding curve",
+      "create",
+      "partner",
+      "metadata"
+    ]
+  },
+  "external_version": {
+    "program_id": "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN",
+    "sdk_crate": "dynamic-bonding-curve-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/dynamic_bonding_curve/create_partner_metadata.jsonc",
+    "repo": "node-builder"
+  }
+}

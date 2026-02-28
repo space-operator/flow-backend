@@ -1,0 +1,122 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "swig_close_token_account",
+  "prefix": "swig",
+  "type": "native",
+  "description": "Close a zero-balance token account owned by the Swig wallet",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/swig/swig_close_token_account.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying transaction fees"
+      },
+      {
+        "name": "swig_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Swig wallet account"
+      },
+      {
+        "name": "destination",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Destination for reclaimed rent"
+      },
+      {
+        "name": "token_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token account to close (must have zero balance)"
+      },
+      {
+        "name": "token_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token program (SPL Token or Token-2022)"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Authority with CloseSwigAuthority permission"
+      },
+      {
+        "name": "role_id",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": true,
+        "tooltip": "Role ID of the authority"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "role_id": {
+      "U": "0"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "swig",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "swig",
+      "close",
+      "token",
+      "account"
+    ]
+  },
+  "external_version": {
+    "program_id": "swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/swig/close_token_account.jsonc",
+    "repo": "node-builder"
+  }
+}

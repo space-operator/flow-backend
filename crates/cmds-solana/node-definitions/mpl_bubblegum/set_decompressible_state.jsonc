@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "set_decompressible_state",
+  "prefix": "compression",
+  "description": "Set whether compressed NFTs in a tree can be decompressed",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/set_decompressible_state.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction"
+      },
+      {
+        "name": "tree_creator",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the tree creator"
+      },
+      {
+        "name": "merkle_tree",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the Merkle tree account"
+      },
+      {
+        "name": "decompressable_state",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Decompressible state: 'Enabled' or 'Disabled'"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "compression",
+    "category": "compression",
+    "icon_url": null,
+    "tags": [
+      "compression",
+      "config",
+      "cnft"
+    ]
+  },
+  "external_version": {
+    "program_id": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/set_decompressible_state.jsonc",
+    "repo": "flow-backend"
+  }
+}

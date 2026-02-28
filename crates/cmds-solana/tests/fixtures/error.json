@@ -1,0 +1,8 @@
+{
+    "code": "bad_customer_request",
+    "message": "Missing required field: email",
+    "source": {
+        "location": "body",
+        "key": "email"
+    }
+}

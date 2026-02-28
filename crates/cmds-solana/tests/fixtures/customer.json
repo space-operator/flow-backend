@@ -1,0 +1,45 @@
+{
+    "id": "9b98c6f5-e3a4-466d-b316-f7c1d8180b7c",
+    "first_name": "amir@spaceoperator.com",
+    "last_name": null,
+    "email": "amir@spaceoperator.com",
+    "status": "active",
+    "type": "business",
+    "persona_inquiry_type": "business",
+    "created_at": "2025-10-24T22:32:47.514Z",
+    "updated_at": "2025-10-24T22:32:47.514Z",
+    "rejection_reasons": [],
+    "has_accepted_terms_of_service": true,
+    "endorsements": [
+        {
+            "name": "base",
+            "status": "approved",
+            "requirements": {
+                "complete": [
+                    "business_name",
+                    "business_type",
+                    "email_address",
+                    "minimal_source_of_funds_data",
+                    "kyb_review",
+                    "post_processing"
+                ],
+                "pending": [],
+                "missing": null,
+                "issues": []
+            }
+        }
+    ],
+    "future_requirements_due": [
+        "id_verification"
+    ],
+    "requirements_due": [
+        "external_account"
+    ],
+    "capabilities": {
+        "payin_crypto": "active",
+        "payout_crypto": "active",
+        "payin_fiat": "pending",
+        "payout_fiat": "pending"
+    },
+    "associated_persons": []
+}

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "das_get_assets_by_owner",
+  "prefix": "das",
+  "type": "native",
+  "description": "Fetch all digital assets owned by a wallet address using the DAS API.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/das/das_get_assets_by_owner.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DAS API endpoint URL"
+      },
+      {
+        "name": "owner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Owner wallet address"
+      },
+      {
+        "name": "page",
+        "type_bounds": [
+          "u32"
+        ],
+        "tooltip": "Page number (default: 1)"
+      },
+      {
+        "name": "limit",
+        "type_bounds": [
+          "u32"
+        ],
+        "tooltip": "Results per page (default: 100, max: 1000)"
+      },
+      {
+        "name": "sort_by",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Sort field: created, updated, recent_action"
+      },
+      {
+        "name": "show_fungible",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Include fungible tokens in results"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "items",
+        "type": "json",
+        "tooltip": "Array of asset objects"
+      },
+      {
+        "name": "total",
+        "type": "u32",
+        "tooltip": "Total number of assets"
+      },
+      {
+        "name": "page",
+        "type": "u32",
+        "tooltip": "Current page number"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "page": {
+      "U": "1"
+    },
+    "limit": {
+      "U": "100"
+    },
+    "show_fungible": {
+      "B": false
+    }
+  },
+  "classification": {
+    "vendor": "Helius",
+    "program": "das",
+    "category": "infrastructure",
+    "icon_url": null,
+    "tags": [
+      "infrastructure",
+      "das",
+      "get",
+      "assets",
+      "owner"
+    ]
+  },
+  "external_version": {
+    "program_id": "das_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/das/get_assets_by_owner.jsonc",
+    "repo": "node-builder"
+  }
+}

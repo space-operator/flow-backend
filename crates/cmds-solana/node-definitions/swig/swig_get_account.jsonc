@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "swig_get_account",
+  "prefix": "swig",
+  "type": "native",
+  "description": "Fetch and parse a Swig wallet account from the Solana network",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/swig/swig_get_account.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "swig_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Swig wallet account address to fetch"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Parsed Swig account data (id, roles, role_counter, bump, wallet_bump)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Unknown",
+    "program": "swig",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "swig",
+      "get",
+      "account"
+    ]
+  },
+  "external_version": {
+    "program_id": "swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/swig/get_account.jsonc",
+    "repo": "node-builder"
+  }
+}

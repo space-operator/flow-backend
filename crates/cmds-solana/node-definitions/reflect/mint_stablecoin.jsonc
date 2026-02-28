@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "mint_stablecoin",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Generate a stablecoin mint transaction",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/reflect/reflect_mint_stablecoin.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Solana cluster: mainnet or devnet (default: mainnet)"
+      },
+      {
+        "name": "stablecoin_index",
+        "type_bounds": [
+          "i64"
+        ],
+        "required": true,
+        "tooltip": "Stablecoin index (0 = USDC+)"
+      },
+      {
+        "name": "deposit_amount",
+        "type_bounds": [
+          "f64"
+        ],
+        "required": true,
+        "tooltip": "Deposit amount in smallest unit"
+      },
+      {
+        "name": "signer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "User's Solana wallet address"
+      },
+      {
+        "name": "minimum_received",
+        "type_bounds": [
+          "f64"
+        ],
+        "required": false,
+        "tooltip": "Slippage protection threshold"
+      },
+      {
+        "name": "collateral_mint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Optional collateral mint address"
+      },
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Fee payer wallet (defaults to signer)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "mint",
+      "stablecoin"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/reflect/mint_stablecoin.jsonc",
+    "repo": "node-builder"
+  }
+}

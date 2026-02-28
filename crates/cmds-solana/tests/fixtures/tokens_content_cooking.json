@@ -1,0 +1,78 @@
+{
+  "data": [
+    {
+      "mint": "cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij",
+      "contents": [
+        {
+          "contentId": "afbe7806-bca4-4b53-adbb-1a8cf1ef230a",
+          "content": "https://x.com/FragmentsOrg/status/2002084034676207800",
+          "contentType": "tweet",
+          "status": "approved",
+          "source": "VRFD",
+          "submittedAt": "2025-12-20T03:38:47.168Z",
+          "updatedAt": "2026-01-27T04:18:11.520Z",
+          "postedAt": "2025-12-19T18:30:05.000Z",
+          "submittedBy": {
+            "id": "fsvvTpH_h_qwkcelOQQuMh4SHODSRKyU",
+            "username": "jup_VRFD",
+            "role": "moderator"
+          },
+          "updatedBy": {
+            "id": "fsvvTpH_h_qwkcelOQQuMh4SHODSRKyU",
+            "username": "jup_VRFD",
+            "role": "moderator"
+          }
+        }
+      ],
+      "newsSummary": {
+        "summaryFull": "Coinbase officially launched cbBTC on Solana. BTC Spot ETFs recorded $150.77M in net inflows. Harvard bought $116M Bitcoin at $116K.",
+        "summaryShort": "Coinbase launched cbBTC on Solana. BTC Spot ETFs saw $150.77M inflows and Harvard bought $116M BTC.",
+        "updatedAt": "2026-01-22T04:34:04.496Z",
+        "citations": [
+          "https://x.com/WhaleInsider/status/1998663673238147562",
+          "https://x.com/BitcoinArchive/status/1954221612615479334",
+          "https://x.com/solana/status/1854573991442194754"
+        ]
+      },
+      "tokenSummary": {
+        "summaryFull": "Coinbase Wrapped BTC (cbBTC) is a transferable token backed 1:1 by Bitcoin held in custody by Coinbase, enabling BTC liquidity and composability in DeFi protocols on Solana, Base, Ethereum, and Arbitrum. Users can unwrap cbBTC to receive equivalent BTC by depositing it into their Coinbase accounts. In February 2025, Coinbase launched Proof of Reserves for cbBTC, and in May 2025 integrated Chainlink Proof of Reserves on Base and Ethereum for independent onchain verification of 1:1 backing, improving transparency and trust for DeFi adoption.",
+        "summaryShort": "Coinbase Wrapped BTC (cbBTC) is a 1:1 BTC-backed token issued by Coinbase for DeFi use across Solana and other chains. Coinbase launched Proof of Reserves in February 2025 and Chainlink onchain verification in May 2025 to enhance backing transparency.",
+        "updatedAt": "2026-02-13T00:12:37.362Z",
+        "citations": [
+          "https://coinmarketcap.com/currencies/coinbase-wrapped-btc",
+          "https://web3.bitget.com/en/swap/sol/cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij",
+          "https://app.gauntlet.xyz/vaults/base:0x5a47c803488fe2bb0a0eaaf346b420e4df22f3c7",
+          "https://www.theblock.co/post/317616/coinbase-plan-cbbtc-to-solana",
+          "https://help.coinbase.com/exchange/crypto-transfers/wrapped-assets",
+          "https://messari.io/project/coinbase-wrapped-btc",
+          "https://x.com/i/status/1928119253212819681",
+          "https://withdrawalfees.com/coins/coinbase-wrapped-btc",
+          "https://currencyfreaks.com/historical/convert/2026-01-08/USD/CBBTC/1",
+          "https://forklog.com/en/coinbase-to-introduce-wrapped-bitcoin-cbbtc-on-solana-network",
+          "https://decrypt.co/290731/coinbase-brings-its-wrapped-bitcoin-to-solana",
+          "https://web3.okx.com/token/solana/cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij",
+          "https://exponential.fi/assets/coinbase-wrapped-btc-ethereum/4b03073c-b7ef-4aef-9d6d-9a67c868fedf",
+          "https://www.tradingview.com/symbols/CBBTCWETH_5B3613.USD/technicals",
+          "https://iq.wiki/wiki/coinbase-wrapped-btc-cbbtc",
+          "https://www.solflare.com/prices/coinbase-wrapped-btc/cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij",
+          "https://www.dune.com/seoul/cbbtc",
+          "https://nibiru.fi/docs/use/tokens/cbbtc.html",
+          "https://coinledger.io/learn/what-is-cbbtc",
+          "https://www.defined.fi/sol/cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij?maker=4i3kFLZuutG5fvjg5wvq15n4NPpj12wXCRMyP7TcZbNj",
+          "https://x.com/i/status/1928122761521553470",
+          "https://www.bitcoinlayers.org/infrastructure/coinbase-cbbtc",
+          "https://x.com/i/status/1891938967982862642",
+          "https://www.coinbase.com/en-ca/price/wrapped-bitcoin",
+          "https://finance.yahoo.com/news/coinbase-unveils-wrapped-bitcoin-cbbtc-083051040.html",
+          "https://www.binance.com/en/square/post/13852060188001",
+          "https://www.coinbase.com/cbbtc",
+          "https://phantom.com/tokens/solana/cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij",
+          "https://www.financemagnates.com/cryptocurrency/coinbases-cbbtc-launches-on-solana-defi-targeting-bitcoin-gap-left-by-ftx",
+          "https://explorer.solana.com/address/cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij",
+          "https://opensea.io/token/solana/cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij",
+          "https://solscan.io/token/cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij"
+        ]
+      }
+    }
+  ]
+}

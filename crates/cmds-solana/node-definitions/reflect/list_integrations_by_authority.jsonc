@@ -1,0 +1,65 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "list_integrations_by_authority",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "List all integrations owned by a specific authority",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/reflect/reflect_list_integrations_by_authority.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "authority",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Authority Solana address"
+      },
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Solana cluster: mainnet or devnet (default: mainnet)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "list",
+      "integrations",
+      "authority"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/reflect/list_integrations_by_authority.jsonc",
+    "repo": "node-builder"
+  }
+}

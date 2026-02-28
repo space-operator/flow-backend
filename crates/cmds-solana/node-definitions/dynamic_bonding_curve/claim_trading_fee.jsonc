@@ -1,0 +1,191 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "claim_trading_fee",
+  "prefix": "dynamic_bonding_curve",
+  "type": "native",
+  "description": "claim_trading_fee instruction for Dynamic Bonding Curve",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/dynamic_bonding_curve/claim_trading_fee.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Config account"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Liquidity pool account"
+      },
+      {
+        "name": "token_a_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The treasury token a account"
+      },
+      {
+        "name": "token_b_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The treasury token b account"
+      },
+      {
+        "name": "base_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The mint of token a"
+      },
+      {
+        "name": "quote_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The mint of token b"
+      },
+      {
+        "name": "creator",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Creator keypair"
+      },
+      {
+        "name": "token_base_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: known_program] Token a program"
+      },
+      {
+        "name": "token_quote_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: known_program] Token b program"
+      },
+      {
+        "name": "event_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: pda]"
+      },
+      {
+        "name": "program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: self_reference]"
+      },
+      {
+        "name": "max_base_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Max base amount value"
+      },
+      {
+        "name": "max_quote_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Max quote amount value"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "base_vault",
+        "type": "pubkey",
+        "tooltip": "Derived base_vault PDA"
+      },
+      {
+        "name": "quote_vault",
+        "type": "pubkey",
+        "tooltip": "Derived quote_vault PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "token_base_program": {
+      "S": "spl_token::id()"
+    },
+    "token_quote_program": {
+      "S": "spl_token::id()"
+    },
+    "program": {
+      "S": "DYNAMIC_BONDING_CURVE_PROGRAM_ID"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "dynamic_bonding_curve",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dynamic bonding curve",
+      "claim",
+      "trading",
+      "fee"
+    ]
+  },
+  "external_version": {
+    "program_id": "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN",
+    "sdk_crate": "dynamic-bonding-curve-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/dynamic_bonding_curve/claim_trading_fee.jsonc",
+    "repo": "node-builder"
+  }
+}

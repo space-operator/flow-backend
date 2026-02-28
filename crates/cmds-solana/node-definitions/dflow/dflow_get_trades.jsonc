@@ -1,0 +1,98 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_get_trades",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Get prediction market trade history with pagination and time filters.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/dflow/dflow_get_trades.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DFlow API key"
+      },
+      {
+        "name": "limit",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Max trades to return (1-1000, default 100)"
+      },
+      {
+        "name": "cursor",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Pagination cursor (trade ID)"
+      },
+      {
+        "name": "ticker",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Filter by market ticker"
+      },
+      {
+        "name": "min_ts",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Filter trades after this Unix timestamp"
+      },
+      {
+        "name": "max_ts",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Filter trades before this Unix timestamp"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "trades",
+        "type": "json",
+        "tooltip": "Array of trade objects"
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "optional": true,
+        "tooltip": "Pagination cursor (trade ID)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "get",
+      "trades"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/dflow/get_trades.jsonc",
+    "repo": "node-builder"
+  }
+}

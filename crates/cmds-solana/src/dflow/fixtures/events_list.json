@@ -1,0 +1,221 @@
+{
+  "events": [
+    {
+      "ticker": "KXSB-26",
+      "seriesTicker": "KXSB",
+      "strikeDate": null,
+      "strikePeriod": null,
+      "title": "Championship: Seattle vs New England",
+      "subtitle": "On Feb 8, 2026",
+      "imageUrl": "https://kalshi-public-docs.s3.amazonaws.com/series-images-webp/KXSB.webp",
+      "competition": "NFL",
+      "competitionScope": "Future",
+      "settlementSources": [
+        {
+          "name": "AP",
+          "url": "https://apnews.com/"
+        },
+        {
+          "name": "Fox Sports",
+          "url": "https://www.foxsports.com/"
+        },
+        {
+          "name": "ESPN",
+          "url": "https://www.espn.com/"
+        }
+      ],
+      "volume": 358758507,
+      "volume24h": 477018,
+      "liquidity": 0,
+      "openInterest": 258692692,
+      "markets": [
+        {
+          "ticker": "KXSB-26-MIA",
+          "eventTicker": "KXSB-26",
+          "marketType": "binary",
+          "title": "Will the Miami win the 2026 Pro Football Championship?",
+          "subtitle": "",
+          "yesSubTitle": "Miami",
+          "noSubTitle": "Miami",
+          "openTime": 1739372400,
+          "closeTime": 1766416913,
+          "expirationTime": 1833634800,
+          "status": "finalized",
+          "volume": 294648,
+          "result": "no",
+          "openInterest": 260419,
+          "canCloseEarly": true,
+          "earlyCloseCondition": "This market will close and expire after a title holder is declared.",
+          "rulesPrimary": "If Miami wins the 2026 Pro Football Championship, then the market resolves to Yes.",
+          "rulesSecondary": "",
+          "yesBid": null,
+          "yesAsk": null,
+          "noBid": null,
+          "noAsk": null,
+          "accounts": {
+            "CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH": {
+              "marketLedger": "9Z4SgCjT3995niBdoFkxYCiJp5EAB3e1HiNYzFUbFBU4",
+              "yesMint": "DgDVcTe35BDikQcGQ2ZhoyUojnifKpp9GeP9odnr8DrE",
+              "noMint": "BGqzTYMoNCNJ3GV8ddpCEez842CRJzUrGHKe7tQsBhc2",
+              "isInitialized": true,
+              "redemptionStatus": "open",
+              "scalarOutcomePct": 0
+            },
+            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v": {
+              "marketLedger": "5ASKfNXuHj1DXcYpr1hwZBaoXwPin1Toy8Vq8xRAze1q",
+              "yesMint": "7f2ZX7SzAdmqkYTRm3GbkdsdwHSMFmBNQpTgPopLdeoM",
+              "noMint": "2dsPDUsDaYqZ8b2k5UzyVeicL4K3ybjHi3ypnvfEbgYF",
+              "isInitialized": true,
+              "redemptionStatus": "open",
+              "scalarOutcomePct": 0
+            }
+          }
+        },
+        {
+          "ticker": "KXSB-26-CIN",
+          "eventTicker": "KXSB-26",
+          "marketType": "binary",
+          "title": "Will the Cincinnati win the 2026 Pro Football Championship?",
+          "subtitle": "",
+          "yesSubTitle": "Cincinnati",
+          "noSubTitle": "Cincinnati",
+          "openTime": 1739372400,
+          "closeTime": 1766416828,
+          "expirationTime": 1833634800,
+          "status": "finalized",
+          "volume": 1667205,
+          "result": "no",
+          "openInterest": 1448817,
+          "canCloseEarly": true,
+          "earlyCloseCondition": "This market will close and expire after a title holder is declared.",
+          "rulesPrimary": "If Cincinnati wins the 2026 Pro Football Championship, then the market resolves to Yes.",
+          "rulesSecondary": "",
+          "yesBid": null,
+          "yesAsk": null,
+          "noBid": null,
+          "noAsk": null,
+          "accounts": {
+            "CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH": {
+              "marketLedger": "EEvUSam1PCFuqGefQRQXzfnQyb4rAPBi18d92ET2yfxD",
+              "yesMint": "5vJvd5BBzWDH2PAVEkf9JszZQVy5TMzrrRAoR4EtBePq",
+              "noMint": "6NNEwzMXRTrALuvbAFo4rkPJvEzgxKNRV1s5Xn1enzei",
+              "isInitialized": true,
+              "redemptionStatus": "open",
+              "scalarOutcomePct": 0
+            },
+            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v": {
+              "marketLedger": "AGsiHkT2nmR56HhGNYiEr2XUa41t1g9an7wmuieRdFZV",
+              "yesMint": "kUHveGRbiTptgkFSTr2A6nPdyEWfuwxRHTUTyNQgCNk",
+              "noMint": "891gZSqdKsUfcthED9GbsXxqjWFKvFVgK2qr4iLfg2N9",
+              "isInitialized": true,
+              "redemptionStatus": "open",
+              "scalarOutcomePct": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "ticker": "KXFEDCHAIRNOM-29",
+      "seriesTicker": "KXFEDCHAIRNOM",
+      "strikeDate": null,
+      "strikePeriod": null,
+      "title": "Who will Trump nominate as Fed Chair?",
+      "subtitle": "During Trump's term",
+      "imageUrl": "https://kalshi-public-docs.s3.amazonaws.com/series-images-webp/KXFEDCHAIRNOM.webp",
+      "settlementSources": [
+        {
+          "name": "Library of Congress",
+          "url": "https://www.congress.gov/"
+        }
+      ],
+      "volume": 178401096,
+      "volume24h": 3905496,
+      "liquidity": 0,
+      "openInterest": 96586433,
+      "markets": [
+        {
+          "ticker": "KXFEDCHAIRNOM-29-JYEL",
+          "eventTicker": "KXFEDCHAIRNOM-29",
+          "marketType": "binary",
+          "title": "Will Trump next nominate Janet Yellen as Fed Chair?",
+          "subtitle": "",
+          "yesSubTitle": "Janet Yellen",
+          "noSubTitle": "Janet Yellen",
+          "openTime": 1755115566,
+          "closeTime": 1863615600,
+          "expirationTime": 1863615600,
+          "status": "active",
+          "volume": 31738,
+          "result": "",
+          "openInterest": 31688,
+          "canCloseEarly": true,
+          "earlyCloseCondition": "This market will close and expire early following the next person fomrally nominated by the President to be Fed Chair.",
+          "rulesPrimary": "If Janet Yellen is the first person formally nominated by the President to Fed Chair before Jan 20, 2029, then the market resolves to Yes.",
+          "rulesSecondary": "",
+          "yesBid": null,
+          "yesAsk": "0.0100",
+          "noBid": "0.9900",
+          "noAsk": null,
+          "accounts": {
+            "CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH": {
+              "marketLedger": "7oeSmTcRyF7YiL2ufXPRBfRE1d4rkhhWmikHcGG6v2pF",
+              "yesMint": "CxapvXq4xnf6hyYJLVPQr649XMTg1zcoaK3WUEfmBBYc",
+              "noMint": "5MqnFRaQBjMVSrX14T7V8WjyY1Hoi2Yw7SXGHu7At9uX",
+              "isInitialized": true,
+              "redemptionStatus": "pending"
+            },
+            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v": {
+              "marketLedger": "4NauvsjwRLxTgcQYpDkPE3j9RZWLLTkoMsReC94PtcBj",
+              "yesMint": "FCuNyfetRe87G6TALRCRbc111xKgL6hDSVnCVDzEXJvG",
+              "noMint": "3u6eUcwg2bQoc2SQF9JQDFRxxJSEugr3Dv8ECMhd7m16",
+              "isInitialized": true,
+              "redemptionStatus": "pending"
+            }
+          }
+        },
+        {
+          "ticker": "KXFEDCHAIRNOM-29-RREI",
+          "eventTicker": "KXFEDCHAIRNOM-29",
+          "marketType": "binary",
+          "title": "Will Trump next nominate Rick Rieder as Fed Chair?",
+          "subtitle": "",
+          "yesSubTitle": "Rick Rieder",
+          "noSubTitle": "Rick Rieder",
+          "openTime": 1755106209,
+          "closeTime": 1863615600,
+          "expirationTime": 1863615600,
+          "status": "active",
+          "volume": 13789655,
+          "result": "",
+          "openInterest": 6018435,
+          "canCloseEarly": true,
+          "earlyCloseCondition": "This market will close and expire early following the next person fomrally nominated by the President to be Fed Chair.",
+          "rulesPrimary": "If Rick Rieder is the first person formally nominated by the President to Fed Chair before Jan 20, 2029, then the market resolves to Yes.",
+          "rulesSecondary": "",
+          "yesBid": null,
+          "yesAsk": "0.0100",
+          "noBid": "0.9900",
+          "noAsk": null,
+          "accounts": {
+            "CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH": {
+              "marketLedger": "CXxdqSHKuQ6bTknnXPnbAk7UngxbpJLMbQhhGWC5rZ6i",
+              "yesMint": "6uqpp4L4iBgvmcbFBdsWgdXgxWvuQH58kvVMYt94zApA",
+              "noMint": "HP136NGBvAu2V7Mg3tPnUKXmo7Nu2NC1PL3TNhHHrwkP",
+              "isInitialized": true,
+              "redemptionStatus": "pending"
+            },
+            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v": {
+              "marketLedger": "2jXvBVccZ4899PdybSVUck7oxwStEbUnEzb3oJxTdKQB",
+              "yesMint": "D9BNepC4uEHHtZLY6wzmNYvgdm8BQcCLByFsjHydwm5Q",
+              "noMint": "G7F1r8HNX33NnhnGnKYmYcvD3pduqqSA2LekBYHfcqtq",
+              "isInitialized": true,
+              "redemptionStatus": "pending"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "cursor": 2
+}

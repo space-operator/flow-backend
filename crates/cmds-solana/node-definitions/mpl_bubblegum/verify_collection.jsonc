@@ -1,0 +1,196 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "verify_collection_cNFT",
+  "prefix": "compression",
+  "description": "Verify collection membership of a compressed NFT",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_bubblegum/verify_collection.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Keypair of the account paying for the transaction"
+      },
+      {
+        "name": "collection_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Keypair of the collection authority"
+      },
+      {
+        "name": "tree_creator_or_delegate",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the tree creator or delegate"
+      },
+      {
+        "name": "leaf_owner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the leaf owner"
+      },
+      {
+        "name": "leaf_delegate",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Public key of the leaf delegate (defaults to leaf_owner)"
+      },
+      {
+        "name": "collection_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Public key of the collection mint"
+      },
+      {
+        "name": "is_delegate_authority",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to derive collection authority record PDA"
+      },
+      {
+        "name": "metadata",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Current metadata of the compressed NFT"
+      },
+      {
+        "name": "merkle_tree",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Public key of the Merkle tree account"
+      },
+      {
+        "name": "root",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Current root hash of the Merkle tree"
+      },
+      {
+        "name": "data_hash",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Data hash of the compressed NFT"
+      },
+      {
+        "name": "creator_hash",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Creator hash of the compressed NFT"
+      },
+      {
+        "name": "leaf_id",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Asset ID of the compressed NFT leaf"
+      },
+      {
+        "name": "index",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Index of the leaf in the Merkle tree"
+      },
+      {
+        "name": "proof",
+        "type_bounds": [
+          "array"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Merkle proof as array of pubkey strings"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "string",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "compression",
+    "category": "compression",
+    "icon_url": null,
+    "tags": [
+      "compression",
+      "verify",
+      "collection",
+      "cnft"
+    ]
+  },
+  "external_version": {
+    "program_id": "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_bubblegum/verify_collection.jsonc",
+    "repo": "flow-backend"
+  }
+}

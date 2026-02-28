@@ -1,0 +1,97 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "das_get_assets_by_authority",
+  "prefix": "das",
+  "type": "native",
+  "description": "Fetch all digital assets with a specific update authority using the DAS API.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/das/das_get_assets_by_authority.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DAS API endpoint URL"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Update authority address"
+      },
+      {
+        "name": "page",
+        "type_bounds": [
+          "u32"
+        ],
+        "tooltip": "Page number (default: 1)"
+      },
+      {
+        "name": "limit",
+        "type_bounds": [
+          "u32"
+        ],
+        "tooltip": "Results per page (default: 100)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "items",
+        "type": "json",
+        "tooltip": "Array of asset objects"
+      },
+      {
+        "name": "total",
+        "type": "u32",
+        "tooltip": "Total assets by authority"
+      },
+      {
+        "name": "page",
+        "type": "u32",
+        "tooltip": "Current page number"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "page": {
+      "U": "1"
+    },
+    "limit": {
+      "U": "100"
+    }
+  },
+  "classification": {
+    "vendor": "Helius",
+    "program": "das",
+    "category": "infrastructure",
+    "icon_url": null,
+    "tags": [
+      "infrastructure",
+      "das",
+      "get",
+      "assets",
+      "authority"
+    ]
+  },
+  "external_version": {
+    "program_id": "das_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/das/get_assets_by_authority.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "orderPubkey": "OrdPubkey123",
+  "status": "filled",
+  "latestEventType": "OrderFilled",
+  "latestSignature": "5xFakeSignature123",
+  "externalOrderId": null,
+  "orderId": "ord_001",
+  "history": [
+    {
+      "eventType": "OrderPlaced",
+      "status": "placed",
+      "rawStatus": "placed",
+      "timestamp": "2025-01-15T10:00:00Z",
+      "signature": "5xFakeSig001",
+      "externalOrderId": null,
+      "orderId": "ord_001"
+    },
+    {
+      "eventType": "OrderFilled",
+      "status": "filled",
+      "rawStatus": "filled",
+      "timestamp": "2025-01-15T10:05:00Z",
+      "signature": "5xFakeSignature123",
+      "externalOrderId": null,
+      "orderId": "ord_001"
+    }
+  ]
+}

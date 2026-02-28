@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "das_get_asset",
+  "prefix": "das",
+  "type": "native",
+  "description": "Fetch a single digital asset by its ID using the DAS API.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/das/das_get_asset.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DAS API endpoint URL (e.g., Helius, QuickNode)"
+      },
+      {
+        "name": "asset_id",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The asset address to fetch"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "asset",
+        "type": "json",
+        "tooltip": "Full asset metadata"
+      },
+      {
+        "name": "owner",
+        "type": "pubkey",
+        "optional": true,
+        "tooltip": "Current owner address"
+      },
+      {
+        "name": "collection",
+        "type": "pubkey",
+        "optional": true,
+        "tooltip": "Collection address if any"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Helius",
+    "program": "das",
+    "category": "infrastructure",
+    "icon_url": null,
+    "tags": [
+      "infrastructure",
+      "das",
+      "get",
+      "asset"
+    ]
+  },
+  "external_version": {
+    "program_id": "das_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/das/get_asset.jsonc",
+    "repo": "node-builder"
+  }
+}

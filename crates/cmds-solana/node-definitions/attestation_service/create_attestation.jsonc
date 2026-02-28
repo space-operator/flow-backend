@@ -1,0 +1,142 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_attestation",
+  "prefix": "attestation_service",
+  "type": "native",
+  "description": "Create attestation using Attestation Service",
+  "author_handle": "spo",
+  "source_code": "lib/attestation_service/src/create_attestation.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account that pays for the transaction"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Authorized signer of the Schema's Credential"
+      },
+      {
+        "name": "credential",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Credential the Schema is associated with"
+      },
+      {
+        "name": "schema",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Schema the Attestation is associated with"
+      },
+      {
+        "name": "nonce",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Nonce account address"
+      },
+      {
+        "name": "layout",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Schema layout types (e.g., [12, 12, 12, 3] for String, String, String, U64)"
+      },
+      {
+        "name": "data",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Data values matching the layout (e.g., [\"hash\", \"commitment\", \"role\", 1706892000])"
+      },
+      {
+        "name": "expiry",
+        "type_bounds": [
+          "i64"
+        ],
+        "required": true,
+        "tooltip": "Expiry"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "attestation",
+        "type": "pubkey",
+        "tooltip": "Derived attestation PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "layout": {
+      "A": []
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "attestation_service",
+    "category": "identity",
+    "icon_url": null,
+    "tags": [
+      "identity",
+      "attestation service",
+      "create",
+      "attestation"
+    ]
+  },
+  "external_version": {
+    "program_id": "attest_service",
+    "sdk_crate": "attestation-service",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "lib",
+    "source_code": "lib/attestation_service/node-definitions/attestation_service/create_attestation.jsonc",
+    "repo": "node-builder"
+  }
+}

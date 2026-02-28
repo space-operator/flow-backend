@@ -1,0 +1,93 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "swig_migrate_wallet_address",
+  "prefix": "swig",
+  "type": "native",
+  "description": "Migrate a Swig account to support the V2 wallet address PDA scheme",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/swig/swig_migrate_wallet_address.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying transaction fees and rent"
+      },
+      {
+        "name": "swig_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Swig wallet account to migrate"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Authority with ManageAuthority permission or admin"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "wallet_address",
+        "type": "pubkey",
+        "optional": true,
+        "tooltip": "Created wallet address PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "swig",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "swig",
+      "migrate",
+      "wallet",
+      "address"
+    ]
+  },
+  "external_version": {
+    "program_id": "swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/swig/migrate_wallet_address.jsonc",
+    "repo": "node-builder"
+  }
+}

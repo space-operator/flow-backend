@@ -1,0 +1,214 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "liquidate_obligation_and_redeem_reserve_collateral",
+  "prefix": "klend",
+  "type": "native",
+  "description": "Liquidate obligation and redeem reserve collateral using Klend",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/klend/liquidate_obligation_and_redeem_reserve_collateral.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "liquidator",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Liquidator keypair"
+      },
+      {
+        "name": "obligation",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "User obligation (loan position) account"
+      },
+      {
+        "name": "lending_market",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Lending market account"
+      },
+      {
+        "name": "repay_reserve",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Repay reserve account address"
+      },
+      {
+        "name": "repay_reserve_liquidity_supply",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Repay reserve liquidity supply account address"
+      },
+      {
+        "name": "withdraw_reserve",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Withdraw reserve account address"
+      },
+      {
+        "name": "withdraw_reserve_collateral_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Withdraw reserve collateral token mint address"
+      },
+      {
+        "name": "withdraw_reserve_collateral_supply",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Withdraw reserve collateral supply account address"
+      },
+      {
+        "name": "withdraw_reserve_liquidity_supply",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Withdraw reserve liquidity supply account address"
+      },
+      {
+        "name": "withdraw_reserve_liquidity_fee_receiver",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Withdraw reserve liquidity fee receiver account address"
+      },
+      {
+        "name": "user_source_liquidity",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "User source liquidity account address"
+      },
+      {
+        "name": "user_destination_collateral",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "User destination collateral account address"
+      },
+      {
+        "name": "user_destination_liquidity",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "User destination liquidity account address"
+      },
+      {
+        "name": "instruction_sysvar_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Instruction sysvar token account"
+      },
+      {
+        "name": "liquidity_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Liquidity amount value"
+      },
+      {
+        "name": "min_acceptable_received_collateral_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Min acceptable received collateral amount value"
+      },
+      {
+        "name": "max_allowed_ltv_override_percent",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Max allowed ltv override percent value"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "lending_market_authority",
+        "type": "pubkey",
+        "tooltip": "Derived lending_market_authority PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "klend",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "klend",
+      "liquidate",
+      "obligation",
+      "redeem",
+      "reserve",
+      "collateral"
+    ]
+  },
+  "external_version": {
+    "program_id": "KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD",
+    "sdk_crate": "klend-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/klend/liquidate_obligation_and_redeem_reserve_collateral.jsonc",
+    "repo": "node-builder"
+  }
+}

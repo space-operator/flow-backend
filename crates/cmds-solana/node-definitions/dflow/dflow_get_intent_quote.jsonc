@@ -1,0 +1,127 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_get_intent_quote",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Get a declarative intent-based swap quote.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/dflow/dflow_get_intent_quote.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DFlow API key"
+      },
+      {
+        "name": "input_mint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Base58 input mint address"
+      },
+      {
+        "name": "output_mint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Base58 output mint address"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Input amount as scaled integer"
+      },
+      {
+        "name": "user_public_key",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Swapper wallet (include to get open transaction)"
+      },
+      {
+        "name": "slippage_bps",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Slippage in basis points or 'auto'"
+      },
+      {
+        "name": "platform_fee_bps",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Platform fee in basis points"
+      },
+      {
+        "name": "fee_account",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Token account for platform fee"
+      },
+      {
+        "name": "fee_budget",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Max fee budget in lamports"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "intent_quote",
+        "type": "json",
+        "tooltip": "Intent quote with fee budget and amounts"
+      },
+      {
+        "name": "open_transaction",
+        "type": "string",
+        "optional": true,
+        "tooltip": "Base64 open transaction to sign"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "slippage_bps": {
+      "S": "auto"
+    }
+  },
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "get",
+      "intent",
+      "quote"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/dflow/get_intent_quote.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,41 @@
+{
+    "trades": [
+        {
+            "tradeId": "d81eedca-825a-4554-6fdc-996e2608fd97",
+            "ticker": "KXUELGAME-26FEB19CELVFB-CEL",
+            "price": 11,
+            "count": 8,
+            "yesPrice": 1100,
+            "noPrice": 8900,
+            "yesPriceDollars": "0.1100",
+            "noPriceDollars": "0.8900",
+            "takerSide": "yes",
+            "createdTime": 1771533149
+        },
+        {
+            "tradeId": "90523b19-042f-6487-b2ad-88e55ef9c2a8",
+            "ticker": "KXNBAGAME-26FEB19BOSGSW-GSW",
+            "price": 33,
+            "count": 1,
+            "yesPrice": 3300,
+            "noPrice": 6700,
+            "yesPriceDollars": "0.3300",
+            "noPriceDollars": "0.6700",
+            "takerSide": "yes",
+            "createdTime": 1771533149
+        },
+        {
+            "tradeId": "c1321489-ecaa-41f4-43ea-2847a4e3fc41",
+            "ticker": "KXBTC15M-26FEB191545-45",
+            "price": 61,
+            "count": 20,
+            "yesPrice": 6100,
+            "noPrice": 3900,
+            "yesPriceDollars": "0.6100",
+            "noPriceDollars": "0.3900",
+            "takerSide": "no",
+            "createdTime": 1771533149
+        }
+    ],
+    "cursor": "EhIKEMEyFInsqkH0Q-ooR6Tj_EEaDAjd5t3MBhDQh-zGAg"
+}

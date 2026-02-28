@@ -1,0 +1,20 @@
+{
+  "invites": [
+    {
+      "invite_signer": "InvSigner123",
+      "invite_pda": "InvPda456",
+      "sender": "SenderPubkey789",
+      "expiry": "1705449600",
+      "amount": "1000000000",
+      "creation_tx": "5xFakeCreationTx",
+      "deletion_tx": null,
+      "receiver": null,
+      "action": null,
+      "creation_time": "2025-01-15T12:00:00Z",
+      "deletion_time": null,
+      "mint": "So11111111111111111111111111111111111111112",
+      "confirmed": 1
+    }
+  ],
+  "hasMoreData": false
+}

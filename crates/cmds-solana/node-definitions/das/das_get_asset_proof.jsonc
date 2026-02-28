@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "das_get_asset_proof",
+  "prefix": "das",
+  "type": "native",
+  "description": "Fetch the Merkle proof for a compressed NFT using the DAS API.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/das/das_get_asset_proof.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DAS API endpoint URL"
+      },
+      {
+        "name": "asset_id",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Compressed NFT address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "proof",
+        "type": "json",
+        "tooltip": "Array of proof hashes"
+      },
+      {
+        "name": "root",
+        "type": "string",
+        "tooltip": "Merkle root hash"
+      },
+      {
+        "name": "leaf",
+        "type": "string",
+        "tooltip": "Leaf hash"
+      },
+      {
+        "name": "tree_id",
+        "type": "pubkey",
+        "tooltip": "Merkle tree address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Helius",
+    "program": "das",
+    "category": "infrastructure",
+    "icon_url": null,
+    "tags": [
+      "infrastructure",
+      "das",
+      "get",
+      "asset",
+      "proof"
+    ]
+  },
+  "external_version": {
+    "program_id": "das_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/das/get_asset_proof.jsonc",
+    "repo": "node-builder"
+  }
+}
