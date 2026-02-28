@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Compute rolling sum over a fixed window size",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_rolling_sum.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_rolling_sum.rs",
   "ports": {
     "inputs": [
       {
@@ -85,8 +85,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/rolling_sum.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_rolling_sum.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fix/override pool base fee parameters on a DAMM v2 pool (operator with UpdatePoolFees permission)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/fix_pool_fee_params.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/fix_pool_fee_params.rs",
   "ports": {
     "inputs": [
       {
@@ -97,8 +97,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/fix_pool_fee_params.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/fix_pool_fee_params.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Cancel a recurring order",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_recurring_cancel_order.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_recurring_cancel_order.rs",
   "ports": {
     "inputs": [
       {
@@ -75,8 +75,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_recurring_cancel_order.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_recurring_cancel_order.jsonc",
+    "repo": "flow-backend"
   }
 }

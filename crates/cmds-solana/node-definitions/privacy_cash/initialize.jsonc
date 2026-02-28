@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize the Privacy Cash SOL merkle tree, tree token account, and global config. Admin only.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/privacy_cash/initialize.rs",
+  "source_code": "crates/cmds-solana/src/privacy_cash/initialize.rs",
   "ports": {
     "inputs": [
       {
@@ -84,8 +84,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/privacy_cash/initialize.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/privacy_cash/initialize.jsonc",
+    "repo": "flow-backend"
   }
 }

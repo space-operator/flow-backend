@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize user using Kfarms",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kfarms/initialize_user.rs",
+  "source_code": "crates/cmds-solana/src/kfarms/initialize_user.rs",
   "ports": {
     "inputs": [
       {
@@ -109,8 +109,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kfarms/initialize_user.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kfarms/initialize_user.jsonc",
+    "repo": "flow-backend"
   }
 }

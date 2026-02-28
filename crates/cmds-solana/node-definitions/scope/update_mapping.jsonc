@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Update mapping using Scope",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/scope/update_mapping.rs",
+  "source_code": "crates/cmds-solana/src/scope/update_mapping.rs",
   "ports": {
     "inputs": [
       {
@@ -119,8 +119,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/scope/update_mapping.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/scope/update_mapping.jsonc",
+    "repo": "flow-backend"
   }
 }

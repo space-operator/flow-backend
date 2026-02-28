@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Deposit into using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/deposit.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/deposit.rs",
   "ports": {
     "inputs": [
       {
@@ -229,8 +229,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/deposit.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/deposit.jsonc",
+    "repo": "flow-backend"
   }
 }

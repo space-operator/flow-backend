@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Swap tokens on a DAMM v2 pool (exact-in mode)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/swap.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/swap.rs",
   "ports": {
     "inputs": [
       {
@@ -139,8 +139,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/swap.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/swap.jsonc",
+    "repo": "flow-backend"
   }
 }

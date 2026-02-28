@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get vault information",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_prediction_get_vault_info.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_prediction_get_vault_info.rs",
   "ports": {
     "inputs": [
       {
@@ -52,8 +52,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_prediction_get_vault_info.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_prediction_get_vault_info.jsonc",
+    "repo": "flow-backend"
   }
 }

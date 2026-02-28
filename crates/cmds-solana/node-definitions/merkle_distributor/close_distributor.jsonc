@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Closes a Merkle Distributor, transferring remaining tokens and rent exemption lamports to the destination accounts.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/merkle_distributor/close_distributor.rs",
+  "source_code": "crates/cmds-solana/src/merkle_distributor/close_distributor.rs",
   "ports": {
     "inputs": [
       {
@@ -95,8 +95,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/merkle_distributor/close_distributor.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/merkle_distributor/close_distributor.jsonc",
+    "repo": "flow-backend"
   }
 }

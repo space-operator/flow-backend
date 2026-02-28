@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Creator Withdraw (Presale)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/presale/creator_withdraw.rs",
+  "source_code": "crates/cmds-solana/src/presale/creator_withdraw.rs",
   "ports": {
     "inputs": [
       {
@@ -103,8 +103,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/presale/creator_withdraw.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/presale/creator_withdraw.jsonc",
+    "repo": "flow-backend"
   }
 }

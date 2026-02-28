@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fetch a complete block by slot number using the Solana RPC.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/helius/helius_get_block.rs",
+  "source_code": "crates/cmds-solana/src/helius/helius_get_block.rs",
   "ports": {
     "inputs": [
       {
@@ -97,8 +97,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/helius/get_block.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/helius/helius_get_block.jsonc",
+    "repo": "flow-backend"
   }
 }

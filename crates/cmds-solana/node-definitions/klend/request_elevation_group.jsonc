@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Request Elevation Group (Klend)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/request_elevation_group.rs",
+  "source_code": "crates/cmds-solana/src/klend/request_elevation_group.rs",
   "ports": {
     "inputs": [
       {
@@ -96,8 +96,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/request_elevation_group.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/request_elevation_group.jsonc",
+    "repo": "flow-backend"
   }
 }

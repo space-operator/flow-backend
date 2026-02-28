@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Delete a previously created transfer",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_delete_transfer.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_delete_transfer.rs",
   "ports": {
     "inputs": [
       {
@@ -58,8 +58,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/delete_transfer.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_delete_transfer.jsonc",
+    "repo": "flow-backend"
   }
 }

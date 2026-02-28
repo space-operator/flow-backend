@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fund a reward distribution for a DAMM v2 pool. Deposits reward tokens into the vault for LP distribution.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/fund_reward.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/fund_reward.rs",
   "ports": {
     "inputs": [
       {
@@ -115,8 +115,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/fund_reward.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/fund_reward.jsonc",
+    "repo": "flow-backend"
   }
 }

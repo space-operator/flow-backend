@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Transitions an off-chain or manually executable Proposal from Succeeded into Completed state",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/complete_proposal.rs",
+  "source_code": "crates/cmds-solana/src/governance/complete_proposal.rs",
   "ports": {
     "inputs": [
       {
@@ -86,8 +86,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/complete_proposal.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/complete_proposal.jsonc",
+    "repo": "flow-backend"
   }
 }

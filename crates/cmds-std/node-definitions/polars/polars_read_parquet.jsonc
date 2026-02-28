@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Read a Parquet file into a Polars DataFrame",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_read_parquet.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_read_parquet.rs",
   "ports": {
     "inputs": [
       {
@@ -55,8 +55,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/read_parquet.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_read_parquet.jsonc",
+    "repo": "flow-backend"
   }
 }

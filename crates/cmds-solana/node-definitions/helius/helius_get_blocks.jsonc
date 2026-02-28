@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fetch a list of confirmed blocks between two slots.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/helius/helius_get_blocks.rs",
+  "source_code": "crates/cmds-solana/src/helius/helius_get_blocks.rs",
   "ports": {
     "inputs": [
       {
@@ -65,8 +65,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/helius/get_blocks.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/helius/helius_get_blocks.jsonc",
+    "repo": "flow-backend"
   }
 }

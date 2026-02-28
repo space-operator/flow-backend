@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Pivot (reshape from long to wide) a DataFrame by turning unique values from one column into new column headers",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_pivot.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_pivot.rs",
   "ports": {
     "inputs": [
       {
@@ -89,8 +89,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/pivot.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_pivot.jsonc",
+    "repo": "flow-backend"
   }
 }

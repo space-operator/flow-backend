@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Refresh user state using Kfarms",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kfarms/refresh_user_state.rs",
+  "source_code": "crates/cmds-solana/src/kfarms/refresh_user_state.rs",
   "ports": {
     "inputs": [
       {
@@ -79,8 +79,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kfarms/refresh_user_state.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kfarms/refresh_user_state.jsonc",
+    "repo": "flow-backend"
   }
 }

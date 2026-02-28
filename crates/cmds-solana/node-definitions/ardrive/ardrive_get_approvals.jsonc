@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get credit share approvals between two addresses",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/ardrive/ardrive_get_approvals.rs",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_get_approvals.rs",
   "ports": {
     "inputs": [
       {
@@ -58,8 +58,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/ardrive/get_approvals.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_get_approvals.jsonc",
+    "repo": "flow-backend"
   }
 }

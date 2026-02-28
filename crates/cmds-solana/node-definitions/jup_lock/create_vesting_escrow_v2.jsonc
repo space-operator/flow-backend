@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create a token vesting escrow v2 with memo support and Token-2022 compatibility",
   "author_handle": "spo",
-  "source_code": "lib/jup_lock/src/create_vesting_escrow_v2.rs",
+  "source_code": "crates/cmds-solana/src/jup_lock/create_vesting_escrow_v2.rs",
   "ports": {
     "inputs": [
       {
@@ -174,8 +174,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jup_lock/create_vesting_escrow_v2.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jup_lock/create_vesting_escrow_v2.jsonc",
+    "repo": "flow-backend"
   }
 }

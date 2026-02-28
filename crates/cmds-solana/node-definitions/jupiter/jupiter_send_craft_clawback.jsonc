@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Craft a clawback transaction",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_send_craft_clawback.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_send_craft_clawback.rs",
   "ports": {
     "inputs": [
       {
@@ -67,8 +67,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_send_craft_clawback.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_send_craft_clawback.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "List countries and subdivisions recognized by Bridge",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_list_countries.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_list_countries.rs",
   "ports": {
     "inputs": [
       {
@@ -50,8 +50,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/list_countries.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_list_countries.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get a winc quote for a given payment type and amount",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/ardrive/ardrive_get_price_quote.rs",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_get_price_quote.rs",
   "ports": {
     "inputs": [
       {
@@ -93,8 +93,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/ardrive/get_price_quote.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_get_price_quote.jsonc",
+    "repo": "flow-backend"
   }
 }

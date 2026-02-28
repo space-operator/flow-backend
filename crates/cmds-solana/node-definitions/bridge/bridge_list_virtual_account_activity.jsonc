@@ -6,7 +6,7 @@
   "type": "native",
   "description": "List activity across all virtual accounts",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_list_virtual_account_activity.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_list_virtual_account_activity.rs",
   "ports": {
     "inputs": [
       {
@@ -73,8 +73,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/list_virtual_account_activity.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_list_virtual_account_activity.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize tuktuk config v0 using Tuktuk",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/tuktuk/initialize_tuktuk_config_v0.rs",
+  "source_code": "crates/cmds-solana/src/tuktuk/initialize_tuktuk_config_v0.rs",
   "ports": {
     "inputs": [
       {
@@ -97,7 +97,7 @@
   },
   "internal": {
     "source": "lib",
-    "source_code": "lib/tuktuk/node-definitions/tuktuk/initialize_tuktuk_config_v0.jsonc",
-    "repo": "node-builder"
+    "source_code": "crates/cmds-solana/node-definitions/tuktuk/initialize_tuktuk_config_v0.jsonc",
+    "repo": "flow-backend"
   }
 }

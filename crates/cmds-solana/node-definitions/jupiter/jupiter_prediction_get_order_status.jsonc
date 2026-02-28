@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get order status",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_prediction_get_order_status.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_prediction_get_order_status.rs",
   "ports": {
     "inputs": [
       {
@@ -60,8 +60,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_prediction_get_order_status.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_prediction_get_order_status.jsonc",
+    "repo": "flow-backend"
   }
 }

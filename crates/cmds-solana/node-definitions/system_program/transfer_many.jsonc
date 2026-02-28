@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Transfer SOL (lamports) from one account to multiple recipients in a single transaction",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/system_program/transfer_many.rs",
+  "source_code": "crates/cmds-solana/src/system_program/transfer_many.rs",
   "ports": {
     "inputs": [
       {
@@ -80,8 +80,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/system_program/transfer_many.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/system_program/transfer_many.jsonc",
+    "repo": "flow-backend"
   }
 }

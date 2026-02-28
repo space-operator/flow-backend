@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fetch a confirmed transaction by signature.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/helius/helius_get_transaction.rs",
+  "source_code": "crates/cmds-solana/src/helius/helius_get_transaction.rs",
   "ports": {
     "inputs": [
       {
@@ -97,8 +97,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/helius/get_transaction.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/helius/helius_get_transaction.jsonc",
+    "repo": "flow-backend"
   }
 }

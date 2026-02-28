@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Batch lookup prediction markets by mints or tickers.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dflow/dflow_get_markets_batch.rs",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_markets_batch.rs",
   "ports": {
     "inputs": [
       {
@@ -65,8 +65,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dflow/get_markets_batch.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_markets_batch.jsonc",
+    "repo": "flow-backend"
   }
 }

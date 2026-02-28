@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Compute the mean (average) of all values in a Series",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_series_mean.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_series_mean.rs",
   "ports": {
     "inputs": [
       {
@@ -49,8 +49,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/series_mean.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_series_mean.jsonc",
+    "repo": "flow-backend"
   }
 }

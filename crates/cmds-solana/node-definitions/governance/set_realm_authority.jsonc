@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Set realm authority using Governance",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/set_realm_authority.rs",
+  "source_code": "crates/cmds-solana/src/governance/set_realm_authority.rs",
   "ports": {
     "inputs": [
       {
@@ -96,8 +96,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/set_realm_authority.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/set_realm_authority.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "List prediction market events with filtering and pagination.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dflow/dflow_get_events.rs",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_events.rs",
   "ports": {
     "inputs": [
       {
@@ -105,8 +105,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dflow/get_events.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_events.jsonc",
+    "repo": "flow-backend"
   }
 }

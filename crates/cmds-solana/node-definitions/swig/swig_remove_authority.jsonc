@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Remove an authority from a Swig wallet",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/swig/swig_remove_authority.rs",
+  "source_code": "crates/cmds-solana/src/swig/swig_remove_authority.rs",
   "ports": {
     "inputs": [
       {
@@ -98,8 +98,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/swig/remove_authority.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_remove_authority.jsonc",
+    "repo": "flow-backend"
   }
 }

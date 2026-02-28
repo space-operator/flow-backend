@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Retrieve authorization controls for a card account",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_get_card_auth_controls.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_get_card_auth_controls.rs",
   "ports": {
     "inputs": [
       {
@@ -68,8 +68,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/get_card_auth_controls.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_get_card_auth_controls.jsonc",
+    "repo": "flow-backend"
   }
 }

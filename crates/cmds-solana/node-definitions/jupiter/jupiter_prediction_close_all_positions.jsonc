@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Close all positions",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_prediction_close_all_positions.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_prediction_close_all_positions.rs",
   "ports": {
     "inputs": [
       {
@@ -60,8 +60,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_prediction_close_all_positions.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_prediction_close_all_positions.jsonc",
+    "repo": "flow-backend"
   }
 }

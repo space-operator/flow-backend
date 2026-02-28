@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Redeem fees using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/redeem_fees.rs",
+  "source_code": "crates/cmds-solana/src/klend/redeem_fees.rs",
   "ports": {
     "inputs": [
       {
@@ -99,8 +99,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/redeem_fees.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/redeem_fees.jsonc",
+    "repo": "flow-backend"
   }
 }

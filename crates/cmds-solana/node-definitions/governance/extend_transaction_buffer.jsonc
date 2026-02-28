@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Appends additional data to an existing transaction buffer. v3.1.2 instruction index 30.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/extend_transaction_buffer.rs",
+  "source_code": "crates/cmds-solana/src/governance/extend_transaction_buffer.rs",
   "ports": {
     "inputs": [
       {
@@ -111,8 +111,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/extend_transaction_buffer.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/extend_transaction_buffer.jsonc",
+    "repo": "flow-backend"
   }
 }

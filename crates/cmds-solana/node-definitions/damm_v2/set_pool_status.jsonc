@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Enable or disable a DAMM v2 pool. Operator-only action to control pool trading state.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/set_pool_status.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/set_pool_status.rs",
   "ports": {
     "inputs": [
       {
@@ -87,8 +87,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/set_pool_status.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/set_pool_status.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize a prediction market and get transaction to sign.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dflow/dflow_init_prediction_market.rs",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_init_prediction_market.rs",
   "ports": {
     "inputs": [
       {
@@ -72,8 +72,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dflow/init_prediction_market.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_init_prediction_market.jsonc",
+    "repo": "flow-backend"
   }
 }

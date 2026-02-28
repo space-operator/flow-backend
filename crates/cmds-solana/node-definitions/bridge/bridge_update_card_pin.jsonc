@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Generate a URL for secure PIN update",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_update_card_pin.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_update_card_pin.rs",
   "ports": {
     "inputs": [
       {
@@ -75,8 +75,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/update_card_pin.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_update_card_pin.jsonc",
+    "repo": "flow-backend"
   }
 }

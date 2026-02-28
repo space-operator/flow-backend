@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Swap via uneven vaults using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/swap_uneven_vaults.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/swap_uneven_vaults.rs",
   "ports": {
     "inputs": [
       {
@@ -216,8 +216,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/swap_uneven_vaults.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/swap_uneven_vaults.jsonc",
+    "repo": "flow-backend"
   }
 }

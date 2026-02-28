@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Reward User Once (Kfarms)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kfarms/reward_user_once.rs",
+  "source_code": "crates/cmds-solana/src/kfarms/reward_user_once.rs",
   "ports": {
     "inputs": [
       {
@@ -104,8 +104,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kfarms/reward_user_once.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kfarms/reward_user_once.jsonc",
+    "repo": "flow-backend"
   }
 }

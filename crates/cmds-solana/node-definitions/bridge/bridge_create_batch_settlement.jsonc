@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create a batch settlement schedule",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_create_batch_settlement.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_create_batch_settlement.rs",
   "ports": {
     "inputs": [
       {
@@ -67,8 +67,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/create_batch_settlement.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_create_batch_settlement.jsonc",
+    "repo": "flow-backend"
   }
 }

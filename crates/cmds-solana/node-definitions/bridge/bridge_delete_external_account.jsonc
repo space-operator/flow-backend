@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Delete an external account",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_delete_external_account.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_delete_external_account.rs",
   "ports": {
     "inputs": [
       {
@@ -67,8 +67,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/delete_external_account.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_delete_external_account.jsonc",
+    "repo": "flow-backend"
   }
 }

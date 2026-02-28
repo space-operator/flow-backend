@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Compute column-wise skewness of numeric columns in a DataFrame. Positive skew indicates a right tail, negative skew indicates a left tail.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_skew.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_skew.rs",
   "ports": {
     "inputs": [
       {
@@ -72,8 +72,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/skew.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_skew.jsonc",
+    "repo": "flow-backend"
   }
 }

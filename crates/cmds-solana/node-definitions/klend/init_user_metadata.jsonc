@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize user metadata using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/init_user_metadata.rs",
+  "source_code": "crates/cmds-solana/src/klend/init_user_metadata.rs",
   "ports": {
     "inputs": [
       {
@@ -93,8 +93,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/init_user_metadata.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/init_user_metadata.jsonc",
+    "repo": "flow-backend"
   }
 }

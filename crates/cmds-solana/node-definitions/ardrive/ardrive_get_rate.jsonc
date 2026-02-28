@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get the conversion rate for a single currency (1 AR equivalent)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/ardrive/ardrive_get_rate.rs",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_get_rate.rs",
   "ports": {
     "inputs": [
       {
@@ -49,8 +49,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/ardrive/get_rate.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_get_rate.jsonc",
+    "repo": "flow-backend"
   }
 }

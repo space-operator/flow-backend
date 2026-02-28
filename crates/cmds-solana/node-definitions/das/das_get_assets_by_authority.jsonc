@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fetch all digital assets with a specific update authority using the DAS API.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/das/das_get_assets_by_authority.rs",
+  "source_code": "crates/cmds-solana/src/das/das_get_assets_by_authority.rs",
   "ports": {
     "inputs": [
       {
@@ -90,8 +90,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/das/get_assets_by_authority.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/das/das_get_assets_by_authority.jsonc",
+    "repo": "flow-backend"
   }
 }

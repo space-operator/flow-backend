@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Withdraw from slashed amount using Kfarms",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kfarms/withdraw_slashed_amount.rs",
+  "source_code": "crates/cmds-solana/src/kfarms/withdraw_slashed_amount.rs",
   "ports": {
     "inputs": [
       {
@@ -104,8 +104,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kfarms/withdraw_slashed_amount.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kfarms/withdraw_slashed_amount.jsonc",
+    "repo": "flow-backend"
   }
 }

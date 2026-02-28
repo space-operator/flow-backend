@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Assert User Swap Balances Start (Limo)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/limo/assert_user_swap_balances_start.rs",
+  "source_code": "crates/cmds-solana/src/limo/assert_user_swap_balances_start.rs",
   "ports": {
     "inputs": [
       {
@@ -97,8 +97,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/limo/assert_user_swap_balances_start.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/limo/assert_user_swap_balances_start.jsonc",
+    "repo": "flow-backend"
   }
 }

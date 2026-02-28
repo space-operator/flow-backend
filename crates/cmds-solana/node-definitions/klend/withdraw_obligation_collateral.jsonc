@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Withdraw from obligation collateral using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/withdraw_obligation_collateral.rs",
+  "source_code": "crates/cmds-solana/src/klend/withdraw_obligation_collateral.rs",
   "ports": {
     "inputs": [
       {
@@ -133,8 +133,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/withdraw_obligation_collateral.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/withdraw_obligation_collateral.jsonc",
+    "repo": "flow-backend"
   }
 }

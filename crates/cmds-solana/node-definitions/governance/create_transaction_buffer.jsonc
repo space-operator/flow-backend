@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Creates a transaction buffer for uploading large versioned transaction messages in chunks. v3.1.2 instruction index 29.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/create_transaction_buffer.rs",
+  "source_code": "crates/cmds-solana/src/governance/create_transaction_buffer.rs",
   "ports": {
     "inputs": [
       {
@@ -135,8 +135,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/create_transaction_buffer.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/create_transaction_buffer.jsonc",
+    "repo": "flow-backend"
   }
 }

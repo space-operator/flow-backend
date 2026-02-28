@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Deposit or withdraw SPL tokens (USDC, USDT, etc.) using a Groth16 ZK proof.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/privacy_cash/transact_spl.rs",
+  "source_code": "crates/cmds-solana/src/privacy_cash/transact_spl.rs",
   "ports": {
     "inputs": [
       {
@@ -141,8 +141,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/privacy_cash/transact_spl.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/privacy_cash/transact_spl.jsonc",
+    "repo": "flow-backend"
   }
 }

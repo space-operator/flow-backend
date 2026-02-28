@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create a Polars DataFrame from column-oriented JSON data",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_create_dataframe.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_create_dataframe.rs",
   "ports": {
     "inputs": [
       {
@@ -55,8 +55,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/create_dataframe.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_create_dataframe.jsonc",
+    "repo": "flow-backend"
   }
 }

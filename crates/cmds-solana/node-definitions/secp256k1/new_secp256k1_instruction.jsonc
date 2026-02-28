@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Creates and optionally submits a secp256k1 program instruction for verifying an Ethereum-compatible signature on-chain. The secp256k1 program can verify up to 255 signatures per transaction.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/secp256k1/new_secp256k1_instruction.rs",
+  "source_code": "crates/cmds-solana/src/secp256k1/new_secp256k1_instruction.rs",
   "ports": {
     "inputs": [
       {
@@ -99,8 +99,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/secp256k1/new_secp256k1_instruction.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/secp256k1/new_secp256k1_instruction.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Randomly sample rows from a DataFrame by count (n) or fraction",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_sample.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_sample.rs",
   "ports": {
     "inputs": [
       {
@@ -86,8 +86,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/sample.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_sample.jsonc",
+    "repo": "flow-backend"
   }
 }

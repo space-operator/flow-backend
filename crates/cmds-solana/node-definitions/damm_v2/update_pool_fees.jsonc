@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Update pool fee parameters on a DAMM v2 pool (operator with UpdatePoolFees permission)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/update_pool_fees.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/update_pool_fees.rs",
   "ports": {
     "inputs": [
       {
@@ -144,8 +144,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/update_pool_fees.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/update_pool_fees.jsonc",
+    "repo": "flow-backend"
   }
 }

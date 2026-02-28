@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Refresh obligation using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/refresh_obligation.rs",
+  "source_code": "crates/cmds-solana/src/klend/refresh_obligation.rs",
   "ports": {
     "inputs": [
       {
@@ -78,8 +78,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/refresh_obligation.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/refresh_obligation.jsonc",
+    "repo": "flow-backend"
   }
 }

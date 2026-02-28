@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fetch all digital assets created by a specific address using the DAS API.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/das/das_get_assets_by_creator.rs",
+  "source_code": "crates/cmds-solana/src/das/das_get_assets_by_creator.rs",
   "ports": {
     "inputs": [
       {
@@ -100,8 +100,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/das/get_assets_by_creator.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/das/das_get_assets_by_creator.jsonc",
+    "repo": "flow-backend"
   }
 }

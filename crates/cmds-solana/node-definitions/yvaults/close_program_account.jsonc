@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Close program account using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/close_program_account.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/close_program_account.rs",
   "ports": {
     "inputs": [
       {
@@ -96,8 +96,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/close_program_account.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/close_program_account.jsonc",
+    "repo": "flow-backend"
   }
 }

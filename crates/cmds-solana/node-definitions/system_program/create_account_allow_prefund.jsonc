@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create a new account allowing pre-funded destination (requires SIMD-0312)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/system_program/create_account_allow_prefund.rs",
+  "source_code": "crates/cmds-solana/src/system_program/create_account_allow_prefund.rs",
   "ports": {
     "inputs": [
       {
@@ -107,8 +107,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/system_program/create_account_allow_prefund.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/system_program/create_account_allow_prefund.jsonc",
+    "repo": "flow-backend"
   }
 }

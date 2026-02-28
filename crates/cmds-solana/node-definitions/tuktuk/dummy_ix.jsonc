@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Dummy Ix (Tuktuk)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/tuktuk/dummy_ix.rs",
+  "source_code": "crates/cmds-solana/src/tuktuk/dummy_ix.rs",
   "ports": {
     "inputs": [
       {
@@ -70,7 +70,7 @@
   },
   "internal": {
     "source": "lib",
-    "source_code": "lib/tuktuk/node-definitions/tuktuk/dummy_ix.jsonc",
-    "repo": "node-builder"
+    "source_code": "crates/cmds-solana/node-definitions/tuktuk/dummy_ix.jsonc",
+    "repo": "flow-backend"
   }
 }

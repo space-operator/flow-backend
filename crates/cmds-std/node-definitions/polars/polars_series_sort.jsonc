@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Sort a Series in ascending or descending order",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_series_sort.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_series_sort.rs",
   "ports": {
     "inputs": [
       {
@@ -66,8 +66,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/series_sort.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_series_sort.jsonc",
+    "repo": "flow-backend"
   }
 }

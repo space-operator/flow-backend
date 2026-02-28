@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Log User Swap Balances End (Limo)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/limo/log_user_swap_balances_end.rs",
+  "source_code": "crates/cmds-solana/src/limo/log_user_swap_balances_end.rs",
   "ports": {
     "inputs": [
       {
@@ -160,8 +160,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/limo/log_user_swap_balances_end.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/limo/log_user_swap_balances_end.jsonc",
+    "repo": "flow-backend"
   }
 }

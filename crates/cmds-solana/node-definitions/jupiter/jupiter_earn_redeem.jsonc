@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Earn redeem transaction",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_earn_redeem.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_earn_redeem.rs",
   "ports": {
     "inputs": [
       {
@@ -74,8 +74,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_earn_redeem.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_earn_redeem.jsonc",
+    "repo": "flow-backend"
   }
 }

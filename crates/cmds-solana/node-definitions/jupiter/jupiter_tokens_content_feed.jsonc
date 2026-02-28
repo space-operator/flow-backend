@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get paginated content feed for a mint",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_tokens_content_feed.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_tokens_content_feed.rs",
   "ports": {
     "inputs": [
       {
@@ -73,8 +73,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_tokens_content_feed.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_tokens_content_feed.jsonc",
+    "repo": "flow-backend"
   }
 }

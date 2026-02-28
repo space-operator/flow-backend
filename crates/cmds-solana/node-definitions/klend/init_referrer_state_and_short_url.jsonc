@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize referrer state and short url using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/init_referrer_state_and_short_url.rs",
+  "source_code": "crates/cmds-solana/src/klend/init_referrer_state_and_short_url.rs",
   "ports": {
     "inputs": [
       {
@@ -98,8 +98,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/init_referrer_state_and_short_url.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/init_referrer_state_and_short_url.jsonc",
+    "repo": "flow-backend"
   }
 }

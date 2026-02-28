@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Update global config using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/update_global_config.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/update_global_config.rs",
   "ports": {
     "inputs": [
       {
@@ -104,8 +104,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/update_global_config.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/update_global_config.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Top up ArDrive Turbo credits via the X402 Payment Protocol",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/ardrive/ardrive_x402_topup.rs",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_x402_topup.rs",
   "ports": {
     "inputs": [
       {
@@ -64,8 +64,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/ardrive/x402_topup.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_x402_topup.jsonc",
+    "repo": "flow-backend"
   }
 }

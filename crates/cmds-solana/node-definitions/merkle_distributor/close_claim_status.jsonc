@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Closes a claimant's status account to reclaim rent. Used in the Merkle Distributor program.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/merkle_distributor/close_claim_status.rs",
+  "source_code": "crates/cmds-solana/src/merkle_distributor/close_claim_status.rs",
   "ports": {
     "inputs": [
       {
@@ -88,8 +88,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/merkle_distributor/close_claim_status.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/merkle_distributor/close_claim_status.jsonc",
+    "repo": "flow-backend"
   }
 }

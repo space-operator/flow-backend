@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Refresh escrow using Presale",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/presale/refresh_escrow.rs",
+  "source_code": "crates/cmds-solana/src/presale/refresh_escrow.rs",
   "ports": {
     "inputs": [
       {
@@ -79,8 +79,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/presale/refresh_escrow.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/presale/refresh_escrow.jsonc",
+    "repo": "flow-backend"
   }
 }

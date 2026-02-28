@@ -82,8 +82,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/token_2022/revoke.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_token_2022/revoke.jsonc",
+    "repo": "flow-backend"
   }
 }

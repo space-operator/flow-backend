@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Upload integration metadata (logo image and token info)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_upload_integration_logo.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_upload_integration_logo.rs",
   "ports": {
     "inputs": [
       {
@@ -90,8 +90,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/upload_integration_logo.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/upload_integration_logo.jsonc",
+    "repo": "flow-backend"
   }
 }

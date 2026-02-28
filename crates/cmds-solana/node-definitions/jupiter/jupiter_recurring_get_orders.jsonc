@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get recurring orders for account",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_recurring_get_orders.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_recurring_get_orders.rs",
   "ports": {
     "inputs": [
       {
@@ -90,8 +90,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_recurring_get_orders.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_recurring_get_orders.jsonc",
+    "repo": "flow-backend"
   }
 }

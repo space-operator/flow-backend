@@ -6,7 +6,7 @@
   "type": "native",
   "description": "BOTH partner and creator FUNCTIONS ///",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dynamic_bonding_curve/withdraw_migration_fee.rs",
+  "source_code": "crates/cmds-solana/src/dynamic_bonding_curve/withdraw_migration_fee.rs",
   "ports": {
     "inputs": [
       {
@@ -155,8 +155,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dynamic_bonding_curve/withdraw_migration_fee.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dynamic_bonding_curve/withdraw_migration_fee.jsonc",
+    "repo": "flow-backend"
   }
 }

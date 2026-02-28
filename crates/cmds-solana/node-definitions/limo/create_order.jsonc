@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create order using Limo",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/limo/create_order.rs",
+  "source_code": "crates/cmds-solana/src/limo/create_order.rs",
   "ports": {
     "inputs": [
       {
@@ -179,8 +179,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/limo/create_order.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/limo/create_order.jsonc",
+    "repo": "flow-backend"
   }
 }

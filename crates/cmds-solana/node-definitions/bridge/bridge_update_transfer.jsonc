@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Update a previously created transfer",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_update_transfer.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_update_transfer.rs",
   "ports": {
     "inputs": [
       {
@@ -66,8 +66,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/update_transfer.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_update_transfer.jsonc",
+    "repo": "flow-backend"
   }
 }

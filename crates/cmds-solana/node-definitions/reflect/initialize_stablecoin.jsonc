@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize a branded stablecoin token with metadata",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_initialize_stablecoin.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_initialize_stablecoin.rs",
   "ports": {
     "inputs": [
       {
@@ -97,8 +97,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/initialize_stablecoin.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/initialize_stablecoin.jsonc",
+    "repo": "flow-backend"
   }
 }

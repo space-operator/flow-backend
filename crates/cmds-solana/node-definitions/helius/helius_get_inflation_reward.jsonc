@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fetch inflation/staking rewards for addresses at an epoch.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/helius/helius_get_inflation_reward.rs",
+  "source_code": "crates/cmds-solana/src/helius/helius_get_inflation_reward.rs",
   "ports": {
     "inputs": [
       {
@@ -66,8 +66,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/helius/get_inflation_reward.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/helius/helius_get_inflation_reward.jsonc",
+    "repo": "flow-backend"
   }
 }

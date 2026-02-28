@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Close attestation using Attestation Service",
   "author_handle": "spo",
-  "source_code": "lib/attestation_service/src/close_attestation.rs",
+  "source_code": "crates/cmds-solana/src/attestation_service/close_attestation.rs",
   "ports": {
     "inputs": [
       {
@@ -102,7 +102,7 @@
   },
   "internal": {
     "source": "lib",
-    "source_code": "lib/attestation_service/node-definitions/attestation_service/close_attestation.jsonc",
-    "repo": "node-builder"
+    "source_code": "crates/cmds-solana/node-definitions/attestation_service/close_attestation.jsonc",
+    "repo": "flow-backend"
   }
 }

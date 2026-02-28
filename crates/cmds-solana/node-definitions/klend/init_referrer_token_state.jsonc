@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize referrer token state using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/init_referrer_token_state.rs",
+  "source_code": "crates/cmds-solana/src/klend/init_referrer_token_state.rs",
   "ports": {
     "inputs": [
       {
@@ -102,8 +102,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/init_referrer_token_state.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/init_referrer_token_state.jsonc",
+    "repo": "flow-backend"
   }
 }

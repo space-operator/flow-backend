@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get the winc (winston credit) cost for uploading data of a specified byte size",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/ardrive/ardrive_get_price_bytes.rs",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_get_price_bytes.rs",
   "ports": {
     "inputs": [
       {
@@ -50,8 +50,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/ardrive/get_price_bytes.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_get_price_bytes.jsonc",
+    "repo": "flow-backend"
   }
 }

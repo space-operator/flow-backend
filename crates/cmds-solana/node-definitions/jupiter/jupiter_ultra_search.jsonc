@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Search tokens by symbol, name, or mint",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_ultra_search.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_ultra_search.rs",
   "ports": {
     "inputs": [
       {
@@ -58,8 +58,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_ultra_search.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_ultra_search.jsonc",
+    "repo": "flow-backend"
   }
 }

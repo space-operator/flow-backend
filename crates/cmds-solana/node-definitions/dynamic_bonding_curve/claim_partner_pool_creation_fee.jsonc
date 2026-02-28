@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Claim partner pool creation fee from a Dynamic Bonding Curve pool.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dynamic_bonding_curve/claim_partner_pool_creation_fee.rs",
+  "source_code": "crates/cmds-solana/src/dynamic_bonding_curve/claim_partner_pool_creation_fee.rs",
   "ports": {
     "inputs": [
       {
@@ -116,8 +116,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dynamic_bonding_curve/claim_partner_pool_creation_fee.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dynamic_bonding_curve/claim_partner_pool_creation_fee.jsonc",
+    "repo": "flow-backend"
   }
 }

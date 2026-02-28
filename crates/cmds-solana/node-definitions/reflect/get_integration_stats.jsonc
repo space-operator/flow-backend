@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get statistics for a specific integration (requires Reflect-API-Key)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_get_integration_stats.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_integration_stats.rs",
   "ports": {
     "inputs": [
       {
@@ -67,8 +67,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/get_integration_stats.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_integration_stats.jsonc",
+    "repo": "flow-backend"
   }
 }

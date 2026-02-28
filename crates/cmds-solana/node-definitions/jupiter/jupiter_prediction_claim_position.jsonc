@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Claim winning position payout",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_prediction_claim_position.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_prediction_claim_position.rs",
   "ports": {
     "inputs": [
       {
@@ -67,8 +67,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_prediction_claim_position.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_prediction_claim_position.jsonc",
+    "repo": "flow-backend"
   }
 }

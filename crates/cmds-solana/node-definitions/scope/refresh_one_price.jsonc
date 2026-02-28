@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Refresh one price using Scope",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/scope/refresh_one_price.rs",
+  "source_code": "crates/cmds-solana/src/scope/refresh_one_price.rs",
   "ports": {
     "inputs": [
       {
@@ -95,8 +95,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/scope/refresh_one_price.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/scope/refresh_one_price.jsonc",
+    "repo": "flow-backend"
   }
 }

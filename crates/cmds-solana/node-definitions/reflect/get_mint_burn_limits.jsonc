@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get supply cap and utilization for all stablecoins",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_get_mint_burn_limits.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_mint_burn_limits.rs",
   "ports": {
     "inputs": [],
     "outputs": [
@@ -42,8 +42,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/get_mint_burn_limits.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_mint_burn_limits.jsonc",
+    "repo": "flow-backend"
   }
 }

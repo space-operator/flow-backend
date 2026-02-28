@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Add a Signatory to a proposal. Cannot leave draft until Signatory signs. v3.1.2 simplified account layout.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/add_signatory.rs",
+  "source_code": "crates/cmds-solana/src/governance/add_signatory.rs",
   "ports": {
     "inputs": [
       {
@@ -98,8 +98,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/add_signatory.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/add_signatory.jsonc",
+    "repo": "flow-backend"
   }
 }

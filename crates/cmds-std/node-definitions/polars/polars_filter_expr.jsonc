@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Filter DataFrame rows using a simple expression string (e.g., 'age > 30', 'name == John', 'score is_null')",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_filter_expr.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_filter_expr.rs",
   "ports": {
     "inputs": [
       {
@@ -63,8 +63,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/filter_expr.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_filter_expr.jsonc",
+    "repo": "flow-backend"
   }
 }

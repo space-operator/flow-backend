@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create a durable transaction nonce account using a seed-derived address",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/system_program/create_nonce_account_with_seed.rs",
+  "source_code": "crates/cmds-solana/src/system_program/create_nonce_account_with_seed.rs",
   "ports": {
     "inputs": [
       {
@@ -115,8 +115,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/system_program/create_nonce_account_with_seed.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/system_program/create_nonce_account_with_seed.jsonc",
+    "repo": "flow-backend"
   }
 }

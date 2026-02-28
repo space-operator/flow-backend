@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Claim locked using Merkle Distributor",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/merkle_distributor/claim_locked.rs",
+  "source_code": "crates/cmds-solana/src/merkle_distributor/claim_locked.rs",
   "ports": {
     "inputs": [
       {
@@ -95,8 +95,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/merkle_distributor/claim_locked.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/merkle_distributor/claim_locked.jsonc",
+    "repo": "flow-backend"
   }
 }

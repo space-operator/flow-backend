@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize an integration vault for token storage",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_initialize_vault.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_initialize_vault.rs",
   "ports": {
     "inputs": [
       {
@@ -73,8 +73,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/initialize_vault.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/initialize_vault.jsonc",
+    "repo": "flow-backend"
   }
 }

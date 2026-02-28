@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Claim vested tokens from an escrow (v1, SPL Token only)",
   "author_handle": "spo",
-  "source_code": "lib/jup_lock/src/claim.rs",
+  "source_code": "crates/cmds-solana/src/jup_lock/claim.rs",
   "ports": {
     "inputs": [
       {
@@ -111,8 +111,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jup_lock/claim.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jup_lock/claim.jsonc",
+    "repo": "flow-backend"
   }
 }

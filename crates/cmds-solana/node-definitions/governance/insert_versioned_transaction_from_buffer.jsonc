@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Inserts a versioned transaction into a proposal from a previously populated buffer. v3.1.2 instruction index 32.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/insert_versioned_transaction_from_buffer.rs",
+  "source_code": "crates/cmds-solana/src/governance/insert_versioned_transaction_from_buffer.rs",
   "ports": {
     "inputs": [
       {
@@ -145,8 +145,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/insert_versioned_transaction_from_buffer.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/insert_versioned_transaction_from_buffer.jsonc",
+    "repo": "flow-backend"
   }
 }

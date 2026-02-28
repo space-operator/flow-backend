@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Generate a claim transaction for accumulated integration fees",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_claim_integration.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_claim_integration.rs",
   "ports": {
     "inputs": [
       {
@@ -65,8 +65,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/claim_integration.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/claim_integration.jsonc",
+    "repo": "flow-backend"
   }
 }

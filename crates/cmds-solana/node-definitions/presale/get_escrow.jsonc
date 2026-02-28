@@ -99,8 +99,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/presale/get_escrow.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/presale/get_escrow.jsonc",
+    "repo": "flow-backend"
   }
 }

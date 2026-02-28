@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Search for digital assets with multiple filter criteria using the DAS API.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/das/das_search_assets.rs",
+  "source_code": "crates/cmds-solana/src/das/das_search_assets.rs",
   "ports": {
     "inputs": [
       {
@@ -119,8 +119,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/das/search_assets.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/das/das_search_assets.jsonc",
+    "repo": "flow-backend"
   }
 }

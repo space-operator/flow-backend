@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Set stake delegated using Kfarms",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kfarms/set_stake_delegated.rs",
+  "source_code": "crates/cmds-solana/src/kfarms/set_stake_delegated.rs",
   "ports": {
     "inputs": [
       {
@@ -96,8 +96,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kfarms/set_stake_delegated.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kfarms/set_stake_delegated.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Flags a transaction and its parent proposal with error status. v3.1.2 instruction index 20.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/flag_transaction_error.rs",
+  "source_code": "crates/cmds-solana/src/governance/flag_transaction_error.rs",
   "ports": {
     "inputs": [
       {
@@ -94,8 +94,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/flag_transaction_error.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/flag_transaction_error.jsonc",
+    "repo": "flow-backend"
   }
 }

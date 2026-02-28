@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get historical APY data for a specific stablecoin",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_get_historical_apy.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_historical_apy.rs",
   "ports": {
     "inputs": [
       {
@@ -58,8 +58,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/get_historical_apy.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_historical_apy.jsonc",
+    "repo": "flow-backend"
   }
 }

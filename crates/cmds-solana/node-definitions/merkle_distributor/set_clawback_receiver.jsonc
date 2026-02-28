@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Set clawback receiver using Merkle Distributor",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/merkle_distributor/set_clawback_receiver.rs",
+  "source_code": "crates/cmds-solana/src/merkle_distributor/set_clawback_receiver.rs",
   "ports": {
     "inputs": [
       {
@@ -88,8 +88,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/merkle_distributor/set_clawback_receiver.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/merkle_distributor/set_clawback_receiver.jsonc",
+    "repo": "flow-backend"
   }
 }

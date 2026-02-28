@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Close a DAMM v2 operator account and reclaim rent SOL (admin only)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/close_operator_account.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/close_operator_account.rs",
   "ports": {
     "inputs": [
       {
@@ -88,8 +88,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/close_operator_account.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/close_operator_account.jsonc",
+    "repo": "flow-backend"
   }
 }

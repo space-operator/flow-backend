@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create a new Swig wallet through the Developer Portal API",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/swig/swig_create_wallet_api.rs",
+  "source_code": "crates/cmds-solana/src/swig/swig_create_wallet_api.rs",
   "ports": {
     "inputs": [
       {
@@ -99,8 +99,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/swig/create_wallet_api.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_create_wallet_api.jsonc",
+    "repo": "flow-backend"
   }
 }

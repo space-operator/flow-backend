@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Withdraw from referrer fees using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/withdraw_referrer_fees.rs",
+  "source_code": "crates/cmds-solana/src/klend/withdraw_referrer_fees.rs",
   "ports": {
     "inputs": [
       {
@@ -117,8 +117,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/withdraw_referrer_fees.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/withdraw_referrer_fees.jsonc",
+    "repo": "flow-backend"
   }
 }

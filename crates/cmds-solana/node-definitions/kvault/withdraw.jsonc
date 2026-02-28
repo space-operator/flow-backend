@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Withdraw from using Kvault",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kvault/withdraw.rs",
+  "source_code": "crates/cmds-solana/src/kvault/withdraw.rs",
   "ports": {
     "inputs": [
       {
@@ -100,8 +100,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kvault/withdraw.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kvault/withdraw.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Socialize Loss (Klend)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/socialize_loss.rs",
+  "source_code": "crates/cmds-solana/src/klend/socialize_loss.rs",
   "ports": {
     "inputs": [
       {
@@ -111,8 +111,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/socialize_loss.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/socialize_loss.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Anti join two DataFrames, keeping rows from the left that have no match in the right",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_anti_join.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_anti_join.rs",
   "ports": {
     "inputs": [
       {
@@ -71,8 +71,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/anti_join.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_anti_join.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Cast a column to a different data type (e.g., f64, i32, string, bool)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_cast.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_cast.rs",
   "ports": {
     "inputs": [
       {
@@ -70,8 +70,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/cast.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_cast.jsonc",
+    "repo": "flow-backend"
   }
 }

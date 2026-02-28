@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Map program IDs to DEX labels",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_program_id_to_label.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_program_id_to_label.rs",
   "ports": {
     "inputs": [
       {
@@ -50,8 +50,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_program_id_to_label.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_program_id_to_label.jsonc",
+    "repo": "flow-backend"
   }
 }

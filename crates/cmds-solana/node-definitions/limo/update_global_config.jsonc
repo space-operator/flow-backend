@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Update global config using Limo",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/limo/update_global_config.rs",
+  "source_code": "crates/cmds-solana/src/limo/update_global_config.rs",
   "ports": {
     "inputs": [
       {
@@ -95,8 +95,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/limo/update_global_config.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/limo/update_global_config.jsonc",
+    "repo": "flow-backend"
   }
 }

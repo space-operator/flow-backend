@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Take Order (Limo)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/limo/take_order.rs",
+  "source_code": "crates/cmds-solana/src/limo/take_order.rs",
   "ports": {
     "inputs": [
       {
@@ -216,8 +216,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/limo/take_order.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/limo/take_order.jsonc",
+    "repo": "flow-backend"
   }
 }

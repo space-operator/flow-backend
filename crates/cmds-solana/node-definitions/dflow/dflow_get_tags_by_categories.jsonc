@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get prediction market tags organized by category.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dflow/dflow_get_tags_by_categories.rs",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_tags_by_categories.rs",
   "ports": {
     "inputs": [
       {
@@ -51,8 +51,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dflow/get_tags_by_categories.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_tags_by_categories.jsonc",
+    "repo": "flow-backend"
   }
 }

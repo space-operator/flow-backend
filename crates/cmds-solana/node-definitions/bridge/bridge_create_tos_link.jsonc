@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Generate a Terms of Service acceptance link for a new customer",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_create_tos_link.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_create_tos_link.rs",
   "ports": {
     "inputs": [
       {
@@ -59,8 +59,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/create_tos_link.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_create_tos_link.jsonc",
+    "repo": "flow-backend"
   }
 }

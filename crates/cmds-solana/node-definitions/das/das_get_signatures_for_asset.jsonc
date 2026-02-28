@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fetch transaction signatures for a digital asset using the DAS API.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/das/das_get_signatures_for_asset.rs",
+  "source_code": "crates/cmds-solana/src/das/das_get_signatures_for_asset.rs",
   "ports": {
     "inputs": [
       {
@@ -90,8 +90,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/das/get_signatures_for_asset.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/das/das_get_signatures_for_asset.jsonc",
+    "repo": "flow-backend"
   }
 }

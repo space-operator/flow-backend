@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Refund Proposal Deposit (Governance)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/refund_proposal_deposit.rs",
+  "source_code": "crates/cmds-solana/src/governance/refund_proposal_deposit.rs",
   "ports": {
     "inputs": [
       {
@@ -84,8 +84,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/refund_proposal_deposit.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/refund_proposal_deposit.jsonc",
+    "repo": "flow-backend"
   }
 }

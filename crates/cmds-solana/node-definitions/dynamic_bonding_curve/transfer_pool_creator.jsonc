@@ -6,7 +6,7 @@
   "type": "native",
   "description": "transfer_pool_creator instruction for Dynamic Bonding Curve",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dynamic_bonding_curve/transfer_pool_creator.rs",
+  "source_code": "crates/cmds-solana/src/dynamic_bonding_curve/transfer_pool_creator.rs",
   "ports": {
     "inputs": [
       {
@@ -114,8 +114,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dynamic_bonding_curve/transfer_pool_creator.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dynamic_bonding_curve/transfer_pool_creator.jsonc",
+    "repo": "flow-backend"
   }
 }

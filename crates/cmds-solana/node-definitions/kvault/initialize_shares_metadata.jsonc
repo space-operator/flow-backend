@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize shares metadata using Kvault",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kvault/initialize_shares_metadata.rs",
+  "source_code": "crates/cmds-solana/src/kvault/initialize_shares_metadata.rs",
   "ports": {
     "inputs": [
       {
@@ -135,8 +135,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kvault/initialize_shares_metadata.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kvault/initialize_shares_metadata.jsonc",
+    "repo": "flow-backend"
   }
 }

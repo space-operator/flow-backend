@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Deposit or withdraw SOL using a Groth16 ZK proof. Positive ext_amount = deposit, negative = withdrawal.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/privacy_cash/transact.rs",
+  "source_code": "crates/cmds-solana/src/privacy_cash/transact.rs",
   "ports": {
     "inputs": [
       {
@@ -117,8 +117,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/privacy_cash/transact.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/privacy_cash/transact.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get latest exchange rates for all stablecoins",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_get_all_exchange_rates.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_all_exchange_rates.rs",
   "ports": {
     "inputs": [],
     "outputs": [
@@ -42,8 +42,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/get_all_exchange_rates.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_all_exchange_rates.jsonc",
+    "repo": "flow-backend"
   }
 }

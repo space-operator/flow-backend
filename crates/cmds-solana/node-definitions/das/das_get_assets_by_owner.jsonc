@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fetch all digital assets owned by a wallet address using the DAS API.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/das/das_get_assets_by_owner.rs",
+  "source_code": "crates/cmds-solana/src/das/das_get_assets_by_owner.rs",
   "ports": {
     "inputs": [
       {
@@ -107,8 +107,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/das/get_assets_by_owner.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/das/das_get_assets_by_owner.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Claim protocol fees from a DAMM v2 pool to treasury accounts",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/claim_protocol_fee.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/claim_protocol_fee.rs",
   "ports": {
     "inputs": [
       {
@@ -146,8 +146,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/claim_protocol_fee.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/claim_protocol_fee.jsonc",
+    "repo": "flow-backend"
   }
 }

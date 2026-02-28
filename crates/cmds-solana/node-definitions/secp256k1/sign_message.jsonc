@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Sign a message using secp256k1 ECDSA  This is a utility node that performs pure computation - no transaction submission.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/secp256k1/sign_message.rs",
+  "source_code": "crates/cmds-solana/src/secp256k1/sign_message.rs",
   "ports": {
     "inputs": [
       {
@@ -61,8 +61,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/secp256k1/sign_message.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/secp256k1/sign_message.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize fixed price presale args using Presale",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/presale/initialize_fixed_price_presale_args.rs",
+  "source_code": "crates/cmds-solana/src/presale/initialize_fixed_price_presale_args.rs",
   "ports": {
     "inputs": [
       {
@@ -129,8 +129,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/presale/initialize_fixed_price_presale_args.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/presale/initialize_fixed_price_presale_args.jsonc",
+    "repo": "flow-backend"
   }
 }

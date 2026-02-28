@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Record a pending payment transaction to credit an ArDrive Turbo account",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/ardrive/ardrive_post_balance.rs",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_post_balance.rs",
   "ports": {
     "inputs": [
       {
@@ -57,8 +57,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/ardrive/post_balance.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_post_balance.jsonc",
+    "repo": "flow-backend"
   }
 }

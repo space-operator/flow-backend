@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Revoke operator using Presale",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/presale/revoke_operator.rs",
+  "source_code": "crates/cmds-solana/src/presale/revoke_operator.rs",
   "ports": {
     "inputs": [
       {
@@ -80,8 +80,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/presale/revoke_operator.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/presale/revoke_operator.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Sponsor a Solana transaction via the Swig Paymaster (pays fees on behalf of the user)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/swig/swig_sponsor_transaction.rs",
+  "source_code": "crates/cmds-solana/src/swig/swig_sponsor_transaction.rs",
   "ports": {
     "inputs": [
       {
@@ -68,8 +68,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/swig/sponsor_transaction.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_sponsor_transaction.jsonc",
+    "repo": "flow-backend"
   }
 }

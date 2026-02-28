@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Invest using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/invest.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/invest.rs",
   "ports": {
     "inputs": [
       {
@@ -206,8 +206,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/invest.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/invest.jsonc",
+    "repo": "flow-backend"
   }
 }

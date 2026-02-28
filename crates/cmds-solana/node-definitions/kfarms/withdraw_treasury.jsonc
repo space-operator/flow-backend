@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Withdraw from treasury using Kfarms",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kfarms/withdraw_treasury.rs",
+  "source_code": "crates/cmds-solana/src/kfarms/withdraw_treasury.rs",
   "ports": {
     "inputs": [
       {
@@ -119,8 +119,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kfarms/withdraw_treasury.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kfarms/withdraw_treasury.jsonc",
+    "repo": "flow-backend"
   }
 }

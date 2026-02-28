@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Remove transaction using Governance",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/remove_transaction.rs",
+  "source_code": "crates/cmds-solana/src/governance/remove_transaction.rs",
   "ports": {
     "inputs": [
       {
@@ -105,8 +105,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/remove_transaction.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/remove_transaction.jsonc",
+    "repo": "flow-backend"
   }
 }

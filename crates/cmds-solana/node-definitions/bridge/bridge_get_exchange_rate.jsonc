@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get current exchange rate between two currencies",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_get_exchange_rate.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_get_exchange_rate.rs",
   "ports": {
     "inputs": [
       {
@@ -67,8 +67,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/get_exchange_rate.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_get_exchange_rate.jsonc",
+    "repo": "flow-backend"
   }
 }

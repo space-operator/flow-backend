@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Generate a mint transaction for an integration's branded token",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_mint_integration.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_mint_integration.rs",
   "ports": {
     "inputs": [
       {
@@ -81,8 +81,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/mint_integration.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/mint_integration.jsonc",
+    "repo": "flow-backend"
   }
 }

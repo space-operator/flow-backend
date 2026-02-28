@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize a new DAMM v2 constant product AMM pool with static config. Creates the pool, token vaults, and initial LP position with NFT-based position tracking.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/initialize_pool.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/initialize_pool.rs",
   "ports": {
     "inputs": [
       {
@@ -172,8 +172,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/initialize_pool.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/initialize_pool.jsonc",
+    "repo": "flow-backend"
   }
 }

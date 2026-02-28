@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Group a DataFrame by columns and apply aggregation functions (sum, mean, min, max, count, first, last, median, std, var)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_group_by.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_group_by.rs",
   "ports": {
     "inputs": [
       {
@@ -70,8 +70,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/group_by.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_group_by.jsonc",
+    "repo": "flow-backend"
   }
 }

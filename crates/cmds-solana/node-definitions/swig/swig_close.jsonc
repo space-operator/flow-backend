@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Close a Swig wallet and return all SOL to destination",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/swig/swig_close.rs",
+  "source_code": "crates/cmds-solana/src/swig/swig_close.rs",
   "ports": {
     "inputs": [
       {
@@ -97,8 +97,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/swig/close.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_close.jsonc",
+    "repo": "flow-backend"
   }
 }

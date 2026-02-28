@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Set realm config using Governance",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/set_realm_config.rs",
+  "source_code": "crates/cmds-solana/src/governance/set_realm_config.rs",
   "ports": {
     "inputs": [
       {
@@ -130,8 +130,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/set_realm_config.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/set_realm_config.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fetch a Swig policy by ID from the Developer Portal",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/swig/swig_get_policy.rs",
+  "source_code": "crates/cmds-solana/src/swig/swig_get_policy.rs",
   "ports": {
     "inputs": [
       {
@@ -57,8 +57,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/swig/get_policy.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_get_policy.jsonc",
+    "repo": "flow-backend"
   }
 }

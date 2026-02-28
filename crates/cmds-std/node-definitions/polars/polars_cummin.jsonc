@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Compute cumulative minimum of a column",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_cummin.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_cummin.rs",
   "ports": {
     "inputs": [
       {
@@ -73,8 +73,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/cummin.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_cummin.jsonc",
+    "repo": "flow-backend"
   }
 }

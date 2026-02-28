@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get the KYC link for an existing customer",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_get_customer_kyc_link.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_get_customer_kyc_link.rs",
   "ports": {
     "inputs": [
       {
@@ -60,8 +60,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/get_customer_kyc_link.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_get_customer_kyc_link.jsonc",
+    "repo": "flow-backend"
   }
 }

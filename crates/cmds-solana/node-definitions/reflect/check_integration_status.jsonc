@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Check if a branded stablecoin is a verified Reflect integration",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_check_integration_status.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_check_integration_status.rs",
   "ports": {
     "inputs": [
       {
@@ -58,8 +58,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/check_integration_status.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/check_integration_status.jsonc",
+    "repo": "flow-backend"
   }
 }

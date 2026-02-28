@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get delivery logs for a webhook",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_get_webhook_logs.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_get_webhook_logs.rs",
   "ports": {
     "inputs": [
       {
@@ -80,8 +80,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/get_webhook_logs.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_get_webhook_logs.jsonc",
+    "repo": "flow-backend"
   }
 }

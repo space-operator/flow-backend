@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize a DAMM v2 pool with a dynamic config that allows the pool creator authority to customize parameters.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/initialize_pool_with_dynamic_config.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/initialize_pool_with_dynamic_config.rs",
   "ports": {
     "inputs": [
       {
@@ -231,8 +231,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/initialize_pool_with_dynamic_config.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/initialize_pool_with_dynamic_config.jsonc",
+    "repo": "flow-backend"
   }
 }

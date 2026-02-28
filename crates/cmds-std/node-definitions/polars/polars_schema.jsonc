@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get the schema, column names, and data types of a DataFrame",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_schema.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_schema.rs",
   "ports": {
     "inputs": [
       {
@@ -58,8 +58,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/schema.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_schema.jsonc",
+    "repo": "flow-backend"
   }
 }

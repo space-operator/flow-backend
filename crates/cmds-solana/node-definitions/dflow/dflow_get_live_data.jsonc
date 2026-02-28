@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get live data by milestone IDs.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dflow/dflow_get_live_data.rs",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_live_data.rs",
   "ports": {
     "inputs": [
       {
@@ -59,8 +59,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dflow/get_live_data.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_live_data.jsonc",
+    "repo": "flow-backend"
   }
 }

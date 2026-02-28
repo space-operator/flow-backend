@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create native treasury using Governance",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/create_native_treasury.rs",
+  "source_code": "crates/cmds-solana/src/governance/create_native_treasury.rs",
   "ports": {
     "inputs": [
       {
@@ -75,8 +75,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/create_native_treasury.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/create_native_treasury.jsonc",
+    "repo": "flow-backend"
   }
 }

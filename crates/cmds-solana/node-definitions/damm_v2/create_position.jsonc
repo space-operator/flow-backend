@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create a new LP position for a DAMM v2 pool. Mints a Token-2022 NFT to represent the position.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/create_position.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/create_position.rs",
   "ports": {
     "inputs": [
       {
@@ -97,8 +97,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/create_position.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/create_position.jsonc",
+    "repo": "flow-backend"
   }
 }

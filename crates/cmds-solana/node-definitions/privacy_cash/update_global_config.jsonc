@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Update deposit/withdrawal fee rates and error margin (basis points, 0-10000). Admin only.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/privacy_cash/update_global_config.rs",
+  "source_code": "crates/cmds-solana/src/privacy_cash/update_global_config.rs",
   "ports": {
     "inputs": [
       {
@@ -92,8 +92,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/privacy_cash/update_global_config.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/privacy_cash/update_global_config.jsonc",
+    "repo": "flow-backend"
   }
 }

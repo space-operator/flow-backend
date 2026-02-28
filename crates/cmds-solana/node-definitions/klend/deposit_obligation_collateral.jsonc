@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Deposit into obligation collateral using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/deposit_obligation_collateral.rs",
+  "source_code": "crates/cmds-solana/src/klend/deposit_obligation_collateral.rs",
   "ports": {
     "inputs": [
       {
@@ -128,8 +128,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/deposit_obligation_collateral.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/deposit_obligation_collateral.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create a temporary session key for delegated authority",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/swig/swig_create_session.rs",
+  "source_code": "crates/cmds-solana/src/swig/swig_create_session.rs",
   "ports": {
     "inputs": [
       {
@@ -109,8 +109,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/swig/create_session.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_create_session.jsonc",
+    "repo": "flow-backend"
   }
 }

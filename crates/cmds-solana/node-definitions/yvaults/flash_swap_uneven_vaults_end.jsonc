@@ -6,7 +6,7 @@
   "type": "native",
   "description": "End of Flash swap uneven vaults.  See [`flash_swap_uneven_vaults_start`] for details.  Warning: This instruction is allowed to be used independently from `FlashSwapUnevenVaultsStart` and shall not perform any operation that can be exploited when used alone.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/flash_swap_uneven_vaults_end.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/flash_swap_uneven_vaults_end.rs",
   "ports": {
     "inputs": [
       {
@@ -194,8 +194,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/flash_swap_uneven_vaults_end.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/flash_swap_uneven_vaults_end.jsonc",
+    "repo": "flow-backend"
   }
 }

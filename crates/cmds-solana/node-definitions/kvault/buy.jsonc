@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Buy (Kvault)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kvault/buy.rs",
+  "source_code": "crates/cmds-solana/src/kvault/buy.rs",
   "ports": {
     "inputs": [
       {
@@ -159,8 +159,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kvault/buy.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kvault/buy.jsonc",
+    "repo": "flow-backend"
   }
 }

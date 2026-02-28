@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Update admin using Kvault",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kvault/update_admin.rs",
+  "source_code": "crates/cmds-solana/src/kvault/update_admin.rs",
   "ports": {
     "inputs": [
       {
@@ -78,8 +78,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kvault/update_admin.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kvault/update_admin.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create governance using Governance",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/create_governance.rs",
+  "source_code": "crates/cmds-solana/src/governance/create_governance.rs",
   "ports": {
     "inputs": [
       {
@@ -112,8 +112,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/create_governance.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/create_governance.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Derives an Ethereum address from an uncompressed secp256k1 public key by computing its Keccak256 hash. This is a pure computation node - no transaction is submitted.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/secp256k1/eth_address_from_pubkey.rs",
+  "source_code": "crates/cmds-solana/src/secp256k1/eth_address_from_pubkey.rs",
   "ports": {
     "inputs": [
       {
@@ -50,8 +50,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/secp256k1/eth_address_from_pubkey.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/secp256k1/eth_address_from_pubkey.jsonc",
+    "repo": "flow-backend"
   }
 }

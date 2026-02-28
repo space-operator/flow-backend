@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Derive the Swig wallet address PDA from the Swig account",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/swig/swig_find_wallet_address.rs",
+  "source_code": "crates/cmds-solana/src/swig/swig_find_wallet_address.rs",
   "ports": {
     "inputs": [
       {
@@ -54,8 +54,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/swig/find_wallet_address.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_find_wallet_address.jsonc",
+    "repo": "flow-backend"
   }
 }

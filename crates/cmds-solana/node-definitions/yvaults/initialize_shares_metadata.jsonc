@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize shares metadata using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/initialize_shares_metadata.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/initialize_shares_metadata.rs",
   "ports": {
     "inputs": [
       {
@@ -144,8 +144,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/initialize_shares_metadata.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/initialize_shares_metadata.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Deposit into using Kvault",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kvault/deposit.rs",
+  "source_code": "crates/cmds-solana/src/kvault/deposit.rs",
   "ports": {
     "inputs": [
       {
@@ -159,8 +159,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kvault/deposit.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kvault/deposit.jsonc",
+    "repo": "flow-backend"
   }
 }

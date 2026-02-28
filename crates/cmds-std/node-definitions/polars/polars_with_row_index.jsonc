@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Add a row index column to a DataFrame with a configurable name and starting offset",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_with_row_index.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_with_row_index.rs",
   "ports": {
     "inputs": [
       {
@@ -76,8 +76,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/with_row_index.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_with_row_index.jsonc",
+    "repo": "flow-backend"
   }
 }

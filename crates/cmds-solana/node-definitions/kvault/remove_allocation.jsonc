@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Remove allocation using Kvault",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/kvault/remove_allocation.rs",
+  "source_code": "crates/cmds-solana/src/kvault/remove_allocation.rs",
   "ports": {
     "inputs": [
       {
@@ -86,8 +86,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/kvault/remove_allocation.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kvault/remove_allocation.jsonc",
+    "repo": "flow-backend"
   }
 }

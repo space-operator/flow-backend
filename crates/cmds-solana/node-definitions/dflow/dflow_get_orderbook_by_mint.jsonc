@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get orderbook depth for a prediction market by mint address.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dflow/dflow_get_orderbook_by_mint.rs",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_orderbook_by_mint.rs",
   "ports": {
     "inputs": [
       {
@@ -59,8 +59,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dflow/get_orderbook_by_mint.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_orderbook_by_mint.jsonc",
+    "repo": "flow-backend"
   }
 }

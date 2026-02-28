@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Open liquidity position using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/open_liquidity_position.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/open_liquidity_position.rs",
   "ports": {
     "inputs": [
       {
@@ -273,8 +273,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/open_liquidity_position.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/open_liquidity_position.jsonc",
+    "repo": "flow-backend"
   }
 }

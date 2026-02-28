@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create merkle root config using Presale",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/presale/create_merkle_root_config.rs",
+  "source_code": "crates/cmds-solana/src/presale/create_merkle_root_config.rs",
   "ports": {
     "inputs": [
       {
@@ -106,8 +106,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/presale/create_merkle_root_config.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/presale/create_merkle_root_config.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Remove queue authority v0 using Tuktuk",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/tuktuk/remove_queue_authority_v0.rs",
+  "source_code": "crates/cmds-solana/src/tuktuk/remove_queue_authority_v0.rs",
   "ports": {
     "inputs": [
       {
@@ -106,7 +106,7 @@
   },
   "internal": {
     "source": "lib",
-    "source_code": "lib/tuktuk/node-definitions/tuktuk/remove_queue_authority_v0.jsonc",
-    "repo": "node-builder"
+    "source_code": "crates/cmds-solana/node-definitions/tuktuk/remove_queue_authority_v0.jsonc",
+    "repo": "flow-backend"
   }
 }

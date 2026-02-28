@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Delete an associated person",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_delete_associated_person.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_delete_associated_person.rs",
   "ports": {
     "inputs": [
       {
@@ -67,8 +67,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/delete_associated_person.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_delete_associated_person.jsonc",
+    "repo": "flow-backend"
   }
 }

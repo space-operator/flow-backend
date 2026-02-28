@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Claim reward tokens from a DAMM v2 LP position. Supports up to 2 reward token types per pool.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/claim_reward.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/claim_reward.rs",
   "ports": {
     "inputs": [
       {
@@ -125,8 +125,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/claim_reward.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/claim_reward.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Attach metadata (name, description, emails) to a vesting escrow",
   "author_handle": "spo",
-  "source_code": "lib/jup_lock/src/create_vesting_escrow_metadata.rs",
+  "source_code": "crates/cmds-solana/src/jup_lock/create_vesting_escrow_metadata.rs",
   "ports": {
     "inputs": [
       {
@@ -125,8 +125,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jup_lock/create_vesting_escrow_metadata.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jup_lock/create_vesting_escrow_metadata.jsonc",
+    "repo": "flow-backend"
   }
 }

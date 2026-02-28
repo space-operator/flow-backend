@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Withdraw ineligible (unearned) reward tokens from a DAMM v2 pool reward vault",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/withdraw_ineligible_reward.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/withdraw_ineligible_reward.rs",
   "ports": {
     "inputs": [
       {
@@ -109,8 +109,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/withdraw_ineligible_reward.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/withdraw_ineligible_reward.jsonc",
+    "repo": "flow-backend"
   }
 }

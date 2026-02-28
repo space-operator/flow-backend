@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Transfer mint authority of an integration to a new address",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_transfer_authority.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_transfer_authority.rs",
   "ports": {
     "inputs": [
       {
@@ -73,8 +73,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/transfer_authority.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/transfer_authority.jsonc",
+    "repo": "flow-backend"
   }
 }

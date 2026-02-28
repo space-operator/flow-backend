@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Craft an unsigned Send transaction",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_send_craft_send.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_send_craft_send.rs",
   "ports": {
     "inputs": [
       {
@@ -81,8 +81,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_send_craft_send.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_send_craft_send.jsonc",
+    "repo": "flow-backend"
   }
 }

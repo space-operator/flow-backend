@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Check if a wallet address has been KYC verified.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dflow/dflow_verify_address.rs",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_verify_address.rs",
   "ports": {
     "inputs": [
       {
@@ -49,8 +49,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dflow/verify_address.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_verify_address.jsonc",
+    "repo": "flow-backend"
   }
 }

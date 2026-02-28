@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Flash Borrow Reserve Liquidity (Klend)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/flash_borrow_reserve_liquidity.rs",
+  "source_code": "crates/cmds-solana/src/klend/flash_borrow_reserve_liquidity.rs",
   "ports": {
     "inputs": [
       {
@@ -134,8 +134,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/flash_borrow_reserve_liquidity.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/flash_borrow_reserve_liquidity.jsonc",
+    "repo": "flow-backend"
   }
 }

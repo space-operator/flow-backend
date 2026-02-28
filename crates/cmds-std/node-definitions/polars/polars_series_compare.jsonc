@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Element-wise comparison of two Series (eq, neq, gt, gte, lt, lte)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_series_compare.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_series_compare.rs",
   "ports": {
     "inputs": [
       {
@@ -75,8 +75,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/series_compare.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_series_compare.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get leaderboard rankings",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_prediction_get_leaderboards.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_prediction_get_leaderboards.rs",
   "ports": {
     "inputs": [
       {
@@ -65,8 +65,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_prediction_get_leaderboards.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_prediction_get_leaderboards.jsonc",
+    "repo": "flow-backend"
   }
 }

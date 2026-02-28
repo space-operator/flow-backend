@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fetch the Merkle proof for a compressed NFT using the DAS API.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/das/das_get_asset_proof.rs",
+  "source_code": "crates/cmds-solana/src/das/das_get_asset_proof.rs",
   "ports": {
     "inputs": [
       {
@@ -74,8 +74,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/das/get_asset_proof.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/das/das_get_asset_proof.jsonc",
+    "repo": "flow-backend"
   }
 }

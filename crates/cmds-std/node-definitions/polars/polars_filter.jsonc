@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Filter DataFrame rows by comparing a column against a value using an operator (eq, neq, gt, gte, lt, lte, is_null, is_not_null, contains, is_in)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_filter.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_filter.rs",
   "ports": {
     "inputs": [
       {
@@ -81,8 +81,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/filter.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_filter.jsonc",
+    "repo": "flow-backend"
   }
 }

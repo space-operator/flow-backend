@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Swap via rewards using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/swap_rewards.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/swap_rewards.rs",
   "ports": {
     "inputs": [
       {
@@ -249,8 +249,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/swap_rewards.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/swap_rewards.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get activity history for a static memo",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_get_static_memo_history.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_get_static_memo_history.rs",
   "ports": {
     "inputs": [
       {
@@ -89,8 +89,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/get_static_memo_history.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_get_static_memo_history.jsonc",
+    "repo": "flow-backend"
   }
 }

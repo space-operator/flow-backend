@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Remove duplicate rows from a DataFrame, optionally considering only specific columns",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_unique.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_unique.rs",
   "ports": {
     "inputs": [
       {
@@ -72,8 +72,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/unique.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_unique.jsonc",
+    "repo": "flow-backend"
   }
 }

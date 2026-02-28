@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Post Message (Governance)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/post_message.rs",
+  "source_code": "crates/cmds-solana/src/governance/post_message.rs",
   "ports": {
     "inputs": [
       {
@@ -133,8 +133,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/post_message.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/post_message.jsonc",
+    "repo": "flow-backend"
   }
 }

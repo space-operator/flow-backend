@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create a liquidation address for a customer",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_create_liquidation_address.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_create_liquidation_address.rs",
   "ports": {
     "inputs": [
       {
@@ -67,8 +67,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/create_liquidation_address.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_create_liquidation_address.jsonc",
+    "repo": "flow-backend"
   }
 }

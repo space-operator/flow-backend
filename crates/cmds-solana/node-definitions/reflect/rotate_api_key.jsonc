@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Rotate the API key for an integration (requires cryptographic signature)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_rotate_api_key.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_rotate_api_key.rs",
   "ports": {
     "inputs": [
       {
@@ -82,8 +82,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/rotate_api_key.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/rotate_api_key.jsonc",
+    "repo": "flow-backend"
   }
 }

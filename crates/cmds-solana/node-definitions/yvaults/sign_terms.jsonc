@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Sign terms using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/sign_terms.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/sign_terms.rs",
   "ports": {
     "inputs": [
       {
@@ -87,8 +87,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/sign_terms.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/sign_terms.jsonc",
+    "repo": "flow-backend"
   }
 }

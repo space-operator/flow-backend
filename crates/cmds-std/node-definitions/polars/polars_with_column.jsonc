@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Add or replace a column in a DataFrame using a Series",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_with_column.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_with_column.rs",
   "ports": {
     "inputs": [
       {
@@ -62,8 +62,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/with_column.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_with_column.jsonc",
+    "repo": "flow-backend"
   }
 }

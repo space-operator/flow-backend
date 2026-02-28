@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Refresh vesting schedules for a DAMM v2 position. Processes pending vesting unlocks and updates position state.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/refresh_vesting.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/refresh_vesting.rs",
   "ports": {
     "inputs": [
       {
@@ -88,8 +88,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/refresh_vesting.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/refresh_vesting.jsonc",
+    "repo": "flow-backend"
   }
 }

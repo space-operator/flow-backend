@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Closes a transaction buffer account and returns rent to beneficiary. v3.1.2 instruction index 31.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/close_transaction_buffer.rs",
+  "source_code": "crates/cmds-solana/src/governance/close_transaction_buffer.rs",
   "ports": {
     "inputs": [
       {
@@ -119,8 +119,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/close_transaction_buffer.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/close_transaction_buffer.jsonc",
+    "repo": "flow-backend"
   }
 }

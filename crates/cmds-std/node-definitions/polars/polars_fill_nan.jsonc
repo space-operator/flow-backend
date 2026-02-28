@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Replace NaN values in a floating-point column with a specified value",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_fill_nan.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_fill_nan.rs",
   "ports": {
     "inputs": [
       {
@@ -75,8 +75,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/fill_nan.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_fill_nan.jsonc",
+    "repo": "flow-backend"
   }
 }

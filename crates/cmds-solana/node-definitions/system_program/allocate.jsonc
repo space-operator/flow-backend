@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Allocate space for an account without funding or assigning an owner",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/system_program/allocate.rs",
+  "source_code": "crates/cmds-solana/src/system_program/allocate.rs",
   "ports": {
     "inputs": [
       {
@@ -79,8 +79,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/system_program/allocate.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/system_program/allocate.jsonc",
+    "repo": "flow-backend"
   }
 }

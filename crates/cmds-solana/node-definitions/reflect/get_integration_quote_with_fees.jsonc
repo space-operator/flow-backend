@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get a mint or redeem quote with USDC input/output for an integration flow",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_get_integration_quote_with_fees.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_integration_quote_with_fees.rs",
   "ports": {
     "inputs": [
       {
@@ -83,8 +83,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/get_integration_quote_with_fees.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_integration_quote_with_fees.jsonc",
+    "repo": "flow-backend"
   }
 }

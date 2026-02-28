@@ -6,7 +6,7 @@
   "type": "native",
   "description": "migrate_meteora_damm_lock_lp_token instruction for Dynamic Bonding Curve",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dynamic_bonding_curve/migrate_meteora_damm_lock_lp_token.rs",
+  "source_code": "crates/cmds-solana/src/dynamic_bonding_curve/migrate_meteora_damm_lock_lp_token.rs",
   "ports": {
     "inputs": [
       {
@@ -205,8 +205,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dynamic_bonding_curve/migrate_meteora_damm_lock_lp_token.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dynamic_bonding_curve/migrate_meteora_damm_lock_lp_token.jsonc",
+    "repo": "flow-backend"
   }
 }

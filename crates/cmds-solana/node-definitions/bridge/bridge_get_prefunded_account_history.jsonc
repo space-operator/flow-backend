@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get funding history for a prefunded account",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_get_prefunded_account_history.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_get_prefunded_account_history.rs",
   "ports": {
     "inputs": [
       {
@@ -81,8 +81,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/get_prefunded_account_history.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_get_prefunded_account_history.jsonc",
+    "repo": "flow-backend"
   }
 }

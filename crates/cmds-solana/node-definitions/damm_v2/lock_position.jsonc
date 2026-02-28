@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Lock a DAMM v2 LP position with a vesting schedule. Creates an external vesting account with cliff and periodic unlocks.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/lock_position.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/lock_position.rs",
   "ports": {
     "inputs": [
       {
@@ -136,8 +136,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/lock_position.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/lock_position.jsonc",
+    "repo": "flow-backend"
   }
 }

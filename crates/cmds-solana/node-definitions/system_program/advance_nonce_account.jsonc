@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Advance the value of a durable transaction nonce",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/system_program/advance_nonce_account.rs",
+  "source_code": "crates/cmds-solana/src/system_program/advance_nonce_account.rs",
   "ports": {
     "inputs": [
       {
@@ -81,8 +81,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/system_program/advance_nonce_account.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/system_program/advance_nonce_account.jsonc",
+    "repo": "flow-backend"
   }
 }

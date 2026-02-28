@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Orca Swap (Yvaults)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/orca_swap.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/orca_swap.rs",
   "ports": {
     "inputs": [
       {
@@ -199,8 +199,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/orca_swap.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/orca_swap.jsonc",
+    "repo": "flow-backend"
   }
 }

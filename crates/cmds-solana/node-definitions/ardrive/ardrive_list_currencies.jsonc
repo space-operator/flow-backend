@@ -6,7 +6,7 @@
   "type": "native",
   "description": "List supported currencies with payment limits and suggested amounts",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/ardrive/ardrive_list_currencies.rs",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_list_currencies.rs",
   "ports": {
     "inputs": [],
     "outputs": [
@@ -40,8 +40,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/ardrive/list_currencies.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_list_currencies.jsonc",
+    "repo": "flow-backend"
   }
 }

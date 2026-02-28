@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get a price quote for a mint or redeem operation",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_get_mint_burn_quote.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_mint_burn_quote.rs",
   "ports": {
     "inputs": [
       {
@@ -67,8 +67,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/get_mint_burn_quote.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_mint_burn_quote.jsonc",
+    "repo": "flow-backend"
   }
 }

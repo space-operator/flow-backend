@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Add a deposit address to a card account",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_add_card_deposit_address.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_add_card_deposit_address.rs",
   "ports": {
     "inputs": [
       {
@@ -76,8 +76,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/add_card_deposit_address.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_add_card_deposit_address.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fund an ArDrive Turbo account by sending SOL to the Turbo payment address. Optionally direct credits to a different wallet via memo.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/ardrive/turbo_fund_account.rs",
+  "source_code": "crates/cmds-solana/src/ardrive/turbo_fund_account.rs",
   "ports": {
     "inputs": [
       {
@@ -86,8 +86,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/ardrive/turbo_fund_account.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/turbo_fund_account.jsonc",
+    "repo": "flow-backend"
   }
 }

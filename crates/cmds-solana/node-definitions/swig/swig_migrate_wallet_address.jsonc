@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Migrate a Swig account to support the V2 wallet address PDA scheme",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/swig/swig_migrate_wallet_address.rs",
+  "source_code": "crates/cmds-solana/src/swig/swig_migrate_wallet_address.rs",
   "ports": {
     "inputs": [
       {
@@ -86,8 +86,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/swig/migrate_wallet_address.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_migrate_wallet_address.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Executive Withdraw (Yvaults)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/executive_withdraw.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/executive_withdraw.rs",
   "ports": {
     "inputs": [
       {
@@ -223,8 +223,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/executive_withdraw.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/executive_withdraw.jsonc",
+    "repo": "flow-backend"
   }
 }

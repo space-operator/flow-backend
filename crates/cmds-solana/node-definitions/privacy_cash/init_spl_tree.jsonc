@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize a new merkle tree for a specific SPL token mint. Admin only.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/privacy_cash/init_spl_tree.rs",
+  "source_code": "crates/cmds-solana/src/privacy_cash/init_spl_tree.rs",
   "ports": {
     "inputs": [
       {
@@ -92,8 +92,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/privacy_cash/init_spl_tree.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/privacy_cash/init_spl_tree.jsonc",
+    "repo": "flow-backend"
   }
 }

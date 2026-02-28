@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get all protocol events associated with a signer address",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_get_events_by_signer.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_events_by_signer.rs",
   "ports": {
     "inputs": [
       {
@@ -50,8 +50,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/get_events_by_signer.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_events_by_signer.jsonc",
+    "repo": "flow-backend"
   }
 }

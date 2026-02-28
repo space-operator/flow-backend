@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Remove ALL unlocked liquidity from a DAMM v2 position at once.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/damm_v2/remove_all_liquidity.rs",
+  "source_code": "crates/cmds-solana/src/damm_v2/remove_all_liquidity.rs",
   "ports": {
     "inputs": [
       {
@@ -147,8 +147,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/damm_v2/remove_all_liquidity.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/remove_all_liquidity.jsonc",
+    "repo": "flow-backend"
   }
 }

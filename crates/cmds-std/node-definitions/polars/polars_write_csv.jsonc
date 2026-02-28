@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Serialize a DataFrame to CSV text",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_write_csv.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_write_csv.rs",
   "ports": {
     "inputs": [
       {
@@ -70,8 +70,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/write_csv.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_write_csv.jsonc",
+    "repo": "flow-backend"
   }
 }

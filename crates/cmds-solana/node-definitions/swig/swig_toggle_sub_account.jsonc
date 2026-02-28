@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Enable or disable a Swig sub-account",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/swig/swig_toggle_sub_account.rs",
+  "source_code": "crates/cmds-solana/src/swig/swig_toggle_sub_account.rs",
   "ports": {
     "inputs": [
       {
@@ -115,8 +115,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/swig/toggle_sub_account.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_toggle_sub_account.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get content for trending tokens",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/jupiter/jupiter_tokens_content_cooking.rs",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_tokens_content_cooking.rs",
   "ports": {
     "inputs": [
       {
@@ -51,8 +51,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/jupiter/jupiter_tokens_content_cooking.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_tokens_content_cooking.jsonc",
+    "repo": "flow-backend"
   }
 }

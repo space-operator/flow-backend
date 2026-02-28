@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize farms for reserve using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/init_farms_for_reserve.rs",
+  "source_code": "crates/cmds-solana/src/klend/init_farms_for_reserve.rs",
   "ports": {
     "inputs": [
       {
@@ -133,8 +133,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/init_farms_for_reserve.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/init_farms_for_reserve.jsonc",
+    "repo": "flow-backend"
   }
 }

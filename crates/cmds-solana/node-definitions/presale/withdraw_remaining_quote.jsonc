@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Withdraw from remaining quote using Presale",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/presale/withdraw_remaining_quote.rs",
+  "source_code": "crates/cmds-solana/src/presale/withdraw_remaining_quote.rs",
   "ports": {
     "inputs": [
       {
@@ -128,8 +128,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/presale/withdraw_remaining_quote.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/presale/withdraw_remaining_quote.jsonc",
+    "repo": "flow-backend"
   }
 }

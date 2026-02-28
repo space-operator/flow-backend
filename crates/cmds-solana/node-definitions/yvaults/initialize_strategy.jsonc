@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize strategy using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/initialize_strategy.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/initialize_strategy.rs",
   "ports": {
     "inputs": [
       {
@@ -199,8 +199,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/initialize_strategy.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/initialize_strategy.jsonc",
+    "repo": "flow-backend"
   }
 }

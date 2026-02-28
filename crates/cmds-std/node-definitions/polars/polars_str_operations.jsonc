@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Apply string operations to a column (contains, starts_with, ends_with, replace, to_lowercase, to_uppercase, strip, len)",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_str_operations.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_str_operations.rs",
   "ports": {
     "inputs": [
       {
@@ -89,8 +89,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/str_operations.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_str_operations.jsonc",
+    "repo": "flow-backend"
   }
 }

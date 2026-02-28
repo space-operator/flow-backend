@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Retrieve a virtual account by ID",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_get_virtual_account.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_get_virtual_account.rs",
   "ports": {
     "inputs": [
       {
@@ -67,8 +67,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/get_virtual_account.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_get_virtual_account.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get recent protocol events across all users",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/reflect/reflect_get_recent_events.rs",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_recent_events.rs",
   "ports": {
     "inputs": [
       {
@@ -66,8 +66,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/reflect/get_recent_events.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_recent_events.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Exchange a Plaid public token for an access token",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/bridge/bridge_exchange_plaid_token.rs",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_exchange_plaid_token.rs",
   "ports": {
     "inputs": [
       {
@@ -59,8 +59,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/bridge/exchange_plaid_token.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_exchange_plaid_token.jsonc",
+    "repo": "flow-backend"
   }
 }

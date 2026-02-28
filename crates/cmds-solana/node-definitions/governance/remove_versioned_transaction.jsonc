@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Removes a versioned transaction from a proposal and returns rent to beneficiary. v3.1.2 instruction index 35.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/remove_versioned_transaction.rs",
+  "source_code": "crates/cmds-solana/src/governance/remove_versioned_transaction.rs",
   "ports": {
     "inputs": [
       {
@@ -102,8 +102,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/remove_versioned_transaction.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/remove_versioned_transaction.jsonc",
+    "repo": "flow-backend"
   }
 }

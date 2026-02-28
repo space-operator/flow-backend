@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Withdraw from from treasury using Yvaults",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/withdraw_from_treasury.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/withdraw_from_treasury.rs",
   "ports": {
     "inputs": [
       {
@@ -117,8 +117,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/withdraw_from_treasury.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/withdraw_from_treasury.jsonc",
+    "repo": "flow-backend"
   }
 }

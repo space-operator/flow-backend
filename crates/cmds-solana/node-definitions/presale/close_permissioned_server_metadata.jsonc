@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Close permissioned server metadata using Presale",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/presale/close_permissioned_server_metadata.rs",
+  "source_code": "crates/cmds-solana/src/presale/close_permissioned_server_metadata.rs",
   "ports": {
     "inputs": [
       {
@@ -98,8 +98,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/presale/close_permissioned_server_metadata.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/presale/close_permissioned_server_metadata.jsonc",
+    "repo": "flow-backend"
   }
 }

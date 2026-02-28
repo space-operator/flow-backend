@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Fill null values in a column using a strategy (forward, backward, mean, min, max, zero, one) or a specific value",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/polars/polars_fill_null.rs",
+  "source_code": "crates/cmds-std/src/polars/polars_fill_null.rs",
   "ports": {
     "inputs": [
       {
@@ -81,8 +81,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/polars/fill_null.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_fill_null.jsonc",
+    "repo": "flow-backend"
   }
 }

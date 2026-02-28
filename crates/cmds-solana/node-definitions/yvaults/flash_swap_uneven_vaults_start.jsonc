@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Start of a Flash swap uneven vaults.  This needs to be the first instruction of the transaction or preceded only by a ComputeBudget.  This ix has to be paired with a `flash_swap_uneven_vaults_end` (`FlashSwapUnevenVaultsEnd`) as the last instruction of the transaction. No other instruction targeted the program is allowed. The instructions between the start and end instructions are expected to perform the swap.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/yvaults/flash_swap_uneven_vaults_start.rs",
+  "source_code": "crates/cmds-solana/src/yvaults/flash_swap_uneven_vaults_start.rs",
   "ports": {
     "inputs": [
       {
@@ -186,8 +186,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/yvaults/flash_swap_uneven_vaults_start.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/flash_swap_uneven_vaults_start.jsonc",
+    "repo": "flow-backend"
   }
 }

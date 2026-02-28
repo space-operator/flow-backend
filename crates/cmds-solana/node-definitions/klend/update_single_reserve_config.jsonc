@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Update single reserve config using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/update_single_reserve_config.rs",
+  "source_code": "crates/cmds-solana/src/klend/update_single_reserve_config.rs",
   "ports": {
     "inputs": [
       {
@@ -105,8 +105,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/update_single_reserve_config.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/update_single_reserve_config.jsonc",
+    "repo": "flow-backend"
   }
 }

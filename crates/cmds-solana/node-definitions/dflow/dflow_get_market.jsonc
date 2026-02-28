@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get a single prediction market by ticker ID.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dflow/dflow_get_market.rs",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_market.rs",
   "ports": {
     "inputs": [
       {
@@ -58,8 +58,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dflow/get_market.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_market.jsonc",
+    "repo": "flow-backend"
   }
 }

@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Inserts a versioned transaction into a proposal with the transaction message provided directly. v3.1.2 instruction index 33.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/governance/insert_versioned_transaction.rs",
+  "source_code": "crates/cmds-solana/src/governance/insert_versioned_transaction.rs",
   "ports": {
     "inputs": [
       {
@@ -135,8 +135,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/governance/insert_versioned_transaction.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/insert_versioned_transaction.jsonc",
+    "repo": "flow-backend"
   }
 }

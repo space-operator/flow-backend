@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Get conversion rates for 1 GiB storage cost across all supported currencies",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/ardrive/ardrive_get_rates.rs",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_get_rates.rs",
   "ports": {
     "inputs": [],
     "outputs": [
@@ -40,8 +40,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/ardrive/get_rates.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_get_rates.jsonc",
+    "repo": "flow-backend"
   }
 }

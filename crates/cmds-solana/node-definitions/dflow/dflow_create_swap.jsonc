@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Create an imperative swap transaction from a quote response.",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/dflow/dflow_create_swap.rs",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_create_swap.rs",
   "ports": {
     "inputs": [
       {
@@ -99,8 +99,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/dflow/create_swap.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_create_swap.jsonc",
+    "repo": "flow-backend"
   }
 }

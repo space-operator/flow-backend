@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Withdraw from host tip using Limo",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/limo/withdraw_host_tip.rs",
+  "source_code": "crates/cmds-solana/src/limo/withdraw_host_tip.rs",
   "ports": {
     "inputs": [
       {
@@ -87,8 +87,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/limo/withdraw_host_tip.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/limo/withdraw_host_tip.jsonc",
+    "repo": "flow-backend"
   }
 }

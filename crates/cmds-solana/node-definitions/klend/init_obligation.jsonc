@@ -6,7 +6,7 @@
   "type": "native",
   "description": "Initialize obligation using Klend",
   "author_handle": "spo",
-  "source_code": "private-cmds/src/klend/init_obligation.rs",
+  "source_code": "crates/cmds-solana/src/klend/init_obligation.rs",
   "ports": {
     "inputs": [
       {
@@ -121,8 +121,8 @@
     "source_repo": null
   },
   "internal": {
-    "source": "private-cmds",
-    "source_code": "private-cmds/node-definitions/klend/init_obligation.jsonc",
-    "repo": "node-builder"
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/init_obligation.jsonc",
+    "repo": "flow-backend"
   }
 }
