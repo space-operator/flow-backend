@@ -1,0 +1,75 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "switchboard_randomness_init",
+  "prefix": "switchboard",
+  "description": "Create a new Switchboard randomness account for verifiable random number generation. This is the first step of the commit-reveal VRF flow.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/switchboard/randomness_init.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees and rent"
+      },
+      {
+        "name": "queue",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Switchboard oracle queue to associate with this randomness account"
+      },
+      {
+        "name": "randomness_account",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "tooltip": "Keypair for the new randomness account (will be created)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "tooltip": "Submit transaction to the network (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "randomness_pubkey",
+        "type": "pubkey",
+        "tooltip": "Public key of the created randomness account"
+      },
+      {
+        "name": "reward_escrow",
+        "type": "pubkey",
+        "tooltip": "Associated token account for oracle rewards"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Switchboard",
+    "program": "switchboard",
+    "category": "oracle",
+    "tags": ["oracle", "switchboard", "randomness", "vrf", "init"]
+  },
+  "external_version": {
+    "program_id": "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/switchboard/switchboard_randomness_init.jsonc",
+    "repo": "flow-backend"
+  }
+}

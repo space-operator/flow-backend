@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "switchboard_randomness_commit",
+  "prefix": "switchboard",
+  "description": "Commit to Switchboard randomness. Locks in the current slot+1 slothash as the randomness seed. Step 2 of the VRF flow (after init, before reveal).",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/switchboard/randomness_commit.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "randomness_account",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Switchboard randomness account (created via randomness_init)"
+      },
+      {
+        "name": "queue",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Switchboard oracle queue"
+      },
+      {
+        "name": "oracle",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Oracle to assign for randomness generation. Obtain from the queue's oracle list."
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "tooltip": "Authority of the randomness account (must sign)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "tooltip": "Submit transaction to the network (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Switchboard",
+    "program": "switchboard",
+    "category": "oracle",
+    "tags": ["oracle", "switchboard", "randomness", "vrf", "commit"]
+  },
+  "external_version": {
+    "program_id": "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/switchboard/switchboard_randomness_commit.jsonc",
+    "repo": "flow-backend"
+  }
+}

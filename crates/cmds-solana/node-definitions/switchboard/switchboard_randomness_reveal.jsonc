@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "switchboard_randomness_reveal",
+  "prefix": "switchboard",
+  "description": "Reveal Switchboard randomness. Contacts the oracle gateway to obtain the signed random value, then submits the on-chain reveal instruction. Step 3 of the VRF flow (after commit). Returns 32 random bytes.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/switchboard/randomness_reveal.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "randomness_account",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Switchboard randomness account that has been committed"
+      },
+      {
+        "name": "gateway_url",
+        "type_bounds": ["string"],
+        "required": false,
+        "tooltip": "Oracle gateway URL override. If not provided, the URL is extracted from the oracle account data."
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "tooltip": "Submit transaction to the network (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "random_value",
+        "type": "json",
+        "tooltip": "32 random bytes as a JSON array. Use individual bytes for random outcomes (e.g., value[0] % 2 for coin flip)."
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Switchboard",
+    "program": "switchboard",
+    "category": "oracle",
+    "tags": ["oracle", "switchboard", "randomness", "vrf", "reveal"]
+  },
+  "external_version": {
+    "program_id": "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/switchboard/switchboard_randomness_reveal.jsonc",
+    "repo": "flow-backend"
+  }
+}
