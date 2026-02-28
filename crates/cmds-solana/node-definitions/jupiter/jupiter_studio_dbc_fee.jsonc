@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "jupiter_studio_dbc_fee",
+  "prefix": "jupiter",
+  "type": "native",
+  "description": "Get unclaimed creator trading fees",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/jupiter/jupiter_studio_dbc_fee.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Jupiter API key (portal.jup.ag)"
+      },
+      {
+        "name": "poolAddress",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DBC pool address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Jupiter",
+    "program": "jupiter",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "jupiter",
+      "studio",
+      "dbc",
+      "fee"
+    ]
+  },
+  "external_version": {
+    "program_id": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://api.jup.ag",
+    "api_version": "v6",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/jupiter/jupiter_studio_dbc_fee.jsonc",
+    "repo": "node-builder"
+  }
+}

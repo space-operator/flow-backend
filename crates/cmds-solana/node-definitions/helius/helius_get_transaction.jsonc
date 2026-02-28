@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "helius_get_transaction",
+  "prefix": "helius",
+  "type": "native",
+  "description": "Fetch a confirmed transaction by signature.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/helius/helius_get_transaction.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "RPC endpoint URL"
+      },
+      {
+        "name": "signature",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Transaction signature (base58)"
+      },
+      {
+        "name": "encoding",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Encoding: json, jsonParsed, base58, base64"
+      },
+      {
+        "name": "max_supported_version",
+        "type_bounds": [
+          "u8"
+        ],
+        "tooltip": "Max tx version (0 for legacy only)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "transaction",
+        "type": "json",
+        "tooltip": "Full transaction data"
+      },
+      {
+        "name": "slot",
+        "type": "u64",
+        "optional": true,
+        "tooltip": "Slot the tx was in"
+      },
+      {
+        "name": "block_time",
+        "type": "i64",
+        "optional": true,
+        "tooltip": "Unix timestamp"
+      },
+      {
+        "name": "meta",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Transaction metadata"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "encoding": {
+      "S": "json"
+    },
+    "max_supported_version": {
+      "U": "0"
+    }
+  },
+  "classification": {
+    "vendor": "Helius",
+    "program": "helius",
+    "category": "infrastructure",
+    "icon_url": null,
+    "tags": [
+      "infrastructure",
+      "helius",
+      "get",
+      "transaction"
+    ]
+  },
+  "external_version": {
+    "program_id": "helius_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/helius/get_transaction.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "helius_get_signatures_for_address",
+  "prefix": "helius",
+  "type": "native",
+  "description": "Fetch transaction signatures for an address.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/helius/helius_get_signatures_for_address.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "RPC endpoint URL"
+      },
+      {
+        "name": "address",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Account address to query"
+      },
+      {
+        "name": "limit",
+        "type_bounds": [
+          "u32"
+        ],
+        "tooltip": "Max signatures to return (default: 1000)"
+      },
+      {
+        "name": "before",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Start searching from this signature"
+      },
+      {
+        "name": "until",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Search until this signature"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signatures",
+        "type": "json",
+        "tooltip": "Array of signature info objects"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "limit": {
+      "U": "1000"
+    }
+  },
+  "classification": {
+    "vendor": "Helius",
+    "program": "helius",
+    "category": "infrastructure",
+    "icon_url": null,
+    "tags": [
+      "infrastructure",
+      "helius",
+      "get",
+      "signatures",
+      "address"
+    ]
+  },
+  "external_version": {
+    "program_id": "helius_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/helius/get_signatures_for_address.jsonc",
+    "repo": "node-builder"
+  }
+}

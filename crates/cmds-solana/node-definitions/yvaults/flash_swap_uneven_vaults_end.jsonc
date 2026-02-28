@@ -1,0 +1,201 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "flash_swap_uneven_vaults_end",
+  "prefix": "yvaults",
+  "type": "native",
+  "description": "End of Flash swap uneven vaults.  See [`flash_swap_uneven_vaults_start`] for details.  Warning: This instruction is allowed to be used independently from `FlashSwapUnevenVaultsStart` and shall not perform any operation that can be exploited when used alone.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/yvaults/flash_swap_uneven_vaults_end.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "actions_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Actions authority account"
+      },
+      {
+        "name": "strategy",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Strategy account address"
+      },
+      {
+        "name": "global_config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Global configuration account"
+      },
+      {
+        "name": "token_a_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token a vault account"
+      },
+      {
+        "name": "token_b_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token b vault account"
+      },
+      {
+        "name": "token_a_ata",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token a ata account address"
+      },
+      {
+        "name": "token_b_ata",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token b ata account address"
+      },
+      {
+        "name": "base_vault_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Base vault authority account"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Liquidity pool account"
+      },
+      {
+        "name": "position",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "LP position account"
+      },
+      {
+        "name": "scope_prices",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Scope prices account address"
+      },
+      {
+        "name": "token_infos",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token infos account address"
+      },
+      {
+        "name": "instruction_sysvar_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Instruction sysvar token account"
+      },
+      {
+        "name": "min_repay_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Min repay amount value"
+      },
+      {
+        "name": "amount_to_leave_to_user",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Amount to leave to user value"
+      },
+      {
+        "name": "a_to_b",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Whether to enable a to b"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "yvaults",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "yvaults",
+      "flash",
+      "swap",
+      "uneven",
+      "vaults",
+      "end"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/yvaults/flash_swap_uneven_vaults_end.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "yvaults_deposit",
+  "prefix": "yvaults",
+  "type": "native",
+  "description": "Deposit into using Yvaults",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/yvaults/deposit.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "user",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "User keypair"
+      },
+      {
+        "name": "strategy",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Strategy account address"
+      },
+      {
+        "name": "global_config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Global configuration account"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Liquidity pool account"
+      },
+      {
+        "name": "position",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "LP position account"
+      },
+      {
+        "name": "token_a_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token a vault account"
+      },
+      {
+        "name": "token_b_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token b vault account"
+      },
+      {
+        "name": "base_vault_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Base vault authority account"
+      },
+      {
+        "name": "treasury_fee_token_a_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Treasury fee token a vault account"
+      },
+      {
+        "name": "treasury_fee_token_b_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Treasury fee token b vault account"
+      },
+      {
+        "name": "token_a_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Mint of token A"
+      },
+      {
+        "name": "token_b_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Mint of token B"
+      },
+      {
+        "name": "shares_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Shares token mint address"
+      },
+      {
+        "name": "shares_mint_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Shares mint authority account"
+      },
+      {
+        "name": "scope_prices",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Scope prices account address"
+      },
+      {
+        "name": "token_infos",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token infos account address"
+      },
+      {
+        "name": "instruction_sysvar_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Instruction sysvar token account"
+      },
+      {
+        "name": "token_max_a",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Token max a value"
+      },
+      {
+        "name": "token_max_b",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Token max b value"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "token_a_ata",
+        "type": "pubkey",
+        "tooltip": "Derived token A account (ATA of user for token_a_mint)"
+      },
+      {
+        "name": "token_b_ata",
+        "type": "pubkey",
+        "tooltip": "Derived token B account (ATA of user for token_b_mint)"
+      },
+      {
+        "name": "user_shares_ata",
+        "type": "pubkey",
+        "tooltip": "Derived shares account (ATA of user for shares_mint)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "yvaults",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "yvaults",
+      "deposit"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/yvaults/deposit.jsonc",
+    "repo": "node-builder"
+  }
+}

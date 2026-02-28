@@ -1,0 +1,124 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "helius_get_transactions_for_address",
+  "prefix": "helius",
+  "type": "native",
+  "description": "Helius enhanced transaction history with filtering, sorting, and full tx data.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/helius/helius_get_transactions_for_address.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Helius RPC endpoint URL"
+      },
+      {
+        "name": "address",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Account address to query"
+      },
+      {
+        "name": "limit",
+        "type_bounds": [
+          "u32"
+        ],
+        "tooltip": "Max transactions (default: 100)"
+      },
+      {
+        "name": "before_signature",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Pagination cursor"
+      },
+      {
+        "name": "start_time",
+        "type_bounds": [
+          "i64"
+        ],
+        "tooltip": "Unix timestamp for time-based filtering"
+      },
+      {
+        "name": "end_time",
+        "type_bounds": [
+          "i64"
+        ],
+        "tooltip": "Unix timestamp for time-based filtering"
+      },
+      {
+        "name": "sort_order",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Sort order: asc or desc"
+      },
+      {
+        "name": "include_token_accounts",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Include associated token account history"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "transactions",
+        "type": "json",
+        "tooltip": "Full transaction objects"
+      },
+      {
+        "name": "oldest_signature",
+        "type": "string",
+        "optional": true,
+        "tooltip": "For pagination"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "limit": {
+      "U": "100"
+    },
+    "sort_order": {
+      "S": "desc"
+    },
+    "include_token_accounts": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Helius",
+    "program": "helius",
+    "category": "infrastructure",
+    "icon_url": null,
+    "tags": [
+      "infrastructure",
+      "helius",
+      "get",
+      "transactions",
+      "address"
+    ]
+  },
+  "external_version": {
+    "program_id": "helius_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/helius/get_transactions_for_address.jsonc",
+    "repo": "node-builder"
+  }
+}

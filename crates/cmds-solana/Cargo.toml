@@ -69,12 +69,16 @@ anchor-libs.workspace = true
 
 # spl
 spl-token-interface = "2"
-spl-token-2022-interface = { version = "2.1", features = ["serde"] }
+spl-token-2022-interface = { version = "2.1.0", features = ["serde"] }
+spl-token-2022 = { version = "7", features = ["no-entrypoint"] }
 spl-memo-interface = "2"
 spl-associated-token-account-interface = "2"
 spl-concurrent-merkle-tree = "1"
 spl-record = { version = "0.4.0" }
+spl-associated-token-account = { version = "6", features = ["no-entrypoint"] }
 
+# attestation service
+solana-attestation-service = { git = "https://github.com/solana-foundation/solana-attestation-service", branch = "pre-audit", package = "solana-attestation-service-client" }
 
 # metaplex
 mpl-token-metadata = { path = "../../vendor/mpl-token-metadata" }
@@ -103,10 +107,6 @@ anchor-lang = { git = "https://github.com/space-operator/anchor", rev = "6469201
 swig-interface = { git = "https://github.com/anagrambuild/swig-wallet" }
 swig-state = { git = "https://github.com/anagrambuild/swig-wallet" }
 
-# attestation service
-solana-attestation-service = { git = "https://github.com/solana-foundation/solana-attestation-service", branch = "pre-audit", package = "solana-attestation-service-client" }
-spl-token-2022 = { version = "7", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "6", features = ["no-entrypoint"] }
 
 # tuktuk
 tuktuk-program = "0.3.2"

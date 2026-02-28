@@ -1,0 +1,161 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "remove_liquidity",
+  "prefix": "damm_v2",
+  "type": "native",
+  "description": "Remove liquidity from a DAMM v2 position. Withdraws token A and B from pool vaults back to user.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/damm_v2/remove_liquidity.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "owner",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pool to remove liquidity from"
+      },
+      {
+        "name": "position_nft_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Mint of the position NFT (used to derive position + nft_account)"
+      },
+      {
+        "name": "token_a_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "User's token A account"
+      },
+      {
+        "name": "token_b_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "User's token B account"
+      },
+      {
+        "name": "token_a_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Mint of token A"
+      },
+      {
+        "name": "token_b_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Mint of token B"
+      },
+      {
+        "name": "liquidity_delta",
+        "type_bounds": [
+          "u128"
+        ],
+        "required": true,
+        "tooltip": "Amount of liquidity to remove"
+      },
+      {
+        "name": "token_a_amount_threshold",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Minimum token A to receive (slippage protection)"
+      },
+      {
+        "name": "token_b_amount_threshold",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Minimum token B to receive (slippage protection)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "position",
+        "type": "pubkey",
+        "tooltip": "Derived position PDA"
+      },
+      {
+        "name": "position_nft_account",
+        "type": "pubkey",
+        "tooltip": "Derived position NFT account PDA"
+      },
+      {
+        "name": "token_a_vault",
+        "type": "pubkey",
+        "tooltip": "Derived token A vault PDA"
+      },
+      {
+        "name": "token_b_vault",
+        "type": "pubkey",
+        "tooltip": "Derived token B vault PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "damm_v2",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "damm v2",
+      "remove",
+      "liquidity"
+    ]
+  },
+  "external_version": {
+    "program_id": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+    "sdk_crate": "damm-v2-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/damm_v2/remove_liquidity.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "damm_v2_create_config",
+  "prefix": "damm_v2",
+  "type": "native",
+  "description": "Create a static pool configuration for DAMM v2. Operator-only: sets fee parameters, price bounds, and activation settings.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/damm_v2/create_config.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "operator",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Operator account with CreateConfigKey permission"
+      },
+      {
+        "name": "signer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Operator signer"
+      },
+      {
+        "name": "index",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Config index for PDA derivation"
+      },
+      {
+        "name": "pool_fees",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Pool fee parameters"
+      },
+      {
+        "name": "sqrt_min_price",
+        "type_bounds": [
+          "u128"
+        ],
+        "required": true,
+        "tooltip": "Minimum sqrt price"
+      },
+      {
+        "name": "sqrt_max_price",
+        "type_bounds": [
+          "u128"
+        ],
+        "required": true,
+        "tooltip": "Maximum sqrt price"
+      },
+      {
+        "name": "vault_config_key",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Vault configuration key"
+      },
+      {
+        "name": "pool_creator_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Authority allowed to create pools"
+      },
+      {
+        "name": "activation_type",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Activation type"
+      },
+      {
+        "name": "collect_fee_mode",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Fee collection mode"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "config",
+        "type": "pubkey",
+        "tooltip": "Derived config PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "damm_v2",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "damm v2",
+      "create",
+      "config"
+    ]
+  },
+  "external_version": {
+    "program_id": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+    "sdk_crate": "damm-v2-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/damm_v2/create_config.jsonc",
+    "repo": "node-builder"
+  }
+}

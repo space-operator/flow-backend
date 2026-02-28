@@ -1,0 +1,102 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "claim_locked",
+  "prefix": "merkle_distributor",
+  "type": "native",
+  "description": "Claim locked using Merkle Distributor",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/merkle_distributor/claim_locked.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "distributor",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The [MerkleDistributor]."
+      },
+      {
+        "name": "from",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Distributor ATA containing the tokens to distribute."
+      },
+      {
+        "name": "to",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Account to send the claimed tokens to. Claimant must sign the transaction and can only claim on behalf of themself"
+      },
+      {
+        "name": "claimant",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Who is claiming the tokens."
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "merkle_distributor",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "merkle distributor",
+      "claim",
+      "locked"
+    ]
+  },
+  "external_version": {
+    "program_id": "KdisqEcXbXKaTrBFqeDLhMmBvymLTwj9GmhDcdJyGat",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/merkle_distributor/claim_locked.jsonc",
+    "repo": "node-builder"
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "split_position",
+  "prefix": "damm_v2",
+  "type": "native",
+  "description": "Split a DAMM v2 position into two positions by transferring a percentage of liquidity, fees, and rewards.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/damm_v2/split_position.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "first_owner",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pool account"
+      },
+      {
+        "name": "first_position_nft_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Mint of the source position NFT (used to derive first_position + first_position_nft_account)"
+      },
+      {
+        "name": "second_position_nft_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Mint of the target position NFT (used to derive second_position + second_position_nft_account)"
+      },
+      {
+        "name": "second_owner",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Owner of the target position"
+      },
+      {
+        "name": "unlocked_liquidity_percentage",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Percentage of unlocked liquidity to transfer (0-100)"
+      },
+      {
+        "name": "permanent_locked_liquidity_percentage",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Percentage of permanent locked liquidity to transfer"
+      },
+      {
+        "name": "fee_a_percentage",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Percentage of fee A to transfer"
+      },
+      {
+        "name": "fee_b_percentage",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Percentage of fee B to transfer"
+      },
+      {
+        "name": "reward_0_percentage",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Percentage of reward 0 to transfer"
+      },
+      {
+        "name": "reward_1_percentage",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Percentage of reward 1 to transfer"
+      },
+      {
+        "name": "inner_vesting_liquidity_percentage",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Percentage of inner vesting liquidity to transfer"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "first_position",
+        "type": "pubkey",
+        "tooltip": "Derived first position PDA"
+      },
+      {
+        "name": "first_position_nft_account",
+        "type": "pubkey",
+        "tooltip": "Derived first position NFT account PDA"
+      },
+      {
+        "name": "second_position",
+        "type": "pubkey",
+        "tooltip": "Derived second position PDA"
+      },
+      {
+        "name": "second_position_nft_account",
+        "type": "pubkey",
+        "tooltip": "Derived second position NFT account PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "damm_v2",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "damm v2",
+      "split",
+      "position"
+    ]
+  },
+  "external_version": {
+    "program_id": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+    "sdk_crate": "damm-v2-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/damm_v2/split_position.jsonc",
+    "repo": "node-builder"
+  }
+}

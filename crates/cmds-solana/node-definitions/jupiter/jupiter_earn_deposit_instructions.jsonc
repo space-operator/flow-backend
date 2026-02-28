@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "jupiter_earn_deposit_instructions",
+  "prefix": "jupiter",
+  "type": "native",
+  "description": "Earn deposit instructions",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/jupiter/jupiter_earn_deposit_instructions.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Jupiter API key (portal.jup.ag)"
+      },
+      {
+        "name": "user",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "User wallet pubkey"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Amount"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Token mint"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Jupiter",
+    "program": "jupiter",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "jupiter",
+      "earn",
+      "deposit",
+      "instructions"
+    ]
+  },
+  "external_version": {
+    "program_id": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://api.jup.ag",
+    "api_version": "v6",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/jupiter/jupiter_earn_deposit_instructions.jsonc",
+    "repo": "node-builder"
+  }
+}

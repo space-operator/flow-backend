@@ -1,0 +1,103 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "close_position",
+  "prefix": "damm_v2",
+  "type": "native",
+  "description": "Close a DAMM v2 LP position. Burns the position NFT and reclaims rent. Position must have zero liquidity.",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/damm_v2/close_position.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "owner",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "position_nft_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Position NFT mint to burn"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pool the position belongs to"
+      },
+      {
+        "name": "rent_receiver",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Account to receive reclaimed rent"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "position",
+        "type": "pubkey",
+        "tooltip": "Derived position PDA"
+      },
+      {
+        "name": "position_nft_account",
+        "type": "pubkey",
+        "tooltip": "Derived position NFT account PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "damm_v2",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "damm v2",
+      "close",
+      "position"
+    ]
+  },
+  "external_version": {
+    "program_id": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+    "sdk_crate": "damm-v2-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/damm_v2/close_position.jsonc",
+    "repo": "node-builder"
+  }
+}

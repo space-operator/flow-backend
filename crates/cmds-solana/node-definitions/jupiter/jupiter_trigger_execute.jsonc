@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "jupiter_trigger_execute",
+  "prefix": "jupiter",
+  "type": "native",
+  "description": "Execute signed trigger transaction",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/jupiter/jupiter_trigger_execute.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Jupiter API key (portal.jup.ag)"
+      },
+      {
+        "name": "requestId",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Request ID from create/cancel"
+      },
+      {
+        "name": "signedTransaction",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Signed transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Jupiter",
+    "program": "jupiter",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "jupiter",
+      "trigger",
+      "execute"
+    ]
+  },
+  "external_version": {
+    "program_id": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://api.jup.ag",
+    "api_version": "v6",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/jupiter/jupiter_trigger_execute.jsonc",
+    "repo": "node-builder"
+  }
+}

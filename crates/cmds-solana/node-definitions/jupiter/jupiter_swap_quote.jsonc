@@ -1,0 +1,123 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "jupiter_swap_quote",
+  "prefix": "jupiter",
+  "type": "native",
+  "description": "Get a swap quote for POST /swap",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/jupiter/jupiter_swap_quote.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Jupiter API key (portal.jup.ag)"
+      },
+      {
+        "name": "inputMint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Input mint"
+      },
+      {
+        "name": "outputMint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Output mint"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Raw amount"
+      },
+      {
+        "name": "slippageBps",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Slippage in bps (default 50)"
+      },
+      {
+        "name": "swapMode",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "ExactIn or ExactOut"
+      },
+      {
+        "name": "dexes",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Comma-separated DEX names"
+      },
+      {
+        "name": "excludeDexes",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "DEXes to exclude"
+      },
+      {
+        "name": "platformFeeBps",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Platform fee bps"
+      },
+      {
+        "name": "maxAccounts",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Max accounts estimate"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Jupiter",
+    "program": "jupiter",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "jupiter",
+      "swap",
+      "quote"
+    ]
+  },
+  "external_version": {
+    "program_id": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://api.jup.ag",
+    "api_version": "v6",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/jupiter/jupiter_swap_quote.jsonc",
+    "repo": "node-builder"
+  }
+}

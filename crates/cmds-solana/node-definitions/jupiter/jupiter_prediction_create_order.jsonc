@@ -1,0 +1,106 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "jupiter_prediction_create_order",
+  "prefix": "jupiter",
+  "type": "native",
+  "description": "Create prediction order",
+  "author_handle": "spo",
+  "source_code": "private-cmds/src/jupiter/jupiter_prediction_create_order.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Jupiter API key (portal.jup.ag)"
+      },
+      {
+        "name": "user",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "User pubkey"
+      },
+      {
+        "name": "marketId",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Market ID"
+      },
+      {
+        "name": "side",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Buy or Sell"
+      },
+      {
+        "name": "outcomeId",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Outcome ID"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Amount"
+      },
+      {
+        "name": "price",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Price"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Jupiter",
+    "program": "jupiter",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "jupiter",
+      "prediction",
+      "create",
+      "order"
+    ]
+  },
+  "external_version": {
+    "program_id": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://api.jup.ag",
+    "api_version": "v6",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "private-cmds",
+    "source_code": "private-cmds/node-definitions/jupiter/jupiter_prediction_create_order.jsonc",
+    "repo": "node-builder"
+  }
+}
