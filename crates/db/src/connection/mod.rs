@@ -10,7 +10,7 @@ use csv_export::df_serde;
 use deadpool_postgres::{Object as Connection, Transaction};
 use flow::flow_set::{DeploymentId, Flow, FlowDeployment, X402Fee, get_flow_row};
 use flow_lib::{
-    CommandType, FlowId, FlowRunId, NodeId, UserId, ValueSet,
+    FlowId, FlowRunId, NodeId, UserId, ValueSet,
     config::client::{self, ClientConfig, FlowRow},
     context::signer::Presigner,
 };

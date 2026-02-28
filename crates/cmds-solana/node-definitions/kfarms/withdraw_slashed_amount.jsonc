@@ -1,0 +1,111 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "withdraw_slashed_amount",
+  "prefix": "kfarms",
+  "type": "native",
+  "description": "Withdraw from slashed amount using Kfarms",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/kfarms/withdraw_slashed_amount.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "crank",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Crank keypair"
+      },
+      {
+        "name": "farm_state",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Farm state account address"
+      },
+      {
+        "name": "slashed_amount_spill_address",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Slashed amount spill address account address"
+      },
+      {
+        "name": "farm_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Farm vault account"
+      },
+      {
+        "name": "farm_vaults_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Farm vaults authority account"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "kfarms",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "kfarms",
+      "withdraw",
+      "slashed",
+      "amount"
+    ]
+  },
+  "external_version": {
+    "program_id": "FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kfarms/withdraw_slashed_amount.jsonc",
+    "repo": "flow-backend"
+  }
+}

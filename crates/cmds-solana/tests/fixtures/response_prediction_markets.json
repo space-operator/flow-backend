@@ -1,0 +1,28 @@
+{
+  "data": [
+    {
+      "marketId": "mkt_xyz789",
+      "event": "evt_abc123",
+      "status": "active",
+      "result": null,
+      "openTime": "2025-01-01T00:00:00Z",
+      "closeTime": "2025-02-28T23:59:59Z",
+      "settlementTime": null,
+      "metadata": {
+        "title": "SOL > $300",
+        "description": "Market for SOL reaching $300"
+      },
+      "pricing": {
+        "yesPrice": "0.35",
+        "noPrice": "0.65",
+        "lastTradePrice": "0.36"
+      }
+    }
+  ],
+  "pagination": {
+    "start": 0,
+    "end": 1,
+    "total": 1,
+    "hasNext": false
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_get_event",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Get a single prediction market event with nested markets.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_event.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DFlow API key"
+      },
+      {
+        "name": "event_id",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Event ticker ID"
+      },
+      {
+        "name": "with_nested_markets",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Include nested markets in response"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "event",
+        "type": "json",
+        "tooltip": "Event details with markets, volumes, settlement sources"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "get",
+      "event"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_event.jsonc",
+    "repo": "flow-backend"
+  }
+}

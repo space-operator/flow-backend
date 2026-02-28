@@ -1,0 +1,65 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "get_integration_config",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Get configuration for a specific integration",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_integration_config.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "integration_id",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Integration ID"
+      },
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Solana cluster: mainnet or devnet (default: mainnet)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "get",
+      "integration",
+      "config"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_integration_config.jsonc",
+    "repo": "flow-backend"
+  }
+}

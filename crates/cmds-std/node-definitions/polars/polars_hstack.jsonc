@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_hstack",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Stack two DataFrames horizontally (append columns side by side). Both must have the same number of rows.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_hstack.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "left",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Left DataFrame in IPC format (columns appear first)"
+      },
+      {
+        "name": "right",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Right DataFrame in IPC format (columns appended after left)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Combined DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Combined DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "hstack"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_hstack.jsonc",
+    "repo": "flow-backend"
+  }
+}

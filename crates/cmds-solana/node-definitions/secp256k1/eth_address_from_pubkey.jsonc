@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "eth_address_from_pubkey",
+  "prefix": "secp256k1",
+  "type": "native",
+  "description": "Derives an Ethereum address from an uncompressed secp256k1 public key by computing its Keccak256 hash. This is a pure computation node - no transaction is submitted.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/secp256k1/eth_address_from_pubkey.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "pubkey",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "64-byte uncompressed secp256k1 public key (without 0x04 prefix) as byte array or hex string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "eth_address",
+        "type": "json",
+        "tooltip": "20-byte Ethereum address as byte array"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Unknown",
+    "program": "secp256k1",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "secp256k1",
+      "eth",
+      "address",
+      "from",
+      "pubkey"
+    ]
+  },
+  "external_version": {
+    "program_id": "KeccakSecp256k11111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/secp256k1/eth_address_from_pubkey.jsonc",
+    "repo": "flow-backend"
+  }
+}

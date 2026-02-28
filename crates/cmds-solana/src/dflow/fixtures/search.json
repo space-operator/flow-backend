@@ -1,0 +1,31 @@
+{
+    "events": [
+        {
+            "ticker": "KXBTCMAXY-25",
+            "seriesTicker": "KXBTCMAXY",
+            "strikeDate": null,
+            "strikePeriod": null,
+            "title": "How high will Bitcoin get in 2025?",
+            "subtitle": "In 2025",
+            "imageUrl": "https://kalshi-public-docs.s3.amazonaws.com/series-images-webp/KXBTCMAXY.webp",
+            "volume": 32460997,
+            "volume24h": 0,
+            "liquidity": 18446744073688120636,
+            "openInterest": 10250735
+        },
+        {
+            "ticker": "KXBTCMAX150-25",
+            "seriesTicker": "KXBTCMAX150",
+            "strikeDate": null,
+            "strikePeriod": null,
+            "title": "When will Bitcoin hit $150k?",
+            "subtitle": "In 2025",
+            "imageUrl": "https://kalshi-public-docs.s3.amazonaws.com/series-images-webp/KXBTCMAX150.webp",
+            "volume": 26623114,
+            "volume24h": 237254,
+            "liquidity": 0,
+            "openInterest": 10618377
+        }
+    ],
+    "cursor": 2
+}

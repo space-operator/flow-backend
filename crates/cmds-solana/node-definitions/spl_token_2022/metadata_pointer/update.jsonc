@@ -1,0 +1,92 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "update_metadata_pointer",
+  "prefix": "metadata_pointer",
+  "type": "native",
+  "description": "Update the metadata pointer on a Token-2022 mint to point to a new metadata account",
+  "author_handle": "spo",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The mint to update the metadata pointer on"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Authority that can set the metadata address"
+      },
+      {
+        "name": "metadata_address",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "New account address that holds the metadata"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "metadata_pointer",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "metadata pointer",
+      "update",
+      "metadata",
+      "pointer"
+    ]
+  },
+  "external_version": {
+    "program_id": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_token_2022/metadata_pointer/update.jsonc",
+    "repo": "flow-backend"
+  }
+}

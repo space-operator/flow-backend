@@ -1,0 +1,27 @@
+[
+  {
+    "token": {
+      "id": 1,
+      "address": "TokenAddr123",
+      "name": "Jupiter SOL Vault",
+      "symbol": "jSOL",
+      "decimals": 9,
+      "assetAddress": "So11111111111111111111111111111111111111112",
+      "asset": {},
+      "totalAssets": "50000000000000",
+      "totalSupply": "48000000000000",
+      "convertToShares": "0.96",
+      "convertToAssets": "1.041666",
+      "rewardsRate": "0.05",
+      "supplyRate": "0.03",
+      "totalRate": "0.08",
+      "rebalanceDifference": "0",
+      "liquiditySupplyData": {}
+    },
+    "ownerAddress": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+    "shares": "1000000000",
+    "underlyingAssets": "1041666000",
+    "underlyingBalance": "1041666000",
+    "allowance": "999999999999"
+  }
+]

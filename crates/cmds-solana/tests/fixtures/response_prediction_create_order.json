@@ -1,0 +1,15 @@
+{
+  "transaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfake-pred-order-tx",
+  "txMeta": {
+    "blockhash": "HZz1a3VJdC7EKxQwT6N7pbN3sF2DjBbfSvGwa8E7VqXB",
+    "lastValidBlockHeight": 401400200
+  },
+  "order": {
+    "orderPubkey": "OrdPubkey123",
+    "positionPubkey": "PosPubkey123",
+    "isBuy": true,
+    "isYes": true,
+    "contracts": 10,
+    "orderCostUsd": "5.00"
+  }
+}

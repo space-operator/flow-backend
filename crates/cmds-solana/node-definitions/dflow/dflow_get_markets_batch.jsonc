@@ -1,0 +1,72 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_get_markets_batch",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Batch lookup prediction markets by mints or tickers.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_markets_batch.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DFlow API key"
+      },
+      {
+        "name": "mints",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Array of mint addresses to look up"
+      },
+      {
+        "name": "tickers",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Array of market tickers to look up"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "markets",
+        "type": "json",
+        "tooltip": "Array of matched market objects"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "get",
+      "markets",
+      "batch"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_markets_batch.jsonc",
+    "repo": "flow-backend"
+  }
+}

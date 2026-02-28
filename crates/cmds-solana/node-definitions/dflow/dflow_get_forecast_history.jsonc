@@ -1,0 +1,106 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_get_forecast_history",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Get event forecast percentile history.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_forecast_history.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DFlow API key"
+      },
+      {
+        "name": "series_ticker",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Series ticker"
+      },
+      {
+        "name": "event_id",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Event ID"
+      },
+      {
+        "name": "percentiles",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Comma-separated percentile values (e.g. '25,50,75')"
+      },
+      {
+        "name": "start_ts",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Start timestamp (unix seconds)"
+      },
+      {
+        "name": "end_ts",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "End timestamp (unix seconds)"
+      },
+      {
+        "name": "period_interval",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Period interval in minutes: 0, 1, 60, or 1440"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "forecast_history",
+        "type": "json",
+        "tooltip": "Forecast percentile history data"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "get",
+      "forecast",
+      "history"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_forecast_history.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "queue_task_v0",
+  "prefix": "tuktuk",
+  "type": "native",
+  "description": "Queue Task V0 (Tuktuk)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/tuktuk/queue_task_v0.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account that pays for the transaction"
+      },
+      {
+        "name": "queue_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Queue authority account"
+      },
+      {
+        "name": "task_queue",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Task queue account address"
+      },
+      {
+        "name": "task",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Task account address"
+      },
+      {
+        "name": "id",
+        "type_bounds": [
+          "u16"
+        ],
+        "required": true,
+        "tooltip": "Id value"
+      },
+      {
+        "name": "trigger",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Trigger"
+      },
+      {
+        "name": "transaction",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Transaction"
+      },
+      {
+        "name": "crank_reward",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Crank reward value"
+      },
+      {
+        "name": "free_tasks",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Free tasks value"
+      },
+      {
+        "name": "description",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Description string"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "TukTuk",
+    "program": "tuktuk",
+    "category": "automation",
+    "icon_url": null,
+    "tags": [
+      "automation",
+      "tuktuk",
+      "queue",
+      "task"
+    ]
+  },
+  "external_version": {
+    "program_id": "tuktukUrLhYtkEEdm4K3shf8CWnB89rHACC7EcNNmmZ",
+    "sdk_crate": "tuktuk-program",
+    "sdk_version": "0.3.2",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "lib",
+    "source_code": "crates/cmds-solana/node-definitions/tuktuk/queue_task_v0.jsonc",
+    "repo": "flow-backend"
+  }
+}

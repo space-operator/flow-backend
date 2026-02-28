@@ -1,0 +1,97 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "upload_integration_logo",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Upload integration metadata (logo image and token info)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_upload_integration_logo.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Solana cluster: mainnet or devnet (default: mainnet)"
+      },
+      {
+        "name": "image_url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "URL of the image to upload"
+      },
+      {
+        "name": "branded_mint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Branded mint address"
+      },
+      {
+        "name": "metadata_name",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Token name"
+      },
+      {
+        "name": "metadata_symbol",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Token symbol"
+      },
+      {
+        "name": "metadata_description",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Token description"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "upload",
+      "integration",
+      "logo"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/upload_integration_logo.jsonc",
+    "repo": "flow-backend"
+  }
+}

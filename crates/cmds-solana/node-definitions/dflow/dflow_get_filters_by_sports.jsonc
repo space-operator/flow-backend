@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_get_filters_by_sports",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Get filtering options organized by sports for prediction markets.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_filters_by_sports.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DFlow API key"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "filters_by_sports",
+        "type": "json",
+        "tooltip": "Filters organized by sport"
+      },
+      {
+        "name": "sport_ordering",
+        "type": "json",
+        "tooltip": "Sport ordering array"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "get",
+      "filters",
+      "sports"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_filters_by_sports.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_create_series",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Create a Polars Series from a JSON array of values",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_create_series.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "name",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Name for the series"
+      },
+      {
+        "name": "values",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "JSON array of values, e.g. [1, 2, 3]"
+      },
+      {
+        "name": "dtype",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Data type: f64, i64, str, bool, etc."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "series",
+        "type": "string",
+        "tooltip": "Series in IPC format"
+      },
+      {
+        "name": "series_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Series as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "dtype": {
+      "S": "f64"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "create",
+      "series"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_create_series.jsonc",
+    "repo": "flow-backend"
+  }
+}

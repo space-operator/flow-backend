@@ -1,0 +1,11 @@
+{
+  "ownerPubkey": "OwnerPubkey456",
+  "history": [
+    { "timestamp": "2025-01-10T00:00:00Z", "realizedPnlUsd": "10.00" },
+    { "timestamp": "2025-01-11T00:00:00Z", "realizedPnlUsd": "25.50" },
+    { "timestamp": "2025-01-12T00:00:00Z", "realizedPnlUsd": "50.00" },
+    { "timestamp": "2025-01-13T00:00:00Z", "realizedPnlUsd": "80.25" },
+    { "timestamp": "2025-01-14T00:00:00Z", "realizedPnlUsd": "120.00" },
+    { "timestamp": "2025-01-15T00:00:00Z", "realizedPnlUsd": "150.50" }
+  ]
+}

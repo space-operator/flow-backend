@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_slice",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Extract a slice (subset of rows) from a DataFrame by offset and length",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_slice.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "offset",
+        "type_bounds": [
+          "i64"
+        ],
+        "tooltip": "Starting row offset (negative counts from end)"
+      },
+      {
+        "name": "length",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Number of rows to extract"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Sliced DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Sliced DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "offset": {
+      "U": "0"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "slice"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_slice.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -9,9 +9,9 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 fn build() -> BuildResult {
     const DEFINITION: &str = flow_lib::node_definition!("mpl_token_metadata/approve_collection_authority.jsonc");
     static CACHE: BuilderCache = BuilderCache::new(|| {
-        Ok(CmdBuilder::new(DEFINITION)?
+        CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?
-            .simple_instruction_info("signature")?)
+            .simple_instruction_info("signature")
     });
     Ok(CACHE.clone()?.build(run))
 }

@@ -1,0 +1,101 @@
+{
+  "series": [
+    {
+      "ticker": "DOTPLOT",
+      "frequency": "custom",
+      "title": "fed dot plot",
+      "category": "Economics",
+      "tags": [
+        "Inflation",
+        "Interest rates"
+      ],
+      "settlementSources": [
+        {
+          "name": "Federal Reserve Board of Governors",
+          "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+        }
+      ],
+      "contractUrl": "https://kalshi-public-docs.s3.us-east-1.amazonaws.com/regulatory/product-certifications/DOTPLOT.pdf",
+      "contractTermsUrl": "https://kalshi-public-docs.s3.amazonaws.com/contract_terms/DOTPLOT.pdf",
+      "productMetadata": {},
+      "feeType": "quadratic",
+      "feeMultiplier": 1.0,
+      "additionalProhibitions": [
+        "Persons who are employed by any of the Source Agencies are not permitted to trade on the Contract.",
+        "Persons who hold any material, non-public information on the Underlying are not permitted to trade on the Contract."
+      ]
+    },
+    {
+      "ticker": "KXAFRICALEADEROUT",
+      "frequency": "custom",
+      "title": "Next African leader out",
+      "category": "Politics",
+      "tags": [
+        "International"
+      ],
+      "settlementSources": [
+        {
+          "name": "ABC",
+          "url": "https://abcnews.go.com/"
+        },
+        {
+          "name": "AP",
+          "url": "https://apnews.com/"
+        },
+        {
+          "name": "Axios",
+          "url": "https://www.axios.com/"
+        },
+        {
+          "name": "Bloomberg",
+          "url": "https://www.bloomberg.com/"
+        },
+        {
+          "name": "Fox News",
+          "url": "https://www.foxnews.com/"
+        },
+        {
+          "name": "MSNBC",
+          "url": "https://www.msnbc.com/"
+        },
+        {
+          "name": "NBC",
+          "url": "https://www.nbcnews.com/"
+        },
+        {
+          "name": "Politico",
+          "url": "https://www.politico.com/"
+        },
+        {
+          "name": "Semafor",
+          "url": "https://www.semafor.com/"
+        },
+        {
+          "name": "The Information",
+          "url": "https://www.theinformation.com/"
+        },
+        {
+          "name": "The New York Times",
+          "url": "https://www.nytimes.com/"
+        },
+        {
+          "name": "The Wall Street Journal",
+          "url": "https://www.wsj.com/"
+        },
+        {
+          "name": "The Washington Post",
+          "url": "https://www.washingtonpost.com/"
+        }
+      ],
+      "contractUrl": "https://kalshi-public-docs.s3.us-east-1.amazonaws.com/regulatory/product-certifications/NEXTOUT.pdf",
+      "contractTermsUrl": "https://kalshi-public-docs.s3.amazonaws.com/contract_terms/NEXTOUT.pdf",
+      "productMetadata": {},
+      "feeType": "quadratic",
+      "feeMultiplier": 1.0,
+      "additionalProhibitions": [
+        "Persons who are employed by any of the Source Agencies are not permitted to trade on the Contract.",
+        "Persons who hold any material, non-public information on the Underlying are not permitted to trade on the Contract."
+      ]
+    }
+  ]
+}

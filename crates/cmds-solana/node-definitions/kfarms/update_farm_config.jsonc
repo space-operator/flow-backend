@@ -1,0 +1,103 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "update_farm_config",
+  "prefix": "kfarms",
+  "type": "native",
+  "description": "Update farm config using Kfarms",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/kfarms/update_farm_config.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "farm_admin",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Farm admin keypair"
+      },
+      {
+        "name": "farm_state",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Farm state account address"
+      },
+      {
+        "name": "mode",
+        "type_bounds": [
+          "u16"
+        ],
+        "required": true,
+        "tooltip": "Mode value"
+      },
+      {
+        "name": "data",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Data"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "kfarms",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "kfarms",
+      "update",
+      "farm",
+      "config"
+    ]
+  },
+  "external_version": {
+    "program_id": "FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kfarms/update_farm_config.jsonc",
+    "repo": "flow-backend"
+  }
+}

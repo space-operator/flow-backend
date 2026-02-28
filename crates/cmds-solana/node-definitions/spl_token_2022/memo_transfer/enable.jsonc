@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "enable_required_transfer_memos",
+  "prefix": "memo_transfer",
+  "type": "native",
+  "description": "Enable required transfer memos on a Token-2022 token account so incoming transfers must include a memo",
+  "author_handle": "spo",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The token mint"
+      },
+      {
+        "name": "owner",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Owner of the token account"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "account",
+        "type": "pubkey",
+        "tooltip": "Derived token account (ATA of owner for mint)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "memo_transfer",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "memo transfer",
+      "enable",
+      "required",
+      "transfer",
+      "memos"
+    ]
+  },
+  "external_version": {
+    "program_id": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_token_2022/memo_transfer/enable.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "initialize",
+  "prefix": "privacy_cash",
+  "type": "native",
+  "description": "Initialize the Privacy Cash SOL merkle tree, tree token account, and global config. Admin only.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/privacy_cash/initialize.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying transaction fees"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Program admin authority (must match ADMIN_PUBKEY)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "tree_account",
+        "type": "pubkey",
+        "tooltip": "SOL merkle tree PDA"
+      },
+      {
+        "name": "tree_token_account",
+        "type": "pubkey",
+        "tooltip": "Tree token account PDA"
+      },
+      {
+        "name": "global_config",
+        "type": "pubkey",
+        "tooltip": "Global config PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "privacy_cash",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "privacy cash",
+      "initialize"
+    ]
+  },
+  "external_version": {
+    "program_id": "privacy_cash_program",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/privacy_cash/initialize.jsonc",
+    "repo": "flow-backend"
+  }
+}

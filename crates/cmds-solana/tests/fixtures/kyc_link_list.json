@@ -1,0 +1,19 @@
+{
+    "count": 1,
+    "data": [
+        {
+            "id": null,
+            "full_name": "amir@spaceoperator.com",
+            "email": "amir@spaceoperator.com",
+            "type": "business",
+            "kyc_link": "https://bridge.withpersona.com/verify?fields%5Bdeveloper_id%5D=b75373fc-e5ea-453c-b324-9f8d3e93d4fb&fields%5Bemail_address%5D=amir%40spaceoperator.com&fields%5Biqt_token%5D=3bpmDX&fields%5Bis_developer%5D=true&environment-id=env_UWeuo2CnqFQXVeKujbQLBx6u&inquiry-template-id=itmpl_wKuJEFST4JKViF2zcfmNJJJs&reference-id=9b98c6f5-e3a4-466d-b316-f7c1d8180b7c",
+            "tos_link": "https://compliance.sandbox.bridge.xyz/accept-terms-of-service?customer_id=9b98c6f5-e3a4-466d-b316-f7c1d8180b7c&developer_id=b75373fc-e5ea-453c-b324-9f8d3e93d4fb",
+            "kyc_status": "approved",
+            "rejection_reasons": [],
+            "tos_status": "approved",
+            "created_at": "2025-10-24T22:32:47.514Z",
+            "customer_id": "9b98c6f5-e3a4-466d-b316-f7c1d8180b7c",
+            "persona_inquiry_type": "business"
+        }
+    ]
+}

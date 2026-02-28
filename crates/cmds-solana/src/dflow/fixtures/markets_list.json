@@ -1,0 +1,85 @@
+{
+    "markets": [
+        {
+            "ticker": "PRES-2024-KH",
+            "eventTicker": "PRES-2024",
+            "marketType": "binary",
+            "title": "Will Kamala Harris or another Democrat win the Presidency?",
+            "subtitle": "",
+            "yesSubTitle": "Kamala Harris",
+            "noSubTitle": "Kamala Harris",
+            "openTime": 1728044100,
+            "closeTime": 1737392628,
+            "expirationTime": 1762354800,
+            "status": "finalized",
+            "volume": 273312857,
+            "result": "no",
+            "openInterest": 55939388,
+            "canCloseEarly": true,
+            "earlyCloseCondition": "This market will close following the inauguration of a non-acting President for the term beginning January 20, 2025.",
+            "rulesPrimary": "If Kamala Harris or another representative of the Democratic party is inaugurated as President for the term beginning January 20, 2025, then the market resolves to Yes.",
+            "rulesSecondary": "",
+            "yesBid": null,
+            "yesAsk": null,
+            "noBid": null,
+            "noAsk": null,
+            "accounts": {
+                "CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH": {
+                    "marketLedger": "FvQx2gx1qDQj9uS2YYa1LAUHkw2aoADd73YWdGsbNWtf",
+                    "yesMint": "ZUB5tvLrnch7Fz8khGuz2JezhQe3rSFLP5CMFeVipzy",
+                    "noMint": "6CvNH47HC9hi3Dv2ELL4Tbgrg33UqsUHs2mkyKwuPoad",
+                    "isInitialized": false,
+                    "redemptionStatus": null
+                },
+                "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v": {
+                    "marketLedger": "7y4kTrRUitXYhFgg5mzpUhPDKBQTRFz2vjjyQK88tcPP",
+                    "yesMint": "F4Fo7jaT6wvFr9z6iMnejnPECtPwext5rZQBxXQcmWZL",
+                    "noMint": "3CrbJmeG912tNphnKSZwEyZ1cyQV4dnFQ1NwxpFKvsrU",
+                    "isInitialized": false,
+                    "redemptionStatus": null
+                }
+            }
+        },
+        {
+            "ticker": "PRES-2024-DJT",
+            "eventTicker": "PRES-2024",
+            "marketType": "binary",
+            "title": "Will Donald Trump or another Republican win the Presidency?",
+            "subtitle": "",
+            "yesSubTitle": "Donald Trump",
+            "noSubTitle": "Donald Trump",
+            "openTime": 1728044100,
+            "closeTime": 1737392628,
+            "expirationTime": 1762354800,
+            "status": "finalized",
+            "volume": 262334207,
+            "result": "yes",
+            "openInterest": 48737297,
+            "canCloseEarly": true,
+            "earlyCloseCondition": "This market will close following the inauguration of a non-acting President for the term beginning January 20, 2025.",
+            "rulesPrimary": "If Donald Trump or another representative of the Republican party is inaugurated as President for the term beginning January 20, 2025, then the market resolves to Yes.",
+            "rulesSecondary": "",
+            "yesBid": null,
+            "yesAsk": null,
+            "noBid": null,
+            "noAsk": null,
+            "accounts": {
+                "CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH": {
+                    "marketLedger": "82k7sDH89TFFrK8QDENAE8Lk5s9yhanu7TxFEhYKjvwc",
+                    "yesMint": "8XdWJdL6EikodvcM3pmUzJmCDLZyz35rhVtEda4Euki3",
+                    "noMint": "7LMF28VrEYPkPq9PTWFpfbxy7Pb7d1fZmQ313Sqzp61H",
+                    "isInitialized": false,
+                    "redemptionStatus": null
+                },
+                "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v": {
+                    "marketLedger": "GcjHd3rwCG478Lv5in4NicaEkUiuZVSBmBRoQBxsRELs",
+                    "yesMint": "CQKoRgJdo8mptwvaptkiCZuNQ6rm1a3G5WiRvZAg5vie",
+                    "noMint": "AGPVPXWPRn2MkY6wSQVt7QN9mQtKKLHVkc4BjxYAjJrX",
+                    "isInitialized": false,
+                    "redemptionStatus": null
+                }
+            }
+        }
+    ],
+    "cursor": 2
+}

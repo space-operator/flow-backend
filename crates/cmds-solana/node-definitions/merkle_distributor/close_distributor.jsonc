@@ -1,0 +1,102 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "close_distributor",
+  "prefix": "merkle_distributor",
+  "type": "native",
+  "description": "Closes a Merkle Distributor, transferring remaining tokens and rent exemption lamports to the destination accounts.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/merkle_distributor/close_distributor.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "The wallet paying for the transaction fees."
+      },
+      {
+        "name": "distributor",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The PDA account for the Merkle Distributor to close."
+      },
+      {
+        "name": "token_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The token account vault holding the remaining tokens to distribute."
+      },
+      {
+        "name": "admin",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "The admin wallet authorizing the closure."
+      },
+      {
+        "name": "destination_token_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The token account to receive the remaining tokens."
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether to submit the transaction automatically."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "merkle_distributor",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "merkle distributor",
+      "close",
+      "distributor"
+    ]
+  },
+  "external_version": {
+    "program_id": "KdisqEcXbXKaTrBFqeDLhMmBvymLTwj9GmhDcdJyGat",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/merkle_distributor/close_distributor.jsonc",
+    "repo": "flow-backend"
+  }
+}

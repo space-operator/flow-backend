@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_nonce_account",
+  "prefix": "system_program",
+  "type": "native",
+  "description": "Create a durable transaction nonce account",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/system_program/create_nonce_account.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "from",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Funding account that pays lamports for the nonce account"
+      },
+      {
+        "name": "nonce_account",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "New nonce account to create (must sign)"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Entity authorized to execute nonce instructions on this account"
+      },
+      {
+        "name": "lamports",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Lamports to transfer to the nonce account (must cover rent)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "system_program",
+    "category": "core",
+    "icon_url": null,
+    "tags": [
+      "core",
+      "system program",
+      "create",
+      "nonce",
+      "account"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/system_program/create_nonce_account.jsonc",
+    "repo": "flow-backend"
+  }
+}

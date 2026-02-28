@@ -1,0 +1,82 @@
+[
+  {
+    "id": 9,
+    "address": "7GxATsNMnaC88vdwd2t3mwrFuQwwGvmYPrUQ4D6FotXk",
+    "name": "jupiter lend JupUSD",
+    "symbol": "jlJupUSD",
+    "decimals": 6,
+    "assetAddress": "JuprjznTrTSp2UFa3ZBUFgwdAmtZCq4MQCwysN55USD",
+    "asset": {
+      "address": "JuprjznTrTSp2UFa3ZBUFgwdAmtZCq4MQCwysN55USD",
+      "chainId": "solana",
+      "name": "Jupiter USD",
+      "symbol": "JupUSD",
+      "uiSymbol": "JupUSD",
+      "decimals": 6,
+      "logoUrl": "https://coin-images.coingecko.com/coins/images/70636/large/icon.png?1767003505",
+      "price": "0.999917017826",
+      "coingeckoId": "jupusd",
+      "updatedAt": "2026-02-19T22:18:05.000+00:00"
+    },
+    "totalAssets": "55465817995375",
+    "totalSupply": "55060756246389",
+    "convertToShares": "992697",
+    "convertToAssets": "1007357",
+    "rewardsRate": "295",
+    "supplyRate": "166",
+    "totalRate": "461",
+    "rebalanceDifference": "25024523223",
+    "liquiditySupplyData": {
+      "modeWithInterest": true,
+      "supply": "55315350515949",
+      "withdrawalLimit": "27657675257975",
+      "lastUpdateTimestamp": "1771539470",
+      "expandPercent": 5000,
+      "expandDuration": "21600",
+      "baseWithdrawalLimit": "10022678733730",
+      "withdrawableUntilLimit": "27657675257974",
+      "withdrawable": "24224941180387"
+    },
+    "rewards": []
+  },
+  {
+    "id": 2,
+    "address": "9BEcn9aPEmhSPbPQeFGjidRiEKki46fVQDyPpSQXPA2D",
+    "name": "jupiter lend USDC",
+    "symbol": "jlUSDC",
+    "decimals": 6,
+    "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "asset": {
+      "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "chainId": "solana",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "uiSymbol": "USDC",
+      "decimals": 6,
+      "logoUrl": "https://coin-images.coingecko.com/coins/images/6319/large/USDC.png?1769615602",
+      "price": "1.00001638049",
+      "coingeckoId": "usd-coin",
+      "updatedAt": "2026-02-19T22:18:03.000+00:00"
+    },
+    "totalAssets": "534589249900494",
+    "totalSupply": "517158746697703",
+    "convertToShares": "967395",
+    "convertToAssets": "1033704",
+    "rewardsRate": "154",
+    "supplyRate": "235",
+    "totalRate": "389",
+    "rebalanceDifference": "-8808206150803",
+    "liquiditySupplyData": {
+      "modeWithInterest": true,
+      "supply": "532831815280758",
+      "withdrawalLimit": "399623861460569",
+      "lastUpdateTimestamp": "1771539644",
+      "expandPercent": 2500,
+      "expandDuration": "21600",
+      "baseWithdrawalLimit": "8158633812736",
+      "withdrawableUntilLimit": "133207953820189",
+      "withdrawable": "133207953820189"
+    },
+    "rewards": []
+  }
+]

@@ -1,0 +1,109 @@
+[
+  {
+    "id": "6Lo8x7yHsV8T19keXEKu4gCYwCKvFkbQSffRrvpwYYCB",
+    "name": "DankMemer",
+    "symbol": "DANKMEMER",
+    "icon": "https://cdn.coinbarrel.com/tokens/dankmemer-1771539693734-qhmbm4u6.png",
+    "decimals": 6,
+    "dev": "2Vpm36Mfxpz8WWGNktbDUmqvnizKL7BAoPjVrwnFGA11",
+    "circSupply": 1000000000,
+    "totalSupply": 1000000000,
+    "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "firstPool": {
+      "id": "7tqdbeNKpjcGFgGdS4o7jTbxnUSxnzUz9xjPzpixVSMa",
+      "createdAt": "2026-02-19T22:21:54Z"
+    },
+    "holderCount": 1,
+    "audit": {
+      "isSus": true,
+      "mintAuthorityDisabled": true,
+      "freezeAuthorityDisabled": true,
+      "topHoldersPercentage": 100,
+      "devMints": 4
+    },
+    "organicScore": 0,
+    "organicScoreLabel": "low",
+    "tags": [
+      "unknown",
+      "token-2022"
+    ],
+    "createdAt": "2026-02-19T22:21:38Z",
+    "updatedAt": "2026-02-19T22:21:56.504734224Z"
+  },
+  {
+    "id": "Gnp6L6ybcFwRpxUENTNMTrudj7wDEgipRFFGdSqKpump",
+    "name": "Mankey",
+    "symbol": "Mankey",
+    "icon": "https://ipfs.io/ipfs/bafkreiah3taxaeuc5jpttergftl3s74r64plmitupvl3kt2drlm5r4y4cy",
+    "decimals": 6,
+    "twitter": "https://x.com/i/communities/2024609147023417499",
+    "website": "https://www.pokemon.com/us/pokedex/mankey",
+    "dev": "5pTjYZofupJcfozeonskYbFHrcF8W9bwaz1veFLLeST2",
+    "circSupply": 1000000000,
+    "totalSupply": 1000000000,
+    "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "launchpad": "pump.fun",
+    "firstPool": {
+      "id": "Gnp6L6ybcFwRpxUENTNMTrudj7wDEgipRFFGdSqKpump",
+      "createdAt": "2026-02-19T22:21:52Z"
+    },
+    "holderCount": 1,
+    "audit": {
+      "mintAuthorityDisabled": true,
+      "freezeAuthorityDisabled": true,
+      "topHoldersPercentage": 0.1411145750589,
+      "devMints": 12
+    },
+    "organicScore": 0,
+    "organicScoreLabel": "low",
+    "tags": [
+      "unknown",
+      "token-2022"
+    ],
+    "createdAt": "2026-02-19T22:21:52Z",
+    "fdv": 2302.042674310375,
+    "mcap": 2302.042674310375,
+    "usdPrice": 2.302042674310375e-06,
+    "priceBlockId": 401399189,
+    "liquidity": 2467.00300815697,
+    "stats5m": {
+      "priceChange": -2.5312501148679033e-06,
+      "buyVolume": 3.248517819755734,
+      "sellVolume": 3.248517737527623,
+      "numBuys": 1,
+      "numSells": 1,
+      "numTraders": 1,
+      "numNetBuyers": 1
+    },
+    "stats1h": {
+      "priceChange": -2.5312501148679033e-06,
+      "buyVolume": 3.248517819755734,
+      "sellVolume": 3.248517737527623,
+      "numBuys": 1,
+      "numSells": 1,
+      "numTraders": 1,
+      "numNetBuyers": 1
+    },
+    "stats6h": {
+      "priceChange": -2.5312501148679033e-06,
+      "buyVolume": 3.248517819755734,
+      "sellVolume": 3.248517737527623,
+      "numBuys": 1,
+      "numSells": 1,
+      "numTraders": 1,
+      "numNetBuyers": 1
+    },
+    "stats24h": {
+      "priceChange": -2.5312501148679033e-06,
+      "buyVolume": 3.248517819755734,
+      "sellVolume": 3.248517737527623,
+      "numBuys": 1,
+      "numSells": 1,
+      "numTraders": 1,
+      "numNetBuyers": 1
+    },
+    "fees": 0.001393434,
+    "bondingCurve": 0,
+    "updatedAt": "2026-02-19T22:21:58.393284809Z"
+  }
+]

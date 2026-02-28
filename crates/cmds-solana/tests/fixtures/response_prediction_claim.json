@@ -1,0 +1,14 @@
+{
+  "transaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfake-claim-tx",
+  "txMeta": {
+    "blockhash": "HZz1a3VJdC7EKxQwT6N7pbN3sF2DjBbfSvGwa8E7VqXB",
+    "lastValidBlockHeight": 401400200
+  },
+  "position": {
+    "positionPubkey": "PosPubkey123",
+    "marketPubkey": "MktPubkey123",
+    "isYes": true,
+    "contracts": 10,
+    "payoutAmountUsd": "10.00"
+  }
+}

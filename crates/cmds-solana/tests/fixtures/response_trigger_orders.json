@@ -1,0 +1,31 @@
+{
+  "user": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+  "orderStatus": "active",
+  "orders": [
+    {
+      "userPubkey": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+      "orderKey": "OrdKey123abc",
+      "inputMint": "So11111111111111111111111111111111111111112",
+      "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "makingAmount": "1000000000",
+      "takingAmount": "150000000",
+      "remainingMakingAmount": "1000000000",
+      "remainingTakingAmount": "150000000",
+      "rawMakingAmount": "1000000000",
+      "rawTakingAmount": "150000000",
+      "rawRemainingMakingAmount": "1000000000",
+      "rawRemainingTakingAmount": "150000000",
+      "slippageBps": "50",
+      "expiredAt": null,
+      "createdAt": "2025-01-15T10:00:00Z",
+      "updatedAt": "2025-01-15T10:00:00Z",
+      "status": "active",
+      "openTx": "5xFakeOpenTxSignature",
+      "closeTx": "",
+      "programVersion": "v2",
+      "trades": []
+    }
+  ],
+  "totalPages": 1,
+  "page": 1
+}

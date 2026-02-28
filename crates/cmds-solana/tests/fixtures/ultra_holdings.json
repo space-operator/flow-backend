@@ -1,0 +1,49 @@
+{
+  "amount": "5714266356",
+  "uiAmount": 5.714266356,
+  "uiAmountString": "5.714266356",
+  "tokens": {
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v": [
+      {
+        "account": "ALZv1FW3Bc5uRtci2UHnYS34DEWCmfkN5btEYDKms9yU",
+        "amount": "205451455",
+        "uiAmount": 205.451455,
+        "uiAmountString": "205.451455",
+        "isFrozen": false,
+        "isAssociatedTokenAccount": true,
+        "decimals": 6,
+        "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "excludeFromNetWorth": false,
+        "lamports": "2039280"
+      }
+    ],
+    "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB": [
+      {
+        "account": "FUB3AwADyvY5DtmP5dC25NB8BTdMqBmMggFauWwFkZJS",
+        "amount": "2523372237",
+        "uiAmount": 2523.372237,
+        "uiAmountString": "2523.372237",
+        "isFrozen": false,
+        "isAssociatedTokenAccount": true,
+        "decimals": 6,
+        "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "excludeFromNetWorth": false,
+        "lamports": "2039280"
+      }
+    ],
+    "29tcY3zPp7jLZaK2436BJ3UhqzmR4kLKJJ5SE2rQaHiG": [
+      {
+        "account": "8iYqJN2vZ7byh1HQWgPEnzxjX3kQbCe5ZYmmJTvqe8Mg",
+        "amount": "24000000000",
+        "uiAmount": 24,
+        "uiAmountString": "24",
+        "isFrozen": false,
+        "isAssociatedTokenAccount": true,
+        "decimals": 9,
+        "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "excludeFromNetWorth": false,
+        "lamports": "2039280"
+      }
+    ]
+  }
+}

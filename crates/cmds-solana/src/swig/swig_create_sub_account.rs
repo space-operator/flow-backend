@@ -1,0 +1,135 @@
+use crate::prelude::*;
+use super::{
+    to_pubkey_v2, to_instruction_v3,
+    find_sub_account_pda,
+    CreateSubAccountInstruction,
+};
+
+const NAME: &str = "swig_create_sub_account";
+const DEFINITION: &str = flow_lib::node_definition!("swig/swig_create_sub_account.jsonc");
+
+fn build() -> BuildResult {
+    static CACHE: BuilderCache = BuilderCache::new(|| {
+        CmdBuilder::new(DEFINITION)?
+            .check_name(NAME)?
+            .simple_instruction_info("signature")
+    });
+    Ok(CACHE.clone()?.build(run))
+}
+
+flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
+
+#[serde_as]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Input {
+    pub fee_payer: Wallet,
+    #[serde_as(as = "AsPubkey")]
+    pub swig_account: Pubkey,
+    pub swig_id: [u8; 32],
+    pub authority: Wallet,
+    pub role_id: u32,
+    #[serde(default = "value::default::bool_true")]
+    pub submit: bool,
+}
+
+#[serde_as]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Output {
+    #[serde(default, with = "value::signature::opt")]
+    pub signature: Option<Signature>,
+    #[serde_as(as = "AsPubkey")]
+    pub sub_account: Pubkey,
+}
+
+async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    let (sub_account, sub_account_bump) = find_sub_account_pda(&input.swig_id, input.role_id);
+
+    let ix_v2 = CreateSubAccountInstruction::new_with_ed25519_authority(
+        to_pubkey_v2(&input.swig_account),
+        to_pubkey_v2(&input.authority.pubkey()),
+        to_pubkey_v2(&input.fee_payer.pubkey()),
+        to_pubkey_v2(&sub_account),
+        input.role_id,
+        sub_account_bump,
+    ).map_err(|e| CommandError::msg(e.to_string()))?;
+
+    let instruction = to_instruction_v3(ix_v2);
+
+    let ins = Instructions {
+        lookup_tables: None,
+        fee_payer: input.fee_payer.pubkey(),
+        signers: [input.fee_payer, input.authority].into(),
+        instructions: [instruction].into(),
+    };
+
+    let ins = if input.submit { ins } else { Default::default() };
+    let signature = ctx.execute(ins, <_>::default()).await?.signature;
+
+    Ok(Output { signature, sub_account })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::swig::SWIG_PROGRAM_ID;
+    use solana_keypair::{Keypair, Signer};
+
+    #[test]
+    fn test_build() {
+        build().unwrap();
+    }
+
+    #[test]
+    fn test_instruction_builder() {
+        let kp = Keypair::new();
+        let swig_account = Keypair::new().pubkey();
+        let swig_id = [7u8; 32];
+        let (sub_account, sub_account_bump) = find_sub_account_pda(&swig_id, 0);
+
+        let ix = CreateSubAccountInstruction::new_with_ed25519_authority(
+            to_pubkey_v2(&swig_account),
+            to_pubkey_v2(&kp.pubkey()),
+            to_pubkey_v2(&kp.pubkey()),
+            to_pubkey_v2(&sub_account),
+            0,
+            sub_account_bump,
+        ).unwrap();
+
+        let instruction = to_instruction_v3(ix);
+        assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
+        assert!(!instruction.data.is_empty());
+    }
+
+    #[test]
+    fn test_sub_account_pda_derivation() {
+        let swig_id = [7u8; 32];
+        let (sub1, bump1) = find_sub_account_pda(&swig_id, 0);
+        let (sub2, bump2) = find_sub_account_pda(&swig_id, 0);
+        assert_eq!(sub1, sub2);
+        assert_eq!(bump1, bump2);
+
+        // Different role_id yields different PDA
+        let (sub3, _) = find_sub_account_pda(&swig_id, 1);
+        assert_ne!(sub1, sub3);
+    }
+
+    #[tokio::test]
+    #[ignore = "requires funded wallet and network access"]
+    async fn test_run_integration() {
+        let wallet: Wallet = Keypair::new().into();
+        let swig_account = Keypair::new().pubkey();
+        let swig_id = [7u8; 32];
+
+        let input = Input {
+            fee_payer: wallet.clone(),
+            swig_account,
+            swig_id,
+            authority: wallet,
+            role_id: 0,
+            submit: true,
+        };
+
+        let result = run(CommandContext::default(), input).await;
+        assert!(result.is_ok(), "run failed: {:?}", result.err());
+    }
+}

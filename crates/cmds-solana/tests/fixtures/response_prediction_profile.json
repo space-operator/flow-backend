@@ -1,0 +1,10 @@
+{
+  "ownerPubkey": "OwnerPubkey456",
+  "realizedPnlUsd": "150.50",
+  "totalVolumeUsd": "2500.00",
+  "predictionsCount": 42,
+  "correctPredictions": 28,
+  "wrongPredictions": 14,
+  "totalActiveContracts": 25,
+  "totalPositionsValueUsd": "120.00"
+}

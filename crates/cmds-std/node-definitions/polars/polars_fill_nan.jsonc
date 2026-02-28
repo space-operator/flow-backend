@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_fill_nan",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Replace NaN values in a floating-point column with a specified value",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_fill_nan.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "column",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Column name to fill NaN values in"
+      },
+      {
+        "name": "value",
+        "type_bounds": [
+          "f64"
+        ],
+        "required": true,
+        "tooltip": "Replacement value for NaN"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "DataFrame with NaN values replaced in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "value": {
+      "D": "0.0"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "fill",
+      "nan"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_fill_nan.jsonc",
+    "repo": "flow-backend"
+  }
+}

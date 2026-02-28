@@ -1,0 +1,36 @@
+{
+    "ticker": "KXSB",
+    "frequency": "annual",
+    "title": "Super Bowl",
+    "category": "Sports",
+    "tags": [
+        "Football"
+    ],
+    "settlementSources": [
+        {
+            "name": "AP",
+            "url": "https://apnews.com/"
+        },
+        {
+            "name": "ESPN",
+            "url": "https://www.espn.com/"
+        },
+        {
+            "name": "Fox Sports",
+            "url": "https://www.foxsports.com/"
+        }
+    ],
+    "contractUrl": "https://kalshi-public-docs.s3.us-east-1.amazonaws.com/regulatory/product-certifications/TITLE.pdf",
+    "contractTermsUrl": "https://kalshi-public-docs.s3.amazonaws.com/contract_terms/TITLE.pdf",
+    "productMetadata": {},
+    "feeType": "quadratic_with_maker_fees",
+    "feeMultiplier": 1.0,
+    "additionalProhibitions": [
+        "Current and former players, coaches, and staff of the league, association, or organization(s) governing the event. For college leagues/associations specifically, or where otherwise appropriate (as identified by the Exchange), this applies to current and former players/coaches/staff of the specific teams in <event> rather than the league/association as a whole (e.g., if the Division I Gonzaga Men\u2019s Basketball Team is playing in <event>, this prohibition will restrict trades by  current/former players of that team, rather than all current/former players/coaches/staff in any NCAA sport).",
+        "Paid employees of the league and league participants",
+        "Owners of teams and the league",
+        "and household members and immediate family of all above",
+        "Persons who are employed by any of the Source Agencies are not permitted to trade on the Contract.",
+        "Persons who hold any material, non-public information on the Underlying are not permitted to trade on the Contract."
+    ]
+}

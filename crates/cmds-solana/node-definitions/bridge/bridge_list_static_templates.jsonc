@@ -1,0 +1,79 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "bridge_list_static_templates",
+  "prefix": "bridge",
+  "type": "native",
+  "description": "List all static transfer templates",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_list_static_templates.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Bridge.xyz API key"
+      },
+      {
+        "name": "limit",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Max items per page (1-100)"
+      },
+      {
+        "name": "starting_after",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Cursor: fetch items after this ID"
+      },
+      {
+        "name": "ending_before",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Cursor: fetch items before this ID"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Bridge"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Bridge",
+    "program": "bridge",
+    "category": "payments",
+    "icon_url": null,
+    "tags": [
+      "payments",
+      "bridge",
+      "list",
+      "static",
+      "templates"
+    ]
+  },
+  "external_version": {
+    "program_id": "bridge_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_list_static_templates.jsonc",
+    "repo": "flow-backend"
+  }
+}

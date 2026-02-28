@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "helius_get_block_time",
+  "prefix": "helius",
+  "type": "native",
+  "description": "Fetch the estimated production time of a block.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/helius/helius_get_block_time.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "RPC endpoint URL"
+      },
+      {
+        "name": "slot",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Slot number"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "block_time",
+        "type": "i64",
+        "tooltip": "Unix timestamp of block"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Helius",
+    "program": "helius",
+    "category": "infrastructure",
+    "icon_url": null,
+    "tags": [
+      "infrastructure",
+      "helius",
+      "get",
+      "block",
+      "time"
+    ]
+  },
+  "external_version": {
+    "program_id": "helius_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/helius/helius_get_block_time.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "initialize_flow",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Initialize integration with full setup (mint creation + vault + metadata) in one flow",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_initialize_flow.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Solana cluster: mainnet or devnet (default: mainnet)"
+      },
+      {
+        "name": "signer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Initializer's Solana wallet address"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Authority Solana address"
+      },
+      {
+        "name": "stablecoin",
+        "type_bounds": [
+          "i64"
+        ],
+        "required": true,
+        "tooltip": "Stablecoin index (0 = USDC+)"
+      },
+      {
+        "name": "fee_bps",
+        "type_bounds": [
+          "i64"
+        ],
+        "required": true,
+        "tooltip": "Fee in basis points (0-10000)"
+      },
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Fee payer Solana address"
+      },
+      {
+        "name": "metadata_name",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Token name"
+      },
+      {
+        "name": "metadata_symbol",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Token symbol"
+      },
+      {
+        "name": "metadata_description",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Token description"
+      },
+      {
+        "name": "metadata_uri",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Metadata URI"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "initialize",
+      "flow"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/initialize_flow.jsonc",
+    "repo": "flow-backend"
+  }
+}

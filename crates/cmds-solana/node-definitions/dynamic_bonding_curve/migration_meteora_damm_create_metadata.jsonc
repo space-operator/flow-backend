@@ -1,0 +1,130 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "migration_meteora_damm_create_metadata",
+  "prefix": "dynamic_bonding_curve",
+  "type": "native",
+  "description": "migration_meteora_damm_create_metadata instruction for Dynamic Bonding Curve",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/dynamic_bonding_curve/migration_meteora_damm_create_metadata.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "virtual_pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Virtual pool account"
+      },
+      {
+        "name": "config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Config account"
+      },
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Payer (writable, signer)"
+      },
+      {
+        "name": "system_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: constant] System program"
+      },
+      {
+        "name": "event_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: pda] Event authority"
+      },
+      {
+        "name": "program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: self_reference]"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "migration_metadata",
+        "type": "pubkey",
+        "tooltip": "Derived migration_metadata PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "system_program": {
+      "S": "pubkey!(\"11111111111111111111111111111111\")"
+    },
+    "program": {
+      "S": "DYNAMIC_BONDING_CURVE_PROGRAM_ID"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "dynamic_bonding_curve",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dynamic bonding curve",
+      "migration",
+      "meteora",
+      "damm",
+      "create",
+      "metadata"
+    ]
+  },
+  "external_version": {
+    "program_id": "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN",
+    "sdk_crate": "dynamic-bonding-curve-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dynamic_bonding_curve/migration_meteora_damm_create_metadata.jsonc",
+    "repo": "flow-backend"
+  }
+}

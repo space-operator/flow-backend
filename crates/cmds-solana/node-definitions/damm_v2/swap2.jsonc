@@ -1,0 +1,163 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "damm_v2_swap2",
+  "prefix": "damm_v2",
+  "type": "native",
+  "description": "Swap tokens on a DAMM v2 pool with flexible swap modes (ExactIn, PartialFill, ExactOut)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/damm_v2/swap2.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pool account"
+      },
+      {
+        "name": "input_token_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "User's input token account"
+      },
+      {
+        "name": "output_token_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "User's output token account"
+      },
+      {
+        "name": "token_a_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token A mint"
+      },
+      {
+        "name": "token_b_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token B mint"
+      },
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Swap executor"
+      },
+      {
+        "name": "referral_token_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Optional referral token account"
+      },
+      {
+        "name": "amount_0",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "amount_in for ExactIn/PartialFill; amount_out for ExactOut"
+      },
+      {
+        "name": "amount_1",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "minimum_amount_out for ExactIn/PartialFill; maximum_amount_in for ExactOut"
+      },
+      {
+        "name": "swap_mode",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "0=ExactIn, 1=PartialFill, 2=ExactOut"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "pool_authority",
+        "type": "pubkey",
+        "tooltip": "Derived pool authority PDA"
+      },
+      {
+        "name": "token_a_vault",
+        "type": "pubkey",
+        "tooltip": "Derived token A vault PDA"
+      },
+      {
+        "name": "token_b_vault",
+        "type": "pubkey",
+        "tooltip": "Derived token B vault PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "damm_v2",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "damm v2",
+      "swap2"
+    ]
+  },
+  "external_version": {
+    "program_id": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+    "sdk_crate": "damm-v2-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/swap2.jsonc",
+    "repo": "flow-backend"
+  }
+}

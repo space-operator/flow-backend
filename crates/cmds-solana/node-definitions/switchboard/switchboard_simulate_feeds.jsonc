@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "switchboard_simulate_feeds",
+  "prefix": "switchboard",
+  "description": "Simulate Switchboard feed values off-chain via the Crossbar API. Returns simulated oracle results without submitting any on-chain transaction.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/switchboard/simulate_feeds.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "feed_pubkeys",
+        "type_bounds": [
+          "string[]"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Array of base58-encoded Switchboard feed public keys to simulate"
+      },
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Solana cluster: 'Mainnet' or 'Devnet' (default: 'Mainnet')"
+      },
+      {
+        "name": "crossbar_url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Override Crossbar API base URL (default: https://crossbar.switchboard.xyz). Use for self-hosted Crossbar instances."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "results",
+        "type": "json",
+        "tooltip": "Array of simulation results with feed pubkey, results array, and feed hash"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Switchboard",
+    "program": "switchboard",
+    "category": "oracle",
+    "icon_url": null,
+    "tags": [
+      "oracle",
+      "switchboard",
+      "simulate",
+      "crossbar",
+      "feed"
+    ]
+  },
+  "external_version": {
+    "program_id": "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://crossbar.switchboard.xyz",
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/switchboard/switchboard_simulate_feeds.jsonc",
+    "repo": "flow-backend"
+  }
+}

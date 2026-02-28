@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "initialize_scaled_ui_amount",
+  "prefix": "scaled_ui_amount",
+  "type": "native",
+  "description": "Initialize scaled UI amount configuration for a Token-2022 mint",
+  "author_handle": "spo",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The mint to configure scaled UI amount on"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Authority that can update the multiplier"
+      },
+      {
+        "name": "multiplier",
+        "type_bounds": [
+          "f64"
+        ],
+        "required": true,
+        "tooltip": "Initial UI amount multiplier"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "scaled_ui_amount",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "scaled ui amount",
+      "initialize",
+      "scaled",
+      "amount"
+    ]
+  },
+  "external_version": {
+    "program_id": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_token_2022/scaled_ui_amount/initialize.jsonc",
+    "repo": "flow-backend"
+  }
+}

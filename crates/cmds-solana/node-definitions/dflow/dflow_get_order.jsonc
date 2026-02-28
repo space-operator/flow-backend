@@ -1,0 +1,140 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_get_order",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Get a swap order with route plan, pricing, and optional transaction.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_order.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DFlow API key"
+      },
+      {
+        "name": "input_mint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Base58 input mint address"
+      },
+      {
+        "name": "output_mint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Base58 output mint address"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Input amount as scaled integer (e.g. 1 SOL = 1000000000)"
+      },
+      {
+        "name": "user_public_key",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Swapper wallet address (include to get transaction)"
+      },
+      {
+        "name": "slippage_bps",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Slippage in basis points or 'auto'"
+      },
+      {
+        "name": "dexes",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Comma-separated DEXes to include"
+      },
+      {
+        "name": "exclude_dexes",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Comma-separated DEXes to exclude"
+      },
+      {
+        "name": "only_direct_routes",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Only use single-leg routes"
+      },
+      {
+        "name": "platform_fee_bps",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Platform fee in basis points"
+      },
+      {
+        "name": "fee_account",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Token account for platform fee"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "order",
+        "type": "json",
+        "tooltip": "Full order response with route plan and pricing"
+      },
+      {
+        "name": "transaction",
+        "type": "string",
+        "optional": true,
+        "tooltip": "Base64 encoded transaction (if userPublicKey provided)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "slippage_bps": {
+      "S": "auto"
+    }
+  },
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "get",
+      "order"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_order.jsonc",
+    "repo": "flow-backend"
+  }
+}

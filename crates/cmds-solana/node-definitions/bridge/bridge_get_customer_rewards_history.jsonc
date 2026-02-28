@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "bridge_get_customer_rewards_history",
+  "prefix": "bridge",
+  "type": "native",
+  "description": "Get rewards history for a customer",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_get_customer_rewards_history.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Bridge.xyz API key"
+      },
+      {
+        "name": "currency",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Currency code (e.g. usdc)"
+      },
+      {
+        "name": "customer_id",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Customer ID"
+      },
+      {
+        "name": "limit",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Max items per page (1-100)"
+      },
+      {
+        "name": "starting_after",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Cursor: fetch items after this ID"
+      },
+      {
+        "name": "ending_before",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Cursor: fetch items before this ID"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Bridge"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Bridge",
+    "program": "bridge",
+    "category": "payments",
+    "icon_url": null,
+    "tags": [
+      "payments",
+      "bridge",
+      "get",
+      "customer",
+      "rewards",
+      "history"
+    ]
+  },
+  "external_version": {
+    "program_id": "bridge_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_get_customer_rewards_history.jsonc",
+    "repo": "flow-backend"
+  }
+}

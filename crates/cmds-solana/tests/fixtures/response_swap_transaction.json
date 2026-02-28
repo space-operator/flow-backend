@@ -1,0 +1,5 @@
+{
+  "swapTransaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfake-swap-tx",
+  "lastValidBlockHeight": 401400100,
+  "prioritizationFeeLamports": 5000
+}

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_read_csv",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Parse CSV text into a Polars DataFrame",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_read_csv.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "csv_string",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "CSV text to parse"
+      },
+      {
+        "name": "has_header",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether CSV has a header row"
+      },
+      {
+        "name": "separator",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Column separator character"
+      },
+      {
+        "name": "infer_schema_length",
+        "type_bounds": [
+          "u32"
+        ],
+        "tooltip": "Number of rows to use for schema inference"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "has_header": {
+      "B": true
+    },
+    "separator": {
+      "S": ","
+    },
+    "infer_schema_length": {
+      "U": "100"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "read",
+      "csv"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_read_csv.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "data": [
+    {
+      "ownerPubkey": "fLHEtMsi9qKwLJfSruuRBJL3VcrkywnQhLN43ivRDjE",
+      "realizedPnlUsd": "18455830000",
+      "totalVolumeUsd": "35956950000",
+      "predictionsCount": 10,
+      "correctPredictions": 5,
+      "wrongPredictions": 5,
+      "winRatePct": "50.00",
+      "period": "all_time",
+      "periodStart": null,
+      "periodEnd": null
+    },
+    {
+      "ownerPubkey": "CsDziMuu2sjyjwoviFoKDUGFh42atgtyj5CHjWGoSZPJ",
+      "realizedPnlUsd": "17573940000",
+      "totalVolumeUsd": "57091060000",
+      "predictionsCount": 8,
+      "correctPredictions": 8,
+      "wrongPredictions": 0,
+      "winRatePct": "100.00",
+      "period": "all_time",
+      "periodStart": null,
+      "periodEnd": null
+    }
+  ],
+  "summary": {
+    "all_time": {
+      "totalVolumeUsd": "6098643984010",
+      "predictionsCount": 27195
+    },
+    "weekly": {
+      "totalVolumeUsd": "143849150000",
+      "predictionsCount": 470
+    },
+    "monthly": {
+      "totalVolumeUsd": "844594413000",
+      "predictionsCount": 3395
+    }
+  }
+}

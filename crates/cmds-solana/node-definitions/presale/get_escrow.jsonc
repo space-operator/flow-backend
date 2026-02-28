@@ -1,0 +1,106 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "get_escrow",
+  "prefix": "presale",
+  "type": "native",
+  "description": "Fetch and parse escrow account data. Returns deposit state, claimed tokens, and individual caps.",
+  "author_handle": "spo",
+  "source_code": "https://github.com/MeteoraAg/presale-sdk",
+  "ports": {
+    "inputs": [
+      {
+        "name": "escrow",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Address of the escrow account to fetch"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "presale",
+        "type": "pubkey",
+        "tooltip": "Presale this escrow belongs to"
+      },
+      {
+        "name": "owner",
+        "type": "pubkey",
+        "tooltip": "Owner of the escrow account"
+      },
+      {
+        "name": "total_deposit",
+        "type": "u64",
+        "tooltip": "Total quote tokens deposited by user"
+      },
+      {
+        "name": "total_claimed_token",
+        "type": "u64",
+        "tooltip": "Total base tokens claimed so far"
+      },
+      {
+        "name": "is_remaining_quote_withdrawn",
+        "type": "bool",
+        "tooltip": "Whether remaining quote tokens have been withdrawn"
+      },
+      {
+        "name": "registry_index",
+        "type": "u8",
+        "tooltip": "Registry index for this escrow"
+      },
+      {
+        "name": "pending_claim_token",
+        "type": "u64",
+        "tooltip": "Pending base tokens to be claimed"
+      },
+      {
+        "name": "deposit_max_cap",
+        "type": "u64",
+        "tooltip": "Maximum deposit cap for this escrow"
+      },
+      {
+        "name": "created_at",
+        "type": "u64",
+        "tooltip": "Escrow creation timestamp (Unix)"
+      },
+      {
+        "name": "total_deposit_fee",
+        "type": "u64",
+        "tooltip": "Total deposit fees accumulated"
+      },
+      {
+        "name": "last_refreshed_at",
+        "type": "u64",
+        "tooltip": "Timestamp of last escrow refresh"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "presale",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "presale",
+      "get",
+      "escrow"
+    ]
+  },
+  "external_version": {
+    "program_id": "presSVxnf9UU8jMxhgSMqaRwNiT36qeBdNeTRKjTdbj",
+    "sdk_crate": "presale-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/presale/get_escrow.jsonc",
+    "repo": "flow-backend"
+  }
+}

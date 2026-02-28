@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_pivot",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Pivot (reshape from long to wide) a DataFrame by turning unique values from one column into new column headers",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_pivot.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "on",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Column whose unique values become new column headers"
+      },
+      {
+        "name": "index",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Array of column names to keep as row identifiers"
+      },
+      {
+        "name": "values",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Column containing the values to fill the new columns"
+      },
+      {
+        "name": "agg",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Aggregation function: first, sum, min, max, mean, median, count, last"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Pivoted DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Pivoted DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "agg": {
+      "S": "first"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "pivot"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_pivot.jsonc",
+    "repo": "flow-backend"
+  }
+}

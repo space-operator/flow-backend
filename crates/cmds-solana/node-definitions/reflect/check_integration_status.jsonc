@@ -1,0 +1,65 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "check_integration_status",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Check if a branded stablecoin is a verified Reflect integration",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_check_integration_status.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "stablecoin_mint",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Branded stablecoin mint address"
+      },
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Solana cluster: mainnet or devnet (default: mainnet)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "check",
+      "integration",
+      "status"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/check_integration_status.jsonc",
+    "repo": "flow-backend"
+  }
+}

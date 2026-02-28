@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.2",
+  "name": "add_signatory",
+  "prefix": "governance",
+  "type": "native",
+  "description": "Add a Signatory to a proposal. Cannot leave draft until Signatory signs. v3.1.2 simplified account layout.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/governance/add_signatory.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Wallet that pays for transaction fees"
+      },
+      {
+        "name": "proposal",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Proposal account"
+      },
+      {
+        "name": "token_owner_record",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "TokenOwnerRecord of the Proposal owner"
+      },
+      {
+        "name": "governance_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Governance Authority (Token Owner or Governance Delegate)"
+      },
+      {
+        "name": "signatory",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Signatory to add to the Proposal"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether to sign and submit the transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "signatory_record_address",
+        "type": "pubkey",
+        "tooltip": "Signatory record address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Realms",
+    "program": "governance",
+    "category": "governance",
+    "icon_url": null,
+    "tags": [
+      "governance",
+      "add",
+      "signatory"
+    ]
+  },
+  "external_version": {
+    "program_id": "GovER5Lthms3bLBqWub97yVRMmNLacFYbaaoNrextimN",
+    "sdk_crate": "spl-governance",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/add_signatory.jsonc",
+    "repo": "flow-backend"
+  }
+}

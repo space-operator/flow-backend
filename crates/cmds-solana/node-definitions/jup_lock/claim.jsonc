@@ -1,0 +1,118 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "claim",
+  "prefix": "jup_lock",
+  "type": "native",
+  "description": "Claim vested tokens from an escrow (v1, SPL Token only)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/jup_lock/claim.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "escrow",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Vesting escrow PDA address"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token mint address (used to derive token accounts)"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Recipient wallet (must be the escrow's designated recipient)"
+      },
+      {
+        "name": "token_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "SPL Token program ID"
+      },
+      {
+        "name": "max_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Maximum amount of tokens to claim (use u64::MAX to claim all available)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "escrow_token",
+        "type": "pubkey",
+        "tooltip": "Derived escrow token account address"
+      },
+      {
+        "name": "recipient_token",
+        "type": "pubkey",
+        "tooltip": "Derived recipient token account address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Jupiter",
+    "program": "jup_lock",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "jup lock",
+      "claim"
+    ]
+  },
+  "external_version": {
+    "program_id": "LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jup_lock/claim.jsonc",
+    "repo": "flow-backend"
+  }
+}

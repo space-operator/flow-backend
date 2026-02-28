@@ -1,0 +1,108 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_dynamic_config",
+  "prefix": "damm_v2",
+  "type": "native",
+  "description": "Create a dynamic config for DAMM v2 pools with pool_creator_authority only",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/damm_v2/create_dynamic_config.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "operator",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Operator account with CreateConfigKey permission"
+      },
+      {
+        "name": "signer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Operator signer"
+      },
+      {
+        "name": "index",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Config index for PDA derivation"
+      },
+      {
+        "name": "pool_creator_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Authority that can create pools with this config"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "config",
+        "type": "pubkey",
+        "tooltip": "Derived config PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "damm_v2",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "damm v2",
+      "create",
+      "dynamic",
+      "config"
+    ]
+  },
+  "external_version": {
+    "program_id": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+    "sdk_crate": "damm-v2-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/create_dynamic_config.jsonc",
+    "repo": "flow-backend"
+  }
+}

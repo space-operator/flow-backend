@@ -1,0 +1,86 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "dflow_get_trades_by_mint",
+  "prefix": "dflow",
+  "type": "native",
+  "description": "Get prediction market trade history by outcome mint.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/dflow/dflow_get_trades_by_mint.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "DFlow API key"
+      },
+      {
+        "name": "mint_address",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Base58 outcome mint address"
+      },
+      {
+        "name": "limit",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Max trades to return"
+      },
+      {
+        "name": "cursor",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Pagination cursor"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "trades",
+        "type": "json",
+        "tooltip": "Array of trade objects"
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "optional": true,
+        "tooltip": "Pagination cursor"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "dFlow",
+    "program": "dflow",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dflow",
+      "get",
+      "trades",
+      "mint"
+    ]
+  },
+  "external_version": {
+    "program_id": "DfLow1HL2FTctjeAeGjgq4sMfnrECfWHnB6LEZXR6qdi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dflow/dflow_get_trades_by_mint.jsonc",
+    "repo": "flow-backend"
+  }
+}

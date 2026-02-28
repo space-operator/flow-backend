@@ -22,11 +22,21 @@ use tracing::info;
 pub mod types;
 
 pub mod burn;
+pub mod cancel_redeem;
 pub mod create_tree;
+pub mod decompress_v1;
+pub mod delegate;
 pub mod mint_to_collection_v1;
 pub mod mint_v1;
+pub mod redeem;
+pub mod set_and_verify_collection;
+pub mod set_decompressible_state;
 pub mod transfer;
+pub mod unverify_collection;
+pub mod unverify_creator;
 pub mod update;
+pub mod verify_collection;
+pub mod verify_creator;
 
 pub use super::WalletOrPubkey;
 
@@ -258,4 +268,19 @@ pub async fn get_leaf_schema_event(
     let leaf_schema = leaf_schema_event.schema.clone();
 
     Ok((leaf_schema_event, leaf_schema))
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
+pub enum DecompressibleState {
+    Enabled,
+    Disabled,
+}
+
+impl From<DecompressibleState> for mpl_bubblegum::types::DecompressibleState {
+    fn from(v: DecompressibleState) -> Self {
+        match v {
+            DecompressibleState::Enabled => mpl_bubblegum::types::DecompressibleState::Enabled,
+            DecompressibleState::Disabled => mpl_bubblegum::types::DecompressibleState::Disabled,
+        }
+    }
 }

@@ -84,11 +84,25 @@ pub async fn try_sign_wallet(
     Ok(())
 }
 
-//
-pub fn anchor_sighash(name: &str) -> [u8; 8] {
-    let namespace = "global";
-    let preimage = format!("{namespace}:{name}");
-    let mut sighash = [0u8; 8];
-    sighash.copy_from_slice(&solana_program::hash::hash(preimage.as_bytes()).to_bytes()[..8]);
-    sighash
+/// Compute the 8-byte Anchor instruction discriminator: `sha256("global:{name}")[0..8]`
+pub fn anchor_discriminator(name: &str) -> [u8; 8] {
+    let hash = solana_program::hash::hash(format!("global:{name}").as_bytes());
+    hash.to_bytes()[..8].try_into().unwrap()
+}
+
+/// Build an Anchor instruction: 8-byte discriminator + args data.
+pub fn build_anchor_instruction(
+    program_id: Pubkey,
+    instruction_name: &str,
+    accounts: Vec<solana_program::instruction::AccountMeta>,
+    args_data: Vec<u8>,
+) -> Instruction {
+    let mut data = Vec::with_capacity(8 + args_data.len());
+    data.extend_from_slice(&anchor_discriminator(instruction_name));
+    data.extend_from_slice(&args_data);
+    Instruction {
+        program_id,
+        accounts,
+        data,
+    }
 }

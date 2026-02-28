@@ -1,0 +1,89 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "rotate_api_key",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Rotate the API key for an integration (requires cryptographic signature)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_rotate_api_key.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "cluster",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Solana cluster: mainnet or devnet (default: mainnet)"
+      },
+      {
+        "name": "integration_id",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Integration ID (proxy state address)"
+      },
+      {
+        "name": "signer",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Authority's Solana address"
+      },
+      {
+        "name": "signature",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Base58-encoded message signature"
+      },
+      {
+        "name": "timestamp",
+        "type_bounds": [
+          "i64"
+        ],
+        "required": true,
+        "tooltip": "Unix timestamp in milliseconds (must be within 1 min of server time)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "rotate",
+      "api",
+      "key"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/rotate_api_key.jsonc",
+    "repo": "flow-backend"
+  }
+}

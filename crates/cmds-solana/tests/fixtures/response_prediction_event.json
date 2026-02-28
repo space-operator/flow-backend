@@ -1,0 +1,24 @@
+{
+  "id": "evt_abc123",
+  "eventId": "evt_abc123",
+  "series": "crypto",
+  "winner": null,
+  "multipleWinners": false,
+  "isActive": true,
+  "isLive": true,
+  "isTrending": false,
+  "isRecommended": false,
+  "category": "crypto",
+  "subcategory": "price",
+  "metadata": {
+    "title": "Will SOL reach $300 by Feb 2025?",
+    "description": "Resolves YES if SOL/USD price hits $300.",
+    "imageUrl": "https://example.com/event.png"
+  },
+  "markets": [],
+  "tvlDollars": "50000.00",
+  "volumeUsd": "120000.00",
+  "closeCondition": "manual",
+  "beginAt": "2025-01-01T00:00:00Z",
+  "rulesPdf": null
+}

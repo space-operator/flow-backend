@@ -1,0 +1,106 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "swig_create_wallet_api",
+  "prefix": "swig",
+  "type": "native",
+  "description": "Create a new Swig wallet through the Developer Portal API",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/swig/swig_create_wallet_api.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Swig API key (sk_...)"
+      },
+      {
+        "name": "policy_id",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Policy ID (CUID format) to apply to the wallet"
+      },
+      {
+        "name": "network",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Network: mainnet or devnet"
+      },
+      {
+        "name": "paymaster_pubkey",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Paymaster public key"
+      },
+      {
+        "name": "swig_id",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Custom Swig ID (auto-generated if omitted)"
+      },
+      {
+        "name": "wallet_address",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Wallet public key as authority"
+      },
+      {
+        "name": "wallet_type",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Authority type: ED25519, SECP256K1, SECP256R1, or session variants"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Created wallet info (swigId, swigAddress, signature)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "network": {
+      "S": "mainnet"
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "swig",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "swig",
+      "create",
+      "wallet",
+      "api"
+    ]
+  },
+  "external_version": {
+    "program_id": "swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_create_wallet_api.jsonc",
+    "repo": "flow-backend"
+  }
+}

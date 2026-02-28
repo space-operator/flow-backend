@@ -1,0 +1,86 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "refresh_escrow",
+  "prefix": "presale",
+  "type": "native",
+  "description": "Refresh escrow using Presale",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/presale/refresh_escrow.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "presale",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Presale account"
+      },
+      {
+        "name": "escrow",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Escrow account"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "presale",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "presale",
+      "refresh",
+      "escrow"
+    ]
+  },
+  "external_version": {
+    "program_id": "presSVxnf9UU8jMxhgSMqaRwNiT36qeBdNeTRKjTdbj",
+    "sdk_crate": "presale-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/presale/refresh_escrow.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "jupiter_trigger_get_orders",
+  "prefix": "jupiter",
+  "type": "native",
+  "description": "Get trigger orders for account",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_trigger_get_orders.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Jupiter API key (portal.jup.ag)"
+      },
+      {
+        "name": "user",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "User wallet pubkey"
+      },
+      {
+        "name": "orderStatus",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "active or history"
+      },
+      {
+        "name": "page",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Page number"
+      },
+      {
+        "name": "includeFailedTx",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Include failed transactions"
+      },
+      {
+        "name": "inputMint",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Filter by input mint"
+      },
+      {
+        "name": "outputMint",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Filter by output mint"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Jupiter",
+    "program": "jupiter",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "jupiter",
+      "trigger",
+      "get",
+      "orders"
+    ]
+  },
+  "external_version": {
+    "program_id": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://api.jup.ag",
+    "api_version": "v6",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_trigger_get_orders.jsonc",
+    "repo": "flow-backend"
+  }
+}

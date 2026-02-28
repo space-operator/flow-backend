@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_filter_expr",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Filter DataFrame rows using a simple expression string (e.g., 'age > 30', 'name == John', 'score is_null')",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_filter_expr.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "expression",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Filter expression (e.g., 'age > 30', 'name == John', 'status is_null')"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Filtered DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Filtered DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "filter",
+      "expr"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_filter_expr.jsonc",
+    "repo": "flow-backend"
+  }
+}

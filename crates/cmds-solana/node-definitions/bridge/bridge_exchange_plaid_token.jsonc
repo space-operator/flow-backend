@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "bridge_exchange_plaid_token",
+  "prefix": "bridge",
+  "type": "native",
+  "description": "Exchange a Plaid public token for an access token",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_exchange_plaid_token.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Bridge.xyz API key"
+      },
+      {
+        "name": "link_token",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Plaid link token to exchange"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Bridge"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Bridge",
+    "program": "bridge",
+    "category": "payments",
+    "icon_url": null,
+    "tags": [
+      "payments",
+      "bridge",
+      "exchange",
+      "plaid",
+      "token"
+    ]
+  },
+  "external_version": {
+    "program_id": "bridge_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_exchange_plaid_token.jsonc",
+    "repo": "flow-backend"
+  }
+}

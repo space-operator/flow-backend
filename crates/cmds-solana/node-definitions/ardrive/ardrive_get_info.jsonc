@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "ardrive_get_info",
+  "prefix": "ardrive",
+  "type": "native",
+  "description": "Get ArDrive Turbo service metadata including version and blockchain payment addresses",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_get_info.rs",
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Service info including version and blockchain addresses"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "ArDrive",
+    "program": "ardrive",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "ardrive",
+      "get",
+      "info"
+    ]
+  },
+  "external_version": {
+    "program_id": "ardrive_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_get_info.jsonc",
+    "repo": "flow-backend"
+  }
+}

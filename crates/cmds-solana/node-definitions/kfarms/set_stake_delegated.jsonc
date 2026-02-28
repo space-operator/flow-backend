@@ -1,0 +1,103 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "set_stake_delegated",
+  "prefix": "kfarms",
+  "type": "native",
+  "description": "Set stake delegated using Kfarms",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/kfarms/set_stake_delegated.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "delegate_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Delegate authority account"
+      },
+      {
+        "name": "user_state",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "User state account address"
+      },
+      {
+        "name": "farm_state",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Farm state account address"
+      },
+      {
+        "name": "new_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "New amount value"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "kfarms",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "kfarms",
+      "set",
+      "stake",
+      "delegated"
+    ]
+  },
+  "external_version": {
+    "program_id": "FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kfarms/set_stake_delegated.jsonc",
+    "repo": "flow-backend"
+  }
+}

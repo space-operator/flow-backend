@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_series_mean",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Compute the mean (average) of all values in a Series",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_series_mean.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "series",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Series in IPC format"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "value",
+        "type": "f64",
+        "tooltip": "Mean of all values in the Series"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "series",
+      "mean"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_series_mean.jsonc",
+    "repo": "flow-backend"
+  }
+}

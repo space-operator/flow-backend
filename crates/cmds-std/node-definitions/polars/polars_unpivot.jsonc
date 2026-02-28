@@ -1,0 +1,98 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_unpivot",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Unpivot (melt) a DataFrame from wide to long format by converting columns into rows",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_unpivot.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "on",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Array of column names to unpivot (melt into rows)"
+      },
+      {
+        "name": "index",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Array of column names to keep as identifiers"
+      },
+      {
+        "name": "variable_name",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Name for the column holding the original column names"
+      },
+      {
+        "name": "value_name",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Name for the column holding the values"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Unpivoted DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Unpivoted DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "variable_name": {
+      "S": "variable"
+    },
+    "value_name": {
+      "S": "value"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "unpivot"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_unpivot.jsonc",
+    "repo": "flow-backend"
+  }
+}

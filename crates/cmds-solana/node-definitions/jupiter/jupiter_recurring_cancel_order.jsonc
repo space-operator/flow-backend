@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "jupiter_recurring_cancel_order",
+  "prefix": "jupiter",
+  "type": "native",
+  "description": "Cancel a recurring order",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/jupiter/jupiter_recurring_cancel_order.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Jupiter API key (portal.jup.ag)"
+      },
+      {
+        "name": "order",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Order account (base58)"
+      },
+      {
+        "name": "recurringType",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Order type (time)"
+      },
+      {
+        "name": "user",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "User pubkey"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Jupiter",
+    "program": "jupiter",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "jupiter",
+      "recurring",
+      "cancel",
+      "order"
+    ]
+  },
+  "external_version": {
+    "program_id": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://api.jup.ag",
+    "api_version": "v6",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/jupiter/jupiter_recurring_cancel_order.jsonc",
+    "repo": "flow-backend"
+  }
+}

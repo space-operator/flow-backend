@@ -1,0 +1,223 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "take_order",
+  "prefix": "limo",
+  "type": "native",
+  "description": "Take Order (Limo)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/limo/take_order.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "taker",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Taker keypair"
+      },
+      {
+        "name": "maker",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Maker account address"
+      },
+      {
+        "name": "global_config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Global configuration account"
+      },
+      {
+        "name": "pda_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pda authority account"
+      },
+      {
+        "name": "order",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Order account address"
+      },
+      {
+        "name": "input_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Input token mint address"
+      },
+      {
+        "name": "output_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Output token mint address"
+      },
+      {
+        "name": "input_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Input vault account"
+      },
+      {
+        "name": "express_relay",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Express relay account address"
+      },
+      {
+        "name": "express_relay_metadata",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Express relay metadata account address"
+      },
+      {
+        "name": "config_router",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Config router account address"
+      },
+      {
+        "name": "input_token_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Input token program"
+      },
+      {
+        "name": "output_token_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Output token program"
+      },
+      {
+        "name": "event_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Event authority account"
+      },
+      {
+        "name": "program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Program account address"
+      },
+      {
+        "name": "input_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Input amount value"
+      },
+      {
+        "name": "min_output_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Min output amount value"
+      },
+      {
+        "name": "tip_amount_permissionless_taking",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Tip amount permissionless taking value"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "taker_input_ata",
+        "type": "pubkey",
+        "tooltip": "Derived taker input account (ATA of taker for input_mint)"
+      },
+      {
+        "name": "taker_output_ata",
+        "type": "pubkey",
+        "tooltip": "Derived taker output account (ATA of taker for output_mint)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "limo",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "limo",
+      "take",
+      "order"
+    ]
+  },
+  "external_version": {
+    "program_id": "LiMoM9rMhrdYrfzUCxQppvxCSG1FcrUK9G8uLq4A1GF",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/limo/take_order.jsonc",
+    "repo": "flow-backend"
+  }
+}

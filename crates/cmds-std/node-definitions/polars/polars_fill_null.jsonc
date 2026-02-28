@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_fill_null",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Fill null values in a column using a strategy (forward, backward, mean, min, max, zero, one) or a specific value",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_fill_null.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "column",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Column name to fill nulls in"
+      },
+      {
+        "name": "strategy",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Fill strategy: forward, backward, mean, min, max, zero, one, value"
+      },
+      {
+        "name": "value",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Value to use when strategy is 'value'"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "DataFrame with nulls filled in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "strategy": {
+      "S": "forward"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "fill",
+      "null"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_fill_null.jsonc",
+    "repo": "flow-backend"
+  }
+}

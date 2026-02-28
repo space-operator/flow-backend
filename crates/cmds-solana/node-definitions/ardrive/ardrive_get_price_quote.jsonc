@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "ardrive_get_price_quote",
+  "prefix": "ardrive",
+  "type": "native",
+  "description": "Get a winc quote for a given payment type and amount",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_get_price_quote.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payment_type",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Payment type (fiat or token type, e.g. 'usd', 'arweave')"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Payment amount in smallest currency unit"
+      },
+      {
+        "name": "promo_code",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Optional promotional code"
+      },
+      {
+        "name": "destination_address",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Optional destination wallet for the credits"
+      },
+      {
+        "name": "x_signature",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Wallet signature for authentication"
+      },
+      {
+        "name": "x_nonce",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Nonce used in the signature"
+      },
+      {
+        "name": "x_public_key",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Public key of the signing wallet"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Price quote with winc amount, adjustments, and fees"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "ArDrive",
+    "program": "ardrive",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "ardrive",
+      "get",
+      "price",
+      "quote"
+    ]
+  },
+  "external_version": {
+    "program_id": "ardrive_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_get_price_quote.jsonc",
+    "repo": "flow-backend"
+  }
+}

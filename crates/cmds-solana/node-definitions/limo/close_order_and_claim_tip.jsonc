@@ -1,0 +1,156 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "close_order_and_claim_tip",
+  "prefix": "limo",
+  "type": "native",
+  "description": "Close order and claim tip using Limo",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/limo/close_order_and_claim_tip.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "maker",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Maker keypair"
+      },
+      {
+        "name": "order",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Order account address"
+      },
+      {
+        "name": "global_config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Global configuration account"
+      },
+      {
+        "name": "pda_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pda authority account"
+      },
+      {
+        "name": "input_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Input token mint address"
+      },
+      {
+        "name": "output_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "- required only for indexing the order state from the instruction"
+      },
+      {
+        "name": "input_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Input vault account"
+      },
+      {
+        "name": "input_token_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Input token program"
+      },
+      {
+        "name": "event_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Event authority account"
+      },
+      {
+        "name": "program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Program account address"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "maker_input_ata",
+        "type": "pubkey",
+        "tooltip": "Derived maker input account (ATA of maker for input_mint)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "limo",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "limo",
+      "close",
+      "order",
+      "claim",
+      "tip"
+    ]
+  },
+  "external_version": {
+    "program_id": "LiMoM9rMhrdYrfzUCxQppvxCSG1FcrUK9G8uLq4A1GF",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/limo/close_order_and_claim_tip.jsonc",
+    "repo": "flow-backend"
+  }
+}

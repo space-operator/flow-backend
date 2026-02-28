@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_series_sub",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Element-wise subtraction of two Series",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_series_sub.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "left",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Left Series in IPC format"
+      },
+      {
+        "name": "right",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Right Series in IPC format"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "series",
+        "type": "string",
+        "tooltip": "Result Series in IPC format"
+      },
+      {
+        "name": "series_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Result Series as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "series",
+      "sub"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_series_sub.jsonc",
+    "repo": "flow-backend"
+  }
+}

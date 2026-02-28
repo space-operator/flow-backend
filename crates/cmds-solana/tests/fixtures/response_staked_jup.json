@@ -1,0 +1,9 @@
+{
+  "stakedAmount": 5000.0,
+  "unstaking": [
+    {
+      "amount": 1000.0,
+      "until": 1705363200000
+    }
+  ]
+}

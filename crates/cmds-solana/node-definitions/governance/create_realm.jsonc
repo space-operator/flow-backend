@@ -1,0 +1,160 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_realm",
+  "prefix": "governance",
+  "type": "native",
+  "description": "Create realm using Governance",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/governance/create_realm.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Wallet that pays for transaction fees"
+      },
+      {
+        "name": "realm_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Realm authority account"
+      },
+      {
+        "name": "community_token_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Community token token mint address"
+      },
+      {
+        "name": "council_token_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Council token token mint address"
+      },
+      {
+        "name": "community_token_config_args",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Community token config args"
+      },
+      {
+        "name": "council_token_config_args",
+        "type_bounds": [
+          "json"
+        ],
+        "tooltip": "Council token config args"
+      },
+      {
+        "name": "name",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Name string"
+      },
+      {
+        "name": "min_weight",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Min weight value"
+      },
+      {
+        "name": "max_weight_source",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Max weight source"
+      },
+      {
+        "name": "is_token_2022_for_community",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Set to true if the community token mint is a Token-2022 mint"
+      },
+      {
+        "name": "is_token_2022_for_council",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Set to true if the council token mint is a Token-2022 mint"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether to sign and submit the transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "realm",
+        "type": "pubkey",
+        "tooltip": "Realm address"
+      },
+      {
+        "name": "community_token_holding",
+        "type": "pubkey",
+        "tooltip": "Community token holding address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "is_token_2022_for_community": {
+      "B": false
+    },
+    "is_token_2022_for_council": {
+      "B": false
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Realms",
+    "program": "governance",
+    "category": "governance",
+    "icon_url": null,
+    "tags": [
+      "governance",
+      "create",
+      "realm"
+    ]
+  },
+  "external_version": {
+    "program_id": "GovER5Lthms3bLBqWub97yVRMmNLacFYbaaoNrextimN",
+    "sdk_crate": "spl-governance",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/create_realm.jsonc",
+    "repo": "flow-backend"
+  }
+}

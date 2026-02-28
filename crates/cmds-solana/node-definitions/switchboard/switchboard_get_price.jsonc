@@ -1,0 +1,101 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "switchboard_get_price",
+  "prefix": "switchboard",
+  "description": "Read current price from a Switchboard On-Demand pull feed account. Returns the median oracle value with statistics.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/switchboard/get_price.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "feed_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Switchboard pull feed account address"
+      },
+      {
+        "name": "max_staleness_slots",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Maximum age in slots before feed data is considered stale. If set and exceeded, the command returns an error."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "price",
+        "type": "f64",
+        "tooltip": "Current median oracle price"
+      },
+      {
+        "name": "std_dev",
+        "type": "f64",
+        "tooltip": "Standard deviation of oracle submissions"
+      },
+      {
+        "name": "mean",
+        "type": "f64",
+        "tooltip": "Mean of oracle submissions"
+      },
+      {
+        "name": "min_value",
+        "type": "f64",
+        "tooltip": "Minimum oracle submission value"
+      },
+      {
+        "name": "max_value",
+        "type": "f64",
+        "tooltip": "Maximum oracle submission value"
+      },
+      {
+        "name": "num_samples",
+        "type": "u8",
+        "tooltip": "Number of successful oracle samples in the current result"
+      },
+      {
+        "name": "slot",
+        "type": "u64",
+        "tooltip": "Slot at which the result was computed"
+      },
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Full CurrentResult data as JSON (value, std_dev, mean, range, min_value, max_value, num_samples, slot, min_slot, max_slot)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Switchboard",
+    "program": "switchboard",
+    "category": "oracle",
+    "icon_url": null,
+    "tags": [
+      "oracle",
+      "switchboard",
+      "price",
+      "feed"
+    ]
+  },
+  "external_version": {
+    "program_id": "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/switchboard/switchboard_get_price.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "data": [
+    {
+      "followerPubkey": "FollowerPk001",
+      "followedAt": "2025-01-12T08:00:00Z"
+    },
+    {
+      "followerPubkey": "FollowerPk002",
+      "followedAt": "2025-01-14T15:30:00Z"
+    }
+  ],
+  "pagination": {
+    "start": 0,
+    "end": 2,
+    "total": 2,
+    "hasNext": false
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "switchboard_fetch_update_ix",
+  "prefix": "switchboard",
+  "description": "Fetch fresh oracle signatures for a Switchboard pull feed and submit a feed update on-chain. Contacts Crossbar to simulate the feed, fetches oracle signatures via the gateway, and builds a pullFeedSubmitResponse transaction.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/switchboard/fetch_update_ix.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "feed",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Switchboard pull feed account to update"
+      },
+      {
+        "name": "queue",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Switchboard oracle queue the feed belongs to"
+      },
+      {
+        "name": "gateway_url",
+        "type_bounds": ["string"],
+        "required": false,
+        "tooltip": "Gateway URL for fetching oracle signatures. Defaults to Crossbar public gateway."
+      },
+      {
+        "name": "crossbar_url",
+        "type_bounds": ["string"],
+        "required": false,
+        "tooltip": "Crossbar API base URL override (default: https://crossbar.switchboard.xyz)"
+      },
+      {
+        "name": "num_signatures",
+        "type_bounds": ["u32"],
+        "required": false,
+        "tooltip": "Number of oracle signatures to request (default: 1, max: 10)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "tooltip": "Submit transaction to the network (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "simulated_value",
+        "type": "json",
+        "tooltip": "Simulated feed values from Crossbar (for informational purposes)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Switchboard",
+    "program": "switchboard",
+    "category": "oracle",
+    "tags": ["oracle", "switchboard", "feed", "update", "pull"]
+  },
+  "external_version": {
+    "program_id": "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/switchboard/switchboard_fetch_update_ix.jsonc",
+    "repo": "flow-backend"
+  }
+}

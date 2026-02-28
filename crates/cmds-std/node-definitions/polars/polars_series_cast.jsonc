@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_series_cast",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Cast a Series to a different data type",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_series_cast.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "series",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Series in IPC format"
+      },
+      {
+        "name": "dtype",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Target data type (e.g., f64, i64, str, bool)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "series",
+        "type": "string",
+        "tooltip": "Cast Series in IPC format"
+      },
+      {
+        "name": "series_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Cast Series as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "dtype": {
+      "S": "f64"
+    }
+  },
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "series",
+      "cast"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_series_cast.jsonc",
+    "repo": "flow-backend"
+  }
+}

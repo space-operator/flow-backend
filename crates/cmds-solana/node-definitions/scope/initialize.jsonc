@@ -1,0 +1,125 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "scope_initialize",
+  "prefix": "scope",
+  "type": "native",
+  "description": "Initialize using Scope",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/scope/initialize.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "admin",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Admin authority account"
+      },
+      {
+        "name": "program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Program account address"
+      },
+      {
+        "name": "program_data",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Program data account address"
+      },
+      {
+        "name": "configuration",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Configuration account address"
+      },
+      {
+        "name": "oracle_prices",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Oracle prices account address"
+      },
+      {
+        "name": "oracle_mappings",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Oracle mappings account address"
+      },
+      {
+        "name": "feed_name",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Feed name string"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "scope",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "scope",
+      "initialize"
+    ]
+  },
+  "external_version": {
+    "program_id": "HFn8GnPADiny6XqUoWE8uRPPxb29ikn4yTnUa9MF2fWJ",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/scope/initialize.jsonc",
+    "repo": "flow-backend"
+  }
+}

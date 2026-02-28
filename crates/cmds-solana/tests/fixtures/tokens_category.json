@@ -1,0 +1,216 @@
+[
+  {
+    "id": "cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij",
+    "name": "Coinbase Wrapped BTC",
+    "symbol": "cbBTC",
+    "icon": "https://ipfs.io/ipfs/QmZ7L8yd5j36oXXydUiYFiFsRHbi3EdgC4RuFwvM7dcqge",
+    "decimals": 8,
+    "dev": "t227cdhHdt67b2FzPUEE3R1GKZ6uG9BU2Ubax3H4DR4",
+    "circSupply": 4416.96714403,
+    "totalSupply": 4416.96714403,
+    "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "mintAuthority": "CTQE6PMesbH4szKR9Nk5moj9WWUr9MVGP734wYX9wy3p",
+    "freezeAuthority": "DSFAkPhfrSR95J9oq9Sh8rUetbj5vgFmwiSuHw6rAVnz",
+    "firstPool": {
+      "id": "ELbPFBzxERu22EC4D1AAipiy9L6tD8TjCxtYdNsqYQ66",
+      "createdAt": "2024-11-07T14:34:00Z"
+    },
+    "holderCount": 58271,
+    "audit": {
+      "topHoldersPercentage": 22.24428635558188,
+      "devMints": 1,
+      "highSingleOwnership": true
+    },
+    "organicScore": 93.72910308375633,
+    "organicScoreLabel": "high",
+    "ctLikes": 4,
+    "smartCtLikes": 1,
+    "isVerified": true,
+    "tags": [
+      "moonshot-verified",
+      "verified",
+      "community"
+    ],
+    "createdAt": "2024-10-08T16:54:05Z",
+    "fdv": 295092798.20716447,
+    "mcap": 295092798.20716447,
+    "usdPrice": 66808.91855987965,
+    "priceBlockId": 401399521,
+    "liquidity": 22742272.142359637,
+    "stats5m": {
+      "priceChange": -0.14499634668791198,
+      "holderChange": 0.0034323568278158195,
+      "liquidityChange": -0.006651340983460754,
+      "volumeChange": 1.2650320978845604,
+      "buyVolume": 92524.89046449383,
+      "sellVolume": 131579.52371644325,
+      "buyOrganicVolume": 2314.4965439916296,
+      "sellOrganicVolume": 167.77964408317655,
+      "numBuys": 473,
+      "numSells": 404,
+      "numTraders": 119,
+      "numOrganicBuyers": 5,
+      "numNetBuyers": 16
+    },
+    "stats1h": {
+      "priceChange": -0.2699150127213425,
+      "holderChange": 0.012014279829740493,
+      "liquidityChange": 0.056089312027462354,
+      "volumeChange": 34.93281605267129,
+      "buyVolume": 797586.2305672927,
+      "sellVolume": 1022561.932191094,
+      "buyOrganicVolume": 22271.80350658689,
+      "sellOrganicVolume": 25461.263949561817,
+      "numBuys": 2691,
+      "numSells": 2882,
+      "numTraders": 435,
+      "numOrganicBuyers": 11,
+      "numNetBuyers": 51
+    },
+    "stats6h": {
+      "priceChange": 0.8615080036089493,
+      "holderChange": 0.01716414067729699,
+      "liquidityChange": -0.20471600485375652,
+      "volumeChange": -2.740612350661624,
+      "buyVolume": 7042259.938872008,
+      "sellVolume": 7133774.7997774985,
+      "buyOrganicVolume": 216064.6622378751,
+      "sellOrganicVolume": 224209.0974465737,
+      "numBuys": 20610,
+      "numSells": 19281,
+      "numTraders": 1610,
+      "numOrganicBuyers": 46,
+      "numNetBuyers": 213
+    },
+    "stats24h": {
+      "priceChange": 0.8484915427844559,
+      "holderChange": 0.08244164677189426,
+      "liquidityChange": -2.795890341883874,
+      "volumeChange": -6.773468554477556,
+      "buyVolume": 22220232.53503836,
+      "sellVolume": 21599350.995324686,
+      "buyOrganicVolume": 704384.6360177353,
+      "sellOrganicVolume": 927531.1310203956,
+      "numBuys": 70269,
+      "numSells": 65505,
+      "numTraders": 4068,
+      "numOrganicBuyers": 138,
+      "numNetBuyers": 590
+    },
+    "stats7d": {
+      "priceChange": 1.228138715568401
+    },
+    "stats30d": {
+      "priceChange": -24.408935686511043
+    },
+    "fees": 134.33378059200572,
+    "updatedAt": "2026-02-19T22:23:43.392936474Z"
+  },
+  {
+    "id": "27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4",
+    "name": "Jupiter Perps",
+    "symbol": "JLP",
+    "icon": "https://static.jup.ag/jlp/icon.png",
+    "decimals": 6,
+    "dev": "mQBipzeneXqnAkWNL8raGvrj2c8dJv87LXs2Hn7BeXk",
+    "circSupply": 316230172.700805,
+    "totalSupply": 316230172.700805,
+    "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "mintAuthority": "AVzP2GeRmqGphJsMxWoqjpUifPpCret7LqWhD8NWQK49",
+    "freezeAuthority": "AVzP2GeRmqGphJsMxWoqjpUifPpCret7LqWhD8NWQK49",
+    "firstPool": {
+      "id": "96GCoubLr9Zk6oPEb1wnzuY7PXRqaGF9oP6DSCMPpFE2",
+      "createdAt": "2024-02-20T16:18:24Z"
+    },
+    "holderCount": 91068,
+    "audit": {
+      "topHoldersPercentage": 40.119354915440695,
+      "devMints": 1,
+      "highSingleOwnership": true
+    },
+    "organicScore": 92.96136138526853,
+    "organicScoreLabel": "high",
+    "ctLikes": 97,
+    "smartCtLikes": 49,
+    "isVerified": true,
+    "tags": [
+      "community",
+      "strict",
+      "verified"
+    ],
+    "createdAt": "2024-06-07T10:22:58.336Z",
+    "fdv": 1140971692.0475655,
+    "mcap": 1140971692.0475655,
+    "usdPrice": 3.608041833272733,
+    "priceBlockId": 401399472,
+    "liquidity": 10018852.563157301,
+    "stats5m": {
+      "priceChange": -0.11135088765959589,
+      "holderChange": -0.007685973099094153,
+      "liquidityChange": 0.002424104682179291,
+      "volumeChange": -5.545106664217022,
+      "buyVolume": 27732.234818414876,
+      "sellVolume": 37804.388681433724,
+      "buyOrganicVolume": 1337.2157996699636,
+      "sellOrganicVolume": 24.63447401598099,
+      "numBuys": 163,
+      "numSells": 142,
+      "numTraders": 67,
+      "numOrganicBuyers": 2,
+      "numNetBuyers": 11
+    },
+    "stats1h": {
+      "priceChange": 0.04145317031625583,
+      "holderChange": -0.005490101347270871,
+      "liquidityChange": 0.14168924240488126,
+      "volumeChange": 3.3400852775678653,
+      "buyVolume": 230242.3844305505,
+      "sellVolume": 465992.75201693404,
+      "buyOrganicVolume": 14337.25523197786,
+      "sellOrganicVolume": 5176.461649341081,
+      "numBuys": 1121,
+      "numSells": 1233,
+      "numTraders": 226,
+      "numOrganicBuyers": 5,
+      "numNetBuyers": 30
+    },
+    "stats6h": {
+      "priceChange": 0.9185464788384954,
+      "holderChange": -0.029639387452659312,
+      "liquidityChange": 1.6848759593061025,
+      "volumeChange": -26.121200983072583,
+      "buyVolume": 2072867.5533544587,
+      "sellVolume": 3716386.406244055,
+      "buyOrganicVolume": 33749.795291095055,
+      "sellOrganicVolume": 24071.93303128362,
+      "numBuys": 11197,
+      "numSells": 11995,
+      "numTraders": 1224,
+      "numOrganicBuyers": 36,
+      "numNetBuyers": 160
+    },
+    "stats24h": {
+      "priceChange": 0.7813634685851745,
+      "holderChange": -0.04280680957555402,
+      "liquidityChange": 1.3951566879384196,
+      "volumeChange": 26.027870267563173,
+      "buyVolume": 9530187.01950474,
+      "sellVolume": 20581541.6199008,
+      "buyOrganicVolume": 161345.928624599,
+      "sellOrganicVolume": 197065.77472529118,
+      "numBuys": 44518,
+      "numSells": 45712,
+      "numTraders": 3783,
+      "numOrganicBuyers": 124,
+      "numNetBuyers": 666
+    },
+    "stats7d": {
+      "priceChange": 2.7760757915175653
+    },
+    "stats30d": {
+      "priceChange": -20.971619428701338
+    },
+    "fees": 270.28680511000204,
+    "updatedAt": "2026-02-19T22:23:44.061796791Z"
+  }
+]

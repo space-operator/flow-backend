@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "get_apy",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Get current APY for a specific stablecoin",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_apy.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "stablecoin_index",
+        "type_bounds": [
+          "i64"
+        ],
+        "required": true,
+        "tooltip": "Stablecoin index (0 = USDC+)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "get",
+      "apy"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_apy.jsonc",
+    "repo": "flow-backend"
+  }
+}

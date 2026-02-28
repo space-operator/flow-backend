@@ -1,0 +1,142 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_transaction_buffer",
+  "prefix": "governance",
+  "type": "native",
+  "description": "Creates a transaction buffer for uploading large versioned transaction messages in chunks. v3.1.2 instruction index 29.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/governance/create_transaction_buffer.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Wallet that pays for transaction fees"
+      },
+      {
+        "name": "governance",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Governance account"
+      },
+      {
+        "name": "proposal",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Proposal account"
+      },
+      {
+        "name": "token_owner_record",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "TokenOwnerRecord of the Proposal owner"
+      },
+      {
+        "name": "governance_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Governance Authority (becomes the buffer creator)"
+      },
+      {
+        "name": "buffer_index",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Buffer index for PDA derivation"
+      },
+      {
+        "name": "final_buffer_hash",
+        "type_bounds": [
+          "bytes"
+        ],
+        "required": true,
+        "tooltip": "SHA-256 hash of the complete buffer content (32 bytes)"
+      },
+      {
+        "name": "final_buffer_size",
+        "type_bounds": [
+          "u16"
+        ],
+        "required": true,
+        "tooltip": "Total size of the final buffer in bytes"
+      },
+      {
+        "name": "buffer",
+        "type_bounds": [
+          "bytes"
+        ],
+        "required": true,
+        "tooltip": "Initial buffer content chunk"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Whether to sign and submit the transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "proposal_transaction_buffer_address",
+        "type": "pubkey",
+        "tooltip": "Derived buffer PDA address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "buffer_index": {
+      "U": "0"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Realms",
+    "program": "governance",
+    "category": "governance",
+    "icon_url": null,
+    "tags": [
+      "governance",
+      "create",
+      "transaction",
+      "buffer"
+    ]
+  },
+  "external_version": {
+    "program_id": "GovER5Lthms3bLBqWub97yVRMmNLacFYbaaoNrextimN",
+    "sdk_crate": "spl-governance",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/governance/create_transaction_buffer.jsonc",
+    "repo": "flow-backend"
+  }
+}

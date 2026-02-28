@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_count",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Get the row count and per-column null counts of a DataFrame",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_count.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "dataframe",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "DataFrame in IPC format"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "polars_count",
+        "type": "u64",
+        "tooltip": "Total number of rows in the DataFrame"
+      },
+      {
+        "name": "null_counts",
+        "type": "json",
+        "tooltip": "JSON object with null count per column"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "count"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_count.jsonc",
+    "repo": "flow-backend"
+  }
+}

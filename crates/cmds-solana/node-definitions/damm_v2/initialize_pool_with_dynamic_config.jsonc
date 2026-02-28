@@ -1,0 +1,238 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "initialize_pool_with_dynamic_config",
+  "prefix": "damm_v2",
+  "type": "native",
+  "description": "Initialize a DAMM v2 pool with a dynamic config that allows the pool creator authority to customize parameters.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/damm_v2/initialize_pool_with_dynamic_config.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "creator",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Creator of the pool"
+      },
+      {
+        "name": "position_nft_mint",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "New mint for the LP position NFT"
+      },
+      {
+        "name": "pool_creator_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Authority allowed to create pools with this config"
+      },
+      {
+        "name": "config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Dynamic pool configuration account"
+      },
+      {
+        "name": "token_a_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Mint of token A"
+      },
+      {
+        "name": "token_b_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Mint of token B"
+      },
+      {
+        "name": "payer_token_a",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Payer's token A account"
+      },
+      {
+        "name": "payer_token_b",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Payer's token B account"
+      },
+      {
+        "name": "pool_fees",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Pool fee parameters"
+      },
+      {
+        "name": "sqrt_min_price",
+        "type_bounds": [
+          "u128"
+        ],
+        "required": true,
+        "tooltip": "Minimum sqrt price bound"
+      },
+      {
+        "name": "sqrt_max_price",
+        "type_bounds": [
+          "u128"
+        ],
+        "required": true,
+        "tooltip": "Maximum sqrt price bound"
+      },
+      {
+        "name": "has_alpha_vault",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Whether pool uses alpha vault"
+      },
+      {
+        "name": "liquidity",
+        "type_bounds": [
+          "u128"
+        ],
+        "required": true,
+        "tooltip": "Initial liquidity"
+      },
+      {
+        "name": "sqrt_price",
+        "type_bounds": [
+          "u128"
+        ],
+        "required": true,
+        "tooltip": "Initial sqrt price (Q64.64)"
+      },
+      {
+        "name": "activation_type",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Activation type"
+      },
+      {
+        "name": "collect_fee_mode",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Fee collection mode"
+      },
+      {
+        "name": "activation_point",
+        "type_bounds": [
+          "u64"
+        ],
+        "tooltip": "Optional activation point"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "pool",
+        "type": "pubkey",
+        "tooltip": "Derived pool PDA"
+      },
+      {
+        "name": "pool_authority",
+        "type": "pubkey",
+        "tooltip": "Derived pool authority PDA"
+      },
+      {
+        "name": "token_a_vault",
+        "type": "pubkey",
+        "tooltip": "Derived token A vault PDA"
+      },
+      {
+        "name": "token_b_vault",
+        "type": "pubkey",
+        "tooltip": "Derived token B vault PDA"
+      },
+      {
+        "name": "position",
+        "type": "pubkey",
+        "tooltip": "Derived position PDA"
+      },
+      {
+        "name": "position_nft_account",
+        "type": "pubkey",
+        "tooltip": "Derived position NFT account PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "damm_v2",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "damm v2",
+      "initialize",
+      "pool",
+      "dynamic",
+      "config"
+    ]
+  },
+  "external_version": {
+    "program_id": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+    "sdk_crate": "damm-v2-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/initialize_pool_with_dynamic_config.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "swig_paymaster_health",
+  "prefix": "swig",
+  "type": "native",
+  "description": "Check the health status of the Swig Paymaster service",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/swig/swig_paymaster_health.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Swig API key (sk_...)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Health status (status, timestamp)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Unknown",
+    "program": "swig",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "swig",
+      "paymaster",
+      "health"
+    ]
+  },
+  "external_version": {
+    "program_id": "swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_paymaster_health.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_read_parquet",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Read a Parquet file into a Polars DataFrame",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_read_parquet.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "file_path",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Path to the Parquet file to read"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "DataFrame in IPC format"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "DataFrame as JSON (for viewing)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "read",
+      "parquet"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_read_parquet.jsonc",
+    "repo": "flow-backend"
+  }
+}

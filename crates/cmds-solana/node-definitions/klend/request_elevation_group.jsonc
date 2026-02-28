@@ -1,0 +1,103 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "request_elevation_group",
+  "prefix": "klend",
+  "type": "native",
+  "description": "Request Elevation Group (Klend)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/klend/request_elevation_group.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "owner",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Owner of the account"
+      },
+      {
+        "name": "obligation",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "User obligation (loan position) account"
+      },
+      {
+        "name": "lending_market",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Lending market account"
+      },
+      {
+        "name": "elevation_group",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Elevation group value"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "klend",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "klend",
+      "request",
+      "elevation",
+      "group"
+    ]
+  },
+  "external_version": {
+    "program_id": "KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD",
+    "sdk_crate": "klend-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/request_elevation_group.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "swap_uneven_vaults",
+  "prefix": "yvaults",
+  "type": "native",
+  "description": "Swap via uneven vaults using Yvaults",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/yvaults/swap_uneven_vaults.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "actions_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Actions authority account"
+      },
+      {
+        "name": "strategy",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Strategy account address"
+      },
+      {
+        "name": "global_config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Global configuration account"
+      },
+      {
+        "name": "token_a_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token a vault account"
+      },
+      {
+        "name": "token_b_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token b vault account"
+      },
+      {
+        "name": "base_vault_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Base vault authority account"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Liquidity pool account"
+      },
+      {
+        "name": "position",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "LP position account"
+      },
+      {
+        "name": "raydium_pool_config_or_base_vault_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Raydium pool config or base vault authority account"
+      },
+      {
+        "name": "pool_token_vault_a",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pool token vault a account address"
+      },
+      {
+        "name": "pool_token_vault_b",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pool token vault b account address"
+      },
+      {
+        "name": "tick_array0",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Payer must send this correctly."
+      },
+      {
+        "name": "tick_array1",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Payer must send this correctly."
+      },
+      {
+        "name": "tick_array2",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Payer must send this correctly."
+      },
+      {
+        "name": "oracle",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Oracle account address"
+      },
+      {
+        "name": "pool_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pool program"
+      },
+      {
+        "name": "scope_prices",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Scope prices account address"
+      },
+      {
+        "name": "token_infos",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token infos account address"
+      },
+      {
+        "name": "target_limit_bps",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Target limit bps value"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "yvaults",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "yvaults",
+      "swap",
+      "uneven",
+      "vaults"
+    ]
+  },
+  "external_version": {
+    "program_id": "11111111111111111111111111111111",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/yvaults/swap_uneven_vaults.jsonc",
+    "repo": "flow-backend"
+  }
+}

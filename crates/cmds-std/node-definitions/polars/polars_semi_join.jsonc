@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_semi_join",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Semi join two DataFrames, keeping rows from the left that have a match in the right",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_semi_join.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "left",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Left DataFrame in IPC format"
+      },
+      {
+        "name": "right",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Right DataFrame in IPC format"
+      },
+      {
+        "name": "on",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Column name(s) to join on"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dataframe",
+        "type": "string",
+        "tooltip": "Joined DataFrame (IPC)"
+      },
+      {
+        "name": "dataframe_json",
+        "type": "json",
+        "optional": true,
+        "tooltip": "Joined DataFrame (JSON view)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "semi",
+      "join"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_semi_join.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "initialize_interest_bearing",
+  "prefix": "interest_bearing",
+  "type": "native",
+  "description": "Initialize interest bearing configuration for a Token-2022 mint",
+  "author_handle": "spo",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "The mint to configure interest bearing on"
+      },
+      {
+        "name": "rate_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Authority that can update the interest rate"
+      },
+      {
+        "name": "rate",
+        "type_bounds": [
+          "i16"
+        ],
+        "required": true,
+        "tooltip": "Initial interest rate in basis points"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "interest_bearing",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "interest bearing",
+      "initialize",
+      "interest",
+      "bearing"
+    ]
+  },
+  "external_version": {
+    "program_id": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_token_2022/interest_bearing/initialize.jsonc",
+    "repo": "flow-backend"
+  }
+}

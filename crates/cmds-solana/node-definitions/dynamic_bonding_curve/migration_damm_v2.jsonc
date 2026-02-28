@@ -1,0 +1,262 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "migration_damm_v2",
+  "prefix": "dynamic_bonding_curve",
+  "type": "native",
+  "description": "migration_damm_v2 instruction for Dynamic Bonding Curve",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/dynamic_bonding_curve/migration_damm_v2.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "virtual_pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Virtual pool account"
+      },
+      {
+        "name": "config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Virtual pool config key"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pool account"
+      },
+      {
+        "name": "first_position_nft_mint",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "First position NFT mint (signer)"
+      },
+      {
+        "name": "first_position_nft_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "First position NFT token account"
+      },
+      {
+        "name": "first_position",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "First position account"
+      },
+      {
+        "name": "second_position_nft_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Second position NFT mint (optional, signer)"
+      },
+      {
+        "name": "second_position_nft_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Second position NFT token account (optional)"
+      },
+      {
+        "name": "second_position",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Second position account (optional)"
+      },
+      {
+        "name": "damm_pool_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "DAMM pool authority"
+      },
+      {
+        "name": "amm_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: constant] AMM program"
+      },
+      {
+        "name": "base_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Base mint account"
+      },
+      {
+        "name": "quote_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Quote mint account"
+      },
+      {
+        "name": "token_a_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token A vault account"
+      },
+      {
+        "name": "token_b_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token B vault account"
+      },
+      {
+        "name": "payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Payer (signer)"
+      },
+      {
+        "name": "token_base_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: known_program] Token base program"
+      },
+      {
+        "name": "token_quote_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: known_program] Token quote program"
+      },
+      {
+        "name": "token_2022_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: known_program] Token 2022 program"
+      },
+      {
+        "name": "damm_event_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "DAMM event authority"
+      },
+      {
+        "name": "system_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: constant] System program"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "migration_metadata",
+        "type": "pubkey",
+        "tooltip": "Derived migration_metadata PDA"
+      },
+      {
+        "name": "base_vault",
+        "type": "pubkey",
+        "tooltip": "Derived base_vault PDA"
+      },
+      {
+        "name": "quote_vault",
+        "type": "pubkey",
+        "tooltip": "Derived quote_vault PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "amm_program": {
+      "S": "pubkey!(\"cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG\")"
+    },
+    "token_base_program": {
+      "S": "spl_token::id()"
+    },
+    "token_quote_program": {
+      "S": "spl_token::id()"
+    },
+    "token_2022_program": {
+      "S": "spl_token_2022::id()"
+    },
+    "system_program": {
+      "S": "pubkey!(\"11111111111111111111111111111111\")"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "dynamic_bonding_curve",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dynamic bonding curve",
+      "migration",
+      "damm"
+    ]
+  },
+  "external_version": {
+    "program_id": "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN",
+    "sdk_crate": "dynamic-bonding-curve-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dynamic_bonding_curve/migration_damm_v2.jsonc",
+    "repo": "flow-backend"
+  }
+}

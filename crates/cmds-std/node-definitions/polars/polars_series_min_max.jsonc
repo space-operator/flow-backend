@@ -1,0 +1,62 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "polars_series_min_max",
+  "prefix": "polars",
+  "type": "native",
+  "description": "Get the minimum and maximum values of a Series",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-std/src/polars/polars_series_min_max.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "series",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Series in IPC format"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "min",
+        "type": "json",
+        "tooltip": "Minimum value of the Series"
+      },
+      {
+        "name": "max",
+        "type": "json",
+        "tooltip": "Maximum value of the Series"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "polars",
+    "category": "data",
+    "icon_url": null,
+    "tags": [
+      "data",
+      "polars",
+      "series",
+      "min",
+      "max"
+    ]
+  },
+  "external_version": {
+    "program_id": "polars_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-std/node-definitions/polars/polars_series_min_max.jsonc",
+    "repo": "flow-backend"
+  }
+}

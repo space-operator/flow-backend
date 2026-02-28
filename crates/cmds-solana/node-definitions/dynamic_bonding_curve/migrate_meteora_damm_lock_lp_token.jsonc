@@ -1,0 +1,212 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "migrate_meteora_damm_lock_lp_token",
+  "prefix": "dynamic_bonding_curve",
+  "type": "native",
+  "description": "migrate_meteora_damm_lock_lp_token instruction for Dynamic Bonding Curve",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/dynamic_bonding_curve/migrate_meteora_damm_lock_lp_token.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "virtual_pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Virtual pool account"
+      },
+      {
+        "name": "pool_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: constant] Pool authority"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pool account"
+      },
+      {
+        "name": "lp_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "LP mint account"
+      },
+      {
+        "name": "lock_escrow",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Lock escrow account"
+      },
+      {
+        "name": "owner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Owner account"
+      },
+      {
+        "name": "source_tokens",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Source tokens account"
+      },
+      {
+        "name": "escrow_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Escrow vault account"
+      },
+      {
+        "name": "amm_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: constant] AMM program"
+      },
+      {
+        "name": "a_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "A vault account"
+      },
+      {
+        "name": "b_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "B vault account"
+      },
+      {
+        "name": "a_vault_lp",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "A vault LP account"
+      },
+      {
+        "name": "b_vault_lp",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "B vault LP account"
+      },
+      {
+        "name": "a_vault_lp_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "A vault LP mint account"
+      },
+      {
+        "name": "b_vault_lp_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "B vault LP mint account"
+      },
+      {
+        "name": "token_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "[Auto-derived: constant] Token program"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "migration_metadata",
+        "type": "pubkey",
+        "tooltip": "Derived migration_metadata PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "pool_authority": {
+      "S": "pubkey!(\"FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM\")"
+    },
+    "amm_program": {
+      "S": "pubkey!(\"Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB\")"
+    },
+    "token_program": {
+      "S": "pubkey!(\"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA\")"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "dynamic_bonding_curve",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "dynamic bonding curve",
+      "migrate",
+      "meteora",
+      "damm",
+      "lock",
+      "token"
+    ]
+  },
+  "external_version": {
+    "program_id": "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN",
+    "sdk_crate": "dynamic-bonding-curve-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/dynamic_bonding_curve/migrate_meteora_damm_lock_lp_token.jsonc",
+    "repo": "flow-backend"
+  }
+}

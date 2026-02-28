@@ -1,0 +1,190 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "withdraw_pending_fees",
+  "prefix": "kvault",
+  "type": "native",
+  "description": "Withdraw from pending fees using Kvault",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/kvault/withdraw_pending_fees.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "vault_admin_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Vault admin authority account"
+      },
+      {
+        "name": "vault_state",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Vault state account address"
+      },
+      {
+        "name": "reserve",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Reserve account for the asset"
+      },
+      {
+        "name": "token_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token vault account"
+      },
+      {
+        "name": "ctoken_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Ctoken vault account"
+      },
+      {
+        "name": "base_vault_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Base vault authority account"
+      },
+      {
+        "name": "token_ata",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token ata account address"
+      },
+      {
+        "name": "token_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token mint address"
+      },
+      {
+        "name": "lending_market",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "CPI accounts"
+      },
+      {
+        "name": "lending_market_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Lending market authority account"
+      },
+      {
+        "name": "reserve_liquidity_supply",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Reserve liquidity supply account address"
+      },
+      {
+        "name": "reserve_collateral_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Reserve collateral token mint address"
+      },
+      {
+        "name": "klend_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Klend program"
+      },
+      {
+        "name": "reserve_collateral_token_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Reserve collateral token program"
+      },
+      {
+        "name": "instruction_sysvar_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Instruction sysvar token account"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "kvault",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "kvault",
+      "withdraw",
+      "pending",
+      "fees"
+    ]
+  },
+  "external_version": {
+    "program_id": "KvauGMspG5k6rtzrqqn7WNn3oZdyKqLKwK2XWQ8FLjd",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kvault/withdraw_pending_fees.jsonc",
+    "repo": "flow-backend"
+  }
+}

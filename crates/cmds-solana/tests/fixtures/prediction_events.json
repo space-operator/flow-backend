@@ -1,0 +1,59 @@
+{
+  "data": [
+    {
+      "eventId": "POLY-30829",
+      "isActive": true,
+      "beginAt": "1752259277.827",
+      "category": "politics",
+      "subcategory": "politics",
+      "isRecommended": false,
+      "isTrending": false,
+      "metadata": {
+        "slug": "democratic-presidential-nominee-2028",
+        "title": "Democratic Presidential Nominee 2028",
+        "isLive": false,
+        "series": "polymarket",
+        "eventId": "POLY-30829",
+        "imageUrl": "https://polymarket-upload.s3.us-east-2.amazonaws.com/democrats+2028+donkey.png",
+        "subtitle": "",
+        "closeTime": "2028-11-07T00:00:00Z"
+      },
+      "markets": [
+        {
+          "marketId": "POLY-559652",
+          "status": "open",
+          "result": null,
+          "openTime": 1752258956,
+          "closeTime": 1857168000,
+          "resolveAt": null,
+          "metadata": {
+            "title": "Gavin Newsom",
+            "closeTime": 1857168000,
+            "openTime": 1752258956,
+            "isTeamMarket": false,
+            "rulesPrimary": "This market will resolve to \u201cYes\u201d if the named individual wins and accepts the 2028 nomination of the Democratic Party for U.S. president. Otherwise, this market will resolve to \u201cNo\u201d.\n\nThe resolution source for this market will be a consensus of official Democratic Party sources.\n\nAny replacement of the democratic nominee before election day will not change the resolution of the market.",
+            "rulesSecondary": "",
+            "status": "open"
+          },
+          "pricing": {
+            "buyYesPriceUsd": 280000,
+            "sellYesPriceUsd": 279000,
+            "sellNoPriceUsd": 720000,
+            "buyNoPriceUsd": 721000,
+            "volume": 7439878
+          }
+        }
+      ],
+      "isLive": false,
+      "volumeUsd": "681713996000000",
+      "closeCondition": "This market will close and expire after a winner is declared.",
+      "rulesPdf": ""
+    }
+  ],
+  "pagination": {
+    "start": 0,
+    "end": 10,
+    "total": 2180,
+    "hasNext": true
+  }
+}

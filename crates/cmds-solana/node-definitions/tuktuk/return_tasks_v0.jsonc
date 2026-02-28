@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "return_tasks_v0",
+  "prefix": "tuktuk",
+  "type": "native",
+  "description": "Return Tasks V0 (Tuktuk)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/tuktuk/return_tasks_v0.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "tasks",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Tasks"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "TukTuk",
+    "program": "tuktuk",
+    "category": "automation",
+    "icon_url": null,
+    "tags": [
+      "automation",
+      "tuktuk",
+      "return",
+      "tasks"
+    ]
+  },
+  "external_version": {
+    "program_id": "tuktukUrLhYtkEEdm4K3shf8CWnB89rHACC7EcNNmmZ",
+    "sdk_crate": "tuktuk-program",
+    "sdk_version": "0.3.2",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "lib",
+    "source_code": "crates/cmds-solana/node-definitions/tuktuk/return_tasks_v0.jsonc",
+    "repo": "flow-backend"
+  }
+}

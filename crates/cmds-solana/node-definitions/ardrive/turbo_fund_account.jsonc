@@ -1,0 +1,93 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "turbo_fund_account",
+  "prefix": "ardrive",
+  "type": "native",
+  "description": "Fund an ArDrive Turbo account by sending SOL to the Turbo payment address. Optionally direct credits to a different wallet via memo.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/ardrive/turbo_fund_account.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Wallet that pays SOL to fund the Turbo account"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Amount in lamports to send (1 SOL = 1_000_000_000 lamports)"
+      },
+      {
+        "name": "credit_destination",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "tooltip": "Optional: wallet to receive the Turbo credits. If omitted, credits go to fee_payer."
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "tooltip": "Whether to sign and submit the transaction"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature of the SOL transfer"
+      },
+      {
+        "name": "turbo_address",
+        "type": "pubkey",
+        "optional": false,
+        "tooltip": "The Turbo SOL payment address that received the funds"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "ArDrive",
+    "program": "ardrive",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "ardrive",
+      "turbo",
+      "fund",
+      "account"
+    ]
+  },
+  "external_version": {
+    "program_id": "ardrive_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/turbo_fund_account.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "transaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfake-studio-tx",
+  "mint": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+  "imagePresignedUrl": "https://storage.example.com/upload/image",
+  "metadataPresignedUrl": "https://storage.example.com/upload/metadata",
+  "imageUrl": "https://cdn.example.com/tokens/image.png"
+}

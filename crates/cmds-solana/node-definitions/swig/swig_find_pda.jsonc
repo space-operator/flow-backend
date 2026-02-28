@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "swig_find_pda",
+  "prefix": "swig",
+  "type": "native",
+  "description": "Derive the Swig account PDA from a 32-byte wallet ID",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/swig/swig_find_pda.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "swig_id",
+        "type_bounds": [
+          "bytes"
+        ],
+        "required": true,
+        "tooltip": "32-byte Swig wallet identifier"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "swig_account",
+        "type": "pubkey",
+        "tooltip": "Derived Swig account PDA"
+      },
+      {
+        "name": "bump",
+        "type": "u8",
+        "tooltip": "PDA bump seed"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Unknown",
+    "program": "swig",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "swig",
+      "find",
+      "pda"
+    ]
+  },
+  "external_version": {
+    "program_id": "swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_find_pda.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "ardrive_x402_topup",
+  "prefix": "ardrive",
+  "type": "native",
+  "description": "Top up ArDrive Turbo credits via the X402 Payment Protocol",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_x402_topup.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "payment_type",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Payment type: 'bytes' or 'credits'"
+      },
+      {
+        "name": "qty",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Quantity to top up"
+      },
+      {
+        "name": "x_payment",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Optional base64-encoded X402 payment payload"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Top-up result or payment requirements"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "ArDrive",
+    "program": "ardrive",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "ardrive",
+      "x402",
+      "topup"
+    ]
+  },
+  "external_version": {
+    "program_id": "ardrive_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_x402_topup.jsonc",
+    "repo": "flow-backend"
+  }
+}

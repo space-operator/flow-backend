@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "bridge_create_batch_settlement",
+  "prefix": "bridge",
+  "type": "native",
+  "description": "Create a batch settlement schedule",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/bridge/bridge_create_batch_settlement.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Bridge.xyz API key"
+      },
+      {
+        "name": "customer_id",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "tooltip": "Customer ID"
+      },
+      {
+        "name": "body",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Request body (JSON)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Bridge"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Bridge",
+    "program": "bridge",
+    "category": "payments",
+    "icon_url": null,
+    "tags": [
+      "payments",
+      "bridge",
+      "create",
+      "batch",
+      "settlement"
+    ]
+  },
+  "external_version": {
+    "program_id": "bridge_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/bridge/bridge_create_batch_settlement.jsonc",
+    "repo": "flow-backend"
+  }
+}

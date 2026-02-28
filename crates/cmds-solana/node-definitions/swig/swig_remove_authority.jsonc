@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "swig_remove_authority",
+  "prefix": "swig",
+  "type": "native",
+  "description": "Remove an authority from a Swig wallet",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/swig/swig_remove_authority.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying transaction fees"
+      },
+      {
+        "name": "swig_account",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Swig wallet account address"
+      },
+      {
+        "name": "acting_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Current authority (must have ManageAuthority permission)"
+      },
+      {
+        "name": "acting_role_id",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": true,
+        "tooltip": "Role ID of the acting authority"
+      },
+      {
+        "name": "authority_to_remove_id",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": true,
+        "tooltip": "Role ID of the authority to remove"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "acting_role_id": {
+      "U": "0"
+    },
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Unknown",
+    "program": "swig",
+    "category": "uncategorized",
+    "icon_url": null,
+    "tags": [
+      "swig",
+      "remove",
+      "authority"
+    ]
+  },
+  "external_version": {
+    "program_id": "swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/swig/swig_remove_authority.jsonc",
+    "repo": "flow-backend"
+  }
+}

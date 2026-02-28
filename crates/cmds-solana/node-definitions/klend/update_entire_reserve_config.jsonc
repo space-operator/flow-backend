@@ -1,0 +1,112 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "update_entire_reserve_config",
+  "prefix": "klend",
+  "type": "native",
+  "description": "Update entire reserve config using Klend",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/klend/update_entire_reserve_config.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "lending_market_owner",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Lending market owner account"
+      },
+      {
+        "name": "lending_market",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Lending market account"
+      },
+      {
+        "name": "reserve",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Reserve account for the asset"
+      },
+      {
+        "name": "mode",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Mode value"
+      },
+      {
+        "name": "value",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "Value"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "klend",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "klend",
+      "update",
+      "entire",
+      "reserve",
+      "config"
+    ]
+  },
+  "external_version": {
+    "program_id": "KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD",
+    "sdk_crate": "klend-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/klend/update_entire_reserve_config.jsonc",
+    "repo": "flow-backend"
+  }
+}

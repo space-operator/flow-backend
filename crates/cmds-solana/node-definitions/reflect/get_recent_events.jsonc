@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "get_recent_events",
+  "prefix": "reflect",
+  "type": "native",
+  "description": "Get recent protocol events across all users",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/reflect/reflect_get_recent_events.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "limit",
+        "type_bounds": [
+          "i64"
+        ],
+        "required": true,
+        "tooltip": "Maximum events to return (1-1000)"
+      },
+      {
+        "name": "non_zero",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Set to 'true' to filter non-zero amounts"
+      },
+      {
+        "name": "minimum_value",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Filter by minimum value"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "API response from Reflect"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Reflect",
+    "program": "reflect",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "defi",
+      "reflect",
+      "get",
+      "recent",
+      "events"
+    ]
+  },
+  "external_version": {
+    "program_id": "reflect_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://prod.api.reflect.money",
+    "api_version": "v1",
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/reflect/get_recent_events.jsonc",
+    "repo": "flow-backend"
+  }
+}

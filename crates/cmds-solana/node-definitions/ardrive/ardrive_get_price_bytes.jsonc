@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "ardrive_get_price_bytes",
+  "prefix": "ardrive",
+  "type": "native",
+  "description": "Get the winc (winston credit) cost for uploading data of a specified byte size",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/ardrive/ardrive_get_price_bytes.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "byte_count",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Number of bytes to price"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "result",
+        "type": "json",
+        "tooltip": "Winc cost and adjustments for the specified byte count"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "ArDrive",
+    "program": "ardrive",
+    "category": "storage",
+    "icon_url": null,
+    "tags": [
+      "storage",
+      "ardrive",
+      "get",
+      "price",
+      "bytes"
+    ]
+  },
+  "external_version": {
+    "program_id": "ardrive_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/ardrive_get_price_bytes.jsonc",
+    "repo": "flow-backend"
+  }
+}

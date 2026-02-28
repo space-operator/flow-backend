@@ -1,0 +1,176 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "withdraw_from_available",
+  "prefix": "kvault",
+  "type": "native",
+  "description": "Withdraw from from available using Kvault",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/kvault/withdraw_from_available.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "user",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "User keypair"
+      },
+      {
+        "name": "vault_state",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Vault state account address"
+      },
+      {
+        "name": "global_config",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Global configuration account"
+      },
+      {
+        "name": "token_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token vault account"
+      },
+      {
+        "name": "base_vault_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Base vault authority account"
+      },
+      {
+        "name": "token_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token mint address"
+      },
+      {
+        "name": "shares_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Shares token mint address"
+      },
+      {
+        "name": "shares_token_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Shares token program"
+      },
+      {
+        "name": "klend_program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Klend program"
+      },
+      {
+        "name": "event_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Event authority account"
+      },
+      {
+        "name": "program",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Program account address"
+      },
+      {
+        "name": "shares_amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Shares amount value"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "user_token_ata",
+        "type": "pubkey",
+        "tooltip": "Derived user token account (ATA of user for token_mint)"
+      },
+      {
+        "name": "user_shares_ata",
+        "type": "pubkey",
+        "tooltip": "Derived user shares account (ATA of user for shares_mint)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Kamino",
+    "program": "kvault",
+    "category": "defi",
+    "icon_url": null,
+    "tags": [
+      "kvault",
+      "withdraw",
+      "from",
+      "available"
+    ]
+  },
+  "external_version": {
+    "program_id": "KvauGMspG5k6rtzrqqn7WNn3oZdyKqLKwK2XWQ8FLjd",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/kvault/withdraw_from_available.jsonc",
+    "repo": "flow-backend"
+  }
+}
