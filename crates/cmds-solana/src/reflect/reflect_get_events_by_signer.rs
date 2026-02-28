@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_get};
 
-pub const NAME: &str = "reflect_get_events_by_signer";
+pub const NAME: &str = "get_events_by_signer";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/get_events_by_signer.jsonc");
 
 fn build() -> BuildResult {

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_get};
 
-pub const NAME: &str = "reflect_get_historical_stats";
+pub const NAME: &str = "get_historical_stats";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/get_historical_stats.jsonc");
 
 fn build() -> BuildResult {

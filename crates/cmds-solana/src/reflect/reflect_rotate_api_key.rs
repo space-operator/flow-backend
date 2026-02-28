@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
 
-pub const NAME: &str = "reflect_rotate_api_key";
+pub const NAME: &str = "rotate_api_key";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/rotate_api_key.jsonc");
 
 fn build() -> BuildResult {

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
 
-pub const NAME: &str = "reflect_mint_stablecoin";
+pub const NAME: &str = "mint_stablecoin";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/mint_stablecoin.jsonc");
 
 fn build() -> BuildResult {

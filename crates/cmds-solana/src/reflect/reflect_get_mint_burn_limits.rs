@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_get};
 
-pub const NAME: &str = "reflect_get_mint_burn_limits";
+pub const NAME: &str = "get_mint_burn_limits";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/get_mint_burn_limits.jsonc");
 
 fn build() -> BuildResult {

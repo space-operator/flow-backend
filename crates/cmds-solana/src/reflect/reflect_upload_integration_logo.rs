@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
 
-pub const NAME: &str = "reflect_upload_integration_logo";
+pub const NAME: &str = "upload_integration_logo";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/upload_integration_logo.jsonc");
 
 fn build() -> BuildResult {

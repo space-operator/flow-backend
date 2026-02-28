@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
 
-pub const NAME: &str = "reflect_get_integration_quote";
+pub const NAME: &str = "get_integration_quote";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/get_integration_quote.jsonc");
 
 fn build() -> BuildResult {

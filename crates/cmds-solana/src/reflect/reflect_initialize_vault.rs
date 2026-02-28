@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
 
-pub const NAME: &str = "reflect_initialize_vault";
+pub const NAME: &str = "initialize_vault";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/initialize_vault.jsonc");
 
 fn build() -> BuildResult {

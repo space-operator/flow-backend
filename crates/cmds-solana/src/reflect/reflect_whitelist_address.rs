@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_post_auth};
 
-pub const NAME: &str = "reflect_whitelist_address";
+pub const NAME: &str = "whitelist_address";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/whitelist_address.jsonc");
 
 fn build() -> BuildResult {

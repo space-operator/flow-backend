@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
 
-pub const NAME: &str = "reflect_initialize_user_account";
+pub const NAME: &str = "initialize_user_account";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/initialize_user_account.jsonc");
 
 fn build() -> BuildResult {

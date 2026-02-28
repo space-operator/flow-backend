@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use super::helper::{check_response, reflect_get};
 
-pub const NAME: &str = "reflect_get_all_apy";
+pub const NAME: &str = "get_all_apy";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/get_all_apy.jsonc");
 
 fn build() -> BuildResult {
