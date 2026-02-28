@@ -103,6 +103,8 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
         home.display().to_string()
     });
 
+    // Note: Deno 1.x does not support IPv6 addresses in --deny-net.
+    // "localhost" covers both 127.0.0.1 and ::1 via hostname resolution.
     let local_networks = [
         // "127.0.0.0/8",    // Loopback (127.0.0.1, etc.)
         "10.0.0.0/8",     // Private Class A (10.x.x.x)
@@ -112,11 +114,7 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
         "224.0.0.0/4",    // Multicast
         "240.0.0.0/4",    // Reserved
         "0.0.0.0/8",      // Local all
-        "[::1]",          // IPv6 loopback
-        "[fe80::]",       // IPv6 link-local
-        "[fc00::]",       // IPv6 private/unique local
-        "[ff00::]",       // IPv6 multicast
-        "localhost",      // Cover localhost hostname
+        "localhost",      // Cover localhost hostname (resolves to 127.0.0.1 and ::1)
     ]
     .join(",");
 
