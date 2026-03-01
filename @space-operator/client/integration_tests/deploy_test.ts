@@ -22,13 +22,16 @@ function ed25519SignText(keypair: web3.Keypair, message: string): Uint8Array {
 
 const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
-const supabaseUrl = "http://localhost:8000";
+const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "http://localhost:8000";
 const DEPLOY_RUN_FLOW_ID = "92b480ad-1a18-4a52-a459-4d5420890272"; // Transfer SOL
 const DEPLOY_DELETE_FLOW_ID = "102244df-74aa-4f77-a556-d9d279c64655"; // Collatz-Core
 const DEPLOY_ACTION_FLOW_ID = "9647ba16-de20-4209-9056-1a3dd8c2d6ab"; // Simple Transfer
 const DEPLOY_SIMPLE_FLOW_ID = "6c949718-69e2-47c1-8b93-d56b8e34ec51"; // Add
 
-Deno.test("deploy and run", async () => {
+// sanitizeOps/sanitizeResources disabled on tests because @solana/web3.js
+// rpc-websockets and Supabase client create internal timers/connections that
+// outlive test boundaries. These are library internals we can't clean up.
+Deno.test({ name: "deploy and run", sanitizeOps: false, sanitizeResources: false, fn: async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
     anonKey,
@@ -93,7 +96,7 @@ Deno.test("deploy and run", async () => {
   });
   await sup.auth.setSession(jwt);
   await checkNoErrors(sup, flow_run_id);
-});
+}});
 
 Deno.test("deploy and delete", async (t) => {
   const owner = new client.Client({
@@ -106,6 +109,12 @@ Deno.test("deploy and delete", async (t) => {
     auth: { autoRefreshToken: false },
   });
   await sup.auth.setSession(jwt);
+
+  // Clean up leftover deployments from previous test runs
+  await sup
+    .from("flow_deployments")
+    .delete()
+    .eq("entrypoint", DEPLOY_DELETE_FLOW_ID);
 
   const getLatest = async (
     flowId: client.FlowId,
@@ -339,7 +348,7 @@ Deno.test("action identity", async () => {
   assert(memo.startsWith(`solana-action:${identity.publicKey.toBase58()}`));
 });
 
-Deno.test("execute on action", async () => {
+Deno.test({ name: "execute on action", sanitizeOps: false, sanitizeResources: false, fn: async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
     anonKey,
@@ -428,9 +437,9 @@ Deno.test("execute on action", async () => {
   const output = (await starter.getFlowOutput(flow_run_id)).toJSObject();
   await checkNoErrors(sup, flow_run_id);
   assertEquals(bs58.decodeBase58(signature), output.signature);
-});
+}});
 
-Deno.test("start authenticated by flow", async () => {
+Deno.test({ name: "start authenticated by flow", sanitizeOps: false, sanitizeResources: false, fn: async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
     anonKey,
@@ -492,9 +501,9 @@ Deno.test("start authenticated by flow", async () => {
     Value.fromJSON(selectResult.data.output as client.IValue),
     result,
   );
-});
+}});
 
-Deno.test("start by flow + tag", async () => {
+Deno.test({ name: "start by flow + tag", sanitizeOps: false, sanitizeResources: false, fn: async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
     anonKey,
@@ -527,9 +536,9 @@ Deno.test("start by flow + tag", async () => {
   });
   await sup.auth.setSession(jwt);
   await checkNoErrors(sup, flow_run_id);
-});
+}});
 
-Deno.test("start custom tag", async () => {
+Deno.test({ name: "start custom tag", sanitizeOps: false, sanitizeResources: false, fn: async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
     anonKey,
@@ -569,4 +578,4 @@ Deno.test("start custom tag", async () => {
   assertEquals(c, 3);
 
   await checkNoErrors(sup, flow_run_id);
-});
+}});

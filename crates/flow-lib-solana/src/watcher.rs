@@ -39,27 +39,23 @@ pub async fn confirm_action_transaction(
             )
             .await?;
 
-        let txs = result
-            .into_iter()
-            .take_while(|r| match r.block_time {
-                None => true,
-                Some(time) => time >= memo.timestamp,
-            })
-            .collect::<Vec<_>>();
+        // NOTE: previously had a `take_while` filtering by block_time >= memo.timestamp,
+        // but clock skew between the server and Solana validators caused valid
+        // transactions to be dropped. The `until` cursor already prevents
+        // re-scanning old transactions, and the memo content check is the real filter.
 
-        if let Some(tx) = txs.first() {
+        if let Some(tx) = result.first() {
             until = Some(tx.signature.parse()?);
         }
 
-        for tx in txs.into_iter().rev() {
-            if let Some(memo) = tx.memo {
-                let memos = parse_rpc_memo_field(&memo)?;
+        for tx in result.into_iter().rev() {
+            if let Some(ref raw_memo) = tx.memo {
+                let memos = parse_rpc_memo_field(raw_memo)?;
                 if memos.contains(&reference) {
                     if let Some(err) = tx.err {
                         return Err(err.into());
                     } else {
-                        let signature = tx.signature.parse()?;
-                        return Ok(signature);
+                        return Ok(tx.signature.parse()?);
                     }
                 }
             }
