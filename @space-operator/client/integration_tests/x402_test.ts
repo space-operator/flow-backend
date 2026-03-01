@@ -24,7 +24,7 @@ Deno.test("run x402", async () => {
     token: apiKey,
   });
   const usdcKeypair = await createKeyPairSignerFromBytes(
-    bs58.decodeBase58(getEnv("USDC_KEYPAIR")),
+    bs58.decodeBase58(getEnv("KEYPAIR")),
   );
   const x402 = new x402Client();
   registerExactSvmScheme(x402, { signer: usdcKeypair });

@@ -30,9 +30,10 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     cmd!(sh, "./gen-secrets.ts").run()?;
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let repo = if compile { "" } else { "public.ecr.aws/" };
+    let pull = if compile { "missing" } else { "always" };
     cmd!(
         sh,
-        "docker compose -f with-cmds-server.yml up --quiet-pull --pull always -d --wait"
+        "docker compose -f with-cmds-server.yml up --quiet-pull --pull {pull} -d --wait"
     )
     .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
     .env(
@@ -41,6 +42,10 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     )
     .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
+    dotenv::from_path(
+        meta.workspace_root.join("@space-operator/client/integration_tests/.env"),
+    )
+    .ok();
     cmd!(sh, "./import-data.ts --file=export.json").run()?;
 
     // wait for cmds-server to join

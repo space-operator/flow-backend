@@ -14,10 +14,10 @@ function getEnv(key: string): string {
 async function main(from: string, file?: string) {
   await load({ export: true });
   const SERVICE_ROLE_KEY = getEnv("SERVICE_ROLE_KEY");
-  const APIKEY = getEnv("APIKEY");
 
   let data;
   if (!file) {
+    const APIKEY = getEnv("APIKEY");
     console.log(`Exporting data from ${from}`);
     const exportResp = await fetch(`${from}/data/export`, {
       method: "POST",
