@@ -163,8 +163,29 @@ pub struct Position {
 pub struct Ports {
     #[serde(default)]
     pub inputs: Vec<InputPort>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_output_ports")]
     pub outputs: Vec<OutputPort>,
+}
+
+/// Filter out synthetic passthrough output ports during deserialization.
+/// The frontend generates output ports with `id: "passthrough-{uuid}"` for
+/// inputs that have `passthrough: true`. These are a frontend concept and
+/// should not reach the backend. This handles existing data that was saved
+/// with passthrough port IDs before the frontend fix.
+fn deserialize_output_ports<'de, D>(deserializer: D) -> Result<Vec<OutputPort>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let values: Vec<JsonValue> = Vec::deserialize(deserializer)?;
+    Ok(values
+        .into_iter()
+        .filter(|v| {
+            v.get("id")
+                .and_then(|id| id.as_str())
+                .map_or(true, |id| !id.starts_with("passthrough-"))
+        })
+        .map(|v| serde_json::from_value(v).map_err(serde::de::Error::custom))
+        .collect::<Result<Vec<_>, _>>()?)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
