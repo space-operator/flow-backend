@@ -64,6 +64,32 @@ pub fn series_to_json(series: &Series) -> Result<JsonValue, CommandError> {
 // ── DataFrame from JSON input (for create nodes) ───────────────────────
 
 pub fn df_from_json_value(value: &JsonValue) -> Result<DataFrame, CommandError> {
+    // If value is a string-encoded JSON, unwrap it first
+    let value = unwrap_json_input(value)?;
+    let value = value.as_ref();
+    // Column-oriented: {"col": [v1, v2, ...], ...} → convert to row-oriented
+    if let JsonValue::Object(map) = value {
+        if map.values().all(|v| v.is_array()) && !map.is_empty() {
+            let len = map.values().next().unwrap().as_array().unwrap().len();
+            let mut rows = Vec::with_capacity(len);
+            for i in 0..len {
+                let mut row = serde_json::Map::new();
+                for (key, arr) in map {
+                    if let Some(val) = arr.as_array().and_then(|a| a.get(i)) {
+                        row.insert(key.clone(), val.clone());
+                    }
+                }
+                rows.push(JsonValue::Object(row));
+            }
+            let json_str = serde_json::to_string(&rows)
+                .map_err(|e| CommandError::msg(format!("JSON serialize error: {e}")))?;
+            let cursor = Cursor::new(json_str.as_bytes());
+            return JsonReader::new(cursor)
+                .finish()
+                .map_err(|e| CommandError::msg(format!("JSON to DataFrame error: {e}")));
+        }
+    }
+    // Row-oriented: [{col: v1, ...}, {col: v2, ...}, ...]
     let json_str = serde_json::to_string(value)
         .map_err(|e| CommandError::msg(format!("JSON serialize error: {e}")))?;
     let cursor = Cursor::new(json_str.as_bytes());
@@ -112,10 +138,27 @@ pub fn parse_dtype(dtype_str: &str) -> Result<DataType, CommandError> {
     }
 }
 
+// ── Unwrap string-encoded JSON (IValue {S: "..."} arrives as JsonValue::String) ──
+
+/// Try to unwrap a string-encoded JSON value (from IValue {S: "..."}).
+/// If the string is valid JSON that parses to a non-string value (object/array/bool/number),
+/// returns the parsed value. Otherwise returns the original value as-is.
+pub fn unwrap_json_input(value: &JsonValue) -> Result<std::borrow::Cow<'_, JsonValue>, CommandError> {
+    if let JsonValue::String(s) = value {
+        if let Ok(parsed) = serde_json::from_str::<JsonValue>(s) {
+            if !parsed.is_string() {
+                return Ok(std::borrow::Cow::Owned(parsed));
+            }
+        }
+    }
+    Ok(std::borrow::Cow::Borrowed(value))
+}
+
 // ── Parse column name list from JSON ────────────────────────────────────
 
 pub fn parse_column_names(value: &JsonValue) -> Result<Vec<String>, CommandError> {
-    match value {
+    let value = unwrap_json_input(value)?;
+    match value.as_ref() {
         JsonValue::Array(arr) => arr
             .iter()
             .map(|v| match v {

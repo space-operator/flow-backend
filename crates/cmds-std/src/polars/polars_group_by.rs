@@ -1,4 +1,4 @@
-use crate::polars::types::{df_from_ipc, dual_output, parse_column_names};
+use crate::polars::types::{df_from_ipc, dual_output, parse_column_names, unwrap_json_input};
 use flow_lib::command::prelude::*;
 use polars::prelude::*;
 
@@ -48,8 +48,8 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
     let df = df_from_ipc(&input.dataframe)?;
     let by_cols = parse_column_names(&input.by)?;
 
-    let agg_map = input
-        .agg
+    let agg_value = unwrap_json_input(&input.agg)?;
+    let agg_map = agg_value
         .as_object()
         .ok_or_else(|| CommandError::msg("agg must be a JSON object mapping column names to aggregation functions"))?;
 

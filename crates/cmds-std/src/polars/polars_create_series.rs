@@ -1,4 +1,4 @@
-use crate::polars::types::{dual_series_output, parse_dtype};
+use crate::polars::types::{dual_series_output, parse_dtype, unwrap_json_input};
 use flow_lib::command::prelude::*;
 use polars::prelude::*;
 
@@ -32,8 +32,8 @@ pub struct Output {
 }
 
 async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let arr = input
-        .values
+    let values = unwrap_json_input(&input.values)?;
+    let arr = values
         .as_array()
         .ok_or_else(|| CommandError::msg("values must be a JSON array"))?;
 

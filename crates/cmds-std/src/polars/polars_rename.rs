@@ -1,4 +1,4 @@
-use crate::polars::types::{df_from_ipc, dual_output};
+use crate::polars::types::{df_from_ipc, dual_output, unwrap_json_input};
 use flow_lib::command::prelude::*;
 
 pub const NAME: &str = "polars_rename";
@@ -26,8 +26,8 @@ pub struct Output {
 
 async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let mut df = df_from_ipc(&input.dataframe)?;
-    let mapping = input
-        .mapping
+    let mapping_value = unwrap_json_input(&input.mapping)?;
+    let mapping = mapping_value
         .as_object()
         .ok_or_else(|| CommandError::msg("mapping must be a JSON object {\"old_name\": \"new_name\", ...}"))?;
 
