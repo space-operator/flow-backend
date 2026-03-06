@@ -1,0 +1,20 @@
+[package]
+name = "cmds-image"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+value = { workspace = true }
+flow-lib = { workspace = true }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+bytes = "1.5"
+thiserror = "2"
+image = { version = "0.25", features = ["png", "jpeg", "webp", "gif", "bmp"] }
+reqwest = { version = "0.12", features = ["json"] }
+qrcode = "0.14"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }

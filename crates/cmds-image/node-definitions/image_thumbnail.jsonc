@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "image_thumbnail",
+  "prefix": "image",
+  "type": "native",
+  "description": "Generate a thumbnail that fits within the specified max dimension while preserving aspect ratio.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-image/src/thumbnail.rs",
+  "ports": {
+    "inputs": [
+      { "name": "image", "type_bounds": ["bytes", "string"], "required": true, "passthrough": false, "tooltip": "Input image data (raw bytes or URL)" },
+      { "name": "max_dimension", "type_bounds": ["u64"], "required": false, "passthrough": false, "tooltip": "Maximum width or height in pixels (default: 128)" }
+    ],
+    "outputs": [
+      { "name": "image", "type": "bytes", "tooltip": "Thumbnail image data" },
+      { "name": "width", "type": "u64", "tooltip": "Thumbnail width" },
+      { "name": "height", "type": "u64", "tooltip": "Thumbnail height" }
+    ]
+  },
+  "config_schema": { "type": "object", "properties": { "max_dimension": { "type": "integer" } }, "additionalProperties": false },
+  "config": { "max_dimension": { "U": 128 } },
+  "classification": { "vendor": "Native", "program": "image", "category": "media", "icon_url": null, "tags": ["media", "image", "thumbnail", "preview"] },
+  "external_version": { "program_id": "image_native", "sdk_crate": null, "sdk_version": null, "api_base_url": null, "api_version": null, "source_repo": null },
+  "internal": { "source": "crates", "source_code": "crates/cmds-image/node-definitions/image_thumbnail.jsonc", "repo": "flow-backend" }
+}

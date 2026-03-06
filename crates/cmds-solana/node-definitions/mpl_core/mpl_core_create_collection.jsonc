@@ -2,7 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "create_core_collection_v2",
-  "prefix": "nft",
+  "prefix": "mpl_core",
   "description": "Create a new MPL Core collection",
   "type": "native",
   "author_handle": "spo",
@@ -73,6 +73,15 @@
         "tooltip": "Plugins to attach to the collection"
       },
       {
+        "name": "external_plugin_adapters",
+        "type_bounds": [
+          "json"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "External plugin adapters to attach to the collection"
+      },
+      {
         "name": "submit",
         "type_bounds": [
           "bool"
@@ -102,19 +111,20 @@
     }
   },
   "classification": {
-    "vendor": "Native",
-    "program": "core",
-    "category": "core",
+    "vendor": "Metaplex",
+    "program": "mpl_core",
+    "category": "nft",
     "icon_url": null,
     "tags": [
-      "core",
+      "nft",
+      "mpl core",
       "create",
       "collection"
     ]
   },
   "external_version": {
-    "program_id": "core_native",
-    "sdk_crate": null,
+    "program_id": "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d",
+    "sdk_crate": "mpl-core",
     "sdk_version": null,
     "api_base_url": null,
     "api_version": null,
