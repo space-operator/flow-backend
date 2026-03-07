@@ -463,7 +463,7 @@ mod tests {
         }));
         assert_eq!(
             values.get(INPUT_WALLET),
-            Some(&Value::String(PUBKEY_STR.to_owned()))
+            Some(&Value::B32(Pubkey::from_str_const(PUBKEY_STR).to_bytes()))
         );
     }
 
@@ -476,7 +476,7 @@ mod tests {
         }));
         assert_eq!(
             values.get(INPUT_WALLET),
-            Some(&Value::String(PUBKEY_STR.to_owned()))
+            Some(&Value::B32(Pubkey::from_str_const(PUBKEY_STR).to_bytes()))
         );
     }
 }

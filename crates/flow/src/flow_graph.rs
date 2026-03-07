@@ -2262,7 +2262,7 @@ mod tests {
 
         assert_eq!(
             res.output.get("pubkey"),
-            Some(&value::to_value(&edge_pubkey).unwrap())
+            Some(&Value::B32(edge_pubkey.to_bytes()))
         );
     }
 
