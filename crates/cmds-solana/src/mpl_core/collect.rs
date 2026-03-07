@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use mpl_core::instructions::CollectBuilder;
 
-const NAME: &str = "collect";
+const NAME: &str = "mpl_core_collect";
 const DEFINITION: &str = flow_lib::node_definition!("mpl_core/collect.jsonc");
 
 fn build() -> BuildResult {

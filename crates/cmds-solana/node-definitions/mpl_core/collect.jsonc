@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
-  "name": "collect",
+  "name": "mpl_core_collect",
   "prefix": "mpl_core",
   "type": "native",
   "description": "Collect using Mpl Core",
