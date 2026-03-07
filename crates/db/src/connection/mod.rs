@@ -81,8 +81,8 @@ impl TryFrom<Row> for FlowInfo {
         Ok(Self {
             user_id: r.try_get("user_id").map_err(Error::data("flow.user_id"))?,
             is_public: r
-                .try_get("isPublic")
-                .map_err(Error::data("flow.isPublic"))?,
+                .try_get("is_public")
+                .map_err(Error::data("flow.is_public"))?,
             start_shared: r
                 .try_get("start_shared")
                 .map_err(Error::data("flow.start_shared"))?,

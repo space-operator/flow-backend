@@ -1001,7 +1001,7 @@ create table if not exists public.flows_v2 (
     description text not null default ''::text,
     slug text,
 
-    "isPublic" boolean not null default false,
+    is_public boolean not null default false,
     gg_marketplace boolean not null default false,
     visibility_profile text,
 
@@ -1034,7 +1034,7 @@ create table if not exists public.flows_v2 (
 create unique index if not exists flows_v2_uuid_key on public.flows_v2 (uuid);
 create unique index if not exists flows_v2_slug_key on public.flows_v2 (slug) where slug is not null;
 create index if not exists idx_flows_v2_user_id on public.flows_v2 (user_id);
-create index if not exists idx_flows_v2_is_public on public.flows_v2 ("isPublic");
+create index if not exists idx_flows_v2_is_public on public.flows_v2 (is_public);
 create index if not exists idx_flows_v2_current_branch_id on public.flows_v2 (current_branch_id);
 create index if not exists idx_flows_v2_nodes_gin on public.flows_v2 using gin (nodes);
 create index if not exists idx_flows_v2_edges_gin on public.flows_v2 using gin (edges);
@@ -1056,7 +1056,7 @@ begin
         where tablename = 'flows_v2' and policyname = 'public-select'
     ) then
         create policy "public-select" on public.flows_v2
-            for select to anon using ("isPublic" = true);
+            for select to anon using (is_public = true);
     end if;
 
     if not exists (
@@ -1138,7 +1138,7 @@ insert into public.flows_v2 (
     name,
     description,
     slug,
-    "isPublic",
+    is_public,
     gg_marketplace,
     visibility_profile,
     nodes,
