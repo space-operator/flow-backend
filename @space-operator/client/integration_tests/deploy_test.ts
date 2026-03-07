@@ -28,10 +28,7 @@ const DEPLOY_DELETE_FLOW_ID = "102244df-74aa-4f77-a556-d9d279c64655"; // Collatz
 const DEPLOY_ACTION_FLOW_ID = "9647ba16-de20-4209-9056-1a3dd8c2d6ab"; // Simple Transfer
 const DEPLOY_SIMPLE_FLOW_ID = "6c949718-69e2-47c1-8b93-d56b8e34ec51"; // Add
 
-// sanitizeOps/sanitizeResources disabled on tests because @solana/web3.js
-// rpc-websockets and Supabase client create internal timers/connections that
-// outlive test boundaries. These are library internals we can't clean up.
-Deno.test({ name: "deploy and run", sanitizeOps: false, sanitizeResources: false, fn: async () => {
+Deno.test({ name: "deploy and run", fn: async () => {
   const owner = new client.Client({
     host: "http://localhost:8080",
     anonKey,
