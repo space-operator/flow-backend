@@ -4,7 +4,6 @@ use crate::{
 };
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
-use flow_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
     command::{
@@ -24,6 +23,7 @@ use flow_lib::{
     utils::{Extensions, TowerClient, tower_client::CommonErrorExt},
 };
 use flow_lib_solana::{InstructionsExt, find_failed_instruction, simple_execute_svc};
+use flow_rpc::flow_side::command_factory::CommandFactoryWithRemotes;
 use futures::{
     FutureExt, StreamExt,
     channel::{mpsc, oneshot},
@@ -1610,9 +1610,14 @@ impl FlowGraph {
         let times = *s.ran.entry(node.id).and_modify(|t| *t += 1).or_insert(0);
 
         let (mut inputs, tracker) = match node.command.name().as_str() {
-            crate::command::flow_input::FLOW_INPUT => (s.flow_inputs.clone(), TrackEdgeValue::None),
             crate::command::collect::COLLECT => self.collect_array_input(idx),
-            _ => self.take_inputs(idx),
+            _ => {
+                // Commands opt into start/deployment input binding, and graph edges still win.
+                let mut inputs = node.command.bind_flow_inputs(&s.flow_inputs);
+                let (edge_inputs, tracker) = self.take_inputs(idx);
+                inputs.extend(edge_inputs);
+                (inputs, tracker)
+            }
         };
 
         for (name, value) in &node.form_inputs {
@@ -1933,15 +1938,166 @@ where
 mod tests {
     use super::*;
     use anyhow::anyhow;
-    use flow_lib::config::client::ClientConfig;
+    use flow_lib::{
+        CommandType, ValueType,
+        config::client::{
+            ClientConfig, Edge as ClientEdge, FlowRunOrigin, InputPort, Node as ClientNode,
+            NodeData, OutputPort, SourceHandle,
+        },
+    };
     use flow_lib::flow_run_events::event_channel;
+    use serde_json::{Value as JsonValue, json};
 
     use cmds_solana as _;
     use cmds_std as _;
+    use uuid::Uuid;
 
     #[derive(serde::Deserialize)]
     struct TestFile {
         flow: ClientConfig,
+    }
+
+    fn output_port(name: &str, r#type: ValueType) -> OutputPort {
+        OutputPort {
+            id: Uuid::new_v4(),
+            name: name.to_owned(),
+            r#type,
+            optional: false,
+            tooltip: None,
+        }
+    }
+
+    fn input_port(name: &str, type_bounds: Vec<ValueType>, required: bool) -> InputPort {
+        InputPort {
+            id: Uuid::new_v4(),
+            name: name.to_owned(),
+            type_bounds,
+            required,
+            passthrough: false,
+            tooltip: None,
+        }
+    }
+
+    fn flow_input_node(output_name: &str) -> ClientNode {
+        ClientNode {
+            id: Uuid::new_v4(),
+            data: NodeData {
+                r#type: CommandType::Native,
+                node_id: crate::command::flow_input::FLOW_INPUT.into(),
+                outputs: vec![output_port(output_name, ValueType::Free)],
+                inputs: Vec::new(),
+                config: json!({}),
+                wasm: None,
+                instruction_info: None,
+            },
+        }
+    }
+
+    fn flow_output_node(name: &str) -> ClientNode {
+        ClientNode {
+            id: Uuid::new_v4(),
+            data: NodeData {
+                r#type: CommandType::Native,
+                node_id: crate::command::flow_output::FLOW_OUTPUT.into(),
+                outputs: vec![output_port(name, ValueType::Free)],
+                inputs: vec![input_port(name, vec![ValueType::Free], true)],
+                config: json!({}),
+                wasm: None,
+                instruction_info: None,
+            },
+        }
+    }
+
+    fn const_node(value: JsonValue) -> ClientNode {
+        ClientNode {
+            id: Uuid::new_v4(),
+            data: NodeData {
+                r#type: CommandType::Native,
+                node_id: "const".into(),
+                outputs: vec![output_port("output", ValueType::Free)],
+                inputs: Vec::new(),
+                config: json!({
+                    "type": "JSON",
+                    "value": value,
+                }),
+                wasm: None,
+                instruction_info: None,
+            },
+        }
+    }
+
+    fn wallet_node(static_pubkey: &str, wallet_id: i64, api_input: bool) -> ClientNode {
+        ClientNode {
+            id: Uuid::new_v4(),
+            data: NodeData {
+                r#type: CommandType::Native,
+                node_id: crate::command::wallet::WALLET.into(),
+                outputs: vec![
+                    output_port("pubkey", ValueType::Pubkey),
+                    output_port("keypair", ValueType::Keypair),
+                ],
+                inputs: vec![input_port(
+                    "wallet",
+                    vec![ValueType::Keypair, ValueType::Pubkey],
+                    false,
+                )],
+                config: json!({
+                    "api_input": { "B": api_input },
+                    "public_key": { "B3": static_pubkey },
+                    "wallet_id": { "U": wallet_id.to_string() },
+                }),
+                wasm: None,
+                instruction_info: None,
+            },
+        }
+    }
+
+    fn find_input_id(node: &ClientNode, name: &str) -> Uuid {
+        node.data
+            .inputs
+            .iter()
+            .find(|port| port.name == name)
+            .map(|port| port.id)
+            .expect("input port not found")
+    }
+
+    fn find_output_id(node: &ClientNode, name: &str) -> Uuid {
+        node.data
+            .outputs
+            .iter()
+            .find(|port| port.name == name)
+            .map(|port| port.id)
+            .expect("output port not found")
+    }
+
+    fn edge(from: &ClientNode, from_output: &str, to: &ClientNode, to_input: &str) -> ClientEdge {
+        ClientEdge {
+            source: from.id,
+            source_handle: SourceHandle {
+                id: find_output_id(from, from_output),
+                is_passthough: false,
+            },
+            target: to.id,
+            target_handle: find_input_id(to, to_input),
+        }
+    }
+
+    fn client_config(nodes: Vec<ClientNode>, edges: Vec<ClientEdge>) -> ClientConfig {
+        ClientConfig {
+            user_id: Uuid::new_v4(),
+            id: Uuid::new_v4(),
+            nodes,
+            edges,
+            environment: <_>::default(),
+            sol_network: <_>::default(),
+            instructions_bundling: <_>::default(),
+            partial_config: None,
+            collect_instructions: false,
+            call_depth: 0,
+            origin: FlowRunOrigin::Start {},
+            signers: JsonValue::Null,
+            interflow_instruction_info: Err("unimplemented".to_owned()),
+        }
     }
 
     #[tokio::test]
@@ -2043,6 +2199,70 @@ mod tests {
                 ]
                 .to_vec()
             )
+        );
+    }
+
+    #[actix::test]
+    async fn flow_input_binds_runtime_inputs_via_trait_hook() {
+        let source = flow_input_node("amount");
+        let sink = flow_output_node("amount");
+        let config = client_config(
+            vec![source.clone(), sink.clone()],
+            vec![edge(&source, "amount", &sink, "amount")],
+        );
+
+        let mut flow = FlowGraph::from_cfg(FlowConfig::new(config), <_>::default(), None)
+            .await
+            .unwrap();
+        let (tx, _rx) = event_channel();
+        let res = flow
+            .run(
+                tx,
+                FlowRunId::nil(),
+                value::map! { "amount" => 5u64 },
+                <_>::default(),
+                <_>::default(),
+                <_>::default(),
+            )
+            .await;
+
+        assert_eq!(res.output.get("amount"), Some(&Value::U64(5)));
+    }
+
+    #[actix::test]
+    async fn wallet_edge_input_overrides_start_input_and_static_fallback() {
+        let static_pubkey = "DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY";
+        let start_pubkey = Pubkey::new_unique();
+        let edge_pubkey = Pubkey::new_unique();
+        let source = const_node(json!({ "B3": edge_pubkey.to_string() }));
+        let wallet = wallet_node(static_pubkey, 7, true);
+        let sink = flow_output_node("pubkey");
+        let config = client_config(
+            vec![source.clone(), wallet.clone(), sink.clone()],
+            vec![
+                edge(&source, "output", &wallet, "wallet"),
+                edge(&wallet, "pubkey", &sink, "pubkey"),
+            ],
+        );
+
+        let mut flow = FlowGraph::from_cfg(FlowConfig::new(config), <_>::default(), None)
+            .await
+            .unwrap();
+        let (tx, _rx) = event_channel();
+        let res = flow
+            .run(
+                tx,
+                FlowRunId::nil(),
+                value::map! { "wallet" => value::to_value(&start_pubkey).unwrap() },
+                <_>::default(),
+                <_>::default(),
+                <_>::default(),
+            )
+            .await;
+
+        assert_eq!(
+            res.output.get("pubkey"),
+            Some(&value::to_value(&edge_pubkey).unwrap())
         );
     }
 
