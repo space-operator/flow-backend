@@ -61,20 +61,12 @@
         "tooltip": "Payer (signer)"
       },
       {
-        "name": "system_program",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "required": true,
-        "tooltip": "System program"
-      },
-      {
         "name": "params",
         "type_bounds": [
           "json"
         ],
         "required": true,
-        "tooltip": "Config parameters as JSON"
+        "tooltip": "ConfigParameters: pool_fees, collect_fee_mode, migration_option, activation_type, token_type, token_decimal, liquidity percentages, migration thresholds, locked_vesting, curve distribution, etc. See DBC SDK docs for full schema."
       },
       {
         "name": "submit",

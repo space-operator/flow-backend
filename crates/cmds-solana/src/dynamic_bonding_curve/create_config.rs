@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{DBC_PROGRAM_ID, pda, discriminators};
+use super::{DBC_PROGRAM_ID, pda, discriminators, ConfigParameters};
 
 const NAME: &str = "create_config";
 const DEFINITION: &str = flow_lib::node_definition!("dynamic_bonding_curve/create_config.jsonc");
@@ -28,10 +28,7 @@ pub struct Input {
     #[serde_as(as = "AsPubkey")]
     pub quote_mint: Pubkey,
     pub payer: Wallet,
-    #[serde_as(as = "AsPubkey")]
-    pub system_program: Pubkey,
-    /// Config parameters as JSON
-    pub params: JsonValue,
+    pub params: ConfigParameters,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -44,6 +41,7 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let event_authority = pda::event_authority();
+    let system_program = solana_sdk_ids::system_program::ID;
 
     let accounts = vec![
         // 0: config (writable, signer - new keypair)
@@ -57,7 +55,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         // 4: payer (writable, signer)
         AccountMeta::new(input.payer.pubkey(), true),
         // 5: system_program (readonly)
-        AccountMeta::new_readonly(input.system_program, false),
+        AccountMeta::new_readonly(system_program, false),
         // 6: event_authority (readonly, PDA)
         AccountMeta::new_readonly(event_authority, false),
         // 7: program (readonly)
@@ -65,8 +63,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     ];
 
     let mut data = discriminators::CREATE_CONFIG.to_vec();
-    let params_bytes: Vec<u8> = serde_json::from_value(input.params)?;
-    data.extend(params_bytes);
+    data.extend(borsh::to_vec(&input.params)?);
 
     let instruction = Instruction {
         program_id: DBC_PROGRAM_ID,
