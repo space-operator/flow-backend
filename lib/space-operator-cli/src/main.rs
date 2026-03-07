@@ -589,25 +589,35 @@ impl ApiClient {
     }
 
     pub async fn get_username(&mut self) -> Result<Option<String>, Report<Error>> {
-        let resp = self
-            .pg
-            .from("users_public")
-            .auth(self.get_access_token().await?)
-            .eq("user_id", self.config.jwt.user_id.to_string())
-            .select("username")
-            .single()
-            .execute()
+        let token = self.get_access_token().await?;
+        let url = self
+            .config
+            .info
+            .supabase_url
+            .join("/auth/v1/user")
+            .change_context(Error::Url)?;
+        let resp = CLIENT
+            .get(url)
+            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .header(
+                HeaderName::from_static("apikey"),
+                &self.config.info.anon_key,
+            )
+            .send()
             .await
             .change_context(Error::Postgrest)?;
 
         #[derive(Deserialize)]
-        struct Body {
-            username: Option<String>,
+        struct UserMeta {
+            handle: Option<String>,
+        }
+        #[derive(Deserialize)]
+        struct AuthUser {
+            user_metadata: Option<UserMeta>,
         }
 
-        read_json_response::<Body, PostgrestErrorBody>(resp)
-            .await
-            .map(|body| body.username)
+        let user: AuthUser = resp.json().await.change_context(Error::Postgrest)?;
+        Ok(user.user_metadata.and_then(|m| m.handle))
     }
 }
 
