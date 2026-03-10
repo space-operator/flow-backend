@@ -13,7 +13,7 @@ concurrency:
 jobs:
   unit-test:
     name: Type checking
-    runs-on: self-hosted
+    runs-on: [self-hosted, rust-builder]
     steps:
       - uses: actions/checkout@v4
       - name: Install deno

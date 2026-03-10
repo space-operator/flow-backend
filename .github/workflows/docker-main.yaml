@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Build docker image
-    runs-on: self-hosted
+    runs-on: [self-hosted, rust-builder]
     env:
       BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
@@ -17,27 +17,36 @@ jobs:
         run: ./scripts/build_images.bash
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-east-1
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: ECR Push
-        run: ./scripts/ecr-push.bash login
-      - id: 'auth'
-        uses: 'google-github-actions/auth@v1'
-        with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-      - name: Configure Docker
-        run: gcloud auth configure-docker us-west1-docker.pkg.dev
-      - name: GCR Push
-        run: ./scripts/gcr-push.bash
+        run: ./scripts/ecr-private-push.bash login
       - name: Clean up
         run: podman image prune -f
+
+  deploy:
+    name: Deploy to EKS
+    needs: build
+    runs-on: [self-hosted, rust-builder]
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name app-cluster-v2 --region us-west-2
+      - name: Rollout restart
+        run: |
+          kubectl rollout restart statefulset/flow-server
+          kubectl rollout restart statefulset/flow-server-v2
+          kubectl rollout restart deployment/schema-server
+
   integration-test:
     name: Integration Test
-    needs: build
-    runs-on: self-hosted
+    needs: deploy
+    runs-on: [self-hosted, rust-builder]
     env:
       APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
       KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
@@ -59,9 +68,9 @@ jobs:
         run: cargo build --bin integration-tests --quiet
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-east-1
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Run Integration Tests
         env:
           APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
