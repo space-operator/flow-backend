@@ -202,7 +202,7 @@ pub struct CreateUser {
 
 #[derive(Serialize)]
 struct UserMetadata {
-    pub_key: String,
+    pubkey: String,
 }
 
 pub fn get_email(pubkey: &[u8; 32]) -> String {
@@ -211,12 +211,12 @@ pub fn get_email(pubkey: &[u8; 32]) -> String {
 
 impl CreateUser {
     fn new(pk: &[u8; 32]) -> Self {
-        let pub_key = bs58::encode(pk).into_string();
+        let pubkey = bs58::encode(pk).into_string();
         let email = get_email(pk);
         Self {
             email,
             email_confirm: true,
-            user_metadata: UserMetadata { pub_key },
+            user_metadata: UserMetadata { pubkey },
         }
     }
 }

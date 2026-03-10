@@ -71,7 +71,7 @@ impl UserConnection {
                         'environment', environment,
                         'current_network', current_network,
                         'instructions_bundling', instructions_bundling,
-                        'is_public', "isPublic",
+                        'is_public', is_public,
                         'start_shared', start_shared,
                         'start_unverified', start_unverified,
                         'current_branch_id', current_branch_id
@@ -121,8 +121,8 @@ impl UserConnection {
     pub(crate) async fn get_flow_info_impl(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
         let conn = self.pool.get_conn().await?;
         conn.do_query_opt(
-            r#"SELECT user_id, start_shared, start_unverified, "isPublic" FROM flows_v2
-                WHERE uuid = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
+            r#"SELECT user_id, start_shared, start_unverified, is_public FROM flows_v2
+                WHERE uuid = $1 AND (user_id = $2 OR is_public = TRUE)"#,
             &[&flow_id, &self.user_id],
         )
         .await
@@ -209,7 +209,7 @@ impl UserConnection {
             let owner: UserId = tx
                 .do_query_one(
                     r#"SELECT user_id FROM flows_v2
-                    WHERE uuid = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#,
+                    WHERE uuid = $1 AND (user_id = $2 OR is_public = TRUE)"#,
                     &[&flow_id, &self.user_id],
                 )
                 .await
@@ -277,7 +277,7 @@ impl UserConnection {
         let mut ids = HashSet::<FlowId>::new();
         let mut queue = vec![flow_id];
         let check_flow = r#"SELECT nodes FROM flows_v2
-                WHERE uuid = $1 AND (user_id = $2 OR "isPublic" = TRUE)"#;
+                WHERE uuid = $1 AND (user_id = $2 OR is_public = TRUE)"#;
         while let Some(id) = queue.pop() {
             if !ids.insert(id) {
                 continue;

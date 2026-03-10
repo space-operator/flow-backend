@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "qr_code",
+  "prefix": "image",
+  "type": "native",
+  "description": "Generate a QR code image from text data. Useful for Solana Pay URLs.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-image/src/qr_code.rs",
+  "ports": {
+    "inputs": [
+      { "name": "data", "type_bounds": ["string"], "required": true, "passthrough": false, "tooltip": "Data to encode (URL, text, etc.)" },
+      { "name": "size", "type_bounds": ["u64"], "required": false, "passthrough": false, "tooltip": "Image size in pixels (default: 256)" },
+      { "name": "error_correction", "type_bounds": ["string"], "required": false, "passthrough": false, "tooltip": "Error correction level: low, medium (default), quartile, high" }
+    ],
+    "outputs": [
+      { "name": "image", "type": "bytes", "tooltip": "QR code as PNG image" },
+      { "name": "svg", "type": "string", "optional": true, "tooltip": "QR code as SVG string" }
+    ]
+  },
+  "config_schema": { "type": "object", "properties": { "size": { "type": "integer" } }, "additionalProperties": false },
+  "config": { "size": { "U": 256 } },
+  "classification": { "vendor": "Native", "program": "image", "category": "media", "icon_url": null, "tags": ["media", "image", "qr", "qrcode", "solana-pay"] },
+  "external_version": { "program_id": "image_native", "sdk_crate": null, "sdk_version": null, "api_base_url": null, "api_version": null, "source_repo": null },
+  "internal": { "source": "crates", "source_code": "crates/cmds-image/node-definitions/qr_code.jsonc", "repo": "flow-backend" }
+}

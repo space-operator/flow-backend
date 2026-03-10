@@ -1,4 +1,4 @@
-use crate::polars::types::{df_from_ipc, dual_output, parse_column_names};
+use crate::polars::types::{df_from_ipc, dual_output, parse_column_names, unwrap_json_input};
 use flow_lib::command::prelude::*;
 use polars::prelude::*;
 
@@ -32,7 +32,8 @@ pub struct Output {
 }
 
 fn parse_descending(value: &JsonValue, num_cols: usize) -> Vec<bool> {
-    match value {
+    let value = unwrap_json_input(value).unwrap_or(std::borrow::Cow::Borrowed(value));
+    match value.as_ref() {
         JsonValue::Bool(b) => vec![*b; num_cols],
         JsonValue::Array(arr) => arr
             .iter()

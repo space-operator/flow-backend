@@ -2,7 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "update_core_v1",
-  "prefix": "nft",
+  "prefix": "mpl_core",
   "description": "Update an MPL Core asset's name, URI, or update authority",
   "type": "native",
   "author_handle": "spo",
@@ -21,11 +21,18 @@
       {
         "name": "asset",
         "type_bounds": [
-          "keypair"
+          "pubkey"
         ],
         "required": true,
-        "passthrough": false,
-        "tooltip": "Asset keypair to update"
+        "tooltip": "The address of the asset to update"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": false,
+        "tooltip": "Update authority keypair"
       },
       {
         "name": "collection",
@@ -33,7 +40,6 @@
           "pubkey"
         ],
         "required": false,
-        "passthrough": false,
         "tooltip": "Collection the asset belongs to"
       },
       {
@@ -42,7 +48,6 @@
           "string"
         ],
         "required": false,
-        "passthrough": false,
         "tooltip": "New name for the asset"
       },
       {
@@ -51,7 +56,6 @@
           "string"
         ],
         "required": false,
-        "passthrough": false,
         "tooltip": "New URI for the asset metadata"
       },
       {
@@ -60,7 +64,6 @@
           "json"
         ],
         "required": false,
-        "passthrough": false,
         "tooltip": "New update authority to set"
       },
       {
@@ -68,31 +71,15 @@
         "type_bounds": [
           "bool"
         ],
-        "required": false,
-        "passthrough": false,
-        "tooltip": "Whether to submit the transaction (default: true)"
+        "tooltip": "Submit transaction to the network"
       }
     ],
     "outputs": [
       {
         "name": "signature",
         "type": "signature",
-        "tooltip": "Signature of the submitted transaction"
-      },
-      {
-        "name": "mint_account",
-        "type": "pubkey",
-        "tooltip": "Mint account public key"
-      },
-      {
-        "name": "metadata_account",
-        "type": "pubkey",
-        "tooltip": "Metadata account public key"
-      },
-      {
-        "name": "master_edition_account",
-        "type": "pubkey",
-        "tooltip": "Master edition account public key"
+        "optional": true,
+        "tooltip": "Transaction signature"
       }
     ]
   },
@@ -103,18 +90,19 @@
     }
   },
   "classification": {
-    "vendor": "Native",
-    "program": "core",
-    "category": "core",
+    "vendor": "Metaplex",
+    "program": "mpl_core",
+    "category": "nft",
     "icon_url": null,
     "tags": [
-      "core",
+      "nft",
+      "mpl core",
       "update"
     ]
   },
   "external_version": {
-    "program_id": "core_native",
-    "sdk_crate": null,
+    "program_id": "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d",
+    "sdk_crate": "mpl-core",
     "sdk_version": null,
     "api_base_url": null,
     "api_version": null,

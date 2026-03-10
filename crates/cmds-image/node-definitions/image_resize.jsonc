@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "image_resize",
+  "prefix": "image",
+  "type": "native",
+  "description": "Resize an image to the specified dimensions.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-image/src/resize.rs",
+  "ports": {
+    "inputs": [
+      { "name": "image", "type_bounds": ["bytes", "string"], "required": true, "passthrough": false, "tooltip": "Input image data (raw bytes or URL)" },
+      { "name": "width", "type_bounds": ["u64"], "required": true, "passthrough": false, "tooltip": "Target width in pixels" },
+      { "name": "height", "type_bounds": ["u64"], "required": true, "passthrough": false, "tooltip": "Target height in pixels" },
+      { "name": "filter", "type_bounds": ["string"], "required": false, "passthrough": false, "tooltip": "Resize filter: nearest, linear, cubic, lanczos3 (default)" },
+      { "name": "preserve_aspect_ratio", "type_bounds": ["bool"], "required": false, "passthrough": false, "tooltip": "Preserve aspect ratio (default: true)" }
+    ],
+    "outputs": [
+      { "name": "image", "type": "bytes", "tooltip": "Resized image data" },
+      { "name": "width", "type": "u64", "tooltip": "Actual output width" },
+      { "name": "height", "type": "u64", "tooltip": "Actual output height" }
+    ]
+  },
+  "config_schema": { "type": "object", "properties": { "filter": { "type": "string" } }, "additionalProperties": false },
+  "config": { "filter": { "S": "lanczos3" } },
+  "classification": { "vendor": "Native", "program": "image", "category": "media", "icon_url": null, "tags": ["media", "image", "resize", "scale"] },
+  "external_version": { "program_id": "image_native", "sdk_crate": null, "sdk_version": null, "api_base_url": null, "api_version": null, "source_repo": null },
+  "internal": { "source": "crates", "source_code": "crates/cmds-image/node-definitions/image_resize.jsonc", "repo": "flow-backend" }
+}

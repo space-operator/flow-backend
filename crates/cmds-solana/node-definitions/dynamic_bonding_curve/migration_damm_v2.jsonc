@@ -35,14 +35,6 @@
         "tooltip": "Virtual pool config key"
       },
       {
-        "name": "pool",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "required": true,
-        "tooltip": "Pool account"
-      },
-      {
         "name": "first_position_nft_mint",
         "type_bounds": [
           "keypair"
@@ -97,13 +89,6 @@
         "tooltip": "DAMM pool authority"
       },
       {
-        "name": "amm_program",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "tooltip": "[Auto-derived: constant] AMM program"
-      },
-      {
         "name": "base_mint",
         "type_bounds": [
           "pubkey"
@@ -145,40 +130,12 @@
         "tooltip": "Payer (signer)"
       },
       {
-        "name": "token_base_program",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "tooltip": "[Auto-derived: known_program] Token base program"
-      },
-      {
-        "name": "token_quote_program",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "tooltip": "[Auto-derived: known_program] Token quote program"
-      },
-      {
-        "name": "token_2022_program",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "tooltip": "[Auto-derived: known_program] Token 2022 program"
-      },
-      {
         "name": "damm_event_authority",
         "type_bounds": [
           "pubkey"
         ],
         "required": true,
         "tooltip": "DAMM event authority"
-      },
-      {
-        "name": "system_program",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "tooltip": "[Auto-derived: constant] System program"
       },
       {
         "name": "submit",
@@ -195,6 +152,11 @@
         "type": "signature",
         "optional": true,
         "tooltip": "Transaction signature"
+      },
+      {
+        "name": "pool",
+        "type": "pubkey",
+        "tooltip": "Derived pool PDA"
       },
       {
         "name": "migration_metadata",
@@ -215,21 +177,6 @@
   },
   "config_schema": {},
   "config": {
-    "amm_program": {
-      "S": "pubkey!(\"cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG\")"
-    },
-    "token_base_program": {
-      "S": "spl_token::id()"
-    },
-    "token_quote_program": {
-      "S": "spl_token::id()"
-    },
-    "token_2022_program": {
-      "S": "spl_token_2022::id()"
-    },
-    "system_program": {
-      "S": "pubkey!(\"11111111111111111111111111111111\")"
-    },
     "submit": {
       "B": true
     }

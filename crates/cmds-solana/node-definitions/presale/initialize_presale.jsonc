@@ -27,44 +27,12 @@
         "tooltip": "Presale token mint"
       },
       {
-        "name": "presale",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "required": true,
-        "tooltip": "Presale account PDA"
-      },
-      {
-        "name": "presale_authority",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "required": true,
-        "tooltip": "Presale authority"
-      },
-      {
         "name": "quote_token_mint",
         "type_bounds": [
           "pubkey"
         ],
         "required": true,
         "tooltip": "Quote token mint"
-      },
-      {
-        "name": "presale_vault",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "required": true,
-        "tooltip": "Presale base token vault PDA"
-      },
-      {
-        "name": "quote_token_vault",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "required": true,
-        "tooltip": "Quote token vault PDA"
       },
       {
         "name": "payer_presale_token",
@@ -154,6 +122,26 @@
         "type": "signature",
         "optional": true,
         "tooltip": "Transaction signature"
+      },
+      {
+        "name": "presale",
+        "type": "pubkey",
+        "tooltip": "Derived presale PDA"
+      },
+      {
+        "name": "presale_authority",
+        "type": "pubkey",
+        "tooltip": "Derived presale authority PDA"
+      },
+      {
+        "name": "presale_vault",
+        "type": "pubkey",
+        "tooltip": "Derived presale base token vault PDA"
+      },
+      {
+        "name": "quote_token_vault",
+        "type": "pubkey",
+        "tooltip": "Derived quote token vault PDA"
       }
     ]
   },

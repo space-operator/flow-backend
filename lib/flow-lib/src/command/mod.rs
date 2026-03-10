@@ -60,6 +60,16 @@ pub fn parse_value_tagged(json: serde_json::Value) -> Result<Value, serde_json::
     serde_json::from_value::<Value>(json)
 }
 
+pub fn parse_value_tagged_bool(json: &serde_json::Value) -> Option<bool> {
+    // Many configs still store booleans in tagged value form, so keep the helper centralized.
+    parse_value_tagged(json.clone())
+        .ok()
+        .and_then(|value| match value {
+            Value::Bool(b) => Some(b),
+            _ => None,
+        })
+}
+
 pub fn parse_value_tagged_or_json(json: serde_json::Value) -> Value {
     parse_value_tagged(json.clone()).unwrap_or_else(|_| Value::from(json))
 }
@@ -145,6 +155,11 @@ pub trait CommandTrait: 'static {
         result
     }
 
+    /// Specify how start/deployment `flow_inputs` are mapped into this command's inputs.
+    fn bind_flow_inputs(&self, _flow_inputs: &ValueSet) -> ValueSet {
+        ValueSet::new()
+    }
+
     fn node_data(&self) -> NodeData {
         default_node_data(self)
     }
@@ -180,10 +195,7 @@ pub fn passthrough_outputs<T: CommandTrait + ?Sized>(cmd: &T, inputs: &ValueSet)
 }
 
 /// Specify how [`config`][crate::config::NodeConfig::config] values are read.
-pub fn default_read_config<T: CommandTrait + ?Sized>(
-    cmd: &T,
-    data: serde_json::Value,
-) -> ValueSet {
+pub fn default_read_config<T: CommandTrait + ?Sized>(cmd: &T, data: serde_json::Value) -> ValueSet {
     let mut result = ValueSet::new();
     for i in cmd.inputs() {
         if let Some(json) = data.get(&i.name) {
@@ -548,6 +560,14 @@ mod tests {
     fn parse_value_tagged_rejects_plain_json() {
         assert!(parse_value_tagged(json!(123)).is_err());
         assert!(parse_value_tagged(json!("hello")).is_err());
+    }
+
+    #[test]
+    fn parse_value_tagged_bool_reads_bool_tags() {
+        assert_eq!(parse_value_tagged_bool(&json!({"B": true})), Some(true));
+        assert_eq!(parse_value_tagged_bool(&json!({"B": false})), Some(false));
+        assert_eq!(parse_value_tagged_bool(&json!({"S": "nope"})), None);
+        assert_eq!(parse_value_tagged_bool(&json!(true)), None);
     }
 
     #[test]

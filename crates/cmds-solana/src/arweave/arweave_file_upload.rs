@@ -1,5 +1,6 @@
 use super::arweave_nft_upload::Uploader;
 use crate::prelude::*;
+use flow_lib::solana::Keypair;
 
 const NAME: &str = "arweave_file_upload";
 
@@ -27,10 +28,17 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    let ephemeral_keypair = if input.fee_payer.is_adapter_wallet() {
+        Some(Keypair::new())
+    } else {
+        None
+    };
+
     let mut uploader = Uploader::new(
         ctx.solana_client().clone(),
         ctx.solana_config().cluster,
         input.fee_payer,
+        ephemeral_keypair,
     )?;
 
     if input.fund_bundlr {

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "image_rotate",
+  "prefix": "image",
+  "type": "native",
+  "description": "Rotate and/or flip an image.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-image/src/rotate.rs",
+  "ports": {
+    "inputs": [
+      { "name": "image", "type_bounds": ["bytes", "string"], "required": true, "passthrough": false, "tooltip": "Input image data (raw bytes or URL)" },
+      { "name": "angle", "type_bounds": ["string"], "required": false, "passthrough": false, "tooltip": "Rotation angle: 90, 180, or 270" },
+      { "name": "flip_h", "type_bounds": ["bool"], "required": false, "passthrough": false, "tooltip": "Flip horizontally" },
+      { "name": "flip_v", "type_bounds": ["bool"], "required": false, "passthrough": false, "tooltip": "Flip vertically" }
+    ],
+    "outputs": [
+      { "name": "image", "type": "bytes", "tooltip": "Transformed image data" }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": { "vendor": "Native", "program": "image", "category": "media", "icon_url": null, "tags": ["media", "image", "rotate", "flip"] },
+  "external_version": { "program_id": "image_native", "sdk_crate": null, "sdk_version": null, "api_base_url": null, "api_version": null, "source_repo": null },
+  "internal": { "source": "crates", "source_code": "crates/cmds-image/node-definitions/image_rotate.jsonc", "repo": "flow-backend" }
+}

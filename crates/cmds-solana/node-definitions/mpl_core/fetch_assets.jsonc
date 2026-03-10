@@ -2,7 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "fetch_assets",
-  "prefix": "nft",
+  "prefix": "mpl_core",
   "description": "Fetch all assets belonging to an MPL Core collection",
   "type": "native",
   "author_handle": "spo",
@@ -15,7 +15,6 @@
           "pubkey"
         ],
         "required": true,
-        "passthrough": false,
         "tooltip": "Public key of the collection to fetch assets from"
       }
     ],
@@ -30,19 +29,20 @@
   "config_schema": {},
   "config": {},
   "classification": {
-    "vendor": "Native",
-    "program": "core",
-    "category": "core",
+    "vendor": "Metaplex",
+    "program": "mpl_core",
+    "category": "nft",
     "icon_url": null,
     "tags": [
-      "core",
+      "nft",
+      "mpl core",
       "fetch",
       "assets"
     ]
   },
   "external_version": {
-    "program_id": "core_native",
-    "sdk_crate": null,
+    "program_id": "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d",
+    "sdk_crate": "mpl-core",
     "sdk_version": null,
     "api_base_url": null,
     "api_version": null,

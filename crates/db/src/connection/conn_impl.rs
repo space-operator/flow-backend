@@ -558,13 +558,13 @@ impl UserConnection {
 
         let pubkey = tx
             .do_query_one(
-                "SELECT pub_key FROM users_public WHERE user_id = $1",
+                "SELECT raw_user_meta_data->>'pubkey' AS pub_key FROM auth.users WHERE id = $1",
                 &[&self.user_id],
             )
             .await
             .map_err(Error::exec("get pub_key"))?
             .try_get::<_, String>(0)
-            .map_err(Error::data("users_public.pub_key"))?;
+            .map_err(Error::data("auth.users.pub_key"))?;
         bs58_decode::<32>(&pubkey).map_err(Error::parsing("base58"))?;
 
         let mut users = copy_out(
@@ -606,7 +606,8 @@ impl UserConnection {
         let users_public = copy_out(
             &tx,
             &format!(
-                "SELECT * FROM users_public WHERE user_id = '{}'",
+                "SELECT id AS user_id, raw_user_meta_data->>'pubkey' AS pub_key
+                FROM auth.users WHERE id = '{}'",
                 self.user_id
             ),
         )

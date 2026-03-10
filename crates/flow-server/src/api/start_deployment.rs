@@ -19,7 +19,7 @@ use anyhow::anyhow;
 use flow::flow_set::{DeploymentId, FlowStarter, StartFlowDeploymentOptions, X402Network};
 use flow_lib::solana::Pubkey;
 use serde_with::serde_as;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use value::{Decimal, with::AsPubkey};
 use x402_kit::{
     core::Resource,
@@ -171,7 +171,15 @@ async fn start_deployment(
 
     let conn = db.get_user_conn(deployment.user_id).await?;
     deployment.flows = conn.get_deployment_flows(&id).await?;
-    deployment.wallets_id = conn.get_deployment_wallets(&id).await?;
+    // Recompute from the stored flow snapshot so API-mode wallets do not keep stale rows alive.
+    deployment.wallets_id = deployment
+        .flows
+        .values()
+        .map(|flow| flow.wallets_id())
+        .fold(BTreeSet::new(), |mut acc, mut item| {
+            acc.append(&mut item);
+            acc
+        });
     deployment.x402_fees = conn.get_deployment_x402_fees(&id).await?;
 
     let paywall = if let Some(fees) = deployment.x402_fees.as_ref() {

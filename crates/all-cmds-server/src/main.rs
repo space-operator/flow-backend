@@ -1,3 +1,4 @@
+use cmds_image as _;
 use cmds_pdg as _;
 use cmds_solana as _;
 use cmds_std as _;

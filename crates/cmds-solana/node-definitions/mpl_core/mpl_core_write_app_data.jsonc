@@ -2,7 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "write_app_data",
-  "prefix": "nft",
+  "prefix": "mpl_core",
   "description": "Write application data to an MPL Core asset or collection",
   "type": "native",
   "author_handle": "spo",
@@ -23,8 +23,7 @@
         "type_bounds": [
           "pubkey"
         ],
-        "required": false,
-        "passthrough": false,
+        "required": true,
         "tooltip": "Public key of the asset to write data to"
       },
       {
@@ -32,9 +31,8 @@
         "type_bounds": [
           "pubkey"
         ],
-        "required": false,
-        "passthrough": false,
-        "tooltip": "Public key of the collection to write data to"
+        "required": true,
+        "tooltip": "Public key of the collection"
       },
       {
         "name": "buffer",
@@ -42,7 +40,6 @@
           "pubkey"
         ],
         "required": false,
-        "passthrough": false,
         "tooltip": "Buffer account for large data writes"
       },
       {
@@ -50,8 +47,7 @@
         "type_bounds": [
           "keypair"
         ],
-        "required": false,
-        "passthrough": false,
+        "required": true,
         "tooltip": "Authority keypair for writing data"
       },
       {
@@ -60,7 +56,6 @@
           "string"
         ],
         "required": false,
-        "passthrough": false,
         "tooltip": "Application data string to write"
       },
       {
@@ -68,16 +63,15 @@
         "type_bounds": [
           "bool"
         ],
-        "required": false,
-        "passthrough": false,
-        "tooltip": "Whether to submit the transaction (default: true)"
+        "tooltip": "Submit transaction to the network"
       }
     ],
     "outputs": [
       {
         "name": "signature",
         "type": "signature",
-        "tooltip": "Signature of the submitted transaction"
+        "optional": true,
+        "tooltip": "Transaction signature"
       }
     ]
   },
@@ -88,20 +82,20 @@
     }
   },
   "classification": {
-    "vendor": "Native",
-    "program": "core",
-    "category": "core",
+    "vendor": "Metaplex",
+    "program": "mpl_core",
+    "category": "nft",
     "icon_url": null,
     "tags": [
-      "core",
+      "nft",
+      "mpl core",
       "write",
-      "app",
-      "data"
+      "app data"
     ]
   },
   "external_version": {
-    "program_id": "core_native",
-    "sdk_crate": null,
+    "program_id": "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d",
+    "sdk_crate": "mpl-core",
     "sdk_version": null,
     "api_base_url": null,
     "api_version": null,

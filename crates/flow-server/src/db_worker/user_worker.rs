@@ -11,7 +11,6 @@ use actix::{
 };
 use actix_web::{ResponseError, http::StatusCode};
 use bytes::Bytes;
-use flow_rpc::flow_side::address_book::{AddressBook, BaseAddressBook};
 use db::{Error as DbError, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
@@ -37,6 +36,7 @@ use flow_lib::{
     utils::{TowerClient, tower_client::CommonErrorExt},
 };
 use flow_lib_solana::is_same_message_logic;
+use flow_rpc::flow_side::address_book::{AddressBook, BaseAddressBook};
 use futures_channel::{mpsc, oneshot};
 use futures_metrics::FutureExt;
 use futures_util::{TryFutureExt, future::BoxFuture};
@@ -45,6 +45,7 @@ use metrics::histogram;
 use serde_json::{Value as JsonValue, json};
 use solana_signature::Signature;
 use std::{
+    collections::BTreeSet,
     future::{Future, ready},
     sync::Arc,
 };
@@ -106,9 +107,7 @@ impl SharedWalletRemap {
             let Some(node_config) = node.data.config.as_object_mut() else {
                 continue;
             };
-            let wallet_type = node_config
-                .get("wallet_type")
-                .and_then(parse_string_value);
+            let wallet_type = node_config.get("wallet_type").and_then(parse_string_value);
             let has_swig_wallet_id = node_config
                 .get("swig_wallet_id")
                 .and_then(parse_string_value)
@@ -123,6 +122,7 @@ impl SharedWalletRemap {
             let Some(owner_wallet_id) = owner_wallet_id else {
                 continue;
             };
+            // Wallet nodes still fall back to static config in api_input mode, so remap it too.
             let should_remap = owner_wallet_id == 0
                 || wallet_type.as_deref() == Some("ADAPTER")
                 || self.owner_adapter_wallet_ids.contains(&owner_wallet_id);
@@ -135,7 +135,10 @@ impl SharedWalletRemap {
             if let Some(wallet_id_value) = node_config.get_mut("wallet_id") {
                 set_wallet_id(wallet_id_value, wallet_id);
             } else {
-                node_config.insert("wallet_id".to_owned(), json!({ "U": wallet_id.to_string() }));
+                node_config.insert(
+                    "wallet_id".to_owned(),
+                    json!({ "U": wallet_id.to_string() }),
+                );
             }
 
             if let Some(public_key_value) = node_config.get_mut("public_key") {
@@ -165,7 +168,11 @@ async fn build_shared_wallet_remap(
     }
 
     let owner_wallets = db.get_user_conn(owner_user_id).await?.get_wallets().await?;
-    let starter_wallets = db.get_user_conn(starter_user_id).await?.get_wallets().await?;
+    let starter_wallets = db
+        .get_user_conn(starter_user_id)
+        .await?
+        .get_wallets()
+        .await?;
 
     let Some(default_wallet) = starter_wallets
         .iter()
@@ -306,7 +313,7 @@ impl UserWorker {
         d: &FlowDeployment,
         options: &StartFlowDeploymentOptions,
         ctx: &mut actix::Context<Self>,
-    ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static {
+    ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static + use<> {
         let new_flow_run = TowerClient::new(ActixService::from(ctx.address().recipient()));
 
         let root = DBWorker::from_registry();
@@ -389,8 +396,7 @@ impl UserWorker {
                     .await
                 {
                     Ok(Some(secret_key)) => {
-                        if let Err(e) =
-                            signer.add_swig_session(session.session_pubkey, &secret_key)
+                        if let Err(e) = signer.add_swig_session(session.session_pubkey, &secret_key)
                         {
                             tracing::warn!(
                                 "failed to register swig session keypair for {}: {}",
@@ -986,7 +992,8 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let remotes = AddressBook::new(self.remote_command_address_book.clone(), Some(user_id));
         Box::pin(async move {
             let wrk = root.send(GetTokenWorker { user_id }).await??;
-            let shared_wallet_remap = build_shared_wallet_remap(&db, user_id, msg.started_by.0).await?;
+            let shared_wallet_remap =
+                build_shared_wallet_remap(&db, user_id, msg.started_by.0).await?;
 
             let (signer, signers_info) = SignerWorker::fetch_all_and_start(
                 db.clone(),
@@ -1126,34 +1133,52 @@ impl actix::Message for StartDeployment {
 impl actix::Handler<StartDeployment> for UserWorker {
     type Result = ResponseActFuture<Self, <StartDeployment as actix::Message>::Result>;
 
-    fn handle(&mut self, msg: StartDeployment, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: StartDeployment, _ctx: &mut Self::Context) -> Self::Result {
         let db = self.db.clone();
         let owner_user_id = self.user_id;
-        self.make_flow_set_context(&msg.deployment, &msg.options, ctx)
-            .map_err(StartError::from)
-            .into_actor(&*self)
-            .and_then(move |context, _, _| {
-                wrap_future::<_, Self>(async move {
-                    let mut deployment = msg.deployment;
-                    if msg.options.starter.authenticated && msg.options.starter.user_id != owner_user_id {
-                        if let Some(remap) =
-                            build_shared_wallet_remap(&db, owner_user_id, msg.options.starter.user_id).await?
-                        {
-                            for flow in deployment.flows.values_mut() {
-                                remap.apply_flow_row(&mut flow.row);
-                            }
-                        }
+        async move {
+            let mut deployment = msg.deployment;
+            let options = msg.options;
+            if options.starter.authenticated && options.starter.user_id != owner_user_id {
+                if let Some(remap) =
+                    build_shared_wallet_remap(&db, owner_user_id, options.starter.user_id).await?
+                {
+                    for flow in deployment.flows.values_mut() {
+                        remap.apply_flow_row(&mut flow.row);
                     }
-                    let id = FlowSet::builder()
-                        .deployment(deployment)
-                        .context(context)
-                        .build()
-                        .start(msg.options)
-                        .await?
-                        .0;
-                    Ok(id)
+                    // Remap can change which static wallets should be preloaded for signing.
+                    deployment.wallets_id = deployment
+                        .flows
+                        .values()
+                        .map(|flow| flow.wallets_id())
+                        .fold(BTreeSet::new(), |mut acc, mut item| {
+                            acc.append(&mut item);
+                            acc
+                        });
+                }
+            }
+            Ok::<_, StartError>((deployment, options))
+        }
+        .into_actor(&*self)
+        .and_then(move |(deployment, options), act, ctx| {
+            // Shared-wallet remap can change which static wallets a deployment should preload.
+            // Build signer context from the effective deployment, not the stored snapshot.
+            act.make_flow_set_context(&deployment, &options, ctx)
+                .map_err(StartError::from)
+                .into_actor(act)
+                .and_then(move |context, _, _| {
+                    wrap_future::<_, Self>(async move {
+                        let id = FlowSet::builder()
+                            .deployment(deployment)
+                            .context(context)
+                            .build()
+                            .start(options)
+                            .await?
+                            .0;
+                        Ok(id)
+                    })
                 })
-            })
-            .boxed_local()
+        })
+        .boxed_local()
     }
 }
