@@ -29,6 +29,9 @@ jobs:
     name: Deploy to EKS
     needs: build
     runs-on: [self-hosted, rust-builder]
+    env:
+      ECR: 311141552572.dkr.ecr.us-west-2.amazonaws.com
+      COMMIT: ${{ github.sha }}
     steps:
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -37,11 +40,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name app-cluster-v2 --region us-west-2
-      - name: Rollout restart
+      - name: Deploy pinned commit images
         run: |
-          kubectl rollout restart statefulset/flow-server
-          kubectl rollout restart statefulset/flow-server-v2
-          kubectl rollout restart deployment/schema-server
+          kubectl set image statefulset/flow-server flow-server=$ECR/flow-server:$COMMIT
+          kubectl set image statefulset/deno-server deno-server=$ECR/cmds-server:$COMMIT init=$ECR/cmds-server:$COMMIT
+          kubectl set image deployment/schema-server schema-server=$ECR/schema-server:$COMMIT
+
+          kubectl rollout status statefulset/flow-server --timeout=10m
+          kubectl rollout status statefulset/deno-server --timeout=10m
+          kubectl rollout status deployment/schema-server --timeout=10m
 
   integration-test:
     name: Integration Test

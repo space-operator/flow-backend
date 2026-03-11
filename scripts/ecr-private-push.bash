@@ -32,9 +32,11 @@ function push {
     $CMD tag "$LOCAL_NAME:$BRANCH" "$URL:$BRANCH"
     $CMD push "$URL:$BRANCH"
 
-    if [[ "$BRANCH" == "main" ]]; then
+    if [[ "$BRANCH" == "main" && "${PUSH_LATEST_TAG:-0}" == "1" ]]; then
         $CMD tag "$LOCAL_NAME:$COMMIT" "$URL:latest"
         $CMD push "$URL:latest"
+    elif [[ "$BRANCH" == "main" ]]; then
+        echo "Skipping :latest push (immutable tags enabled)."
     fi
 }
 
