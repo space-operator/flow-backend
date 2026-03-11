@@ -40,15 +40,40 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name app-cluster-v2 --region us-west-2
+      - name: Wait for EKS API
+        run: |
+          for i in $(seq 1 20); do
+            if kubectl get ns default --request-timeout=20s >/dev/null 2>&1; then
+              echo "EKS API reachable."
+              exit 0
+            fi
+            echo "EKS API not reachable yet (attempt $i/20); retrying in 15s..."
+            sleep 15
+          done
+          kubectl get ns default --request-timeout=20s
       - name: Deploy pinned commit images
         run: |
-          kubectl set image statefulset/flow-server flow-server=$ECR/flow-server:$COMMIT
-          kubectl set image statefulset/deno-server deno-server=$ECR/cmds-server:$COMMIT init=$ECR/cmds-server:$COMMIT
-          kubectl set image deployment/schema-server schema-server=$ECR/schema-server:$COMMIT
+          retry() {
+            local attempts="$1"
+            shift
+            local n=1
+            until "$@"; do
+              if [ "$n" -ge "$attempts" ]; then
+                return 1
+              fi
+              echo "Attempt $n/$attempts failed: $*"
+              n=$((n + 1))
+              sleep 10
+            done
+          }
 
-          kubectl rollout status statefulset/flow-server --timeout=10m
-          kubectl rollout status statefulset/deno-server --timeout=10m
-          kubectl rollout status deployment/schema-server --timeout=10m
+          retry 5 kubectl set image statefulset/flow-server flow-server=$ECR/flow-server:$COMMIT
+          retry 5 kubectl set image statefulset/deno-server deno-server=$ECR/cmds-server:$COMMIT init=$ECR/cmds-server:$COMMIT
+          retry 5 kubectl set image deployment/schema-server schema-server=$ECR/schema-server:$COMMIT
+
+          retry 5 kubectl rollout status statefulset/flow-server --timeout=10m
+          retry 5 kubectl rollout status statefulset/deno-server --timeout=10m
+          retry 5 kubectl rollout status deployment/schema-server --timeout=10m
 
   integration-test:
     name: Integration Test
