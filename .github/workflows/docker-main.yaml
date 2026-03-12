@@ -46,15 +46,16 @@ jobs:
         run: aws eks update-kubeconfig --name app-cluster-v2 --region us-west-2
       - name: Wait for EKS API
         run: |
+          probe_resource="statefulset/flow-server"
           for i in $(seq 1 20); do
-            if kubectl get ns default --request-timeout=20s >/dev/null 2>&1; then
+            if kubectl get "$probe_resource" -n default --request-timeout=20s >/dev/null 2>&1; then
               echo "EKS API reachable."
               exit 0
             fi
             echo "EKS API not reachable yet (attempt $i/20); retrying in 15s..."
             sleep 15
           done
-          kubectl get ns default --request-timeout=20s
+          kubectl get "$probe_resource" -n default --request-timeout=20s
       - name: Deploy pinned commit images
         run: |
           retry() {
