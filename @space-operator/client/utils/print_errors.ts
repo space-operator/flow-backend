@@ -1,5 +1,20 @@
+import * as dotenv from "@std/dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { Client, type Database } from "../src/mod.ts";
+
+for (const envPath of [
+  new URL("../../../docker/.env", import.meta.url),
+  new URL("../integration_tests/.env", import.meta.url),
+]) {
+  try {
+    dotenv.loadSync({
+      envPath,
+      export: true,
+    });
+  } catch {
+    // Best-effort loading keeps failure diagnostics usable even when startup aborts early.
+  }
+}
 
 function getEnv(key: string): string {
   const env = Deno.env.get(key);
