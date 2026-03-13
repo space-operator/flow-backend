@@ -37,7 +37,7 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
         .unwrap_or_else(|_| format!("{default_repo}space-operator/cmds-server:{tag}"));
     cmd!(
         sh,
-        "docker compose -f with-cmds-server.yml up --quiet-pull --pull {pull} -d --wait"
+        "docker compose -f with-cmds-server.yml up --quiet-pull --pull {pull} -d --wait flow-server cmds-server deno-cmds-server webhook auth rest kong db"
     )
     .env("IMAGE", flow_image)
     .env("CMDS_IMAGE", cmds_image)
@@ -108,7 +108,7 @@ fn main() {
 
     if result.is_err() {
         sh.change_dir(&meta.workspace_root);
-        cmd!(sh, "deno -A utils/print_errors.ts")
+        cmd!(sh, "deno -A @space-operator/client/utils/print_errors.ts")
             .run()
             .inspect_err(|error| eprint!("{error}"))
             .ok();
@@ -125,12 +125,27 @@ fn main() {
     }
 
     if result.is_err() {
-        logs_service(&sh, "flow-server");
-        logs_service(&sh, "cmds-server");
-    }
+        cmd!(sh, "docker compose -f with-cmds-server.yml ps")
+            .run()
+            .inspect_err(|error| eprint!("{error}"))
+            .ok();
 
-    logs_service(&sh, "deno-cmds-server");
-    logs_service(&sh, "webhook");
+        for name in [
+            "flow-server",
+            "cmds-server",
+            "deno-cmds-server",
+            "realtime",
+            "auth",
+            "kong",
+            "rest",
+            "db",
+            "storage",
+            "meta",
+            "webhook",
+        ] {
+            logs_service(&sh, name);
+        }
+    }
 
     cmd!(sh, "docker compose -f with-cmds-server.yml down -v")
         .ignore_stdout()
