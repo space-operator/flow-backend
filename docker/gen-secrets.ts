@@ -19,6 +19,12 @@ const DENO_CMDS_CONFIG_PATH = ".deno-cmds-server-config.jsonc";
 const ENV_TEMPLATE = "env.example";
 const CONFIG_TEMPLATE = "flow-server-config.jsonc";
 const CMDS_SERVER_TEMPLATE = "cmds-server-config.jsonc";
+const OUTPUT_PATHS = [
+  ENV_PATH,
+  CONFIG_PATH,
+  CMDS_CONFIG_PATH,
+  DENO_CMDS_CONFIG_PATH,
+];
 
 async function initHmac(secret: string): Promise<CryptoKey> {
   return await crypto.subtle.importKey(
@@ -74,6 +80,21 @@ function generateCmdsConfig(path: string): sol.PublicKey {
 }
 
 async function main() {
+  const force = Deno.args.includes("--force");
+  const fileExists: string[] = [];
+  for (const path of OUTPUT_PATHS) {
+    if (await fs.exists(path)) fileExists.push(path);
+  }
+  if (!force && fileExists.length > 0) {
+    console.log(
+      "Secret files already exist, please remove them or rerun with --force:",
+    );
+    for (const path of fileExists) {
+      console.log(`\t${path}`);
+    }
+    Deno.exit(1);
+  }
+
   const cmdsServerKey = generateCmdsConfig(CMDS_CONFIG_PATH);
   const denoCmdsServerKey = generateCmdsConfig(DENO_CMDS_CONFIG_PATH);
 
@@ -135,19 +156,6 @@ async function main() {
     encodeHex(denoCmdsServerKey.toBytes()),
   ];
   const configContent = JSON.stringify(config, null, 2) + "\n";
-
-  const fileExists: string[] = [];
-  if (await fs.exists(ENV_PATH)) fileExists.push(ENV_PATH);
-  if (await fs.exists(CONFIG_PATH)) fileExists.push(CONFIG_PATH);
-  if (fileExists.length > 0) {
-    console.log(
-      "Secret files already exist, please remove them before running:",
-    );
-    for (const path of fileExists) {
-      console.log(`\t${path}`);
-    }
-    Deno.exit(1);
-  }
 
   console.log("Writing", ENV_PATH);
   await Deno.writeTextFile(ENV_PATH, envContent);

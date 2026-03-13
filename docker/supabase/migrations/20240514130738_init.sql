@@ -603,25 +603,77 @@ ALTER TABLE ONLY "auth"."passwords"
 
 GRANT ALL ON TABLE "auth"."passwords" TO "flow_runner";
 
-INSERT INTO "storage"."buckets" ("id", "name", "public") VALUES
-    ('user-storages', 'user-storages', FALSE),
-    ('user-public-storages', 'user-public-storages', TRUE);
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM "information_schema"."columns"
+        WHERE "table_schema" = 'storage'
+          AND "table_name" = 'buckets'
+          AND "column_name" = 'public'
+    ) THEN
+        INSERT INTO "storage"."buckets" ("id", "name", "public") VALUES
+            ('user-storages', 'user-storages', FALSE),
+            ('user-public-storages', 'user-public-storages', TRUE)
+        ON CONFLICT ("id") DO NOTHING;
+    ELSE
+        INSERT INTO "storage"."buckets" ("id", "name") VALUES
+            ('user-storages', 'user-storages'),
+            ('user-public-storages', 'user-public-storages')
+        ON CONFLICT ("id") DO NOTHING;
+    END IF;
+END;
+$$;
 
-CREATE POLICY "user-pubic-storages xeg75m_0" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = 'user-public-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+DO $$
+DECLARE
+    first_path_segment text;
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM "information_schema"."columns"
+        WHERE "table_schema" = 'storage'
+          AND "table_name" = 'objects'
+          AND "column_name" = 'path_tokens'
+    ) THEN
+        first_path_segment := '("path_tokens"[1] = ("auth"."uid"())::"text")';
+    ELSE
+        first_path_segment :=
+            '((storage.foldername("name"))[1] = ("auth"."uid"())::"text")';
+    END IF;
 
-CREATE POLICY "user-pubic-storages xeg75m_1" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = 'user-public-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
-
-CREATE POLICY "user-pubic-storages xeg75m_2" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = 'user-public-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+    EXECUTE format(
+        'CREATE POLICY "user-pubic-storages xeg75m_0" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = ''user-public-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-pubic-storages xeg75m_1" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = ''user-public-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-pubic-storages xeg75m_2" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = ''user-public-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-storage w6lp96_0" ON "storage"."objects" FOR SELECT TO "authenticated" USING ((("bucket_id" = ''user-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-storage w6lp96_1" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = ''user-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-storage w6lp96_2" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = ''user-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-storage w6lp96_3" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = ''user-storages''::"text") AND %s))',
+        first_path_segment
+    );
+END;
+$$;
 
 CREATE POLICY "user-public-storages xeg75m_0" ON "storage"."objects" FOR SELECT TO "authenticated", "anon" USING (("bucket_id" = 'user-public-storages'::"text"));
-
-CREATE POLICY "user-storage w6lp96_0" ON "storage"."objects" FOR SELECT TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
-
-CREATE POLICY "user-storage w6lp96_1" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
-
-CREATE POLICY "user-storage w6lp96_2" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
-
-CREATE POLICY "user-storage w6lp96_3" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
 
 CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
 LANGUAGE "plpgsql"

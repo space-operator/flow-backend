@@ -27,7 +27,7 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     }
 
     sh.change_dir("docker/");
-    cmd!(sh, "./gen-secrets.ts").run()?;
+    cmd!(sh, "./gen-secrets.ts --force").run()?;
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let pull = if compile { "missing" } else { "always" };
     let default_repo = if compile { "" } else { "public.ecr.aws/" };
