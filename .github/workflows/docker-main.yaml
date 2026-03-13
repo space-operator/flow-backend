@@ -85,6 +85,8 @@ jobs:
     needs: deploy
     runs-on: [self-hosted, rust-builder]
     env:
+      ECR: 311141552572.dkr.ecr.us-west-2.amazonaws.com
+      COMMIT: ${{ github.sha }}
       APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
       KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
       USDC_KEYPAIR: ${{ secrets.USDC_KEYPAIR }}
@@ -108,8 +110,12 @@ jobs:
           aws-region: us-west-2
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Login to private ECR
+        run: aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin "$ECR"
       - name: Run Integration Tests
         env:
           APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
           KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
+          IMAGE: ${{ env.ECR }}/flow-server:${{ env.COMMIT }}
+          CMDS_IMAGE: ${{ env.ECR }}/cmds-server:${{ env.COMMIT }}
         run: cargo run --bin integration-tests --quiet
