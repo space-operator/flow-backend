@@ -51,6 +51,8 @@ pub mod tuktuk;
 pub mod utils;
 pub mod wormhole;
 pub mod yvaults;
+pub mod solana_v2_compat;
+pub mod zk_compression;
 
 pub use error::{Error, Result};
 

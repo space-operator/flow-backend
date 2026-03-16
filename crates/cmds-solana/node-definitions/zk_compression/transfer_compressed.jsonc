@@ -1,0 +1,94 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "transfer_compressed",
+  "prefix": "zk_compression",
+  "description": "Transfer compressed tokens between wallets. Fetches compressed account state and validity proof from the RPC indexer automatically.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/zk_compression/transfer_compressed.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Pays for transaction fees"
+      },
+      {
+        "name": "owner",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Current owner of the compressed tokens"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Token mint address"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Recipient wallet address"
+      },
+      {
+        "name": "amount",
+        "type_bounds": ["u64"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Amount of tokens to transfer (in raw units)"
+      },
+      {
+        "name": "merkle_tree",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Output state merkle tree for the recipient's compressed account"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Light Protocol",
+    "program": "compressed_token",
+    "category": "zk_compression",
+    "icon_url": null,
+    "tags": ["zk compression", "compressed token", "transfer", "light protocol"]
+  },
+  "external_version": {
+    "program_id": null,
+    "sdk_crate": "light-compressed-token-sdk",
+    "sdk_version": "0.23",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/Lightprotocol/light-protocol"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/zk_compression/transfer_compressed.jsonc",
+    "repo": "flow-backend"
+  }
+}

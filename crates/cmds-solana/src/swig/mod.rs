@@ -46,31 +46,8 @@ pub const SWIG_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("swigypWHEksbC64pWKwa
 /// System Program ID
 pub const SYSTEM_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("11111111111111111111111111111111");
 
-// =============================================================================
-// Solana v2 ↔ v3 Type Conversion
-// =============================================================================
-
-/// Convert solana-pubkey v3 Pubkey to solana-program v2 Pubkey.
-/// Required because swig-interface uses solana-sdk v2 types.
-#[inline]
-pub fn to_pubkey_v2(pk: &solana_pubkey::Pubkey) -> solana_program_v2::pubkey::Pubkey {
-    solana_program_v2::pubkey::Pubkey::new_from_array(pk.to_bytes())
-}
-
-/// Convert solana-program v2 Instruction to solana-instruction v3.
-/// Required because swig-interface returns v2 Instructions.
-#[inline]
-pub fn to_instruction_v3(ix: solana_program_v2::instruction::Instruction) -> solana_instruction::Instruction {
-    solana_instruction::Instruction {
-        program_id: solana_pubkey::Pubkey::new_from_array(ix.program_id.to_bytes()),
-        accounts: ix.accounts.into_iter().map(|a| solana_instruction::AccountMeta {
-            pubkey: solana_pubkey::Pubkey::new_from_array(a.pubkey.to_bytes()),
-            is_signer: a.is_signer,
-            is_writable: a.is_writable,
-        }).collect(),
-        data: ix.data,
-    }
-}
+// Re-export shared v2↔v3 conversion helpers
+pub use crate::solana_v2_compat::{to_pubkey_v2, to_instruction_v3};
 
 // =============================================================================
 // ClientAction Builder Helper
