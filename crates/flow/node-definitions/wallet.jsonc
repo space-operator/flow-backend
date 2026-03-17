@@ -3,20 +3,21 @@
   "version": "0.1",
   "name": "wallet",
   "prefix": "flow",
-  "description": "Look up a wallet keypair by name",
+  "description": "Resolve a wallet from static config or an optional runtime input",
   "type": "native",
   "author_handle": "spo",
   "source_code": "crates/flow/src/command/wallet.rs",
   "ports": {
     "inputs": [
       {
-        "name": "name",
+        "name": "wallet",
         "type_bounds": [
-          "string"
+          "keypair",
+          "pubkey"
         ],
         "required": false,
         "passthrough": false,
-        "tooltip": "Wallet name to look up"
+        "tooltip": "Optional wallet override from a graph edge or start input when api_input is enabled"
       }
     ],
     "outputs": [
@@ -32,8 +33,20 @@
       }
     ]
   },
-  "config_schema": {},
-  "config": {},
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "api_input": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": true
+  },
+  "config": {
+    "api_input": {
+      "B": false
+    }
+  },
   "classification": {
     "vendor": "Native",
     "program": "flow",

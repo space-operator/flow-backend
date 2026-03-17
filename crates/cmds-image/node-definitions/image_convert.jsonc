@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "image_convert",
+  "prefix": "image",
+  "type": "native",
+  "description": "Convert an image to a different format (PNG, JPEG, WebP, GIF, BMP).",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-image/src/convert.rs",
+  "ports": {
+    "inputs": [
+      { "name": "image", "type_bounds": ["bytes", "string"], "required": true, "passthrough": false, "tooltip": "Input image data (raw bytes or URL)" },
+      { "name": "format", "type_bounds": ["string"], "required": true, "passthrough": false, "tooltip": "Target format: png, jpeg, webp, gif, bmp" }
+    ],
+    "outputs": [
+      { "name": "image", "type": "bytes", "tooltip": "Converted image data" },
+      { "name": "mime_type", "type": "string", "tooltip": "MIME type of the output (e.g. image/png)" }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": { "vendor": "Native", "program": "image", "category": "media", "icon_url": null, "tags": ["media", "image", "convert", "format"] },
+  "external_version": { "program_id": "image_native", "sdk_crate": null, "sdk_version": null, "api_base_url": null, "api_version": null, "source_repo": null },
+  "internal": { "source": "crates", "source_code": "crates/cmds-image/node-definitions/image_convert.jsonc", "repo": "flow-backend" }
+}

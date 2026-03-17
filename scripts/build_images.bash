@@ -17,10 +17,7 @@ DIRTY=""
 if [[ "$(git describe --always --dirty)" == *-dirty ]]; then
     DIRTY="-dirty"
 fi
-
-
 COMMIT="$(git rev-parse --verify HEAD)$DIRTY"
-BRANCH="${BRANCH:-$(git rev-parse --abbrev-ref HEAD)$DIRTY}"
 
 function build {
     local NAME="$1"
@@ -35,8 +32,6 @@ function build {
 
     time $BUILD --build-arg PROFILE=$PROFILE -t "$NAME:$COMMIT" -f "$DOCKERFILE" .
 
-    $CMD tag $NAME:$COMMIT $NAME:$BRANCH
-
     $CMD image rm "$NAME-builder:$BUILDER_TAG"
 }
 
@@ -45,5 +40,4 @@ build space-operator/cmds-server lib/flow-rpc/Dockerfile
 
 pushd schema
 time $BUILD -t space-operator/schema-server:$COMMIT .
-$CMD tag space-operator/schema-server:$COMMIT space-operator/schema-server:$BRANCH
 popd

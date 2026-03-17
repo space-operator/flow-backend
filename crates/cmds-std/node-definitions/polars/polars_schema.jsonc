@@ -20,7 +20,7 @@
     ],
     "outputs": [
       {
-        "name": "polars_schema",
+        "name": "schema",
         "type": "json",
         "tooltip": "Schema as {column_name: dtype_string, ...}"
       },

@@ -609,25 +609,77 @@ ALTER TABLE ONLY "auth"."passwords"
 
 GRANT ALL ON TABLE "auth"."passwords" TO "flow_runner";
 
-INSERT INTO "storage"."buckets" ("id", "name", "public") VALUES
-    ('user-storages', 'user-storages', FALSE),
-    ('user-public-storages', 'user-public-storages', TRUE);
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM "information_schema"."columns"
+        WHERE "table_schema" = 'storage'
+          AND "table_name" = 'buckets'
+          AND "column_name" = 'public'
+    ) THEN
+        INSERT INTO "storage"."buckets" ("id", "name", "public") VALUES
+            ('user-storages', 'user-storages', FALSE),
+            ('user-public-storages', 'user-public-storages', TRUE)
+        ON CONFLICT ("id") DO NOTHING;
+    ELSE
+        INSERT INTO "storage"."buckets" ("id", "name") VALUES
+            ('user-storages', 'user-storages'),
+            ('user-public-storages', 'user-public-storages')
+        ON CONFLICT ("id") DO NOTHING;
+    END IF;
+END;
+$$;
 
-CREATE POLICY "user-pubic-storages xeg75m_0" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = 'user-public-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+DO $$
+DECLARE
+    first_path_segment text;
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM "information_schema"."columns"
+        WHERE "table_schema" = 'storage'
+          AND "table_name" = 'objects'
+          AND "column_name" = 'path_tokens'
+    ) THEN
+        first_path_segment := '("path_tokens"[1] = ("auth"."uid"())::"text")';
+    ELSE
+        first_path_segment :=
+            '((storage.foldername("name"))[1] = ("auth"."uid"())::"text")';
+    END IF;
 
-CREATE POLICY "user-pubic-storages xeg75m_1" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = 'user-public-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
-
-CREATE POLICY "user-pubic-storages xeg75m_2" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = 'user-public-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
+    EXECUTE format(
+        'CREATE POLICY "user-pubic-storages xeg75m_0" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = ''user-public-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-pubic-storages xeg75m_1" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = ''user-public-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-pubic-storages xeg75m_2" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = ''user-public-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-storage w6lp96_0" ON "storage"."objects" FOR SELECT TO "authenticated" USING ((("bucket_id" = ''user-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-storage w6lp96_1" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = ''user-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-storage w6lp96_2" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = ''user-storages''::"text") AND %s))',
+        first_path_segment
+    );
+    EXECUTE format(
+        'CREATE POLICY "user-storage w6lp96_3" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = ''user-storages''::"text") AND %s))',
+        first_path_segment
+    );
+END;
+$$;
 
 CREATE POLICY "user-public-storages xeg75m_0" ON "storage"."objects" FOR SELECT TO "authenticated", "anon" USING (("bucket_id" = 'user-public-storages'::"text"));
-
-CREATE POLICY "user-storage w6lp96_0" ON "storage"."objects" FOR SELECT TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
-
-CREATE POLICY "user-storage w6lp96_1" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
-
-CREATE POLICY "user-storage w6lp96_2" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
-
-CREATE POLICY "user-storage w6lp96_3" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = 'user-storages'::"text") AND ("path_tokens"[1] = ("auth"."uid"())::"text")));
 
 CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
 LANGUAGE "plpgsql"
@@ -1001,7 +1053,7 @@ create table if not exists public.flows_v2 (
     description text not null default ''::text,
     slug text,
 
-    "isPublic" boolean not null default false,
+    is_public boolean not null default false,
     gg_marketplace boolean not null default false,
     visibility_profile text,
 
@@ -1034,7 +1086,7 @@ create table if not exists public.flows_v2 (
 create unique index if not exists flows_v2_uuid_key on public.flows_v2 (uuid);
 create unique index if not exists flows_v2_slug_key on public.flows_v2 (slug) where slug is not null;
 create index if not exists idx_flows_v2_user_id on public.flows_v2 (user_id);
-create index if not exists idx_flows_v2_is_public on public.flows_v2 ("isPublic");
+create index if not exists idx_flows_v2_is_public on public.flows_v2 (is_public);
 create index if not exists idx_flows_v2_current_branch_id on public.flows_v2 (current_branch_id);
 create index if not exists idx_flows_v2_nodes_gin on public.flows_v2 using gin (nodes);
 create index if not exists idx_flows_v2_edges_gin on public.flows_v2 using gin (edges);
@@ -1056,7 +1108,7 @@ begin
         where tablename = 'flows_v2' and policyname = 'public-select'
     ) then
         create policy "public-select" on public.flows_v2
-            for select to anon using ("isPublic" = true);
+            for select to anon using (is_public = true);
     end if;
 
     if not exists (
@@ -1138,7 +1190,7 @@ insert into public.flows_v2 (
     name,
     description,
     slug,
-    "isPublic",
+    is_public,
     gg_marketplace,
     visibility_profile,
     nodes,

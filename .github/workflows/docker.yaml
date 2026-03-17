@@ -11,10 +11,9 @@ jobs:
   build:
     name: Build docker image
     if: contains(github.event.pull_request.labels.*.name, 'docker')
-    runs-on: self-hosted
+    runs-on: [self-hosted, rust-builder]
     env:
       BRANCH: ${{ github.head_ref || github.ref_name }}
-      GPC_PROJECT_ID: ${{ secrets.GPC_PROJECT_ID }}
       PROFILE: dev
     steps:
       - uses: actions/checkout@v4
@@ -22,21 +21,11 @@ jobs:
         run: ./scripts/build_images.bash
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-east-1
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: ECR Push
-        run: ./scripts/ecr-push.bash login
-      - id: 'auth'
-        uses: 'google-github-actions/auth@v1'
-        with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-      - name: Configure Docker
-        run: gcloud auth configure-docker us-west1-docker.pkg.dev
-      - name: GCR Push
-        run: ./scripts/gcr-push.bash
+        run: ./scripts/ecr-private-push.bash login
       - name: Clean up
         run: podman image prune -f
 
@@ -44,7 +33,7 @@ jobs:
     name: Integration Test
     if: ${{ contains(github.event.pull_request.labels.*.name, 'integration-test') }}
     needs: build
-    runs-on: self-hosted
+    runs-on: [self-hosted, rust-builder]
     env:
       APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
       KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}

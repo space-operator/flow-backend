@@ -18,10 +18,13 @@ fn build() -> BuildResult {
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
     pub fee_payer: Wallet,
-    pub asset: Wallet,
+    #[serde_as(as = "AsPubkey")]
+    pub asset: Pubkey,
+    pub authority: Option<Wallet>,
     #[serde(default, with = "value::pubkey::opt")]
     pub collection: Option<Pubkey>,
     pub new_name: Option<String>,
@@ -40,45 +43,39 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let mut builder = UpdateV1Builder::new();
 
-    let builder = builder
-        .asset(input.asset.pubkey())
+    builder
+        .asset(input.asset)
         .payer(input.fee_payer.pubkey());
 
-    let builder = match input.collection {
-        Some(collection) => builder.collection(Some(collection)),
-        _ => builder,
-    };
-
-    let builder = match input.new_name {
-        Some(new_name) => builder.new_name(new_name),
-        _ => builder,
-    };
-
-    let builder = match input.new_uri {
-        Some(new_uri) => builder.new_uri(new_uri),
-        _ => builder,
-    };
-
-    let builder = match input.new_update_authority {
-        Some(new_update_authority) => builder.new_update_authority(new_update_authority),
-        _ => builder,
-    };
+    if let Some(collection) = input.collection {
+        builder.collection(Some(collection));
+    }
+    if let Some(ref authority) = input.authority {
+        builder.authority(Some(authority.pubkey()));
+    }
+    if let Some(new_name) = input.new_name {
+        builder.new_name(new_name);
+    }
+    if let Some(new_uri) = input.new_uri {
+        builder.new_uri(new_uri);
+    }
+    if let Some(new_update_authority) = input.new_update_authority {
+        builder.new_update_authority(new_update_authority);
+    }
 
     let ins = builder.instruction();
 
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer].into(),
+        signers: [input.fee_payer]
+            .into_iter()
+            .chain(input.authority)
+            .collect(),
         instructions: [ins].into(),
     };
 
-    let ins = if input.submit {
-        ins
-    } else {
-        Default::default()
-    };
-
+    let ins = if input.submit { ins } else { Default::default() };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

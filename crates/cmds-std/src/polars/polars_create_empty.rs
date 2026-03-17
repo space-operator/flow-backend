@@ -1,4 +1,4 @@
-use crate::polars::types::{dual_output, parse_dtype};
+use crate::polars::types::{dual_output, parse_dtype, unwrap_json_input};
 use flow_lib::command::prelude::*;
 use polars::prelude::*;
 
@@ -25,8 +25,8 @@ pub struct Output {
 }
 
 async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let obj = input
-        .schema
+    let schema_value = unwrap_json_input(&input.schema)?;
+    let obj = schema_value
         .as_object()
         .ok_or_else(|| CommandError::msg("schema must be a JSON object: {\"col_name\": \"dtype\", ...}"))?;
 

@@ -65,6 +65,47 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_run_create_dataframe_column_oriented() {
+        let data = serde_json::json!({
+            "product": ["Laptop", "Phone", "Tablet"],
+            "price": [999.99, 699.99, 449.99],
+            "quantity": [10, 25, 15]
+        });
+        let output = run(
+            CommandContext::default(),
+            Input { data },
+        )
+        .await
+        .unwrap();
+
+        let df = df_from_ipc(&output.dataframe).unwrap();
+        assert_eq!(df.height(), 3);
+        assert_eq!(df.width(), 3);
+        let col_names: Vec<&str> = df.get_column_names().iter().map(|s| s.as_str()).collect();
+        assert!(col_names.contains(&"product"));
+        assert!(col_names.contains(&"price"));
+        assert!(col_names.contains(&"quantity"));
+    }
+
+    #[tokio::test]
+    async fn test_run_create_dataframe_string_input() {
+        // Simulates IValue {S: "..."} being deserialized as JsonValue::String
+        let data = serde_json::json!(
+            "{\"product\":[\"Laptop\",\"Phone\"],\"price\":[999.99,699.99]}"
+        );
+        let output = run(
+            CommandContext::default(),
+            Input { data },
+        )
+        .await
+        .unwrap();
+
+        let df = df_from_ipc(&output.dataframe).unwrap();
+        assert_eq!(df.height(), 2);
+        assert_eq!(df.width(), 2);
+    }
+
+    #[tokio::test]
     async fn test_run_create_dataframe_single_column() {
         let data = serde_json::json!([
             {"values": 10},

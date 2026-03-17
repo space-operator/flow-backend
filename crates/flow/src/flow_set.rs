@@ -103,15 +103,13 @@ impl Flow {
             .nodes
             .iter()
             .filter_map(|n| {
-                (n.data.r#type == CommandType::Native
-                    && is_spo_builtin_node(&n.data.node_id, "wallet"))
-                    .then(|| {
-                        n.data
-                            .config
-                            .get("wallet_id")
-                            .and_then(parse_wallet_id)
-                    })
-                    .flatten()
+                if n.data.r#type != CommandType::Native
+                    || !is_spo_builtin_node(&n.data.node_id, "wallet")
+                {
+                    return None;
+                }
+                // Wallet config remains a real fallback even when api_input allows start binding.
+                n.data.config.get("wallet_id").and_then(parse_wallet_id)
             })
             .collect()
     }
@@ -128,18 +126,24 @@ impl Flow {
                 {
                     return None;
                 }
-                let wallet_type = n.data.config.get("wallet_type").and_then(parse_string_value)?;
+                let wallet_type = n
+                    .data
+                    .config
+                    .get("wallet_type")
+                    .and_then(parse_string_value)?;
                 if wallet_type != "SWIG" {
                     return None;
                 }
-                let swig_wallet_id =
-                    n.data.config.get("swig_wallet_id").and_then(parse_string_value)?;
-                let pubkey_str =
-                    n.data.config.get("public_key").and_then(|v| {
-                        flow_lib::command::parse_value_tagged(v.clone())
-                            .ok()
-                            .and_then(|val| value::pubkey::deserialize(val).ok())
-                    })?;
+                let swig_wallet_id = n
+                    .data
+                    .config
+                    .get("swig_wallet_id")
+                    .and_then(parse_string_value)?;
+                let pubkey_str = n.data.config.get("public_key").and_then(|v| {
+                    flow_lib::command::parse_value_tagged(v.clone())
+                        .ok()
+                        .and_then(|val| value::pubkey::deserialize(val).ok())
+                })?;
                 Some(SwigSessionInfo {
                     session_pubkey: pubkey_str,
                     swig_wallet_id,
@@ -500,4 +504,57 @@ pub struct FlowSetContext {
     rpc_server: Option<actix::Addr<tower_rpc::Server>>,
 
     new_flow_api_request: api_input::Svc,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use flow_lib::config::client::{Node, NodeData};
+    use serde_json::json;
+    use uuid::Uuid;
+
+    fn wallet_node(config: JsonValue) -> Node {
+        Node {
+            id: Uuid::new_v4(),
+            data: NodeData {
+                r#type: CommandType::Native,
+                node_id: "wallet".to_owned(),
+                outputs: Vec::new(),
+                inputs: Vec::new(),
+                config,
+                wasm: None,
+                instruction_info: None,
+            },
+        }
+    }
+
+    #[test]
+    fn wallets_id_keeps_api_mode_wallet_fallbacks() {
+        let flow = Flow {
+            row: FlowRow {
+                id: Uuid::new_v4(),
+                user_id: Uuid::new_v4(),
+                nodes: vec![
+                    wallet_node(json!({
+                        "wallet_id": { "U": "7" },
+                        "public_key": { "B3": "DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY" },
+                    })),
+                    wallet_node(json!({
+                        "api_input": { "B": true },
+                        "wallet_id": { "U": "11" },
+                        "public_key": { "B3": "DKsvmM9hfNm4R94yB3VdYMZJk2ETv5hpcjuRmiwgiztY" },
+                    })),
+                ],
+                edges: Vec::new(),
+                environment: <_>::default(),
+                current_network: <_>::default(),
+                instructions_bundling: <_>::default(),
+                is_public: false,
+                start_shared: false,
+                start_unverified: false,
+            },
+        };
+
+        assert_eq!(flow.wallets_id(), [7, 11].into());
+    }
 }

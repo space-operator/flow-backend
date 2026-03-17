@@ -65,7 +65,8 @@ struct Payload<'a> {
 
 #[derive(Deserialize)]
 struct UserMetadata<'a> {
-    pub_key: &'a str,
+    #[serde(alias = "pub_key")]
+    pubkey: &'a str,
 }
 
 #[derive(Deserialize)]
@@ -213,7 +214,7 @@ fn jwt_verify_inner(token: &[u8], auth: &AuthV1) -> Result<Jwt, AuthError> {
         return Err(AuthError::Expired);
     }
     let mut pubkey = [0u8; 32];
-    five8::decode_32(payload.user_metadata.pub_key, &mut pubkey)
+    five8::decode_32(payload.user_metadata.pubkey, &mut pubkey)
         .map_err(|_| AuthError::InvalidPayload)?;
 
     Ok(Jwt {

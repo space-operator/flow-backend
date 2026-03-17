@@ -238,9 +238,10 @@ services:
     healthcheck:
       test: >
         curl -sSfL --head -o /dev/null -H "Authorization: Bearer $ANON_KEY" "http://realtime:4000/api/tenants/realtime-dev/health"
+      start_period: 60s
       timeout: 5s
       interval: 5s
-      retries: 10
+      retries: 20
     restart: unless-stopped
     environment:
       PORT: 4000

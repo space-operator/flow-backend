@@ -66,6 +66,10 @@ impl CommandTrait for FlowInputCommand {
 
         ValueSet::new()
     }
+
+    fn bind_flow_inputs(&self, flow_inputs: &ValueSet) -> ValueSet {
+        flow_inputs.clone()
+    }
 }
 
 flow_lib::submit!(CommandDescription::new(FLOW_INPUT, |data: &NodeData| {
@@ -132,6 +136,9 @@ mod tests {
         let node = test_node(json!({ "label": { "S": "password" } }), "");
         let cmd = FlowInputCommand::new(&node);
         let values = cmd.read_config(json!({ "form_label": "Hunter1!" }));
-        assert_eq!(values.get("password"), Some(&Value::String("Hunter1!".to_owned())));
+        assert_eq!(
+            values.get("password"),
+            Some(&Value::String("Hunter1!".to_owned()))
+        );
     }
 }

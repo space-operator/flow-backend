@@ -221,11 +221,11 @@ impl AdminConn {
         let row = conn
             .do_query_one(
                 "SELECT
-                    users_public.user_id,
-                    users_public.pub_key
-                FROM apikeys LEFT JOIN users_public
-                ON apikeys.user_id = users_public.user_id
-                WHERE apikeys.key_hash = $1",
+                    a.user_id,
+                    u.raw_user_meta_data->>'pubkey' AS pub_key
+                FROM apikeys a LEFT JOIN auth.users u
+                ON a.user_id = u.id
+                WHERE a.key_hash = $1",
                 &[&key_hash],
             )
             .await

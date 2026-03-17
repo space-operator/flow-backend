@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "image_composite",
+  "prefix": "image",
+  "type": "native",
+  "description": "Overlay one image on top of another (compositing / watermarking).",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-image/src/composite.rs",
+  "ports": {
+    "inputs": [
+      { "name": "base", "type_bounds": ["bytes", "string"], "required": true, "passthrough": false, "tooltip": "Base image data (raw bytes or URL)" },
+      { "name": "overlay", "type_bounds": ["bytes", "string"], "required": true, "passthrough": false, "tooltip": "Overlay image data (raw bytes or URL)" },
+      { "name": "x", "type_bounds": ["i64"], "required": false, "passthrough": false, "tooltip": "X offset for overlay placement" },
+      { "name": "y", "type_bounds": ["i64"], "required": false, "passthrough": false, "tooltip": "Y offset for overlay placement" }
+    ],
+    "outputs": [
+      { "name": "image", "type": "bytes", "tooltip": "Composited image data" }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": { "vendor": "Native", "program": "image", "category": "media", "icon_url": null, "tags": ["media", "image", "composite", "overlay", "watermark"] },
+  "external_version": { "program_id": "image_native", "sdk_crate": null, "sdk_version": null, "api_base_url": null, "api_version": null, "source_repo": null },
+  "internal": { "source": "crates", "source_code": "crates/cmds-image/node-definitions/image_composite.jsonc", "repo": "flow-backend" }
+}

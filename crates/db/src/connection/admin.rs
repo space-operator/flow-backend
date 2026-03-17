@@ -79,14 +79,14 @@ impl AdminConn {
     async fn get_user_id_by_pubkey_impl(&self, pk_bs58: &str) -> crate::Result<Option<UserId>> {
         let conn = self.pool.get_conn().await?;
         conn.do_query_opt(
-            "SELECT user_id FROM users_public WHERE pub_key = $1",
+            "SELECT id AS user_id FROM auth.users WHERE raw_user_meta_data->>'pubkey' = $1",
             &[&pk_bs58],
         )
         .await
-        .map_err(Error::exec("query users_public"))?
+        .map_err(Error::exec("query auth.users by pubkey"))?
         .map(|row| row.try_get(0))
         .transpose()
-        .map_err(Error::data("users_public.user_id"))
+        .map_err(Error::data("auth.users.id"))
     }
 
     pub async fn get_login_credential(&self, user_id: UserId) -> crate::Result<LoginCredential> {
@@ -473,7 +473,7 @@ impl AdminConn {
         copy_in(&tx, "auth.users", &mut data.users).await?;
 
         copy_in(&tx, "auth.identities", &mut data.identities).await?;
-        copy_in(&tx, "users_public", &mut data.users_public).await?;
+        // users_public table was removed; pub_key now lives in auth.users.raw_user_meta_data
 
         let mut wallets = encrypt_wallets_df(data.wallets, self.pool.encryption_key()?.clone())?;
         copy_in(&tx, "wallets", &mut wallets).await?;

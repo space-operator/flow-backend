@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators, InitializePresaleArgs, RemainingAccountsInfo, RemainingAccountsSlice};
+use super::{PRESALE_PROGRAM_ID, derive_event_authority, derive_presale, derive_presale_authority, derive_base_vault, derive_quote_vault, discriminators, InitializePresaleArgs, RemainingAccountsInfo, RemainingAccountsSlice};
 
 const NAME: &str = "initialize_presale";
 const DEFINITION: &str = flow_lib::node_definition!("presale/initialize_presale.jsonc");
@@ -23,15 +23,7 @@ pub struct Input {
     #[serde_as(as = "AsPubkey")]
     pub presale_mint: Pubkey,
     #[serde_as(as = "AsPubkey")]
-    pub presale: Pubkey,
-    #[serde_as(as = "AsPubkey")]
-    pub presale_authority: Pubkey,
-    #[serde_as(as = "AsPubkey")]
     pub quote_token_mint: Pubkey,
-    #[serde_as(as = "AsPubkey")]
-    pub presale_vault: Pubkey,
-    #[serde_as(as = "AsPubkey")]
-    pub quote_token_vault: Pubkey,
     #[serde_as(as = "AsPubkey")]
     pub payer_presale_token: Pubkey,
     #[serde_as(as = "AsPubkey")]
@@ -51,22 +43,35 @@ pub struct Input {
     pub submit: bool,
 }
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     pub signature: Option<Signature>,
+    #[serde_as(as = "AsPubkey")]
+    pub presale: Pubkey,
+    #[serde_as(as = "AsPubkey")]
+    pub presale_authority: Pubkey,
+    #[serde_as(as = "AsPubkey")]
+    pub presale_vault: Pubkey,
+    #[serde_as(as = "AsPubkey")]
+    pub quote_token_vault: Pubkey,
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let event_authority = derive_event_authority();
+    let presale = derive_presale(&input.base.pubkey(), &input.presale_mint, &input.quote_token_mint);
+    let presale_authority = derive_presale_authority();
+    let presale_vault = derive_base_vault(&presale);
+    let quote_token_vault = derive_quote_vault(&presale);
 
     let accounts = vec![
         AccountMeta::new_readonly(input.presale_mint, false),          // presale_mint (readonly)
-        AccountMeta::new(input.presale, false),                        // presale (writable, PDA)
-        AccountMeta::new_readonly(input.presale_authority, false),     // presale_authority (readonly)
+        AccountMeta::new(presale, false),                              // presale (writable, PDA)
+        AccountMeta::new_readonly(presale_authority, false),           // presale_authority (readonly)
         AccountMeta::new_readonly(input.quote_token_mint, false),      // quote_token_mint (readonly)
-        AccountMeta::new(input.presale_vault, false),                  // presale_vault (writable, PDA)
-        AccountMeta::new(input.quote_token_vault, false),              // quote_token_vault (writable, PDA)
+        AccountMeta::new(presale_vault, false),                        // presale_vault (writable, PDA)
+        AccountMeta::new(quote_token_vault, false),                    // quote_token_vault (writable, PDA)
         AccountMeta::new(input.payer_presale_token, false),            // payer_presale_token (writable)
         AccountMeta::new_readonly(input.creator, false),               // creator (readonly)
         AccountMeta::new_readonly(input.base.pubkey(), true),          // base (signer)
@@ -102,7 +107,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ins = if input.submit { ins } else { Default::default() };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    Ok(Output { signature })
+    Ok(Output { signature, presale, presale_authority, presale_vault, quote_token_vault })
 }
 
 #[cfg(test)]
@@ -119,11 +124,7 @@ mod tests {
         let input = value::map! {
             "fee_payer" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
             "presale_mint" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
-            "presale" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
-            "presale_authority" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "quote_token_mint" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
-            "presale_vault" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
-            "quote_token_vault" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "payer_presale_token" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "creator" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "base" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
@@ -155,6 +156,7 @@ mod tests {
             },
             "submit" => false,
         };
+        // presale, presale_authority, presale_vault, quote_token_vault omitted — should auto-derive
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

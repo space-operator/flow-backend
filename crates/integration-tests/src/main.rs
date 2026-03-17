@@ -27,19 +27,20 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     }
 
     sh.change_dir("docker/");
-    cmd!(sh, "./gen-secrets.ts").run()?;
+    cmd!(sh, "./gen-secrets.ts --force").run()?;
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
-    let repo = if compile { "" } else { "public.ecr.aws/" };
     let pull = if compile { "missing" } else { "always" };
+    let default_repo = if compile { "" } else { "public.ecr.aws/" };
+    let flow_image = std::env::var("IMAGE")
+        .unwrap_or_else(|_| format!("{default_repo}space-operator/flow-server:{tag}"));
+    let cmds_image = std::env::var("CMDS_IMAGE")
+        .unwrap_or_else(|_| format!("{default_repo}space-operator/cmds-server:{tag}"));
     cmd!(
         sh,
-        "docker compose -f with-cmds-server.yml up --quiet-pull --pull {pull} -d --wait"
+        "docker compose -f with-cmds-server.yml up --quiet-pull --pull {pull} -d --wait flow-server cmds-server deno-cmds-server webhook auth rest kong db"
     )
-    .env("IMAGE", format!("{repo}space-operator/flow-server:{tag}"))
-    .env(
-        "CMDS_IMAGE",
-        format!("{repo}space-operator/cmds-server:{tag}"),
-    )
+    .env("IMAGE", flow_image)
+    .env("CMDS_IMAGE", cmds_image)
     .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
     dotenv::from_path(
@@ -106,7 +107,8 @@ fn main() {
     let result = run(&sh, args.compile, args.tag);
 
     if result.is_err() {
-        cmd!(sh, "deno -A utils/print_errors.ts")
+        sh.change_dir(&meta.workspace_root);
+        cmd!(sh, "deno -A @space-operator/client/utils/print_errors.ts")
             .run()
             .inspect_err(|error| eprint!("{error}"))
             .ok();
@@ -123,12 +125,27 @@ fn main() {
     }
 
     if result.is_err() {
-        logs_service(&sh, "flow-server");
-        logs_service(&sh, "cmds-server");
-    }
+        cmd!(sh, "docker compose -f with-cmds-server.yml ps")
+            .run()
+            .inspect_err(|error| eprint!("{error}"))
+            .ok();
 
-    logs_service(&sh, "deno-cmds-server");
-    logs_service(&sh, "webhook");
+        for name in [
+            "flow-server",
+            "cmds-server",
+            "deno-cmds-server",
+            "realtime",
+            "auth",
+            "kong",
+            "rest",
+            "db",
+            "storage",
+            "meta",
+            "webhook",
+        ] {
+            logs_service(&sh, name);
+        }
+    }
 
     cmd!(sh, "docker compose -f with-cmds-server.yml down -v")
         .ignore_stdout()

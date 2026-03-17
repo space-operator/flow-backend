@@ -5,10 +5,14 @@ on:
     branches:
       - "main"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build docker image
-    runs-on: self-hosted
+    runs-on: [self-hosted, rust-builder]
     env:
       BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
@@ -17,28 +21,72 @@ jobs:
         run: ./scripts/build_images.bash
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-east-1
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: ECR Push
-        run: ./scripts/ecr-push.bash login
-      - id: 'auth'
-        uses: 'google-github-actions/auth@v1'
-        with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-      - name: Configure Docker
-        run: gcloud auth configure-docker us-west1-docker.pkg.dev
-      - name: GCR Push
-        run: ./scripts/gcr-push.bash
+        run: ./scripts/ecr-private-push.bash login
       - name: Clean up
         run: podman image prune -f
+
+  deploy:
+    name: Deploy to EKS
+    needs: build
+    runs-on: [self-hosted, rust-builder]
+    env:
+      ECR: 311141552572.dkr.ecr.us-west-2.amazonaws.com
+      COMMIT: ${{ github.sha }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name app-cluster-v2 --region us-west-2
+      - name: Wait for EKS API
+        run: |
+          probe_resource="statefulset/flow-server"
+          for i in $(seq 1 20); do
+            if kubectl get "$probe_resource" -n default --request-timeout=20s >/dev/null 2>&1; then
+              echo "EKS API reachable."
+              exit 0
+            fi
+            echo "EKS API not reachable yet (attempt $i/20); retrying in 15s..."
+            sleep 15
+          done
+          kubectl get "$probe_resource" -n default --request-timeout=20s
+      - name: Deploy pinned commit images
+        run: |
+          retry() {
+            local attempts="$1"
+            shift
+            local n=1
+            until "$@"; do
+              if [ "$n" -ge "$attempts" ]; then
+                return 1
+              fi
+              echo "Attempt $n/$attempts failed: $*"
+              n=$((n + 1))
+              sleep 10
+            done
+          }
+
+          retry 5 kubectl set image statefulset/flow-server flow-server=$ECR/flow-server:$COMMIT
+          retry 5 kubectl set image statefulset/deno-server deno-server=$ECR/cmds-server:$COMMIT init=$ECR/cmds-server:$COMMIT
+          retry 5 kubectl set image deployment/schema-server schema-server=$ECR/schema-server:$COMMIT
+
+          retry 5 kubectl rollout status statefulset/flow-server --timeout=10m
+          retry 5 kubectl rollout status statefulset/deno-server --timeout=10m
+          retry 5 kubectl rollout status deployment/schema-server --timeout=10m
+
   integration-test:
     name: Integration Test
-    needs: build
-    runs-on: self-hosted
+    needs: deploy
+    runs-on: [self-hosted, rust-builder]
     env:
+      ECR: 311141552572.dkr.ecr.us-west-2.amazonaws.com
+      COMMIT: ${{ github.sha }}
       APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
       KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
       USDC_KEYPAIR: ${{ secrets.USDC_KEYPAIR }}
@@ -59,11 +107,15 @@ jobs:
         run: cargo build --bin integration-tests --quiet
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-east-1
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ACCESS_KEY }}
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Login to private ECR
+        run: aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin "$ECR"
       - name: Run Integration Tests
         env:
           APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
           KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
+          IMAGE: ${{ env.ECR }}/flow-server:${{ env.COMMIT }}
+          CMDS_IMAGE: ${{ env.ECR }}/cmds-server:${{ env.COMMIT }}
         run: cargo run --bin integration-tests --quiet

@@ -1,7 +1,11 @@
 use crate::mpl_token_metadata::NftMetadata;
 use crate::prelude::*;
 use bundlr_sdk::{Bundlr, Ed25519Signer, error::BundlrError, tags::Tag};
-use flow_lib::solana::SIGNATURE_TIMEOUT;
+use flow_lib::solana::{Keypair, SIGNATURE_TIMEOUT};
+use solana_compute_budget_interface::ComputeBudgetInstruction;
+use solana_message::{VersionedMessage, v0};
+use solana_presigner::Presigner;
+use solana_transaction::versioned::VersionedTransaction;
 use std::collections::HashSet;
 
 pub struct BundlrSigner {
@@ -80,10 +84,20 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    // Generate ephemeral keypair for Bundlr when fee_payer is an adapter wallet.
+    // This signs Arweave data items server-side instead of forwarding raw deep
+    // hashes to the frontend (which wallets like Phantom reject via signMessage).
+    let ephemeral_keypair = if input.fee_payer.is_adapter_wallet() {
+        Some(Keypair::new())
+    } else {
+        None
+    };
+
     let mut uploader = Uploader::new(
         ctx.solana_client().clone(),
         ctx.solana_config().cluster,
         input.fee_payer,
+        ephemeral_keypair,
     )?;
 
     if input.fund_bundlr {
@@ -119,7 +133,11 @@ pub(crate) struct Uploader {
     cache: HashMap<String, String>,
     content_cache: HashMap<String, bytes::Bytes>,
     fee_payer: Wallet,
+    /// Ephemeral keypair used for Bundlr signing when fee_payer is an adapter wallet.
+    /// Signs Arweave data items locally, avoiding forwarding raw deep hashes to the frontend.
+    ephemeral_keypair: Option<Keypair>,
     node_url: String,
+    gateway_url: String,
     client: Arc<RpcClient>,
 }
 
@@ -128,11 +146,18 @@ impl Uploader {
         client: Arc<RpcClient>,
         cluster: SolanaNet,
         fee_payer: Wallet,
+        ephemeral_keypair: Option<Keypair>,
     ) -> crate::Result<Uploader> {
         // Get Bundlr Network URL
-        let node_url = match cluster {
-            SolanaNet::Mainnet => "https://node1.bundlr.network".to_owned(),
-            SolanaNet::Devnet => "https://devnet.bundlr.network".to_owned(),
+        let (node_url, gateway_url) = match cluster {
+            SolanaNet::Mainnet => (
+                "https://node1.bundlr.network".to_owned(),
+                "https://arweave.net".to_owned(),
+            ),
+            SolanaNet::Devnet => (
+                "https://devnet.bundlr.network".to_owned(),
+                "https://devnet.irys.xyz".to_owned(),
+            ),
             SolanaNet::Testnet => return Err(crate::Error::BundlrNotAvailableOnTestnet),
         };
 
@@ -140,9 +165,29 @@ impl Uploader {
             cache: HashMap::new(),
             content_cache: HashMap::new(),
             fee_payer,
+            ephemeral_keypair,
             node_url,
+            gateway_url,
             client,
         })
+    }
+
+    /// Pubkey used for Bundlr account operations.
+    /// Returns the ephemeral keypair's pubkey when fee_payer is an adapter wallet.
+    fn bundlr_pubkey(&self) -> Pubkey {
+        match &self.ephemeral_keypair {
+            Some(kp) => kp.pubkey(),
+            None => self.fee_payer.pubkey(),
+        }
+    }
+
+    /// Wallet used for Bundlr signing.
+    /// Returns a Wallet::Keypair wrapping the ephemeral key so BundlrSigner signs locally.
+    fn bundlr_wallet(&self) -> Wallet {
+        match &self.ephemeral_keypair {
+            Some(kp) => Wallet::Keypair(kp.insecure_clone()),
+            None => self.fee_payer.clone(),
+        }
     }
 
     pub async fn lazy_fund(
@@ -241,7 +286,7 @@ impl Uploader {
         let resp = reqwest::get(format!(
             "{}/account/balance/solana/?address={}",
             &self.node_url,
-            self.fee_payer.pubkey()
+            self.bundlr_pubkey()
         ))
         .await?;
 
@@ -269,34 +314,129 @@ impl Uploader {
 
         let info: Info = serde_json::from_str(&resp.text().await?)?;
 
-        let recipient = info
+        let bundlr_address = info
             .addresses
             .solana
             .parse::<Pubkey>()
             .map_err(crate::Error::custom)?;
 
-        let instruction = solana_system_interface::instruction::transfer(
-            &self.fee_payer.pubkey(),
-            &recipient,
-            amount,
-        );
-        let (mut tx, recent_blockhash) =
-            execute(&self.client, &self.fee_payer.pubkey(), &[instruction]).await?;
+        // When using an ephemeral keypair, we need two-step funding:
+        //   1. fee_payer → ephemeral (adapter-signed V0 Solana tx)
+        //   2. ephemeral → Bundlr (locally-signed Solana tx)
+        // Bundlr credits the SENDER of the SOL transfer, so the ephemeral key
+        // must be the one that sends SOL to Bundlr.
+        let funding_signature = if let Some(ephemeral) = &self.ephemeral_keypair {
+            // Ephemeral accounts must hold >= rent-exempt minimum to exist on-chain.
+            // After step 2, we drain the leftover back to fee_payer so the account
+            // ends at exactly 0 lamports (garbage collected).
+            let rent_exempt_min = self
+                .client
+                .get_minimum_balance_for_rent_exemption(0)
+                .await?;
+            let step2_tx_fee = 5000u64; // base fee for 1-signature legacy tx
 
-        try_sign_wallet(signer, &mut tx, &self.fee_payer, recent_blockhash).await?;
+            // Step 1: fee_payer → ephemeral (signed by adapter wallet via frontend)
+            // Uses V0 message with pre-added compute budget instructions so the
+            // wallet updates values in-place rather than adding new instructions
+            // (which would change the message structure and fail is_same_message_logic).
+            let step1_ix = solana_system_interface::instruction::transfer(
+                &self.fee_payer.pubkey(),
+                &ephemeral.pubkey(),
+                amount + rent_exempt_min,
+            );
+            let blockhash1 = self.client.get_latest_blockhash().await?;
+            let v0_msg = v0::Message::try_compile(
+                &self.fee_payer.pubkey(),
+                &[
+                    ComputeBudgetInstruction::set_compute_unit_limit(200_000),
+                    ComputeBudgetInstruction::set_compute_unit_price(1000),
+                    step1_ix,
+                ],
+                &[], // no address lookup tables
+                blockhash1,
+            )
+            .map_err(crate::Error::custom)?;
+            let versioned_msg = VersionedMessage::V0(v0_msg);
+            let msg_bytes: bytes::Bytes =
+                bincode::serialize(&versioned_msg)
+                    .map_err(crate::Error::custom)?
+                    .into();
 
-        let signature = submit_transaction(&self.client, tx).await?;
+            let sig_resp = tokio::time::timeout(
+                crate::utils::SIGNATURE_TIMEOUT,
+                signer.request_signature(
+                    self.fee_payer.pubkey(),
+                    self.fee_payer.token(),
+                    msg_bytes,
+                    crate::utils::SIGNATURE_TIMEOUT,
+                ),
+            )
+            .await
+            .map_err(|_| crate::Error::SignatureTimeout)??;
 
+            // Use the wallet's modified message if it changed the transaction
+            let final_msg = match sig_resp.new_message {
+                Some(ref new_msg) => bincode::deserialize::<VersionedMessage>(new_msg)
+                    .map_err(crate::Error::custom)?,
+                None => versioned_msg,
+            };
+            let presigner =
+                Presigner::new(&self.fee_payer.pubkey(), &sig_resp.signature);
+            let vtx = VersionedTransaction::try_new(final_msg, &[&presigner])
+                .map_err(crate::Error::custom)?;
+
+            self.client
+                .send_and_confirm_transaction(&vtx)
+                .await?;
+
+            // Step 2: ephemeral → Bundlr + drain remainder back to fee_payer.
+            // After paying step2_tx_fee, ephemeral has: amount + rent_exempt_min - step2_tx_fee
+            // ix1 sends `amount` to Bundlr, ix2 drains the rest → ephemeral ends at 0.
+            let drain_amount = rent_exempt_min.saturating_sub(step2_tx_fee);
+            let step2_transfer_ix = solana_system_interface::instruction::transfer(
+                &ephemeral.pubkey(),
+                &bundlr_address,
+                amount,
+            );
+            let step2_drain_ix = solana_system_interface::instruction::transfer(
+                &ephemeral.pubkey(),
+                &self.fee_payer.pubkey(),
+                drain_amount,
+            );
+            let (mut tx2, blockhash2) = execute(
+                &self.client,
+                &ephemeral.pubkey(),
+                &[step2_transfer_ix, step2_drain_ix],
+            )
+            .await?;
+            tx2.try_sign(&[ephemeral], blockhash2)?;
+            submit_transaction(&self.client, tx2).await?
+        } else {
+            // Direct funding: fee_payer → Bundlr
+            let instruction = solana_system_interface::instruction::transfer(
+                &self.fee_payer.pubkey(),
+                &bundlr_address,
+                amount,
+            );
+            let (mut tx, recent_blockhash) =
+                execute(&self.client, &self.fee_payer.pubkey(), &[instruction]).await?;
+            try_sign_wallet(signer, &mut tx, &self.fee_payer, recent_blockhash).await?;
+            submit_transaction(&self.client, tx).await?
+        };
+
+        // Register the funding transaction with Bundlr
         let resp = reqwest::Client::new()
             .post(format!("{}/account/balance/solana", &self.node_url))
             .json(&serde_json::json!({
-                "tx_id": signature.to_string(),
+                "tx_id": funding_signature.to_string(),
             }))
             .send()
             .await?;
 
         if !resp.status().is_success() {
-            return Err(crate::Error::BundlrTxRegisterFailed(signature.to_string()));
+            return Err(crate::Error::BundlrTxRegisterFailed(
+                funding_signature.to_string(),
+            ));
         }
 
         Ok(())
@@ -334,7 +474,7 @@ impl Uploader {
             self.node_url.clone(),
             "solana".to_string(),
             "sol".to_string(),
-            BundlrSigner::new(self.fee_payer.clone(), ctx),
+            BundlrSigner::new(self.bundlr_wallet(), ctx),
         );
 
         let (bundlr, tx) = tokio::task::spawn_blocking(move || {
@@ -353,7 +493,7 @@ impl Uploader {
 
         let resp: BundlrResponse = serde_json::from_value(bundlr.send_transaction(tx).await?)?;
 
-        Ok(format!("https://arweave.net/{}", resp.id))
+        Ok(format!("{}/{}", self.gateway_url, resp.id))
     }
 }
 

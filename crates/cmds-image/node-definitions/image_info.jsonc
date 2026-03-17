@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "image_info",
+  "prefix": "image",
+  "type": "native",
+  "description": "Get metadata about an image (dimensions, format, color type).",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-image/src/info.rs",
+  "ports": {
+    "inputs": [
+      { "name": "image", "type_bounds": ["bytes", "string"], "required": true, "passthrough": false, "tooltip": "Input image data (raw bytes or URL)" }
+    ],
+    "outputs": [
+      { "name": "width", "type": "u64", "tooltip": "Image width in pixels" },
+      { "name": "height", "type": "u64", "tooltip": "Image height in pixels" },
+      { "name": "format", "type": "string", "tooltip": "Detected format (png, jpeg, webp, etc.)" },
+      { "name": "color_type", "type": "string", "tooltip": "Color type (Rgba8, Rgb8, etc.)" }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": { "vendor": "Native", "program": "image", "category": "media", "icon_url": null, "tags": ["media", "image", "info", "metadata"] },
+  "external_version": { "program_id": "image_native", "sdk_crate": null, "sdk_version": null, "api_base_url": null, "api_version": null, "source_repo": null },
+  "internal": { "source": "crates", "source_code": "crates/cmds-image/node-definitions/image_info.jsonc", "repo": "flow-backend" }
+}
