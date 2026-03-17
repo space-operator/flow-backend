@@ -58,4 +58,6 @@ jobs:
         env:
           APIKEY: ${{ secrets.INTEGRATION_TESTS_APIKEY }}
           KEYPAIR: ${{ secrets.INTEGRATION_TESTS_KEYPAIR }}
+          IMAGE: ${{ env.ECR }}/flow-server:${{ env.COMMIT }}
+          CMDS_IMAGE: ${{ env.ECR }}/cmds-server:${{ env.COMMIT }}
         run: cargo run --bin integration-tests --quiet
