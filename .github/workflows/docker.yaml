@@ -15,6 +15,7 @@ jobs:
     env:
       BRANCH: ${{ github.head_ref || github.ref_name }}
       GPC_PROJECT_ID: ${{ secrets.GPC_PROJECT_ID }}
+      PROFILE: dev
     steps:
       - uses: actions/checkout@v4
       - name: Build

@@ -28,72 +28,75 @@ const DEPLOY_DELETE_FLOW_ID = "102244df-74aa-4f77-a556-d9d279c64655"; // Collatz
 const DEPLOY_ACTION_FLOW_ID = "9647ba16-de20-4209-9056-1a3dd8c2d6ab"; // Simple Transfer
 const DEPLOY_SIMPLE_FLOW_ID = "6c949718-69e2-47c1-8b93-d56b8e34ec51"; // Add
 
-Deno.test({ name: "deploy and run", fn: async () => {
-  const owner = new client.Client({
-    host: "http://localhost:8080",
-    anonKey,
-    token: apiKey,
-  });
-  const ownerKeypair = web3.Keypair.fromSecretKey(
-    bs58.decodeBase58(getEnv("KEYPAIR")),
-  );
+Deno.test({
+  name: "deploy and run",
+  fn: async () => {
+    const owner = new client.Client({
+      host: "http://localhost:8080",
+      anonKey,
+      token: apiKey,
+    });
+    const ownerKeypair = web3.Keypair.fromSecretKey(
+      bs58.decodeBase58(getEnv("KEYPAIR")),
+    );
 
-  const id = await owner.deployFlow(DEPLOY_RUN_FLOW_ID);
+    const id = await owner.deployFlow(DEPLOY_RUN_FLOW_ID);
 
-  const starterKeypair = web3.Keypair.generate();
-  const starter = new client.Client({
-    host: "http://localhost:8080",
-    anonKey,
-  });
-  starter.setToken(starterKeypair.publicKey.toString());
-  const { flow_run_id, token } = await starter.startDeployment(
-    {
-      id,
-    },
-    {
-      inputs: new Value({
-        sender: starterKeypair.publicKey,
-        n: 2,
-      }).M!,
-    },
-  );
-  starter.setToken(token);
-
-  {
-    const req = await owner.getSignatureRequest(flow_run_id);
-    await owner.signAndSubmitSignature(
-      req,
-      ownerKeypair.publicKey,
-      (tx) => {
-        tx.sign([ownerKeypair]);
-        return tx;
+    const starterKeypair = web3.Keypair.generate();
+    const starter = new client.Client({
+      host: "http://localhost:8080",
+      anonKey,
+    });
+    starter.setToken(starterKeypair.publicKey.toString());
+    const { flow_run_id, token } = await starter.startDeployment(
+      {
+        id,
+      },
+      {
+        inputs: new Value({
+          sender: starterKeypair.publicKey,
+          n: 2,
+        }).M!,
       },
     );
-  }
+    starter.setToken(token);
 
-  {
-    const req = await starter.getSignatureRequest(flow_run_id);
-    await starter.signAndSubmitSignature(
-      req,
-      starterKeypair.publicKey,
-      (tx) => {
-        tx.sign([starterKeypair]);
-        return tx;
-      },
-    );
-  }
+    {
+      const req = await owner.getSignatureRequest(flow_run_id);
+      await owner.signAndSubmitSignature(
+        req,
+        ownerKeypair.publicKey,
+        (tx) => {
+          tx.sign([ownerKeypair]);
+          return tx;
+        },
+      );
+    }
 
-  const result = await starter.getFlowOutput(flow_run_id);
-  const signature = result.M?.signature.asBytes();
-  assert(signature != null);
+    {
+      const req = await starter.getSignatureRequest(flow_run_id);
+      await starter.signAndSubmitSignature(
+        req,
+        starterKeypair.publicKey,
+        (tx) => {
+          tx.sign([starterKeypair]);
+          return tx;
+        },
+      );
+    }
 
-  const jwt = await owner.claimToken();
-  const sup = createClient<client.Database>(supabaseUrl, anonKey, {
-    auth: { autoRefreshToken: false },
-  });
-  await sup.auth.setSession(jwt);
-  await checkNoErrors(sup, flow_run_id);
-}});
+    const result = await starter.getFlowOutput(flow_run_id);
+    const signature = result.M?.signature.asBytes();
+    assert(signature != null);
+
+    const jwt = await owner.claimToken();
+    const sup = createClient<client.Database>(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false },
+    });
+    await sup.auth.setSession(jwt);
+    await checkNoErrors(sup, flow_run_id);
+  },
+});
 
 Deno.test("deploy and delete", async (t) => {
   const owner = new client.Client({
@@ -345,234 +348,246 @@ Deno.test("action identity", async () => {
   assert(memo.startsWith(`solana-action:${identity.publicKey.toBase58()}`));
 });
 
-Deno.test({ name: "execute on action", sanitizeOps: false, sanitizeResources: false, fn: async () => {
-  const owner = new client.Client({
-    host: "http://localhost:8080",
-    anonKey,
-    token: apiKey,
-  });
-  const jwt = await owner.claimToken();
-  const sup = createClient<client.Database>(supabaseUrl, anonKey, {
-    auth: { autoRefreshToken: false },
-  });
-  await sup.auth.setSession(jwt);
-  owner.setToken(`Bearer ${jwt.access_token}`);
-  const user_id = (await sup.auth.getSession()).data.session?.user.id;
+Deno.test({
+  name: "execute on action",
+  fn: async () => {
+    const owner = new client.Client({
+      host: "http://localhost:8080",
+      anonKey,
+      token: apiKey,
+    });
+    const jwt = await owner.claimToken();
+    const sup = createClient<client.Database>(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false },
+    });
+    await sup.auth.setSession(jwt);
+    owner.setToken(`Bearer ${jwt.access_token}`);
+    const user_id = (await sup.auth.getSession()).data.session?.user.id;
 
-  const flowId = DEPLOY_ACTION_FLOW_ID;
-  const id = await owner.deployFlow(flowId);
-  const identity = web3.Keypair.generate();
-  await owner.upsertWallet({
-    type: "HARDCODED",
-    name: "identity",
-    public_key: identity.publicKey.toBase58(),
-    keypair: bs58.encodeBase58(identity.secretKey),
-    user_id,
-  });
-  const updateResult = await sup
-    .from("flow_deployments")
-    .update({
-      start_permission: "Anonymous",
-      action_identity: identity.publicKey.toBase58(),
-    })
-    .eq("id", id);
-  if (updateResult.error) throw new Error(JSON.stringify(updateResult.error));
+    const flowId = DEPLOY_ACTION_FLOW_ID;
+    const id = await owner.deployFlow(flowId);
+    const identity = web3.Keypair.generate();
+    await owner.upsertWallet({
+      type: "HARDCODED",
+      name: "identity",
+      public_key: identity.publicKey.toBase58(),
+      keypair: bs58.encodeBase58(identity.secretKey),
+      user_id,
+    });
+    const updateResult = await sup
+      .from("flow_deployments")
+      .update({
+        start_permission: "Anonymous",
+        action_identity: identity.publicKey.toBase58(),
+      })
+      .eq("id", id);
+    if (updateResult.error) throw new Error(JSON.stringify(updateResult.error));
 
-  const starterKeypair = web3.Keypair.generate();
-  const starter = new client.Client({
-    host: "http://localhost:8080",
-    anonKey,
-  });
-  starter.setToken(starterKeypair.publicKey.toString());
+    const starterKeypair = web3.Keypair.generate();
+    const starter = new client.Client({
+      host: "http://localhost:8080",
+      anonKey,
+    });
+    starter.setToken(starterKeypair.publicKey.toString());
 
-  const conn = new web3.Connection(getEnv("SOLANA_DEVNET_URL"));
-  const ownerKeypair = web3.Keypair.fromSecretKey(
-    bs58.decodeBase58(getEnv("KEYPAIR")),
-  );
-  const recent = await conn.getLatestBlockhash();
-  const fundTx = web3.Transaction.populate(
-    web3.Message.compile({
-      instructions: [
-        web3.SystemProgram.transfer({
-          fromPubkey: ownerKeypair.publicKey,
-          toPubkey: starterKeypair.publicKey,
-          lamports: 0.1 * LAMPORTS_PER_SOL + 10000,
-        }),
-      ],
-      payerKey: ownerKeypair.publicKey,
-      recentBlockhash: recent.blockhash,
-    }),
-  );
-  const fundSignature = await web3.sendAndConfirmTransaction(conn, fundTx, [
-    ownerKeypair,
-  ]);
-  console.log("fundSignature", fundSignature);
+    const conn = new web3.Connection(getEnv("SOLANA_DEVNET_URL"));
+    const ownerKeypair = web3.Keypair.fromSecretKey(
+      bs58.decodeBase58(getEnv("KEYPAIR")),
+    );
+    const recent = await conn.getLatestBlockhash();
+    const fundTx = web3.Transaction.populate(
+      web3.Message.compile({
+        instructions: [
+          web3.SystemProgram.transfer({
+            fromPubkey: ownerKeypair.publicKey,
+            toPubkey: starterKeypair.publicKey,
+            lamports: 0.1 * LAMPORTS_PER_SOL + 10000,
+          }),
+        ],
+        payerKey: ownerKeypair.publicKey,
+        recentBlockhash: recent.blockhash,
+      }),
+    );
+    const fundSignature = await web3.sendAndConfirmTransaction(conn, fundTx, [
+      ownerKeypair,
+    ]);
+    console.log("fundSignature", fundSignature);
 
-  const { flow_run_id, token } = await starter.startDeployment(
-    {
-      flow: flowId,
-      tag: "latest",
-    },
-    {
-      inputs: new Value({
-        sender: starterKeypair.publicKey,
-      }).M!,
-      action_signer: starterKeypair.publicKey.toBase58(),
-    },
-  );
-  starter.setToken(token);
+    const { flow_run_id, token } = await starter.startDeployment(
+      {
+        flow: flowId,
+        tag: "latest",
+      },
+      {
+        inputs: new Value({
+          sender: starterKeypair.publicKey,
+        }).M!,
+        action_signer: starterKeypair.publicKey.toBase58(),
+      },
+    );
+    starter.setToken(token);
 
-  const req = await starter.getSignatureRequest(flow_run_id);
-  const tx = req.buildTransaction();
-  tx.sign([starterKeypair]);
-  console.log(tx.signatures.map((sig) => encodeBase58(sig)));
+    const req = await starter.getSignatureRequest(flow_run_id);
+    const tx = req.buildTransaction();
+    tx.sign([starterKeypair]);
+    console.log(tx.signatures.map((sig) => encodeBase58(sig)));
 
-  const signature = await conn.sendTransaction(tx, {
-    skipPreflight: true,
-  });
+    const signature = await conn.sendTransaction(tx, {
+      skipPreflight: true,
+    });
 
-  const output = (await starter.getFlowOutput(flow_run_id)).toJSObject();
-  await checkNoErrors(sup, flow_run_id);
-  assertEquals(bs58.decodeBase58(signature), output.signature);
-}});
+    const output = (await starter.getFlowOutput(flow_run_id)).toJSObject();
+    await checkNoErrors(sup, flow_run_id);
+    assertEquals(bs58.decodeBase58(signature), output.signature);
+  },
+});
 
-Deno.test({ name: "start authenticated by flow", sanitizeOps: false, sanitizeResources: false, fn: async () => {
-  const owner = new client.Client({
-    host: "http://localhost:8080",
-    anonKey,
-    token: apiKey,
-  });
+Deno.test({
+  name: "start authenticated by flow",
+  fn: async () => {
+    const owner = new client.Client({
+      host: "http://localhost:8080",
+      anonKey,
+      token: apiKey,
+    });
 
-  const flowId = DEPLOY_SIMPLE_FLOW_ID;
-  const id = await owner.deployFlow(flowId);
-  const ownerSup = createClient<client.Database>(supabaseUrl, anonKey, {
-    auth: { autoRefreshToken: false },
-  });
-  await ownerSup.auth.setSession(await owner.claimToken());
-  const updateResult = await ownerSup
-    .from("flow_deployments")
-    .update({
-      start_permission: "Authenticated",
-    })
-    .eq("id", id);
-  if (updateResult.error) throw new Error(JSON.stringify(updateResult.error));
+    const flowId = DEPLOY_SIMPLE_FLOW_ID;
+    const id = await owner.deployFlow(flowId);
+    const ownerSup = createClient<client.Database>(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false },
+    });
+    await ownerSup.auth.setSession(await owner.claimToken());
+    const updateResult = await ownerSup
+      .from("flow_deployments")
+      .update({
+        start_permission: "Authenticated",
+      })
+      .eq("id", id);
+    if (updateResult.error) throw new Error(JSON.stringify(updateResult.error));
 
-  const starter = new client.Client({
-    host: "http://localhost:8080",
-    anonKey,
-  });
-  const starterKeypair = web3.Keypair.generate();
-  const initAuth = await starter.initAuth(starterKeypair.publicKey);
-  const signature = ed25519SignText(starterKeypair, initAuth);
-  const { session } = await starter.confirmAuth(initAuth, signature);
-  starter.setToken(`Bearer ${session.access_token}`);
+    const starter = new client.Client({
+      host: "http://localhost:8080",
+      anonKey,
+    });
+    const starterKeypair = web3.Keypair.generate();
+    const initAuth = await starter.initAuth(starterKeypair.publicKey);
+    const signature = ed25519SignText(starterKeypair, initAuth);
+    const { session } = await starter.confirmAuth(initAuth, signature);
+    starter.setToken(`Bearer ${session.access_token}`);
 
-  const { flow_run_id } = await starter.startDeployment(
-    {
-      flow: flowId,
-    },
-    {
-      inputs: new Value({
-        a: 1,
-        b: 2,
-      }).M!,
-    },
-  );
+    const { flow_run_id } = await starter.startDeployment(
+      {
+        flow: flowId,
+      },
+      {
+        inputs: new Value({
+          a: 1,
+          b: 2,
+        }).M!,
+      },
+    );
 
-  const result = await starter.getFlowOutput(flow_run_id);
-  const c = result.toJSObject().c;
-  assertEquals(c, 3);
+    const result = await starter.getFlowOutput(flow_run_id);
+    const c = result.toJSObject().c;
+    assertEquals(c, 3);
 
-  const starterSup = createClient<client.Database>(supabaseUrl, anonKey, {
-    auth: { autoRefreshToken: false },
-  });
-  await starterSup.auth.setSession(session);
-  await checkNoErrors(starterSup, flow_run_id);
-  const selectResult = await starterSup
-    .from("flow_run")
-    .select("output")
-    .eq("deployment_id", id)
-    .single();
-  if (selectResult.error) throw new Error(JSON.stringify(selectResult.error));
-  assertEquals(
-    Value.fromJSON(selectResult.data.output as client.IValue),
-    result,
-  );
-}});
+    const starterSup = createClient<client.Database>(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false },
+    });
+    await starterSup.auth.setSession(session);
+    await checkNoErrors(starterSup, flow_run_id);
+    const selectResult = await starterSup
+      .from("flow_run")
+      .select("output")
+      .eq("deployment_id", id)
+      .single();
+    if (selectResult.error) throw new Error(JSON.stringify(selectResult.error));
+    assertEquals(
+      Value.fromJSON(selectResult.data.output as client.IValue),
+      result,
+    );
+  },
+});
 
-Deno.test({ name: "start by flow + tag", sanitizeOps: false, sanitizeResources: false, fn: async () => {
-  const owner = new client.Client({
-    host: "http://localhost:8080",
-    anonKey,
-    token: apiKey,
-  });
+Deno.test({
+  name: "start by flow + tag",
+  fn: async () => {
+    const owner = new client.Client({
+      host: "http://localhost:8080",
+      anonKey,
+      token: apiKey,
+    });
 
-  const flowId = DEPLOY_SIMPLE_FLOW_ID;
-  await owner.deployFlow(flowId);
+    const flowId = DEPLOY_SIMPLE_FLOW_ID;
+    await owner.deployFlow(flowId);
 
-  const { flow_run_id } = await owner.startDeployment(
-    {
-      flow: flowId,
-      tag: "latest",
-    },
-    {
-      inputs: new Value({
-        a: 1,
-        b: 2,
-      }).M!,
-    },
-  );
+    const { flow_run_id } = await owner.startDeployment(
+      {
+        flow: flowId,
+        tag: "latest",
+      },
+      {
+        inputs: new Value({
+          a: 1,
+          b: 2,
+        }).M!,
+      },
+    );
 
-  const result = await owner.getFlowOutput(flow_run_id);
-  const c = result.toJSObject().c;
-  assertEquals(c, 3);
+    const result = await owner.getFlowOutput(flow_run_id);
+    const c = result.toJSObject().c;
+    assertEquals(c, 3);
 
-  const jwt = await owner.claimToken();
-  const sup = createClient<client.Database>(supabaseUrl, anonKey, {
-    auth: { autoRefreshToken: false },
-  });
-  await sup.auth.setSession(jwt);
-  await checkNoErrors(sup, flow_run_id);
-}});
+    const jwt = await owner.claimToken();
+    const sup = createClient<client.Database>(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false },
+    });
+    await sup.auth.setSession(jwt);
+    await checkNoErrors(sup, flow_run_id);
+  },
+});
 
-Deno.test({ name: "start custom tag", sanitizeOps: false, sanitizeResources: false, fn: async () => {
-  const owner = new client.Client({
-    host: "http://localhost:8080",
-    anonKey,
-    token: apiKey,
-  });
-  const sup = createClient<client.Database>(supabaseUrl, anonKey, {
-    auth: { autoRefreshToken: false },
-  });
-  const jwt = await owner.claimToken();
-  await sup.auth.setSession(jwt);
-  const user_id = (await sup.auth.getUser()).data.user?.id!;
+Deno.test({
+  name: "start custom tag",
+  fn: async () => {
+    const owner = new client.Client({
+      host: "http://localhost:8080",
+      anonKey,
+      token: apiKey,
+    });
+    const sup = createClient<client.Database>(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false },
+    });
+    const jwt = await owner.claimToken();
+    await sup.auth.setSession(jwt);
+    const user_id = (await sup.auth.getUser()).data.user?.id!;
 
-  const flowId = DEPLOY_SIMPLE_FLOW_ID;
-  const id = await owner.deployFlow(flowId);
-  await sup.from("flow_deployments_tags").upsert({
-    deployment_id: id,
-    entrypoint: flowId,
-    tag: "v1",
-    user_id,
-  });
-
-  const { flow_run_id } = await owner.startDeployment(
-    {
-      flow: flowId,
+    const flowId = DEPLOY_SIMPLE_FLOW_ID;
+    const id = await owner.deployFlow(flowId);
+    await sup.from("flow_deployments_tags").upsert({
+      deployment_id: id,
+      entrypoint: flowId,
       tag: "v1",
-    },
-    {
-      inputs: new Value({
-        a: 1,
-        b: 2,
-      }).M!,
-    },
-  );
+      user_id,
+    });
 
-  const result = await owner.getFlowOutput(flow_run_id);
-  const c = result.toJSObject().c;
-  assertEquals(c, 3);
+    const { flow_run_id } = await owner.startDeployment(
+      {
+        flow: flowId,
+        tag: "v1",
+      },
+      {
+        inputs: new Value({
+          a: 1,
+          b: 2,
+        }).M!,
+      },
+    );
 
-  await checkNoErrors(sup, flow_run_id);
-}});
+    const result = await owner.getFlowOutput(flow_run_id);
+    const c = result.toJSObject().c;
+    assertEquals(c, 3);
+
+    await checkNoErrors(sup, flow_run_id);
+  },
+});
