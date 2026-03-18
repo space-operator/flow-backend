@@ -86,7 +86,7 @@
     "vendor": "TukTuk",
     "program": "tuktuk",
     "category": "automation",
-    "icon_url": null,
+    "icon_url": "https://github.com/helium.png",
     "tags": [
       "automation",
       "tuktuk",

@@ -80,10 +80,10 @@
     }
   },
   "classification": {
-    "vendor": "Unknown",
+    "vendor": "Solana",
     "program": "secp256k1",
     "category": "uncategorized",
-    "icon_url": null,
+    "icon_url": "https://github.com/solana-labs.png",
     "tags": [
       "secp256k1",
       "new",

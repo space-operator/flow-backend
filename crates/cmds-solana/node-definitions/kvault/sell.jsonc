@@ -85,7 +85,7 @@
     "vendor": "Kamino",
     "program": "kvault",
     "category": "defi",
-    "icon_url": null,
+    "icon_url": "https://github.com/Kamino-Finance.png",
     "tags": [
       "kvault",
       "sell"

@@ -56,7 +56,7 @@
     "vendor": "Helius",
     "program": "das",
     "category": "infrastructure",
-    "icon_url": null,
+    "icon_url": "https://github.com/helius-labs.png",
     "tags": [
       "infrastructure",
       "das",

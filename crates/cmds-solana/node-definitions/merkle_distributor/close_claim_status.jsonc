@@ -70,7 +70,7 @@
     "vendor": "Kamino",
     "program": "merkle_distributor",
     "category": "defi",
-    "icon_url": null,
+    "icon_url": "https://github.com/Kamino-Finance.png",
     "tags": [
       "defi",
       "merkle distributor",

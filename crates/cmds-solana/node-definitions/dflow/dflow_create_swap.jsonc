@@ -82,7 +82,7 @@
     "vendor": "dFlow",
     "program": "dflow",
     "category": "defi",
-    "icon_url": null,
+    "icon_url": "https://github.com/dflow.png",
     "tags": [
       "defi",
       "dflow",

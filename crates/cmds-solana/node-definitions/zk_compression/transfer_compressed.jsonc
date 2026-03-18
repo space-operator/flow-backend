@@ -75,7 +75,7 @@
     "vendor": "Light Protocol",
     "program": "compressed_token",
     "category": "zk_compression",
-    "icon_url": null,
+    "icon_url": "https://github.com/Lightprotocol.png",
     "tags": ["zk compression", "compressed token", "transfer", "light protocol"]
   },
   "external_version": {

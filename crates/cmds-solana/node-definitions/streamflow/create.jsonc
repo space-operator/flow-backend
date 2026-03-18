@@ -120,7 +120,7 @@
     "vendor": "Streamflow",
     "program": "streamflow",
     "category": "defi",
-    "icon_url": null,
+    "icon_url": "https://github.com/streamflow-finance.png",
     "tags": [
       "defi",
       "streamflow",

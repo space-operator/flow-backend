@@ -56,7 +56,7 @@
     "vendor": "Jupiter",
     "program": "jupiter",
     "category": "defi",
-    "icon_url": null,
+    "icon_url": "https://github.com/jup-ag.png",
     "tags": [
       "defi",
       "jupiter",

@@ -51,7 +51,7 @@
     "vendor": "Switchboard",
     "program": "switchboard",
     "category": "oracle",
-    "icon_url": null,
+    "icon_url": "https://github.com/switchboard-xyz.png",
     "tags": [
       "oracle",
       "switchboard",
