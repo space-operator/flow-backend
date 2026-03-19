@@ -1,6 +1,11 @@
+use super::{
+    InitializePresaleArgs, PRESALE_PROGRAM_ID, RemainingAccountsInfo, RemainingAccountsSlice,
+    derive_base_vault, derive_event_authority, derive_presale, derive_presale_authority,
+    derive_quote_vault, discriminators,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, derive_presale, derive_presale_authority, derive_base_vault, derive_quote_vault, discriminators, InitializePresaleArgs, RemainingAccountsInfo, RemainingAccountsSlice};
+use solana_sdk_ids::system_program;
 
 const NAME: &str = "initialize_presale";
 const DEFINITION: &str = flow_lib::node_definition!("presale/initialize_presale.jsonc");
@@ -34,8 +39,6 @@ pub struct Input {
     pub base_token_program: Pubkey,
     #[serde_as(as = "AsPubkey")]
     pub quote_token_program: Pubkey,
-    #[serde_as(as = "AsPubkey")]
-    pub system_program: Pubkey,
     pub params: InitializePresaleArgs,
     #[serde(default)]
     pub slices: Vec<RemainingAccountsSlice>,
@@ -60,27 +63,31 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let event_authority = derive_event_authority();
-    let presale = derive_presale(&input.base.pubkey(), &input.presale_mint, &input.quote_token_mint);
+    let presale = derive_presale(
+        &input.base.pubkey(),
+        &input.presale_mint,
+        &input.quote_token_mint,
+    );
     let presale_authority = derive_presale_authority();
     let presale_vault = derive_base_vault(&presale);
     let quote_token_vault = derive_quote_vault(&presale);
 
     let accounts = vec![
-        AccountMeta::new_readonly(input.presale_mint, false),          // presale_mint (readonly)
-        AccountMeta::new(presale, false),                              // presale (writable, PDA)
-        AccountMeta::new_readonly(presale_authority, false),           // presale_authority (readonly)
-        AccountMeta::new_readonly(input.quote_token_mint, false),      // quote_token_mint (readonly)
-        AccountMeta::new(presale_vault, false),                        // presale_vault (writable, PDA)
-        AccountMeta::new(quote_token_vault, false),                    // quote_token_vault (writable, PDA)
-        AccountMeta::new(input.payer_presale_token, false),            // payer_presale_token (writable)
-        AccountMeta::new_readonly(input.creator, false),               // creator (readonly)
-        AccountMeta::new_readonly(input.base.pubkey(), true),          // base (signer)
-        AccountMeta::new(input.payer.pubkey(), true),                  // payer (writable, signer)
-        AccountMeta::new_readonly(input.base_token_program, false),    // base_token_program (readonly)
-        AccountMeta::new_readonly(input.quote_token_program, false),   // quote_token_program (readonly)
-        AccountMeta::new_readonly(input.system_program, false),        // system_program (readonly)
-        AccountMeta::new_readonly(event_authority, false),             // event_authority (PDA)
-        AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false),          // program
+        AccountMeta::new_readonly(input.presale_mint, false), // presale_mint (readonly)
+        AccountMeta::new(presale, false),                     // presale (writable, PDA)
+        AccountMeta::new_readonly(presale_authority, false),  // presale_authority (readonly)
+        AccountMeta::new_readonly(input.quote_token_mint, false), // quote_token_mint (readonly)
+        AccountMeta::new(presale_vault, false),               // presale_vault (writable, PDA)
+        AccountMeta::new(quote_token_vault, false),           // quote_token_vault (writable, PDA)
+        AccountMeta::new(input.payer_presale_token, false),   // payer_presale_token (writable)
+        AccountMeta::new_readonly(input.creator, false),      // creator (readonly)
+        AccountMeta::new_readonly(input.base.pubkey(), true), // base (signer)
+        AccountMeta::new(input.payer.pubkey(), true),         // payer (writable, signer)
+        AccountMeta::new_readonly(input.base_token_program, false), // base_token_program (readonly)
+        AccountMeta::new_readonly(input.quote_token_program, false), // quote_token_program (readonly)
+        AccountMeta::new_readonly(system_program::ID, false),        // system_program (readonly)
+        AccountMeta::new_readonly(event_authority, false),           // event_authority (PDA)
+        AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false),        // program
     ];
 
     let remaining_accounts_info = RemainingAccountsInfo {
@@ -104,10 +111,20 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    Ok(Output { signature, presale, presale_authority, presale_vault, quote_token_vault })
+    Ok(Output {
+        signature,
+        presale,
+        presale_authority,
+        presale_vault,
+        quote_token_vault,
+    })
 }
 
 #[cfg(test)]

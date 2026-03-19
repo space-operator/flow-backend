@@ -16,6 +16,7 @@ pub mod damm_v2;
 pub mod das;
 pub mod dflow;
 pub mod dynamic_bonding_curve;
+pub mod escrow;
 pub mod find_pda;
 pub mod generate_keypair;
 pub mod get_balance;

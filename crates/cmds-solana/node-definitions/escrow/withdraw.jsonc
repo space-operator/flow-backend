@@ -1,0 +1,93 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "withdraw",
+  "prefix": "escrow",
+  "type": "native",
+  "description": "Withdraw tokens from escrow using a receipt (receipt is closed after withdrawal)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/escrow/withdraw.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "withdrawer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "tooltip": "Must match receipt depositor"
+      },
+      {
+        "name": "rent_recipient",
+        "type_bounds": ["pubkey"],
+        "tooltip": "Receives rent from closed receipt account (defaults to fee_payer)"
+      },
+      {
+        "name": "escrow",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Escrow PDA address"
+      },
+      {
+        "name": "receipt",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Receipt PDA to verify and close"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Token mint"
+      },
+      {
+        "name": "token_program",
+        "type_bounds": ["pubkey"],
+        "tooltip": "SPL Token or Token-2022 program ID (defaults to SPL Token)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true },
+    "token_program": { "S": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "escrow",
+    "category": "utility",
+    "icon_url": "https://github.com/solana-program.png",
+    "tags": ["escrow", "withdraw", "token", "solana"]
+  },
+  "external_version": {
+    "program_id": "Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-program/escrow"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/escrow/withdraw.jsonc",
+    "repo": "flow-backend"
+  }
+}

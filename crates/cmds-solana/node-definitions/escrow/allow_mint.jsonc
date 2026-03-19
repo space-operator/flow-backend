@@ -1,0 +1,92 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "allow_mint",
+  "prefix": "escrow",
+  "type": "native",
+  "description": "Allow a mint for deposits and create its vault ATA",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/escrow/allow_mint.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction and rent fees"
+      },
+      {
+        "name": "admin",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "tooltip": "Must match escrow admin"
+      },
+      {
+        "name": "escrow",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Escrow PDA address"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Token mint to allow for deposits"
+      },
+      {
+        "name": "token_program",
+        "type_bounds": ["pubkey"],
+        "tooltip": "SPL Token or Token-2022 program ID (defaults to SPL Token)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "allowed_mint",
+        "type": "pubkey",
+        "tooltip": "Derived AllowedMint PDA address"
+      },
+      {
+        "name": "vault",
+        "type": "pubkey",
+        "tooltip": "Derived vault ATA address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true },
+    "token_program": { "S": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "escrow",
+    "category": "utility",
+    "icon_url": "https://github.com/solana-program.png",
+    "tags": ["escrow", "allow", "mint", "solana"]
+  },
+  "external_version": {
+    "program_id": "Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-program/escrow"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/escrow/allow_mint.jsonc",
+    "repo": "flow-backend"
+  }
+}

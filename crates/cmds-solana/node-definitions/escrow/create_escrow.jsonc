@@ -1,0 +1,75 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_escrow",
+  "prefix": "escrow",
+  "type": "native",
+  "description": "Create a new escrow with an admin and seed signer",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/escrow/create_escrow.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction and rent fees"
+      },
+      {
+        "name": "admin",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "tooltip": "Admin of the escrow"
+      },
+      {
+        "name": "escrow_seed",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "tooltip": "Seed signer for escrow PDA derivation (generate a fresh keypair)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "escrow",
+        "type": "pubkey",
+        "tooltip": "Derived escrow PDA address"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "escrow",
+    "category": "utility",
+    "icon_url": "https://github.com/solana-program.png",
+    "tags": ["escrow", "create", "solana"]
+  },
+  "external_version": {
+    "program_id": "Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-program/escrow"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/escrow/create_escrow.jsonc",
+    "repo": "flow-backend"
+  }
+}
