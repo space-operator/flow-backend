@@ -281,6 +281,8 @@ pub struct FlowRowV2 {
     #[serde(default)]
     #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
     pub environment: HashMap<String, String>,
+    #[serde(default)]
+    #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
     pub current_network: Network,
     #[serde(default)]
     #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
@@ -289,7 +291,7 @@ pub struct FlowRowV2 {
     pub start_shared: bool,
     pub start_unverified: bool,
     #[serde(default)]
-    pub current_branch_id: Option<i32>,
+    pub current_branch_id: Option<String>,
 }
 
 /// Runtime state for WASM nodes: DB row ID + cached bytes.
