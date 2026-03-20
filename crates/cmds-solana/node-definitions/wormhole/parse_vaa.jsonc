@@ -73,7 +73,7 @@
     "vendor": "Wormhole",
     "program": "wormhole",
     "category": "bridge",
-    "icon_url": null,
+    "icon_url": "https://github.com/wormhole-foundation.png",
     "tags": [
       "bridge",
       "wormhole",

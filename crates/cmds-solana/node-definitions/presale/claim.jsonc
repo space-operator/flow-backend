@@ -127,7 +127,7 @@
     "vendor": "Native",
     "program": "presale",
     "category": "defi",
-    "icon_url": null,
+    "icon_url": "https://github.com/space-operator.png",
     "tags": [
       "defi",
       "presale",

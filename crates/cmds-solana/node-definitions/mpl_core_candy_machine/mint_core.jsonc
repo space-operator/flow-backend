@@ -127,7 +127,7 @@
     "vendor": "Metaplex",
     "program": "candy_machine_core",
     "category": "nft",
-    "icon_url": null,
+    "icon_url": "https://github.com/metaplex-foundation.png",
     "tags": [
       "nft",
       "candy machine core",

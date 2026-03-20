@@ -151,7 +151,7 @@
     "vendor": "Realms",
     "program": "governance",
     "category": "governance",
-    "icon_url": null,
+    "icon_url": "https://github.com/solana-labs.png",
     "tags": [
       "governance",
       "create",

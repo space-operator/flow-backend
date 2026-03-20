@@ -79,10 +79,10 @@
     }
   },
   "classification": {
-    "vendor": "Unknown",
+    "vendor": "Swig",
     "program": "swig",
     "category": "uncategorized",
-    "icon_url": null,
+    "icon_url": "https://github.com/anagrambuild.png",
     "tags": [
       "swig",
       "close"

@@ -156,7 +156,7 @@
     "vendor": "Jupiter",
     "program": "jup_lock",
     "category": "defi",
-    "icon_url": null,
+    "icon_url": "https://github.com/jup-ag.png",
     "tags": [
       "defi",
       "jup lock",

@@ -76,7 +76,7 @@
     "vendor": "Metaplex",
     "program": "mpl_core",
     "category": "nft",
-    "icon_url": null,
+    "icon_url": "https://github.com/metaplex-foundation.png",
     "tags": [
       "nft",
       "mpl core",

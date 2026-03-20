@@ -67,10 +67,10 @@
     }
   },
   "classification": {
-    "vendor": "Unknown",
+    "vendor": "Kamino",
     "program": "limo",
     "category": "uncategorized",
-    "icon_url": null,
+    "icon_url": "https://github.com/Kamino-Finance.png",
     "tags": [
       "limo",
       "initialize",

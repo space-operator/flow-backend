@@ -96,7 +96,7 @@
     "vendor": "Native",
     "program": "v1",
     "category": "core",
-    "icon_url": null,
+    "icon_url": "https://github.com/space-operator.png",
     "tags": [
       "core",
       "v1",

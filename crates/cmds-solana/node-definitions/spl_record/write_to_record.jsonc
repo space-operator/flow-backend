@@ -82,7 +82,7 @@
     "vendor": "Native",
     "program": "record",
     "category": "data",
-    "icon_url": null,
+    "icon_url": "https://github.com/space-operator.png",
     "tags": [
       "data",
       "record",

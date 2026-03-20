@@ -2,7 +2,7 @@
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
   "name": "revoke",
-  "prefix": "token_2022",
+  "prefix": "spl_token_2022",
   "type": "native",
   "description": "Revoke a delegate's authority on a Token-2022 token account",
   "author_handle": "spo",
@@ -66,7 +66,7 @@
     "vendor": "Solana",
     "program": "token_2022",
     "category": "token",
-    "icon_url": null,
+    "icon_url": "https://github.com/solana-labs.png",
     "tags": [
       "token",
       "token 2022",

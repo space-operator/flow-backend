@@ -124,7 +124,7 @@
     "vendor": "Wormhole",
     "program": "token_bridge",
     "category": "bridge",
-    "icon_url": null,
+    "icon_url": "https://github.com/wormhole-foundation.png",
     "tags": [
       "bridge",
       "token bridge",

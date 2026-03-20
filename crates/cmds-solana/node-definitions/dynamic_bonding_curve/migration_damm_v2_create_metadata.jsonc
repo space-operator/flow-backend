@@ -102,7 +102,7 @@
     "vendor": "Meteora",
     "program": "dynamic_bonding_curve",
     "category": "defi",
-    "icon_url": null,
+    "icon_url": "https://github.com/MeteoraAg.png",
     "tags": [
       "defi",
       "dynamic bonding curve",

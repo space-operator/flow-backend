@@ -16,6 +16,7 @@ pub mod damm_v2;
 pub mod das;
 pub mod dflow;
 pub mod dynamic_bonding_curve;
+pub mod escrow;
 pub mod find_pda;
 pub mod generate_keypair;
 pub mod get_balance;
@@ -39,6 +40,7 @@ pub mod pyth;
 pub mod reflect;
 pub mod scope;
 pub mod secp256k1;
+pub mod solana_v2_compat;
 pub mod spl_memo;
 pub mod spl_record;
 pub mod spl_token;
@@ -51,6 +53,7 @@ pub mod tuktuk;
 pub mod utils;
 pub mod wormhole;
 pub mod yvaults;
+pub mod zk_compression;
 
 pub use error::{Error, Result};
 

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "compress_tokens",
+  "prefix": "zk_compression",
+  "description": "Compress SPL tokens into compressed token accounts. Derives the source ATA from owner+mint and the token pool PDA from mint automatically.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/zk_compression/compress_tokens.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Pays for transaction fees"
+      },
+      {
+        "name": "owner",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Owner of the source token account"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Token mint address (ATA and token pool PDA are derived from this)"
+      },
+      {
+        "name": "recipient",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Recipient wallet address for compressed tokens"
+      },
+      {
+        "name": "amount",
+        "type_bounds": ["u64"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Amount of tokens to compress (in raw units)"
+      },
+      {
+        "name": "merkle_tree",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "State merkle tree pubkey"
+      },
+      {
+        "name": "source_token_account",
+        "type_bounds": ["pubkey"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Optional: override source token account. Defaults to owner's ATA for this mint."
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Light Protocol",
+    "program": "compressed_token",
+    "category": "zk_compression",
+    "icon_url": "https://github.com/Lightprotocol.png",
+    "tags": ["zk compression", "compressed token", "compress", "airdrop", "light protocol"]
+  },
+  "external_version": {
+    "program_id": null,
+    "sdk_crate": "light-compressed-token-sdk",
+    "sdk_version": "0.23",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/Lightprotocol/light-protocol"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/zk_compression/compress_tokens.jsonc",
+    "repo": "flow-backend"
+  }
+}
