@@ -22,8 +22,12 @@ pub struct Input {
     pub separator: String,
 }
 
-fn default_true() -> bool { true }
-fn default_comma() -> String { ",".to_string() }
+fn default_true() -> bool {
+    true
+}
+fn default_comma() -> String {
+    ",".to_string()
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -39,8 +43,8 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
         .with_separator(sep)
         .finish(&mut df)
         .map_err(|e| CommandError::msg(format!("CSV write error: {e}")))?;
-    let csv_string = String::from_utf8(buf)
-        .map_err(|e| CommandError::msg(format!("UTF-8 error: {e}")))?;
+    let csv_string =
+        String::from_utf8(buf).map_err(|e| CommandError::msg(format!("UTF-8 error: {e}")))?;
     Ok(Output { csv_string })
 }
 
@@ -50,7 +54,9 @@ mod tests {
     use crate::polars::types::df_to_ipc;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     #[tokio::test]
     async fn test_run_write_csv() {
@@ -79,10 +85,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_write_csv_no_header() {
-        let mut df = DataFrame::new(vec![
-            Column::new("x".into(), &[1i64, 2]),
-        ])
-        .unwrap();
+        let mut df = DataFrame::new(vec![Column::new("x".into(), &[1i64, 2])]).unwrap();
         let ipc = df_to_ipc(&mut df).unwrap();
 
         let output = run(

@@ -4,9 +4,9 @@ use actix_web::{
     middleware::{Compress, Logger},
     web,
 };
-use flow_rpc::flow_side::address_book::BaseAddressBook;
 use db::{LocalStorage, WasmStorage, pool::DbPool};
 use flow_lib::{command::CommandFactory, utils::TowerClient};
+use flow_rpc::flow_side::address_book::BaseAddressBook;
 use flow_server::{
     Config,
     api::{

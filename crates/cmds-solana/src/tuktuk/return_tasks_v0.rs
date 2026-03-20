@@ -1,5 +1,5 @@
+use super::{SYSTEM_PROGRAM_ID, account_meta_readonly, build_ix, types};
 use crate::prelude::*;
-use super::{build_ix, types, SYSTEM_PROGRAM_ID, account_meta_readonly};
 
 const NAME: &str = "return_tasks_v0";
 const DEFINITION: &str = flow_lib::node_definition!("tuktuk/return_tasks_v0.jsonc");
@@ -102,9 +102,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     // Accounts per IDL order:
     // system_program: readonly
-    let accounts = vec![
-        account_meta_readonly(&SYSTEM_PROGRAM_ID),
-    ];
+    let accounts = vec![account_meta_readonly(&SYSTEM_PROGRAM_ID)];
 
     let instruction = build_ix(accounts, data);
 
@@ -115,7 +113,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

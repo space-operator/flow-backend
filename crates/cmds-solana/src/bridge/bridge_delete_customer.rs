@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{bridge_delete, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_delete_customer";
 const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_delete_customer.jsonc");
@@ -25,12 +25,7 @@ pub struct Output {
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let path = format!("/v0/customers/{}", input.customer_id);
-    let result = check_response(
-        bridge_delete(&ctx, &path, &input.api_key)
-            .send()
-            .await?,
-    )
-    .await?;
+    let result = check_response(bridge_delete(&ctx, &path, &input.api_key).send().await?).await?;
     Ok(Output { result })
 }
 

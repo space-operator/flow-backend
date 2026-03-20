@@ -3,7 +3,6 @@
 //! On-chain Solana instruction nodes for the Kamino Farms program.
 //! Program ID: FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr
 
-
 // kfarms - Space Operator nodes for Kamino Farms
 //
 // Program ID: `FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr`
@@ -18,13 +17,15 @@ use crate::prelude::*;
 // =============================================================================
 
 /// Kamino Farms Program ID
-pub const KFARMS_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr");
+pub const KFARMS_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr");
 
 /// System Program ID
 pub const SYSTEM_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("11111111111111111111111111111111");
 
 /// Token Program ID
-pub const TOKEN_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+pub const TOKEN_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
 // =============================================================================
 // Anchor Discriminator
@@ -48,7 +49,8 @@ pub fn derive_user_state(farm: &Pubkey, owner: &Pubkey) -> Pubkey {
     Pubkey::find_program_address(
         &[b"user", farm.as_ref(), owner.as_ref()],
         &KFARMS_PROGRAM_ID,
-    ).0
+    )
+    .0
 }
 
 /// Derive standard SPL Associated Token Account
@@ -74,26 +76,26 @@ pub mod update_global_config_admin;
 
 pub mod initialize_farm;
 pub mod initialize_farm_delegated;
-pub mod update_farm_config;
-pub mod update_farm_admin;
 pub mod transfer_ownership;
+pub mod update_farm_admin;
+pub mod update_farm_config;
 
 // =============================================================================
 // Node Modules - Reward Management (Admin)
 // =============================================================================
 
-pub mod initialize_reward;
 pub mod add_rewards;
+pub mod initialize_reward;
 pub mod reward_user_once;
 
 // =============================================================================
 // Node Modules - User Operations
 // =============================================================================
 
-pub mod initialize_user;
-pub mod stake;
-pub mod set_stake_delegated;
 pub mod harvest_reward;
+pub mod initialize_user;
+pub mod set_stake_delegated;
+pub mod stake;
 pub mod unstake;
 
 // =============================================================================
@@ -110,5 +112,5 @@ pub mod withdraw_unstaked_deposits;
 
 pub mod deposit_to_farm_vault;
 pub mod withdraw_from_farm_vault;
-pub mod withdraw_treasury;
 pub mod withdraw_slashed_amount;
+pub mod withdraw_treasury;

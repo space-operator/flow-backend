@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
+use crate::prelude::*;
 
 pub const NAME: &str = "get_mint_burn_quote";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/get_mint_burn_quote.jsonc");
@@ -28,8 +28,14 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     let path = format!("/stablecoin/quote/{}", input.quote_type);
     let mut req = reflect_post(&ctx, &path);
     let mut body = serde_json::Map::new();
-    body.insert("stablecoinIndex".into(), serde_json::json!(input.stablecoin_index));
-    body.insert("depositAmount".into(), serde_json::json!(input.deposit_amount));
+    body.insert(
+        "stablecoinIndex".into(),
+        serde_json::json!(input.stablecoin_index),
+    );
+    body.insert(
+        "depositAmount".into(),
+        serde_json::json!(input.deposit_amount),
+    );
     req = req.json(&serde_json::Value::Object(body));
     let result = check_response(req.send().await?).await?;
     Ok(Output { result })

@@ -1,6 +1,6 @@
+use super::{SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, YVAULTS_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{YVAULTS_PROGRAM_ID, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "update_treasury_fee_vault";
 const DEFINITION: &str = flow_lib::node_definition!("yvaults/update_treasury_fee_vault.jsonc");
@@ -42,13 +42,13 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
-        AccountMeta::new(input.admin_authority.pubkey(), true),  // admin_authority (writable signer)
-        AccountMeta::new_readonly(input.global_config, false),   // global_config (readonly)
-        AccountMeta::new_readonly(input.fee_mint, false),        // fee_mint (readonly)
-        AccountMeta::new(input.treasury_fee_vault, false),       // treasury_fee_vault (writable)
+        AccountMeta::new(input.admin_authority.pubkey(), true), // admin_authority (writable signer)
+        AccountMeta::new_readonly(input.global_config, false),  // global_config (readonly)
+        AccountMeta::new_readonly(input.fee_mint, false),       // fee_mint (readonly)
+        AccountMeta::new(input.treasury_fee_vault, false),      // treasury_fee_vault (writable)
         AccountMeta::new_readonly(input.treasury_fee_vault_authority, false), // treasury_fee_vault_authority (readonly)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),      // token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),     // system_program
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),                   // token_program
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),                  // system_program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -67,7 +67,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -96,7 +100,7 @@ mod tests {
             "collateral_id" => 0_u16,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

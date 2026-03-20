@@ -99,7 +99,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         return Err(crate::Error::RecipientAddressNotFunded.into());
     }
     let recipient_is_token_account = recipient_is_token_account.unwrap_or(false);
-    info!("recipient_is_token_account: {:?}", recipient_is_token_account);
+    info!(
+        "recipient_is_token_account: {:?}",
+        recipient_is_token_account
+    );
 
     let mut instructions = vec![];
 
@@ -116,10 +119,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             Some(account) if account.owner == system_program::ID => true,
             Some(account) if account.owner == spl_token_interface::ID => false,
             Some(_) => {
-                return Err(crate::Error::UnsupportedRecipientAddress(
-                    input.recipient.to_string(),
-                )
-                .into());
+                return Err(
+                    crate::Error::UnsupportedRecipientAddress(input.recipient.to_string()).into(),
+                );
             }
             None => true,
         };
@@ -165,7 +167,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions,
     };
 
-    let instructions = if input.submit { ins } else { Default::default() };
+    let instructions = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
 
     let signature = ctx
         .execute(

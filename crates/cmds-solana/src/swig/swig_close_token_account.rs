@@ -1,5 +1,5 @@
+use super::{CloseTokenAccountV1Instruction, find_wallet_address, to_instruction_v3, to_pubkey_v2};
 use crate::prelude::*;
-use super::{to_pubkey_v2, to_instruction_v3, find_wallet_address, CloseTokenAccountV1Instruction};
 
 const NAME: &str = "swig_close_token_account";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_close_token_account.jsonc");
@@ -51,7 +51,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         to_pubkey_v2(&input.token_program),
         vec![to_pubkey_v2(&input.token_account)],
         input.role_id,
-    ).map_err(|e| CommandError::msg(e.to_string()))?;
+    )
+    .map_err(|e| CommandError::msg(e.to_string()))?;
 
     let instruction = to_instruction_v3(ix_v2);
 
@@ -62,7 +63,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })
@@ -86,7 +91,9 @@ mod tests {
         let (wallet_address, _) = find_wallet_address(&swig_account);
         let destination = Keypair::new().pubkey();
         let token_account = Keypair::new().pubkey();
-        let token_program: Pubkey = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA".parse().unwrap();
+        let token_program: Pubkey = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+            .parse()
+            .unwrap();
 
         let ix = CloseTokenAccountV1Instruction::new_with_ed25519_authority(
             to_pubkey_v2(&swig_account),
@@ -96,7 +103,8 @@ mod tests {
             to_pubkey_v2(&token_program),
             vec![to_pubkey_v2(&token_account)],
             0,
-        ).unwrap();
+        )
+        .unwrap();
 
         let instruction = to_instruction_v3(ix);
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
@@ -110,7 +118,9 @@ mod tests {
         let swig_account = Keypair::new().pubkey();
         let destination = Keypair::new().pubkey();
         let token_account = Keypair::new().pubkey();
-        let token_program: Pubkey = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA".parse().unwrap();
+        let token_program: Pubkey = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+            .parse()
+            .unwrap();
 
         let input = Input {
             fee_payer: wallet.clone(),

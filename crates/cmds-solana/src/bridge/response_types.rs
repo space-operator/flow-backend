@@ -453,10 +453,7 @@ mod tests {
     use super::*;
 
     fn fixture(name: &str) -> String {
-        let path = format!(
-            "{}/tests/fixtures/{name}",
-            env!("CARGO_MANIFEST_DIR")
-        );
+        let path = format!("{}/tests/fixtures/{name}", env!("CARGO_MANIFEST_DIR"));
         std::fs::read_to_string(&path)
             .unwrap_or_else(|e| panic!("Failed to read fixture {name}: {e}"))
     }
@@ -596,7 +593,10 @@ mod tests {
     async fn test_live_exchange_rate() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -616,7 +616,10 @@ mod tests {
     async fn test_live_list_customers() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -636,7 +639,10 @@ mod tests {
     async fn test_live_get_customer() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         // First get the list to find a customer ID
@@ -669,7 +675,10 @@ mod tests {
     async fn test_live_list_countries() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -688,7 +697,10 @@ mod tests {
     async fn test_live_list_occupation_codes() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -707,7 +719,10 @@ mod tests {
     async fn test_live_list_transfers() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -726,7 +741,10 @@ mod tests {
     async fn test_live_list_external_accounts() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -745,7 +763,10 @@ mod tests {
     async fn test_live_list_liquidation_addresses() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -756,7 +777,8 @@ mod tests {
             .await
             .expect("request failed");
         assert!(resp.status().is_success(), "status: {}", resp.status());
-        let _list: PaginatedList<LiquidationAddress> = resp.json().await.expect("json parse failed");
+        let _list: PaginatedList<LiquidationAddress> =
+            resp.json().await.expect("json parse failed");
     }
 
     #[tokio::test]
@@ -764,7 +786,10 @@ mod tests {
     async fn test_live_list_kyc_links() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -783,7 +808,10 @@ mod tests {
     async fn test_live_developer_fees() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -801,7 +829,10 @@ mod tests {
     async fn test_live_list_static_memos() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -819,7 +850,10 @@ mod tests {
     async fn test_live_list_crypto_return_policies() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -837,7 +871,10 @@ mod tests {
     async fn test_live_list_static_templates() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
@@ -855,7 +892,10 @@ mod tests {
     async fn test_live_list_funds_requests() {
         let api_key = match sandbox_key() {
             Some(k) => k,
-            None => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            None => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client

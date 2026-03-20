@@ -44,7 +44,8 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     .run()?;
     dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
     dotenv::from_path(
-        meta.workspace_root.join("@space-operator/client/integration_tests/.env"),
+        meta.workspace_root
+            .join("@space-operator/client/integration_tests/.env"),
     )
     .ok();
     cmd!(sh, "./import-data.ts --file=export.json").run()?;

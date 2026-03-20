@@ -1,10 +1,9 @@
 use crate::prelude::*;
 
-use super::helper::{check_response, CROSSBAR_URL};
+use super::helper::{CROSSBAR_URL, check_response};
 
 pub const NAME: &str = "switchboard_simulate_feeds";
-const DEFINITION: &str =
-    flow_lib::node_definition!("switchboard/switchboard_simulate_feeds.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("switchboard/switchboard_simulate_feeds.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
@@ -33,10 +32,7 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let base_url = input
-        .crossbar_url
-        .as_deref()
-        .unwrap_or(CROSSBAR_URL);
+    let base_url = input.crossbar_url.as_deref().unwrap_or(CROSSBAR_URL);
 
     let url = format!("{}/simulate/solana", base_url.trim_end_matches('/'));
 
@@ -45,12 +41,7 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
         "feeds": input.feed_pubkeys,
     });
 
-    let resp = ctx
-        .http()
-        .post(&url)
-        .json(&body)
-        .send()
-        .await?;
+    let resp = ctx.http().post(&url).json(&body).send().await?;
 
     let results = check_response(resp).await?;
 

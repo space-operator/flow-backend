@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
+use crate::prelude::*;
 
 pub const NAME: &str = "reveal_api_key";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/reveal_api_key.jsonc");
@@ -38,9 +38,18 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
         req = req.query(&query);
     }
     let mut body = serde_json::Map::new();
-    body.insert("integrationId".into(), serde_json::Value::String(input.integration_id.clone()));
-    body.insert("signer".into(), serde_json::Value::String(input.signer.clone()));
-    body.insert("signature".into(), serde_json::Value::String(input.signature.clone()));
+    body.insert(
+        "integrationId".into(),
+        serde_json::Value::String(input.integration_id.clone()),
+    );
+    body.insert(
+        "signer".into(),
+        serde_json::Value::String(input.signer.clone()),
+    );
+    body.insert(
+        "signature".into(),
+        serde_json::Value::String(input.signature.clone()),
+    );
     body.insert("timestamp".into(), serde_json::json!(input.timestamp));
     req = req.json(&serde_json::Value::Object(body));
     let result = check_response(req.send().await?).await?;

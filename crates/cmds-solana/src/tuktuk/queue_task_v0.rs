@@ -1,5 +1,8 @@
+use super::{
+    SYSTEM_PROGRAM_ID, account_meta_mut, account_meta_readonly, account_meta_signer,
+    account_meta_signer_mut, build_ix, pda, types,
+};
 use crate::prelude::*;
-use super::{build_ix, pda, types, SYSTEM_PROGRAM_ID, account_meta_signer_mut, account_meta_signer, account_meta_readonly, account_meta_mut};
 
 const NAME: &str = "queue_task_v0";
 const DEFINITION: &str = flow_lib::node_definition!("tuktuk/queue_task_v0.jsonc");
@@ -91,10 +94,8 @@ fn serialize_transaction(data: &mut Vec<u8>, tx: &types::TransactionSourceV0) {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     // Derive the task_queue_authority PDA
-    let (task_queue_authority, _) = pda::find_task_queue_authority(
-        &input.task_queue,
-        &input.queue_authority.pubkey(),
-    );
+    let (task_queue_authority, _) =
+        pda::find_task_queue_authority(&input.task_queue, &input.queue_authority.pubkey());
 
     // IDL discriminator for queue_task_v0
     let mut data = vec![177, 95, 195, 252, 241, 2, 178, 88];
@@ -154,7 +155,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

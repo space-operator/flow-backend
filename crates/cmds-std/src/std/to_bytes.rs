@@ -87,14 +87,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_null_empty() {
-        let output = run(
-            <_>::default(),
-            Input {
-                input: Value::Null,
-            },
-        )
-        .await
-        .unwrap();
+        let output = run(<_>::default(), Input { input: Value::Null })
+            .await
+            .unwrap();
         assert!(output.bytes.is_empty());
     }
 

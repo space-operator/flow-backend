@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{check_response, reflect_post_auth};
+use crate::prelude::*;
 
 pub const NAME: &str = "whitelist_address";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/whitelist_address.jsonc");
@@ -39,11 +39,17 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
         req = req.query(&query);
     }
     let mut body = serde_json::Map::new();
-    body.insert("signer".into(), serde_json::Value::String(input.signer.clone()));
+    body.insert(
+        "signer".into(),
+        serde_json::Value::String(input.signer.clone()),
+    );
     if let Some(ref val) = input.user {
         body.insert("user".into(), serde_json::Value::String(val.clone()));
     }
-    body.insert("feePayer".into(), serde_json::Value::String(input.fee_payer.clone()));
+    body.insert(
+        "feePayer".into(),
+        serde_json::Value::String(input.fee_payer.clone()),
+    );
     req = req.json(&serde_json::Value::Object(body));
     let result = check_response(req.send().await?).await?;
     Ok(Output { result })

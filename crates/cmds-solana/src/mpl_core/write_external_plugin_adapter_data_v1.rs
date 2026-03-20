@@ -3,7 +3,8 @@ use mpl_core::instructions::WriteExternalPluginAdapterDataV1Builder;
 use mpl_core::types::ExternalPluginAdapterKey;
 
 const NAME: &str = "write_external_plugin_adapter_data_v1";
-const DEFINITION: &str = flow_lib::node_definition!("mpl_core/write_external_plugin_adapter_data_v1.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("mpl_core/write_external_plugin_adapter_data_v1.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -36,13 +37,13 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let payer = input.payer.as_ref().map_or_else(|| input.fee_payer.pubkey(), |p| p.pubkey());
+    let payer = input
+        .payer
+        .as_ref()
+        .map_or_else(|| input.fee_payer.pubkey(), |p| p.pubkey());
     // Build instruction using builder pattern
     let mut builder = WriteExternalPluginAdapterDataV1Builder::new();
-    builder
-        .asset(input.asset)
-        .payer(payer)
-        .key(input.key);
+    builder.asset(input.asset).payer(payer).key(input.key);
     if let Some(data) = input.data {
         builder.data(data);
     }
@@ -51,12 +52,15 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer].into_iter().chain(input.payer)
-            .collect(),
+        signers: [input.fee_payer].into_iter().chain(input.payer).collect(),
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

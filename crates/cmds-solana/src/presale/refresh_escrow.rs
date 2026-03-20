@@ -1,6 +1,6 @@
+use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 
 const NAME: &str = "refresh_escrow";
 const DEFINITION: &str = flow_lib::node_definition!("presale/refresh_escrow.jsonc");
@@ -38,10 +38,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new_readonly(input.presale, false),         // presale (readonly)
-        AccountMeta::new(input.escrow, false),                   // escrow (writable)
-        AccountMeta::new_readonly(event_authority, false),       // event_authority (PDA)
-        AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false),    // program
+        AccountMeta::new_readonly(input.presale, false), // presale (readonly)
+        AccountMeta::new(input.escrow, false),           // escrow (writable)
+        AccountMeta::new_readonly(event_authority, false), // event_authority (PDA)
+        AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false), // program
     ];
 
     let data = discriminators::REFRESH_ESCROW.to_vec();
@@ -59,7 +59,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

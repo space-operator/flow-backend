@@ -1,6 +1,6 @@
+use super::{SCOPE_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{SCOPE_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "refresh_price_list";
 const DEFINITION: &str = flow_lib::node_definition!("scope/refresh_price_list.jsonc");
@@ -37,7 +37,7 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
-        AccountMeta::new(input.oracle_prices, false),            // oracle_prices (writable)
+        AccountMeta::new(input.oracle_prices, false), // oracle_prices (writable)
         AccountMeta::new_readonly(input.oracle_mappings, false), // oracle_mappings
     ];
 
@@ -58,7 +58,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -84,7 +88,7 @@ mod tests {
             "tokens" => serde_json::json!({}),
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

@@ -1,4 +1,7 @@
-use crate::{jup_lock::{JUP_LOCK_PROGRAM_ID, borsh_string, pda}, prelude::*};
+use crate::{
+    jup_lock::{JUP_LOCK_PROGRAM_ID, borsh_string, pda},
+    prelude::*,
+};
 use solana_program::instruction::AccountMeta;
 
 const NAME: &str = "create_vesting_escrow_v2";
@@ -85,7 +88,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     args_data.push(input.update_recipient_mode);
     args_data.extend(borsh_string(&input.memo));
 
-    let instruction = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"create_vesting_escrow_v2", accounts, args_data);
+    let instruction = crate::utils::build_anchor_instruction(
+        JUP_LOCK_PROGRAM_ID,
+        "create_vesting_escrow_v2",
+        accounts,
+        args_data,
+    );
 
     let ins = Instructions {
         lookup_tables: None,
@@ -184,7 +192,12 @@ mod tests {
         args_data.push(0u8);
         args_data.extend(borsh_string(memo));
 
-        let ix = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"create_vesting_escrow_v2", accounts, args_data);
+        let ix = crate::utils::build_anchor_instruction(
+            JUP_LOCK_PROGRAM_ID,
+            "create_vesting_escrow_v2",
+            accounts,
+            args_data,
+        );
 
         assert_eq!(ix.program_id, JUP_LOCK_PROGRAM_ID);
         // v2 has 12 accounts (v1 has 10, v2 adds mint + memo_program)

@@ -1,5 +1,5 @@
+use super::{account_meta_mut, account_meta_readonly, account_meta_signer, build_ix, pda};
 use crate::prelude::*;
-use super::{build_ix, pda, account_meta_signer, account_meta_readonly, account_meta_mut};
 
 const NAME: &str = "dequeue_task_v0";
 const DEFINITION: &str = flow_lib::node_definition!("tuktuk/dequeue_task_v0.jsonc");
@@ -38,10 +38,8 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     // Derive the task_queue_authority PDA
-    let (task_queue_authority, _) = pda::find_task_queue_authority(
-        &input.task_queue,
-        &input.queue_authority.pubkey(),
-    );
+    let (task_queue_authority, _) =
+        pda::find_task_queue_authority(&input.task_queue, &input.queue_authority.pubkey());
 
     // IDL discriminator for dequeue_task_v0
     let data = vec![92, 141, 249, 132, 219, 109, 215, 126];
@@ -71,7 +69,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

@@ -1,6 +1,6 @@
+use super::{TOKEN_PROGRAM_ID, YVAULTS_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{YVAULTS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "collect_fees_and_rewards";
 const DEFINITION: &str = flow_lib::node_definition!("yvaults/collect_fees_and_rewards.jsonc");
@@ -85,34 +85,37 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
-        AccountMeta::new(input.user.pubkey(), true),             // user (writable signer)
-        AccountMeta::new(input.strategy, false),                 // strategy (writable)
-        AccountMeta::new_readonly(input.global_config, false),   // global_config (readonly)
+        AccountMeta::new(input.user.pubkey(), true), // user (writable signer)
+        AccountMeta::new(input.strategy, false),     // strategy (writable)
+        AccountMeta::new_readonly(input.global_config, false), // global_config (readonly)
         AccountMeta::new_readonly(input.base_vault_authority, false), // base_vault_authority (readonly)
-        AccountMeta::new(input.pool, false),                     // pool (writable)
-        AccountMeta::new(input.tick_array_lower, false),         // tick_array_lower (writable)
-        AccountMeta::new(input.tick_array_upper, false),         // tick_array_upper (writable)
-        AccountMeta::new(input.position, false),                 // position (writable)
-        AccountMeta::new(input.raydium_protocol_position_or_base_vault_authority, false), // raydium_protocol_position_or_base_vault_authority
-        AccountMeta::new(input.position_token_account, false),   // position_token_account (writable)
-        AccountMeta::new(input.token_a_vault, false),            // token_a_vault (writable)
-        AccountMeta::new(input.pool_token_vault_a, false),       // pool_token_vault_a (writable)
-        AccountMeta::new(input.token_b_vault, false),            // token_b_vault (writable)
-        AccountMeta::new(input.pool_token_vault_b, false),       // pool_token_vault_b (writable)
+        AccountMeta::new(input.pool, false),                          // pool (writable)
+        AccountMeta::new(input.tick_array_lower, false),              // tick_array_lower (writable)
+        AccountMeta::new(input.tick_array_upper, false),              // tick_array_upper (writable)
+        AccountMeta::new(input.position, false),                      // position (writable)
+        AccountMeta::new(
+            input.raydium_protocol_position_or_base_vault_authority,
+            false,
+        ), // raydium_protocol_position_or_base_vault_authority
+        AccountMeta::new(input.position_token_account, false), // position_token_account (writable)
+        AccountMeta::new(input.token_a_vault, false),          // token_a_vault (writable)
+        AccountMeta::new(input.pool_token_vault_a, false),     // pool_token_vault_a (writable)
+        AccountMeta::new(input.token_b_vault, false),          // token_b_vault (writable)
+        AccountMeta::new(input.pool_token_vault_b, false),     // pool_token_vault_b (writable)
         AccountMeta::new(input.treasury_fee_token_a_vault, false), // treasury_fee_token_a_vault (writable)
         AccountMeta::new(input.treasury_fee_token_b_vault, false), // treasury_fee_token_b_vault (writable)
         AccountMeta::new_readonly(input.treasury_fee_vault_authority, false), // treasury_fee_vault_authority (readonly)
-        AccountMeta::new(input.reward0_vault, false),            // reward0_vault (writable)
-        AccountMeta::new(input.reward1_vault, false),            // reward1_vault (writable)
-        AccountMeta::new(input.reward2_vault, false),            // reward2_vault (writable)
-        AccountMeta::new(input.pool_reward_vault0, false),       // pool_reward_vault0 (writable)
-        AccountMeta::new(input.pool_reward_vault1, false),       // pool_reward_vault1 (writable)
-        AccountMeta::new(input.pool_reward_vault2, false),       // pool_reward_vault2 (writable)
-        AccountMeta::new_readonly(input.token_a_mint, false),    // token_a_mint (readonly)
-        AccountMeta::new_readonly(input.token_b_mint, false),    // token_b_mint (readonly)
-        AccountMeta::new_readonly(input.pool_program, false),    // pool_program (readonly)
+        AccountMeta::new(input.reward0_vault, false), // reward0_vault (writable)
+        AccountMeta::new(input.reward1_vault, false), // reward1_vault (writable)
+        AccountMeta::new(input.reward2_vault, false), // reward2_vault (writable)
+        AccountMeta::new(input.pool_reward_vault0, false), // pool_reward_vault0 (writable)
+        AccountMeta::new(input.pool_reward_vault1, false), // pool_reward_vault1 (writable)
+        AccountMeta::new(input.pool_reward_vault2, false), // pool_reward_vault2 (writable)
+        AccountMeta::new_readonly(input.token_a_mint, false), // token_a_mint (readonly)
+        AccountMeta::new_readonly(input.token_b_mint, false), // token_b_mint (readonly)
+        AccountMeta::new_readonly(input.pool_program, false), // pool_program (readonly)
         AccountMeta::new_readonly(input.instruction_sysvar_account, false), // instruction_sysvar_account (readonly)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),      // token_program
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),                 // token_program
     ];
 
     let data = anchor_discriminator(NAME).to_vec();
@@ -130,7 +133,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -180,7 +187,7 @@ mod tests {
             "instruction_sysvar_account" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

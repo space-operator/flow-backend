@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{check_response, reflect_get};
+use crate::prelude::*;
 
 pub const NAME: &str = "get_protocol_stats";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/get_protocol_stats.jsonc");
@@ -13,9 +13,7 @@ fn build() -> BuildResult {
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Input {
-
-}
+pub struct Input {}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {

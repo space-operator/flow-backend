@@ -49,6 +49,8 @@ jobs:
           deno-version: v2.x
       - name: Run tests
         run: cargo test -- --skip need_key_
+      - name: cargo fmt
+        run: cargo fmt --check 
   benchmark-pr:
     name: Benchmark PR
     needs: unit-test

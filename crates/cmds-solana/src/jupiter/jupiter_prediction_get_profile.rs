@@ -29,10 +29,7 @@ pub struct Output {
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let url = format!("https://api.jup.ag/prediction/v1/profile/{}", input.address);
 
-    let req = ctx
-        .http()
-        .get(&url)
-        .header("x-api-key", &input.api_key);
+    let req = ctx.http().get(&url).header("x-api-key", &input.api_key);
 
     let resp = req.send().await?;
 

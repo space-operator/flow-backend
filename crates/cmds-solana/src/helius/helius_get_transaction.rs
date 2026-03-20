@@ -27,7 +27,9 @@ pub struct Input {
     pub max_supported_version: Option<u8>,
 }
 
-fn default_encoding() -> String { "json".to_string() }
+fn default_encoding() -> String {
+    "json".to_string()
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {

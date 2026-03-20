@@ -1,5 +1,5 @@
+use super::{check_response, portal_post};
 use crate::prelude::*;
-use super::{portal_post, check_response};
 
 const NAME: &str = "swig_create_wallet_api";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_create_wallet_api.jsonc");
@@ -27,7 +27,9 @@ pub struct Input {
     pub wallet_type: Option<String>,
 }
 
-fn default_network() -> String { "mainnet".to_string() }
+fn default_network() -> String {
+    "mainnet".to_string()
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {

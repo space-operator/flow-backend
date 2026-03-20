@@ -54,7 +54,8 @@ mod tests {
         let mut df = DataFrame::new(vec![
             Series::new("id".into(), &[1i64, 2, 3]).into_column(),
             Series::new("name".into(), &["Alice", "Bob", "Charlie"]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
@@ -62,16 +63,22 @@ mod tests {
         let mut df = DataFrame::new(vec![
             Series::new("id".into(), &[2i64, 3, 4]).into_column(),
             Series::new("city".into(), &["NYC", "LA", "SF"]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_cross_join() {
-        let output = run(CommandContext::default(), Input {
-            left: left_df_ipc(),
-            right: right_df_ipc(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                left: left_df_ipc(),
+                right: right_df_ipc(),
+            },
+        )
+        .await
+        .unwrap();
         let df = crate::polars::types::df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 9); // 3 * 3 = 9 cartesian product
     }

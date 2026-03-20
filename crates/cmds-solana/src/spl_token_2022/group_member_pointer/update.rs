@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 const NAME: &str = "update_group_member_pointer";
-const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/group_member_pointer/update.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("spl_token_2022/group_member_pointer/update.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -49,7 +50,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ix].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }

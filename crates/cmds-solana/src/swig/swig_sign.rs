@@ -1,6 +1,6 @@
+use super::{SWIG_PROGRAM_ID, SYSTEM_PROGRAM_ID, find_wallet_address};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{SWIG_PROGRAM_ID, SYSTEM_PROGRAM_ID, find_wallet_address};
 
 const NAME: &str = "swig_sign";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_sign.jsonc");
@@ -43,9 +43,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     // SignV2Args (8 bytes):
     // instruction(u16=11) + instruction_payload_len(u16) + role_id(u32)
     let mut data = Vec::with_capacity(16 + instruction_payload.len());
-    data.extend_from_slice(&11u16.to_le_bytes());                           // instruction = 11
+    data.extend_from_slice(&11u16.to_le_bytes()); // instruction = 11
     data.extend_from_slice(&(instruction_payload.len() as u16).to_le_bytes()); // instruction_payload_len
-    data.extend_from_slice(&input.role_id.to_le_bytes());                   // role_id
+    data.extend_from_slice(&input.role_id.to_le_bytes()); // role_id
 
     // Instruction payload (compact serialized inner instructions)
     data.extend_from_slice(instruction_payload);
@@ -73,7 +73,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{bridge_post, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_send_webhook_event";
 const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_send_webhook_event.jsonc");

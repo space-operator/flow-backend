@@ -6,7 +6,8 @@ use crate::prelude::*;
 use serde_json::json;
 
 pub const NAME: &str = "jupiter_prediction_close_all_positions";
-const DEFINITION: &str = flow_lib::node_definition!("jupiter/jupiter_prediction_close_all_positions.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("jupiter/jupiter_prediction_close_all_positions.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

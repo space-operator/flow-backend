@@ -42,27 +42,36 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     #[tokio::test]
     async fn test_run() {
         let mut top = DataFrame::new(vec![
             Series::new("name".into(), &["Alice", "Bob"]).into_column(),
             Series::new("age".into(), &[30i64, 25]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         let mut bottom = DataFrame::new(vec![
             Series::new("name".into(), &["Charlie", "Diana", "Eve"]).into_column(),
             Series::new("age".into(), &[35i64, 28, 22]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
 
-        let output = run(CommandContext::default(), Input {
-            top: df_to_ipc(&mut top).unwrap(),
-            bottom: df_to_ipc(&mut bottom).unwrap(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                top: df_to_ipc(&mut top).unwrap(),
+                bottom: df_to_ipc(&mut bottom).unwrap(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 5, "vstack should produce 5 rows (2 + 3)");
         assert_eq!(df.width(), 2, "vstack should preserve 2 columns");

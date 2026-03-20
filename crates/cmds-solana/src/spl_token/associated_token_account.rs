@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use spl_associated_token_account_interface::{
-    address::get_associated_token_address,
-    instruction::create_associated_token_account,
+    address::get_associated_token_address, instruction::create_associated_token_account,
 };
 
 const SOLANA_ASSOCIATED_TOKEN_ACCOUNT: &str = "associated_token_account";
@@ -42,8 +41,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let associated_token_account =
-        get_associated_token_address(&input.owner, &input.mint_account);
+    let associated_token_account = get_associated_token_address(&input.owner, &input.mint_account);
 
     let instruction = create_associated_token_account(
         &input.fee_payer.pubkey(),
@@ -93,12 +91,8 @@ mod tests {
 
         let ata = get_associated_token_address(&owner, &mint);
 
-        let ix = create_associated_token_account(
-            &fee_payer,
-            &owner,
-            &mint,
-            &spl_token_interface::ID,
-        );
+        let ix =
+            create_associated_token_account(&fee_payer, &owner, &mint, &spl_token_interface::ID);
 
         assert_eq!(ix.accounts.len(), 6);
         // [funding, ata, wallet, mint, system_program, token_program]

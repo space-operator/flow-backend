@@ -1,6 +1,10 @@
+use super::{
+    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID,
+    anchor_discriminator, derive_event_authority, derive_pool_authority, derive_position,
+    derive_token_vault,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{CP_AMM_PROGRAM_ID, TOKEN_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_pool_authority, derive_token_vault, derive_position, derive_event_authority, POSITION_NFT_ACCOUNT_PREFIX};
 
 const NAME: &str = "claim_position_fee";
 const DEFINITION: &str = flow_lib::node_definition!("damm_v2/claim_position_fee.jsonc");
@@ -55,30 +59,34 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let pool_authority = derive_pool_authority();
     let position = derive_position(&input.pool, &input.position_nft_mint);
     let position_nft_account = Pubkey::find_program_address(
-        &[POSITION_NFT_ACCOUNT_PREFIX, input.position_nft_mint.as_ref()],
+        &[
+            POSITION_NFT_ACCOUNT_PREFIX,
+            input.position_nft_mint.as_ref(),
+        ],
         &CP_AMM_PROGRAM_ID,
-    ).0;
+    )
+    .0;
     let token_a_vault = derive_token_vault(&input.pool, &input.token_a_mint);
     let token_b_vault = derive_token_vault(&input.pool, &input.token_b_mint);
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.owner.pubkey(), true),              // owner (writable signer)
-        AccountMeta::new_readonly(pool_authority, false),          // pool_authority
-        AccountMeta::new(input.pool, false),                       // pool (writable)
-        AccountMeta::new(position, false),                         // position (writable)
+        AccountMeta::new(input.owner.pubkey(), true), // owner (writable signer)
+        AccountMeta::new_readonly(pool_authority, false), // pool_authority
+        AccountMeta::new(input.pool, false),          // pool (writable)
+        AccountMeta::new(position, false),            // position (writable)
         AccountMeta::new_readonly(input.position_nft_mint, false), // position_nft_mint
-        AccountMeta::new_readonly(position_nft_account, false),    // position_nft_account
-        AccountMeta::new(input.token_a_account, false),            // token_a_account (writable)
-        AccountMeta::new(input.token_b_account, false),            // token_b_account (writable)
-        AccountMeta::new(token_a_vault, false),                    // token_a_vault (writable)
-        AccountMeta::new(token_b_vault, false),                    // token_b_vault (writable)
-        AccountMeta::new_readonly(input.token_a_mint, false),      // token_a_mint
-        AccountMeta::new_readonly(input.token_b_mint, false),      // token_b_mint
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),        // token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),       // system_program
-        AccountMeta::new_readonly(event_authority, false),         // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false),       // program
+        AccountMeta::new_readonly(position_nft_account, false), // position_nft_account
+        AccountMeta::new(input.token_a_account, false), // token_a_account (writable)
+        AccountMeta::new(input.token_b_account, false), // token_b_account (writable)
+        AccountMeta::new(token_a_vault, false),       // token_a_vault (writable)
+        AccountMeta::new(token_b_vault, false),       // token_b_vault (writable)
+        AccountMeta::new_readonly(input.token_a_mint, false), // token_a_mint
+        AccountMeta::new_readonly(input.token_b_mint, false), // token_b_mint
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
+        AccountMeta::new_readonly(event_authority, false), // event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
     ];
 
     let data = anchor_discriminator(NAME).to_vec();
@@ -96,15 +104,25 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, position, position_nft_account, token_a_vault, token_b_vault })
+    Ok(Output {
+        signature,
+        position,
+        position_nft_account,
+        token_a_vault,
+        token_b_vault,
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use solana_signer::Signer;
     use super::*;
+    use solana_signer::Signer;
 
     /// Tests that the node definition can be built correctly.
     #[test]
@@ -126,7 +144,7 @@ mod tests {
             "token_b_mint" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

@@ -54,10 +54,20 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
 
     let response: JsonValue = resp.json().await?;
 
-    let transaction = response.get("transaction").and_then(|v| v.as_str()).unwrap_or_default().to_string();
-    let last_valid_block_height = response.get("last_valid_block_height").and_then(|v| v.as_u64()).unwrap_or(0);
+    let transaction = response
+        .get("transaction")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+    let last_valid_block_height = response
+        .get("last_valid_block_height")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
 
-    Ok(Output { transaction, last_valid_block_height })
+    Ok(Output {
+        transaction,
+        last_valid_block_height,
+    })
 }
 
 #[cfg(test)]

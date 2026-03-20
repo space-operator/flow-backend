@@ -4,10 +4,8 @@ const NAME: &str = "get_presale";
 const DEFINITION: &str = flow_lib::node_definition!("presale/get_presale.jsonc");
 
 fn build() -> BuildResult {
-    static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(DEFINITION)?
-            .check_name(NAME)
-    });
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))
 }
 

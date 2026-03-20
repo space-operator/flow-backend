@@ -25,9 +25,7 @@ pub struct Output {
 async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let s = series_from_ipc(&input.series)?;
     let mean = s.mean().unwrap_or(f64::NAN);
-    Ok(Output {
-        value: mean,
-    })
+    Ok(Output { value: mean })
 }
 
 #[cfg(test)]
@@ -37,7 +35,9 @@ mod tests {
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_series_ipc(name: &str, values: &[i64]) -> String {
         let s = Series::new(name.into(), values);
@@ -46,9 +46,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_mean() {
-        let output = run(CommandContext::default(), Input {
-            series: test_series_ipc("a", &[10, 20, 30]),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                series: test_series_ipc("a", &[10, 20, 30]),
+            },
+        )
+        .await
+        .unwrap();
         assert_eq!(output.value, 20.0);
     }
 }

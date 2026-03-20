@@ -1,6 +1,6 @@
+use super::{LIMO_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{LIMO_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "limo_update_global_config_admin";
 const IX_NAME: &str = "update_global_config_admin";
@@ -37,7 +37,7 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
         AccountMeta::new(input.admin_authority_cached.pubkey(), true), // admin_authority_cached (writable signer)
-        AccountMeta::new(input.global_config, false),                  // global_config (writable - update)
+        AccountMeta::new(input.global_config, false), // global_config (writable - update)
     ];
 
     let data = anchor_discriminator(IX_NAME).to_vec();
@@ -55,7 +55,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -80,7 +84,7 @@ mod tests {
             "global_config" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

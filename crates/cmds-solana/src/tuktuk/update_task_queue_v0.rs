@@ -1,5 +1,8 @@
+use super::{
+    SYSTEM_PROGRAM_ID, account_meta_mut, account_meta_readonly, account_meta_signer,
+    account_meta_signer_mut, build_ix,
+};
 use crate::prelude::*;
-use super::{build_ix, SYSTEM_PROGRAM_ID, account_meta_signer_mut, account_meta_signer, account_meta_readonly, account_meta_mut};
 
 const NAME: &str = "update_task_queue_v0";
 const DEFINITION: &str = flow_lib::node_definition!("tuktuk/update_task_queue_v0.jsonc");
@@ -55,13 +58,23 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     // min_crank_reward
     match input.min_crank_reward {
-        Some(v) => { data.push(1); data.extend_from_slice(&v.to_le_bytes()); }
-        None => { data.push(0); }
+        Some(v) => {
+            data.push(1);
+            data.extend_from_slice(&v.to_le_bytes());
+        }
+        None => {
+            data.push(0);
+        }
     }
     // capacity
     match input.capacity {
-        Some(v) => { data.push(1); data.extend_from_slice(&v.to_le_bytes()); }
-        None => { data.push(0); }
+        Some(v) => {
+            data.push(1);
+            data.extend_from_slice(&v.to_le_bytes());
+        }
+        None => {
+            data.push(0);
+        }
     }
     // lookup_tables
     match &input.lookup_tables {
@@ -72,17 +85,29 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
                 data.extend_from_slice(&pk.to_bytes());
             }
         }
-        None => { data.push(0); }
+        None => {
+            data.push(0);
+        }
     }
     // update_authority (new)
     match input.new_update_authority {
-        Some(pk) => { data.push(1); data.extend_from_slice(&pk.to_bytes()); }
-        None => { data.push(0); }
+        Some(pk) => {
+            data.push(1);
+            data.extend_from_slice(&pk.to_bytes());
+        }
+        None => {
+            data.push(0);
+        }
     }
     // stale_task_age
     match input.stale_task_age {
-        Some(v) => { data.push(1); data.extend_from_slice(&v.to_le_bytes()); }
-        None => { data.push(0); }
+        Some(v) => {
+            data.push(1);
+            data.extend_from_slice(&v.to_le_bytes());
+        }
+        None => {
+            data.push(0);
+        }
     }
 
     // Accounts per IDL order:
@@ -112,7 +137,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

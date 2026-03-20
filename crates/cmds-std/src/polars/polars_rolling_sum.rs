@@ -22,7 +22,9 @@ pub struct Input {
     pub min_periods: u32,
 }
 
-fn default_min_periods() -> u32 { 1 }
+fn default_min_periods() -> u32 {
+    1
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -56,32 +58,46 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("value".into(), &[1.0f64, 2.0, 3.0, 4.0, 5.0]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: "value".to_string(),
-            window_size: 3,
-            min_periods: 3,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: "value".to_string(),
+                window_size: 3,
+                min_periods: 3,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 5, "rolling_sum should preserve row count");
         let rolling = df.column("value_rolling_sum").unwrap();
         // First 2 values are null (min_periods=3)
-        assert!(rolling.get(0).unwrap() == AnyValue::Null, "index 0 should be null");
-        assert!(rolling.get(1).unwrap() == AnyValue::Null, "index 1 should be null");
+        assert!(
+            rolling.get(0).unwrap() == AnyValue::Null,
+            "index 0 should be null"
+        );
+        assert!(
+            rolling.get(1).unwrap() == AnyValue::Null,
+            "index 1 should be null"
+        );
         // sum(1,2,3) = 6.0
         let v2: f64 = rolling.f64().unwrap().get(2).unwrap();
         assert!((v2 - 6.0).abs() < 1e-10);

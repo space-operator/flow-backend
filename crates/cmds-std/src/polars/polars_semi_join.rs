@@ -63,7 +63,8 @@ mod tests {
         let mut df = DataFrame::new(vec![
             Series::new("id".into(), &[1i64, 2, 3]).into_column(),
             Series::new("name".into(), &["Alice", "Bob", "Charlie"]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
@@ -71,21 +72,33 @@ mod tests {
         let mut df = DataFrame::new(vec![
             Series::new("id".into(), &[2i64, 3, 4]).into_column(),
             Series::new("city".into(), &["NYC", "LA", "SF"]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_semi_join() {
-        let output = run(CommandContext::default(), Input {
-            left: left_df_ipc(),
-            right: right_df_ipc(),
-            on: serde_json::json!("id"),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                left: left_df_ipc(),
+                right: right_df_ipc(),
+                on: serde_json::json!("id"),
+            },
+        )
+        .await
+        .unwrap();
         let df = crate::polars::types::df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 2); // only left rows with matching id (2 and 3)
         assert_eq!(df.width(), 2); // only left columns (id, name), no right columns
-        let ids: Vec<i64> = df.column("id").unwrap().i64().unwrap().into_no_null_iter().collect();
+        let ids: Vec<i64> = df
+            .column("id")
+            .unwrap()
+            .i64()
+            .unwrap()
+            .into_no_null_iter()
+            .collect();
         assert!(ids.contains(&2));
         assert!(ids.contains(&3));
     }

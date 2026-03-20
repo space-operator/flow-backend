@@ -24,8 +24,12 @@ pub struct Input {
     pub bias: bool,
 }
 
-fn default_fisher() -> bool { true }
-fn default_bias() -> bool { true }
+fn default_fisher() -> bool {
+    true
+}
+fn default_bias() -> bool {
+    true
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -65,42 +69,58 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("value".into(), &[1.0f64, 2.0, 3.0, 4.0, 100.0]).into_column(),
             Series::new("uniform".into(), &[1.0f64, 2.0, 3.0, 4.0, 5.0]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_kurtosis_fisher() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            columns: Some(serde_json::json!(["value"])),
-            fisher: true,
-            bias: true,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                columns: Some(serde_json::json!(["value"])),
+                fisher: true,
+                bias: true,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 1, "kurtosis should produce a 1-row DataFrame");
         let val: f64 = df.column("value").unwrap().f64().unwrap().get(0).unwrap();
         // [1,2,3,4,100] has heavy tail => positive excess kurtosis (Fisher)
-        assert!(val > 0.0, "expected positive excess kurtosis for heavy-tailed data, got {val}");
+        assert!(
+            val > 0.0,
+            "expected positive excess kurtosis for heavy-tailed data, got {val}"
+        );
     }
 
     #[tokio::test]
     async fn test_run_kurtosis_pearson() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            columns: Some(serde_json::json!(["uniform"])),
-            fisher: false,
-            bias: true,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                columns: Some(serde_json::json!(["uniform"])),
+                fisher: false,
+                bias: true,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         let val: f64 = df.column("uniform").unwrap().f64().unwrap().get(0).unwrap();
         // Pearson kurtosis: for uniform-like data should be around 1.7 (< 3.0 for normal)

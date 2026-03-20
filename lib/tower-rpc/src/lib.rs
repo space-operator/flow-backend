@@ -3,9 +3,7 @@
 //! Each service is uniquely identified by Name and ID, allowing multiple services of the same class to exists.
 
 use actix::{Actor, ActorFutureExt, AsyncContext, Context, ResponseFuture, WrapFuture};
-use actix_web::{
-    App, HttpServer, dev::ServerHandle, web,
-};
+use actix_web::{App, HttpServer, dev::ServerHandle, web};
 use futures_channel::oneshot;
 use futures_util::TryFutureExt;
 use hashbrown::HashMap;

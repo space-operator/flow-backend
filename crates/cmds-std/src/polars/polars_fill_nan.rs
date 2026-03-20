@@ -48,23 +48,31 @@ mod tests {
     use crate::polars::types::df_to_ipc;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn df_with_nan_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("name".into(), &["Alice", "Bob", "Charlie"]).into_column(),
             Series::new("value".into(), &[1.0f64, f64::NAN, 3.0]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_fill_nan() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: df_with_nan_ipc(),
-            column: "value".to_string(),
-            value: 0.0,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: df_with_nan_ipc(),
+                column: "value".to_string(),
+                value: 0.0,
+            },
+        )
+        .await
+        .unwrap();
         let df = crate::polars::types::df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
         let values = df.column("value").unwrap();

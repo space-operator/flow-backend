@@ -1,6 +1,6 @@
+use super::{KVAULT_PROGRAM_ID, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KVAULT_PROGRAM_ID, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "init_vault";
 const DEFINITION: &str = flow_lib::node_definition!("kvault/init_vault.jsonc");
@@ -46,20 +46,19 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-
     let rent = solana_pubkey::pubkey!("SysvarRent111111111111111111111111111111111");
 
     let accounts = vec![
-        AccountMeta::new(input.admin_authority.pubkey(), true),      // admin_authority (writable signer)
-        AccountMeta::new(input.vault_state, false),                  // vault_state (writable)
+        AccountMeta::new(input.admin_authority.pubkey(), true), // admin_authority (writable signer)
+        AccountMeta::new(input.vault_state, false),             // vault_state (writable)
         AccountMeta::new_readonly(input.base_vault_authority, false), // base_vault_authority
-        AccountMeta::new(input.token_vault, false),                  // token_vault (writable)
-        AccountMeta::new_readonly(input.base_token_mint, false),     // base_token_mint
-        AccountMeta::new(input.shares_mint, false),                  // shares_mint (writable)
-        AccountMeta::new(input.admin_token_account, false),          // admin_token_account (writable)
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),         // system_program
-        AccountMeta::new_readonly(rent, false),                      // rent
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),          // token_program
+        AccountMeta::new(input.token_vault, false),             // token_vault (writable)
+        AccountMeta::new_readonly(input.base_token_mint, false), // base_token_mint
+        AccountMeta::new(input.shares_mint, false),             // shares_mint (writable)
+        AccountMeta::new(input.admin_token_account, false),     // admin_token_account (writable)
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),    // system_program
+        AccountMeta::new_readonly(rent, false),                 // rent
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),     // token_program
         AccountMeta::new_readonly(input.shares_token_program, false), // shares_token_program
     ];
 
@@ -78,7 +77,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -109,7 +112,7 @@ mod tests {
             "shares_token_program" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

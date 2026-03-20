@@ -39,32 +39,50 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
-            Series::new("name".into(), &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Diana")]).into_column(),
+            Series::new(
+                "name".into(),
+                &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Diana")],
+            )
+            .into_column(),
             Series::new("age".into(), &[Some(30i64), Some(25), Some(35), Some(28)]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_slice() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            offset: 1,
-            length: 2,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                offset: 1,
+                length: 2,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 2);
         // Should contain rows at index 1 and 2: Bob and Charlie
-        let names: Vec<Option<&str>> = df.column("name").unwrap()
-            .as_materialized_series().str().unwrap().into_iter().collect();
+        let names: Vec<Option<&str>> = df
+            .column("name")
+            .unwrap()
+            .as_materialized_series()
+            .str()
+            .unwrap()
+            .into_iter()
+            .collect();
         assert_eq!(names, vec![Some("Bob"), Some("Charlie")]);
     }
 }

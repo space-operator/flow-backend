@@ -17,7 +17,8 @@ impl FlowOutputCommand {
             .map(|t| t.name.clone())
             .filter(|name| !name.is_empty())
             .or_else(|| {
-                config.get("label")
+                config
+                    .get("label")
                     .and_then(|v| flow_lib::command::parse_value_tagged(v.clone()).ok())
                     .and_then(|v| match v {
                         Value::String(s) => Some(s),

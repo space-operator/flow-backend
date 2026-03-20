@@ -1,8 +1,7 @@
 use crate::prelude::*;
 
 const NAME: &str = "harvest_withheld_tokens_to_mint";
-const DEFINITION: &str =
-    flow_lib::node_definition!("spl_token_2022/transfer_fee/harvest.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/transfer_fee/harvest.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -49,7 +48,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ix].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }

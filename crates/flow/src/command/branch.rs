@@ -145,9 +145,9 @@ mod tests {
     #[actix::test]
     async fn test_branch_flow() {
         use crate::FlowGraph;
+        use flow_lib::FlowConfig;
         use flow_lib::config::client::ClientConfig;
         use flow_lib::flow_run_events::event_channel;
-        use flow_lib::FlowConfig;
 
         use cmds_std as _;
 

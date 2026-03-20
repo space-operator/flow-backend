@@ -160,7 +160,10 @@ mod tests {
         )
         .await
         .unwrap_err();
-        assert!(err.to_string().contains("chunk_size must be greater than 0"));
+        assert!(
+            err.to_string()
+                .contains("chunk_size must be greater than 0")
+        );
     }
 
     #[tokio::test]

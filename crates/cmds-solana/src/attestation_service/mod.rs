@@ -38,14 +38,20 @@ pub fn to_pubkey_v2(pk: &solana_pubkey::Pubkey) -> solana_program_v2::pubkey::Pu
 /// Convert solana-program v2 Instruction to solana-instruction v3
 /// Required because attestation-service-client returns v2 instructions
 #[inline]
-pub fn to_instruction_v3(ix: solana_program_v2::instruction::Instruction) -> solana_instruction::Instruction {
+pub fn to_instruction_v3(
+    ix: solana_program_v2::instruction::Instruction,
+) -> solana_instruction::Instruction {
     solana_instruction::Instruction {
         program_id: solana_pubkey::Pubkey::new_from_array(ix.program_id.to_bytes()),
-        accounts: ix.accounts.into_iter().map(|a| solana_instruction::AccountMeta {
-            pubkey: solana_pubkey::Pubkey::new_from_array(a.pubkey.to_bytes()),
-            is_signer: a.is_signer,
-            is_writable: a.is_writable,
-        }).collect(),
+        accounts: ix
+            .accounts
+            .into_iter()
+            .map(|a| solana_instruction::AccountMeta {
+                pubkey: solana_pubkey::Pubkey::new_from_array(a.pubkey.to_bytes()),
+                is_signer: a.is_signer,
+                is_writable: a.is_writable,
+            })
+            .collect(),
         data: ix.data,
     }
 }
@@ -583,7 +589,8 @@ mod tests {
 
     #[test]
     fn test_borsh_encode_space_operator_format() {
-        let layout_json = serde_json::json!({"A": [{"I": "12"}, {"I": "12"}, {"I": "12"}, {"I": "3"}]});
+        let layout_json =
+            serde_json::json!({"A": [{"I": "12"}, {"I": "12"}, {"I": "12"}, {"I": "3"}]});
         let layout = to_bytes(&layout_json);
         let data = serde_json::json!({"A": [
             {"S": "test_hash"},
@@ -622,7 +629,11 @@ mod tests {
             "https://example.com/attestation/metadata.json",
             51,
         );
-        assert!((400..=1200).contains(&size), "Size {} should be in range 400-1200", size);
+        assert!(
+            (400..=1200).contains(&size),
+            "Size {} should be in range 400-1200",
+            size
+        );
     }
 
     #[test]
@@ -633,7 +644,11 @@ mod tests {
             "https://example.com/metadata.json",
             0,
         );
-        assert!((300..=1000).contains(&size), "Size {} should be in range 300-1000", size);
+        assert!(
+            (300..=1000).contains(&size),
+            "Size {} should be in range 300-1000",
+            size
+        );
     }
 }
 
@@ -648,11 +663,31 @@ mod flow_tests {
             "close_attestation",
         ];
         let expected_edges = [
-            ("create_credential", "credential", "create_schema", "credential"),
-            ("create_credential", "credential", "create_attestation", "credential"),
+            (
+                "create_credential",
+                "credential",
+                "create_schema",
+                "credential",
+            ),
+            (
+                "create_credential",
+                "credential",
+                "create_attestation",
+                "credential",
+            ),
             ("create_schema", "schema", "create_attestation", "schema"),
-            ("create_attestation", "attestation", "close_attestation", "attestation"),
-            ("create_credential", "credential", "close_attestation", "credential"),
+            (
+                "create_attestation",
+                "attestation",
+                "close_attestation",
+                "attestation",
+            ),
+            (
+                "create_credential",
+                "credential",
+                "close_attestation",
+                "credential",
+            ),
         ];
         assert_eq!(flow_nodes.len(), 4);
         assert_eq!(expected_edges.len(), 5);
@@ -668,13 +703,43 @@ mod flow_tests {
             "close_tokenized_attestation",
         ];
         let expected_edges = [
-            ("create_credential", "credential", "create_schema", "credential"),
-            ("create_credential", "credential", "tokenize_schema", "credential"),
+            (
+                "create_credential",
+                "credential",
+                "create_schema",
+                "credential",
+            ),
+            (
+                "create_credential",
+                "credential",
+                "tokenize_schema",
+                "credential",
+            ),
             ("create_schema", "schema", "tokenize_schema", "schema"),
-            ("tokenize_schema", "mint", "create_tokenized_attestation", "schema_mint"),
-            ("create_credential", "credential", "create_tokenized_attestation", "credential"),
-            ("create_schema", "schema", "create_tokenized_attestation", "schema"),
-            ("create_tokenized_attestation", "attestation", "close_tokenized_attestation", "attestation"),
+            (
+                "tokenize_schema",
+                "mint",
+                "create_tokenized_attestation",
+                "schema_mint",
+            ),
+            (
+                "create_credential",
+                "credential",
+                "create_tokenized_attestation",
+                "credential",
+            ),
+            (
+                "create_schema",
+                "schema",
+                "create_tokenized_attestation",
+                "schema",
+            ),
+            (
+                "create_tokenized_attestation",
+                "attestation",
+                "close_tokenized_attestation",
+                "attestation",
+            ),
         ];
         assert_eq!(flow_nodes.len(), 5);
         assert_eq!(expected_edges.len(), 7);
@@ -720,7 +785,11 @@ mod flow_tests {
 
         let cred_result =
             super::create_credential::run(CommandContext::default(), cred_input).await;
-        assert!(cred_result.is_ok(), "create_credential failed: {:?}", cred_result.err());
+        assert!(
+            cred_result.is_ok(),
+            "create_credential failed: {:?}",
+            cred_result.err()
+        );
         let cred_output = cred_result.unwrap();
         let credential = cred_output.credential;
 
@@ -739,7 +808,11 @@ mod flow_tests {
 
         let schema_result =
             super::create_schema::run(CommandContext::default(), schema_input).await;
-        assert!(schema_result.is_ok(), "create_schema failed: {:?}", schema_result.err());
+        assert!(
+            schema_result.is_ok(),
+            "create_schema failed: {:?}",
+            schema_result.err()
+        );
         let schema_output = schema_result.unwrap();
         let schema = schema_output.schema;
 
@@ -759,7 +832,11 @@ mod flow_tests {
 
         let attestation_result =
             super::create_attestation::run(CommandContext::default(), attestation_input).await;
-        assert!(attestation_result.is_ok(), "create_attestation failed: {:?}", attestation_result.err());
+        assert!(
+            attestation_result.is_ok(),
+            "create_attestation failed: {:?}",
+            attestation_result.err()
+        );
         let attestation_output = attestation_result.unwrap();
         let attestation = attestation_output.attestation;
 
@@ -774,6 +851,10 @@ mod flow_tests {
 
         let close_result =
             super::close_attestation::run(CommandContext::default(), close_input).await;
-        assert!(close_result.is_ok(), "close_attestation failed: {:?}", close_result.err());
+        assert!(
+            close_result.is_ok(),
+            "close_attestation failed: {:?}",
+            close_result.err()
+        );
     }
 }

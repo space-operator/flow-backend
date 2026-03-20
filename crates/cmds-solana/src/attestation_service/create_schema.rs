@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-use super::{pda, parse_strings, to_bytes, to_instruction_v3, to_pubkey_v2};
+use super::{parse_strings, pda, to_bytes, to_instruction_v3, to_pubkey_v2};
 use solana_attestation_service::instructions::CreateSchemaBuilder;
 
 const NAME: &str = "create_schema";

@@ -285,7 +285,9 @@ pub fn is_same_message_logic(l: &[u8], r: &[u8]) -> Result<v0::Message, anyhow::
             contains_swig_program(&l),
             "swig instruction introduced in modified message"
         );
-        tracing::info!("Swig program detected in modified message, skipping strict structural checks");
+        tracing::info!(
+            "Swig program detected in modified message, skipping strict structural checks"
+        );
         return Ok(r);
     }
 

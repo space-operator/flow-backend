@@ -1,6 +1,8 @@
+use super::{
+    KFARMS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator, derive_ata, derive_user_state,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KFARMS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator, derive_user_state, derive_ata};
 
 const NAME: &str = "stake";
 const DEFINITION: &str = flow_lib::node_definition!("kfarms/stake.jsonc");
@@ -73,9 +75,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, user_state, user_ata })
+    Ok(Output {
+        signature,
+        user_state,
+        user_ata,
+    })
 }
 
 #[cfg(test)]
@@ -101,7 +111,7 @@ mod tests {
             "amount" => 1000u64,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

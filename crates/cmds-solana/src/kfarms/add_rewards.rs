@@ -1,6 +1,6 @@
+use super::{KFARMS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KFARMS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "add_rewards";
 const DEFINITION: &str = flow_lib::node_definition!("kfarms/add_rewards.jsonc");
@@ -45,13 +45,13 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
-        AccountMeta::new(input.farm_admin.pubkey(), true),             // farmAdmin (writable signer)
-        AccountMeta::new(input.farm_state, false),                     // farmState (writable)
-        AccountMeta::new(input.reward_vault, false),                   // rewardVault (writable)
+        AccountMeta::new(input.farm_admin.pubkey(), true), // farmAdmin (writable signer)
+        AccountMeta::new(input.farm_state, false),         // farmState (writable)
+        AccountMeta::new(input.reward_vault, false),       // rewardVault (writable)
         AccountMeta::new_readonly(input.farm_vaults_authority, false), // farmVaultsAuthority
-        AccountMeta::new(input.reward_token_ata, false),               // rewardTokenAta (writable)
-        AccountMeta::new_readonly(input.reward_mint, false),           // rewardMint
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),            // tokenProgram
+        AccountMeta::new(input.reward_token_ata, false),   // rewardTokenAta (writable)
+        AccountMeta::new_readonly(input.reward_mint, false), // rewardMint
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // tokenProgram
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -71,7 +71,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -102,7 +106,7 @@ mod tests {
             "reward_index" => 1000u64,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

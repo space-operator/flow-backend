@@ -71,7 +71,11 @@ mod tests {
 
         let result_df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(result_df.shape(), (3, 2));
-        let col_names: Vec<&str> = result_df.get_column_names().iter().map(|s| s.as_str()).collect();
+        let col_names: Vec<&str> = result_df
+            .get_column_names()
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
         assert!(col_names.contains(&"city"));
         assert!(col_names.contains(&"pop"));
 
@@ -105,7 +109,11 @@ mod tests {
 
         let result_df = df_from_ipc(&read_output.dataframe).unwrap();
         assert_eq!(result_df.shape(), (3, 2));
-        let col_names: Vec<&str> = result_df.get_column_names().iter().map(|s| s.as_str()).collect();
+        let col_names: Vec<&str> = result_df
+            .get_column_names()
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
         assert!(col_names.contains(&"a"));
         assert!(col_names.contains(&"b"));
 

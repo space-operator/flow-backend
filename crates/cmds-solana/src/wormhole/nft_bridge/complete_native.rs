@@ -12,7 +12,8 @@ use super::{CompleteNativeData, NFTBridgeInstructions, PayloadTransfer};
 // Command Name
 const NAME: &str = "nft_complete_native";
 
-const DEFINITION: &str = flow_lib::node_definition!("wormhole/nft_bridge/nft_complete_native.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("wormhole/nft_bridge/nft_complete_native.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

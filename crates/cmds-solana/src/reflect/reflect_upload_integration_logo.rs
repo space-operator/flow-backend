@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
+use crate::prelude::*;
 
 pub const NAME: &str = "upload_integration_logo";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/upload_integration_logo.jsonc");
@@ -39,9 +39,20 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
         req = req.query(&query);
     }
     // Download image from URL then construct multipart form
-    let image_bytes = ctx.http().get(&input.image_url).send().await?.bytes().await?;
+    let image_bytes = ctx
+        .http()
+        .get(&input.image_url)
+        .send()
+        .await?
+        .bytes()
+        .await?;
     let form = reqwest::multipart::Form::new()
-        .part("image", reqwest::multipart::Part::bytes(image_bytes.to_vec()).file_name("image.png").mime_str("image/png")?)
+        .part(
+            "image",
+            reqwest::multipart::Part::bytes(image_bytes.to_vec())
+                .file_name("image.png")
+                .mime_str("image/png")?,
+        )
         .text("brandedMint", input.branded_mint.clone())
         .text("metadata[name]", input.metadata_name.clone())
         .text("metadata[symbol]", input.metadata_symbol.clone())

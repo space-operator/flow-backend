@@ -1,4 +1,4 @@
-use crate::polars::types::{series_from_ipc, dual_series_output};
+use crate::polars::types::{dual_series_output, series_from_ipc};
 use flow_lib::command::prelude::*;
 use polars::prelude::*;
 
@@ -31,13 +31,36 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
     let r = series_from_ipc(&input.right)?;
 
     let result = match input.operator.as_str() {
-        "eq" => l.equal(&r).map_err(|e| CommandError::msg(format!("Compare error: {e}")))?.into_series(),
-        "neq" => l.not_equal(&r).map_err(|e| CommandError::msg(format!("Compare error: {e}")))?.into_series(),
-        "gt" => l.gt(&r).map_err(|e| CommandError::msg(format!("Compare error: {e}")))?.into_series(),
-        "gte" => l.gt_eq(&r).map_err(|e| CommandError::msg(format!("Compare error: {e}")))?.into_series(),
-        "lt" => l.lt(&r).map_err(|e| CommandError::msg(format!("Compare error: {e}")))?.into_series(),
-        "lte" => l.lt_eq(&r).map_err(|e| CommandError::msg(format!("Compare error: {e}")))?.into_series(),
-        _ => return Err(CommandError::msg(format!("Unknown operator: '{}'. Use: eq, neq, gt, gte, lt, lte", input.operator))),
+        "eq" => l
+            .equal(&r)
+            .map_err(|e| CommandError::msg(format!("Compare error: {e}")))?
+            .into_series(),
+        "neq" => l
+            .not_equal(&r)
+            .map_err(|e| CommandError::msg(format!("Compare error: {e}")))?
+            .into_series(),
+        "gt" => l
+            .gt(&r)
+            .map_err(|e| CommandError::msg(format!("Compare error: {e}")))?
+            .into_series(),
+        "gte" => l
+            .gt_eq(&r)
+            .map_err(|e| CommandError::msg(format!("Compare error: {e}")))?
+            .into_series(),
+        "lt" => l
+            .lt(&r)
+            .map_err(|e| CommandError::msg(format!("Compare error: {e}")))?
+            .into_series(),
+        "lte" => l
+            .lt_eq(&r)
+            .map_err(|e| CommandError::msg(format!("Compare error: {e}")))?
+            .into_series(),
+        _ => {
+            return Err(CommandError::msg(format!(
+                "Unknown operator: '{}'. Use: eq, neq, gt, gte, lt, lte",
+                input.operator
+            )));
+        }
     };
 
     let (ipc, json) = dual_series_output(&result)?;
@@ -50,10 +73,12 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{series_to_ipc, series_from_ipc};
+    use crate::polars::types::{series_from_ipc, series_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_series_ipc(name: &str, values: &[i64]) -> String {
         let s = Series::new(name.into(), values);
@@ -62,11 +87,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_compare_gt() {
-        let output = run(CommandContext::default(), Input {
-            left: test_series_ipc("a", &[1, 2, 3]),
-            right: test_series_ipc("b", &[2, 2, 2]),
-            operator: "gt".to_string(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                left: test_series_ipc("a", &[1, 2, 3]),
+                right: test_series_ipc("b", &[2, 2, 2]),
+                operator: "gt".to_string(),
+            },
+        )
+        .await
+        .unwrap();
         let result = series_from_ipc(&output.series).unwrap();
         let vals: Vec<bool> = result.bool().unwrap().into_no_null_iter().collect();
         assert_eq!(vals, vec![false, false, true]);
@@ -74,11 +104,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_compare_eq() {
-        let output = run(CommandContext::default(), Input {
-            left: test_series_ipc("a", &[1, 2, 3]),
-            right: test_series_ipc("b", &[2, 2, 2]),
-            operator: "eq".to_string(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                left: test_series_ipc("a", &[1, 2, 3]),
+                right: test_series_ipc("b", &[2, 2, 2]),
+                operator: "eq".to_string(),
+            },
+        )
+        .await
+        .unwrap();
         let result = series_from_ipc(&output.series).unwrap();
         let vals: Vec<bool> = result.bool().unwrap().into_no_null_iter().collect();
         assert_eq!(vals, vec![false, true, false]);

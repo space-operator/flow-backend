@@ -49,16 +49,14 @@ fn hex_decode(input: &str) -> Result<rhai::Blob, Box<EvalAltResult>> {
 }
 
 fn json_encode(input: Dynamic) -> Result<String, Box<EvalAltResult>> {
-    let value = dynamic_to_value(input)
-        .map_err(|e| rhai_err(format!("json encode error: {e}")))?;
+    let value = dynamic_to_value(input).map_err(|e| rhai_err(format!("json encode error: {e}")))?;
     let json = serde_json::Value::from(value);
-    serde_json::to_string(&json)
-        .map_err(|e| rhai_err(format!("json encode error: {e}")))
+    serde_json::to_string(&json).map_err(|e| rhai_err(format!("json encode error: {e}")))
 }
 
 fn json_decode(input: &str) -> Result<Dynamic, Box<EvalAltResult>> {
-    let json: serde_json::Value = serde_json::from_str(input)
-        .map_err(|e| rhai_err(format!("json decode error: {e}")))?;
+    let json: serde_json::Value =
+        serde_json::from_str(input).map_err(|e| rhai_err(format!("json decode error: {e}")))?;
     Ok(json_value_to_dynamic(json))
 }
 

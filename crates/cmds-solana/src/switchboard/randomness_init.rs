@@ -44,9 +44,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let lut_signer = lut_signer_pda(&SB_ON_DEMAND_PID, &rng_pubkey);
 
     // The LUT key requires the current finalized slot. We fetch it from RPC.
-    let recent_slot = ctx.solana_client().get_slot().await.map_err(|e| {
-        CommandError::msg(format!("Failed to get recent slot: {e}"))
-    })?;
+    let recent_slot = ctx
+        .solana_client()
+        .get_slot()
+        .await
+        .map_err(|e| CommandError::msg(format!("Failed to get recent slot: {e}")))?;
     // derive_lookup_table_address: PDA of [lut_signer, recent_slot as le bytes] under the ALT program
     let lut_key = Pubkey::find_program_address(
         &[lut_signer.as_ref(), &recent_slot.to_le_bytes()],
@@ -58,19 +60,19 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let args_data = recent_slot.to_le_bytes();
 
     let accounts = vec![
-        AccountMeta::new(rng_pubkey, true),                             // randomness (signer, writable)
-        AccountMeta::new_readonly(input.queue, false),                  // queue
-        AccountMeta::new_readonly(payer_pubkey, true),                  // authority (signer)
-        AccountMeta::new(payer_pubkey, true),                           // payer (signer, writable)
-        AccountMeta::new(reward_escrow, false),                         // rewardEscrow (writable)
+        AccountMeta::new(rng_pubkey, true), // randomness (signer, writable)
+        AccountMeta::new_readonly(input.queue, false), // queue
+        AccountMeta::new_readonly(payer_pubkey, true), // authority (signer)
+        AccountMeta::new(payer_pubkey, true), // payer (signer, writable)
+        AccountMeta::new(reward_escrow, false), // rewardEscrow (writable)
         AccountMeta::new_readonly(solana_sdk_ids::system_program::ID, false), // systemProgram
-        AccountMeta::new_readonly(SPL_TOKEN_PROGRAM, false),            // tokenProgram
-        AccountMeta::new_readonly(SPL_ATA_PROGRAM, false),              // associatedTokenProgram
-        AccountMeta::new_readonly(WSOL_MINT, false),                    // wrappedSolMint
-        AccountMeta::new_readonly(program_state, false),                // programState
-        AccountMeta::new_readonly(lut_signer, false),                   // lutSigner
-        AccountMeta::new(lut_key, false),                               // lut (writable)
-        AccountMeta::new_readonly(ALT_PROGRAM, false),                  // addressLookupTableProgram
+        AccountMeta::new_readonly(SPL_TOKEN_PROGRAM, false), // tokenProgram
+        AccountMeta::new_readonly(SPL_ATA_PROGRAM, false), // associatedTokenProgram
+        AccountMeta::new_readonly(WSOL_MINT, false), // wrappedSolMint
+        AccountMeta::new_readonly(program_state, false), // programState
+        AccountMeta::new_readonly(lut_signer, false), // lutSigner
+        AccountMeta::new(lut_key, false),   // lut (writable)
+        AccountMeta::new_readonly(ALT_PROGRAM, false), // addressLookupTableProgram
     ];
 
     let instruction = build_sb_instruction("randomness_init", accounts, &args_data);
@@ -82,7 +84,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output {

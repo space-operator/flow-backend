@@ -1,7 +1,7 @@
 use super::derive_ata;
+use super::{KVAULT_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KVAULT_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "buy";
 const DEFINITION: &str = flow_lib::node_definition!("kvault/buy.jsonc");
@@ -57,24 +57,23 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-
     let user_token_ata = derive_ata(&input.user.pubkey(), &input.token_mint);
     let user_shares_ata = derive_ata(&input.user.pubkey(), &input.shares_mint);
 
     let accounts = vec![
-        AccountMeta::new(input.user.pubkey(), true),              // user (writable signer)
-        AccountMeta::new(input.vault_state, false),               // vault_state (writable)
-        AccountMeta::new(input.token_vault, false),               // token_vault (writable)
-        AccountMeta::new_readonly(input.token_mint, false),       // token_mint
+        AccountMeta::new(input.user.pubkey(), true), // user (writable signer)
+        AccountMeta::new(input.vault_state, false),  // vault_state (writable)
+        AccountMeta::new(input.token_vault, false),  // token_vault (writable)
+        AccountMeta::new_readonly(input.token_mint, false), // token_mint
         AccountMeta::new_readonly(input.base_vault_authority, false), // base_vault_authority
-        AccountMeta::new(input.shares_mint, false),               // shares_mint (writable)
-        AccountMeta::new(user_token_ata, false),                  // user_token_ata (writable)
-        AccountMeta::new(user_shares_ata, false),                 // user_shares_ata (writable)
-        AccountMeta::new_readonly(input.klend_program, false),    // klend_program
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),       // token_program
+        AccountMeta::new(input.shares_mint, false),  // shares_mint (writable)
+        AccountMeta::new(user_token_ata, false),     // user_token_ata (writable)
+        AccountMeta::new(user_shares_ata, false),    // user_shares_ata (writable)
+        AccountMeta::new_readonly(input.klend_program, false), // klend_program
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
         AccountMeta::new_readonly(input.shares_token_program, false), // shares_token_program
-        AccountMeta::new_readonly(input.event_authority, false),  // event_authority
-        AccountMeta::new_readonly(input.program, false),          // program
+        AccountMeta::new_readonly(input.event_authority, false), // event_authority
+        AccountMeta::new_readonly(input.program, false), // program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -93,9 +92,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, user_token_ata, user_shares_ata })
+    Ok(Output {
+        signature,
+        user_token_ata,
+        user_shares_ata,
+    })
 }
 
 #[cfg(test)]
@@ -127,7 +134,7 @@ mod tests {
             "max_amount" => 1000u64,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

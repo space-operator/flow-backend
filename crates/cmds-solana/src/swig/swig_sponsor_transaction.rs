@@ -1,5 +1,5 @@
+use super::{check_response, paymaster_post};
 use crate::prelude::*;
-use super::{paymaster_post, check_response};
 
 const NAME: &str = "swig_sponsor_transaction";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_sponsor_transaction.jsonc");
@@ -20,7 +20,9 @@ pub struct Input {
     pub network: Option<String>,
 }
 
-fn default_network() -> Option<String> { Some("mainnet".to_string()) }
+fn default_network() -> Option<String> {
+    Some("mainnet".to_string())
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {

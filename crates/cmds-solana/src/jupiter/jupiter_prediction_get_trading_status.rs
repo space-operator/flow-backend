@@ -5,7 +5,8 @@
 use crate::prelude::*;
 
 pub const NAME: &str = "jupiter_prediction_get_trading_status";
-const DEFINITION: &str = flow_lib::node_definition!("jupiter/jupiter_prediction_get_trading_status.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("jupiter/jupiter_prediction_get_trading_status.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
@@ -28,10 +29,7 @@ pub struct Output {
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let url = "https://api.jup.ag/prediction/v1/trading-status".to_string();
 
-    let req = ctx
-        .http()
-        .get(&url)
-        .header("x-api-key", &input.api_key);
+    let req = ctx.http().get(&url).header("x-api-key", &input.api_key);
 
     let resp = req.send().await?;
 
@@ -71,11 +69,12 @@ mod tests {
     async fn test_run_prediction_get_trading_status() {
         let api_key = match std::env::var("JUPITER_API_KEY") {
             Ok(k) => k,
-            Err(_) => { eprintln!("JUPITER_API_KEY not set, skipping"); return; }
+            Err(_) => {
+                eprintln!("JUPITER_API_KEY not set, skipping");
+                return;
+            }
         };
-        let input = Input {
-            api_key,
-        };
+        let input = Input { api_key };
         let result = run(CommandContext::default(), input).await;
         assert!(result.is_ok(), "run() failed: {:?}", result.err());
     }

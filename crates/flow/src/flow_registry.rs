@@ -5,7 +5,6 @@ use crate::{
     flow_set::DeploymentId,
 };
 use chrono::Utc;
-use flow_rpc::flow_side::address_book::AddressBook;
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, NodeId, SolanaClientConfig, UserId,
     config::{
@@ -17,6 +16,7 @@ use flow_lib::{
     solana::{ExecuteOn, Pubkey, SolanaActionConfig},
     utils::tower_client::{CommonErrorExt, unimplemented_svc},
 };
+use flow_rpc::flow_side::address_book::AddressBook;
 use futures::channel::oneshot;
 use hashbrown::HashMap;
 use serde_json::Value as JsonValue;
@@ -338,9 +338,14 @@ impl FlowRegistry {
     where
         S: Service<get_flow::Request, Response = get_flow::Response, Error = get_flow::Error>,
     {
-        let flows =
-            get_all_flows(entrypoint, flow_owner.id, get_flow, environment, remotes.clone())
-                .await?;
+        let flows = get_all_flows(
+            entrypoint,
+            flow_owner.id,
+            get_flow,
+            environment,
+            remotes.clone(),
+        )
+        .await?;
         Ok(Self {
             depth: 0,
             flow_owner,

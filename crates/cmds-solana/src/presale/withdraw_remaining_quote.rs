@@ -1,7 +1,7 @@
+use super::RemainingAccountsInfo;
+use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
-use super::RemainingAccountsInfo;
 
 const NAME: &str = "withdraw_remaining_quote";
 const DEFINITION: &str = flow_lib::node_definition!("presale/withdraw_remaining_quote.jsonc");
@@ -64,7 +64,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     ];
 
     let mut data = discriminators::WITHDRAW_REMAINING_QUOTE.to_vec();
-    let remaining = RemainingAccountsInfo { slices: input.slices.clone() };
+    let remaining = RemainingAccountsInfo {
+        slices: input.slices.clone(),
+    };
     data.extend(borsh::to_vec(&remaining)?);
 
     let instruction = Instruction {
@@ -80,7 +82,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

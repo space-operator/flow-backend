@@ -1,5 +1,5 @@
+use super::{account_meta_mut, build_ix};
 use crate::prelude::*;
-use super::{build_ix, account_meta_mut};
 
 const NAME: &str = "dummy_ix";
 const DEFINITION: &str = flow_lib::node_definition!("tuktuk/dummy_ix.jsonc");
@@ -36,7 +36,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let data = vec![234, 95, 176, 185, 7, 42, 35, 159];
 
     let accounts = vec![
-        account_meta_mut(&input.dummy),         // dummy: writable
+        account_meta_mut(&input.dummy), // dummy: writable
     ];
 
     let instruction = build_ix(accounts, data);
@@ -48,7 +48,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

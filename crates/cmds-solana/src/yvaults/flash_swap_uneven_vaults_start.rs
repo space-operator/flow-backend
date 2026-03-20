@@ -1,6 +1,6 @@
+use super::{TOKEN_PROGRAM_ID, YVAULTS_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{YVAULTS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "flash_swap_uneven_vaults_start";
 const DEFINITION: &str = flow_lib::node_definition!("yvaults/flash_swap_uneven_vaults_start.jsonc");
@@ -60,19 +60,19 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
         AccountMeta::new(input.actions_authority.pubkey(), true), // actions_authority (writable signer)
-        AccountMeta::new(input.strategy, false),                 // strategy (writable)
-        AccountMeta::new_readonly(input.global_config, false),   // global_config (readonly)
-        AccountMeta::new(input.token_a_vault, false),            // token_a_vault (writable)
-        AccountMeta::new(input.token_b_vault, false),            // token_b_vault (writable)
-        AccountMeta::new(input.token_a_ata, false),              // token_a_ata (writable)
-        AccountMeta::new(input.token_b_ata, false),              // token_b_ata (writable)
+        AccountMeta::new(input.strategy, false),                  // strategy (writable)
+        AccountMeta::new_readonly(input.global_config, false),    // global_config (readonly)
+        AccountMeta::new(input.token_a_vault, false),             // token_a_vault (writable)
+        AccountMeta::new(input.token_b_vault, false),             // token_b_vault (writable)
+        AccountMeta::new(input.token_a_ata, false),               // token_a_ata (writable)
+        AccountMeta::new(input.token_b_ata, false),               // token_b_ata (writable)
         AccountMeta::new_readonly(input.base_vault_authority, false), // base_vault_authority (readonly)
-        AccountMeta::new(input.pool, false),                     // pool (writable)
-        AccountMeta::new(input.position, false),                 // position (writable)
-        AccountMeta::new_readonly(input.scope_prices, false),    // scope_prices (readonly)
-        AccountMeta::new_readonly(input.token_infos, false),     // token_infos (readonly)
+        AccountMeta::new(input.pool, false),                          // pool (writable)
+        AccountMeta::new(input.position, false),                      // position (writable)
+        AccountMeta::new_readonly(input.scope_prices, false),         // scope_prices (readonly)
+        AccountMeta::new_readonly(input.token_infos, false),          // token_infos (readonly)
         AccountMeta::new_readonly(input.instruction_sysvar_account, false), // instruction_sysvar_account (readonly)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),      // token_program
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),                 // token_program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -92,7 +92,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -130,7 +134,7 @@ mod tests {
             "a_to_b" => false,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

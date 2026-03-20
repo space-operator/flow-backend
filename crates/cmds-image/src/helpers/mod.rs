@@ -5,8 +5,7 @@ use image::{DynamicImage, ImageFormat};
 use std::io::Cursor;
 
 pub fn decode_image(bytes: &[u8]) -> Result<DynamicImage, CommandError> {
-    image::load_from_memory(bytes)
-        .map_err(|e| CommandError::msg(format!("invalid image: {e}")))
+    image::load_from_memory(bytes).map_err(|e| CommandError::msg(format!("invalid image: {e}")))
 }
 
 pub fn encode_image(img: &DynamicImage, format: ImageFormat) -> Result<Vec<u8>, CommandError> {

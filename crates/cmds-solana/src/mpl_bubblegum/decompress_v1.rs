@@ -41,10 +41,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let token_account = get_associated_token_address(
-        &input.leaf_owner.pubkey(),
-        &input.mint,
-    );
+    let token_account = get_associated_token_address(&input.leaf_owner.pubkey(), &input.mint);
 
     let metadata_account = mpl_token_metadata::accounts::Metadata::find_pda(&input.mint).0;
     let master_edition = mpl_token_metadata::accounts::MasterEdition::find_pda(&input.mint).0;

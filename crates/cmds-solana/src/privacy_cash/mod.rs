@@ -7,10 +7,10 @@ pub mod helper;
 pub mod pda;
 
 // Admin instructions
+pub mod init_spl_tree;
 pub mod initialize;
 pub mod update_deposit_limit;
 pub mod update_global_config;
-pub mod init_spl_tree;
 pub mod update_spl_deposit_limit;
 
 // User instructions (ZK proof transactions)

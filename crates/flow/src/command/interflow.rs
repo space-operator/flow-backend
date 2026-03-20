@@ -25,10 +25,7 @@ fn parse_flow_id(value: &JsonValue) -> Option<FlowId> {
 }
 
 pub fn get_interflow_id(n: &NodeData) -> Result<FlowId, serde_json::Error> {
-    let flow_id = n
-        .config
-        .get("flow_id")
-        .and_then(parse_flow_id);
+    let flow_id = n.config.get("flow_id").and_then(parse_flow_id);
 
     flow_id.ok_or_else(|| {
         serde_json::Error::io(std::io::Error::new(

@@ -44,27 +44,46 @@ mod tests {
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
-            Series::new("name".into(), &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")]).into_column(),
+            Series::new(
+                "name".into(),
+                &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")],
+            )
+            .into_column(),
             Series::new("age".into(), &[Some(30i64), Some(25), Some(35), Some(30)]).into_column(),
-            Series::new("score".into(), &[Some(88.5f64), Some(92.0), Some(75.3), Some(91.0)]).into_column(),
-        ]).unwrap();
+            Series::new(
+                "score".into(),
+                &[Some(88.5f64), Some(92.0), Some(75.3), Some(91.0)],
+            )
+            .into_column(),
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_get_column() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: "name".into(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: "name".into(),
+            },
+        )
+        .await
+        .unwrap();
         let series = series_from_ipc(&output.series).unwrap();
         assert_eq!(series.len(), 4);
         assert_eq!(series.name().as_str(), "name");
         let values: Vec<Option<&str>> = series.str().unwrap().into_iter().collect();
-        assert_eq!(values, vec![Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")]);
+        assert_eq!(
+            values,
+            vec![Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")]
+        );
     }
 }

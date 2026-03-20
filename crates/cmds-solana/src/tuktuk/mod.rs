@@ -6,7 +6,6 @@
 //! Uses tuktuk-program crate (anchor-lang / solana-program v2) internally,
 //! with v2→v3 bridge functions for the workspace's solana v3 types.
 
-
 /// System program ID (v3 Pubkey)
 pub const SYSTEM_PROGRAM_ID: solana_pubkey::Pubkey =
     solana_pubkey::pubkey!("11111111111111111111111111111111");
@@ -111,7 +110,7 @@ pub fn account_meta_readonly(pk: &solana_pubkey::Pubkey) -> solana_instruction::
 
 /// Compute the 8-byte Anchor instruction discriminator: sha256("global:<name>")[..8]
 pub fn anchor_discriminator(name: &str) -> [u8; 8] {
-    use sha2::{Sha256, Digest};
+    use sha2::{Digest, Sha256};
     let hash = Sha256::digest(format!("global:{name}").as_bytes());
     let mut disc = [0u8; 8];
     disc.copy_from_slice(&hash[..8]);

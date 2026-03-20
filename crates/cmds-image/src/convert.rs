@@ -43,9 +43,11 @@ mod tests {
     use crate::helpers::{detect_format, encode_image};
 
     fn test_png() -> bytes::Bytes {
-        let img = image::DynamicImage::ImageRgba8(
-            image::RgbaImage::from_pixel(4, 4, image::Rgba([255, 0, 0, 255])),
-        );
+        let img = image::DynamicImage::ImageRgba8(image::RgbaImage::from_pixel(
+            4,
+            4,
+            image::Rgba([255, 0, 0, 255]),
+        ));
         encode_image(&img, image::ImageFormat::Png).unwrap().into()
     }
 

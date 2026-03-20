@@ -23,7 +23,9 @@ pub struct Input {
     pub nulls_last: bool,
 }
 
-fn default_true() -> bool { true }
+fn default_true() -> bool {
+    true
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -35,10 +37,7 @@ fn parse_descending(value: &JsonValue, num_cols: usize) -> Vec<bool> {
     let value = unwrap_json_input(value).unwrap_or(std::borrow::Cow::Borrowed(value));
     match value.as_ref() {
         JsonValue::Bool(b) => vec![*b; num_cols],
-        JsonValue::Array(arr) => arr
-            .iter()
-            .map(|v| v.as_bool().unwrap_or(false))
-            .collect(),
+        JsonValue::Array(arr) => arr.iter().map(|v| v.as_bool().unwrap_or(false)).collect(),
         _ => vec![false; num_cols],
     }
 }
@@ -69,25 +68,33 @@ mod tests {
     use crate::polars::types::df_to_ipc;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("name".into(), &["Alice", "Bob", "Charlie"]).into_column(),
             Series::new("age".into(), &[30i64, 25, 35]).into_column(),
             Series::new("score".into(), &[88.5f64, 92.0, 75.3]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_sort_ascending() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            by: serde_json::json!("age"),
-            descending: serde_json::json!(false),
-            nulls_last: true,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                by: serde_json::json!("age"),
+                descending: serde_json::json!(false),
+                nulls_last: true,
+            },
+        )
+        .await
+        .unwrap();
         let df = crate::polars::types::df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
         let names = df.column("name").unwrap();
@@ -96,12 +103,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_sort_descending() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            by: serde_json::json!("age"),
-            descending: serde_json::json!(true),
-            nulls_last: true,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                by: serde_json::json!("age"),
+                descending: serde_json::json!(true),
+                nulls_last: true,
+            },
+        )
+        .await
+        .unwrap();
         let df = crate::polars::types::df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
         let names = df.column("name").unwrap();

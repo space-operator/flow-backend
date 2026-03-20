@@ -82,7 +82,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     args_data.extend_from_slice(&input.number_of_period.to_le_bytes());
     args_data.push(input.update_recipient_mode);
 
-    let instruction = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"create_vesting_escrow", accounts, args_data);
+    let instruction = crate::utils::build_anchor_instruction(
+        JUP_LOCK_PROGRAM_ID,
+        "create_vesting_escrow",
+        accounts,
+        args_data,
+    );
 
     let ins = Instructions {
         lookup_tables: None,
@@ -178,7 +183,12 @@ mod tests {
         args_data.extend_from_slice(&12u64.to_le_bytes()); // number_of_period
         args_data.push(0u8); // update_recipient_mode
 
-        let ix = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"create_vesting_escrow", accounts, args_data);
+        let ix = crate::utils::build_anchor_instruction(
+            JUP_LOCK_PROGRAM_ID,
+            "create_vesting_escrow",
+            accounts,
+            args_data,
+        );
 
         assert_eq!(ix.program_id, JUP_LOCK_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 10);

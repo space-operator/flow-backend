@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{bridge_post, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_generate_card_statement";
 const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_generate_card_statement.jsonc");
@@ -26,13 +26,11 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let path = format!("/v0/customers/{}/card_accounts/{}/statements/{}.pdf", input.customer_id, input.card_account_id, input.period);
-    let result = check_response(
-        bridge_post(&ctx, &path, &input.api_key)
-            .send()
-            .await?,
-    )
-    .await?;
+    let path = format!(
+        "/v0/customers/{}/card_accounts/{}/statements/{}.pdf",
+        input.customer_id, input.card_account_id, input.period
+    );
+    let result = check_response(bridge_post(&ctx, &path, &input.api_key).send().await?).await?;
     Ok(Output { result })
 }
 

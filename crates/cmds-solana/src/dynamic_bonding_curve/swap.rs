@@ -1,6 +1,6 @@
+use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, discriminators, pda};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, pda, discriminators};
 
 const NAME: &str = "swap";
 const DEFINITION: &str = flow_lib::node_definition!("dynamic_bonding_curve/swap.jsonc");
@@ -64,27 +64,27 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     // Build accounts list matching IDL order
     let mut accounts = vec![
-        AccountMeta::new_readonly(POOL_AUTHORITY, false),     // pool_authority (constant)
-        AccountMeta::new_readonly(input.config, false),        // config
-        AccountMeta::new(input.pool, false),                   // pool (writable)
-        AccountMeta::new(input.input_token_account, false),    // input_token_account (writable)
-        AccountMeta::new(input.output_token_account, false),   // output_token_account (writable)
-        AccountMeta::new(base_vault, false),                     // base_vault (writable)
-        AccountMeta::new(quote_vault, false),                   // quote_vault (writable)
-        AccountMeta::new_readonly(input.base_mint, false),     // base_mint
-        AccountMeta::new_readonly(input.quote_mint, false),    // quote_mint
+        AccountMeta::new_readonly(POOL_AUTHORITY, false), // pool_authority (constant)
+        AccountMeta::new_readonly(input.config, false),   // config
+        AccountMeta::new(input.pool, false),              // pool (writable)
+        AccountMeta::new(input.input_token_account, false), // input_token_account (writable)
+        AccountMeta::new(input.output_token_account, false), // output_token_account (writable)
+        AccountMeta::new(base_vault, false),              // base_vault (writable)
+        AccountMeta::new(quote_vault, false),             // quote_vault (writable)
+        AccountMeta::new_readonly(input.base_mint, false), // base_mint
+        AccountMeta::new_readonly(input.quote_mint, false), // quote_mint
         AccountMeta::new_readonly(input.payer.pubkey(), true), // payer (signer)
-        AccountMeta::new_readonly(input.token_base_program, false),  // token_base_program
+        AccountMeta::new_readonly(input.token_base_program, false), // token_base_program
         AccountMeta::new_readonly(input.token_quote_program, false), // token_quote_program
     ];
-    
+
     // Add optional referral account
     if let Some(referral) = input.referral_token_account {
         accounts.push(AccountMeta::new(referral, false));
     }
-    
+
     accounts.push(AccountMeta::new_readonly(event_authority, false)); // event_authority (PDA)
-    accounts.push(AccountMeta::new_readonly(DBC_PROGRAM_ID, false));  // program
+    accounts.push(AccountMeta::new_readonly(DBC_PROGRAM_ID, false)); // program
 
     // Build instruction data: discriminator + SwapParameters
     // SwapParameters { amount_in: u64, minimum_amount_out: u64 }
@@ -105,9 +105,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, base_vault, quote_vault })
+    Ok(Output {
+        signature,
+        base_vault,
+        quote_vault,
+    })
 }
 
 #[cfg(test)]

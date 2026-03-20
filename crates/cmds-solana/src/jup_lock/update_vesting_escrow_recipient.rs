@@ -63,7 +63,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     args_data.extend_from_slice(input.new_recipient.as_ref());
     args_data.extend(borsh_option_string(&input.new_recipient_email));
 
-    let instruction = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"update_vesting_escrow_recipient", accounts, args_data);
+    let instruction = crate::utils::build_anchor_instruction(
+        JUP_LOCK_PROGRAM_ID,
+        "update_vesting_escrow_recipient",
+        accounts,
+        args_data,
+    );
 
     let ins = Instructions {
         lookup_tables: None,
@@ -138,7 +143,12 @@ mod tests {
         args_data.extend_from_slice(new_recipient.as_ref());
         args_data.extend(borsh_option_string(&None));
 
-        let ix = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"update_vesting_escrow_recipient", accounts, args_data);
+        let ix = crate::utils::build_anchor_instruction(
+            JUP_LOCK_PROGRAM_ID,
+            "update_vesting_escrow_recipient",
+            accounts,
+            args_data,
+        );
 
         assert_eq!(ix.program_id, JUP_LOCK_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 4);
@@ -166,7 +176,12 @@ mod tests {
         args_data.extend_from_slice(new_recipient.as_ref());
         args_data.extend(borsh_option_string(&Some(email.clone())));
 
-        let ix = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"update_vesting_escrow_recipient", accounts, args_data);
+        let ix = crate::utils::build_anchor_instruction(
+            JUP_LOCK_PROGRAM_ID,
+            "update_vesting_escrow_recipient",
+            accounts,
+            args_data,
+        );
 
         assert_eq!(ix.program_id, JUP_LOCK_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 4);

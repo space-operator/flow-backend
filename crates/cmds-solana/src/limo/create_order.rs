@@ -1,7 +1,7 @@
 use super::derive_ata;
+use super::{LIMO_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{LIMO_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "create_order";
 const DEFINITION: &str = flow_lib::node_definition!("limo/create_order.jsonc");
@@ -59,22 +59,26 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let maker_ata = derive_ata(&input.maker.pubkey(), &input.input_mint, &input.input_token_program);
+    let maker_ata = derive_ata(
+        &input.maker.pubkey(),
+        &input.input_mint,
+        &input.input_token_program,
+    );
 
     let accounts = vec![
-        AccountMeta::new(input.maker.pubkey(), true),                   // maker (writable signer)
-        AccountMeta::new_readonly(input.global_config, false),          // global_config
-        AccountMeta::new_readonly(input.pda_authority, false),          // pda_authority
-        AccountMeta::new(input.order, false),                           // order (writable)
-        AccountMeta::new_readonly(input.input_mint, false),             // input_mint
-        AccountMeta::new_readonly(input.output_mint, false),            // output_mint
-        AccountMeta::new(maker_ata, false),                       // maker_ata (writable)
-        AccountMeta::new(input.input_vault, false),                     // input_vault (writable)
-        AccountMeta::new_readonly(input.input_token_program, false),    // input_token_program
-        AccountMeta::new_readonly(input.output_token_program, false),   // output_token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),            // system_program
-        AccountMeta::new_readonly(input.event_authority, false),        // event_authority
-        AccountMeta::new_readonly(input.program, false),                // program
+        AccountMeta::new(input.maker.pubkey(), true), // maker (writable signer)
+        AccountMeta::new_readonly(input.global_config, false), // global_config
+        AccountMeta::new_readonly(input.pda_authority, false), // pda_authority
+        AccountMeta::new(input.order, false),         // order (writable)
+        AccountMeta::new_readonly(input.input_mint, false), // input_mint
+        AccountMeta::new_readonly(input.output_mint, false), // output_mint
+        AccountMeta::new(maker_ata, false),           // maker_ata (writable)
+        AccountMeta::new(input.input_vault, false),   // input_vault (writable)
+        AccountMeta::new_readonly(input.input_token_program, false), // input_token_program
+        AccountMeta::new_readonly(input.output_token_program, false), // output_token_program
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
+        AccountMeta::new_readonly(input.event_authority, false), // event_authority
+        AccountMeta::new_readonly(input.program, false), // program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -95,9 +99,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, maker_ata })
+    Ok(Output {
+        signature,
+        maker_ata,
+    })
 }
 
 #[cfg(test)]
@@ -132,7 +143,7 @@ mod tests {
             "order_type" => 0_u8,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

@@ -1,6 +1,6 @@
+use super::{SCOPE_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{SCOPE_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "scope_initialize";
 const IX_NAME: &str = "initialize";
@@ -45,13 +45,13 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
-        AccountMeta::new(input.admin.pubkey(), true),            // admin (writable signer)
-        AccountMeta::new_readonly(input.program, false),         // program
-        AccountMeta::new_readonly(input.program_data, false),    // program_data
-        AccountMeta::new(input.configuration, false),            // configuration (writable - init)
-        AccountMeta::new(input.oracle_prices, false),            // oracle_prices (writable - init)
-        AccountMeta::new(input.oracle_mappings, false),          // oracle_mappings (writable - init)
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),     // system_program
+        AccountMeta::new(input.admin.pubkey(), true), // admin (writable signer)
+        AccountMeta::new_readonly(input.program, false), // program
+        AccountMeta::new_readonly(input.program_data, false), // program_data
+        AccountMeta::new(input.configuration, false), // configuration (writable - init)
+        AccountMeta::new(input.oracle_prices, false), // oracle_prices (writable - init)
+        AccountMeta::new(input.oracle_mappings, false), // oracle_mappings (writable - init)
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
     ];
 
     let mut data = anchor_discriminator(IX_NAME).to_vec();
@@ -70,7 +70,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -100,7 +104,7 @@ mod tests {
             "feed_name" => "test_feed_name",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

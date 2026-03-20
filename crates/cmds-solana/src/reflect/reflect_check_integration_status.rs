@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{check_response, reflect_get};
+use crate::prelude::*;
 
 pub const NAME: &str = "check_integration_status";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/check_integration_status.jsonc");

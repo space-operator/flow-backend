@@ -1,9 +1,8 @@
-use crate::prelude::*;
 use super::{
-    to_pubkey_v2, to_instruction_v3, build_client_action,
-    find_swig_pda, find_wallet_address,
-    CreateInstruction, AuthorityConfig, AuthorityType,
+    AuthorityConfig, AuthorityType, CreateInstruction, build_client_action, find_swig_pda,
+    find_wallet_address, to_instruction_v3, to_pubkey_v2,
 };
+use crate::prelude::*;
 
 const NAME: &str = "swig_create";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_create.jsonc");
@@ -42,7 +41,9 @@ pub struct Input {
     pub submit: bool,
 }
 
-fn default_permission() -> String { "all".to_string() }
+fn default_permission() -> String {
+    "all".to_string()
+}
 
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
@@ -80,7 +81,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         },
         actions,
         input.swig_id,
-    ).map_err(|e| CommandError::msg(e.to_string()))?;
+    )
+    .map_err(|e| CommandError::msg(e.to_string()))?;
 
     let instruction = to_instruction_v3(ix_v2);
 
@@ -91,10 +93,18 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    Ok(Output { signature, swig_account, wallet_address })
+    Ok(Output {
+        signature,
+        swig_account,
+        wallet_address,
+    })
 }
 
 #[cfg(test)]
@@ -128,7 +138,8 @@ mod tests {
             },
             build_client_action("all", None, None, None, None),
             swig_id,
-        ).unwrap();
+        )
+        .unwrap();
 
         let instruction = to_instruction_v3(ix);
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);

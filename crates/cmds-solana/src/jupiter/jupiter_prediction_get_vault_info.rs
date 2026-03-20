@@ -5,7 +5,8 @@
 use crate::prelude::*;
 
 pub const NAME: &str = "jupiter_prediction_get_vault_info";
-const DEFINITION: &str = flow_lib::node_definition!("jupiter/jupiter_prediction_get_vault_info.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("jupiter/jupiter_prediction_get_vault_info.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
@@ -28,10 +29,7 @@ pub struct Output {
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let url = "https://api.jup.ag/prediction/v1/vault".to_string();
 
-    let req = ctx
-        .http()
-        .get(&url)
-        .header("x-api-key", &input.api_key);
+    let req = ctx.http().get(&url).header("x-api-key", &input.api_key);
 
     let resp = req.send().await?;
 
