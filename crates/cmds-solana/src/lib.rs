@@ -40,6 +40,7 @@ pub mod pyth;
 pub mod reflect;
 pub mod scope;
 pub mod secp256k1;
+pub mod solana_v2_compat;
 pub mod spl_memo;
 pub mod spl_record;
 pub mod spl_token;
@@ -52,7 +53,6 @@ pub mod tuktuk;
 pub mod utils;
 pub mod wormhole;
 pub mod yvaults;
-pub mod solana_v2_compat;
 pub mod zk_compression;
 
 pub use error::{Error, Result};

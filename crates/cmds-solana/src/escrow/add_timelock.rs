@@ -68,7 +68,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: vec![instruction],
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output {
@@ -121,8 +125,7 @@ mod tests {
         args_data.extend_from_slice(&86400u64.to_le_bytes());
         args_data.push(bump);
 
-        let ix =
-            build_escrow_instruction(EscrowDiscriminator::AddTimelock, accounts, args_data);
+        let ix = build_escrow_instruction(EscrowDiscriminator::AddTimelock, accounts, args_data);
 
         assert_eq!(ix.program_id, ESCROW_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 7);

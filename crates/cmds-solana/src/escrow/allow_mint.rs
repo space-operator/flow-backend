@@ -1,4 +1,6 @@
-use super::{ESCROW_PROGRAM_ID, EscrowDiscriminator, build_escrow_instruction, default_token_program, pda};
+use super::{
+    ESCROW_PROGRAM_ID, EscrowDiscriminator, build_escrow_instruction, default_token_program, pda,
+};
 use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
 
@@ -66,8 +68,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let args_data = vec![bump];
 
-    let instruction =
-        build_escrow_instruction(EscrowDiscriminator::AllowMint, accounts, args_data);
+    let instruction = build_escrow_instruction(EscrowDiscriminator::AllowMint, accounts, args_data);
 
     let ins = Instructions {
         lookup_tables: None,
@@ -78,7 +79,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: vec![instruction],
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output {
@@ -117,8 +122,7 @@ mod tests {
     fn test_instruction_construction() {
         let escrow = Pubkey::new_unique();
         let mint = Pubkey::new_unique();
-        let token_program =
-            solana_program::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+        let token_program = solana_program::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
         let (allowed_mint, bump) = pda::find_allowed_mint(&escrow, &mint);
         let (extensions, _) = pda::find_extensions(&escrow);
@@ -136,17 +140,13 @@ mod tests {
             AccountMeta::new(allowed_mint, false),
             AccountMeta::new(vault, false),
             AccountMeta::new_readonly(token_program, false),
-            AccountMeta::new_readonly(
-                spl_associated_token_account_interface::program::ID,
-                false,
-            ),
+            AccountMeta::new_readonly(spl_associated_token_account_interface::program::ID, false),
             AccountMeta::new_readonly(solana_system_interface::program::ID, false),
             AccountMeta::new_readonly(event_authority, false),
             AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
         ];
 
-        let ix =
-            build_escrow_instruction(EscrowDiscriminator::AllowMint, accounts, vec![bump]);
+        let ix = build_escrow_instruction(EscrowDiscriminator::AllowMint, accounts, vec![bump]);
 
         assert_eq!(ix.program_id, ESCROW_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 12);

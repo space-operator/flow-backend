@@ -1,4 +1,6 @@
-use super::{ESCROW_PROGRAM_ID, EscrowDiscriminator, build_escrow_instruction, default_token_program, pda};
+use super::{
+    ESCROW_PROGRAM_ID, EscrowDiscriminator, build_escrow_instruction, default_token_program, pda,
+};
 use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
 
@@ -47,10 +49,16 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (extensions, _) = pda::find_extensions(&input.escrow);
     let (vault, _) = pda::find_ata(&input.escrow, &input.mint, &input.token_program);
-    let withdrawer_token_account =
-        pda::find_ata(&input.withdrawer.pubkey(), &input.mint, &input.token_program).0;
+    let withdrawer_token_account = pda::find_ata(
+        &input.withdrawer.pubkey(),
+        &input.mint,
+        &input.token_program,
+    )
+    .0;
     let (event_authority, _) = pda::find_event_authority();
-    let rent_recipient = input.rent_recipient.unwrap_or_else(|| input.fee_payer.pubkey());
+    let rent_recipient = input
+        .rent_recipient
+        .unwrap_or_else(|| input.fee_payer.pubkey());
 
     let accounts = vec![
         AccountMeta::new_readonly(input.fee_payer.pubkey(), true),
@@ -68,8 +76,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
     ];
 
-    let instruction =
-        build_escrow_instruction(EscrowDiscriminator::Withdraw, accounts, vec![]);
+    let instruction = build_escrow_instruction(EscrowDiscriminator::Withdraw, accounts, vec![]);
 
     let ins = Instructions {
         lookup_tables: None,
@@ -80,7 +87,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: vec![instruction],
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })
@@ -117,13 +128,11 @@ mod tests {
     fn test_instruction_construction() {
         let escrow = Pubkey::new_unique();
         let mint = Pubkey::new_unique();
-        let token_program =
-            solana_program::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+        let token_program = solana_program::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
         let (extensions, _) = pda::find_extensions(&escrow);
         let (vault, _) = pda::find_ata(&escrow, &mint, &token_program);
         let withdrawer = Pubkey::new_unique();
-        let withdrawer_token_account =
-            pda::find_ata(&withdrawer, &mint, &token_program).0;
+        let withdrawer_token_account = pda::find_ata(&withdrawer, &mint, &token_program).0;
         let (event_authority, _) = pda::find_event_authority();
         let fee_payer = Pubkey::new_unique();
         let rent_recipient = Pubkey::new_unique();

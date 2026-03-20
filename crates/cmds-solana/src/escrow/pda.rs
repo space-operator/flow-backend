@@ -128,8 +128,7 @@ mod tests {
     fn test_find_ata() {
         let wallet = Pubkey::new_unique();
         let mint = Pubkey::new_unique();
-        let token_program =
-            solana_program::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+        let token_program = solana_program::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
         let (ata, _) = find_ata(&wallet, &mint, &token_program);
         assert_ne!(ata, Pubkey::default());
         let (ata2, _) = find_ata(&wallet, &mint, &token_program);

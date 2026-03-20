@@ -1,4 +1,6 @@
-use super::{ESCROW_PROGRAM_ID, EscrowDiscriminator, build_escrow_instruction, default_token_program, pda};
+use super::{
+    ESCROW_PROGRAM_ID, EscrowDiscriminator, build_escrow_instruction, default_token_program, pda,
+};
 use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
 
@@ -45,7 +47,9 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (allowed_mint, _) = pda::find_allowed_mint(&input.escrow, &input.mint);
     let (event_authority, _) = pda::find_event_authority();
-    let rent_recipient = input.rent_recipient.unwrap_or_else(|| input.fee_payer.pubkey());
+    let rent_recipient = input
+        .rent_recipient
+        .unwrap_or_else(|| input.fee_payer.pubkey());
 
     let accounts = vec![
         AccountMeta::new_readonly(input.admin.pubkey(), true),
@@ -59,8 +63,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
     ];
 
-    let instruction =
-        build_escrow_instruction(EscrowDiscriminator::BlockMint, accounts, vec![]);
+    let instruction = build_escrow_instruction(EscrowDiscriminator::BlockMint, accounts, vec![]);
 
     let ins = Instructions {
         lookup_tables: None,
@@ -71,7 +74,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: vec![instruction],
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })
@@ -107,8 +114,7 @@ mod tests {
     fn test_instruction_construction() {
         let escrow = Pubkey::new_unique();
         let mint = Pubkey::new_unique();
-        let token_program =
-            solana_program::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+        let token_program = solana_program::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
         let (allowed_mint, _) = pda::find_allowed_mint(&escrow, &mint);
         let (event_authority, _) = pda::find_event_authority();
         let admin = Pubkey::new_unique();

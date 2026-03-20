@@ -1,10 +1,10 @@
+use super::{to_instruction_v3, to_pubkey_v2};
 use crate::prelude::*;
-use super::{to_pubkey_v2, to_instruction_v3};
 use light_compressed_token_sdk::compressed_token::batch_compress::{
-    create_batch_compress_instruction, BatchCompressInputs, Recipient,
+    BatchCompressInputs, Recipient, create_batch_compress_instruction,
 };
-use light_compressed_token_sdk::spl_interface::derive_spl_interface_pda;
 use light_compressed_token_sdk::constants::SPL_TOKEN_PROGRAM_ID;
+use light_compressed_token_sdk::spl_interface::derive_spl_interface_pda;
 
 /// Derive the Associated Token Account (ATA) address using v2 pubkey types.
 /// ATA PDA seeds: [wallet_address, token_program_id, mint_address]
@@ -14,16 +14,12 @@ pub fn derive_ata_v2(
     mint: &solana_program_v2::pubkey::Pubkey,
 ) -> solana_program_v2::pubkey::Pubkey {
     const ATA_PROGRAM_ID: [u8; 32] = [
-        140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131,
-        11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89,
+        140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153,
+        218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89,
     ];
     let program_id = solana_program_v2::pubkey::Pubkey::new_from_array(ATA_PROGRAM_ID);
     let spl_token_id = SPL_TOKEN_PROGRAM_ID;
-    let seeds: &[&[u8]] = &[
-        owner.as_ref(),
-        spl_token_id.as_ref(),
-        mint.as_ref(),
-    ];
+    let seeds: &[&[u8]] = &[owner.as_ref(), spl_token_id.as_ref(), mint.as_ref()];
     solana_program_v2::pubkey::Pubkey::find_program_address(seeds, &program_id).0
 }
 
@@ -103,8 +99,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         sol_pool_pda: None,
     };
 
-    let ix_v2 = create_batch_compress_instruction(inputs)
-        .map_err(|e| CommandError::msg(format!("Failed to create batch_compress instruction: {e}")))?;
+    let ix_v2 = create_batch_compress_instruction(inputs).map_err(|e| {
+        CommandError::msg(format!("Failed to create batch_compress instruction: {e}"))
+    })?;
 
     let instruction = to_instruction_v3(ix_v2);
 

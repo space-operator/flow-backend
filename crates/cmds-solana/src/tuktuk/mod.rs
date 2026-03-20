@@ -30,7 +30,7 @@ pub const TUKTUK_PROGRAM_ID: solana_pubkey::Pubkey =
     solana_pubkey::pubkey!("tuktukUrfhXT6ZT77QTU8RQtvgL967uRuVagWF57zVA");
 
 // Re-export shared v2↔v3 conversion helpers
-pub use crate::solana_v2_compat::{to_pubkey_v2, to_instruction_v3};
+pub use crate::solana_v2_compat::{to_instruction_v3, to_pubkey_v2};
 
 /// Build a v3 Instruction from a list of v3 AccountMeta + raw instruction data (discriminator + borsh args).
 pub fn build_ix(

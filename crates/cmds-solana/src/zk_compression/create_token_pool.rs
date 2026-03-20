@@ -1,7 +1,7 @@
+use super::{to_instruction_v3, to_pubkey_v2};
 use crate::prelude::*;
-use super::{to_pubkey_v2, to_instruction_v3};
-use light_compressed_token_sdk::spl_interface::CreateSplInterfacePda;
 use light_compressed_token_sdk::constants::SPL_TOKEN_PROGRAM_ID;
+use light_compressed_token_sdk::spl_interface::CreateSplInterfacePda;
 
 const NAME: &str = "create_token_pool";
 

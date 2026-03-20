@@ -1,14 +1,16 @@
-use crate::prelude::*;
-use super::{to_pubkey_v2, to_instruction_v3};
-use super::photon_rpc;
 use super::compress_tokens::derive_ata_v2;
+use super::photon_rpc;
+use super::{to_instruction_v3, to_pubkey_v2};
+use crate::prelude::*;
+use light_compressed_account::instruction_data::compressed_proof::{
+    CompressedProof, ValidityProof,
+};
 use light_compressed_token_sdk::compressed_token::{
     CTokenAccount, TokenAccountMeta,
     transfer::instruction::{DecompressInputs, decompress},
 };
-use light_compressed_token_sdk::spl_interface::derive_spl_interface_pda;
 use light_compressed_token_sdk::constants::SPL_TOKEN_PROGRAM_ID;
-use light_compressed_account::instruction_data::compressed_proof::{ValidityProof, CompressedProof};
+use light_compressed_token_sdk::spl_interface::derive_spl_interface_pda;
 use light_sdk_types::instruction::PackedStateTreeInfo;
 
 const NAME: &str = "decompress_tokens";
@@ -58,14 +60,15 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let tree_v2 = to_pubkey_v2(&input.merkle_tree);
 
     // 1. Fetch compressed token accounts for the owner + mint
-    let accounts = photon_rpc::get_compressed_token_accounts_by_owner(
-        &http, rpc_url, &owner_pk, &input.mint,
-    )
-    .await
-    .map_err(|e| CommandError::msg(format!("Failed to fetch compressed accounts: {e}")))?;
+    let accounts =
+        photon_rpc::get_compressed_token_accounts_by_owner(&http, rpc_url, &owner_pk, &input.mint)
+            .await
+            .map_err(|e| CommandError::msg(format!("Failed to fetch compressed accounts: {e}")))?;
 
     if accounts.is_empty() {
-        return Err(CommandError::msg("No compressed token accounts found for this owner/mint"));
+        return Err(CommandError::msg(
+            "No compressed token accounts found for this owner/mint",
+        ));
     }
 
     // 2. Select accounts with enough balance (greedy)
@@ -127,10 +130,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     // 7. Tree pubkeys from proof response
     let mut tree_pubkeys = Vec::new();
     for tree_str in &proof_resp.merkle_trees {
-        tree_pubkeys.push(
-            photon_rpc::parse_pubkey_v2(tree_str)
-                .map_err(CommandError::msg)?,
-        );
+        tree_pubkeys.push(photon_rpc::parse_pubkey_v2(tree_str).map_err(CommandError::msg)?);
     }
     // Add the output merkle tree
     tree_pubkeys.push(tree_v2);

@@ -46,8 +46,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
     ];
 
-    let instruction =
-        build_escrow_instruction(EscrowDiscriminator::UpdateAdmin, accounts, vec![]);
+    let instruction = build_escrow_instruction(EscrowDiscriminator::UpdateAdmin, accounts, vec![]);
 
     let ins = Instructions {
         lookup_tables: None,
@@ -62,7 +61,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: vec![instruction],
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })
@@ -105,8 +108,7 @@ mod tests {
             AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
         ];
 
-        let ix =
-            build_escrow_instruction(EscrowDiscriminator::UpdateAdmin, accounts, vec![]);
+        let ix = build_escrow_instruction(EscrowDiscriminator::UpdateAdmin, accounts, vec![]);
 
         assert_eq!(ix.program_id, ESCROW_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 5);

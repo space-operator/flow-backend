@@ -13,4 +13,4 @@ pub mod photon_rpc;
 pub mod transfer_compressed;
 
 // Re-export shared v2↔v3 conversion helpers
-pub use crate::solana_v2_compat::{to_pubkey_v2, to_instruction_v3};
+pub use crate::solana_v2_compat::{to_instruction_v3, to_pubkey_v2};

@@ -67,7 +67,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: vec![instruction],
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature, escrow })
@@ -112,11 +116,7 @@ mod tests {
             AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
         ];
 
-        let ix = build_escrow_instruction(
-            EscrowDiscriminator::CreateEscrow,
-            accounts,
-            vec![bump],
-        );
+        let ix = build_escrow_instruction(EscrowDiscriminator::CreateEscrow, accounts, vec![bump]);
 
         assert_eq!(ix.program_id, ESCROW_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 7);

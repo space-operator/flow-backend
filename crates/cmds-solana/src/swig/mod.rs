@@ -2,7 +2,6 @@
 //!
 //! On-chain instruction nodes + Paymaster/Portal REST API nodes.
 
-
 // Swig Wallet - Space Operator nodes
 //
 // Program ID: `swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB`
@@ -16,38 +15,34 @@ use crate::prelude::*;
 // =============================================================================
 
 pub use swig_interface::{
-    AuthorityConfig, ClientAction, CreateInstruction,
-    AddAuthorityInstruction, RemoveAuthorityInstruction,
-    UpdateAuthorityInstruction, UpdateAuthorityData,
-    CreateSessionInstruction, CreateSubAccountInstruction,
-    WithdrawFromSubAccountInstruction, SubAccountSignInstruction,
-    ToggleSubAccountInstruction, TransferAssetsV1Instruction,
-    CloseTokenAccountV1Instruction, CloseSwigV1Instruction,
-    SignV2Instruction,
+    AddAuthorityInstruction, AuthorityConfig, ClientAction, CloseSwigV1Instruction,
+    CloseTokenAccountV1Instruction, CreateInstruction, CreateSessionInstruction,
+    CreateSubAccountInstruction, RemoveAuthorityInstruction, SignV2Instruction,
+    SubAccountSignInstruction, ToggleSubAccountInstruction, TransferAssetsV1Instruction,
+    UpdateAuthorityData, UpdateAuthorityInstruction, WithdrawFromSubAccountInstruction,
 };
 
-pub use swig_state::authority::AuthorityType;
 use swig_state::action::{
-    all::All, manage_authority::ManageAuthority,
-    all_but_manage_authority::AllButManageAuthority,
-    close_swig_authority::CloseSwigAuthority,
-    program_all::ProgramAll, stake_all::StakeAll,
-    sol_limit::SolLimit, token_limit::TokenLimit,
-    program::Program, stake_limit::StakeLimit,
+    all::All, all_but_manage_authority::AllButManageAuthority,
+    close_swig_authority::CloseSwigAuthority, manage_authority::ManageAuthority, program::Program,
+    program_all::ProgramAll, sol_limit::SolLimit, stake_all::StakeAll, stake_limit::StakeLimit,
+    token_limit::TokenLimit,
 };
+pub use swig_state::authority::AuthorityType;
 
 // =============================================================================
 // Program Constants
 // =============================================================================
 
 /// Swig Wallet Program ID
-pub const SWIG_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB");
+pub const SWIG_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB");
 
 /// System Program ID
 pub const SYSTEM_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("11111111111111111111111111111111");
 
 // Re-export shared v2↔v3 conversion helpers
-pub use crate::solana_v2_compat::{to_pubkey_v2, to_instruction_v3};
+pub use crate::solana_v2_compat::{to_instruction_v3, to_pubkey_v2};
 
 // =============================================================================
 // ClientAction Builder Helper
@@ -73,18 +68,14 @@ pub fn build_client_action(
             amount: sol_limit.unwrap_or(0),
         }),
         "token_limit" => {
-            let mint_bytes = token_mint
-                .map(|pk| pk.to_bytes())
-                .unwrap_or([0u8; 32]);
+            let mint_bytes = token_mint.map(|pk| pk.to_bytes()).unwrap_or([0u8; 32]);
             ClientAction::TokenLimit(TokenLimit {
                 token_mint: mint_bytes,
                 current_amount: token_limit.unwrap_or(0),
             })
         }
         "program" => {
-            let pid_bytes = program_id
-                .map(|pk| pk.to_bytes())
-                .unwrap_or([0u8; 32]);
+            let pid_bytes = program_id.map(|pk| pk.to_bytes()).unwrap_or([0u8; 32]);
             ClientAction::Program(Program {
                 program_id: pid_bytes,
             })
@@ -176,7 +167,9 @@ pub async fn check_response(resp: reqwest::Response) -> Result<JsonValue, Comman
 /// Layout: discriminator(1) + bump(1) + id(32) + roles(2) + role_counter(4) + wallet_bump(1) + padding(7) = 48 bytes header
 pub fn parse_swig_account(data: &[u8]) -> Result<JsonValue, CommandError> {
     if data.len() < 48 {
-        return Err(CommandError::msg("Swig account data too short (need >= 48 bytes)"));
+        return Err(CommandError::msg(
+            "Swig account data too short (need >= 48 bytes)",
+        ));
     }
     let discriminator = data[0];
     if discriminator != 1 {
@@ -204,34 +197,34 @@ pub fn parse_swig_account(data: &[u8]) -> Result<JsonValue, CommandError> {
 // Node Modules - On-chain Instructions
 // =============================================================================
 
-pub mod swig_create;
 pub mod swig_add_authority;
-pub mod swig_remove_authority;
-pub mod swig_update_authority;
+pub mod swig_close;
+pub mod swig_close_token_account;
+pub mod swig_create;
 pub mod swig_create_session;
 pub mod swig_create_sub_account;
-pub mod swig_withdraw_from_sub_account;
-pub mod swig_toggle_sub_account;
-pub mod swig_sign;
-pub mod swig_transfer_assets;
-pub mod swig_close_token_account;
-pub mod swig_close;
 pub mod swig_migrate_wallet_address;
+pub mod swig_remove_authority;
+pub mod swig_sign;
+pub mod swig_toggle_sub_account;
+pub mod swig_transfer_assets;
+pub mod swig_update_authority;
+pub mod swig_withdraw_from_sub_account;
 
 // =============================================================================
 // Node Modules - RPC Read
 // =============================================================================
 
-pub mod swig_get_account;
 pub mod swig_find_pda;
 pub mod swig_find_wallet_address;
+pub mod swig_get_account;
 
 // =============================================================================
 // Node Modules - REST API
 // =============================================================================
 
-pub mod swig_sponsor_transaction;
-pub mod swig_sign_remote;
-pub mod swig_paymaster_health;
 pub mod swig_create_wallet_api;
 pub mod swig_get_policy;
+pub mod swig_paymaster_health;
+pub mod swig_sign_remote;
+pub mod swig_sponsor_transaction;

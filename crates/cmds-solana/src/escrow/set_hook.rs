@@ -57,8 +57,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     args_data.extend_from_slice(input.hook_program.as_ref());
     args_data.push(bump);
 
-    let instruction =
-        build_escrow_instruction(EscrowDiscriminator::SetHook, accounts, args_data);
+    let instruction = build_escrow_instruction(EscrowDiscriminator::SetHook, accounts, args_data);
 
     let ins = Instructions {
         lookup_tables: None,
@@ -69,7 +68,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: vec![instruction],
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output {
@@ -123,8 +126,7 @@ mod tests {
         args_data.extend_from_slice(hook_program.as_ref());
         args_data.push(bump);
 
-        let ix =
-            build_escrow_instruction(EscrowDiscriminator::SetHook, accounts, args_data);
+        let ix = build_escrow_instruction(EscrowDiscriminator::SetHook, accounts, args_data);
 
         assert_eq!(ix.program_id, ESCROW_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 7);

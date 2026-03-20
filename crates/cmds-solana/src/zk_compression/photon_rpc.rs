@@ -174,13 +174,18 @@ pub async fn get_validity_proof(
         return Err(err.to_string());
     }
 
-    body.result.ok_or_else(|| "No result in response".to_string())
+    body.result
+        .ok_or_else(|| "No result in response".to_string())
 }
 
 /// Parse a base58-encoded string to a v2 Pubkey.
 pub fn parse_pubkey_v2(s: &str) -> Result<solana_program_v2::pubkey::Pubkey, String> {
-    let pk: Pubkey = s.parse().map_err(|e| format!("Invalid pubkey '{s}': {e}"))?;
-    Ok(solana_program_v2::pubkey::Pubkey::new_from_array(pk.to_bytes()))
+    let pk: Pubkey = s
+        .parse()
+        .map_err(|e| format!("Invalid pubkey '{s}': {e}"))?;
+    Ok(solana_program_v2::pubkey::Pubkey::new_from_array(
+        pk.to_bytes(),
+    ))
 }
 
 /// Decode a base58-encoded proof component into a fixed-size byte array.

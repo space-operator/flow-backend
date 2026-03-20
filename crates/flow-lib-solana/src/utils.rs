@@ -122,7 +122,11 @@ pub fn test_context_with_execute() -> flow_lib::context::CommandContext {
 
     CommandContext::builder()
         .execute(execute_svc)
-        .get_jwt(unimplemented_svc::<get_jwt::Request, get_jwt::Response, get_jwt::Error>())
+        .get_jwt(unimplemented_svc::<
+            get_jwt::Request,
+            get_jwt::Response,
+            get_jwt::Error,
+        >())
         .flow(
             FlowServices::builder()
                 .signer(unimplemented_svc())

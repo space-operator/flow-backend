@@ -1,10 +1,10 @@
+use super::{to_instruction_v3, to_pubkey_v2};
 use crate::prelude::*;
-use super::{to_pubkey_v2, to_instruction_v3};
 use light_compressed_token_sdk::compressed_token::mint_to_compressed::{
-    create_mint_to_compressed_instruction, MintToCompressedInputs,
+    MintToCompressedInputs, create_mint_to_compressed_instruction,
 };
-use light_token_interface::instructions::mint_action::Recipient;
 use light_token_interface::instructions::mint_action::MintWithContext;
+use light_token_interface::instructions::mint_action::Recipient;
 
 const NAME: &str = "mint_to_compressed";
 
@@ -81,8 +81,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         spl_interface_pda: None,
     };
 
-    let ix_v2 = create_mint_to_compressed_instruction(inputs, None)
-        .map_err(|e| CommandError::msg(format!("Failed to create mint_to_compressed instruction: {e}")))?;
+    let ix_v2 = create_mint_to_compressed_instruction(inputs, None).map_err(|e| {
+        CommandError::msg(format!(
+            "Failed to create mint_to_compressed instruction: {e}"
+        ))
+    })?;
 
     let instruction = to_instruction_v3(ix_v2);
 
