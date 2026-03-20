@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{check_response, reflect_get};
+use crate::prelude::*;
 
 pub const NAME: &str = "get_recent_events";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/get_recent_events.jsonc");

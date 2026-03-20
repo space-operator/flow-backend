@@ -1,6 +1,9 @@
+use super::{
+    CP_AMM_PROGRAM_ID, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator,
+    derive_event_authority, derive_pool_authority, derive_token_vault,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{CP_AMM_PROGRAM_ID, TOKEN_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_pool_authority, derive_token_vault, derive_event_authority};
 
 const NAME: &str = "damm_v2_swap2";
 const IX_NAME: &str = "swap2";
@@ -68,17 +71,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let mut accounts = vec![
-        AccountMeta::new(input.payer.pubkey(), true),         // payer (writable signer)
-        AccountMeta::new_readonly(pool_authority, false),      // pool_authority
-        AccountMeta::new(input.pool, false),                   // pool (writable)
-        AccountMeta::new(input.input_token_account, false),    // input_token_account (writable)
-        AccountMeta::new(input.output_token_account, false),   // output_token_account (writable)
-        AccountMeta::new(token_a_vault, false),                // token_a_vault (writable)
-        AccountMeta::new(token_b_vault, false),                // token_b_vault (writable)
-        AccountMeta::new_readonly(input.token_a_mint, false),  // token_a_mint
-        AccountMeta::new_readonly(input.token_b_mint, false),  // token_b_mint
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),    // token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),   // system_program
+        AccountMeta::new(input.payer.pubkey(), true), // payer (writable signer)
+        AccountMeta::new_readonly(pool_authority, false), // pool_authority
+        AccountMeta::new(input.pool, false),          // pool (writable)
+        AccountMeta::new(input.input_token_account, false), // input_token_account (writable)
+        AccountMeta::new(input.output_token_account, false), // output_token_account (writable)
+        AccountMeta::new(token_a_vault, false),       // token_a_vault (writable)
+        AccountMeta::new(token_b_vault, false),       // token_b_vault (writable)
+        AccountMeta::new_readonly(input.token_a_mint, false), // token_a_mint
+        AccountMeta::new_readonly(input.token_b_mint, false), // token_b_mint
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
     ];
 
     if let Some(referral) = input.referral_token_account {
@@ -104,15 +107,24 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, pool_authority, token_a_vault, token_b_vault })
+    Ok(Output {
+        signature,
+        pool_authority,
+        token_a_vault,
+        token_b_vault,
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use solana_signer::Signer;
     use super::*;
+    use solana_signer::Signer;
 
     /// Tests that the node definition can be built correctly.
     #[test]
@@ -137,7 +149,7 @@ mod tests {
             "swap_mode" => 0_u8,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

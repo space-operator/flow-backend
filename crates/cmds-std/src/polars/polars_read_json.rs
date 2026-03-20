@@ -50,14 +50,9 @@ mod tests {
     #[tokio::test]
     async fn test_run_json_array() {
         let json = r#"[{"name":"Alice","age":30},{"name":"Bob","age":25}]"#.to_string();
-        let output = run(
-            CommandContext::default(),
-            Input {
-                json_string: json,
-            },
-        )
-        .await
-        .unwrap();
+        let output = run(CommandContext::default(), Input { json_string: json })
+            .await
+            .unwrap();
 
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.shape(), (2, 2));
@@ -69,14 +64,9 @@ mod tests {
     #[tokio::test]
     async fn test_run_json_single_row() {
         let json = r#"[{"x":1,"y":2,"z":3}]"#.to_string();
-        let output = run(
-            CommandContext::default(),
-            Input {
-                json_string: json,
-            },
-        )
-        .await
-        .unwrap();
+        let output = run(CommandContext::default(), Input { json_string: json })
+            .await
+            .unwrap();
 
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.shape(), (1, 3));

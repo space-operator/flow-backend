@@ -1,6 +1,6 @@
+use super::{KLEND_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KLEND_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "update_lending_market_owner";
 const DEFINITION: &str = flow_lib::node_definition!("klend/update_lending_market_owner.jsonc");
@@ -54,7 +54,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -79,7 +83,7 @@ mod tests {
             "lending_market" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

@@ -1,6 +1,6 @@
+use super::{CP_AMM_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_event_authority};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{CP_AMM_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_event_authority};
 
 const NAME: &str = "close_operator_account";
 const DEFINITION: &str = flow_lib::node_definition!("damm_v2/close_operator_account.jsonc");
@@ -39,12 +39,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.operator, false),                   // operator (writable, close)
-        AccountMeta::new(input.signer.pubkey(), true),             // signer (signer)
-        AccountMeta::new(input.rent_receiver, false),              // rent_receiver (writable)
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),       // system_program
-        AccountMeta::new_readonly(event_authority, false),         // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false),       // program
+        AccountMeta::new(input.operator, false), // operator (writable, close)
+        AccountMeta::new(input.signer.pubkey(), true), // signer (signer)
+        AccountMeta::new(input.rent_receiver, false), // rent_receiver (writable)
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
+        AccountMeta::new_readonly(event_authority, false), // event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
     ];
 
     let data = anchor_discriminator(NAME).to_vec();
@@ -62,15 +62,19 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
 
 #[cfg(test)]
 mod tests {
-    use solana_signer::Signer;
     use super::*;
+    use solana_signer::Signer;
 
     /// Tests that the node definition can be built correctly.
     #[test]
@@ -89,7 +93,7 @@ mod tests {
             "rent_receiver" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

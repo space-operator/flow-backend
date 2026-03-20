@@ -80,7 +80,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ins].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

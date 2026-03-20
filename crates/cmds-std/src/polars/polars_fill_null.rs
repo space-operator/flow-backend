@@ -23,7 +23,9 @@ pub struct Input {
     pub value: JsonValue,
 }
 
-fn default_strategy() -> String { "forward".to_string() }
+fn default_strategy() -> String {
+    "forward".to_string()
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -86,25 +88,33 @@ mod tests {
     use crate::polars::types::df_to_ipc;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn df_with_nulls_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("name".into(), &["Alice", "Bob", "Charlie"]).into_column(),
             Series::new("age".into(), &[Some(30i64), None, Some(35)]).into_column(),
             Series::new("score".into(), &[88.5f64, 92.0, 75.3]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_fill_null_value() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: df_with_nulls_ipc(),
-            column: "age".to_string(),
-            strategy: "value".to_string(),
-            value: serde_json::json!(99),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: df_with_nulls_ipc(),
+                column: "age".to_string(),
+                strategy: "value".to_string(),
+                value: serde_json::json!(99),
+            },
+        )
+        .await
+        .unwrap();
         let df = crate::polars::types::df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
         let ages = df.column("age").unwrap();
@@ -114,12 +124,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_fill_null_forward() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: df_with_nulls_ipc(),
-            column: "age".to_string(),
-            strategy: "forward".to_string(),
-            value: serde_json::json!(null),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: df_with_nulls_ipc(),
+                column: "age".to_string(),
+                strategy: "forward".to_string(),
+                value: serde_json::json!(null),
+            },
+        )
+        .await
+        .unwrap();
         let df = crate::polars::types::df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
         let ages = df.column("age").unwrap();

@@ -77,9 +77,15 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     let response: JsonValue = resp.json().await?;
 
     let intent_quote = response.get("intent_quote").cloned().unwrap_or(json!(null));
-    let open_transaction = response.get("open_transaction").and_then(|v| v.as_str()).map(String::from);
+    let open_transaction = response
+        .get("open_transaction")
+        .and_then(|v| v.as_str())
+        .map(String::from);
 
-    Ok(Output { intent_quote, open_transaction })
+    Ok(Output {
+        intent_quote,
+        open_transaction,
+    })
 }
 
 #[cfg(test)]
@@ -108,7 +114,10 @@ mod tests {
     async fn test_run_get_intent_quote() {
         let api_key = match std::env::var("DFLOW_API_KEY") {
             Ok(k) => k,
-            Err(_) => { eprintln!("DFLOW_API_KEY not set, skipping"); return; }
+            Err(_) => {
+                eprintln!("DFLOW_API_KEY not set, skipping");
+                return;
+            }
         };
         let input = Input {
             api_key,

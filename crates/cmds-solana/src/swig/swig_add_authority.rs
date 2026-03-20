@@ -1,8 +1,8 @@
-use crate::prelude::*;
 use super::{
-    to_pubkey_v2, to_instruction_v3, build_client_action,
-    AddAuthorityInstruction, AuthorityConfig, AuthorityType,
+    AddAuthorityInstruction, AuthorityConfig, AuthorityType, build_client_action,
+    to_instruction_v3, to_pubkey_v2,
 };
+use crate::prelude::*;
 
 const NAME: &str = "swig_add_authority";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_add_authority.jsonc");
@@ -45,7 +45,9 @@ pub struct Input {
     pub submit: bool,
 }
 
-fn default_permission() -> String { "all".to_string() }
+fn default_permission() -> String {
+    "all".to_string()
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -73,7 +75,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             authority: new_authority_v2.as_ref(),
         },
         actions,
-    ).map_err(|e| CommandError::msg(e.to_string()))?;
+    )
+    .map_err(|e| CommandError::msg(e.to_string()))?;
 
     let instruction = to_instruction_v3(ix_v2);
 
@@ -84,7 +87,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })
@@ -117,7 +124,8 @@ mod tests {
                 authority: new_authority_v2.as_ref(),
             },
             build_client_action("all", None, None, None, None),
-        ).unwrap();
+        )
+        .unwrap();
 
         let instruction = to_instruction_v3(ix);
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
@@ -140,7 +148,8 @@ mod tests {
                 authority: new_authority_v2.as_ref(),
             },
             build_client_action("sol_limit", Some(1_000_000_000), None, None, None),
-        ).unwrap();
+        )
+        .unwrap();
 
         let instruction = to_instruction_v3(ix);
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);

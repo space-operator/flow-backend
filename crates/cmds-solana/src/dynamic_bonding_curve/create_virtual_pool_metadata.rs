@@ -1,9 +1,10 @@
+use super::{DBC_PROGRAM_ID, discriminators, pda};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{DBC_PROGRAM_ID, pda, discriminators};
 
 const NAME: &str = "create_virtual_pool_metadata";
-const DEFINITION: &str = flow_lib::node_definition!("dynamic_bonding_curve/create_virtual_pool_metadata.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("dynamic_bonding_curve/create_virtual_pool_metadata.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -55,16 +56,35 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let mut data = discriminators::CREATE_VIRTUAL_POOL_METADATA.to_vec();
     data.extend(borsh::to_vec(&input.padding)?);
 
-    let instruction = Instruction { program_id: DBC_PROGRAM_ID, accounts, data };
+    let instruction = Instruction {
+        program_id: DBC_PROGRAM_ID,
+        accounts,
+        data,
+    };
     let ins = Instructions {
-        lookup_tables: None, fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer, input.creator].into(), instructions: [instruction].into(),
+        lookup_tables: None,
+        fee_payer: input.fee_payer.pubkey(),
+        signers: [input.fee_payer, input.creator].into(),
+        instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, virtual_pool_metadata })
+    Ok(Output {
+        signature,
+        virtual_pool_metadata,
+    })
 }
 
 #[cfg(test)]
-mod tests { use super::*; #[test] fn test_build() { build().unwrap(); } }
+mod tests {
+    use super::*;
+    #[test]
+    fn test_build() {
+        build().unwrap();
+    }
+}

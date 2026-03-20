@@ -399,9 +399,11 @@ mod tests {
     use super::*;
 
     fn read_fixture(name: &str) -> String {
-        std::fs::read_to_string(
-            format!("{}/tests/fixtures/{}", env!("CARGO_MANIFEST_DIR"), name),
-        )
+        std::fs::read_to_string(format!(
+            "{}/tests/fixtures/{}",
+            env!("CARGO_MANIFEST_DIR"),
+            name
+        ))
         .unwrap()
     }
 

@@ -1,6 +1,8 @@
+use super::{
+    KLEND_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_lending_market_authority,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KLEND_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_lending_market_authority};
 
 const NAME: &str = "init_lending_market";
 const DEFINITION: &str = flow_lib::node_definition!("klend/init_lending_market.jsonc");
@@ -64,9 +66,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, lending_market_authority })
+    Ok(Output {
+        signature,
+        lending_market_authority,
+    })
 }
 
 #[cfg(test)]
@@ -90,7 +99,7 @@ mod tests {
             "quote_currency" => serde_json::json!({}),
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

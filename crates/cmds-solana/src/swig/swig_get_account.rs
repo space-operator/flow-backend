@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::parse_swig_account;
+use crate::prelude::*;
 
 const NAME: &str = "swig_get_account";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_get_account.jsonc");

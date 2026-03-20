@@ -1,4 +1,4 @@
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
+use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
 use flow_lib::command::prelude::*;
 use polars::prelude::*;
 use std::io::Cursor;
@@ -32,10 +32,9 @@ pub fn df_to_json(df: &mut DataFrame) -> Result<JsonValue, CommandError> {
         .with_json_format(JsonFormat::Json)
         .finish(df)
         .map_err(|e| CommandError::msg(format!("JSON write error: {e}")))?;
-    let json_str = String::from_utf8(buf)
-        .map_err(|e| CommandError::msg(format!("UTF-8 error: {e}")))?;
-    serde_json::from_str(&json_str)
-        .map_err(|e| CommandError::msg(format!("JSON parse error: {e}")))
+    let json_str =
+        String::from_utf8(buf).map_err(|e| CommandError::msg(format!("UTF-8 error: {e}")))?;
+    serde_json::from_str(&json_str).map_err(|e| CommandError::msg(format!("JSON parse error: {e}")))
 }
 
 // ── Series IPC serialization ────────────────────────────────────────────
@@ -50,7 +49,9 @@ pub fn series_from_ipc(base64_str: &str) -> Result<Series, CommandError> {
     let df = df_from_ipc(base64_str)?;
     let cols = df.get_columns();
     if cols.is_empty() {
-        return Err(CommandError::msg("Empty DataFrame, expected one column for Series"));
+        return Err(CommandError::msg(
+            "Empty DataFrame, expected one column for Series",
+        ));
     }
     Ok(cols[0].as_materialized_series().clone())
 }
@@ -143,7 +144,9 @@ pub fn parse_dtype(dtype_str: &str) -> Result<DataType, CommandError> {
 /// Try to unwrap a string-encoded JSON value (from IValue {S: "..."}).
 /// If the string is valid JSON that parses to a non-string value (object/array/bool/number),
 /// returns the parsed value. Otherwise returns the original value as-is.
-pub fn unwrap_json_input(value: &JsonValue) -> Result<std::borrow::Cow<'_, JsonValue>, CommandError> {
+pub fn unwrap_json_input(
+    value: &JsonValue,
+) -> Result<std::borrow::Cow<'_, JsonValue>, CommandError> {
     if let JsonValue::String(s) = value {
         if let Ok(parsed) = serde_json::from_str::<JsonValue>(s) {
             if !parsed.is_string() {

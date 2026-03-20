@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::derive_ata;
+use crate::prelude::*;
 
 const NAME: &str = "transfer_checked";
 const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/transfer_checked.jsonc");
@@ -63,7 +63,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ix].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output {
         signature,

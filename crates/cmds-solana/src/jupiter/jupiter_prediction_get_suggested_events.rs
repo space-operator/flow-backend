@@ -5,7 +5,8 @@
 use crate::prelude::*;
 
 pub const NAME: &str = "jupiter_prediction_get_suggested_events";
-const DEFINITION: &str = flow_lib::node_definition!("jupiter/jupiter_prediction_get_suggested_events.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("jupiter/jupiter_prediction_get_suggested_events.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

@@ -43,9 +43,7 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let mut builder = UpdateV1Builder::new();
 
-    builder
-        .asset(input.asset)
-        .payer(input.fee_payer.pubkey());
+    builder.asset(input.asset).payer(input.fee_payer.pubkey());
 
     if let Some(collection) = input.collection {
         builder.collection(Some(collection));
@@ -75,7 +73,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ins].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

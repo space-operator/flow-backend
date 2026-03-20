@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 const NAME: &str = "update_interest_rate";
-const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/interest_bearing/update_rate.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("spl_token_2022/interest_bearing/update_rate.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -48,7 +49,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ix].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -67,14 +72,15 @@ mod tests {
         let mint = Pubkey::new_unique();
         let rate_authority = Pubkey::new_unique();
 
-        let ix = spl_token_2022_interface::extension::interest_bearing_mint::instruction::update_rate(
-            &spl_token_2022_interface::ID,
-            &mint,
-            &rate_authority,
-            &[],
-            200,
-        )
-        .unwrap();
+        let ix =
+            spl_token_2022_interface::extension::interest_bearing_mint::instruction::update_rate(
+                &spl_token_2022_interface::ID,
+                &mint,
+                &rate_authority,
+                &[],
+                200,
+            )
+            .unwrap();
 
         assert_eq!(ix.program_id, spl_token_2022_interface::ID);
         assert!(!ix.data.is_empty());

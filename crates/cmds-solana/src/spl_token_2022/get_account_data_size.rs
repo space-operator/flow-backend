@@ -46,7 +46,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ix].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -67,7 +71,10 @@ mod tests {
         let ix = spl_token_2022_interface::instruction::get_account_data_size(
             &spl_token_2022_interface::ID,
             &mint,
-            &[ExtensionType::TransferFeeAmount, ExtensionType::ImmutableOwner],
+            &[
+                ExtensionType::TransferFeeAmount,
+                ExtensionType::ImmutableOwner,
+            ],
         )
         .unwrap();
 

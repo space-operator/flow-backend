@@ -85,7 +85,10 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     let response: JsonValue = resp.json().await?;
 
     let order = response.get("order").cloned().unwrap_or(json!(null));
-    let transaction = response.get("transaction").and_then(|v| v.as_str()).map(String::from);
+    let transaction = response
+        .get("transaction")
+        .and_then(|v| v.as_str())
+        .map(String::from);
 
     Ok(Output { order, transaction })
 }
@@ -116,7 +119,10 @@ mod tests {
     async fn test_run_get_order() {
         let api_key = match std::env::var("DFLOW_API_KEY") {
             Ok(k) => k,
-            Err(_) => { eprintln!("DFLOW_API_KEY not set, skipping"); return; }
+            Err(_) => {
+                eprintln!("DFLOW_API_KEY not set, skipping");
+                return;
+            }
         };
         let input = Input {
             api_key,

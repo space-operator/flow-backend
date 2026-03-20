@@ -1,9 +1,10 @@
+use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, discriminators, pda};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, pda, discriminators};
 
 const NAME: &str = "migration_damm_v2";
-const DEFINITION: &str = flow_lib::node_definition!("dynamic_bonding_curve/migration_damm_v2.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("dynamic_bonding_curve/migration_damm_v2.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -79,42 +80,42 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let quote_vault = pda::quote_vault(&input.quote_mint, &pool);
 
     let mut accounts = vec![
-        AccountMeta::new(input.virtual_pool, false),                       // 0: virtual_pool (writable)
-        AccountMeta::new_readonly(migration_metadata, false),              // 1: migration_metadata (readonly)
-        AccountMeta::new_readonly(input.config, false),                    // 2: config (readonly)
-        AccountMeta::new(POOL_AUTHORITY, false),                           // 3: pool_authority (writable)
-        AccountMeta::new(pool, false),                                       // 4: pool (writable)
-        AccountMeta::new(input.first_position_nft_mint.pubkey(), true),    // 5: first_position_nft_mint (writable, signer)
-        AccountMeta::new(input.first_position_nft_account, false),         // 6: first_position_nft_account (writable)
-        AccountMeta::new(input.first_position, false),                     // 7: first_position (writable)
+        AccountMeta::new(input.virtual_pool, false), // 0: virtual_pool (writable)
+        AccountMeta::new_readonly(migration_metadata, false), // 1: migration_metadata (readonly)
+        AccountMeta::new_readonly(input.config, false), // 2: config (readonly)
+        AccountMeta::new(POOL_AUTHORITY, false),     // 3: pool_authority (writable)
+        AccountMeta::new(pool, false),               // 4: pool (writable)
+        AccountMeta::new(input.first_position_nft_mint.pubkey(), true), // 5: first_position_nft_mint (writable, signer)
+        AccountMeta::new(input.first_position_nft_account, false), // 6: first_position_nft_account (writable)
+        AccountMeta::new(input.first_position, false),             // 7: first_position (writable)
     ];
 
     // 8-10: optional second position accounts
     if let Some(second_mint) = input.second_position_nft_mint {
-        accounts.push(AccountMeta::new(second_mint, true));                // 8: second_position_nft_mint (writable, signer, optional)
+        accounts.push(AccountMeta::new(second_mint, true)); // 8: second_position_nft_mint (writable, signer, optional)
     }
     if let Some(second_nft_account) = input.second_position_nft_account {
-        accounts.push(AccountMeta::new(second_nft_account, false));        // 9: second_position_nft_account (writable, optional)
+        accounts.push(AccountMeta::new(second_nft_account, false)); // 9: second_position_nft_account (writable, optional)
     }
     if let Some(second_pos) = input.second_position {
-        accounts.push(AccountMeta::new(second_pos, false));                // 10: second_position (writable, optional)
+        accounts.push(AccountMeta::new(second_pos, false)); // 10: second_position (writable, optional)
     }
 
     accounts.extend_from_slice(&[
-        AccountMeta::new_readonly(input.damm_pool_authority, false),       // 11: damm_pool_authority (readonly)
-        AccountMeta::new_readonly(amm_program, false),                     // 12: amm_program (readonly)
-        AccountMeta::new(input.base_mint, false),                          // 13: base_mint (writable)
-        AccountMeta::new(input.quote_mint, false),                         // 14: quote_mint (writable)
-        AccountMeta::new(input.token_a_vault, false),                      // 15: token_a_vault (writable)
-        AccountMeta::new(input.token_b_vault, false),                      // 16: token_b_vault (writable)
-        AccountMeta::new(base_vault, false),                                // 17: base_vault (writable)
-        AccountMeta::new(quote_vault, false),                              // 18: quote_vault (writable)
-        AccountMeta::new(input.payer.pubkey(), true),                      // 19: payer (writable, signer)
-        AccountMeta::new_readonly(token_base_program, false),               // 20: token_base_program (readonly)
-        AccountMeta::new_readonly(token_quote_program, false),             // 21: token_quote_program (readonly)
-        AccountMeta::new_readonly(token_2022_program, false),              // 22: token_2022_program (readonly)
-        AccountMeta::new_readonly(input.damm_event_authority, false),      // 23: damm_event_authority (readonly)
-        AccountMeta::new_readonly(system_program, false),                  // 24: system_program (readonly)
+        AccountMeta::new_readonly(input.damm_pool_authority, false), // 11: damm_pool_authority (readonly)
+        AccountMeta::new_readonly(amm_program, false),               // 12: amm_program (readonly)
+        AccountMeta::new(input.base_mint, false),                    // 13: base_mint (writable)
+        AccountMeta::new(input.quote_mint, false),                   // 14: quote_mint (writable)
+        AccountMeta::new(input.token_a_vault, false),                // 15: token_a_vault (writable)
+        AccountMeta::new(input.token_b_vault, false),                // 16: token_b_vault (writable)
+        AccountMeta::new(base_vault, false),                         // 17: base_vault (writable)
+        AccountMeta::new(quote_vault, false),                        // 18: quote_vault (writable)
+        AccountMeta::new(input.payer.pubkey(), true),                // 19: payer (writable, signer)
+        AccountMeta::new_readonly(token_base_program, false), // 20: token_base_program (readonly)
+        AccountMeta::new_readonly(token_quote_program, false), // 21: token_quote_program (readonly)
+        AccountMeta::new_readonly(token_2022_program, false), // 22: token_2022_program (readonly)
+        AccountMeta::new_readonly(input.damm_event_authority, false), // 23: damm_event_authority (readonly)
+        AccountMeta::new_readonly(system_program, false), // 24: system_program (readonly)
     ]);
 
     let data = discriminators::MIGRATION_DAMM_V2.to_vec();
@@ -132,9 +133,19 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, pool, migration_metadata, base_vault, quote_vault })
+    Ok(Output {
+        signature,
+        pool,
+        migration_metadata,
+        base_vault,
+        quote_vault,
+    })
 }
 
 #[cfg(test)]

@@ -1,9 +1,13 @@
+use super::{
+    CreatePermissionedEscrowWithMerkleProofParams, PRESALE_PROGRAM_ID, derive_event_authority,
+    discriminators,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators, CreatePermissionedEscrowWithMerkleProofParams};
 
 const NAME: &str = "create_permissioned_escrow_with_merkle_proof";
-const DEFINITION: &str = flow_lib::node_definition!("presale/create_permissioned_escrow_with_merkle_proof.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("presale/create_permissioned_escrow_with_merkle_proof.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -46,14 +50,14 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.presale, false),                    // presale (writable)
-        AccountMeta::new(input.escrow, false),                     // escrow (writable, PDA)
-        AccountMeta::new_readonly(input.owner, false),             // owner (readonly)
+        AccountMeta::new(input.presale, false), // presale (writable)
+        AccountMeta::new(input.escrow, false),  // escrow (writable, PDA)
+        AccountMeta::new_readonly(input.owner, false), // owner (readonly)
         AccountMeta::new_readonly(input.merkle_root_config, false), // merkle_root_config (readonly)
-        AccountMeta::new(input.payer.pubkey(), true),              // payer (writable, signer)
-        AccountMeta::new_readonly(input.system_program, false),    // system_program (readonly)
-        AccountMeta::new_readonly(event_authority, false),         // event_authority (PDA)
-        AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false),      // program
+        AccountMeta::new(input.payer.pubkey(), true), // payer (writable, signer)
+        AccountMeta::new_readonly(input.system_program, false), // system_program (readonly)
+        AccountMeta::new_readonly(event_authority, false), // event_authority (PDA)
+        AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false), // program
     ];
 
     let mut data = discriminators::CREATE_PERMISSIONED_ESCROW_WITH_MERKLE_PROOF.to_vec();
@@ -72,7 +76,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

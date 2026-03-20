@@ -28,7 +28,9 @@ pub struct Output {
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     if input.width == 0 || input.height == 0 {
-        return Err(CommandError::msg("crop width and height must be greater than 0"));
+        return Err(CommandError::msg(
+            "crop width and height must be greater than 0",
+        ));
     }
     let image_bytes = input.image.resolve(ctx.http()).await?;
     let img = decode_image(&image_bytes)?;
@@ -47,9 +49,11 @@ mod tests {
     use crate::helpers::{decode_image, encode_image};
 
     fn test_png(w: u32, h: u32) -> bytes::Bytes {
-        let img = image::DynamicImage::ImageRgba8(
-            image::RgbaImage::from_pixel(w, h, image::Rgba([255, 0, 0, 255])),
-        );
+        let img = image::DynamicImage::ImageRgba8(image::RgbaImage::from_pixel(
+            w,
+            h,
+            image::Rgba([255, 0, 0, 255]),
+        ));
         encode_image(&img, image::ImageFormat::Png).unwrap().into()
     }
 

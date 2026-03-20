@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
+use crate::prelude::*;
 
 pub const NAME: &str = "mint_stablecoin";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/mint_stablecoin.jsonc");
@@ -43,14 +43,26 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
         req = req.query(&query);
     }
     let mut body = serde_json::Map::new();
-    body.insert("stablecoinIndex".into(), serde_json::json!(input.stablecoin_index));
-    body.insert("depositAmount".into(), serde_json::json!(input.deposit_amount));
-    body.insert("signer".into(), serde_json::Value::String(input.signer.clone()));
+    body.insert(
+        "stablecoinIndex".into(),
+        serde_json::json!(input.stablecoin_index),
+    );
+    body.insert(
+        "depositAmount".into(),
+        serde_json::json!(input.deposit_amount),
+    );
+    body.insert(
+        "signer".into(),
+        serde_json::Value::String(input.signer.clone()),
+    );
     if let Some(ref val) = input.minimum_received {
         body.insert("minimumReceived".into(), serde_json::json!(val));
     }
     if let Some(ref val) = input.collateral_mint {
-        body.insert("collateralMint".into(), serde_json::Value::String(val.clone()));
+        body.insert(
+            "collateralMint".into(),
+            serde_json::Value::String(val.clone()),
+        );
     }
     if let Some(ref val) = input.fee_payer {
         body.insert("feePayer".into(), serde_json::Value::String(val.clone()));

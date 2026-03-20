@@ -5,7 +5,8 @@
 use crate::prelude::*;
 
 pub const NAME: &str = "jupiter_prediction_search_events";
-const DEFINITION: &str = flow_lib::node_definition!("jupiter/jupiter_prediction_search_events.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("jupiter/jupiter_prediction_search_events.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
@@ -76,7 +77,10 @@ mod tests {
     async fn test_run_prediction_search_events() {
         let api_key = match std::env::var("JUPITER_API_KEY") {
             Ok(k) => k,
-            Err(_) => { eprintln!("JUPITER_API_KEY not set, skipping"); return; }
+            Err(_) => {
+                eprintln!("JUPITER_API_KEY not set, skipping");
+                return;
+            }
         };
         let input = Input {
             api_key,

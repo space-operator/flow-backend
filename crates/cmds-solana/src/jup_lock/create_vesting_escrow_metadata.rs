@@ -3,7 +3,8 @@ use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
 
 const NAME: &str = "create_vesting_escrow_metadata";
-const DEFINITION: &str = flow_lib::node_definition!("jup_lock/create_vesting_escrow_metadata.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("jup_lock/create_vesting_escrow_metadata.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -61,7 +62,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     args_data.extend(borsh_string(&input.creator_email));
     args_data.extend(borsh_string(&input.recipient_email));
 
-    let instruction = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"create_vesting_escrow_metadata", accounts, args_data);
+    let instruction = crate::utils::build_anchor_instruction(
+        JUP_LOCK_PROGRAM_ID,
+        "create_vesting_escrow_metadata",
+        accounts,
+        args_data,
+    );
 
     let ins = Instructions {
         lookup_tables: None,
@@ -76,7 +82,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: vec![instruction],
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output {
@@ -132,7 +142,12 @@ mod tests {
         args_data.extend(borsh_string("creator@test.com"));
         args_data.extend(borsh_string("recipient@test.com"));
 
-        let ix = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"create_vesting_escrow_metadata", accounts, args_data);
+        let ix = crate::utils::build_anchor_instruction(
+            JUP_LOCK_PROGRAM_ID,
+            "create_vesting_escrow_metadata",
+            accounts,
+            args_data,
+        );
 
         assert_eq!(ix.program_id, JUP_LOCK_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 5);

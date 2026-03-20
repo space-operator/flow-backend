@@ -1,6 +1,6 @@
+use super::{KVAULT_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KVAULT_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "kvault_initialize_shares_metadata";
 const DEFINITION: &str = flow_lib::node_definition!("kvault/initialize_shares_metadata.jsonc");
@@ -45,7 +45,6 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-
     let rent = solana_pubkey::pubkey!("SysvarRent111111111111111111111111111111111");
 
     let accounts = vec![
@@ -77,7 +76,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -109,7 +112,7 @@ mod tests {
             "uri" => "test_uri",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

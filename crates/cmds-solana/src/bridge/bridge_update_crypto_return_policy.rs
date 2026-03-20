@@ -1,8 +1,9 @@
-use crate::prelude::*;
 use super::helper::{bridge_put, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_update_crypto_return_policy";
-const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_update_crypto_return_policy.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("bridge/bridge_update_crypto_return_policy.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

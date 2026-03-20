@@ -1,6 +1,6 @@
+use super::{KLEND_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_user_metadata};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KLEND_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_user_metadata};
 
 const NAME: &str = "init_user_metadata";
 const DEFINITION: &str = flow_lib::node_definition!("klend/init_user_metadata.jsonc");
@@ -64,9 +64,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, user_metadata })
+    Ok(Output {
+        signature,
+        user_metadata,
+    })
 }
 
 #[cfg(test)]
@@ -90,7 +97,7 @@ mod tests {
             "user_lookup_table" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

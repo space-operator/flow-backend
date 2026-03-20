@@ -15,7 +15,11 @@ pub fn reflect_post(ctx: &CommandContext, path: &str) -> reqwest::RequestBuilder
 
 /// Authenticated GET request with Reflect-API-Key header.
 /// Used by: get_integration_stats, get_integration_historical_stats.
-pub fn reflect_get_auth(ctx: &CommandContext, path: &str, api_key: &str) -> reqwest::RequestBuilder {
+pub fn reflect_get_auth(
+    ctx: &CommandContext,
+    path: &str,
+    api_key: &str,
+) -> reqwest::RequestBuilder {
     ctx.http()
         .get(format!("{BASE_URL}{path}"))
         .header("Reflect-API-Key", api_key)
@@ -23,7 +27,11 @@ pub fn reflect_get_auth(ctx: &CommandContext, path: &str, api_key: &str) -> reqw
 
 /// Authenticated POST request with Reflect-API-Key header.
 /// Used by: whitelist_address.
-pub fn reflect_post_auth(ctx: &CommandContext, path: &str, api_key: &str) -> reqwest::RequestBuilder {
+pub fn reflect_post_auth(
+    ctx: &CommandContext,
+    path: &str,
+    api_key: &str,
+) -> reqwest::RequestBuilder {
     ctx.http()
         .post(format!("{BASE_URL}{path}"))
         .header("Reflect-API-Key", api_key)

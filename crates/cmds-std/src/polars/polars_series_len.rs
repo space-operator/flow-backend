@@ -38,7 +38,9 @@ mod tests {
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_series_ipc(name: &str, values: &[i64]) -> String {
         let s = Series::new(name.into(), values);
@@ -47,9 +49,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_len() {
-        let output = run(CommandContext::default(), Input {
-            series: test_series_ipc("a", &[10, 20, 30, 40, 50]),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                series: test_series_ipc("a", &[10, 20, 30, 40, 50]),
+            },
+        )
+        .await
+        .unwrap();
         assert_eq!(output.length, 5);
         assert_eq!(output.null_count, 0);
     }

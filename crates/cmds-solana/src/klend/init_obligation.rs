@@ -1,6 +1,9 @@
+use super::{
+    KLEND_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_obligation,
+    derive_user_metadata,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KLEND_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_obligation, derive_user_metadata};
 
 const NAME: &str = "init_obligation";
 const DEFINITION: &str = flow_lib::node_definition!("klend/init_obligation.jsonc");
@@ -45,7 +48,12 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let obligation = derive_obligation(&input.lending_market, &input.obligation_owner.pubkey(), &input.seed1_account, &input.seed2_account);
+    let obligation = derive_obligation(
+        &input.lending_market,
+        &input.obligation_owner.pubkey(),
+        &input.seed1_account,
+        &input.seed2_account,
+    );
     let owner_user_metadata = derive_user_metadata(&input.obligation_owner.pubkey());
 
     let accounts = vec![
@@ -75,9 +83,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, obligation, owner_user_metadata })
+    Ok(Output {
+        signature,
+        obligation,
+        owner_user_metadata,
+    })
 }
 
 #[cfg(test)]
@@ -104,7 +120,7 @@ mod tests {
             "id" => 0_u8,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

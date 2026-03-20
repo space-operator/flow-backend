@@ -3,7 +3,6 @@
 //! On-chain Solana instruction nodes for the Kamino Vault program.
 //! Program ID: KvauGMspG5k6rtzrqqn7WNn3oZdyKqLKwK2XWQ8FLjd
 
-
 // kvault - Space Operator nodes for Kamino Vaults
 //
 // Program ID: `KvauGMspG5k6rtzrqqn7WNn3oZdyKqLKwK2XWQ8FLjd`
@@ -19,13 +18,15 @@ use crate::prelude::*;
 // =============================================================================
 
 /// Kamino Vault Program ID
-pub const KVAULT_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("KvauGMspG5k6rtzrqqn7WNn3oZdyKqLKwK2XWQ8FLjd");
+pub const KVAULT_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("KvauGMspG5k6rtzrqqn7WNn3oZdyKqLKwK2XWQ8FLjd");
 
 /// System Program ID
 pub const SYSTEM_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("11111111111111111111111111111111");
 
 /// Token Program ID
-pub const TOKEN_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+pub const TOKEN_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
 // =============================================================================
 // Anchor Discriminator
@@ -61,22 +62,22 @@ pub mod update_global_config_admin;
 // Node Modules - Vault Management (Admin)
 // =============================================================================
 
+pub mod add_update_whitelisted_reserve;
 pub mod init_vault;
-pub mod update_vault_config;
+pub mod remove_allocation;
 pub mod update_admin;
 pub mod update_reserve_allocation;
-pub mod remove_allocation;
-pub mod add_update_whitelisted_reserve;
+pub mod update_vault_config;
 
 // =============================================================================
 // Node Modules - User Operations
 // =============================================================================
 
-pub mod deposit;
 pub mod buy;
-pub mod withdraw;
-pub mod sell;
+pub mod deposit;
 pub mod invest;
+pub mod sell;
+pub mod withdraw;
 pub mod withdraw_from_available;
 
 // =============================================================================
@@ -90,5 +91,5 @@ pub mod update_shares_metadata;
 // Node Modules - Fee Management (Admin)
 // =============================================================================
 
-pub mod withdraw_pending_fees;
 pub mod give_up_pending_fees;
+pub mod withdraw_pending_fees;

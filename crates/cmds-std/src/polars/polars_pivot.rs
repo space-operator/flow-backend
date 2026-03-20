@@ -23,7 +23,9 @@ pub struct Input {
     pub agg: String,
 }
 
-fn default_agg() -> String { "first".to_string() }
+fn default_agg() -> String {
+    "first".to_string()
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -86,31 +88,43 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("product".into(), &["A", "A", "B", "B"]).into_column(),
             Series::new("quarter".into(), &["Q1", "Q2", "Q1", "Q2"]).into_column(),
             Series::new("sales".into(), &[10i64, 20, 30, 40]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            on: "quarter".to_string(),
-            index: serde_json::json!(["product"]),
-            values: "sales".to_string(),
-            agg: "first".to_string(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                on: "quarter".to_string(),
+                index: serde_json::json!(["product"]),
+                values: "sales".to_string(),
+                agg: "first".to_string(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
-        assert_eq!(df.height(), 2, "pivot should produce 2 rows (one per product)");
+        assert_eq!(
+            df.height(),
+            2,
+            "pivot should produce 2 rows (one per product)"
+        );
         assert!(df.column("Q1").is_ok(), "should have Q1 column");
         assert!(df.column("Q2").is_ok(), "should have Q2 column");
     }

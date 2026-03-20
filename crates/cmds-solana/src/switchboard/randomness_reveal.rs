@@ -61,19 +61,20 @@ struct RandomnessData {
 
 fn parse_randomness_account(data: &[u8]) -> Result<RandomnessData, CommandError> {
     if data.len() < 8 + 176 {
-        return Err(CommandError::msg("Account data too small for RandomnessAccountData"));
+        return Err(CommandError::msg(
+            "Account data too small for RandomnessAccountData",
+        ));
     }
     let disc = randomness_discriminator();
     if data[..8] != disc {
-        return Err(CommandError::msg("Invalid Switchboard Randomness account discriminator"));
+        return Err(CommandError::msg(
+            "Invalid Switchboard Randomness account discriminator",
+        ));
     }
     let d = &data[8..];
-    let read_pubkey = |off: usize| -> Pubkey {
-        Pubkey::new_from_array(d[off..off + 32].try_into().unwrap())
-    };
-    let read_u64 = |off: usize| -> u64 {
-        u64::from_le_bytes(d[off..off + 8].try_into().unwrap())
-    };
+    let read_pubkey =
+        |off: usize| -> Pubkey { Pubkey::new_from_array(d[off..off + 32].try_into().unwrap()) };
+    let read_u64 = |off: usize| -> u64 { u64::from_le_bytes(d[off..off + 8].try_into().unwrap()) };
     let mut seed_slothash = [0u8; 32];
     seed_slothash.copy_from_slice(&d[64..96]);
 
@@ -99,7 +100,10 @@ fn extract_gateway_url_from_oracle(data: &[u8]) -> Result<String, CommandError> 
     // The gateway_uri is typically "https://" or "http://" stored as UTF-8.
     // We scan the account data for it.
     let data_str = String::from_utf8_lossy(data);
-    if let Some(start) = data_str.find("https://").or_else(|| data_str.find("http://")) {
+    if let Some(start) = data_str
+        .find("https://")
+        .or_else(|| data_str.find("http://"))
+    {
         let rest = &data_str[start..];
         // Find the end: first null byte or non-printable character
         let end = rest
@@ -119,9 +123,9 @@ fn extract_gateway_url_from_oracle(data: &[u8]) -> Result<String, CommandError> 
 
 #[derive(Deserialize, Debug)]
 struct RandomnessRevealResponse {
-    signature: String,   // base64-encoded 64-byte signature
+    signature: String, // base64-encoded 64-byte signature
     recovery_id: u8,
-    value: Vec<u8>,      // 32 random bytes
+    value: Vec<u8>, // 32 random bytes
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
@@ -159,12 +163,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         gateway_url.trim_end_matches('/')
     );
 
-    let resp = ctx
-        .http()
-        .post(&reveal_url)
-        .json(&body)
-        .send()
-        .await?;
+    let resp = ctx.http().post(&reveal_url).json(&body).send().await?;
 
     if !resp.status().is_success() {
         return Err(CommandError::msg(format!(
@@ -177,9 +176,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let reveal: RandomnessRevealResponse = resp.json().await?;
 
     // 4. Decode signature from base64
-    let sig_bytes = base64::decode(&reveal.signature).map_err(|e| {
-        CommandError::msg(format!("Failed to decode reveal signature: {e}"))
-    })?;
+    let sig_bytes = base64::decode(&reveal.signature)
+        .map_err(|e| CommandError::msg(format!("Failed to decode reveal signature: {e}")))?;
     if sig_bytes.len() != 64 {
         return Err(CommandError::msg(format!(
             "Expected 64-byte signature, got {}",
@@ -201,19 +199,19 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let stats = oracle_randomness_stats_pda(&SB_ON_DEMAND_PID, &rng_data.oracle);
 
     let accounts = vec![
-        AccountMeta::new(input.randomness_account, false),             // randomness (writable)
-        AccountMeta::new_readonly(rng_data.oracle, false),             // oracle
-        AccountMeta::new_readonly(rng_data.queue, false),              // queue
-        AccountMeta::new(stats, false),                                // stats (writable)
-        AccountMeta::new_readonly(rng_data.authority, false),          // authority
-        AccountMeta::new(payer_pubkey, true),                          // payer (signer, writable)
-        AccountMeta::new_readonly(SLOT_HASHES_SYSVAR, false),          // recentSlothashes
+        AccountMeta::new(input.randomness_account, false), // randomness (writable)
+        AccountMeta::new_readonly(rng_data.oracle, false), // oracle
+        AccountMeta::new_readonly(rng_data.queue, false),  // queue
+        AccountMeta::new(stats, false),                    // stats (writable)
+        AccountMeta::new_readonly(rng_data.authority, false), // authority
+        AccountMeta::new(payer_pubkey, true),              // payer (signer, writable)
+        AccountMeta::new_readonly(SLOT_HASHES_SYSVAR, false), // recentSlothashes
         AccountMeta::new_readonly(solana_sdk_ids::system_program::ID, false), // systemProgram
-        AccountMeta::new(reward_escrow, false),                        // rewardEscrow (writable)
-        AccountMeta::new_readonly(SPL_TOKEN_PROGRAM, false),           // tokenProgram
-        AccountMeta::new_readonly(SPL_ATA_PROGRAM, false),             // associatedTokenProgram
-        AccountMeta::new_readonly(WSOL_MINT, false),                   // wrappedSolMint
-        AccountMeta::new_readonly(program_state, false),               // programState
+        AccountMeta::new(reward_escrow, false),            // rewardEscrow (writable)
+        AccountMeta::new_readonly(SPL_TOKEN_PROGRAM, false), // tokenProgram
+        AccountMeta::new_readonly(SPL_ATA_PROGRAM, false), // associatedTokenProgram
+        AccountMeta::new_readonly(WSOL_MINT, false),       // wrappedSolMint
+        AccountMeta::new_readonly(program_state, false),   // programState
     ];
 
     // Args: { signature: [u8; 64], recovery_id: u8, value: [u8; 32] }
@@ -231,7 +229,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     // Return the random value as a JSON array of bytes

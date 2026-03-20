@@ -27,10 +27,12 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let url = format!("https://dev-prediction-markets-api.dflow.net/api/v1/orderbook/{}", input.market_ticker);
+    let url = format!(
+        "https://dev-prediction-markets-api.dflow.net/api/v1/orderbook/{}",
+        input.market_ticker
+    );
 
     let query: Vec<(&str, String)> = Vec::new();
-
 
     let resp = ctx
         .http()
@@ -77,7 +79,7 @@ mod tests {
     #[test]
     fn test_deserialize_response() {
         let json_str = include_str!("fixtures/orderbook.json");
-        let _parsed: crate::dflow::response_types::Orderbook = serde_json::from_str(json_str)
-            .expect("Failed to deserialize orderbook.json");
+        let _parsed: crate::dflow::response_types::Orderbook =
+            serde_json::from_str(json_str).expect("Failed to deserialize orderbook.json");
     }
 }

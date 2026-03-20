@@ -29,10 +29,7 @@ pub enum TransactionSourceV0 {
         data: Vec<u8>,
     },
     /// Fetch transaction from a remote URL at execution time
-    RemoteV0 {
-        url: String,
-        signer: Pubkey,
-    },
+    RemoteV0 { url: String, signer: Pubkey },
 }
 
 /// Task return value for recursive tasks

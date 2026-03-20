@@ -38,8 +38,7 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
         serde_json::to_string_pretty(&value)
             .map_err(|e| CommandError::msg(format!("JSON pretty-print error: {e}")))?
     } else {
-        String::from_utf8(buf)
-            .map_err(|e| CommandError::msg(format!("UTF-8 error: {e}")))?
+        String::from_utf8(buf).map_err(|e| CommandError::msg(format!("UTF-8 error: {e}")))?
     };
     Ok(Output { json_string })
 }
@@ -82,10 +81,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_write_json_pretty() {
-        let mut df = DataFrame::new(vec![
-            Column::new("val".into(), &[1i64, 2]),
-        ])
-        .unwrap();
+        let mut df = DataFrame::new(vec![Column::new("val".into(), &[1i64, 2])]).unwrap();
         let ipc = df_to_ipc(&mut df).unwrap();
 
         let output = run(

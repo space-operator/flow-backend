@@ -1,6 +1,6 @@
+use super::{KVAULT_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KVAULT_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "kvault_invest";
 const IX_NAME: &str = "invest";
@@ -61,23 +61,22 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-
     let accounts = vec![
-        AccountMeta::new(input.payer.pubkey(), true),                    // payer (writable signer)
-        AccountMeta::new(input.payer_token_account, false),              // payer_token_account (writable)
-        AccountMeta::new(input.vault_state, false),                      // vault_state (writable)
-        AccountMeta::new(input.token_vault, false),                      // token_vault (writable)
-        AccountMeta::new(input.token_mint, false),                       // token_mint (writable)
-        AccountMeta::new(input.base_vault_authority, false),             // base_vault_authority (writable)
-        AccountMeta::new(input.ctoken_vault, false),                     // ctoken_vault (writable)
-        AccountMeta::new(input.reserve, false),                          // reserve (writable)
-        AccountMeta::new_readonly(input.lending_market, false),          // lending_market
+        AccountMeta::new(input.payer.pubkey(), true), // payer (writable signer)
+        AccountMeta::new(input.payer_token_account, false), // payer_token_account (writable)
+        AccountMeta::new(input.vault_state, false),   // vault_state (writable)
+        AccountMeta::new(input.token_vault, false),   // token_vault (writable)
+        AccountMeta::new(input.token_mint, false),    // token_mint (writable)
+        AccountMeta::new(input.base_vault_authority, false), // base_vault_authority (writable)
+        AccountMeta::new(input.ctoken_vault, false),  // ctoken_vault (writable)
+        AccountMeta::new(input.reserve, false),       // reserve (writable)
+        AccountMeta::new_readonly(input.lending_market, false), // lending_market
         AccountMeta::new_readonly(input.lending_market_authority, false), // lending_market_authority
-        AccountMeta::new(input.reserve_liquidity_supply, false),         // reserve_liquidity_supply (writable)
-        AccountMeta::new(input.reserve_collateral_mint, false),          // reserve_collateral_mint (writable)
-        AccountMeta::new_readonly(input.klend_program, false),           // klend_program
+        AccountMeta::new(input.reserve_liquidity_supply, false), // reserve_liquidity_supply (writable)
+        AccountMeta::new(input.reserve_collateral_mint, false), // reserve_collateral_mint (writable)
+        AccountMeta::new_readonly(input.klend_program, false),  // klend_program
         AccountMeta::new_readonly(input.reserve_collateral_token_program, false), // reserve_collateral_token_program
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),              // token_program
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),                       // token_program
         AccountMeta::new_readonly(input.instruction_sysvar_account, false), // instruction_sysvar_account
     ];
 
@@ -96,7 +95,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -134,7 +137,7 @@ mod tests {
             "instruction_sysvar_account" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

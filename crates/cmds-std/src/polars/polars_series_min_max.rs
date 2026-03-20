@@ -46,9 +46,11 @@ fn any_value_to_json(val: AnyValue) -> JsonValue {
 async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let s = series_from_ipc(&input.series)?;
 
-    let min_val = s.min_reduce()
+    let min_val = s
+        .min_reduce()
         .map_err(|e| CommandError::msg(format!("Min error: {e}")))?;
-    let max_val = s.max_reduce()
+    let max_val = s
+        .max_reduce()
         .map_err(|e| CommandError::msg(format!("Max error: {e}")))?;
 
     Ok(Output {
@@ -63,7 +65,9 @@ mod tests {
     use crate::polars::types::series_to_ipc;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_series_ipc(name: &str, values: &[i64]) -> String {
         let s = Series::new(name.into(), values);
@@ -72,9 +76,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_min_max() {
-        let output = run(CommandContext::default(), Input {
-            series: test_series_ipc("a", &[5, 1, 8, 3]),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                series: test_series_ipc("a", &[5, 1, 8, 3]),
+            },
+        )
+        .await
+        .unwrap();
         assert_eq!(output.min, serde_json::json!(1));
         assert_eq!(output.max, serde_json::json!(8));
     }

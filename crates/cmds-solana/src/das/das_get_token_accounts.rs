@@ -33,8 +33,12 @@ pub struct Input {
     pub limit: u32,
 }
 
-fn default_page() -> u32 { 1 }
-fn default_limit() -> u32 { 100 }
+fn default_page() -> u32 {
+    1
+}
+fn default_limit() -> u32 {
+    100
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -97,10 +101,20 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     };
 
     let token_accounts = result.get("token_accounts").cloned().unwrap_or(json!([]));
-    let total = result.get("total").and_then(|t| t.as_u64()).map(|t| t as u32);
-    let page = result.get("page").and_then(|p| p.as_u64()).map(|p| p as u32);
+    let total = result
+        .get("total")
+        .and_then(|t| t.as_u64())
+        .map(|t| t as u32);
+    let page = result
+        .get("page")
+        .and_then(|p| p.as_u64())
+        .map(|p| p as u32);
 
-    Ok(Output { token_accounts, total, page })
+    Ok(Output {
+        token_accounts,
+        total,
+        page,
+    })
 }
 
 #[cfg(test)]

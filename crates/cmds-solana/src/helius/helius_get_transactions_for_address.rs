@@ -8,7 +8,8 @@ use reqwest::header::CONTENT_TYPE;
 use serde_json::json;
 
 pub const NAME: &str = "helius_get_transactions_for_address";
-const DEFINITION: &str = flow_lib::node_definition!("helius/helius_get_transactions_for_address.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("helius/helius_get_transactions_for_address.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
@@ -35,9 +36,15 @@ pub struct Input {
     pub include_token_accounts: bool,
 }
 
-fn default_limit() -> u32 { 100 }
-fn default_sort_order() -> String { "desc".to_string() }
-fn default_include_token_accounts() -> bool { true }
+fn default_limit() -> u32 {
+    100
+}
+fn default_sort_order() -> String {
+    "desc".to_string()
+}
+fn default_include_token_accounts() -> bool {
+    true
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -92,12 +99,21 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     let result = response.get("result").cloned().unwrap_or(JsonValue::Null);
 
     // Extract transactions array
-    let transactions = result.get("transactions").cloned()
-        .or_else(|| if result.is_array() { Some(result.clone()) } else { None })
+    let transactions = result
+        .get("transactions")
+        .cloned()
+        .or_else(|| {
+            if result.is_array() {
+                Some(result.clone())
+            } else {
+                None
+            }
+        })
         .unwrap_or(json!([]));
 
     // Extract oldest signature for pagination
-    let oldest_signature = transactions.as_array()
+    let oldest_signature = transactions
+        .as_array()
         .and_then(|arr| arr.last())
         .and_then(|tx| tx.get("signature"))
         .and_then(|s| s.as_str())

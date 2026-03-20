@@ -3,7 +3,8 @@ use crate::prelude::*;
 use spl_token_2022_interface::state::AccountState;
 
 const NAME: &str = "update_default_account_state";
-const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/default_account_state/update.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("spl_token_2022/default_account_state/update.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -51,7 +52,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ix].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }

@@ -1,5 +1,5 @@
+use super::{check_response, paymaster_get};
 use crate::prelude::*;
-use super::{paymaster_get, check_response};
 
 const NAME: &str = "swig_paymaster_health";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_paymaster_health.jsonc");

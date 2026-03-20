@@ -34,8 +34,7 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let authorized_pubkey = input.authorized.pubkey();
-    let ix =
-        system_instruction::advance_nonce_account(&input.nonce_account, &authorized_pubkey);
+    let ix = system_instruction::advance_nonce_account(&input.nonce_account, &authorized_pubkey);
 
     let ins = Instructions {
         lookup_tables: None,
@@ -44,7 +43,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ix].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

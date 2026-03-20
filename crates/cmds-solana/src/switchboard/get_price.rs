@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use flow_lib::solana::Pubkey;
 
-use super::helper::{parse_pull_feed_result, PRECISION};
+use super::helper::{PRECISION, parse_pull_feed_result};
 
 pub const NAME: &str = "switchboard_get_price";
 const DEFINITION: &str = flow_lib::node_definition!("switchboard/switchboard_get_price.jsonc");

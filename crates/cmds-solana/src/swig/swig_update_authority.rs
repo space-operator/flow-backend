@@ -1,8 +1,8 @@
-use crate::prelude::*;
 use super::{
-    to_pubkey_v2, to_instruction_v3, build_client_action,
-    UpdateAuthorityInstruction, UpdateAuthorityData,
+    UpdateAuthorityData, UpdateAuthorityInstruction, build_client_action, to_instruction_v3,
+    to_pubkey_v2,
 };
+use crate::prelude::*;
 
 const NAME: &str = "swig_update_authority";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_update_authority.jsonc");
@@ -46,8 +46,12 @@ pub struct Input {
     pub submit: bool,
 }
 
-fn default_operation() -> String { "replace_all".to_string() }
-fn default_permission() -> String { "all".to_string() }
+fn default_operation() -> String {
+    "replace_all".to_string()
+}
+fn default_permission() -> String {
+    "all".to_string()
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -77,7 +81,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         input.acting_role_id,
         input.authority_to_update_id,
         update_data,
-    ).map_err(|e| CommandError::msg(e.to_string()))?;
+    )
+    .map_err(|e| CommandError::msg(e.to_string()))?;
 
     let instruction = to_instruction_v3(ix_v2);
 
@@ -88,7 +93,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })
@@ -115,9 +124,11 @@ mod tests {
             to_pubkey_v2(&swig_account),
             to_pubkey_v2(&kp.pubkey()),
             to_pubkey_v2(&kp.pubkey()),
-            0, 1,
+            0,
+            1,
             UpdateAuthorityData::ReplaceAll(actions),
-        ).unwrap();
+        )
+        .unwrap();
 
         let instruction = to_instruction_v3(ix);
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
@@ -129,15 +140,23 @@ mod tests {
         let kp = Keypair::new();
         let swig_account = Keypair::new().pubkey();
         let token_mint = Keypair::new().pubkey();
-        let actions = build_client_action("token_limit", None, Some(&token_mint), Some(1_000_000), None);
+        let actions = build_client_action(
+            "token_limit",
+            None,
+            Some(&token_mint),
+            Some(1_000_000),
+            None,
+        );
 
         let ix = UpdateAuthorityInstruction::new_with_ed25519_authority(
             to_pubkey_v2(&swig_account),
             to_pubkey_v2(&kp.pubkey()),
             to_pubkey_v2(&kp.pubkey()),
-            0, 1,
+            0,
+            1,
             UpdateAuthorityData::AddActions(actions),
-        ).unwrap();
+        )
+        .unwrap();
 
         let instruction = to_instruction_v3(ix);
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);

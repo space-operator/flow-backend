@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::derive_ata;
+use crate::prelude::*;
 use spl_token_2022_interface::extension::ExtensionType;
 
 const NAME: &str = "reallocate_t22";
@@ -57,7 +57,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ix].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature, account })
 }
@@ -84,7 +88,10 @@ mod tests {
             &payer,
             &owner,
             &[],
-            &[ExtensionType::TransferFeeAmount, ExtensionType::ImmutableOwner],
+            &[
+                ExtensionType::TransferFeeAmount,
+                ExtensionType::ImmutableOwner,
+            ],
         )
         .unwrap();
 

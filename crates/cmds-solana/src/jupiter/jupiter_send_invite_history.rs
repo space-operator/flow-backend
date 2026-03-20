@@ -82,7 +82,10 @@ mod tests {
     async fn test_run_send_invite_history() {
         let api_key = match std::env::var("JUPITER_API_KEY") {
             Ok(k) => k,
-            Err(_) => { eprintln!("JUPITER_API_KEY not set, skipping"); return; }
+            Err(_) => {
+                eprintln!("JUPITER_API_KEY not set, skipping");
+                return;
+            }
         };
         let input = Input {
             api_key,

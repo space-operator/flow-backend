@@ -44,7 +44,10 @@ pub struct Input {
     pub uri: String,
     pub symbol: String,
     /// Optional: Mint account space in bytes. If 0, None, or not provided, calculated automatically.
-    #[serde(default, deserialize_with = "crate::attestation_service::deserialize_optional_u16")]
+    #[serde(
+        default,
+        deserialize_with = "crate::attestation_service::deserialize_optional_u16"
+    )]
     pub mint_account_space: u16,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
@@ -168,7 +171,12 @@ pub async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, Comman
         .await?
         .signature;
 
-    Ok(Output { signature, attestation, attestation_mint, recipient_token_account })
+    Ok(Output {
+        signature,
+        attestation,
+        attestation_mint,
+        recipient_token_account,
+    })
 }
 
 #[cfg(test)]

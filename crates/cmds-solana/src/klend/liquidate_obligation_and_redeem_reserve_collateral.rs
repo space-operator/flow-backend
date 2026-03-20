@@ -1,9 +1,12 @@
+use super::{
+    KLEND_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator, derive_lending_market_authority,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KLEND_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator, derive_lending_market_authority};
 
 const NAME: &str = "liquidate_obligation_and_redeem_reserve_collateral";
-const DEFINITION: &str = flow_lib::node_definition!("klend/liquidate_obligation_and_redeem_reserve_collateral.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("klend/liquidate_obligation_and_redeem_reserve_collateral.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -87,7 +90,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let mut data = anchor_discriminator(NAME).to_vec();
     data.extend(borsh::to_vec(&input.liquidity_amount)?);
-    data.extend(borsh::to_vec(&input.min_acceptable_received_collateral_amount)?);
+    data.extend(borsh::to_vec(
+        &input.min_acceptable_received_collateral_amount,
+    )?);
     data.extend(borsh::to_vec(&input.max_allowed_ltv_override_percent)?);
 
     let instruction = Instruction {
@@ -103,9 +108,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, lending_market_authority })
+    Ok(Output {
+        signature,
+        lending_market_authority,
+    })
 }
 
 #[cfg(test)]
@@ -143,7 +155,7 @@ mod tests {
             "max_allowed_ltv_override_percent" => 1000u64,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

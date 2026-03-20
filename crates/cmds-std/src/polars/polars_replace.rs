@@ -74,25 +74,33 @@ mod tests {
     use crate::polars::types::df_to_ipc;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("name".into(), &["Alice", "Bob", "Charlie"]).into_column(),
             Series::new("age".into(), &[30i64, 25, 35]).into_column(),
             Series::new("score".into(), &[88.5f64, 92.0, 75.3]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_replace_string() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: "name".to_string(),
-            old: serde_json::json!("Alice"),
-            new: serde_json::json!("Alicia"),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: "name".to_string(),
+                old: serde_json::json!("Alice"),
+                new: serde_json::json!("Alicia"),
+            },
+        )
+        .await
+        .unwrap();
         let df = crate::polars::types::df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
         let names = df.column("name").unwrap();

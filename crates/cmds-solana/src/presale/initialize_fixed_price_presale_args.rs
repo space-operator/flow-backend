@@ -1,9 +1,10 @@
+use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 
 const NAME: &str = "initialize_fixed_price_presale_args";
-const DEFINITION: &str = flow_lib::node_definition!("presale/initialize_fixed_price_presale_args.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("presale/initialize_fixed_price_presale_args.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -48,21 +49,22 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.fixed_price_presale_params, false),  // fixed_price_presale_params (writable, PDA)
-        AccountMeta::new_readonly(input.owner, false),              // owner (readonly)
-        AccountMeta::new(input.payer.pubkey(), true),               // payer (writable, signer)
-        AccountMeta::new_readonly(input.system_program, false),     // system_program (readonly)
-        AccountMeta::new_readonly(event_authority, false),          // event_authority (PDA)
-        AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false),       // program
+        AccountMeta::new(input.fixed_price_presale_params, false), // fixed_price_presale_params (writable, PDA)
+        AccountMeta::new_readonly(input.owner, false),             // owner (readonly)
+        AccountMeta::new(input.payer.pubkey(), true),              // payer (writable, signer)
+        AccountMeta::new_readonly(input.system_program, false),    // system_program (readonly)
+        AccountMeta::new_readonly(event_authority, false),         // event_authority (PDA)
+        AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false),      // program
     ];
 
     // Manually serialize InitializeFixedPricePresaleExtraArgs to avoid borsh version conflict
     // (Pubkey implements BorshSerialize from borsh 1.x but crate uses borsh 0.10)
     let mut data = discriminators::INITIALIZE_FIXED_PRICE_PRESALE_ARGS.to_vec();
-    data.extend_from_slice(input.presale.as_ref());        // presale: Pubkey (32 bytes)
-    data.push(input.disable_withdraw);                     // disable_withdraw: u8
-    data.extend_from_slice(&input.q_price.to_le_bytes());  // q_price: u128 (16 bytes)
-    for v in &input.padding1 {                             // padding1: [u64; 8]
+    data.extend_from_slice(input.presale.as_ref()); // presale: Pubkey (32 bytes)
+    data.push(input.disable_withdraw); // disable_withdraw: u8
+    data.extend_from_slice(&input.q_price.to_le_bytes()); // q_price: u128 (16 bytes)
+    for v in &input.padding1 {
+        // padding1: [u64; 8]
         data.extend_from_slice(&v.to_le_bytes());
     }
 
@@ -79,7 +81,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

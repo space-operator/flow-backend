@@ -234,7 +234,10 @@ mod tests {
         assert!(parsed.inputs[0].passthrough);
 
         assert_eq!(parsed.inputs[1].name, "amount");
-        assert_eq!(parsed.inputs[1].type_bounds, vec![ValueType::U64, ValueType::Decimal]);
+        assert_eq!(
+            parsed.inputs[1].type_bounds,
+            vec![ValueType::U64, ValueType::Decimal]
+        );
         assert!(parsed.inputs[1].required);
         assert!(!parsed.inputs[1].passthrough);
 

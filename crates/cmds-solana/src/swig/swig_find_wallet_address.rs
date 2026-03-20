@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::find_wallet_address;
+use crate::prelude::*;
 
 const NAME: &str = "swig_find_wallet_address";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_find_wallet_address.jsonc");
@@ -29,7 +29,10 @@ pub struct Output {
 
 async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (wallet_address, bump) = find_wallet_address(&input.swig_account);
-    Ok(Output { wallet_address, bump })
+    Ok(Output {
+        wallet_address,
+        bump,
+    })
 }
 
 #[cfg(test)]

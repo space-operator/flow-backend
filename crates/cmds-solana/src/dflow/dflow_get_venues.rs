@@ -30,7 +30,6 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
 
     let query: Vec<(&str, String)> = Vec::new();
 
-
     let resp = ctx
         .http()
         .get(&url)
@@ -77,11 +76,12 @@ mod tests {
     async fn test_run_get_venues() {
         let api_key = match std::env::var("DFLOW_API_KEY") {
             Ok(k) => k,
-            Err(_) => { eprintln!("DFLOW_API_KEY not set, skipping"); return; }
+            Err(_) => {
+                eprintln!("DFLOW_API_KEY not set, skipping");
+                return;
+            }
         };
-        let input = Input {
-            api_key,
-        };
+        let input = Input { api_key };
         let result = run(CommandContext::default(), input).await;
         assert!(result.is_ok(), "run() failed: {:?}", result.err());
     }

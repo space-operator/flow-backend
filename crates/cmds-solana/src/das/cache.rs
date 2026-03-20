@@ -44,10 +44,13 @@ pub fn set(key: String, value: JsonValue) {
             let now = Instant::now();
             map.retain(|_, e| e.expires_at > now);
         }
-        map.insert(key, Entry {
-            value,
-            expires_at: Instant::now() + TTL,
-        });
+        map.insert(
+            key,
+            Entry {
+                value,
+                expires_at: Instant::now() + TTL,
+            },
+        );
     }
 }
 

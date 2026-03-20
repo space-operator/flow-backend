@@ -1,6 +1,6 @@
+use super::{SWIG_PROGRAM_ID, SYSTEM_PROGRAM_ID, find_wallet_address};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{SWIG_PROGRAM_ID, SYSTEM_PROGRAM_ID, find_wallet_address};
 
 const NAME: &str = "swig_migrate_wallet_address";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_migrate_wallet_address.jsonc");
@@ -42,9 +42,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     // MigrateToWalletAddressV1Args (8 bytes):
     // discriminator(u16=12) + wallet_address_bump(u8) + padding(5)
     let mut data = Vec::with_capacity(16);
-    data.extend_from_slice(&12u16.to_le_bytes());  // discriminator = 12
-    data.push(wallet_bump);                         // wallet_address_bump
-    data.extend_from_slice(&[0u8; 5]);             // padding
+    data.extend_from_slice(&12u16.to_le_bytes()); // discriminator = 12
+    data.push(wallet_bump); // wallet_address_bump
+    data.extend_from_slice(&[0u8; 5]); // padding
 
     let accounts = vec![
         AccountMeta::new(input.swig_account, false),
@@ -67,10 +67,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    Ok(Output { signature, wallet_address })
+    Ok(Output {
+        signature,
+        wallet_address,
+    })
 }
 
 #[cfg(test)]

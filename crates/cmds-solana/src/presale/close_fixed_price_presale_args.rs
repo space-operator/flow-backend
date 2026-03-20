@@ -1,6 +1,6 @@
+use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 
 const NAME: &str = "close_fixed_price_presale_args";
 const DEFINITION: &str = flow_lib::node_definition!("presale/close_fixed_price_presale_args.jsonc");
@@ -58,7 +58,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

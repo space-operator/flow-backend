@@ -284,7 +284,9 @@ impl UserConnection {
         futures_util::pin_mut!(writer);
         for f in d.flows.values() {
             let f = &f.row;
-            let flow_data = f.data().map_err(Error::json("flow_deployments_flows.data"))?;
+            let flow_data = f
+                .data()
+                .map_err(Error::json("flow_deployments_flows.data"))?;
             writer
                 .as_mut()
                 .write(&[&id, &f.id, &f.user_id, &Json(flow_data)])

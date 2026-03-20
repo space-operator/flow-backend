@@ -53,36 +53,26 @@ fn json_array_to_series(value: &JsonValue) -> Result<Series, CommandError> {
             let first_non_null = arr.iter().find(|v| !v.is_null());
             match first_non_null {
                 Some(JsonValue::Number(n)) if n.is_i64() => {
-                    let vals: Vec<Option<i64>> = arr
-                        .iter()
-                        .map(|v| v.as_i64())
-                        .collect();
+                    let vals: Vec<Option<i64>> = arr.iter().map(|v| v.as_i64()).collect();
                     Ok(Series::new("filter_vals".into(), &vals))
                 }
                 Some(JsonValue::Number(_)) => {
-                    let vals: Vec<Option<f64>> = arr
-                        .iter()
-                        .map(|v| v.as_f64())
-                        .collect();
+                    let vals: Vec<Option<f64>> = arr.iter().map(|v| v.as_f64()).collect();
                     Ok(Series::new("filter_vals".into(), &vals))
                 }
                 Some(JsonValue::Bool(_)) => {
-                    let vals: Vec<Option<bool>> = arr
-                        .iter()
-                        .map(|v| v.as_bool())
-                        .collect();
+                    let vals: Vec<Option<bool>> = arr.iter().map(|v| v.as_bool()).collect();
                     Ok(Series::new("filter_vals".into(), &vals))
                 }
                 _ => {
-                    let vals: Vec<Option<&str>> = arr
-                        .iter()
-                        .map(|v| v.as_str())
-                        .collect();
+                    let vals: Vec<Option<&str>> = arr.iter().map(|v| v.as_str()).collect();
                     Ok(Series::new("filter_vals".into(), &vals))
                 }
             }
         }
-        _ => Err(CommandError::msg("is_in operator requires a JSON array value")),
+        _ => Err(CommandError::msg(
+            "is_in operator requires a JSON array value",
+        )),
     }
 }
 
@@ -101,7 +91,10 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
         "is_not_null" => col_expr.is_not_null(),
         "contains" => {
             let pattern = input.value.as_str().unwrap_or("").to_string();
-            col_expr.cast(DataType::String).str().contains_literal(lit(pattern))
+            col_expr
+                .cast(DataType::String)
+                .str()
+                .contains_literal(lit(pattern))
         }
         "is_in" => {
             let series = json_array_to_series(&input.value)?;
@@ -133,44 +126,74 @@ mod tests {
     use crate::polars::types::df_to_ipc;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     /// Build a small test DataFrame: name (str), age (i64), score (f64), active (bool)
     /// with one null row to exercise null-related operators.
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
-            Series::new("name".into(), &[
-                Some("Alice"), Some("Bob"), Some("Charlie"), None, Some("Eve"),
-            ]).into_column(),
-            Series::new("age".into(), &[
-                Some(30i64), Some(25), Some(35), Some(28), None,
-            ]).into_column(),
-            Series::new("score".into(), &[
-                Some(88.5f64), Some(92.0), Some(75.3), Some(88.5), Some(95.1),
-            ]).into_column(),
-            Series::new("active".into(), &[
-                Some(true), Some(false), Some(true), Some(false), Some(true),
-            ]).into_column(),
-        ]).unwrap();
+            Series::new(
+                "name".into(),
+                &[
+                    Some("Alice"),
+                    Some("Bob"),
+                    Some("Charlie"),
+                    None,
+                    Some("Eve"),
+                ],
+            )
+            .into_column(),
+            Series::new(
+                "age".into(),
+                &[Some(30i64), Some(25), Some(35), Some(28), None],
+            )
+            .into_column(),
+            Series::new(
+                "score".into(),
+                &[
+                    Some(88.5f64),
+                    Some(92.0),
+                    Some(75.3),
+                    Some(88.5),
+                    Some(95.1),
+                ],
+            )
+            .into_column(),
+            Series::new(
+                "active".into(),
+                &[Some(true), Some(false), Some(true), Some(false), Some(true)],
+            )
+            .into_column(),
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     /// Helper: run filter and return the resulting DataFrame.
     async fn filter(column: &str, operator: &str, value: JsonValue) -> DataFrame {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: column.into(),
-            operator: operator.into(),
-            value,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: column.into(),
+                operator: operator.into(),
+                value,
+            },
+        )
+        .await
+        .unwrap();
         df_from_ipc(&output.dataframe).unwrap()
     }
 
     /// Helper: extract a string column from the result as Vec<Option<String>>.
     fn str_col(df: &DataFrame, name: &str) -> Vec<Option<String>> {
-        df.column(name).unwrap()
+        df.column(name)
+            .unwrap()
             .as_materialized_series()
-            .str().unwrap()
+            .str()
+            .unwrap()
             .into_iter()
             .map(|v| v.map(|s| s.to_string()))
             .collect()
@@ -231,9 +254,14 @@ mod tests {
         let df = filter("name", "is_null", JsonValue::Null).await;
         assert_eq!(df.height(), 1);
         // The row where name is null has age=28
-        let ages: Vec<Option<i64>> = df.column("age").unwrap()
-            .as_materialized_series().i64().unwrap()
-            .into_iter().collect();
+        let ages: Vec<Option<i64>> = df
+            .column("age")
+            .unwrap()
+            .as_materialized_series()
+            .i64()
+            .unwrap()
+            .into_iter()
+            .collect();
         assert_eq!(ages, vec![Some(28)]);
     }
 
@@ -287,12 +315,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_unknown_operator_errors() {
-        let result = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: "age".into(),
-            operator: "like".into(),
-            value: serde_json::json!("foo"),
-        }).await;
+        let result = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: "age".into(),
+                operator: "like".into(),
+                value: serde_json::json!("foo"),
+            },
+        )
+        .await;
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
         assert!(msg.contains("Unknown operator"), "got: {msg}");
@@ -306,12 +338,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_output_json_present() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: "age".into(),
-            operator: "eq".into(),
-            value: serde_json::json!(30),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: "age".into(),
+                operator: "eq".into(),
+                value: serde_json::json!(30),
+            },
+        )
+        .await
+        .unwrap();
         // dataframe_json should be a non-null array
         assert!(output.dataframe_json.is_array());
         let arr = output.dataframe_json.as_array().unwrap();

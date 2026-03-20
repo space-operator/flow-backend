@@ -74,15 +74,16 @@ mod tests {
         let mint = Pubkey::new_unique();
         let authority = Pubkey::new_unique();
 
-        let ix = spl_token_2022_interface::extension::scaled_ui_amount::instruction::update_multiplier(
-            &spl_token_2022_interface::ID,
-            &mint,
-            &authority,
-            &[],
-            2.0,
-            1_700_000_000,
-        )
-        .unwrap();
+        let ix =
+            spl_token_2022_interface::extension::scaled_ui_amount::instruction::update_multiplier(
+                &spl_token_2022_interface::ID,
+                &mint,
+                &authority,
+                &[],
+                2.0,
+                1_700_000_000,
+            )
+            .unwrap();
 
         assert_eq!(ix.program_id, spl_token_2022_interface::ID);
         assert!(!ix.data.is_empty());

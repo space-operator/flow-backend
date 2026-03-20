@@ -31,7 +31,8 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
     let mut null_map = serde_json::Map::new();
     for col in null_df.get_columns() {
         let name = col.name().to_string();
-        let null_count = col.get(0)
+        let null_count = col
+            .get(0)
             .map(|v| {
                 if let polars::prelude::AnyValue::UInt32(n) = v {
                     n as u64
@@ -40,7 +41,10 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
                 }
             })
             .unwrap_or(0);
-        null_map.insert(name, JsonValue::Number(serde_json::Number::from(null_count)));
+        null_map.insert(
+            name,
+            JsonValue::Number(serde_json::Number::from(null_count)),
+        );
     }
 
     Ok(Output {
@@ -56,22 +60,30 @@ mod tests {
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("category".into(), &["A", "B", "A", "B", "A"]).into_column(),
             Series::new("value".into(), &[10i64, 20, 30, 40, 50]).into_column(),
             Series::new("score".into(), &[1.0f64, 2.0, 3.0, 4.0, 5.0]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_count() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+            },
+        )
+        .await
+        .unwrap();
         assert_eq!(output.count, 5);
         let null_counts = output.null_counts.as_object().unwrap();
         for (_col_name, count) in null_counts {

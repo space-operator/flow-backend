@@ -1,9 +1,11 @@
+use super::{DBC_PROGRAM_ID, discriminators, pda};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{DBC_PROGRAM_ID, pda, discriminators};
 
 const NAME: &str = "migration_meteora_damm_create_metadata";
-const DEFINITION: &str = flow_lib::node_definition!("dynamic_bonding_curve/migration_meteora_damm_create_metadata.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!(
+    "dynamic_bonding_curve/migration_meteora_damm_create_metadata.jsonc"
+);
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -45,13 +47,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let migration_metadata = pda::migration_metadata(&input.virtual_pool);
 
     let accounts = vec![
-        AccountMeta::new_readonly(input.virtual_pool, false),    // 0: virtual_pool (readonly)
-        AccountMeta::new_readonly(input.config, false),          // 1: config (readonly)
-        AccountMeta::new(migration_metadata, false),             // 2: migration_metadata (writable)
-        AccountMeta::new(input.payer.pubkey(), true),            // 3: payer (writable, signer)
-        AccountMeta::new_readonly(input.system_program, false),  // 4: system_program (readonly)
-        AccountMeta::new_readonly(event_authority, false),       // 5: event_authority (readonly, PDA)
-        AccountMeta::new_readonly(DBC_PROGRAM_ID, false),        // 6: program (readonly)
+        AccountMeta::new_readonly(input.virtual_pool, false), // 0: virtual_pool (readonly)
+        AccountMeta::new_readonly(input.config, false),       // 1: config (readonly)
+        AccountMeta::new(migration_metadata, false),          // 2: migration_metadata (writable)
+        AccountMeta::new(input.payer.pubkey(), true),         // 3: payer (writable, signer)
+        AccountMeta::new_readonly(input.system_program, false), // 4: system_program (readonly)
+        AccountMeta::new_readonly(event_authority, false),    // 5: event_authority (readonly, PDA)
+        AccountMeta::new_readonly(DBC_PROGRAM_ID, false),     // 6: program (readonly)
     ];
 
     let data = discriminators::MIGRATION_METEORA_DAMM_CREATE_METADATA.to_vec();
@@ -69,9 +71,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, migration_metadata })
+    Ok(Output {
+        signature,
+        migration_metadata,
+    })
 }
 
 #[cfg(test)]

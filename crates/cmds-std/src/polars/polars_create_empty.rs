@@ -26,15 +26,15 @@ pub struct Output {
 
 async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let schema_value = unwrap_json_input(&input.schema)?;
-    let obj = schema_value
-        .as_object()
-        .ok_or_else(|| CommandError::msg("schema must be a JSON object: {\"col_name\": \"dtype\", ...}"))?;
+    let obj = schema_value.as_object().ok_or_else(|| {
+        CommandError::msg("schema must be a JSON object: {\"col_name\": \"dtype\", ...}")
+    })?;
 
     let mut fields = Vec::new();
     for (col_name, dtype_val) in obj {
-        let dtype_str = dtype_val
-            .as_str()
-            .ok_or_else(|| CommandError::msg(format!("dtype for column '{col_name}' must be a string")))?;
+        let dtype_str = dtype_val.as_str().ok_or_else(|| {
+            CommandError::msg(format!("dtype for column '{col_name}' must be a string"))
+        })?;
         let dtype = parse_dtype(dtype_str)?;
         fields.push(Field::new(PlSmallStr::from(col_name.as_str()), dtype));
     }
@@ -64,12 +64,9 @@ mod tests {
             "a": "i64",
             "b": "string"
         });
-        let output = run(
-            CommandContext::default(),
-            Input { schema },
-        )
-        .await
-        .unwrap();
+        let output = run(CommandContext::default(), Input { schema })
+            .await
+            .unwrap();
 
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 0);
@@ -86,12 +83,9 @@ mod tests {
             "score": "f64",
             "active": "bool"
         });
-        let output = run(
-            CommandContext::default(),
-            Input { schema },
-        )
-        .await
-        .unwrap();
+        let output = run(CommandContext::default(), Input { schema })
+            .await
+            .unwrap();
 
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 0);

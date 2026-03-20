@@ -1,9 +1,5 @@
+use super::{CreateSubAccountInstruction, find_sub_account_pda, to_instruction_v3, to_pubkey_v2};
 use crate::prelude::*;
-use super::{
-    to_pubkey_v2, to_instruction_v3,
-    find_sub_account_pda,
-    CreateSubAccountInstruction,
-};
 
 const NAME: &str = "swig_create_sub_account";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_create_sub_account.jsonc");
@@ -51,7 +47,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         to_pubkey_v2(&sub_account),
         input.role_id,
         sub_account_bump,
-    ).map_err(|e| CommandError::msg(e.to_string()))?;
+    )
+    .map_err(|e| CommandError::msg(e.to_string()))?;
 
     let instruction = to_instruction_v3(ix_v2);
 
@@ -62,10 +59,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    Ok(Output { signature, sub_account })
+    Ok(Output {
+        signature,
+        sub_account,
+    })
 }
 
 #[cfg(test)]
@@ -93,7 +97,8 @@ mod tests {
             to_pubkey_v2(&sub_account),
             0,
             sub_account_bump,
-        ).unwrap();
+        )
+        .unwrap();
 
         let instruction = to_instruction_v3(ix);
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);

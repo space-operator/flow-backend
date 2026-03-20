@@ -3,7 +3,6 @@ use actix::{
     Actor, ActorContext, ActorFutureExt, Arbiter, AsyncContext, Context, ResponseActFuture,
     ResponseFuture, WrapFuture, fut::wrap_future,
 };
-use flow_rpc::flow_side::address_book::BaseAddressBook;
 use db::{FlowRunLogsRow, pool::DbPool};
 use flow_lib::{
     FlowRunId, UserId,
@@ -11,6 +10,7 @@ use flow_lib::{
     context::{Helius, get_jwt},
     flow_run_events::{DEFAULT_LOG_FILTER, EventSender},
 };
+use flow_rpc::flow_side::address_book::BaseAddressBook;
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
 use iroh::Watcher;

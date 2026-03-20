@@ -2,7 +2,6 @@ use std::str::FromStr;
 
 use super::{CollectionDetails, NftCreator, NftUses, TokenStandard};
 use crate::prelude::*;
-use borsh::{BorshDeserialize, BorshSerialize};
 use ::mpl_token_metadata::{
     accounts::{MasterEdition, Metadata},
     instructions::{
@@ -15,6 +14,7 @@ use ::mpl_token_metadata::{
         UpdateAsUpdateAuthorityV2InstructionArgs, UpdateV1InstructionArgs,
     },
 };
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::sysvar;
 use solana_sdk_ids::system_program;
 

@@ -1,4 +1,4 @@
-use crate::polars::types::{dual_output};
+use crate::polars::types::dual_output;
 use flow_lib::command::prelude::*;
 use polars::prelude::*;
 use std::io::Cursor;
@@ -25,9 +25,15 @@ pub struct Input {
     pub infer_schema_length: u32,
 }
 
-fn default_true() -> bool { true }
-fn default_comma() -> String { ",".to_string() }
-fn default_infer_len() -> u32 { 100 }
+fn default_true() -> bool {
+    true
+}
+fn default_comma() -> String {
+    ",".to_string()
+}
+fn default_infer_len() -> u32 {
+    100
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -36,12 +42,7 @@ pub struct Output {
 }
 
 async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let sep = input
-        .separator
-        .as_bytes()
-        .first()
-        .copied()
-        .unwrap_or(b',');
+    let sep = input.separator.as_bytes().first().copied().unwrap_or(b',');
     let cursor = Cursor::new(input.csv_string.as_bytes());
     let parse_options = CsvParseOptions::default().with_separator(sep);
     let mut df = CsvReadOptions::default()

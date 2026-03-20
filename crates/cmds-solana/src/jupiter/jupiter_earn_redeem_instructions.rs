@@ -6,7 +6,8 @@ use crate::prelude::*;
 use serde_json::json;
 
 pub const NAME: &str = "jupiter_earn_redeem_instructions";
-const DEFINITION: &str = flow_lib::node_definition!("jupiter/jupiter_earn_redeem_instructions.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("jupiter/jupiter_earn_redeem_instructions.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =

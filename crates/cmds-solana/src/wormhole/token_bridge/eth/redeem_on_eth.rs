@@ -6,7 +6,8 @@ use crate::{
 // Command Name
 const NAME: &str = "redeem_on_eth";
 
-const DEFINITION: &str = flow_lib::node_definition!("wormhole/token_bridge/eth/redeem_on_eth.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("wormhole/token_bridge/eth/redeem_on_eth.jsonc");
 
 fn build() -> BuildResult {
     use once_cell::sync::Lazy;

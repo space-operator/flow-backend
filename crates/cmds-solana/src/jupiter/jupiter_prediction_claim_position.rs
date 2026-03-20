@@ -6,7 +6,8 @@ use crate::prelude::*;
 use serde_json::json;
 
 pub const NAME: &str = "jupiter_prediction_claim_position";
-const DEFINITION: &str = flow_lib::node_definition!("jupiter/jupiter_prediction_claim_position.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("jupiter/jupiter_prediction_claim_position.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
@@ -30,7 +31,10 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let url = format!("https://api.jup.ag/prediction/v1/positions/{}/claim", input.position_id);
+    let url = format!(
+        "https://api.jup.ag/prediction/v1/positions/{}/claim",
+        input.position_id
+    );
 
     let body = json!({
         "user": input.user,

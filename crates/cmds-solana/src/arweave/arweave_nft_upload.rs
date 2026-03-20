@@ -101,7 +101,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     )?;
 
     if input.fund_bundlr {
-        uploader.lazy_fund_metadata(&input.metadata, &mut ctx).await?;
+        uploader
+            .lazy_fund_metadata(&input.metadata, &mut ctx)
+            .await?;
     }
 
     let mut metadata = input.metadata;
@@ -357,10 +359,9 @@ impl Uploader {
             )
             .map_err(crate::Error::custom)?;
             let versioned_msg = VersionedMessage::V0(v0_msg);
-            let msg_bytes: bytes::Bytes =
-                bincode::serialize(&versioned_msg)
-                    .map_err(crate::Error::custom)?
-                    .into();
+            let msg_bytes: bytes::Bytes = bincode::serialize(&versioned_msg)
+                .map_err(crate::Error::custom)?
+                .into();
 
             let sig_resp = tokio::time::timeout(
                 crate::utils::SIGNATURE_TIMEOUT,
@@ -380,14 +381,11 @@ impl Uploader {
                     .map_err(crate::Error::custom)?,
                 None => versioned_msg,
             };
-            let presigner =
-                Presigner::new(&self.fee_payer.pubkey(), &sig_resp.signature);
+            let presigner = Presigner::new(&self.fee_payer.pubkey(), &sig_resp.signature);
             let vtx = VersionedTransaction::try_new(final_msg, &[&presigner])
                 .map_err(crate::Error::custom)?;
 
-            self.client
-                .send_and_confirm_transaction(&vtx)
-                .await?;
+            self.client.send_and_confirm_transaction(&vtx).await?;
 
             // Step 2: ephemeral → Bundlr + drain remainder back to fee_payer.
             // After paying step2_tx_fee, ephemeral has: amount + rent_exempt_min - step2_tx_fee

@@ -32,7 +32,6 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
 
     let query: Vec<(&str, String)> = Vec::new();
 
-
     let resp = ctx
         .http()
         .get(&url)
@@ -51,10 +50,19 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
 
     let response: JsonValue = resp.json().await?;
 
-    let filters_by_sports = response.get("filters_by_sports").cloned().unwrap_or(json!(null));
-    let sport_ordering = response.get("sport_ordering").cloned().unwrap_or(json!(null));
+    let filters_by_sports = response
+        .get("filters_by_sports")
+        .cloned()
+        .unwrap_or(json!(null));
+    let sport_ordering = response
+        .get("sport_ordering")
+        .cloned()
+        .unwrap_or(json!(null));
 
-    Ok(Output { filters_by_sports, sport_ordering })
+    Ok(Output {
+        filters_by_sports,
+        sport_ordering,
+    })
 }
 
 #[cfg(test)]
@@ -79,9 +87,7 @@ mod tests {
     #[ignore] // Hits live dev endpoint; run with: cargo test -- --ignored
     async fn test_run_get_filters_by_sports() {
         let api_key = std::env::var("DFLOW_API_KEY").unwrap_or_default();
-        let input = Input {
-            api_key,
-        };
+        let input = Input { api_key };
         let result = run(CommandContext::default(), input).await;
         assert!(result.is_ok(), "run() failed: {:?}", result.err());
     }

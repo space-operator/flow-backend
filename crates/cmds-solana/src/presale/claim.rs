@@ -1,6 +1,9 @@
+use super::{
+    PRESALE_PROGRAM_ID, RemainingAccountsInfo, RemainingAccountsSlice, derive_event_authority,
+    discriminators,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators, RemainingAccountsInfo, RemainingAccountsSlice};
 
 const NAME: &str = "presale_claim";
 const DEFINITION: &str = flow_lib::node_definition!("presale/claim.jsonc");
@@ -52,16 +55,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.presale, false),              // presale (writable)
-        AccountMeta::new(input.base_token_vault, false),     // base_token_vault (writable)
-        AccountMeta::new_readonly(input.base_mint, false),   // base_mint (readonly)
+        AccountMeta::new(input.presale, false), // presale (writable)
+        AccountMeta::new(input.base_token_vault, false), // base_token_vault (writable)
+        AccountMeta::new_readonly(input.base_mint, false), // base_mint (readonly)
         AccountMeta::new_readonly(input.presale_authority, false), // presale_authority (readonly)
-        AccountMeta::new(input.escrow, false),               // escrow (writable)
-        AccountMeta::new(input.owner_base_token, false),     // owner_base_token (writable)
+        AccountMeta::new(input.escrow, false),  // escrow (writable)
+        AccountMeta::new(input.owner_base_token, false), // owner_base_token (writable)
         AccountMeta::new_readonly(input.owner.pubkey(), true), // owner (signer)
         AccountMeta::new_readonly(input.token_program, false), // token_program (readonly)
         AccountMeta::new_readonly(input.memo_program, false), // memo_program (readonly)
-        AccountMeta::new_readonly(event_authority, false),   // event_authority (PDA)
+        AccountMeta::new_readonly(event_authority, false), // event_authority (PDA)
         AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false), // program
     ];
 
@@ -84,7 +87,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

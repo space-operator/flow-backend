@@ -65,10 +65,7 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
         }
 
         let response: JsonValue = resp.json().await?;
-        let result = response
-            .get("result")
-            .cloned()
-            .unwrap_or(JsonValue::Null);
+        let result = response.get("result").cloned().unwrap_or(JsonValue::Null);
         super::cache::set(cache_key, result.clone());
         result
     };

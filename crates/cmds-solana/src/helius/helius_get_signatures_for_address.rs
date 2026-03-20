@@ -7,7 +7,8 @@ use reqwest::header::CONTENT_TYPE;
 use serde_json::json;
 
 pub const NAME: &str = "helius_get_signatures_for_address";
-const DEFINITION: &str = flow_lib::node_definition!("helius/helius_get_signatures_for_address.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("helius/helius_get_signatures_for_address.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
@@ -29,7 +30,9 @@ pub struct Input {
     pub until: Option<String>,
 }
 
-fn default_limit() -> u32 { 1000 }
+fn default_limit() -> u32 {
+    1000
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {

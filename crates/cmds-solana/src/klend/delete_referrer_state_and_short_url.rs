@@ -1,9 +1,10 @@
+use super::{KLEND_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KLEND_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "delete_referrer_state_and_short_url";
-const DEFINITION: &str = flow_lib::node_definition!("klend/delete_referrer_state_and_short_url.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("klend/delete_referrer_state_and_short_url.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -57,7 +58,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -83,7 +88,7 @@ mod tests {
             "short_url" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

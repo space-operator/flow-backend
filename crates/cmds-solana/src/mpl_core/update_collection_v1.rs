@@ -36,11 +36,12 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let payer = input.payer.as_ref().map_or_else(|| input.fee_payer.pubkey(), |p| p.pubkey());
+    let payer = input
+        .payer
+        .as_ref()
+        .map_or_else(|| input.fee_payer.pubkey(), |p| p.pubkey());
     let mut builder = UpdateCollectionV1Builder::new();
-    builder
-        .collection(input.collection)
-        .payer(payer);
+    builder.collection(input.collection).payer(payer);
     if let Some(new_name) = input.new_name {
         builder.new_name(new_name);
     }
@@ -56,7 +57,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

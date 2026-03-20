@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{check_response, reflect_post};
+use crate::prelude::*;
 
 pub const NAME: &str = "flow_mint";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/flow_mint.jsonc");
@@ -39,9 +39,18 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     }
     let mut body = serde_json::Map::new();
     body.insert("amount".into(), serde_json::json!(input.amount));
-    body.insert("recipient".into(), serde_json::Value::String(input.recipient.clone()));
-    body.insert("integrationId".into(), serde_json::Value::String(input.integration_id.clone()));
-    body.insert("feePayer".into(), serde_json::Value::String(input.fee_payer.clone()));
+    body.insert(
+        "recipient".into(),
+        serde_json::Value::String(input.recipient.clone()),
+    );
+    body.insert(
+        "integrationId".into(),
+        serde_json::Value::String(input.integration_id.clone()),
+    );
+    body.insert(
+        "feePayer".into(),
+        serde_json::Value::String(input.fee_payer.clone()),
+    );
     req = req.json(&serde_json::Value::Object(body));
     let result = check_response(req.send().await?).await?;
     Ok(Output { result })

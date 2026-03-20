@@ -21,8 +21,12 @@ pub struct Input {
     pub header_name: String,
 }
 
-fn default_true() -> bool { true }
-fn default_header_name() -> String { "column".to_string() }
+fn default_true() -> bool {
+    true
+}
+fn default_header_name() -> String {
+    "column".to_string()
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -51,44 +55,65 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("a".into(), &[1i64, 4]).into_column(),
             Series::new("b".into(), &[2i64, 5]).into_column(),
             Series::new("c".into(), &[3i64, 6]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_with_header() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            include_header: true,
-            header_name: "column".to_string(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                include_header: true,
+                header_name: "column".to_string(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         // 2 rows, 3 columns => transposed: 3 rows, 2 data cols + 1 header col = 3 cols
-        assert_eq!(df.height(), 3, "transpose should produce 3 rows (one per original column)");
+        assert_eq!(
+            df.height(),
+            3,
+            "transpose should produce 3 rows (one per original column)"
+        );
         assert!(df.column("column").is_ok(), "should have header column");
     }
 
     #[tokio::test]
     async fn test_run_without_header() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            include_header: false,
-            header_name: "column".to_string(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                include_header: false,
+                header_name: "column".to_string(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3, "transpose should produce 3 rows");
         // Without header, should have 2 columns (one per original row)
-        assert_eq!(df.width(), 2, "transpose without header should have 2 columns");
+        assert_eq!(
+            df.width(),
+            2,
+            "transpose without header should have 2 columns"
+        );
     }
 }

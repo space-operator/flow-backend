@@ -1,5 +1,8 @@
+use super::{
+    account_meta_mut, account_meta_readonly, account_meta_signer, account_meta_signer_mut,
+    build_ix, pda,
+};
 use crate::prelude::*;
-use super::{build_ix, pda, account_meta_signer_mut, account_meta_signer, account_meta_readonly, account_meta_mut};
 
 const NAME: &str = "remove_queue_authority_v0";
 const DEFINITION: &str = flow_lib::node_definition!("tuktuk/remove_queue_authority_v0.jsonc");
@@ -76,7 +79,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

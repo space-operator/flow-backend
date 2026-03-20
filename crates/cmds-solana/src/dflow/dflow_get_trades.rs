@@ -71,7 +71,10 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     let response: JsonValue = resp.json().await?;
 
     let trades = response.get("trades").cloned().unwrap_or(json!(null));
-    let cursor = response.get("cursor").and_then(|v| v.as_str()).map(String::from);
+    let cursor = response
+        .get("cursor")
+        .and_then(|v| v.as_str())
+        .map(String::from);
 
     Ok(Output { trades, cursor })
 }
@@ -97,8 +100,8 @@ mod tests {
     #[test]
     fn test_deserialize_response() {
         let json_str = include_str!("fixtures/trades.json");
-        let _parsed: crate::dflow::response_types::TradeListResponse = serde_json::from_str(json_str)
-            .expect("Failed to deserialize trades.json");
+        let _parsed: crate::dflow::response_types::TradeListResponse =
+            serde_json::from_str(json_str).expect("Failed to deserialize trades.json");
     }
 
     #[tokio::test]

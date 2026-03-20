@@ -32,8 +32,12 @@ pub struct Input {
     pub show_fungible: bool,
 }
 
-fn default_page() -> u32 { 1 }
-fn default_limit() -> u32 { 100 }
+fn default_page() -> u32 {
+    1
+}
+fn default_limit() -> u32 {
+    100
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {

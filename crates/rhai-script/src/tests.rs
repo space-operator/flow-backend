@@ -4,9 +4,7 @@ use rhai::Dynamic;
 /// Helper: evaluate a script with setup_engine() and return the Dynamic result.
 fn eval(script: &str, scope: &mut rhai::Scope) -> Dynamic {
     let engine = setup_engine();
-    engine
-        .eval_with_scope::<Dynamic>(scope, script)
-        .unwrap()
+    engine.eval_with_scope::<Dynamic>(scope, script).unwrap()
 }
 
 #[test]
@@ -299,10 +297,7 @@ fn test_conditional_templates() {
     let mut scope = rhai::Scope::new();
     scope.push_dynamic("input", Dynamic::UNIT);
     scope.push("input1", 42_i64);
-    let res = eval(
-        r#"if input == () { input1 } else { input }"#,
-        &mut scope,
-    );
+    let res = eval(r#"if input == () { input1 } else { input }"#, &mut scope);
     assert_eq!(res.as_int().unwrap(), 42);
 }
 
@@ -367,19 +362,13 @@ fn test_crypto_templates() {
     // lamports_to_sol: input * Decimal("0.000000001")
     let mut scope = rhai::Scope::new();
     scope.push("input", 1_000_000_000_i64);
-    let res = eval(
-        r#"Decimal(input) * Decimal("0.000000001")"#,
-        &mut scope,
-    );
+    let res = eval(r#"Decimal(input) * Decimal("0.000000001")"#, &mut scope);
     let dec = res.as_decimal().unwrap();
     assert_eq!(dec, rust_decimal::Decimal::new(1, 0)); // 1.0 SOL
 
     // sol_to_lamports: input * Decimal("1000000000")
     let mut scope = rhai::Scope::new();
-    let res = eval(
-        r#"Decimal("2.5") * Decimal("1000000000")"#,
-        &mut scope,
-    );
+    let res = eval(r#"Decimal("2.5") * Decimal("1000000000")"#, &mut scope);
     let dec = res.as_decimal().unwrap();
     assert_eq!(dec, rust_decimal::Decimal::new(2_500_000_000, 0));
 
@@ -519,9 +508,6 @@ fn test_json_decode_integers_are_i64() {
 fn test_base58_decode_error() {
     let engine = setup_engine();
     let mut scope = rhai::Scope::new();
-    let result = engine.eval_with_scope::<Dynamic>(
-        &mut scope,
-        r#"base58_decode("invalid!@#$")"#,
-    );
+    let result = engine.eval_with_scope::<Dynamic>(&mut scope, r#"base58_decode("invalid!@#$")"#);
     assert!(result.is_err());
 }

@@ -1,6 +1,6 @@
+use super::{TOKEN_PROGRAM_ID, YVAULTS_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{YVAULTS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "orca_swap";
 const DEFINITION: &str = flow_lib::node_definition!("yvaults/orca_swap.jsonc");
@@ -60,19 +60,19 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
-        AccountMeta::new(input.funder.pubkey(), true),           // funder (writable signer)
+        AccountMeta::new(input.funder.pubkey(), true), // funder (writable signer)
         AccountMeta::new_readonly(input.token_authority, false), // token_authority (readonly)
-        AccountMeta::new(input.whirlpool, false),                // whirlpool (writable)
-        AccountMeta::new(input.token_owner_account_a, false),    // token_owner_account_a (writable)
-        AccountMeta::new(input.token_vault_a, false),            // token_vault_a (writable)
-        AccountMeta::new(input.token_owner_account_b, false),    // token_owner_account_b (writable)
-        AccountMeta::new(input.token_vault_b, false),            // token_vault_b (writable)
-        AccountMeta::new(input.tick_array0, false),              // tick_array0 (writable)
-        AccountMeta::new(input.tick_array1, false),              // tick_array1 (writable)
-        AccountMeta::new(input.tick_array2, false),              // tick_array2 (writable)
-        AccountMeta::new(input.oracle, false),                   // oracle (writable)
+        AccountMeta::new(input.whirlpool, false),      // whirlpool (writable)
+        AccountMeta::new(input.token_owner_account_a, false), // token_owner_account_a (writable)
+        AccountMeta::new(input.token_vault_a, false),  // token_vault_a (writable)
+        AccountMeta::new(input.token_owner_account_b, false), // token_owner_account_b (writable)
+        AccountMeta::new(input.token_vault_b, false),  // token_vault_b (writable)
+        AccountMeta::new(input.tick_array0, false),    // tick_array0 (writable)
+        AccountMeta::new(input.tick_array1, false),    // tick_array1 (writable)
+        AccountMeta::new(input.tick_array2, false),    // tick_array2 (writable)
+        AccountMeta::new(input.oracle, false),         // oracle (writable)
         AccountMeta::new_readonly(input.whirlpool_program, false), // whirlpool_program (readonly)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),      // token_program
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -95,7 +95,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -135,7 +139,7 @@ mod tests {
             "a_to_b" => false,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

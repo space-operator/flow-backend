@@ -1,6 +1,6 @@
+use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, discriminators, pda};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, pda, discriminators};
 
 const NAME: &str = "swap2";
 const DEFINITION: &str = flow_lib::node_definition!("dynamic_bonding_curve/swap2.jsonc");
@@ -79,11 +79,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(input.token_base_program, false),
         AccountMeta::new_readonly(input.token_quote_program, false),
     ];
-    
+
     if let Some(referral) = input.referral_token_account {
         accounts.push(AccountMeta::new(referral, false));
     }
-    
+
     accounts.push(AccountMeta::new_readonly(event_authority, false));
     accounts.push(AccountMeta::new_readonly(DBC_PROGRAM_ID, false));
 
@@ -106,9 +106,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, base_vault, quote_vault })
+    Ok(Output {
+        signature,
+        base_vault,
+        quote_vault,
+    })
 }
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
+use super::{CreateSessionInstruction, to_instruction_v3, to_pubkey_v2};
 use crate::prelude::*;
-use super::{to_pubkey_v2, to_instruction_v3, CreateSessionInstruction};
 
 const NAME: &str = "swig_create_session";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_create_session.jsonc");
@@ -32,7 +32,9 @@ pub struct Input {
     pub submit: bool,
 }
 
-fn default_duration() -> u64 { 216_000 } // ~1 day at 400ms/slot
+fn default_duration() -> u64 {
+    216_000
+} // ~1 day at 400ms/slot
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -48,7 +50,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         input.role_id,
         to_pubkey_v2(&input.session_key),
         input.duration_slots,
-    ).map_err(|e| CommandError::msg(e.to_string()))?;
+    )
+    .map_err(|e| CommandError::msg(e.to_string()))?;
 
     let instruction = to_instruction_v3(ix_v2);
 
@@ -59,7 +62,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })
@@ -89,7 +96,8 @@ mod tests {
             0,
             to_pubkey_v2(&session_key),
             216_000,
-        ).unwrap();
+        )
+        .unwrap();
 
         let instruction = to_instruction_v3(ix);
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);

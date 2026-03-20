@@ -23,9 +23,15 @@ pub mod pda {
     /// Seeds: "pool" + config + base_mint + quote_mint
     pub fn pool(config: &Pubkey, base_mint: &Pubkey, quote_mint: &Pubkey) -> Pubkey {
         Pubkey::find_program_address(
-            &[b"pool", config.as_ref(), base_mint.as_ref(), quote_mint.as_ref()],
+            &[
+                b"pool",
+                config.as_ref(),
+                base_mint.as_ref(),
+                quote_mint.as_ref(),
+            ],
             &DBC_PROGRAM_ID,
-        ).0
+        )
+        .0
     }
 
     /// Base vault PDA
@@ -34,7 +40,8 @@ pub mod pda {
         Pubkey::find_program_address(
             &[b"token_vault", base_mint.as_ref(), pool.as_ref()],
             &DBC_PROGRAM_ID,
-        ).0
+        )
+        .0
     }
 
     /// Quote vault PDA
@@ -43,7 +50,8 @@ pub mod pda {
         Pubkey::find_program_address(
             &[b"token_vault", quote_mint.as_ref(), pool.as_ref()],
             &DBC_PROGRAM_ID,
-        ).0
+        )
+        .0
     }
 
     /// Virtual pool metadata PDA
@@ -52,7 +60,8 @@ pub mod pda {
         Pubkey::find_program_address(
             &[b"virtual_pool_metadata", virtual_pool.as_ref()],
             &DBC_PROGRAM_ID,
-        ).0
+        )
+        .0
     }
 
     /// Partner metadata PDA
@@ -61,34 +70,26 @@ pub mod pda {
         Pubkey::find_program_address(
             &[b"partner_metadata", fee_claimer.as_ref()],
             &DBC_PROGRAM_ID,
-        ).0
+        )
+        .0
     }
 
     /// Claim fee operator PDA
     /// Seeds: "cf_operator" + operator (IDL name: create_claim_protocol_fee_operator)
     pub fn claim_fee_operator(operator: &Pubkey) -> Pubkey {
-        Pubkey::find_program_address(
-            &[b"cf_operator", operator.as_ref()],
-            &DBC_PROGRAM_ID,
-        ).0
+        Pubkey::find_program_address(&[b"cf_operator", operator.as_ref()], &DBC_PROGRAM_ID).0
     }
 
     /// Base locker PDA (used by create_locker)
     /// Seeds: "base_locker" + virtual_pool
     pub fn base_locker(virtual_pool: &Pubkey) -> Pubkey {
-        Pubkey::find_program_address(
-            &[b"base_locker", virtual_pool.as_ref()],
-            &DBC_PROGRAM_ID,
-        ).0
+        Pubkey::find_program_address(&[b"base_locker", virtual_pool.as_ref()], &DBC_PROGRAM_ID).0
     }
 
     /// Migration metadata PDA
     /// Seeds: "meteora" + virtual_pool
     pub fn migration_metadata(virtual_pool: &Pubkey) -> Pubkey {
-        Pubkey::find_program_address(
-            &[b"meteora", virtual_pool.as_ref()],
-            &DBC_PROGRAM_ID,
-        ).0
+        Pubkey::find_program_address(&[b"meteora", virtual_pool.as_ref()], &DBC_PROGRAM_ID).0
     }
 }
 
@@ -230,14 +231,17 @@ pub mod discriminators {
     pub const CREATE_PARTNER_METADATA: [u8; 8] = [192, 168, 234, 191, 188, 226, 227, 255];
     pub const CREATE_VIRTUAL_POOL_METADATA: [u8; 8] = [45, 97, 187, 103, 254, 109, 124, 134];
     pub const CREATOR_WITHDRAW_SURPLUS: [u8; 8] = [165, 3, 137, 7, 28, 134, 76, 80];
-    pub const INITIALIZE_VIRTUAL_POOL_WITH_SPL_TOKEN: [u8; 8] = [140, 85, 215, 176, 102, 54, 104, 79];
-    pub const INITIALIZE_VIRTUAL_POOL_WITH_TOKEN2022: [u8; 8] = [169, 118, 51, 78, 145, 110, 220, 155];
+    pub const INITIALIZE_VIRTUAL_POOL_WITH_SPL_TOKEN: [u8; 8] =
+        [140, 85, 215, 176, 102, 54, 104, 79];
+    pub const INITIALIZE_VIRTUAL_POOL_WITH_TOKEN2022: [u8; 8] =
+        [169, 118, 51, 78, 145, 110, 220, 155];
     pub const MIGRATE_METEORA_DAMM: [u8; 8] = [27, 1, 48, 22, 180, 63, 118, 217];
     pub const MIGRATE_METEORA_DAMM_CLAIM_LP_TOKEN: [u8; 8] = [139, 133, 2, 30, 91, 145, 127, 154];
     pub const MIGRATE_METEORA_DAMM_LOCK_LP_TOKEN: [u8; 8] = [177, 55, 238, 157, 251, 88, 165, 42];
     pub const MIGRATION_DAMM_V2: [u8; 8] = [156, 169, 230, 103, 53, 228, 80, 64];
     pub const MIGRATION_DAMM_V2_CREATE_METADATA: [u8; 8] = [109, 189, 19, 36, 195, 183, 222, 82];
-    pub const MIGRATION_METEORA_DAMM_CREATE_METADATA: [u8; 8] = [47, 94, 126, 115, 221, 226, 194, 133];
+    pub const MIGRATION_METEORA_DAMM_CREATE_METADATA: [u8; 8] =
+        [47, 94, 126, 115, 221, 226, 194, 133];
     pub const PARTNER_WITHDRAW_SURPLUS: [u8; 8] = [168, 173, 72, 100, 201, 98, 38, 92];
     pub const SWAP: [u8; 8] = [248, 198, 158, 145, 225, 117, 135, 200];
     pub const SWAP2: [u8; 8] = [65, 75, 63, 76, 235, 91, 91, 136];

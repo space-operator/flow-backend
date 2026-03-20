@@ -30,13 +30,7 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
 
     let query: Vec<(&str, String)> = Vec::new();
 
-
-    let resp = ctx
-        .http()
-        .get(&url)
-        .query(&query)
-        .send()
-        .await?;
+    let resp = ctx.http().get(&url).query(&query).send().await?;
 
     if !resp.status().is_success() {
         return Err(CommandError::msg(format!(
@@ -48,7 +42,10 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
 
     let response: JsonValue = resp.json().await?;
 
-    let verified = response.get("verified").and_then(|v| v.as_bool()).unwrap_or(false);
+    let verified = response
+        .get("verified")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
 
     Ok(Output { verified })
 }
@@ -74,8 +71,8 @@ mod tests {
     #[test]
     fn test_deserialize_response() {
         let json_str = include_str!("fixtures/verify.json");
-        let _parsed: crate::dflow::response_types::VerifyResponse = serde_json::from_str(json_str)
-            .expect("Failed to deserialize verify.json");
+        let _parsed: crate::dflow::response_types::VerifyResponse =
+            serde_json::from_str(json_str).expect("Failed to deserialize verify.json");
     }
 
     #[tokio::test]
