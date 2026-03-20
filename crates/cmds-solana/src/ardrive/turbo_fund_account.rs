@@ -1,15 +1,16 @@
 //! Turbo Fund Account - Fund an ArDrive Turbo account with SOL.
 //!
 //! Flow:
-//! 1. GET {turbo_url}/info → extract Turbo's SOL payment address
+//! 1. GET {turbo_url}/info -> extract Turbo's SOL payment address
 //! 2. Build SystemProgram.transfer to that address
 //! 3. Optionally add a Memo instruction to direct credits to a different wallet
-//! 4. Sign and submit via ctx.execute()
+//! 4. Sign and submit directly via Solana RPC (bypasses ctx.execute)
 //! 5. POST {turbo_url}/account/balance/solana with tx_id to notify Turbo
 //!
 //! ArDrive Turbo API: https://payment.ardrive.io/v1
 
 use crate::prelude::*;
+use crate::utils::{execute, submit_transaction, try_sign_wallet};
 use flow_lib::solana::Wallet;
 use solana_instruction::{AccountMeta, Instruction};
 use solana_system_interface::instruction as system_instruction;
@@ -36,11 +37,8 @@ const DEFINITION: &str = flow_lib::node_definition!("ardrive/turbo_fund_account.
 const TURBO_URL: &str = "https://payment.ardrive.io/v1";
 
 fn build() -> BuildResult {
-    static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(DEFINITION)?
-            .check_name(NAME)?
-            .simple_instruction_info("signature")
-    });
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))
 }
 
@@ -60,6 +58,8 @@ pub struct Input {
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     pub signature: Option<Signature>,
+    #[serde(with = "value::pubkey")]
+    pub turbo_address: Pubkey,
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
@@ -96,44 +96,28 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         turbo_address, input.amount
     );
 
-    // 2. Build SOL transfer instruction
-    let payer_pubkey = input.fee_payer.pubkey();
-    let ix = system_instruction::transfer(&payer_pubkey, &turbo_address, input.amount);
-    let mut ixs = vec![ix];
+    let signature = if input.submit {
+        // 2. Build SOL transfer instruction
+        let payer_pubkey = input.fee_payer.pubkey();
+        let ix = system_instruction::transfer(&payer_pubkey, &turbo_address, input.amount);
+        let mut ixs = vec![ix];
 
-    // 3. Optionally add memo to direct credits to a different wallet
-    if let Some(dest) = input.credit_destination {
-        let memo_data = format!("turboCreditDestinationAddress={dest}");
-        ixs.push(build_memo(memo_data.as_bytes(), &[]));
-        info!("Credits will be directed to {}", dest);
-    }
+        // 3. Optionally add memo to direct credits to a different wallet
+        if let Some(dest) = input.credit_destination {
+            let memo_data = format!("turboCreditDestinationAddress={dest}");
+            ixs.push(build_memo(memo_data.as_bytes(), &[]));
+            info!("Credits will be directed to {}", dest);
+        }
 
-    // 4. Execute the transaction
-    let instructions = Instructions {
-        lookup_tables: None,
-        fee_payer: payer_pubkey,
-        signers: [input.fee_payer].into(),
-        instructions: ixs,
-    };
+        // 4. Sign and submit directly via Solana RPC
+        let (mut tx, recent_blockhash) =
+            execute(ctx.solana_client(), &payer_pubkey, &ixs).await?;
+        try_sign_wallet(&mut ctx, &mut tx, &input.fee_payer, recent_blockhash).await?;
+        let sig = submit_transaction(ctx.solana_client(), tx).await?;
 
-    let instructions = if input.submit {
-        instructions
-    } else {
-        Default::default()
-    };
+        info!("Transaction submitted: {}", sig);
 
-    let sig_response = ctx
-        .execute(
-            instructions,
-            value::map! {
-                "turbo_address" => turbo_address,
-            },
-        )
-        .await?;
-    let signature = sig_response.signature;
-
-    // 5. Notify Turbo about the transaction so it processes credits faster
-    if let Some(ref sig) = signature {
+        // 5. Notify Turbo about the transaction so it processes credits faster
         let notify_url = format!("{TURBO_URL}/account/balance/solana");
         info!("Notifying Turbo at {} with tx_id {}", notify_url, sig);
 
@@ -159,9 +143,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
                 tracing::warn!("Failed to notify Turbo (non-fatal): {e}");
             }
         }
-    }
 
-    Ok(Output { signature })
+        Some(sig)
+    } else {
+        info!("submit=false, skipping transaction");
+        None
+    };
+
+    Ok(Output {
+        signature,
+        turbo_address,
+    })
 }
 
 #[cfg(test)]
