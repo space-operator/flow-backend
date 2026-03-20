@@ -1,5 +1,5 @@
+use super::{check_response, portal_get};
 use crate::prelude::*;
-use super::{portal_get, check_response};
 
 const NAME: &str = "swig_get_policy";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_get_policy.jsonc");
@@ -25,12 +25,7 @@ pub struct Output {
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let path = format!("/policies/{}", input.policy_id);
-    let result = check_response(
-        portal_get(&ctx, &path, &input.api_key)
-            .send()
-            .await?,
-    )
-    .await?;
+    let result = check_response(portal_get(&ctx, &path, &input.api_key).send().await?).await?;
     Ok(Output { result })
 }
 

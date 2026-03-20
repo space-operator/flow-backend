@@ -36,8 +36,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let (collection_metadata_account, _) =
-        Metadata::find_pda(&input.collection_mint_account);
+    let (collection_metadata_account, _) = Metadata::find_pda(&input.collection_mint_account);
 
     let (collection_master_edition_account, _) =
         MasterEdition::find_pda(&input.collection_mint_account);
@@ -69,13 +68,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     ];
 
     let ins = Instructions {
-lookup_tables: None,
+        lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [
-            input.fee_payer,
-            input.collection_authority,
-        ]
-        .into(),
+        signers: [input.fee_payer, input.collection_authority].into(),
         instructions,
     };
 

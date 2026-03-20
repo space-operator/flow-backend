@@ -22,7 +22,9 @@ pub struct Input {
     pub keep: String,
 }
 
-fn default_keep() -> String { "first".to_string() }
+fn default_keep() -> String {
+    "first".to_string()
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -67,17 +69,28 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
-            Series::new("name".into(), &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")]).into_column(),
+            Series::new(
+                "name".into(),
+                &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")],
+            )
+            .into_column(),
             Series::new("age".into(), &[Some(30i64), Some(25), Some(35), Some(30)]).into_column(),
-            Series::new("score".into(), &[Some(88.5f64), Some(92.0), Some(75.3), Some(91.0)]).into_column(),
-        ]).unwrap();
+            Series::new(
+                "score".into(),
+                &[Some(88.5f64), Some(92.0), Some(75.3), Some(91.0)],
+            )
+            .into_column(),
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
@@ -85,11 +98,16 @@ mod tests {
     async fn test_run_unique_all_columns() {
         // Rows 0 and 3 are (Alice, 30, 88.5) and (Alice, 30, 91.0) -- differ in score
         // So all 4 rows are unique when considering all columns
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            columns: JsonValue::Null,
-            keep: "first".into(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                columns: JsonValue::Null,
+                keep: "first".into(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 4);
     }
@@ -97,11 +115,16 @@ mod tests {
     #[tokio::test]
     async fn test_run_unique_by_name() {
         // Unique by "name" column: Alice (2x), Bob, Charlie -> 3 unique
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            columns: serde_json::json!(["name"]),
-            keep: "first".into(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                columns: serde_json::json!(["name"]),
+                keep: "first".into(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
     }
@@ -112,14 +135,20 @@ mod tests {
         let mut df = DataFrame::new(vec![
             Series::new("name".into(), &["Alice", "Bob", "Alice"]).into_column(),
             Series::new("age".into(), &[30i64, 25, 30]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         let ipc = df_to_ipc(&mut df).unwrap();
 
-        let output = run(CommandContext::default(), Input {
-            dataframe: ipc,
-            columns: JsonValue::Null,
-            keep: "first".into(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: ipc,
+                columns: JsonValue::Null,
+                keep: "first".into(),
+            },
+        )
+        .await
+        .unwrap();
         let result = df_from_ipc(&output.dataframe).unwrap();
         // Rows 0 and 2 are identical, so unique gives 2 rows
         assert_eq!(result.height(), 2);

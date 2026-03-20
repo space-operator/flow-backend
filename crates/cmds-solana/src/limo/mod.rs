@@ -3,7 +3,6 @@
 //! On-chain Solana instruction nodes for the Kamino Limo program.
 //! Program ID: LiMoM9rMhrdYrfzUCxQppvxCSG1FcrUK9G8uLq4A1GF
 
-
 // limo - Space Operator nodes for Kamino Limo (Limit Orders)
 //
 // Program ID: `LiMoM9rMhrdYrfzUCxQppvxCSG1FcrUK9G8uLq4A1GF`
@@ -19,13 +18,15 @@ use crate::prelude::*;
 // =============================================================================
 
 /// Limo (Limit Orders) Program ID
-pub const LIMO_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("LiMoM9rMhrdYrfzUCxQppvxCSG1FcrUK9G8uLq4A1GF");
+pub const LIMO_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("LiMoM9rMhrdYrfzUCxQppvxCSG1FcrUK9G8uLq4A1GF");
 
 /// System Program ID
 pub const SYSTEM_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("11111111111111111111111111111111");
 
 /// Token Program ID
-pub const TOKEN_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+pub const TOKEN_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
 // =============================================================================
 // Anchor Discriminator
@@ -72,24 +73,24 @@ pub mod initialize_vault;
 // Node Modules - Order Operations
 // =============================================================================
 
-pub mod create_order;
-pub mod update_order;
 pub mod close_order_and_claim_tip;
+pub mod create_order;
 pub mod take_order;
+pub mod update_order;
 
 // =============================================================================
 // Node Modules - Flash Take Orders
 // =============================================================================
 
-pub mod flash_take_order_start;
 pub mod flash_take_order_end;
+pub mod flash_take_order_start;
 
 // =============================================================================
 // Node Modules - Tips & Balances
 // =============================================================================
 
-pub mod withdraw_host_tip;
-pub mod log_user_swap_balances_start;
-pub mod log_user_swap_balances_end;
-pub mod assert_user_swap_balances_start;
 pub mod assert_user_swap_balances_end;
+pub mod assert_user_swap_balances_start;
+pub mod log_user_swap_balances_end;
+pub mod log_user_swap_balances_start;
+pub mod withdraw_host_tip;

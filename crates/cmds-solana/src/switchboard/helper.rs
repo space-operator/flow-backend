@@ -10,8 +10,8 @@ pub const SB_ON_DEMAND_PID: Pubkey =
 
 /// Well-known program IDs sourced from their respective crates.
 pub use spl_associated_token_account_interface::program::ID as SPL_ATA_PROGRAM;
-pub use spl_token_interface::native_mint::ID as WSOL_MINT;
 pub use spl_token_interface::ID as SPL_TOKEN_PROGRAM;
+pub use spl_token_interface::native_mint::ID as WSOL_MINT;
 
 /// SlotHashes sysvar.
 pub const SLOT_HASHES_SYSVAR: Pubkey =
@@ -183,7 +183,8 @@ pub fn parse_pull_feed_result(data: &[u8]) -> Result<CurrentResult, CommandError
     // 112..120  min_slot: u64
     // 120..128  max_slot: u64
 
-    let read_i128 = |off: usize| -> i128 { i128::from_le_bytes(r[off..off + 16].try_into().unwrap()) };
+    let read_i128 =
+        |off: usize| -> i128 { i128::from_le_bytes(r[off..off + 16].try_into().unwrap()) };
     let read_u64 = |off: usize| -> u64 { u64::from_le_bytes(r[off..off + 8].try_into().unwrap()) };
 
     Ok(CurrentResult {

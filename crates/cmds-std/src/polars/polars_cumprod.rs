@@ -33,7 +33,11 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 
     let mut result = df
         .lazy()
-        .with_column(col(&input.column).cum_prod(input.reverse).alias(&output_col))
+        .with_column(
+            col(&input.column)
+                .cum_prod(input.reverse)
+                .alias(&output_col),
+        )
         .collect()
         .map_err(|e| CommandError::msg(format!("Cumulative product error: {e}")))?;
 
@@ -47,25 +51,33 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("value".into(), &[1i64, 2, 3, 4, 5]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: "value".to_string(),
-            reverse: false,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: "value".to_string(),
+                reverse: false,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 5, "cumprod should preserve row count");
         let cumprod = df.column("value_cumprod").unwrap();

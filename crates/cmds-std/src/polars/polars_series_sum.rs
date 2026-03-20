@@ -24,27 +24,23 @@ pub struct Output {
 
 async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let s = series_from_ipc(&input.series)?;
-    let sum_val: JsonValue = match s.sum_reduce()
-        .ok()
-        .map(|scalar| {
-            let av = scalar.value().clone();
-            match av {
-                polars::prelude::AnyValue::Float64(f) => serde_json::json!(f),
-                polars::prelude::AnyValue::Float32(f) => serde_json::json!(f),
-                polars::prelude::AnyValue::Int64(i) => serde_json::json!(i),
-                polars::prelude::AnyValue::Int32(i) => serde_json::json!(i),
-                polars::prelude::AnyValue::UInt64(u) => serde_json::json!(u),
-                polars::prelude::AnyValue::UInt32(u) => serde_json::json!(u),
-                polars::prelude::AnyValue::Null => JsonValue::Null,
-                other => serde_json::json!(format!("{other}")),
-            }
-        }) {
+    let sum_val: JsonValue = match s.sum_reduce().ok().map(|scalar| {
+        let av = scalar.value().clone();
+        match av {
+            polars::prelude::AnyValue::Float64(f) => serde_json::json!(f),
+            polars::prelude::AnyValue::Float32(f) => serde_json::json!(f),
+            polars::prelude::AnyValue::Int64(i) => serde_json::json!(i),
+            polars::prelude::AnyValue::Int32(i) => serde_json::json!(i),
+            polars::prelude::AnyValue::UInt64(u) => serde_json::json!(u),
+            polars::prelude::AnyValue::UInt32(u) => serde_json::json!(u),
+            polars::prelude::AnyValue::Null => JsonValue::Null,
+            other => serde_json::json!(format!("{other}")),
+        }
+    }) {
         Some(v) => v,
         None => JsonValue::Null,
     };
-    Ok(Output {
-        value: sum_val,
-    })
+    Ok(Output { value: sum_val })
 }
 
 #[cfg(test)]
@@ -54,7 +50,9 @@ mod tests {
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_series_ipc(name: &str, values: &[i64]) -> String {
         let s = Series::new(name.into(), values);
@@ -63,9 +61,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_sum() {
-        let output = run(CommandContext::default(), Input {
-            series: test_series_ipc("a", &[10, 20, 30]),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                series: test_series_ipc("a", &[10, 20, 30]),
+            },
+        )
+        .await
+        .unwrap();
         assert_eq!(output.value, serde_json::json!(60));
     }
 }

@@ -104,8 +104,8 @@ mod tests {
     #[test]
     fn test_deserialize_response() {
         let json_str = include_str!("fixtures/search.json");
-        let _parsed: crate::dflow::response_types::EventListResponse = serde_json::from_str(json_str)
-            .expect("Failed to deserialize search.json");
+        let _parsed: crate::dflow::response_types::EventListResponse =
+            serde_json::from_str(json_str).expect("Failed to deserialize search.json");
     }
 
     #[tokio::test]

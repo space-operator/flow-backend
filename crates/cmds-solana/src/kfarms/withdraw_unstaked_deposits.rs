@@ -1,6 +1,6 @@
+use super::{KFARMS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator, derive_user_state};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KFARMS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator, derive_user_state};
 
 const NAME: &str = "withdraw_unstaked_deposits";
 const DEFINITION: &str = flow_lib::node_definition!("kfarms/withdraw_unstaked_deposits.jsonc");
@@ -46,13 +46,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let user_state = derive_user_state(&input.farm_state, &input.owner.pubkey());
 
     let accounts = vec![
-        AccountMeta::new(input.owner.pubkey(), true),              // owner (writable signer)
-        AccountMeta::new(user_state, false),                       // userState (writable, PDA)
-        AccountMeta::new(input.farm_state, false),                 // farmState (writable)
-        AccountMeta::new(input.user_ata, false),                   // userAta (writable)
-        AccountMeta::new(input.farm_vault, false),                 // farmVault (writable)
+        AccountMeta::new(input.owner.pubkey(), true), // owner (writable signer)
+        AccountMeta::new(user_state, false),          // userState (writable, PDA)
+        AccountMeta::new(input.farm_state, false),    // farmState (writable)
+        AccountMeta::new(input.user_ata, false),      // userAta (writable)
+        AccountMeta::new(input.farm_vault, false),    // farmVault (writable)
         AccountMeta::new_readonly(input.farm_vaults_authority, false), // farmVaultsAuthority
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),        // tokenProgram
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // tokenProgram
     ];
 
     let data = anchor_discriminator(NAME).to_vec();
@@ -70,9 +70,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, user_state })
+    Ok(Output {
+        signature,
+        user_state,
+    })
 }
 
 #[cfg(test)]
@@ -98,7 +105,7 @@ mod tests {
             "farm_vaults_authority" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

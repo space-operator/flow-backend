@@ -371,20 +371,14 @@ impl FlowConfig {
             }
         }
 
-        let source_names = config.nodes.iter().flat_map(|n| {
-            n.data
-                .ports
-                .outputs
-                .iter()
-                .map(|s| (s.id, s.name.clone()))
-        });
-        let target_names = config.nodes.iter().flat_map(|n| {
-            n.data
-                .ports
-                .inputs
-                .iter()
-                .map(|t| (t.id, t.name.clone()))
-        });
+        let source_names = config
+            .nodes
+            .iter()
+            .flat_map(|n| n.data.ports.outputs.iter().map(|s| (s.id, s.name.clone())));
+        let target_names = config
+            .nodes
+            .iter()
+            .flat_map(|n| n.data.ports.inputs.iter().map(|t| (t.id, t.name.clone())));
         let names = source_names.chain(target_names).collect::<HashMap<_, _>>();
 
         let edges = config

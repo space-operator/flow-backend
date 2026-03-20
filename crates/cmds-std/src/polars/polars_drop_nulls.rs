@@ -49,18 +49,29 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_with_nulls_ipc() -> String {
         let mut df = DataFrame::new(vec![
-            Series::new("name".into(), &[Some("Alice"), Some("Bob"), None, Some("Diana")]).into_column(),
+            Series::new(
+                "name".into(),
+                &[Some("Alice"), Some("Bob"), None, Some("Diana")],
+            )
+            .into_column(),
             Series::new("age".into(), &[Some(30i64), None, Some(35), Some(28)]).into_column(),
-            Series::new("score".into(), &[Some(88.5f64), Some(92.0), Some(75.3), None]).into_column(),
-        ]).unwrap();
+            Series::new(
+                "score".into(),
+                &[Some(88.5f64), Some(92.0), Some(75.3), None],
+            )
+            .into_column(),
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
@@ -68,10 +79,15 @@ mod tests {
     async fn test_run_drop_nulls_all() {
         // Row 0: all present, Row 1: age null, Row 2: name null, Row 3: score null
         // Only row 0 has no nulls across any column
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_with_nulls_ipc(),
-            columns: JsonValue::Null,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_with_nulls_ipc(),
+                columns: JsonValue::Null,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 1);
     }
@@ -79,10 +95,15 @@ mod tests {
     #[tokio::test]
     async fn test_run_drop_nulls_subset() {
         // Drop rows where "name" is null -- only row 2 has null name
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_with_nulls_ipc(),
-            columns: serde_json::json!(["name"]),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_with_nulls_ipc(),
+                columns: serde_json::json!(["name"]),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
     }

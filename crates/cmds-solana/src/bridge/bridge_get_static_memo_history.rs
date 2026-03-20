@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{bridge_get, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_get_static_memo_history";
 const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_get_static_memo_history.jsonc");
@@ -31,13 +31,24 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let path = format!("/v0/customers/{}/static_memos/{}/history", input.customer_id, input.static_memo_id);
+    let path = format!(
+        "/v0/customers/{}/static_memos/{}/history",
+        input.customer_id, input.static_memo_id
+    );
     let mut req = bridge_get(&ctx, &path, &input.api_key);
     let mut query: Vec<(&str, String)> = Vec::new();
-    if let Some(limit) = input.limit { query.push(("limit", limit.to_string())); }
-    if let Some(ref after) = input.starting_after { query.push(("starting_after", after.clone())); }
-    if let Some(ref before) = input.ending_before { query.push(("ending_before", before.clone())); }
-    if !query.is_empty() { req = req.query(&query); }
+    if let Some(limit) = input.limit {
+        query.push(("limit", limit.to_string()));
+    }
+    if let Some(ref after) = input.starting_after {
+        query.push(("starting_after", after.clone()));
+    }
+    if let Some(ref before) = input.ending_before {
+        query.push(("ending_before", before.clone()));
+    }
+    if !query.is_empty() {
+        req = req.query(&query);
+    }
     let result = check_response(req.send().await?).await?;
     Ok(Output { result })
 }

@@ -17,7 +17,8 @@ use solana_system_interface::instruction as system_instruction;
 use tracing::info;
 
 /// SPL Memo program ID: MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
-const MEMO_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+const MEMO_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 
 /// Build a memo instruction using solana-instruction v3 types directly.
 fn build_memo(memo: &[u8], signer_pubkeys: &[&Pubkey]) -> Instruction {

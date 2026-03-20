@@ -365,13 +365,22 @@ mod tests {
         assert_eq!(cls.vendor, "Jupiter");
         assert_eq!(cls.program, "jup_lock");
         assert_eq!(cls.category, "defi");
-        assert_eq!(cls.icon_url.as_deref(), Some("https://static.jup.ag/jup/icon.png"));
+        assert_eq!(
+            cls.icon_url.as_deref(),
+            Some("https://static.jup.ag/jup/icon.png")
+        );
         assert_eq!(cls.tags, vec!["defi", "jupiter", "vesting"]);
 
         let ext = def.external_version.as_ref().unwrap();
-        assert_eq!(ext.program_id.as_deref(), Some("LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn"));
+        assert_eq!(
+            ext.program_id.as_deref(),
+            Some("LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn")
+        );
         assert!(ext.sdk_crate.is_none());
-        assert_eq!(ext.source_repo.as_deref(), Some("https://github.com/jup-ag/jup-lock"));
+        assert_eq!(
+            ext.source_repo.as_deref(),
+            Some("https://github.com/jup-ag/jup-lock")
+        );
 
         let int = def.internal.as_ref().unwrap();
         assert_eq!(int.source, "lib");

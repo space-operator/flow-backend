@@ -2,7 +2,8 @@ use crate::prelude::*;
 use solana_system_interface::instruction as system_instruction;
 
 const NAME: &str = "create_account_with_seed";
-const DEFINITION: &str = flow_lib::node_definition!("system_program/create_account_with_seed.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("system_program/create_account_with_seed.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -58,7 +59,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [ix].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

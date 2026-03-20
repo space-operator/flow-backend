@@ -29,9 +29,7 @@ pub struct Output {
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let url = "https://dev-prediction-markets-api.dflow.net/api/v1/live_data".to_string();
 
-    let query: Vec<(&str, String)> = vec![
-        ("milestone_ids", input.milestone_ids.to_string()),
-    ];
+    let query: Vec<(&str, String)> = vec![("milestone_ids", input.milestone_ids.to_string())];
 
     let resp = ctx
         .http()

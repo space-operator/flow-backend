@@ -1,8 +1,9 @@
-use crate::prelude::*;
 use super::helper::{bridge_put, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_update_liquidation_address";
-const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_update_liquidation_address.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("bridge/bridge_update_liquidation_address.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
@@ -26,7 +27,10 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let path = format!("/v0/customers/{}/liquidation_addresses/{}", input.customer_id, input.liquidation_address_id);
+    let path = format!(
+        "/v0/customers/{}/liquidation_addresses/{}",
+        input.customer_id, input.liquidation_address_id
+    );
     let result = check_response(
         bridge_put(&ctx, &path, &input.api_key)
             .json(&input.body)

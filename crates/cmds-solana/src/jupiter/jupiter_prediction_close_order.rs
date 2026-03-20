@@ -30,7 +30,10 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let url = format!("https://api.jup.ag/prediction/v1/orders/{}/close", input.order_id);
+    let url = format!(
+        "https://api.jup.ag/prediction/v1/orders/{}/close",
+        input.order_id
+    );
 
     let body = json!({
         "user": input.user,

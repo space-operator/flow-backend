@@ -1,6 +1,6 @@
+use super::{KVAULT_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KVAULT_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "remove_allocation";
 const DEFINITION: &str = flow_lib::node_definition!("kvault/remove_allocation.jsonc");
@@ -36,7 +36,6 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-
     let accounts = vec![
         AccountMeta::new(input.vault_admin_authority.pubkey(), true), // vault_admin_authority (writable signer)
         AccountMeta::new(input.vault_state, false),                   // vault_state (writable)
@@ -58,7 +57,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -84,7 +87,7 @@ mod tests {
             "reserve" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

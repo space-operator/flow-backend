@@ -45,12 +45,7 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 
     let exprs: Vec<Expr> = col_list
         .iter()
-        .map(|name| {
-            col(name.as_str()).quantile(
-                lit(input.quantile),
-                QuantileMethod::Linear,
-            )
-        })
+        .map(|name| col(name.as_str()).quantile(lit(input.quantile), QuantileMethod::Linear))
         .collect();
 
     let mut result = df
@@ -69,54 +64,81 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("category".into(), &["A", "B", "A", "B", "A"]).into_column(),
             Series::new("value".into(), &[10i64, 20, 30, 40, 50]).into_column(),
             Series::new("score".into(), &[1.0f64, 2.0, 3.0, 4.0, 5.0]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_quantile_median() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            quantile: 0.5,
-            columns: Some(serde_json::json!(["value"])),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                quantile: 0.5,
+                columns: Some(serde_json::json!(["value"])),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 1);
         let val: f64 = df.column("value").unwrap().f64().unwrap().get(0).unwrap();
-        assert!((val - 30.0).abs() < 1e-10, "quantile 0.5 should be 30.0, got {val}");
+        assert!(
+            (val - 30.0).abs() < 1e-10,
+            "quantile 0.5 should be 30.0, got {val}"
+        );
     }
 
     #[tokio::test]
     async fn test_run_quantile_min() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            quantile: 0.0,
-            columns: Some(serde_json::json!(["value"])),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                quantile: 0.0,
+                columns: Some(serde_json::json!(["value"])),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         let val: f64 = df.column("value").unwrap().f64().unwrap().get(0).unwrap();
-        assert!((val - 10.0).abs() < 1e-10, "quantile 0.0 should be 10.0, got {val}");
+        assert!(
+            (val - 10.0).abs() < 1e-10,
+            "quantile 0.0 should be 10.0, got {val}"
+        );
     }
 
     #[tokio::test]
     async fn test_run_quantile_max() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            quantile: 1.0,
-            columns: Some(serde_json::json!(["value"])),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                quantile: 1.0,
+                columns: Some(serde_json::json!(["value"])),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         let val: f64 = df.column("value").unwrap().f64().unwrap().get(0).unwrap();
-        assert!((val - 50.0).abs() < 1e-10, "quantile 1.0 should be 50.0, got {val}");
+        assert!(
+            (val - 50.0).abs() < 1e-10,
+            "quantile 1.0 should be 50.0, got {val}"
+        );
     }
 }

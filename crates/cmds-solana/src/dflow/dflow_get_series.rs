@@ -90,8 +90,8 @@ mod tests {
     #[test]
     fn test_deserialize_response() {
         let json_str = include_str!("fixtures/series_list.json");
-        let _parsed: crate::dflow::response_types::SeriesListResponse = serde_json::from_str(json_str)
-            .expect("Failed to deserialize series_list.json");
+        let _parsed: crate::dflow::response_types::SeriesListResponse =
+            serde_json::from_str(json_str).expect("Failed to deserialize series_list.json");
     }
 
     #[tokio::test]

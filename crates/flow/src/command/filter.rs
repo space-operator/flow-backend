@@ -84,7 +84,10 @@ mod tests {
         )
         .await
         .unwrap();
-        assert_eq!(output.filtered, Value::Array(vec![Value::U64(4), Value::U64(5)]));
+        assert_eq!(
+            output.filtered,
+            Value::Array(vec![Value::U64(4), Value::U64(5)])
+        );
         assert_eq!(
             output.rejected,
             Value::Array(vec![Value::U64(1), Value::U64(2), Value::U64(3)])
@@ -113,7 +116,10 @@ mod tests {
             output.filtered,
             Value::Array(vec![Value::String("a".into()), Value::String("b".into())])
         );
-        assert_eq!(output.rejected, Value::Array(vec![Value::Null, Value::Null]));
+        assert_eq!(
+            output.rejected,
+            Value::Array(vec![Value::Null, Value::Null])
+        );
     }
 
     #[tokio::test]
@@ -178,9 +184,9 @@ mod tests {
     #[actix::test]
     async fn test_filter_flow() {
         use crate::FlowGraph;
+        use flow_lib::FlowConfig;
         use flow_lib::config::client::ClientConfig;
         use flow_lib::flow_run_events::event_channel;
-        use flow_lib::FlowConfig;
 
         use cmds_std as _;
 

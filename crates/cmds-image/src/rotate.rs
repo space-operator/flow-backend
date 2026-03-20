@@ -33,9 +33,7 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
 
     // Short-circuit if no operation requested
     if input.angle.is_none() && input.flip_h != Some(true) && input.flip_v != Some(true) {
-        return Ok(Output {
-            image: image_bytes,
-        });
+        return Ok(Output { image: image_bytes });
     }
 
     let mut img = decode_image(&image_bytes)?;
@@ -70,9 +68,11 @@ mod tests {
     use crate::helpers::{decode_image, encode_image};
 
     fn test_png(w: u32, h: u32) -> bytes::Bytes {
-        let img = image::DynamicImage::ImageRgba8(
-            image::RgbaImage::from_pixel(w, h, image::Rgba([255, 0, 0, 255])),
-        );
+        let img = image::DynamicImage::ImageRgba8(image::RgbaImage::from_pixel(
+            w,
+            h,
+            image::Rgba([255, 0, 0, 255]),
+        ));
         encode_image(&img, image::ImageFormat::Png).unwrap().into()
     }
 

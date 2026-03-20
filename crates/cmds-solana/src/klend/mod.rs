@@ -3,7 +3,6 @@
 //! On-chain Solana instruction nodes for the Kamino Lending program.
 //! Program ID: KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD
 
-
 // klend - Space Operator nodes for Kamino Lending
 //
 // Program ID: `KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD`
@@ -19,16 +18,19 @@ use crate::prelude::*;
 // =============================================================================
 
 /// Kamino Lending Program ID
-pub const KLEND_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD");
+pub const KLEND_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD");
 
 /// System Program ID
 pub const SYSTEM_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("11111111111111111111111111111111");
 
 /// Token Program ID
-pub const TOKEN_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+pub const TOKEN_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
 /// Associated Token Account Program ID
-pub const ATA_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+pub const ATA_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
 
 // =============================================================================
 // Anchor Discriminator
@@ -49,26 +51,32 @@ pub fn anchor_discriminator(name: &str) -> [u8; 8] {
 
 /// Derive lending market authority PDA
 pub fn derive_lending_market_authority(lending_market: &Pubkey) -> Pubkey {
-    Pubkey::find_program_address(
-        &[b"lma", lending_market.as_ref()],
-        &KLEND_PROGRAM_ID,
-    ).0
+    Pubkey::find_program_address(&[b"lma", lending_market.as_ref()], &KLEND_PROGRAM_ID).0
 }
 
 /// Derive obligation PDA from lending market, owner, and seed accounts
-pub fn derive_obligation(lending_market: &Pubkey, owner: &Pubkey, seed1: &Pubkey, seed2: &Pubkey) -> Pubkey {
+pub fn derive_obligation(
+    lending_market: &Pubkey,
+    owner: &Pubkey,
+    seed1: &Pubkey,
+    seed2: &Pubkey,
+) -> Pubkey {
     Pubkey::find_program_address(
-        &[b"obligation", lending_market.as_ref(), owner.as_ref(), seed1.as_ref(), seed2.as_ref()],
+        &[
+            b"obligation",
+            lending_market.as_ref(),
+            owner.as_ref(),
+            seed1.as_ref(),
+            seed2.as_ref(),
+        ],
         &KLEND_PROGRAM_ID,
-    ).0
+    )
+    .0
 }
 
 /// Derive user metadata PDA
 pub fn derive_user_metadata(owner: &Pubkey) -> Pubkey {
-    Pubkey::find_program_address(
-        &[b"user_meta", owner.as_ref()],
-        &KLEND_PROGRAM_ID,
-    ).0
+    Pubkey::find_program_address(&[b"user_meta", owner.as_ref()], &KLEND_PROGRAM_ID).0
 }
 
 /// Derive referrer token state PDA
@@ -76,7 +84,8 @@ pub fn derive_referrer_token_state(referrer: &Pubkey, reserve: &Pubkey) -> Pubke
     Pubkey::find_program_address(
         &[b"referrer_acc", referrer.as_ref(), reserve.as_ref()],
         &KLEND_PROGRAM_ID,
-    ).0
+    )
+    .0
 }
 
 /// Derive referrer state and short URL PDA
@@ -84,7 +93,8 @@ pub fn derive_referrer_state(short_url: &str) -> Pubkey {
     Pubkey::find_program_address(
         &[b"referrer_short_url", short_url.as_bytes()],
         &KLEND_PROGRAM_ID,
-    ).0
+    )
+    .0
 }
 
 // =============================================================================
@@ -99,11 +109,11 @@ pub mod update_lending_market_owner;
 // Node Modules - Reserve Management (Admin)
 // =============================================================================
 
-pub mod init_reserve;
 pub mod init_farms_for_reserve;
-pub mod update_single_reserve_config;
-pub mod update_entire_reserve_config;
+pub mod init_reserve;
 pub mod refresh_reserve;
+pub mod update_entire_reserve_config;
+pub mod update_single_reserve_config;
 
 // =============================================================================
 // Node Modules - Deposits & Redemptions
@@ -116,14 +126,14 @@ pub mod redeem_reserve_collateral;
 // Node Modules - Obligations
 // =============================================================================
 
+pub mod borrow_obligation_liquidity;
+pub mod deposit_obligation_collateral;
 pub mod init_obligation;
 pub mod init_obligation_farms_for_reserve;
-pub mod refresh_obligation_farms_for_reserve;
 pub mod refresh_obligation;
-pub mod deposit_obligation_collateral;
-pub mod withdraw_obligation_collateral;
-pub mod borrow_obligation_liquidity;
+pub mod refresh_obligation_farms_for_reserve;
 pub mod repay_obligation_liquidity;
+pub mod withdraw_obligation_collateral;
 
 // =============================================================================
 // Node Modules - Combined Operations
@@ -150,8 +160,8 @@ pub mod flash_repay_reserve_liquidity;
 // =============================================================================
 
 pub mod redeem_fees;
-pub mod withdraw_protocol_fee;
 pub mod socialize_loss;
+pub mod withdraw_protocol_fee;
 
 // =============================================================================
 // Node Modules - Elevation Groups
@@ -163,8 +173,8 @@ pub mod request_elevation_group;
 // Node Modules - Referrals & User Metadata
 // =============================================================================
 
+pub mod delete_referrer_state_and_short_url;
+pub mod init_referrer_state_and_short_url;
 pub mod init_referrer_token_state;
 pub mod init_user_metadata;
 pub mod withdraw_referrer_fees;
-pub mod init_referrer_state_and_short_url;
-pub mod delete_referrer_state_and_short_url;

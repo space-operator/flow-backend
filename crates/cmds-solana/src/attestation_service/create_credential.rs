@@ -89,7 +89,10 @@ pub async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, Comman
         .await?
         .signature;
 
-    Ok(Output { signature, credential })
+    Ok(Output {
+        signature,
+        credential,
+    })
 }
 
 #[cfg(test)]

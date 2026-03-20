@@ -1,7 +1,5 @@
 use super::RemainingAccountsInfo;
-use super::{
-    PRESALE_PROGRAM_ID, derive_event_authority, discriminators,
-};
+use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
 

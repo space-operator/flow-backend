@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 const NAME: &str = "withdraw_excess_lamports";
-const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/withdraw_excess_lamports.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("spl_token_2022/withdraw_excess_lamports.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

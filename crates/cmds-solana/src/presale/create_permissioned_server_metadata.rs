@@ -1,9 +1,10 @@
+use super::{PRESALE_PROGRAM_ID, derive_event_authority, derive_server_metadata, discriminators};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, derive_server_metadata, discriminators};
 
 const NAME: &str = "create_permissioned_server_metadata";
-const DEFINITION: &str = flow_lib::node_definition!("presale/create_permissioned_server_metadata.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("presale/create_permissioned_server_metadata.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -67,7 +68,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output {

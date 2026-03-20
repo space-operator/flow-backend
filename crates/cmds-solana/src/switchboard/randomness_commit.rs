@@ -37,10 +37,10 @@ struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     // randomness_commit takes no args (empty struct `{}`)
     let accounts = vec![
-        AccountMeta::new(input.randomness_account, false),     // randomness (writable)
-        AccountMeta::new_readonly(input.queue, false),         // queue
-        AccountMeta::new_readonly(input.oracle, false),        // oracle
-        AccountMeta::new_readonly(SLOT_HASHES_SYSVAR, false),  // recentSlothashes
+        AccountMeta::new(input.randomness_account, false), // randomness (writable)
+        AccountMeta::new_readonly(input.queue, false),     // queue
+        AccountMeta::new_readonly(input.oracle, false),    // oracle
+        AccountMeta::new_readonly(SLOT_HASHES_SYSVAR, false), // recentSlothashes
         AccountMeta::new_readonly(input.authority.pubkey(), true), // authority (signer)
     ];
 
@@ -53,7 +53,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

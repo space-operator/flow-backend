@@ -3,10 +3,10 @@ use crate::{
     config::{DbConfig, Encrypted, EncryptionKey},
     connection::{AdminConn, UserConnection, UserConnectionTrait},
 };
-use std::borrow::Cow;
 use deadpool_postgres::{ClientWrapper, Hook, HookError, Metrics, Pool, PoolConfig, SslMode};
 use flow_lib::{UserId, solana::Keypair};
 use futures_util::FutureExt;
+use std::borrow::Cow;
 use std::time::{Duration, Instant};
 
 pub use deadpool_postgres::Object as Connection;
@@ -259,7 +259,8 @@ impl DbPool {
         };
 
         let decrypted = self.swig_session_encryption_key()?.decrypt(&encrypted)?;
-        let secret = String::from_utf8(decrypted).map_err(|e| crate::Error::LogicError(e.into()))?;
+        let secret =
+            String::from_utf8(decrypted).map_err(|e| crate::Error::LogicError(e.into()))?;
         Ok(Some(secret))
     }
 }

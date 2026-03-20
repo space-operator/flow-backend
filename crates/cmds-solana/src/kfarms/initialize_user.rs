@@ -1,6 +1,6 @@
+use super::{KFARMS_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_user_state};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KFARMS_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_user_state};
 
 const NAME: &str = "initialize_user";
 const DEFINITION: &str = flow_lib::node_definition!("kfarms/initialize_user.jsonc");
@@ -45,12 +45,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let user_state = derive_user_state(&input.farm_state, &input.owner);
 
     let accounts = vec![
-        AccountMeta::new(input.authority.pubkey(), true),    // authority (writable signer)
-        AccountMeta::new(input.payer.pubkey(), true),        // payer (writable signer)
-        AccountMeta::new_readonly(input.owner, false),       // owner
-        AccountMeta::new_readonly(input.delegatee, false),   // delegatee
-        AccountMeta::new(user_state, false),                 // userState (writable, PDA)
-        AccountMeta::new(input.farm_state, false),           // farmState (writable)
+        AccountMeta::new(input.authority.pubkey(), true), // authority (writable signer)
+        AccountMeta::new(input.payer.pubkey(), true),     // payer (writable signer)
+        AccountMeta::new_readonly(input.owner, false),    // owner
+        AccountMeta::new_readonly(input.delegatee, false), // delegatee
+        AccountMeta::new(user_state, false),              // userState (writable, PDA)
+        AccountMeta::new(input.farm_state, false),        // farmState (writable)
         AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // systemProgram
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false), // rent
     ];
@@ -70,9 +70,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, user_state })
+    Ok(Output {
+        signature,
+        user_state,
+    })
 }
 
 #[cfg(test)]
@@ -98,7 +105,7 @@ mod tests {
             "farm_state" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

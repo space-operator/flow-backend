@@ -313,7 +313,8 @@ impl UserWorker {
         d: &FlowDeployment,
         options: &StartFlowDeploymentOptions,
         ctx: &mut actix::Context<Self>,
-    ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static + use<> {
+    ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static + use<>
+    {
         let new_flow_run = TowerClient::new(ActixService::from(ctx.address().recipient()));
 
         let root = DBWorker::from_registry();

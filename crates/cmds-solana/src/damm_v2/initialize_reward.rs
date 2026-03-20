@@ -1,6 +1,9 @@
+use super::{
+    CP_AMM_PROGRAM_ID, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator,
+    derive_event_authority, derive_reward_vault,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{CP_AMM_PROGRAM_ID, TOKEN_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_reward_vault, derive_event_authority};
 
 const NAME: &str = "damm_v2_initialize_reward";
 const IX_NAME: &str = "initialize_reward";
@@ -48,15 +51,15 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.payer.pubkey(), true),              // payer (writable signer)
-        AccountMeta::new(input.pool, false),                       // pool (writable)
-        AccountMeta::new(reward_vault, false),                     // reward_vault (writable, init)
-        AccountMeta::new_readonly(input.reward_mint, false),       // reward_mint
-        AccountMeta::new(input.signer.pubkey(), true),             // signer (signer)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),        // token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),       // system_program
-        AccountMeta::new_readonly(event_authority, false),         // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false),       // program
+        AccountMeta::new(input.payer.pubkey(), true), // payer (writable signer)
+        AccountMeta::new(input.pool, false),          // pool (writable)
+        AccountMeta::new(reward_vault, false),        // reward_vault (writable, init)
+        AccountMeta::new_readonly(input.reward_mint, false), // reward_mint
+        AccountMeta::new(input.signer.pubkey(), true), // signer (signer)
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
+        AccountMeta::new_readonly(event_authority, false), // event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
     ];
 
     let mut data = anchor_discriminator(IX_NAME).to_vec();
@@ -77,15 +80,22 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, reward_vault })
+    Ok(Output {
+        signature,
+        reward_vault,
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use solana_signer::Signer;
     use super::*;
+    use solana_signer::Signer;
 
     /// Tests that the node definition can be built correctly.
     #[test]
@@ -107,7 +117,7 @@ mod tests {
             "funder" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

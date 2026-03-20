@@ -1,6 +1,6 @@
+use super::{KFARMS_PROGRAM_ID, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{KFARMS_PROGRAM_ID, TOKEN_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "initialize_farm";
 const DEFINITION: &str = flow_lib::node_definition!("kfarms/initialize_farm.jsonc");
@@ -43,14 +43,14 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
-        AccountMeta::new(input.farm_admin.pubkey(), true),             // farmAdmin (writable signer)
-        AccountMeta::new(input.farm_state, false),                     // farmState (writable)
-        AccountMeta::new_readonly(input.global_config, false),         // globalConfig
-        AccountMeta::new(input.farm_vault, false),                     // farmVault (writable)
+        AccountMeta::new(input.farm_admin.pubkey(), true), // farmAdmin (writable signer)
+        AccountMeta::new(input.farm_state, false),         // farmState (writable)
+        AccountMeta::new_readonly(input.global_config, false), // globalConfig
+        AccountMeta::new(input.farm_vault, false),         // farmVault (writable)
         AccountMeta::new_readonly(input.farm_vaults_authority, false), // farmVaultsAuthority
-        AccountMeta::new_readonly(input.token_mint, false),            // tokenMint
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),            // tokenProgram
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),           // systemProgram
+        AccountMeta::new_readonly(input.token_mint, false), // tokenMint
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // tokenProgram
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // systemProgram
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false), // rent
     ];
 
@@ -69,7 +69,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -98,7 +102,7 @@ mod tests {
             "token_mint" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

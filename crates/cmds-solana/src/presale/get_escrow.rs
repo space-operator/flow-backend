@@ -4,10 +4,8 @@ const NAME: &str = "get_escrow";
 const DEFINITION: &str = flow_lib::node_definition!("presale/get_escrow.jsonc");
 
 fn build() -> BuildResult {
-    static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(DEFINITION)?
-            .check_name(NAME)
-    });
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))
 }
 
@@ -74,10 +72,10 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
 
     let d = &account.data[8..]; // skip discriminator
 
-    let presale = Pubkey::try_from(&d[0..32])
-        .map_err(|_| CommandError::msg("Invalid presale pubkey"))?;
-    let owner = Pubkey::try_from(&d[32..64])
-        .map_err(|_| CommandError::msg("Invalid owner pubkey"))?;
+    let presale =
+        Pubkey::try_from(&d[0..32]).map_err(|_| CommandError::msg("Invalid presale pubkey"))?;
+    let owner =
+        Pubkey::try_from(&d[32..64]).map_err(|_| CommandError::msg("Invalid owner pubkey"))?;
 
     Ok(Output {
         presale,

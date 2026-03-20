@@ -68,7 +68,10 @@ fn parse_expression(expr: &str) -> Result<Expr, CommandError> {
     if let Some(pos) = expr.find(" contains ") {
         let col_name = expr[..pos].trim();
         let pattern = expr[pos + " contains ".len()..].trim().trim_matches('"');
-        return Ok(col(col_name).cast(DataType::String).str().contains_literal(lit(pattern.to_string())));
+        return Ok(col(col_name)
+            .cast(DataType::String)
+            .str()
+            .contains_literal(lit(pattern.to_string())));
     }
 
     Err(CommandError::msg(format!(
@@ -117,34 +120,55 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
-            Series::new("name".into(), &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")]).into_column(),
+            Series::new(
+                "name".into(),
+                &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")],
+            )
+            .into_column(),
             Series::new("age".into(), &[Some(30i64), Some(25), Some(35), Some(30)]).into_column(),
-            Series::new("score".into(), &[Some(88.5f64), Some(92.0), Some(75.3), Some(91.0)]).into_column(),
-        ]).unwrap();
+            Series::new(
+                "score".into(),
+                &[Some(88.5f64), Some(92.0), Some(75.3), Some(91.0)],
+            )
+            .into_column(),
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     fn test_df_with_nulls_ipc() -> String {
         let mut df = DataFrame::new(vec![
-            Series::new("name".into(), &[Some("Alice"), Some("Bob"), None, Some("Alice")]).into_column(),
+            Series::new(
+                "name".into(),
+                &[Some("Alice"), Some("Bob"), None, Some("Alice")],
+            )
+            .into_column(),
             Series::new("age".into(), &[Some(30i64), None, Some(35), Some(30)]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_gt() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            expression: "age > 28".into(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                expression: "age > 28".into(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         // age 30, 35, 30 are > 28
         assert_eq!(df.height(), 3);
@@ -152,10 +176,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_eq_string() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            expression: "name == Alice".into(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                expression: "name == Alice".into(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         // Two rows with name "Alice"
         assert_eq!(df.height(), 2);
@@ -163,10 +192,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_contains() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            expression: "name contains li".into(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                expression: "name contains li".into(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         // "Alice" (x2) and "Charlie" contain "li" -> 3 matches
         assert_eq!(df.height(), 3);
@@ -174,10 +208,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_is_null() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_with_nulls_ipc(),
-            expression: "age is_null".into(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_with_nulls_ipc(),
+                expression: "age is_null".into(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 1);
     }

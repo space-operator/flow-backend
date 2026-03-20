@@ -49,24 +49,32 @@ mod tests {
     use crate::polars::types::df_to_ipc;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("name".into(), &["Alice", "Bob", "Charlie"]).into_column(),
             Series::new("age".into(), &[30i64, 25, 35]).into_column(),
             Series::new("score".into(), &[88.5f64, 92.0, 75.3]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_cast_i64_to_f64() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: "age".to_string(),
-            dtype: "f64".to_string(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: "age".to_string(),
+                dtype: "f64".to_string(),
+            },
+        )
+        .await
+        .unwrap();
         let df = crate::polars::types::df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
         assert_eq!(df.column("age").unwrap().dtype(), &DataType::Float64);
@@ -74,11 +82,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_cast_i64_to_string() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: "age".to_string(),
-            dtype: "str".to_string(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: "age".to_string(),
+                dtype: "str".to_string(),
+            },
+        )
+        .await
+        .unwrap();
         let df = crate::polars::types::df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
         assert_eq!(df.column("age").unwrap().dtype(), &DataType::String);

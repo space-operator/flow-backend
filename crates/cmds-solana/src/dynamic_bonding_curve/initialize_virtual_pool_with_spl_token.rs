@@ -1,9 +1,11 @@
+use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, discriminators, pda};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, pda, discriminators};
 
 const NAME: &str = "initialize_virtual_pool_with_spl_token";
-const DEFINITION: &str = flow_lib::node_definition!("dynamic_bonding_curve/initialize_virtual_pool_with_spl_token.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!(
+    "dynamic_bonding_curve/initialize_virtual_pool_with_spl_token.jsonc"
+);
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -120,9 +122,18 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, pool, base_vault, quote_vault })
+    Ok(Output {
+        signature,
+        pool,
+        base_vault,
+        quote_vault,
+    })
 }
 
 #[cfg(test)]

@@ -7,9 +7,9 @@ use flow_lib::{
 };
 use schemars::JsonSchema;
 use serde_with::{DisplayFromStr, serde_as};
-use tower_rpc::GetBaseUrl;
 use std::convert::Infallible;
 use tower::util::ServiceExt;
+use tower_rpc::GetBaseUrl;
 use tracing::Instrument;
 use url::Url;
 
@@ -97,10 +97,9 @@ impl ContextProxy {
         let server = ctx
             .get::<actix::Addr<tower_rpc::Server>>()
             .ok_or_else(|| CommandError::msg("tower_rpc::Server not available"))?;
-        let our_base_url = server
-            .send(GetBaseUrl)
-            .await?
-            .ok_or_else(|| CommandError::msg("tower_rpc::Server is not listening on any interfaces"))?;
+        let our_base_url = server.send(GetBaseUrl).await?.ok_or_else(|| {
+            CommandError::msg("tower_rpc::Server is not listening on any interfaces")
+        })?;
         let flow_run_id = *ctx.flow_run_id();
 
         let signer = ctx.raw().services.signer.clone();

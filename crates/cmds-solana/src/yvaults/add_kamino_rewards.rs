@@ -1,7 +1,7 @@
 use super::derive_ata;
+use super::{TOKEN_PROGRAM_ID, YVAULTS_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{YVAULTS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "add_kamino_rewards";
 const DEFINITION: &str = flow_lib::node_definition!("yvaults/add_kamino_rewards.jsonc");
@@ -49,13 +49,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let reward_ata = derive_ata(&input.admin_authority.pubkey(), &input.reward_mint);
 
     let accounts = vec![
-        AccountMeta::new(input.admin_authority.pubkey(), true),  // admin_authority (writable signer)
-        AccountMeta::new(input.strategy, false),                 // strategy (writable)
-        AccountMeta::new_readonly(input.reward_mint, false),     // reward_mint (readonly)
-        AccountMeta::new(input.reward_vault, false),             // reward_vault (writable)
+        AccountMeta::new(input.admin_authority.pubkey(), true), // admin_authority (writable signer)
+        AccountMeta::new(input.strategy, false),                // strategy (writable)
+        AccountMeta::new_readonly(input.reward_mint, false),    // reward_mint (readonly)
+        AccountMeta::new(input.reward_vault, false),            // reward_vault (writable)
         AccountMeta::new_readonly(input.base_vault_authority, false), // base_vault_authority (readonly)
-        AccountMeta::new(reward_ata, false),               // reward_ata (writable)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),      // token_program
+        AccountMeta::new(reward_ata, false),                          // reward_ata (writable)
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),           // token_program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -75,9 +75,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, reward_ata })
+    Ok(Output {
+        signature,
+        reward_ata,
+    })
 }
 
 #[cfg(test)]
@@ -105,7 +112,7 @@ mod tests {
             "amount" => 1000u64,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

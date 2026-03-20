@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{bridge_put, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_update_customer";
 const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_update_customer.jsonc");

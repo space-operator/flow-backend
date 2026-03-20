@@ -33,10 +33,7 @@ impl ExplorerCommand {
             })
             .collect();
         let pinned = serde_json::from_value::<Vec<String>>(
-            data.config
-                .get("pinned")
-                .cloned()
-                .unwrap_or_default(),
+            data.config.get("pinned").cloned().unwrap_or_default(),
         )?
         .into_iter()
         .filter_map(|s| {

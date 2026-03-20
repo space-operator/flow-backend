@@ -1,5 +1,7 @@
+use super::{
+    SYSTEM_PROGRAM_ID, account_meta_mut, account_meta_readonly, account_meta_signer_mut, build_ix,
+};
 use crate::prelude::*;
-use super::{build_ix, SYSTEM_PROGRAM_ID, account_meta_signer_mut, account_meta_readonly, account_meta_mut};
 
 const NAME: &str = "initialize_task_queue_v0";
 const DEFINITION: &str = flow_lib::node_definition!("tuktuk/initialize_task_queue_v0.jsonc");
@@ -92,7 +94,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

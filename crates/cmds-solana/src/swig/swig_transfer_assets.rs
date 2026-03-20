@@ -1,5 +1,5 @@
+use super::{TransferAssetsV1Instruction, find_wallet_address, to_instruction_v3, to_pubkey_v2};
 use crate::prelude::*;
-use super::{to_pubkey_v2, to_instruction_v3, find_wallet_address, TransferAssetsV1Instruction};
 
 const NAME: &str = "swig_transfer_assets";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_transfer_assets.jsonc");
@@ -43,7 +43,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         to_pubkey_v2(&input.fee_payer.pubkey()),
         to_pubkey_v2(&input.authority.pubkey()),
         input.role_id,
-    ).map_err(|e| CommandError::msg(e.to_string()))?;
+    )
+    .map_err(|e| CommandError::msg(e.to_string()))?;
 
     let instruction = to_instruction_v3(ix_v2);
 
@@ -54,7 +55,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })
@@ -83,7 +88,8 @@ mod tests {
             to_pubkey_v2(&kp.pubkey()),
             to_pubkey_v2(&kp.pubkey()),
             0,
-        ).unwrap();
+        )
+        .unwrap();
 
         let instruction = to_instruction_v3(ix);
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);

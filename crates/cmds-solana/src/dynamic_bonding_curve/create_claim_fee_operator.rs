@@ -1,9 +1,10 @@
+use super::{DBC_PROGRAM_ID, discriminators, pda};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{DBC_PROGRAM_ID, pda, discriminators};
 
 const NAME: &str = "create_claim_fee_operator";
-const DEFINITION: &str = flow_lib::node_definition!("dynamic_bonding_curve/create_claim_fee_operator.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("dynamic_bonding_curve/create_claim_fee_operator.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -66,9 +67,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, claim_fee_operator })
+    Ok(Output {
+        signature,
+        claim_fee_operator,
+    })
 }
 
 #[cfg(test)]

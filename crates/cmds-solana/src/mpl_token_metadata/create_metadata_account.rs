@@ -7,7 +7,8 @@ use solana_sdk_ids::system_program;
 // Command Name
 const NAME: &str = "create_metadata_account";
 
-const DEFINITION: &str = flow_lib::node_definition!("mpl_token_metadata/create_metadata_account.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("mpl_token_metadata/create_metadata_account.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {

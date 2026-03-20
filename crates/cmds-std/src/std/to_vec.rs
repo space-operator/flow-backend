@@ -33,7 +33,10 @@ async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
     let mut result = vec![input.v0];
     for v in [
         input.v1, input.v2, input.v3, input.v4, input.v5, input.v6, input.v7,
-    ].into_iter().flatten() {
+    ]
+    .into_iter()
+    .flatten()
+    {
         result.push(v);
     }
 

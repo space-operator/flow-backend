@@ -97,8 +97,8 @@ mod tests {
     #[test]
     fn test_deserialize_response() {
         let json_str = include_str!("fixtures/markets_list.json");
-        let _parsed: crate::dflow::response_types::MarketListResponse = serde_json::from_str(json_str)
-            .expect("Failed to deserialize markets_list.json");
+        let _parsed: crate::dflow::response_types::MarketListResponse =
+            serde_json::from_str(json_str).expect("Failed to deserialize markets_list.json");
     }
 
     #[tokio::test]

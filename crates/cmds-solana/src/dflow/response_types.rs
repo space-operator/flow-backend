@@ -332,8 +332,16 @@ mod tests {
         assert_eq!(market.ticker, "PRES-2024-KH");
         assert_eq!(market.market_type, "binary");
         assert_eq!(market.status, "finalized");
-        assert!(market.accounts.contains_key("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"));
-        assert!(market.accounts.contains_key("CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH"));
+        assert!(
+            market
+                .accounts
+                .contains_key("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
+        );
+        assert!(
+            market
+                .accounts
+                .contains_key("CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH")
+        );
         let usdc_account = &market.accounts["EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"];
         assert!(!usdc_account.yes_mint.is_empty());
         assert!(!usdc_account.no_mint.is_empty());

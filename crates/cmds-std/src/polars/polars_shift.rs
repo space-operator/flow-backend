@@ -67,31 +67,42 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("value".into(), &[1i64, 2, 3, 4, 5]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: "value".to_string(),
-            periods: 1,
-            fill_value: None,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: "value".to_string(),
+                periods: 1,
+                fill_value: None,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 5, "shift should preserve row count");
         let shifted = df.column("value_shifted").unwrap();
         // First value should be null after shifting by 1
-        assert!(shifted.get(0).unwrap() == AnyValue::Null, "first value should be null");
+        assert!(
+            shifted.get(0).unwrap() == AnyValue::Null,
+            "first value should be null"
+        );
         // Second value should be the original first value (1)
         assert_eq!(shifted.get(1).unwrap(), AnyValue::Int64(1));
         assert_eq!(shifted.get(2).unwrap(), AnyValue::Int64(2));
@@ -99,17 +110,25 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_with_fill_value() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            column: "value".to_string(),
-            periods: 1,
-            fill_value: Some(serde_json::json!(0)),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                column: "value".to_string(),
+                periods: 1,
+                fill_value: Some(serde_json::json!(0)),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         let shifted = df.column("value_shifted").unwrap();
         // With fill_value=0, first value should be 0.0 (fill_null casts to f64)
         let val = shifted.get(0).unwrap();
         // The fill_null with a float literal may produce f64
-        assert!(val != AnyValue::Null, "first value should not be null when fill_value is provided");
+        assert!(
+            val != AnyValue::Null,
+            "first value should not be null when fill_value is provided"
+        );
     }
 }

@@ -1,14 +1,17 @@
 //! Utility functions for secp256k1 node implementations
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 
 /// Convert Vec<u8> to fixed-size array with descriptive error message
 pub fn vec_to_array<const N: usize>(v: Vec<u8>, field_name: &str) -> Result<[u8; N]> {
-    v.try_into()
-        .map_err(|v: Vec<u8>| anyhow!(
+    v.try_into().map_err(|v: Vec<u8>| {
+        anyhow!(
             "{} must be exactly {} bytes, got {} bytes",
-            field_name, N, v.len()
-        ))
+            field_name,
+            N,
+            v.len()
+        )
+    })
 }
 
 /// Parse bytes from JSON value
@@ -18,22 +21,24 @@ pub fn vec_to_array<const N: usize>(v: Vec<u8>, field_name: &str) -> Result<[u8;
 /// - Hex strings: `"0x010203..."` or `"010203..."`
 pub fn parse_bytes(value: &serde_json::Value) -> Result<Vec<u8>> {
     match value {
-        serde_json::Value::Array(arr) => {
-            arr.iter()
-                .map(|v| {
-                    v.as_u64()
-                        .ok_or_else(|| anyhow!("invalid byte value: expected number"))
-                        .and_then(|n| {
-                            u8::try_from(n).map_err(|_| anyhow!("byte value {} out of range 0-255", n))
-                        })
-                })
-                .collect()
-        }
+        serde_json::Value::Array(arr) => arr
+            .iter()
+            .map(|v| {
+                v.as_u64()
+                    .ok_or_else(|| anyhow!("invalid byte value: expected number"))
+                    .and_then(|n| {
+                        u8::try_from(n).map_err(|_| anyhow!("byte value {} out of range 0-255", n))
+                    })
+            })
+            .collect(),
         serde_json::Value::String(s) => {
             let s = s.strip_prefix("0x").unwrap_or(s);
             hex::decode(s).map_err(|e| anyhow!("invalid hex string: {}", e))
         }
-        _ => Err(anyhow!("expected byte array or hex string, got {:?}", value)),
+        _ => Err(anyhow!(
+            "expected byte array or hex string, got {:?}",
+            value
+        )),
     }
 }
 
@@ -53,7 +58,12 @@ mod tests {
         let v = vec![1u8, 2, 3];
         let result: Result<[u8; 4]> = vec_to_array(v, "test");
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("must be exactly 4 bytes"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("must be exactly 4 bytes")
+        );
     }
 
     #[test]

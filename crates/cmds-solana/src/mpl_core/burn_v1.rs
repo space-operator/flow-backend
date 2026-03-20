@@ -36,11 +36,12 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let payer = input.payer.as_ref().map_or_else(|| input.fee_payer.pubkey(), |p| p.pubkey());
+    let payer = input
+        .payer
+        .as_ref()
+        .map_or_else(|| input.fee_payer.pubkey(), |p| p.pubkey());
     let mut builder = BurnV1Builder::new();
-    builder
-        .asset(input.asset)
-        .payer(payer);
+    builder.asset(input.asset).payer(payer);
     if let Some(proof) = input.compression_proof {
         builder.compression_proof(proof);
     }
@@ -53,7 +54,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

@@ -12,7 +12,11 @@ pub struct ScriptError {
 impl std::fmt::Display for ScriptError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let (Some(line), Some(col)) = (self.line, self.column) {
-            write!(f, "[{}] line {}:{}: {}", self.error_type, line, col, self.message)
+            write!(
+                f,
+                "[{}] line {}:{}: {}",
+                self.error_type, line, col, self.message
+            )
         } else if let Some(line) = self.line {
             write!(f, "[{}] line {}: {}", self.error_type, line, self.message)
         } else {

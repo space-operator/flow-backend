@@ -1,6 +1,6 @@
+use super::{LIMO_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{LIMO_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "flash_take_order_end";
 const DEFINITION: &str = flow_lib::node_definition!("limo/flash_take_order_end.jsonc");
@@ -68,23 +68,23 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
-        AccountMeta::new(input.taker.pubkey(), true),                    // taker (writable signer)
-        AccountMeta::new_readonly(input.maker, false),                   // maker
-        AccountMeta::new_readonly(input.global_config, false),           // global_config
-        AccountMeta::new_readonly(input.pda_authority, false),           // pda_authority
-        AccountMeta::new(input.order, false),                            // order (writable)
-        AccountMeta::new_readonly(input.input_mint, false),              // input_mint
-        AccountMeta::new_readonly(input.output_mint, false),             // output_mint
-        AccountMeta::new(input.input_vault, false),                      // input_vault (writable)
-        AccountMeta::new(input.taker_input_ata, false),                  // taker_input_ata (writable)
-        AccountMeta::new(input.taker_output_ata, false),                 // taker_output_ata (writable)
-        AccountMeta::new_readonly(input.express_relay, false),           // express_relay
-        AccountMeta::new_readonly(input.express_relay_metadata, false),  // express_relay_metadata
-        AccountMeta::new_readonly(input.config_router, false),           // config_router
-        AccountMeta::new_readonly(input.input_token_program, false),     // input_token_program
-        AccountMeta::new_readonly(input.output_token_program, false),    // output_token_program
-        AccountMeta::new_readonly(input.event_authority, false),         // event_authority
-        AccountMeta::new_readonly(input.program, false),                 // program
+        AccountMeta::new(input.taker.pubkey(), true), // taker (writable signer)
+        AccountMeta::new_readonly(input.maker, false), // maker
+        AccountMeta::new_readonly(input.global_config, false), // global_config
+        AccountMeta::new_readonly(input.pda_authority, false), // pda_authority
+        AccountMeta::new(input.order, false),         // order (writable)
+        AccountMeta::new_readonly(input.input_mint, false), // input_mint
+        AccountMeta::new_readonly(input.output_mint, false), // output_mint
+        AccountMeta::new(input.input_vault, false),   // input_vault (writable)
+        AccountMeta::new(input.taker_input_ata, false), // taker_input_ata (writable)
+        AccountMeta::new(input.taker_output_ata, false), // taker_output_ata (writable)
+        AccountMeta::new_readonly(input.express_relay, false), // express_relay
+        AccountMeta::new_readonly(input.express_relay_metadata, false), // express_relay_metadata
+        AccountMeta::new_readonly(input.config_router, false), // config_router
+        AccountMeta::new_readonly(input.input_token_program, false), // input_token_program
+        AccountMeta::new_readonly(input.output_token_program, false), // output_token_program
+        AccountMeta::new_readonly(input.event_authority, false), // event_authority
+        AccountMeta::new_readonly(input.program, false), // program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -105,7 +105,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -148,7 +152,7 @@ mod tests {
             "tip_amount_permissionless_taking" => 1000u64,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

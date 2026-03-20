@@ -32,9 +32,15 @@ async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
     let b = input.b;
 
     let result = match input.operator.trim() {
-        "+" => a.checked_add(b).ok_or_else(|| CommandError::msg("addition overflow"))?,
-        "-" => a.checked_sub(b).ok_or_else(|| CommandError::msg("subtraction overflow"))?,
-        "*" => a.checked_mul(b).ok_or_else(|| CommandError::msg("multiplication overflow"))?,
+        "+" => a
+            .checked_add(b)
+            .ok_or_else(|| CommandError::msg("addition overflow"))?,
+        "-" => a
+            .checked_sub(b)
+            .ok_or_else(|| CommandError::msg("subtraction overflow"))?,
+        "*" => a
+            .checked_mul(b)
+            .ok_or_else(|| CommandError::msg("multiplication overflow"))?,
         "/" => {
             if b.is_zero() {
                 return Err(CommandError::msg("division by zero"));
@@ -199,9 +205,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_null_error() {
-        eval(Value::U64(1), "+", Value::Null)
-            .await
-            .unwrap_err();
+        eval(Value::U64(1), "+", Value::Null).await.unwrap_err();
     }
 
     #[tokio::test]

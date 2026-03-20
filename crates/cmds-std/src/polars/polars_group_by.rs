@@ -49,9 +49,9 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
     let by_cols = parse_column_names(&input.by)?;
 
     let agg_value = unwrap_json_input(&input.agg)?;
-    let agg_map = agg_value
-        .as_object()
-        .ok_or_else(|| CommandError::msg("agg must be a JSON object mapping column names to aggregation functions"))?;
+    let agg_map = agg_value.as_object().ok_or_else(|| {
+        CommandError::msg("agg must be a JSON object mapping column names to aggregation functions")
+    })?;
 
     let agg_exprs: Vec<Expr> = agg_map
         .iter()
@@ -80,62 +80,110 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
             Series::new("category".into(), &["A", "B", "A", "B", "A"]).into_column(),
             Series::new("value".into(), &[10i64, 20, 30, 40, 50]).into_column(),
             Series::new("score".into(), &[1.0f64, 2.0, 3.0, 4.0, 5.0]).into_column(),
-        ]).unwrap();
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_group_by_sum() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            by: serde_json::json!(["category"]),
-            agg: serde_json::json!({"value": "sum"}),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                by: serde_json::json!(["category"]),
+                agg: serde_json::json!({"value": "sum"}),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 2, "group by category should produce 2 rows");
-        assert!(df.column("category").is_ok(), "output should have category column");
+        assert!(
+            df.column("category").is_ok(),
+            "output should have category column"
+        );
 
         // Sort by category to ensure deterministic order
         let df = df.sort(["category"], Default::default()).unwrap();
-        let categories: Vec<&str> = df.column("category").unwrap().str().unwrap()
-            .into_no_null_iter().collect();
+        let categories: Vec<&str> = df
+            .column("category")
+            .unwrap()
+            .str()
+            .unwrap()
+            .into_no_null_iter()
+            .collect();
         assert_eq!(categories, vec!["A", "B"]);
 
-        let values: Vec<i64> = df.column("value").unwrap().i64().unwrap()
-            .into_no_null_iter().collect();
+        let values: Vec<i64> = df
+            .column("value")
+            .unwrap()
+            .i64()
+            .unwrap()
+            .into_no_null_iter()
+            .collect();
         assert_eq!(values, vec![90, 60], "A sum=10+30+50=90, B sum=20+40=60");
     }
 
     #[tokio::test]
     async fn test_run_group_by_multi_agg() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            by: serde_json::json!(["category"]),
-            agg: serde_json::json!({"value": "mean", "score": "sum"}),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                by: serde_json::json!(["category"]),
+                agg: serde_json::json!({"value": "mean", "score": "sum"}),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 2);
 
         let df = df.sort(["category"], Default::default()).unwrap();
 
-        let value_means: Vec<f64> = df.column("value").unwrap().f64().unwrap()
-            .into_no_null_iter().collect();
-        assert!((value_means[0] - 30.0).abs() < 1e-10, "A mean = (10+30+50)/3 = 30.0");
-        assert!((value_means[1] - 30.0).abs() < 1e-10, "B mean = (20+40)/2 = 30.0");
+        let value_means: Vec<f64> = df
+            .column("value")
+            .unwrap()
+            .f64()
+            .unwrap()
+            .into_no_null_iter()
+            .collect();
+        assert!(
+            (value_means[0] - 30.0).abs() < 1e-10,
+            "A mean = (10+30+50)/3 = 30.0"
+        );
+        assert!(
+            (value_means[1] - 30.0).abs() < 1e-10,
+            "B mean = (20+40)/2 = 30.0"
+        );
 
-        let score_sums: Vec<f64> = df.column("score").unwrap().f64().unwrap()
-            .into_no_null_iter().collect();
-        assert!((score_sums[0] - 9.0).abs() < 1e-10, "A score sum = 1+3+5 = 9.0");
-        assert!((score_sums[1] - 6.0).abs() < 1e-10, "B score sum = 2+4 = 6.0");
+        let score_sums: Vec<f64> = df
+            .column("score")
+            .unwrap()
+            .f64()
+            .unwrap()
+            .into_no_null_iter()
+            .collect();
+        assert!(
+            (score_sums[0] - 9.0).abs() < 1e-10,
+            "A score sum = 1+3+5 = 9.0"
+        );
+        assert!(
+            (score_sums[1] - 6.0).abs() < 1e-10,
+            "B score sum = 2+4 = 6.0"
+        );
     }
 }

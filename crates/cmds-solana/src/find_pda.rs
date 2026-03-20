@@ -101,8 +101,7 @@ mod tests {
     async fn test_pubkey_seed() {
         let program_id = Pubkey::new_unique();
         let mint = Pubkey::new_unique();
-        let expected =
-            Pubkey::find_program_address(&[b"seed", mint.as_ref()], &program_id).0;
+        let expected = Pubkey::find_program_address(&[b"seed", mint.as_ref()], &program_id).0;
 
         let output = build()
             .unwrap()
@@ -145,8 +144,7 @@ mod tests {
     async fn test_seeds_array() {
         let program_id = Pubkey::new_unique();
         let mint = Pubkey::new_unique();
-        let expected =
-            Pubkey::find_program_address(&[b"token", mint.as_ref()], &program_id).0;
+        let expected = Pubkey::find_program_address(&[b"token", mint.as_ref()], &program_id).0;
 
         let output = build()
             .unwrap()

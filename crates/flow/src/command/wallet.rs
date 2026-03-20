@@ -39,9 +39,11 @@ impl WalletCmd {
             .and_then(flow_lib::command::parse_value_tagged_bool)
             .unwrap_or(false);
 
-        let legacy_api_label = nd.config.get("label").and_then(parse_string_value).filter(|label| {
-            !label.is_empty() && label != INPUT_WALLET
-        });
+        let legacy_api_label = nd
+            .config
+            .get("label")
+            .and_then(parse_string_value)
+            .filter(|label| !label.is_empty() && label != INPUT_WALLET);
 
         Self {
             form: parse_wallet_form(nd.config.clone()),
@@ -240,14 +242,11 @@ impl CommandTrait for WalletCmd {
             return ValueSet::new();
         }
 
-        let value = flow_inputs
-            .get(INPUT_WALLET)
-            .cloned()
-            .or_else(|| {
-                self.legacy_api_label
-                    .as_ref()
-                    .and_then(|label| flow_inputs.get(label).cloned())
-            });
+        let value = flow_inputs.get(INPUT_WALLET).cloned().or_else(|| {
+            self.legacy_api_label
+                .as_ref()
+                .and_then(|label| flow_inputs.get(label).cloned())
+        });
 
         match value {
             Some(value) => value::map! {
@@ -418,7 +417,9 @@ mod tests {
             .await
             .unwrap_err()
             .to_string();
-        assert!(error.contains("wallet requires either an input wallet or valid static wallet config"));
+        assert!(
+            error.contains("wallet requires either an input wallet or valid static wallet config")
+        );
     }
 
     #[test]
@@ -430,7 +431,10 @@ mod tests {
         let values = cmd.bind_flow_inputs(&value::map! {
             INPUT_WALLET => value::to_value(&pubkey).unwrap(),
         });
-        assert_eq!(values.get(INPUT_WALLET), Some(&value::to_value(&pubkey).unwrap()));
+        assert_eq!(
+            values.get(INPUT_WALLET),
+            Some(&value::to_value(&pubkey).unwrap())
+        );
     }
 
     #[test]
@@ -452,7 +456,10 @@ mod tests {
         let values = cmd.bind_flow_inputs(&value::map! {
             "fee_payer" => value::to_value(&pubkey).unwrap(),
         });
-        assert_eq!(values.get(INPUT_WALLET), Some(&value::to_value(&pubkey).unwrap()));
+        assert_eq!(
+            values.get(INPUT_WALLET),
+            Some(&value::to_value(&pubkey).unwrap())
+        );
     }
 
     #[test]

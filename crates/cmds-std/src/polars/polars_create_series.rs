@@ -47,9 +47,7 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
                 .map(|v| match v {
                     JsonValue::Bool(b) => Ok(Some(*b)),
                     JsonValue::Null => Ok(None),
-                    other => Err(CommandError::msg(format!(
-                        "Expected bool, got: {other}"
-                    ))),
+                    other => Err(CommandError::msg(format!("Expected bool, got: {other}"))),
                 })
                 .collect::<Result<_, _>>()?;
             Series::new(name, &vals)
@@ -60,9 +58,7 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
                 .map(|v| match v {
                     JsonValue::Number(n) => Ok(n.as_i64()),
                     JsonValue::Null => Ok(None),
-                    other => Err(CommandError::msg(format!(
-                        "Expected integer, got: {other}"
-                    ))),
+                    other => Err(CommandError::msg(format!("Expected integer, got: {other}"))),
                 })
                 .collect::<Result<_, _>>()?;
             let s = Series::new(name, &vals);
@@ -90,9 +86,7 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
                 .map(|v| match v {
                     JsonValue::Number(n) => Ok(n.as_f64()),
                     JsonValue::Null => Ok(None),
-                    other => Err(CommandError::msg(format!(
-                        "Expected number, got: {other}"
-                    ))),
+                    other => Err(CommandError::msg(format!("Expected number, got: {other}"))),
                 })
                 .collect::<Result<_, _>>()?;
             let s = Series::new(name, &vals);

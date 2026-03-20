@@ -76,10 +76,7 @@ pub fn evaluate(
                 CommandError::msg(format!("cannot compare non-numeric value: {:?}", resolved))
             })?;
             let rhs_f = value_to_f64(rhs).ok_or_else(|| {
-                CommandError::msg(format!(
-                    "cannot compare to non-numeric value: {:?}",
-                    rhs
-                ))
+                CommandError::msg(format!("cannot compare to non-numeric value: {:?}", rhs))
             })?;
             Ok(match operator {
                 Operator::Gt => lhs_f > rhs_f,
@@ -108,9 +105,8 @@ pub fn evaluate(
         }
 
         Operator::Contains => {
-            let rhs = compare_to.ok_or_else(|| {
-                CommandError::msg("compare_to is required for contains operator")
-            })?;
+            let rhs = compare_to
+                .ok_or_else(|| CommandError::msg("compare_to is required for contains operator"))?;
             match resolved {
                 Value::String(s) => match rhs {
                     Value::String(sub) => Ok(s.contains(sub.as_str())),
@@ -156,74 +152,50 @@ mod tests {
 
     #[test]
     fn test_equality() {
-        assert!(evaluate(
-            &Value::String("hello".into()),
-            None,
-            &Operator::Eq,
-            Some(&Value::String("hello".into()))
-        )
-        .unwrap());
-        assert!(evaluate(
-            &Value::U64(42),
-            None,
-            &Operator::Ne,
-            Some(&Value::U64(43))
-        )
-        .unwrap());
+        assert!(
+            evaluate(
+                &Value::String("hello".into()),
+                None,
+                &Operator::Eq,
+                Some(&Value::String("hello".into()))
+            )
+            .unwrap()
+        );
+        assert!(evaluate(&Value::U64(42), None, &Operator::Ne, Some(&Value::U64(43))).unwrap());
         // eq with no compare_to compares to Null
         assert!(evaluate(&Value::Null, None, &Operator::Eq, None).unwrap());
     }
 
     #[test]
     fn test_numeric_comparisons() {
-        assert!(evaluate(
-            &Value::U64(10),
-            None,
-            &Operator::Gt,
-            Some(&Value::U64(5))
-        )
-        .unwrap());
-        assert!(evaluate(
-            &Value::I64(-3),
-            None,
-            &Operator::Lt,
-            Some(&Value::I64(0))
-        )
-        .unwrap());
-        assert!(evaluate(
-            &Value::F64(5.0),
-            None,
-            &Operator::Gte,
-            Some(&Value::F64(5.0))
-        )
-        .unwrap());
-        assert!(evaluate(
-            &Value::U64(5),
-            None,
-            &Operator::Lte,
-            Some(&Value::U64(5))
-        )
-        .unwrap());
+        assert!(evaluate(&Value::U64(10), None, &Operator::Gt, Some(&Value::U64(5))).unwrap());
+        assert!(evaluate(&Value::I64(-3), None, &Operator::Lt, Some(&Value::I64(0))).unwrap());
+        assert!(
+            evaluate(
+                &Value::F64(5.0),
+                None,
+                &Operator::Gte,
+                Some(&Value::F64(5.0))
+            )
+            .unwrap()
+        );
+        assert!(evaluate(&Value::U64(5), None, &Operator::Lte, Some(&Value::U64(5))).unwrap());
         // cross-type numeric comparison
-        assert!(evaluate(
-            &Value::U64(10),
-            None,
-            &Operator::Gt,
-            Some(&Value::I64(-1))
-        )
-        .unwrap());
+        assert!(evaluate(&Value::U64(10), None, &Operator::Gt, Some(&Value::I64(-1))).unwrap());
     }
 
     #[test]
     fn test_numeric_comparison_errors() {
         // string is not numeric
-        assert!(evaluate(
-            &Value::String("abc".into()),
-            None,
-            &Operator::Gt,
-            Some(&Value::U64(5))
-        )
-        .is_err());
+        assert!(
+            evaluate(
+                &Value::String("abc".into()),
+                None,
+                &Operator::Gt,
+                Some(&Value::U64(5))
+            )
+            .is_err()
+        );
         // missing compare_to
         assert!(evaluate(&Value::U64(5), None, &Operator::Gt, None).is_err());
     }
@@ -231,78 +203,94 @@ mod tests {
     #[test]
     fn test_empty_checks() {
         assert!(evaluate(&Value::String("".into()), None, &Operator::IsEmpty, None).unwrap());
-        assert!(!evaluate(
-            &Value::String("hello".into()),
-            None,
-            &Operator::IsEmpty,
-            None
-        )
-        .unwrap());
+        assert!(
+            !evaluate(
+                &Value::String("hello".into()),
+                None,
+                &Operator::IsEmpty,
+                None
+            )
+            .unwrap()
+        );
         assert!(evaluate(&Value::Array(vec![]), None, &Operator::IsEmpty, None).unwrap());
         assert!(evaluate(&Value::Null, None, &Operator::IsEmpty, None).unwrap());
-        assert!(evaluate(
-            &Value::String("x".into()),
-            None,
-            &Operator::IsNotEmpty,
-            None
-        )
-        .unwrap());
+        assert!(
+            evaluate(
+                &Value::String("x".into()),
+                None,
+                &Operator::IsNotEmpty,
+                None
+            )
+            .unwrap()
+        );
     }
 
     #[test]
     fn test_contains() {
         // string contains
-        assert!(evaluate(
-            &Value::String("hello world".into()),
-            None,
-            &Operator::Contains,
-            Some(&Value::String("world".into()))
-        )
-        .unwrap());
-        assert!(!evaluate(
-            &Value::String("hello".into()),
-            None,
-            &Operator::Contains,
-            Some(&Value::String("xyz".into()))
-        )
-        .unwrap());
+        assert!(
+            evaluate(
+                &Value::String("hello world".into()),
+                None,
+                &Operator::Contains,
+                Some(&Value::String("world".into()))
+            )
+            .unwrap()
+        );
+        assert!(
+            !evaluate(
+                &Value::String("hello".into()),
+                None,
+                &Operator::Contains,
+                Some(&Value::String("xyz".into()))
+            )
+            .unwrap()
+        );
         // array contains
-        assert!(evaluate(
-            &Value::Array(vec![Value::U64(1), Value::U64(2), Value::U64(3)]),
-            None,
-            &Operator::Contains,
-            Some(&Value::U64(2))
-        )
-        .unwrap());
+        assert!(
+            evaluate(
+                &Value::Array(vec![Value::U64(1), Value::U64(2), Value::U64(3)]),
+                None,
+                &Operator::Contains,
+                Some(&Value::U64(2))
+            )
+            .unwrap()
+        );
         // map contains key
         let map = Value::Map(value::map! {
             "name" => Value::String("Alice".into()),
             "age" => Value::U64(30),
         });
-        assert!(evaluate(
-            &map,
-            None,
-            &Operator::Contains,
-            Some(&Value::String("name".into()))
-        )
-        .unwrap());
-        assert!(!evaluate(
-            &map,
-            None,
-            &Operator::Contains,
-            Some(&Value::String("email".into()))
-        )
-        .unwrap());
+        assert!(
+            evaluate(
+                &map,
+                None,
+                &Operator::Contains,
+                Some(&Value::String("name".into()))
+            )
+            .unwrap()
+        );
+        assert!(
+            !evaluate(
+                &map,
+                None,
+                &Operator::Contains,
+                Some(&Value::String("email".into()))
+            )
+            .unwrap()
+        );
         // map contains with non-string key errors
         assert!(evaluate(&map, None, &Operator::Contains, Some(&Value::U64(1))).is_err());
         // missing compare_to errors
-        assert!(evaluate(
-            &Value::String("hello".into()),
-            None,
-            &Operator::Contains,
-            None
-        )
-        .is_err());
+        assert!(
+            evaluate(
+                &Value::String("hello".into()),
+                None,
+                &Operator::Contains,
+                None
+            )
+            .is_err()
+        );
     }
 
     #[test]
@@ -313,20 +301,16 @@ mod tests {
                 "age" => Value::U64(30),
             }),
         });
-        assert!(evaluate(
-            &val,
-            Some("user.name"),
-            &Operator::Eq,
-            Some(&Value::String("Alice".into()))
-        )
-        .unwrap());
-        assert!(evaluate(
-            &val,
-            Some("user.age"),
-            &Operator::Gt,
-            Some(&Value::U64(25))
-        )
-        .unwrap());
+        assert!(
+            evaluate(
+                &val,
+                Some("user.name"),
+                &Operator::Eq,
+                Some(&Value::String("Alice".into()))
+            )
+            .unwrap()
+        );
+        assert!(evaluate(&val, Some("user.age"), &Operator::Gt, Some(&Value::U64(25))).unwrap());
         // missing field resolves to Null
         assert!(evaluate(&val, Some("user.email"), &Operator::IsNull, None).unwrap());
     }
@@ -339,12 +323,14 @@ mod tests {
                 Value::String("second".into()),
             ]),
         });
-        assert!(evaluate(
-            &val,
-            Some("items.0"),
-            &Operator::Eq,
-            Some(&Value::String("first".into()))
-        )
-        .unwrap());
+        assert!(
+            evaluate(
+                &val,
+                Some("items.0"),
+                &Operator::Eq,
+                Some(&Value::String("first".into()))
+            )
+            .unwrap()
+        );
     }
 }

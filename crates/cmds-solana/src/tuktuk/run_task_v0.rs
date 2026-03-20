@@ -1,5 +1,7 @@
+use super::{
+    SYSTEM_PROGRAM_ID, account_meta_mut, account_meta_readonly, account_meta_signer_mut, build_ix,
+};
 use crate::prelude::*;
-use super::{build_ix, SYSTEM_PROGRAM_ID, account_meta_signer_mut, account_meta_readonly, account_meta_mut};
 
 const NAME: &str = "run_task_v0";
 const DEFINITION: &str = flow_lib::node_definition!("tuktuk/run_task_v0.jsonc");
@@ -39,8 +41,7 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     // Sysvar Instructions address
-    let sysvar_instructions =
-        solana_pubkey::pubkey!("Sysvar1nstructions1111111111111111111111111");
+    let sysvar_instructions = solana_pubkey::pubkey!("Sysvar1nstructions1111111111111111111111111");
 
     // IDL discriminator for run_task_v0
     let mut data = vec![52, 184, 39, 129, 126, 245, 176, 237];
@@ -79,7 +80,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

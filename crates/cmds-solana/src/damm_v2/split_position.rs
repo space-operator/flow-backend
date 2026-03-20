@@ -1,6 +1,9 @@
+use super::{
+    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID, anchor_discriminator,
+    derive_event_authority, derive_position,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{CP_AMM_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_position, derive_event_authority, POSITION_NFT_ACCOUNT_PREFIX};
 
 const NAME: &str = "split_position";
 const DEFINITION: &str = flow_lib::node_definition!("damm_v2/split_position.jsonc");
@@ -63,29 +66,37 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let first_position = derive_position(&input.pool, &input.first_position_nft_mint);
     let first_position_nft_account = Pubkey::find_program_address(
-        &[POSITION_NFT_ACCOUNT_PREFIX, input.first_position_nft_mint.as_ref()],
+        &[
+            POSITION_NFT_ACCOUNT_PREFIX,
+            input.first_position_nft_mint.as_ref(),
+        ],
         &CP_AMM_PROGRAM_ID,
-    ).0;
+    )
+    .0;
     let second_position = derive_position(&input.pool, &input.second_position_nft_mint);
     let second_position_nft_account = Pubkey::find_program_address(
-        &[POSITION_NFT_ACCOUNT_PREFIX, input.second_position_nft_mint.as_ref()],
+        &[
+            POSITION_NFT_ACCOUNT_PREFIX,
+            input.second_position_nft_mint.as_ref(),
+        ],
         &CP_AMM_PROGRAM_ID,
-    ).0;
+    )
+    .0;
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.first_owner.pubkey(), true),                // first_owner (writable signer)
-        AccountMeta::new(input.second_owner.pubkey(), true),               // second_owner (signer)
-        AccountMeta::new(input.pool, false),                               // pool (writable)
-        AccountMeta::new(first_position, false),                           // first_position (writable)
-        AccountMeta::new_readonly(input.first_position_nft_mint, false),   // first_position_nft_mint
-        AccountMeta::new_readonly(first_position_nft_account, false),      // first_position_nft_account
-        AccountMeta::new(second_position, false),                          // second_position (writable)
-        AccountMeta::new_readonly(input.second_position_nft_mint, false),  // second_position_nft_mint
-        AccountMeta::new_readonly(second_position_nft_account, false),     // second_position_nft_account
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),               // system_program
-        AccountMeta::new_readonly(event_authority, false),                 // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false),               // program
+        AccountMeta::new(input.first_owner.pubkey(), true), // first_owner (writable signer)
+        AccountMeta::new(input.second_owner.pubkey(), true), // second_owner (signer)
+        AccountMeta::new(input.pool, false),                // pool (writable)
+        AccountMeta::new(first_position, false),            // first_position (writable)
+        AccountMeta::new_readonly(input.first_position_nft_mint, false), // first_position_nft_mint
+        AccountMeta::new_readonly(first_position_nft_account, false), // first_position_nft_account
+        AccountMeta::new(second_position, false),           // second_position (writable)
+        AccountMeta::new_readonly(input.second_position_nft_mint, false), // second_position_nft_mint
+        AccountMeta::new_readonly(second_position_nft_account, false), // second_position_nft_account
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),           // system_program
+        AccountMeta::new_readonly(event_authority, false),             // event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false),           // program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -104,15 +115,25 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, first_position, first_position_nft_account, second_position, second_position_nft_account })
+    Ok(Output {
+        signature,
+        first_position,
+        first_position_nft_account,
+        second_position,
+        second_position_nft_account,
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use solana_signer::Signer;
     use super::*;
+    use solana_signer::Signer;
 
     /// Tests that the node definition can be built correctly.
     #[test]
@@ -139,7 +160,7 @@ mod tests {
             "inner_vesting_liquidity_percentage" => 0_u8,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

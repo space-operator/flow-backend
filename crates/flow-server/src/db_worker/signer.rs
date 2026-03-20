@@ -77,7 +77,9 @@ impl SignerWorker {
     fn keypair_from_secret_bytes(bytes: &[u8]) -> Result<Keypair, AddWalletError> {
         match bytes.len() {
             64 => {
-                let keypair_bytes: [u8; 64] = bytes.try_into().map_err(|_| AddWalletError::InvalidKeypair)?;
+                let keypair_bytes: [u8; 64] = bytes
+                    .try_into()
+                    .map_err(|_| AddWalletError::InvalidKeypair)?;
                 // Guard against mismatched secret/public halves (GHSA-w5vr-6qhr-36cc).
                 if ed25519_dalek::SigningKey::from_keypair_bytes(&keypair_bytes).is_err() {
                     return Err(AddWalletError::InvalidKeypair);
@@ -85,7 +87,9 @@ impl SignerWorker {
                 Keypair::try_from(&keypair_bytes[..]).map_err(|_| AddWalletError::InvalidKeypair)
             }
             32 => {
-                let secret_bytes: [u8; 32] = bytes.try_into().map_err(|_| AddWalletError::InvalidKeypair)?;
+                let secret_bytes: [u8; 32] = bytes
+                    .try_into()
+                    .map_err(|_| AddWalletError::InvalidKeypair)?;
                 let signing_key = ed25519_dalek::SigningKey::from_bytes(&secret_bytes);
                 Keypair::try_from(&signing_key.to_keypair_bytes()[..])
                     .map_err(|_| AddWalletError::InvalidKeypair)
@@ -236,7 +240,10 @@ impl SignerWorker {
             Entry::Occupied(mut slot) => {
                 // Keypair always wins over UserWallet
                 if matches!(slot.get(), SignerType::UserWallet { .. }) {
-                    tracing::info!("replacing UserWallet with swig session keypair for {}", pubkey);
+                    tracing::info!(
+                        "replacing UserWallet with swig session keypair for {}",
+                        pubkey
+                    );
                     slot.insert(SignerType::Keypair(Box::new(keypair)));
                 }
             }

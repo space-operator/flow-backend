@@ -1,10 +1,11 @@
+use super::RemainingAccountsInfo;
+use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
-use super::RemainingAccountsInfo;
 
 const NAME: &str = "perform_unsold_base_token_action";
-const DEFINITION: &str = flow_lib::node_definition!("presale/perform_unsold_base_token_action.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("presale/perform_unsold_base_token_action.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -60,7 +61,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     ];
 
     let mut data = discriminators::PERFORM_UNSOLD_BASE_TOKEN_ACTION.to_vec();
-    let remaining = RemainingAccountsInfo { slices: input.slices.clone() };
+    let remaining = RemainingAccountsInfo {
+        slices: input.slices.clone(),
+    };
     data.extend(borsh::to_vec(&remaining)?);
 
     let instruction = Instruction {
@@ -76,7 +79,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

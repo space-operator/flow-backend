@@ -20,12 +20,12 @@ pub mod ardrive_post_balance;
 pub mod ardrive_x402_topup;
 
 // Currencies
-pub mod ardrive_list_currencies;
 pub mod ardrive_list_countries;
+pub mod ardrive_list_currencies;
 
 // Rates
-pub mod ardrive_get_rates;
 pub mod ardrive_get_rate;
+pub mod ardrive_get_rates;
 
 // Redemption
 pub mod ardrive_redeem_credits;

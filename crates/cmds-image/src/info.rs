@@ -44,9 +44,11 @@ mod tests {
     use crate::helpers::encode_image;
 
     fn test_png(w: u32, h: u32) -> bytes::Bytes {
-        let img = image::DynamicImage::ImageRgba8(
-            image::RgbaImage::from_pixel(w, h, image::Rgba([255, 0, 0, 255])),
-        );
+        let img = image::DynamicImage::ImageRgba8(image::RgbaImage::from_pixel(
+            w,
+            h,
+            image::Rgba([255, 0, 0, 255]),
+        ));
         encode_image(&img, image::ImageFormat::Png).unwrap().into()
     }
 
@@ -57,9 +59,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_run() {
-        let output = run(<_>::default(), Input { image: test_png(4, 3).into() })
-            .await
-            .unwrap();
+        let output = run(
+            <_>::default(),
+            Input {
+                image: test_png(4, 3).into(),
+            },
+        )
+        .await
+        .unwrap();
         assert_eq!(output.width, 4);
         assert_eq!(output.height, 3);
         assert_eq!(output.format, "png");

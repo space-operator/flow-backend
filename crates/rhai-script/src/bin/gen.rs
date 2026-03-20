@@ -69,11 +69,7 @@ fn main() {
 
             let base_path: String =
                 concat!(env!("CARGO_MANIFEST_DIR"), "/node-definitions/").to_owned();
-            std::fs::write(
-                base_path + format!("{name}.jsonc").as_str(),
-                &pretty,
-            )
-            .unwrap();
+            std::fs::write(base_path + format!("{name}.jsonc").as_str(), &pretty).unwrap();
         }
     }
 }

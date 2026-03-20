@@ -1,6 +1,10 @@
+use super::{
+    ATA_PROGRAM_ID, CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID,
+    TOKEN_PROGRAM_ID, anchor_discriminator, derive_event_authority, derive_pool,
+    derive_pool_authority, derive_position, derive_token_vault,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{CP_AMM_PROGRAM_ID, TOKEN_PROGRAM_ID, SYSTEM_PROGRAM_ID, ATA_PROGRAM_ID, anchor_discriminator, derive_pool_authority, derive_pool, derive_token_vault, derive_position, derive_event_authority, POSITION_NFT_ACCOUNT_PREFIX};
 
 const NAME: &str = "initialize_pool";
 const DEFINITION: &str = flow_lib::node_definition!("damm_v2/initialize_pool.jsonc");
@@ -68,38 +72,47 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let pool = derive_pool(&input.config, &input.token_a_mint, &input.token_b_mint, &input.creator);
+    let pool = derive_pool(
+        &input.config,
+        &input.token_a_mint,
+        &input.token_b_mint,
+        &input.creator,
+    );
     let pool_authority = derive_pool_authority();
     let token_a_vault = derive_token_vault(&pool, &input.token_a_mint);
     let token_b_vault = derive_token_vault(&pool, &input.token_b_mint);
     let position_nft_mint_pubkey = input.position_nft_mint.pubkey();
     let position = derive_position(&pool, &position_nft_mint_pubkey);
     let position_nft_account = Pubkey::find_program_address(
-        &[POSITION_NFT_ACCOUNT_PREFIX, position_nft_mint_pubkey.as_ref()],
+        &[
+            POSITION_NFT_ACCOUNT_PREFIX,
+            position_nft_mint_pubkey.as_ref(),
+        ],
         &CP_AMM_PROGRAM_ID,
-    ).0;
+    )
+    .0;
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.payer.pubkey(), true),              // payer (writable signer)
-        AccountMeta::new_readonly(input.creator, false),           // creator
-        AccountMeta::new_readonly(input.config, false),            // config
-        AccountMeta::new_readonly(pool_authority, false),          // pool_authority
-        AccountMeta::new(pool, false),                             // pool (writable, init)
-        AccountMeta::new(position, false),                         // position (writable, init)
-        AccountMeta::new(position_nft_mint_pubkey, true),          // position_nft_mint (writable signer)
-        AccountMeta::new(position_nft_account, false),             // position_nft_account (writable)
-        AccountMeta::new_readonly(input.token_a_mint, false),      // token_a_mint
-        AccountMeta::new_readonly(input.token_b_mint, false),      // token_b_mint
-        AccountMeta::new(token_a_vault, false),                    // token_a_vault (writable)
-        AccountMeta::new(token_b_vault, false),                    // token_b_vault (writable)
-        AccountMeta::new(input.payer_token_a, false),              // payer_token_a (writable)
-        AccountMeta::new(input.payer_token_b, false),              // payer_token_b (writable)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),        // token_program
-        AccountMeta::new_readonly(ATA_PROGRAM_ID, false),          // associated_token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),       // system_program
-        AccountMeta::new_readonly(event_authority, false),         // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false),       // program
+        AccountMeta::new(input.payer.pubkey(), true), // payer (writable signer)
+        AccountMeta::new_readonly(input.creator, false), // creator
+        AccountMeta::new_readonly(input.config, false), // config
+        AccountMeta::new_readonly(pool_authority, false), // pool_authority
+        AccountMeta::new(pool, false),                // pool (writable, init)
+        AccountMeta::new(position, false),            // position (writable, init)
+        AccountMeta::new(position_nft_mint_pubkey, true), // position_nft_mint (writable signer)
+        AccountMeta::new(position_nft_account, false), // position_nft_account (writable)
+        AccountMeta::new_readonly(input.token_a_mint, false), // token_a_mint
+        AccountMeta::new_readonly(input.token_b_mint, false), // token_b_mint
+        AccountMeta::new(token_a_vault, false),       // token_a_vault (writable)
+        AccountMeta::new(token_b_vault, false),       // token_b_vault (writable)
+        AccountMeta::new(input.payer_token_a, false), // payer_token_a (writable)
+        AccountMeta::new(input.payer_token_b, false), // payer_token_b (writable)
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
+        AccountMeta::new_readonly(ATA_PROGRAM_ID, false), // associated_token_program
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
+        AccountMeta::new_readonly(event_authority, false), // event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -123,15 +136,27 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, pool, pool_authority, token_a_vault, token_b_vault, position, position_nft_account })
+    Ok(Output {
+        signature,
+        pool,
+        pool_authority,
+        token_a_vault,
+        token_b_vault,
+        position,
+        position_nft_account,
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use solana_signer::Signer;
     use super::*;
+    use solana_signer::Signer;
 
     /// Tests that the node definition can be built correctly.
     #[test]
@@ -156,7 +181,7 @@ mod tests {
             "sqrt_price" => 0_u128,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

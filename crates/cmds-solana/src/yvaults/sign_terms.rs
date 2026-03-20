@@ -1,6 +1,6 @@
+use super::{SYSTEM_PROGRAM_ID, YVAULTS_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{YVAULTS_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "sign_terms";
 const DEFINITION: &str = flow_lib::node_definition!("yvaults/sign_terms.jsonc");
@@ -36,9 +36,9 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
-        AccountMeta::new(input.owner.pubkey(), true),            // owner (writable signer)
-        AccountMeta::new(input.owner_signature_state, false),    // owner_signature_state (writable)
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),     // system_program
+        AccountMeta::new(input.owner.pubkey(), true), // owner (writable signer)
+        AccountMeta::new(input.owner_signature_state, false), // owner_signature_state (writable)
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
     ];
 
     let signature_bytes = serde_json::to_vec(&input.signature)?;
@@ -58,7 +58,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -84,7 +88,7 @@ mod tests {
             "signature" => serde_json::json!({}),
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{check_response, reflect_get};
+use crate::prelude::*;
 
 pub const NAME: &str = "get_integration_events";
 const DEFINITION: &str = flow_lib::node_definition!("reflect/get_integration_events.jsonc");

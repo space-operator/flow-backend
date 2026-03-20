@@ -1,9 +1,10 @@
+use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, discriminators, pda};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, pda, discriminators};
 
 const NAME: &str = "migrate_meteora_damm";
-const DEFINITION: &str = flow_lib::node_definition!("dynamic_bonding_curve/migrate_meteora_damm.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("dynamic_bonding_curve/migrate_meteora_damm.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -96,37 +97,37 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let quote_vault = pda::quote_vault(&input.token_b_mint, &input.pool);
 
     let accounts = vec![
-        AccountMeta::new(input.virtual_pool, false),              // 0: virtual_pool (writable)
-        AccountMeta::new(migration_metadata, false),              // 1: migration_metadata (writable)
-        AccountMeta::new_readonly(input.config, false),           // 2: config (readonly)
-        AccountMeta::new(POOL_AUTHORITY, false),                  // 3: pool_authority (writable)
-        AccountMeta::new(input.pool, false),                      // 4: pool (writable)
-        AccountMeta::new_readonly(input.damm_config, false),      // 5: damm_config (readonly)
-        AccountMeta::new(input.lp_mint, false),                   // 6: lp_mint (writable)
-        AccountMeta::new(input.token_a_mint, false),              // 7: token_a_mint (writable)
-        AccountMeta::new_readonly(input.token_b_mint, false),     // 8: token_b_mint (readonly)
-        AccountMeta::new(input.a_vault, false),                   // 9: a_vault (writable)
-        AccountMeta::new(input.b_vault, false),                   // 10: b_vault (writable)
-        AccountMeta::new(input.a_token_vault, false),             // 11: a_token_vault (writable)
-        AccountMeta::new(input.b_token_vault, false),             // 12: b_token_vault (writable)
-        AccountMeta::new(input.a_vault_lp_mint, false),           // 13: a_vault_lp_mint (writable)
-        AccountMeta::new(input.b_vault_lp_mint, false),           // 14: b_vault_lp_mint (writable)
-        AccountMeta::new(input.a_vault_lp, false),                // 15: a_vault_lp (writable)
-        AccountMeta::new(input.b_vault_lp, false),                // 16: b_vault_lp (writable)
-        AccountMeta::new(base_vault, false),                       // 17: base_vault (writable)
-        AccountMeta::new(quote_vault, false),                     // 18: quote_vault (writable)
-        AccountMeta::new(input.virtual_pool_lp, false),           // 19: virtual_pool_lp (writable)
-        AccountMeta::new(input.protocol_token_a_fee, false),      // 20: protocol_token_a_fee (writable)
-        AccountMeta::new(input.protocol_token_b_fee, false),      // 21: protocol_token_b_fee (writable)
-        AccountMeta::new(input.payer.pubkey(), true),              // 22: payer (writable, signer)
-        AccountMeta::new_readonly(input.rent, false),             // 23: rent (readonly)
-        AccountMeta::new(input.mint_metadata, false),             // 24: mint_metadata (writable)
+        AccountMeta::new(input.virtual_pool, false), // 0: virtual_pool (writable)
+        AccountMeta::new(migration_metadata, false), // 1: migration_metadata (writable)
+        AccountMeta::new_readonly(input.config, false), // 2: config (readonly)
+        AccountMeta::new(POOL_AUTHORITY, false),     // 3: pool_authority (writable)
+        AccountMeta::new(input.pool, false),         // 4: pool (writable)
+        AccountMeta::new_readonly(input.damm_config, false), // 5: damm_config (readonly)
+        AccountMeta::new(input.lp_mint, false),      // 6: lp_mint (writable)
+        AccountMeta::new(input.token_a_mint, false), // 7: token_a_mint (writable)
+        AccountMeta::new_readonly(input.token_b_mint, false), // 8: token_b_mint (readonly)
+        AccountMeta::new(input.a_vault, false),      // 9: a_vault (writable)
+        AccountMeta::new(input.b_vault, false),      // 10: b_vault (writable)
+        AccountMeta::new(input.a_token_vault, false), // 11: a_token_vault (writable)
+        AccountMeta::new(input.b_token_vault, false), // 12: b_token_vault (writable)
+        AccountMeta::new(input.a_vault_lp_mint, false), // 13: a_vault_lp_mint (writable)
+        AccountMeta::new(input.b_vault_lp_mint, false), // 14: b_vault_lp_mint (writable)
+        AccountMeta::new(input.a_vault_lp, false),   // 15: a_vault_lp (writable)
+        AccountMeta::new(input.b_vault_lp, false),   // 16: b_vault_lp (writable)
+        AccountMeta::new(base_vault, false),         // 17: base_vault (writable)
+        AccountMeta::new(quote_vault, false),        // 18: quote_vault (writable)
+        AccountMeta::new(input.virtual_pool_lp, false), // 19: virtual_pool_lp (writable)
+        AccountMeta::new(input.protocol_token_a_fee, false), // 20: protocol_token_a_fee (writable)
+        AccountMeta::new(input.protocol_token_b_fee, false), // 21: protocol_token_b_fee (writable)
+        AccountMeta::new(input.payer.pubkey(), true), // 22: payer (writable, signer)
+        AccountMeta::new_readonly(input.rent, false), // 23: rent (readonly)
+        AccountMeta::new(input.mint_metadata, false), // 24: mint_metadata (writable)
         AccountMeta::new_readonly(input.metadata_program, false), // 25: metadata_program (readonly)
-        AccountMeta::new_readonly(input.amm_program, false),      // 26: amm_program (readonly)
-        AccountMeta::new_readonly(input.vault_program, false),    // 27: vault_program (readonly)
-        AccountMeta::new_readonly(input.token_program, false),    // 28: token_program (readonly)
+        AccountMeta::new_readonly(input.amm_program, false), // 26: amm_program (readonly)
+        AccountMeta::new_readonly(input.vault_program, false), // 27: vault_program (readonly)
+        AccountMeta::new_readonly(input.token_program, false), // 28: token_program (readonly)
         AccountMeta::new_readonly(input.associated_token_program, false), // 29: associated_token_program (readonly)
-        AccountMeta::new_readonly(input.system_program, false),   // 30: system_program (readonly)
+        AccountMeta::new_readonly(input.system_program, false), // 30: system_program (readonly)
     ];
 
     let data = discriminators::MIGRATE_METEORA_DAMM.to_vec();
@@ -144,9 +145,18 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, migration_metadata, base_vault, quote_vault })
+    Ok(Output {
+        signature,
+        migration_metadata,
+        base_vault,
+        quote_vault,
+    })
 }
 
 #[cfg(test)]

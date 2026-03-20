@@ -3,7 +3,6 @@
 //! On-chain Solana instruction nodes for the Kamino Scope Oracle program.
 //! Program ID: HFn8GnPADiny6XqUoWE8uRPPxb29ikn4yTnUa9MF2fWJ
 
-
 // scope - Space Operator nodes for Kamino Scope Oracle
 //
 // Program ID: `HFn8GnPADiny6XqUoWE8uRPPxb29ikn4yTnUa9MF2fWJ`
@@ -18,7 +17,8 @@ use crate::prelude::*;
 // =============================================================================
 
 /// Scope Oracle Program ID
-pub const SCOPE_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("HFn8GnPADiny6XqUoWE8uRPPxb29ikn4yTnUa9MF2fWJ");
+pub const SCOPE_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("HFn8GnPADiny6XqUoWE8uRPPxb29ikn4yTnUa9MF2fWJ");
 
 /// System Program ID
 pub const SYSTEM_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("11111111111111111111111111111111");

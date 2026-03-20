@@ -28,7 +28,8 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let url = "https://dev-prediction-markets-api.dflow.net/api/v1/filter_outcome_mints".to_string();
+    let url =
+        "https://dev-prediction-markets-api.dflow.net/api/v1/filter_outcome_mints".to_string();
 
     let body = json!({
         "addresses": input.addresses,

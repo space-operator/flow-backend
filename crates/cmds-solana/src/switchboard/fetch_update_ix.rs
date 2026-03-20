@@ -54,7 +54,7 @@ struct SimulateResult {
 struct OracleSignatureResponse {
     oracle_pubkey: String,
     success_value: String,
-    signature: String,  // base64
+    signature: String, // base64
     recovery_id: u8,
 }
 
@@ -66,10 +66,7 @@ struct FetchSignaturesResponse {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let payer_pubkey = input.fee_payer.pubkey();
-    let crossbar_base = input
-        .crossbar_url
-        .as_deref()
-        .unwrap_or(CROSSBAR_URL);
+    let crossbar_base = input.crossbar_url.as_deref().unwrap_or(CROSSBAR_URL);
 
     // 1. Simulate the feed to get current value
     let simulate_url = format!("{}/simulate/solana", crossbar_base.trim_end_matches('/'));
@@ -77,22 +74,28 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         "cluster": "Mainnet",
         "feeds": [input.feed.to_string()],
     });
-    let sim_resp = ctx.http().post(&simulate_url).json(&sim_body).send().await?;
+    let sim_resp = ctx
+        .http()
+        .post(&simulate_url)
+        .json(&sim_body)
+        .send()
+        .await?;
     let simulated: Vec<SimulateResult> = check_response(sim_resp)
         .await?
         .as_array()
         .cloned()
         .unwrap_or_default()
         .into_iter()
-        .map(|v| serde_json::from_value(v).unwrap_or(SimulateResult {
-            feed: None,
-            results: vec![],
-            feed_hash: None,
-        }))
+        .map(|v| {
+            serde_json::from_value(v).unwrap_or(SimulateResult {
+                feed: None,
+                results: vec![],
+                feed_hash: None,
+            })
+        })
         .collect();
 
-    let simulated_value = serde_json::to_value(&simulated)
-        .unwrap_or(serde_json::json!(null));
+    let simulated_value = serde_json::to_value(&simulated).unwrap_or(serde_json::json!(null));
 
     // 2. Load feed account to get the feed_hash and queue
     let feed_account = ctx
@@ -146,15 +149,15 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let reward_vault = get_ata(&WSOL_MINT, &input.queue);
 
     let mut accounts = vec![
-        AccountMeta::new(input.feed, false),                           // feed (writable)
-        AccountMeta::new_readonly(input.queue, false),                 // queue
-        AccountMeta::new_readonly(program_state, false),               // programState
-        AccountMeta::new_readonly(SLOT_HASHES_SYSVAR, false),          // recentSlothashes
-        AccountMeta::new(payer_pubkey, true),                          // payer (signer, writable)
+        AccountMeta::new(input.feed, false),           // feed (writable)
+        AccountMeta::new_readonly(input.queue, false), // queue
+        AccountMeta::new_readonly(program_state, false), // programState
+        AccountMeta::new_readonly(SLOT_HASHES_SYSVAR, false), // recentSlothashes
+        AccountMeta::new(payer_pubkey, true),          // payer (signer, writable)
         AccountMeta::new_readonly(solana_sdk_ids::system_program::ID, false), // systemProgram
-        AccountMeta::new(reward_vault, false),                         // rewardVault (writable)
-        AccountMeta::new_readonly(SPL_TOKEN_PROGRAM, false),           // tokenProgram
-        AccountMeta::new_readonly(WSOL_MINT, false),                   // tokenMint
+        AccountMeta::new(reward_vault, false),         // rewardVault (writable)
+        AccountMeta::new_readonly(SPL_TOKEN_PROGRAM, false), // tokenProgram
+        AccountMeta::new_readonly(WSOL_MINT, false),   // tokenMint
     ];
 
     // Remaining accounts: oracle pubkeys (read-only), then oracle feed stats (writable)
@@ -167,9 +170,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         })?;
         oracle_keys.push(oracle_pubkey);
 
-        let sig_bytes = base64::decode(&resp.signature).map_err(|e| {
-            CommandError::msg(format!("Failed to decode oracle signature: {e}"))
-        })?;
+        let sig_bytes = base64::decode(&resp.signature)
+            .map_err(|e| CommandError::msg(format!("Failed to decode oracle signature: {e}")))?;
 
         let value: i128 = resp.success_value.parse().map_err(|_| {
             CommandError::msg(format!("Invalid success_value: {}", resp.success_value))
@@ -185,11 +187,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     // Add oracle feed stats accounts (writable)
     for key in &oracle_keys {
-        let stats = Pubkey::find_program_address(
-            &[b"OracleStats", key.as_ref()],
-            &SB_ON_DEMAND_PID,
-        )
-        .0;
+        let stats =
+            Pubkey::find_program_address(&[b"OracleStats", key.as_ref()], &SB_ON_DEMAND_PID).0;
         accounts.push(AccountMeta::new(stats, false));
     }
 
@@ -200,10 +199,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     // Borsh Vec encoding: u32 length prefix + items
     args_data.extend_from_slice(&(submissions.len() as u32).to_le_bytes());
     for (value, sig, recovery_id) in &submissions {
-        args_data.extend_from_slice(&value.to_le_bytes());   // i128
-        args_data.extend_from_slice(sig);                    // [u8; 64]
-        args_data.push(*recovery_id);                        // u8
-        args_data.push(0u8);                                 // offset (slot diff, usually 0)
+        args_data.extend_from_slice(&value.to_le_bytes()); // i128
+        args_data.extend_from_slice(sig); // [u8; 64]
+        args_data.push(*recovery_id); // u8
+        args_data.push(0u8); // offset (slot diff, usually 0)
     }
 
     let instruction = build_sb_instruction("pull_feed_submit_response", accounts, &args_data);
@@ -215,7 +214,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output {

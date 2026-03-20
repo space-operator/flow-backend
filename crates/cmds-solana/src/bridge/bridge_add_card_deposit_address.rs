@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{bridge_post, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_add_card_deposit_address";
 const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_add_card_deposit_address.jsonc");
@@ -26,7 +26,10 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let path = format!("/v0/customers/{}/card_accounts/{}/deposit_addresses", input.customer_id, input.card_account_id);
+    let path = format!(
+        "/v0/customers/{}/card_accounts/{}/deposit_addresses",
+        input.customer_id, input.card_account_id
+    );
     let result = check_response(
         bridge_post(&ctx, &path, &input.api_key)
             .json(&input.body)

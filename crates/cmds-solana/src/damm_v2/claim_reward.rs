@@ -1,9 +1,9 @@
-use crate::prelude::*;
 use super::{
     CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID,
     anchor_discriminator, derive_event_authority, derive_pool_authority, derive_position,
     derive_reward_vault,
 };
+use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
 
 const NAME: &str = "claim_reward";

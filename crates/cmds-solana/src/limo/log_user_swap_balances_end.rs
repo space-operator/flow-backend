@@ -1,6 +1,6 @@
+use super::{LIMO_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{LIMO_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "log_user_swap_balances_end";
 const DEFINITION: &str = flow_lib::node_definition!("limo/log_user_swap_balances_end.jsonc");
@@ -48,10 +48,10 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
-        AccountMeta::new_readonly(input.base_accounts, false),           // base_accounts
-        AccountMeta::new(input.user_swap_balance_state, false),          // user_swap_balance_state (writable)
-        AccountMeta::new_readonly(input.event_authority, false),         // event_authority
-        AccountMeta::new_readonly(input.program, false),                 // program
+        AccountMeta::new_readonly(input.base_accounts, false), // base_accounts
+        AccountMeta::new(input.user_swap_balance_state, false), // user_swap_balance_state (writable)
+        AccountMeta::new_readonly(input.event_authority, false), // event_authority
+        AccountMeta::new_readonly(input.program, false),        // program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -78,7 +78,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
     Ok(Output { signature })
 }
@@ -113,7 +117,7 @@ mod tests {
             "padding" => serde_json::json!({}),
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

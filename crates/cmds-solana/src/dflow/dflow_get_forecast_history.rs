@@ -32,7 +32,10 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let url = format!("https://dev-prediction-markets-api.dflow.net/api/v1/event/{}/{}/forecast_percentile_history", input.series_ticker, input.event_id);
+    let url = format!(
+        "https://dev-prediction-markets-api.dflow.net/api/v1/event/{}/{}/forecast_percentile_history",
+        input.series_ticker, input.event_id
+    );
 
     let query: Vec<(&str, String)> = vec![
         ("percentiles", input.percentiles.to_string()),

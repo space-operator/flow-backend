@@ -37,10 +37,7 @@ async fn run(_: CommandContext, input: Input) -> Result<Output, CommandError> {
         return Ok(Output { result: vec![] });
     }
 
-    let step = input
-        .step_by
-        .map(|s| s.abs())
-        .unwrap_or(Decimal::ONE);
+    let step = input.step_by.map(|s| s.abs()).unwrap_or(Decimal::ONE);
 
     if step.is_zero() {
         return Err(CommandError::msg("step must not be zero"));
@@ -91,7 +88,11 @@ mod tests {
             .collect()
     }
 
-    async fn eval(start: Value, end: Value, step_by: Option<Value>) -> Result<Output, CommandError> {
+    async fn eval(
+        start: Value,
+        end: Value,
+        step_by: Option<Value>,
+    ) -> Result<Output, CommandError> {
         let mut input = value::map! {
             "start" => start,
             "end" => end,
@@ -120,7 +121,10 @@ mod tests {
         )
         .await
         .unwrap();
-        assert_eq!(to_decimals(&output), vec![dec(0), dec(1), dec(2), dec(3), dec(4)]);
+        assert_eq!(
+            to_decimals(&output),
+            vec![dec(0), dec(1), dec(2), dec(3), dec(4)]
+        );
     }
 
     #[tokio::test]
@@ -135,7 +139,10 @@ mod tests {
         )
         .await
         .unwrap();
-        assert_eq!(to_decimals(&output), vec![dec(5), dec(4), dec(3), dec(2), dec(1)]);
+        assert_eq!(
+            to_decimals(&output),
+            vec![dec(5), dec(4), dec(3), dec(2), dec(1)]
+        );
     }
 
     #[tokio::test]

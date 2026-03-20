@@ -28,7 +28,10 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let url = format!("https://dev-prediction-markets-api.dflow.net/api/v1/event/{}", input.event_id);
+    let url = format!(
+        "https://dev-prediction-markets-api.dflow.net/api/v1/event/{}",
+        input.event_id
+    );
 
     let mut query: Vec<(&str, String)> = Vec::new();
     if let Some(ref val) = input.with_nested_markets {
@@ -80,8 +83,8 @@ mod tests {
     #[test]
     fn test_deserialize_response() {
         let json_str = include_str!("fixtures/event.json");
-        let _parsed: crate::dflow::response_types::Event = serde_json::from_str(json_str)
-            .expect("Failed to deserialize event.json");
+        let _parsed: crate::dflow::response_types::Event =
+            serde_json::from_str(json_str).expect("Failed to deserialize event.json");
         assert!(!_parsed.ticker.is_empty(), "ticker should not be empty");
     }
 

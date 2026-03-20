@@ -133,10 +133,7 @@ mod tests {
         .await
         .unwrap();
         assert_eq!(output.value, Value::Null);
-        assert_eq!(
-            output.trimmed_json,
-            Value::Map(value::map! { "a" => 1i64 })
-        );
+        assert_eq!(output.trimmed_json, Value::Map(value::map! { "a" => 1i64 }));
     }
 
     #[tokio::test]

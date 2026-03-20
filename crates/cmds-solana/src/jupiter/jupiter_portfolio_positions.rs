@@ -29,7 +29,10 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let url = format!("https://api.jup.ag/portfolio/v1/positions/{}", input.address);
+    let url = format!(
+        "https://api.jup.ag/portfolio/v1/positions/{}",
+        input.address
+    );
 
     let mut query: Vec<(&str, String)> = Vec::new();
     if let Some(ref v) = input.platforms {
@@ -81,7 +84,10 @@ mod tests {
     async fn test_run_portfolio_positions() {
         let api_key = match std::env::var("JUPITER_API_KEY") {
             Ok(k) => k,
-            Err(_) => { eprintln!("JUPITER_API_KEY not set, skipping"); return; }
+            Err(_) => {
+                eprintln!("JUPITER_API_KEY not set, skipping");
+                return;
+            }
         };
         let input = Input {
             api_key,

@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{bridge_get, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_get_total_balances";
 const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_get_total_balances.jsonc");
@@ -24,12 +24,7 @@ pub struct Output {
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let path = "/v0/wallets/total_balances";
-    let result = check_response(
-        bridge_get(&ctx, path, &input.api_key)
-            .send()
-            .await?,
-    )
-    .await?;
+    let result = check_response(bridge_get(&ctx, path, &input.api_key).send().await?).await?;
     Ok(Output { result })
 }
 

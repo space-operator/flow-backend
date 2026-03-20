@@ -43,11 +43,13 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         // Create a DataFrame with a list column using df! macro and lazy API
@@ -61,13 +63,22 @@ mod tests {
 
     #[tokio::test]
     async fn test_run() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            columns: serde_json::json!(["scores"]),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                columns: serde_json::json!(["scores"]),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         // Alice has 2 scores, Bob has 3 scores => 5 rows total
-        assert_eq!(df.height(), 5, "explode should produce 5 rows (2 + 3 scores)");
+        assert_eq!(
+            df.height(),
+            5,
+            "explode should produce 5 rows (2 + 3 scores)"
+        );
         assert!(df.column("name").is_ok(), "should have name column");
         assert!(df.column("scores").is_ok(), "should have scores column");
     }

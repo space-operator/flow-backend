@@ -1,8 +1,9 @@
-use crate::prelude::*;
 use super::helper::{bridge_get, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_list_virtual_account_activity";
-const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_list_virtual_account_activity.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("bridge/bridge_list_virtual_account_activity.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache =
@@ -32,10 +33,18 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     let path = "/v0/virtual_accounts/history";
     let mut req = bridge_get(&ctx, path, &input.api_key);
     let mut query: Vec<(&str, String)> = Vec::new();
-    if let Some(limit) = input.limit { query.push(("limit", limit.to_string())); }
-    if let Some(ref after) = input.starting_after { query.push(("starting_after", after.clone())); }
-    if let Some(ref before) = input.ending_before { query.push(("ending_before", before.clone())); }
-    if !query.is_empty() { req = req.query(&query); }
+    if let Some(limit) = input.limit {
+        query.push(("limit", limit.to_string()));
+    }
+    if let Some(ref after) = input.starting_after {
+        query.push(("starting_after", after.clone()));
+    }
+    if let Some(ref before) = input.ending_before {
+        query.push(("ending_before", before.clone()));
+    }
+    if !query.is_empty() {
+        req = req.query(&query);
+    }
     let result = check_response(req.send().await?).await?;
     Ok(Output { result })
 }
@@ -54,14 +63,19 @@ mod tests {
     async fn test_live_list_virtual_account_activity() {
         let api_key = match std::env::var("BRIDGE_API_KEY") {
             Ok(k) => k,
-            Err(_) => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            Err(_) => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
             .get("https://api.sandbox.bridge.xyz/v0/virtual_accounts/history")
             .header("Api-Key", &api_key)
             .query(&[("limit", "2")])
-            .send().await.expect("request failed");
+            .send()
+            .await
+            .expect("request failed");
         assert!(resp.status().is_success(), "status: {}", resp.status());
         let _body: serde_json::Value = resp.json().await.expect("json parse failed");
     }

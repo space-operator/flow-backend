@@ -1,6 +1,9 @@
+use super::{
+    CP_AMM_PROGRAM_ID, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator,
+    derive_event_authority, derive_pool_authority, derive_token_vault,
+};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{CP_AMM_PROGRAM_ID, TOKEN_PROGRAM_ID, SYSTEM_PROGRAM_ID, anchor_discriminator, derive_pool_authority, derive_token_vault, derive_event_authority};
 
 const NAME: &str = "zap_protocol_fee";
 const DEFINITION: &str = flow_lib::node_definition!("damm_v2/zap_protocol_fee.jsonc");
@@ -49,17 +52,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new_readonly(pool_authority, false),          // pool_authority
-        AccountMeta::new(input.pool, false),                       // pool (writable)
-        AccountMeta::new(token_vault, false),                      // token_vault (writable)
-        AccountMeta::new_readonly(input.token_mint, false),        // token_mint
-        AccountMeta::new(input.receiver_token, false),             // receiver_token (writable)
-        AccountMeta::new_readonly(input.operator, false),          // operator
-        AccountMeta::new(input.signer.pubkey(), true),             // signer (signer)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),        // token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),       // system_program
-        AccountMeta::new_readonly(event_authority, false),         // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false),       // program
+        AccountMeta::new_readonly(pool_authority, false), // pool_authority
+        AccountMeta::new(input.pool, false),              // pool (writable)
+        AccountMeta::new(token_vault, false),             // token_vault (writable)
+        AccountMeta::new_readonly(input.token_mint, false), // token_mint
+        AccountMeta::new(input.receiver_token, false),    // receiver_token (writable)
+        AccountMeta::new_readonly(input.operator, false), // operator
+        AccountMeta::new(input.signer.pubkey(), true),    // signer (signer)
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
+        AccountMeta::new_readonly(event_authority, false), // event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -78,15 +81,22 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, token_vault })
+    Ok(Output {
+        signature,
+        token_vault,
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use solana_signer::Signer;
     use super::*;
+    use solana_signer::Signer;
 
     /// Tests that the node definition can be built correctly.
     #[test]
@@ -108,7 +118,7 @@ mod tests {
             "max_amount" => 1000u64,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

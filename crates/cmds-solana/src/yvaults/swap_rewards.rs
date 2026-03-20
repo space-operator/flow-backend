@@ -1,7 +1,7 @@
 use super::derive_ata;
+use super::{TOKEN_PROGRAM_ID, YVAULTS_PROGRAM_ID, anchor_discriminator};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{YVAULTS_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator};
 
 const NAME: &str = "swap_rewards";
 const DEFINITION: &str = flow_lib::node_definition!("yvaults/swap_rewards.jsonc");
@@ -79,26 +79,26 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let user_token_b_ata = derive_ata(&input.user.pubkey(), &input.token_b_mint);
 
     let accounts = vec![
-        AccountMeta::new(input.user.pubkey(), true),             // user (writable signer)
-        AccountMeta::new(input.strategy, false),                 // strategy (writable)
-        AccountMeta::new_readonly(input.global_config, false),   // global_config (readonly)
-        AccountMeta::new(input.pool, false),                     // pool (writable)
-        AccountMeta::new(input.token_a_vault, false),            // token_a_vault (writable)
-        AccountMeta::new(input.token_b_vault, false),            // token_b_vault (writable)
-        AccountMeta::new(input.reward_vault, false),             // reward_vault (writable)
+        AccountMeta::new(input.user.pubkey(), true), // user (writable signer)
+        AccountMeta::new(input.strategy, false),     // strategy (writable)
+        AccountMeta::new_readonly(input.global_config, false), // global_config (readonly)
+        AccountMeta::new(input.pool, false),         // pool (writable)
+        AccountMeta::new(input.token_a_vault, false), // token_a_vault (writable)
+        AccountMeta::new(input.token_b_vault, false), // token_b_vault (writable)
+        AccountMeta::new(input.reward_vault, false), // reward_vault (writable)
         AccountMeta::new_readonly(input.base_vault_authority, false), // base_vault_authority (readonly)
         AccountMeta::new(input.treasury_fee_token_a_vault, false), // treasury_fee_token_a_vault (writable)
         AccountMeta::new(input.treasury_fee_token_b_vault, false), // treasury_fee_token_b_vault (writable)
         AccountMeta::new_readonly(input.treasury_fee_vault_authority, false), // treasury_fee_vault_authority (readonly)
-        AccountMeta::new_readonly(input.token_a_mint, false),    // token_a_mint (readonly)
-        AccountMeta::new_readonly(input.token_b_mint, false),    // token_b_mint (readonly)
-        AccountMeta::new(user_token_a_ata, false),         // user_token_a_ata (writable)
-        AccountMeta::new(user_token_b_ata, false),         // user_token_b_ata (writable)
+        AccountMeta::new_readonly(input.token_a_mint, false), // token_a_mint (readonly)
+        AccountMeta::new_readonly(input.token_b_mint, false), // token_b_mint (readonly)
+        AccountMeta::new(user_token_a_ata, false),            // user_token_a_ata (writable)
+        AccountMeta::new(user_token_b_ata, false),            // user_token_b_ata (writable)
         AccountMeta::new(input.user_reward_token_account, false), // user_reward_token_account (writable)
-        AccountMeta::new_readonly(input.scope_prices, false),    // scope_prices (readonly)
-        AccountMeta::new_readonly(input.token_infos, false),     // token_infos (readonly)
+        AccountMeta::new_readonly(input.scope_prices, false),     // scope_prices (readonly)
+        AccountMeta::new_readonly(input.token_infos, false),      // token_infos (readonly)
         AccountMeta::new_readonly(input.instruction_sysvar_account, false), // instruction_sysvar_account (readonly)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),      // token_program
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),                 // token_program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -121,9 +121,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, user_token_a_ata, user_token_b_ata })
+    Ok(Output {
+        signature,
+        user_token_a_ata,
+        user_token_b_ata,
+    })
 }
 
 #[cfg(test)]
@@ -166,7 +174,7 @@ mod tests {
             "min_collateral_token_out" => 1000u64,
             "submit" => false,
         };
-        
+
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
     }

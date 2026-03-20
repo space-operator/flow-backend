@@ -1938,6 +1938,7 @@ where
 mod tests {
     use super::*;
     use anyhow::anyhow;
+    use flow_lib::flow_run_events::event_channel;
     use flow_lib::{
         CommandType, ValueType,
         config::client::{
@@ -1945,7 +1946,6 @@ mod tests {
             NodeData, OutputPort, SourceHandle,
         },
     };
-    use flow_lib::flow_run_events::event_channel;
     use serde_json::{Value as JsonValue, json};
 
     use cmds_solana as _;

@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{bridge_get, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_get_exchange_rate";
 const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_get_exchange_rate.jsonc");
@@ -47,10 +47,13 @@ mod tests {
 
     #[test]
     fn test_deserialize_response() {
-        let json = std::fs::read_to_string(
-            format!("{}/tests/fixtures/exchange_rate.json", env!("CARGO_MANIFEST_DIR"))
-        ).unwrap();
-        let _parsed: crate::bridge::response_types::ExchangeRate = serde_json::from_str(&json).unwrap();
+        let json = std::fs::read_to_string(format!(
+            "{}/tests/fixtures/exchange_rate.json",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap();
+        let _parsed: crate::bridge::response_types::ExchangeRate =
+            serde_json::from_str(&json).unwrap();
     }
 
     #[tokio::test]
@@ -58,14 +61,19 @@ mod tests {
     async fn test_live_get_exchange_rate() {
         let api_key = match std::env::var("BRIDGE_API_KEY") {
             Ok(k) => k,
-            Err(_) => { eprintln!("BRIDGE_API_KEY not set, skipping"); return; }
+            Err(_) => {
+                eprintln!("BRIDGE_API_KEY not set, skipping");
+                return;
+            }
         };
         let client = reqwest::Client::new();
         let resp = client
             .get("https://api.sandbox.bridge.xyz/v0/exchange_rates")
             .header("Api-Key", &api_key)
             .query(&[("from", "usd"), ("to", "eur")])
-            .send().await.expect("request failed");
+            .send()
+            .await
+            .expect("request failed");
         assert!(resp.status().is_success(), "status: {}", resp.status());
         let _body: serde_json::Value = resp.json().await.expect("json parse failed");
     }

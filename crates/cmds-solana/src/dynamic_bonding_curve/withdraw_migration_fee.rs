@@ -1,14 +1,16 @@
+use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, discriminators, pda};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{DBC_PROGRAM_ID, POOL_AUTHORITY, pda, discriminators};
-
 
 const NAME: &str = "withdraw_migration_fee";
-const DEFINITION: &str = flow_lib::node_definition!("dynamic_bonding_curve/withdraw_migration_fee.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("dynamic_bonding_curve/withdraw_migration_fee.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(DEFINITION)?.check_name(NAME)?.simple_instruction_info("signature")
+        CmdBuilder::new(DEFINITION)?
+            .check_name(NAME)?
+            .simple_instruction_info("signature")
     });
     Ok(CACHE.clone()?.build(run))
 }
@@ -71,13 +73,34 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     ];
     let mut data = discriminators::WITHDRAW_MIGRATION_FEE.to_vec();
     data.extend(borsh::to_vec(&input.flag)?);
-    let instruction = Instruction { program_id: DBC_PROGRAM_ID, accounts, data };
-    let ins = Instructions { lookup_tables: None, fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer, input.sender].into(), instructions: [instruction].into() };
-    let ins = if input.submit { ins } else { Default::default() };
+    let instruction = Instruction {
+        program_id: DBC_PROGRAM_ID,
+        accounts,
+        data,
+    };
+    let ins = Instructions {
+        lookup_tables: None,
+        fee_payer: input.fee_payer.pubkey(),
+        signers: [input.fee_payer, input.sender].into(),
+        instructions: [instruction].into(),
+    };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature, quote_vault })
+    Ok(Output {
+        signature,
+        quote_vault,
+    })
 }
 
 #[cfg(test)]
-mod tests { use super::*; #[test] fn test_build() { build().unwrap(); } }
+mod tests {
+    use super::*;
+    #[test]
+    fn test_build() {
+        build().unwrap();
+    }
+}

@@ -46,7 +46,8 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     // Derive ATAs
     let (escrow_token, _) = pda::find_ata(&input.escrow, &input.mint, &input.token_program);
-    let (recipient_token, _) = pda::find_ata(&input.recipient.pubkey(), &input.mint, &input.token_program);
+    let (recipient_token, _) =
+        pda::find_ata(&input.recipient.pubkey(), &input.mint, &input.token_program);
     let (event_authority, _) = pda::find_event_authority();
 
     let accounts = vec![
@@ -61,7 +62,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let args_data = input.max_amount.to_le_bytes().to_vec();
 
-    let instruction = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"claim", accounts, args_data);
+    let instruction =
+        crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID, "claim", accounts, args_data);
 
     let ins = Instructions {
         lookup_tables: None,
@@ -72,7 +74,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: vec![instruction],
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output {
@@ -129,7 +135,12 @@ mod tests {
 
         let max_amount: u64 = 1_000_000;
         let args_data = max_amount.to_le_bytes().to_vec();
-        let ix = crate::utils::build_anchor_instruction(JUP_LOCK_PROGRAM_ID,"claim", accounts, args_data);
+        let ix = crate::utils::build_anchor_instruction(
+            JUP_LOCK_PROGRAM_ID,
+            "claim",
+            accounts,
+            args_data,
+        );
 
         assert_eq!(ix.program_id, JUP_LOCK_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 7);
@@ -146,6 +157,9 @@ mod tests {
 
         let (escrow_token, _) = pda::find_ata(&escrow, &mint, &token_program);
         let (recipient_token, _) = pda::find_ata(&recipient, &mint, &token_program);
-        assert_ne!(escrow_token, recipient_token, "Escrow and recipient ATAs must differ");
+        assert_ne!(
+            escrow_token, recipient_token,
+            "Escrow and recipient ATAs must differ"
+        );
     }
 }

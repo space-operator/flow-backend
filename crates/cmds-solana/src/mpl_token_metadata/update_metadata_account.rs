@@ -7,7 +7,8 @@ const NAME: &str = "update_metadata_account";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("mpl_token_metadata/update_metadata_account.jsonc");
+    const DEFINITION: &str =
+        flow_lib::node_definition!("mpl_token_metadata/update_metadata_account.jsonc");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?
@@ -65,13 +66,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output1, CommandEr
     let signature = ctx
         .execute(
             Instructions {
-lookup_tables: None,
+                lookup_tables: None,
                 fee_payer: input.fee_payer.pubkey(),
-                signers: [
-                    input.fee_payer,
-                    input.update_authority,
-                ]
-                .into(),
+                signers: [input.fee_payer, input.update_authority].into(),
                 instructions: [instruction].into(),
             },
             value::to_map(&Output0 { metadata_account }).unwrap(),

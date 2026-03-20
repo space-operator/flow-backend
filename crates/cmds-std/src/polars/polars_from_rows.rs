@@ -48,16 +48,17 @@ mod tests {
             {"name": "Alice", "age": 30},
             {"name": "Bob", "age": 25}
         ]);
-        let output = run(
-            CommandContext::default(),
-            Input { rows },
-        )
-        .await
-        .unwrap();
+        let output = run(CommandContext::default(), Input { rows })
+            .await
+            .unwrap();
 
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.shape(), (2, 2));
-        let col_names: Vec<String> = df.get_column_names().iter().map(|s| s.to_string()).collect();
+        let col_names: Vec<String> = df
+            .get_column_names()
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
         assert!(col_names.contains(&"name".to_string()));
         assert!(col_names.contains(&"age".to_string()));
     }
@@ -69,12 +70,9 @@ mod tests {
             {"x": 4, "y": 5, "z": 6},
             {"x": 7, "y": 8, "z": 9}
         ]);
-        let output = run(
-            CommandContext::default(),
-            Input { rows },
-        )
-        .await
-        .unwrap();
+        let output = run(CommandContext::default(), Input { rows })
+            .await
+            .unwrap();
 
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.shape(), (3, 3));

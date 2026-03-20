@@ -239,7 +239,9 @@ impl From<TokenStandard> for ::mpl_token_metadata::types::TokenStandard {
     fn from(v: TokenStandard) -> Self {
         match v {
             TokenStandard::NonFungible => ::mpl_token_metadata::types::TokenStandard::NonFungible,
-            TokenStandard::FungibleAsset => ::mpl_token_metadata::types::TokenStandard::FungibleAsset,
+            TokenStandard::FungibleAsset => {
+                ::mpl_token_metadata::types::TokenStandard::FungibleAsset
+            }
             TokenStandard::Fungible => ::mpl_token_metadata::types::TokenStandard::Fungible,
             TokenStandard::NonFungibleEdition => {
                 ::mpl_token_metadata::types::TokenStandard::NonFungibleEdition
@@ -277,7 +279,9 @@ impl From<PrintSupply> for ::mpl_token_metadata::types::PrintSupply {
     fn from(v: PrintSupply) -> Self {
         match v {
             PrintSupply::Zero => ::mpl_token_metadata::types::PrintSupply::Zero,
-            PrintSupply::Limited(supply) => ::mpl_token_metadata::types::PrintSupply::Limited(supply),
+            PrintSupply::Limited(supply) => {
+                ::mpl_token_metadata::types::PrintSupply::Limited(supply)
+            }
             PrintSupply::Unlimited => ::mpl_token_metadata::types::PrintSupply::Unlimited,
         }
     }

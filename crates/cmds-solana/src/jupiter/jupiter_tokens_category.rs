@@ -30,7 +30,10 @@ pub struct Output {
 }
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let url = format!("https://api.jup.ag/tokens/v2/{}/{}", input.category, input.interval);
+    let url = format!(
+        "https://api.jup.ag/tokens/v2/{}/{}",
+        input.category, input.interval
+    );
 
     let mut query: Vec<(&str, String)> = Vec::new();
     if let Some(ref v) = input.limit {
@@ -83,7 +86,10 @@ mod tests {
     async fn test_run_tokens_category() {
         let api_key = match std::env::var("JUPITER_API_KEY") {
             Ok(k) => k,
-            Err(_) => { eprintln!("JUPITER_API_KEY not set, skipping"); return; }
+            Err(_) => {
+                eprintln!("JUPITER_API_KEY not set, skipping");
+                return;
+            }
         };
         let input = Input {
             api_key,

@@ -3,7 +3,6 @@
 //! On-chain Solana instruction nodes for the Kamino Merkle Distributor program.
 //! Program ID: KdisqEcXbXKaTrBFqeDLhMmBvymLTwj9GmhDcdJyGat
 
-
 // merkle_distributor - Space Operator nodes for Kamino Merkle Distributor
 //
 // Program ID: `KdisqEcXbXKaTrBFqeDLhMmBvymLTwj9GmhDcdJyGat`
@@ -19,13 +18,15 @@ use crate::prelude::*;
 // =============================================================================
 
 /// Merkle Distributor Program ID
-pub const MERKLE_DISTRIBUTOR_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("KdisqEcXbXKaTrBFqeDLhMmBvymLTwj9GmhDcdJyGat");
+pub const MERKLE_DISTRIBUTOR_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("KdisqEcXbXKaTrBFqeDLhMmBvymLTwj9GmhDcdJyGat");
 
 /// System Program ID
 pub const SYSTEM_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("11111111111111111111111111111111");
 
 /// Token Program ID
-pub const TOKEN_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+pub const TOKEN_PROGRAM_ID: Pubkey =
+    solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
 // =============================================================================
 // Anchor Discriminator
@@ -49,31 +50,32 @@ pub fn derive_claim_status(index: u64, distributor: &Pubkey) -> Pubkey {
     Pubkey::find_program_address(
         &[b"ClaimStatus", &index.to_le_bytes(), distributor.as_ref()],
         &MERKLE_DISTRIBUTOR_PROGRAM_ID,
-    ).0
+    )
+    .0
 }
 
 // =============================================================================
 // Node Modules - Distributor Setup (Admin)
 // =============================================================================
 
-pub mod new_distributor;
 pub mod close_distributor;
+pub mod new_distributor;
 pub mod set_admin;
 
 // =============================================================================
 // Node Modules - Configuration (Admin)
 // =============================================================================
 
-pub mod set_enable_slot;
 pub mod set_clawback_receiver;
+pub mod set_enable_slot;
 
 // =============================================================================
 // Node Modules - Claims (User)
 // =============================================================================
 
-pub mod new_claim;
 pub mod claim_locked;
 pub mod close_claim_status;
+pub mod new_claim;
 
 // =============================================================================
 // Node Modules - Clawback (Admin)

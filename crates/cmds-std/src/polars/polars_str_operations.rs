@@ -49,7 +49,9 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
             format!("{}_result", input.column),
         ),
         "replace" => (
-            col(&input.column).str().replace(lit(pattern), lit(replacement), true),
+            col(&input.column)
+                .str()
+                .replace(lit(pattern), lit(replacement), true),
             input.column.clone(),
         ),
         "to_lowercase" => (
@@ -61,16 +63,20 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
             input.column.clone(),
         ),
         "strip" | "trim" => (
-            col(&input.column).str().strip_chars(lit(LiteralValue::Null)),
+            col(&input.column)
+                .str()
+                .strip_chars(lit(LiteralValue::Null)),
             input.column.clone(),
         ),
         "len" | "lengths" => (
             col(&input.column).str().len_chars(),
             format!("{}_len", input.column),
         ),
-        other => return Err(CommandError::msg(format!(
-            "Unknown string operation: '{other}'. Use: contains, starts_with, ends_with, replace, to_lowercase, to_uppercase, strip, len"
-        ))),
+        other => {
+            return Err(CommandError::msg(format!(
+                "Unknown string operation: '{other}'. Use: contains, starts_with, ends_with, replace, to_lowercase, to_uppercase, strip, len"
+            )));
+        }
     };
 
     let mut result = df
@@ -89,10 +95,12 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_str_df_ipc(col_name: &str, values: &[&str]) -> String {
         let s = Series::new(col_name.into(), values);
@@ -102,13 +110,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_to_lowercase() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_str_df_ipc("names", &["Alice", "Bob", "CHARLIE"]),
-            column: "names".to_string(),
-            operation: "to_lowercase".to_string(),
-            pattern: None,
-            replacement: None,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_str_df_ipc("names", &["Alice", "Bob", "CHARLIE"]),
+                column: "names".to_string(),
+                operation: "to_lowercase".to_string(),
+                pattern: None,
+                replacement: None,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         let col = df.column("names").unwrap();
         let vals: Vec<&str> = col.str().unwrap().into_no_null_iter().collect();
@@ -117,13 +130,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_to_uppercase() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_str_df_ipc("names", &["Alice", "Bob", "CHARLIE"]),
-            column: "names".to_string(),
-            operation: "to_uppercase".to_string(),
-            pattern: None,
-            replacement: None,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_str_df_ipc("names", &["Alice", "Bob", "CHARLIE"]),
+                column: "names".to_string(),
+                operation: "to_uppercase".to_string(),
+                pattern: None,
+                replacement: None,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         let col = df.column("names").unwrap();
         let vals: Vec<&str> = col.str().unwrap().into_no_null_iter().collect();
@@ -132,13 +150,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_contains() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_str_df_ipc("names", &["Alice", "Bob", "CHARLIE"]),
-            column: "names".to_string(),
-            operation: "contains".to_string(),
-            pattern: Some("li".to_string()),
-            replacement: None,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_str_df_ipc("names", &["Alice", "Bob", "CHARLIE"]),
+                column: "names".to_string(),
+                operation: "contains".to_string(),
+                pattern: Some("li".to_string()),
+                replacement: None,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         let col = df.column("names_result").unwrap();
         let vals: Vec<bool> = col.bool().unwrap().into_no_null_iter().collect();
@@ -147,13 +170,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_len() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_str_df_ipc("names", &["Alice", "Bob", "CHARLIE"]),
-            column: "names".to_string(),
-            operation: "len".to_string(),
-            pattern: None,
-            replacement: None,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_str_df_ipc("names", &["Alice", "Bob", "CHARLIE"]),
+                column: "names".to_string(),
+                operation: "len".to_string(),
+                pattern: None,
+                replacement: None,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         let col = df.column("names_len").unwrap();
         let vals: Vec<u32> = col.u32().unwrap().into_no_null_iter().collect();

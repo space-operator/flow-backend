@@ -576,37 +576,25 @@ mod tests {
 
     #[test]
     fn test_realm_pda() {
-        let realm = Pubkey::find_program_address(
-            &[b"governance", b"my-dao"],
-            &SPL_GOVERNANCE_ID,
-        );
+        let realm = Pubkey::find_program_address(&[b"governance", b"my-dao"], &SPL_GOVERNANCE_ID);
         // Deterministic: same seeds always produce the same address
-        let realm2 = Pubkey::find_program_address(
-            &[b"governance", b"my-dao"],
-            &SPL_GOVERNANCE_ID,
-        );
+        let realm2 = Pubkey::find_program_address(&[b"governance", b"my-dao"], &SPL_GOVERNANCE_ID);
         assert_eq!(realm, realm2);
 
         // Different name → different PDA
-        let other = Pubkey::find_program_address(
-            &[b"governance", b"other-dao"],
-            &SPL_GOVERNANCE_ID,
-        );
+        let other =
+            Pubkey::find_program_address(&[b"governance", b"other-dao"], &SPL_GOVERNANCE_ID);
         assert_ne!(realm.0, other.0);
     }
 
     #[test]
     fn test_realm_config_pda() {
         let realm = Pubkey::new_unique();
-        let config = Pubkey::find_program_address(
-            &[b"realm-config", realm.as_ref()],
-            &SPL_GOVERNANCE_ID,
-        );
+        let config =
+            Pubkey::find_program_address(&[b"realm-config", realm.as_ref()], &SPL_GOVERNANCE_ID);
         // Same realm → same config PDA
-        let config2 = Pubkey::find_program_address(
-            &[b"realm-config", realm.as_ref()],
-            &SPL_GOVERNANCE_ID,
-        );
+        let config2 =
+            Pubkey::find_program_address(&[b"realm-config", realm.as_ref()], &SPL_GOVERNANCE_ID);
         assert_eq!(config, config2);
     }
 
@@ -622,7 +610,12 @@ mod tests {
         // Different owner → different PDA
         let other_owner = Pubkey::new_unique();
         let pda2 = Pubkey::find_program_address(
-            &[b"governance", realm.as_ref(), mint.as_ref(), other_owner.as_ref()],
+            &[
+                b"governance",
+                realm.as_ref(),
+                mint.as_ref(),
+                other_owner.as_ref(),
+            ],
             &SPL_GOVERNANCE_ID,
         );
         assert_ne!(pda.0, pda2.0);
@@ -633,7 +626,11 @@ mod tests {
         let proposal = Pubkey::new_unique();
         let voter_token_owner_record = Pubkey::new_unique();
         let pda = Pubkey::find_program_address(
-            &[b"governance", proposal.as_ref(), voter_token_owner_record.as_ref()],
+            &[
+                b"governance",
+                proposal.as_ref(),
+                voter_token_owner_record.as_ref(),
+            ],
             &SPL_GOVERNANCE_ID,
         );
         assert_ne!(pda.0, Pubkey::default());
@@ -643,31 +640,19 @@ mod tests {
     fn test_transaction_buffer_pda() {
         let proposal = Pubkey::new_unique();
         let creator = Pubkey::new_unique();
-        let addr = get_proposal_transaction_buffer_address(
-            &SPL_GOVERNANCE_ID,
-            &proposal,
-            &creator,
-            &[0],
-        );
+        let addr =
+            get_proposal_transaction_buffer_address(&SPL_GOVERNANCE_ID, &proposal, &creator, &[0]);
         // Different buffer index → different PDA
-        let addr2 = get_proposal_transaction_buffer_address(
-            &SPL_GOVERNANCE_ID,
-            &proposal,
-            &creator,
-            &[1],
-        );
+        let addr2 =
+            get_proposal_transaction_buffer_address(&SPL_GOVERNANCE_ID, &proposal, &creator, &[1]);
         assert_ne!(addr, addr2);
     }
 
     #[test]
     fn test_versioned_transaction_pda() {
         let proposal = Pubkey::new_unique();
-        let addr = get_proposal_versioned_transaction_address(
-            &SPL_GOVERNANCE_ID,
-            &proposal,
-            &[0],
-            &[0],
-        );
+        let addr =
+            get_proposal_versioned_transaction_address(&SPL_GOVERNANCE_ID, &proposal, &[0], &[0]);
         assert_ne!(addr, Pubkey::default());
     }
 

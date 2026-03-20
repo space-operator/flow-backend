@@ -19,7 +19,9 @@ pub struct Input {
     pub n: u64,
 }
 
-fn default_n() -> u64 { 5 }
+fn default_n() -> u64 {
+    5
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
@@ -40,27 +42,43 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::polars::types::{df_to_ipc, df_from_ipc};
+    use crate::polars::types::{df_from_ipc, df_to_ipc};
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
-            Series::new("name".into(), &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")]).into_column(),
+            Series::new(
+                "name".into(),
+                &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")],
+            )
+            .into_column(),
             Series::new("age".into(), &[Some(30i64), Some(25), Some(35), Some(30)]).into_column(),
-            Series::new("score".into(), &[Some(88.5f64), Some(92.0), Some(75.3), Some(91.0)]).into_column(),
-        ]).unwrap();
+            Series::new(
+                "score".into(),
+                &[Some(88.5f64), Some(92.0), Some(75.3), Some(91.0)],
+            )
+            .into_column(),
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run_head_n2() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            n: 2,
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                n: 2,
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 2);
         assert_eq!(df.width(), 3);
@@ -69,10 +87,15 @@ mod tests {
     #[tokio::test]
     async fn test_run_head_default() {
         // Default n=5, but df only has 4 rows, so should return all 4
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-            n: default_n(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+                n: default_n(),
+            },
+        )
+        .await
+        .unwrap();
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 4);
     }

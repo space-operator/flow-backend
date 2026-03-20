@@ -49,12 +49,9 @@ mod tests {
             {"col_a": 2, "col_b": "y"},
             {"col_a": 3, "col_b": "z"}
         ]);
-        let output = run(
-            CommandContext::default(),
-            Input { data },
-        )
-        .await
-        .unwrap();
+        let output = run(CommandContext::default(), Input { data })
+            .await
+            .unwrap();
 
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
@@ -71,12 +68,9 @@ mod tests {
             "price": [999.99, 699.99, 449.99],
             "quantity": [10, 25, 15]
         });
-        let output = run(
-            CommandContext::default(),
-            Input { data },
-        )
-        .await
-        .unwrap();
+        let output = run(CommandContext::default(), Input { data })
+            .await
+            .unwrap();
 
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 3);
@@ -90,15 +84,11 @@ mod tests {
     #[tokio::test]
     async fn test_run_create_dataframe_string_input() {
         // Simulates IValue {S: "..."} being deserialized as JsonValue::String
-        let data = serde_json::json!(
-            "{\"product\":[\"Laptop\",\"Phone\"],\"price\":[999.99,699.99]}"
-        );
-        let output = run(
-            CommandContext::default(),
-            Input { data },
-        )
-        .await
-        .unwrap();
+        let data =
+            serde_json::json!("{\"product\":[\"Laptop\",\"Phone\"],\"price\":[999.99,699.99]}");
+        let output = run(CommandContext::default(), Input { data })
+            .await
+            .unwrap();
 
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.height(), 2);
@@ -113,12 +103,9 @@ mod tests {
             {"values": 30},
             {"values": 40}
         ]);
-        let output = run(
-            CommandContext::default(),
-            Input { data },
-        )
-        .await
-        .unwrap();
+        let output = run(CommandContext::default(), Input { data })
+            .await
+            .unwrap();
 
         let df = df_from_ipc(&output.dataframe).unwrap();
         assert_eq!(df.shape(), (4, 1));

@@ -1,9 +1,10 @@
+use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
-use super::{PRESALE_PROGRAM_ID, derive_event_authority, discriminators};
 
 const NAME: &str = "close_permissioned_server_metadata";
-const DEFINITION: &str = flow_lib::node_definition!("presale/close_permissioned_server_metadata.jsonc");
+const DEFINITION: &str =
+    flow_lib::node_definition!("presale/close_permissioned_server_metadata.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
@@ -41,7 +42,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new_readonly(input.presale, false),             // presale (readonly)
+        AccountMeta::new_readonly(input.presale, false), // presale (readonly)
         AccountMeta::new(input.permissioned_server_metadata, false), // permissioned_server_metadata (writable)
         AccountMeta::new(input.rent_receiver, false),                // rent_receiver (writable)
         AccountMeta::new_readonly(input.owner.pubkey(), true),       // owner (signer)
@@ -64,7 +65,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         instructions: [instruction].into(),
     };
 
-    let ins = if input.submit { ins } else { Default::default() };
+    let ins = if input.submit {
+        ins
+    } else {
+        Default::default()
+    };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
     Ok(Output { signature })

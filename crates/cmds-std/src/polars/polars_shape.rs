@@ -38,22 +38,38 @@ mod tests {
     use polars::prelude::*;
 
     #[test]
-    fn test_build() { build().unwrap(); }
+    fn test_build() {
+        build().unwrap();
+    }
 
     fn test_df_ipc() -> String {
         let mut df = DataFrame::new(vec![
-            Series::new("name".into(), &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")]).into_column(),
+            Series::new(
+                "name".into(),
+                &[Some("Alice"), Some("Bob"), Some("Charlie"), Some("Alice")],
+            )
+            .into_column(),
             Series::new("age".into(), &[Some(30i64), Some(25), Some(35), Some(30)]).into_column(),
-            Series::new("score".into(), &[Some(88.5f64), Some(92.0), Some(75.3), Some(91.0)]).into_column(),
-        ]).unwrap();
+            Series::new(
+                "score".into(),
+                &[Some(88.5f64), Some(92.0), Some(75.3), Some(91.0)],
+            )
+            .into_column(),
+        ])
+        .unwrap();
         df_to_ipc(&mut df).unwrap()
     }
 
     #[tokio::test]
     async fn test_run() {
-        let output = run(CommandContext::default(), Input {
-            dataframe: test_df_ipc(),
-        }).await.unwrap();
+        let output = run(
+            CommandContext::default(),
+            Input {
+                dataframe: test_df_ipc(),
+            },
+        )
+        .await
+        .unwrap();
         assert_eq!(output.rows, 4);
         assert_eq!(output.columns, 3);
     }

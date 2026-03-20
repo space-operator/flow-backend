@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::helper::{bridge_post, check_response};
+use crate::prelude::*;
 
 pub const NAME: &str = "bridge_exchange_plaid_token";
 const DEFINITION: &str = flow_lib::node_definition!("bridge/bridge_exchange_plaid_token.jsonc");
@@ -25,12 +25,7 @@ pub struct Output {
 
 async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let path = format!("/v0/plaid_exchange_public_token/{}", input.link_token);
-    let result = check_response(
-        bridge_post(&ctx, &path, &input.api_key)
-            .send()
-            .await?,
-    )
-    .await?;
+    let result = check_response(bridge_post(&ctx, &path, &input.api_key).send().await?).await?;
     Ok(Output { result })
 }
 

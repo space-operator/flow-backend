@@ -7,7 +7,8 @@ const NAME: &str = "approve_collection_authority";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 
 fn build() -> BuildResult {
-    const DEFINITION: &str = flow_lib::node_definition!("mpl_token_metadata/approve_collection_authority.jsonc");
+    const DEFINITION: &str =
+        flow_lib::node_definition!("mpl_token_metadata/approve_collection_authority.jsonc");
     static CACHE: BuilderCache = BuilderCache::new(|| {
         CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?
@@ -37,10 +38,8 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (metadata_pubkey, _) = Metadata::find_pda(&input.mint_account);
 
-    let (collection_authority_record, _) = CollectionAuthorityRecord::find_pda(
-        &input.mint_account,
-        &input.new_collection_authority,
-    );
+    let (collection_authority_record, _) =
+        CollectionAuthorityRecord::find_pda(&input.mint_account, &input.new_collection_authority);
 
     let instruction = ApproveCollectionAuthorityBuilder::new()
         .collection_authority_record(collection_authority_record)
@@ -53,7 +52,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let instructions = if input.submit {
         Instructions {
-lookup_tables: None,
+            lookup_tables: None,
             fee_payer: input.fee_payer.pubkey(),
             signers: [input.fee_payer, input.update_authority].into(),
             instructions: [instruction].into(),
