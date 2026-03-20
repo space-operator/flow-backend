@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
-  "name": "update_admin",
+  "name": "escrow_update_admin",
   "prefix": "escrow",
   "type": "native",
   "description": "Transfer escrow admin to a new address",

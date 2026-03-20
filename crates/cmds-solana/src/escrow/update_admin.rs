@@ -2,7 +2,7 @@ use super::{ESCROW_PROGRAM_ID, EscrowDiscriminator, build_escrow_instruction, pd
 use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
 
-const NAME: &str = "update_admin";
+const NAME: &str = "escrow_update_admin";
 const DEFINITION: &str = flow_lib::node_definition!("escrow/update_admin.jsonc");
 
 fn build() -> BuildResult {

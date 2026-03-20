@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
-  "name": "withdraw",
+  "name": "escrow_withdraw",
   "prefix": "escrow",
   "type": "native",
   "description": "Withdraw tokens from escrow using a receipt (receipt is closed after withdrawal)",

@@ -2,7 +2,7 @@ use super::{ESCROW_PROGRAM_ID, EscrowDiscriminator, build_escrow_instruction, de
 use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
 
-const NAME: &str = "deposit";
+const NAME: &str = "escrow_deposit";
 const DEFINITION: &str = flow_lib::node_definition!("escrow/deposit.jsonc");
 
 fn build() -> BuildResult {
