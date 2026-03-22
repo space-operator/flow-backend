@@ -173,4 +173,30 @@ mod tests {
     fn test_build() {
         build().unwrap();
     }
+
+    #[tokio::test]
+    #[ignore = "hits live Turbo API and submits devnet tx"]
+    async fn test_run() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        // Read keypair from .env file
+        let env_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.env");
+        dotenvy::from_path(&env_path).expect("Failed to load .env file");
+        let keypair_str = std::env::var("keypair").expect("keypair not found in .env");
+
+        let ctx = flow_lib_solana::utils::test_context_with_execute();
+        let fee_payer: Wallet = Keypair::from_base58_string(&keypair_str).into();
+        let input = Input {
+            fee_payer,
+            amount: 1000,
+            credit_destination: None,
+            submit: true,
+        };
+
+        let result = run(ctx, input).await;
+        assert!(result.is_ok(), "run() failed: {:?}", result.err());
+        let sig = result.unwrap().signature;
+        assert!(sig.is_some(), "Expected a real signature");
+        println!("Transaction signature: {}", sig.unwrap());
+    }
 }

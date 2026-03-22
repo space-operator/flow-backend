@@ -91,6 +91,75 @@ pub fn simple_execute_svc(
     execute::Svc::new(tower::service_fn(handle))
 }
 
+/// Creates a [`CommandContext`] with a real execute service for integration tests.
+///
+/// Uses `simple_execute_svc` pointed at devnet with default config.
+/// All other services (signer, get_jwt, api_input) remain unimplemented.
+pub fn test_context_with_execute() -> flow_lib::context::CommandContext {
+    use flow_lib::context::{
+        CommandContext, CommandContextData, FlowContextData, FlowServices, FlowSetContextData,
+        FlowSetServices, get_jwt,
+    };
+    use flow_lib::flow_run_events;
+    use flow_lib::utils::tower_client::unimplemented_svc;
+    use flow_lib::{ContextConfig, NodeId};
+    use std::collections::HashMap;
+
+    let config = ContextConfig::default();
+    let solana_client = Arc::new(config.solana_client.build_client(None));
+    let node_id = NodeId::nil();
+    let times = 0;
+    let (tx, _) = flow_run_events::channel();
+
+    let execute_svc = simple_execute_svc(
+        solana_client.clone(),
+        None,
+        SolanaNet::Devnet,
+        unimplemented_svc(),
+        None,
+        ExecutionConfig::default(),
+    );
+
+    CommandContext::builder()
+        .execute(execute_svc)
+        .get_jwt(unimplemented_svc::<
+            get_jwt::Request,
+            get_jwt::Response,
+            get_jwt::Error,
+        >())
+        .flow(
+            FlowServices::builder()
+                .signer(unimplemented_svc())
+                .set(
+                    FlowSetServices::builder()
+                        .http(reqwest::Client::new())
+                        .solana_client(solana_client)
+                        .extensions(Default::default())
+                        .api_input(unimplemented_svc())
+                        .build(),
+                )
+                .build(),
+        )
+        .data(CommandContextData {
+            node_id,
+            times,
+            flow: FlowContextData {
+                flow_run_id: FlowRunId::nil(),
+                environment: HashMap::new(),
+                inputs: Default::default(),
+                set: FlowSetContextData {
+                    flow_owner: Default::default(),
+                    started_by: Default::default(),
+                    endpoints: Default::default(),
+                    solana: config.solana_client,
+                    http: config.http_client,
+                },
+            },
+        })
+        .node_log(flow_run_events::NodeLogSender::new(tx, node_id, times))
+        .build()
+}
+
 pub async fn fetch_address_lookup_table(
     rpc: &RpcClient,
     pubkey: &Pubkey,

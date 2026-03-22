@@ -29,32 +29,8 @@ pub mod update_task_queue_v0;
 pub const TUKTUK_PROGRAM_ID: solana_pubkey::Pubkey =
     solana_pubkey::pubkey!("tuktukUrfhXT6ZT77QTU8RQtvgL967uRuVagWF57zVA");
 
-/// Convert v3 Pubkey (solana-pubkey v3) to v2 Pubkey (solana-program v2)
-/// Required because tuktuk-program uses anchor-lang 0.31 which depends on solana-program v2
-#[inline]
-pub fn to_pubkey_v2(pk: &solana_pubkey::Pubkey) -> solana_program_v2::pubkey::Pubkey {
-    solana_program_v2::pubkey::Pubkey::new_from_array(pk.to_bytes())
-}
-
-/// Convert v2 Instruction (from solana-program v2 / anchor 0.31) to v3 Instruction
-#[inline]
-pub fn to_instruction_v3(
-    ix: solana_program_v2::instruction::Instruction,
-) -> solana_instruction::Instruction {
-    solana_instruction::Instruction {
-        program_id: solana_pubkey::Pubkey::new_from_array(ix.program_id.to_bytes()),
-        accounts: ix
-            .accounts
-            .into_iter()
-            .map(|a| solana_instruction::AccountMeta {
-                pubkey: solana_pubkey::Pubkey::new_from_array(a.pubkey.to_bytes()),
-                is_signer: a.is_signer,
-                is_writable: a.is_writable,
-            })
-            .collect(),
-        data: ix.data,
-    }
-}
+// Re-export shared v2↔v3 conversion helpers
+pub use crate::solana_v2_compat::{to_instruction_v3, to_pubkey_v2};
 
 /// Build a v3 Instruction from a list of v3 AccountMeta + raw instruction data (discriminator + borsh args).
 pub fn build_ix(

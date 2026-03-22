@@ -30,11 +30,21 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     cmd!(sh, "./gen-secrets.ts --force").run()?;
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let pull = if compile { "missing" } else { "always" };
-    let default_repo = if compile { "" } else { "public.ecr.aws/" };
-    let flow_image = std::env::var("IMAGE")
-        .unwrap_or_else(|_| format!("{default_repo}space-operator/flow-server:{tag}"));
-    let cmds_image = std::env::var("CMDS_IMAGE")
-        .unwrap_or_else(|_| format!("{default_repo}space-operator/cmds-server:{tag}"));
+    let ecr = "311141552572.dkr.ecr.us-west-2.amazonaws.com";
+    let flow_image = std::env::var("IMAGE").unwrap_or_else(|_| {
+        if compile {
+            format!("flow-server:{tag}")
+        } else {
+            format!("{ecr}/flow-server:{tag}")
+        }
+    });
+    let cmds_image = std::env::var("CMDS_IMAGE").unwrap_or_else(|_| {
+        if compile {
+            format!("cmds-server:{tag}")
+        } else {
+            format!("{ecr}/cmds-server:{tag}")
+        }
+    });
     cmd!(
         sh,
         "docker compose -f with-cmds-server.yml up --quiet-pull --pull {pull} -d --wait flow-server cmds-server deno-cmds-server webhook auth rest kong db"
@@ -81,13 +91,13 @@ fn main() {
     let sh = Shell::new().unwrap();
 
     if args.ecr_login
-        && let Ok(password) = cmd!(sh, "aws ecr-public get-login-password --region us-east-1")
+        && let Ok(password) = cmd!(sh, "aws ecr get-login-password --region us-west-2")
             .read()
             .inspect_err(|error| eprint!("{error}"))
     {
         cmd!(
             sh,
-            "docker login --username AWS --password-stdin public.ecr.aws/space-operator"
+            "docker login --username AWS --password-stdin 311141552572.dkr.ecr.us-west-2.amazonaws.com"
         )
         .stdin(password.trim())
         .run()
@@ -160,10 +170,13 @@ fn main() {
         .ok();
 
     if args.ecr_login {
-        cmd!(sh, "docker logout public.ecr.aws/space-operator")
-            .run()
-            .inspect_err(|error| eprint!("{error}"))
-            .ok();
+        cmd!(
+            sh,
+            "docker logout 311141552572.dkr.ecr.us-west-2.amazonaws.com"
+        )
+        .run()
+        .inspect_err(|error| eprint!("{error}"))
+        .ok();
     }
 
     if let Err(error) = result {

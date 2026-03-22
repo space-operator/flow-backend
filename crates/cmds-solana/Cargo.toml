@@ -111,6 +111,13 @@ swig-state = { git = "https://github.com/anagrambuild/swig-wallet" }
 # tuktuk
 tuktuk-program = "0.3.2"
 
+# light protocol (ZK compression)
+light-compressed-token-sdk = { version = "0.23", features = ["v1"] }
+light-token-interface = "0.5"
+light-compressed-account = { version = "0.11", features = ["std", "anchor"] }
+light-sdk-types = "0.23"
+light-token-types = "0.23"
+
 [dependencies.wormhole-sdk]
 git = "https://github.com/space-operator/wormhole"
 rev = "b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1"
@@ -123,3 +130,5 @@ rev = "b209022b85d8e6cbf4e37b059bfe3ce7fa11c6e1"
 rust_decimal_macros = "1.26"
 inventory = "0.3"
 tracing-subscriber = "0.3"
+flow-lib-solana = { workspace = true }
+dotenvy = "0.15"

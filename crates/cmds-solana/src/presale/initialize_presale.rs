@@ -5,6 +5,7 @@ use super::{
 };
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
+use solana_sdk_ids::system_program;
 
 const NAME: &str = "initialize_presale";
 const DEFINITION: &str = flow_lib::node_definition!("presale/initialize_presale.jsonc");
@@ -38,8 +39,6 @@ pub struct Input {
     pub base_token_program: Pubkey,
     #[serde_as(as = "AsPubkey")]
     pub quote_token_program: Pubkey,
-    #[serde_as(as = "AsPubkey")]
-    pub system_program: Pubkey,
     pub params: InitializePresaleArgs,
     #[serde(default)]
     pub slices: Vec<RemainingAccountsSlice>,
@@ -86,7 +85,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new(input.payer.pubkey(), true),         // payer (writable, signer)
         AccountMeta::new_readonly(input.base_token_program, false), // base_token_program (readonly)
         AccountMeta::new_readonly(input.quote_token_program, false), // quote_token_program (readonly)
-        AccountMeta::new_readonly(input.system_program, false),      // system_program (readonly)
+        AccountMeta::new_readonly(system_program::ID, false),        // system_program (readonly)
         AccountMeta::new_readonly(event_authority, false),           // event_authority (PDA)
         AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false),        // program
     ];

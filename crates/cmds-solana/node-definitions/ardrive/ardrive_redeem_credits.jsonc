@@ -48,7 +48,7 @@
     "vendor": "ArDrive",
     "program": "ardrive",
     "category": "storage",
-    "icon_url": null,
+    "icon_url": "https://github.com/ardriveapp.png",
     "tags": [
       "storage",
       "ardrive",

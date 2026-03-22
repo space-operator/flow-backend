@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_token_pool",
+  "prefix": "zk_compression",
+  "description": "Create a ZK compression token pool for an existing SPL mint. Required before any compressed token operations on this mint.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/zk_compression/create_token_pool.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Pays for transaction fees and pool creation rent"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "SPL token mint address to register for ZK compression"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Whether to submit the transaction (default: true)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Light Protocol",
+    "program": "compressed_token",
+    "category": "zk_compression",
+    "icon_url": "https://github.com/Lightprotocol.png",
+    "tags": ["zk compression", "compressed token", "token pool", "light protocol"]
+  },
+  "external_version": {
+    "program_id": null,
+    "sdk_crate": "light-compressed-token-sdk",
+    "sdk_version": "0.23",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/Lightprotocol/light-protocol"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/zk_compression/create_token_pool.jsonc",
+    "repo": "flow-backend"
+  }
+}

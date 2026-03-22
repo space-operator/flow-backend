@@ -54,7 +54,7 @@
     "vendor": "Bridge",
     "program": "bridge",
     "category": "payments",
-    "icon_url": null,
+    "icon_url": "https://github.com/bridge-xyz.png",
     "tags": [
       "payments",
       "bridge",

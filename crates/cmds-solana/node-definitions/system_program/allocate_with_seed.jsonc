@@ -87,7 +87,7 @@
     "vendor": "Solana",
     "program": "system_program",
     "category": "core",
-    "icon_url": null,
+    "icon_url": "https://github.com/solana-labs.png",
     "tags": [
       "core",
       "system program",

@@ -50,6 +50,13 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: ECR Docker Login
+        run: aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 311141552572.dkr.ecr.us-west-2.amazonaws.com
       - name: Build Integration Tests
         run: cargo build --bin integration-tests --quiet
 

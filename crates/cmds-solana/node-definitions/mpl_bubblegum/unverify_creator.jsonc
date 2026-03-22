@@ -145,7 +145,7 @@
     "vendor": "Metaplex",
     "program": "compression",
     "category": "compression",
-    "icon_url": null,
+    "icon_url": "https://github.com/metaplex-foundation.png",
     "tags": [
       "compression",
       "unverify",

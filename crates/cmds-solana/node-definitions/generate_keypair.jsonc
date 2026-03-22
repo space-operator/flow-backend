@@ -70,7 +70,7 @@
     "vendor": "Solana",
     "program": "solana",
     "category": "solana",
-    "icon_url": null,
+    "icon_url": "https://github.com/solana-labs.png",
     "tags": [
       "solana",
       "generate",

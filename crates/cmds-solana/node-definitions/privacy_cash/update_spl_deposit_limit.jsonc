@@ -67,10 +67,10 @@
     }
   },
   "classification": {
-    "vendor": "Unknown",
+    "vendor": "Privacy Cash",
     "program": "privacy_cash",
     "category": "uncategorized",
-    "icon_url": null,
+    "icon_url": "https://github.com/Privacy-Cash.png",
     "tags": [
       "privacy cash",
       "update",
