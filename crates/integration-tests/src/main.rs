@@ -30,7 +30,7 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     cmd!(sh, "./gen-secrets.ts --force").run()?;
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let pull = if compile { "missing" } else { "always" };
-    let default_repo = if compile { "" } else { "public.ecr.aws/" };
+    let default_repo = if compile { "" } else { "311141552572.dkr.ecr.us-west-2.amazonaws.com/" };
     let flow_image = std::env::var("IMAGE")
         .unwrap_or_else(|_| format!("{default_repo}space-operator/flow-server:{tag}"));
     let cmds_image = std::env::var("CMDS_IMAGE")
@@ -81,13 +81,13 @@ fn main() {
     let sh = Shell::new().unwrap();
 
     if args.ecr_login
-        && let Ok(password) = cmd!(sh, "aws ecr-public get-login-password --region us-east-1")
+        && let Ok(password) = cmd!(sh, "aws ecr get-login-password --region us-west-2")
             .read()
             .inspect_err(|error| eprint!("{error}"))
     {
         cmd!(
             sh,
-            "docker login --username AWS --password-stdin public.ecr.aws/space-operator"
+            "docker login --username AWS --password-stdin 311141552572.dkr.ecr.us-west-2.amazonaws.com"
         )
         .stdin(password.trim())
         .run()
@@ -160,7 +160,7 @@ fn main() {
         .ok();
 
     if args.ecr_login {
-        cmd!(sh, "docker logout public.ecr.aws/space-operator")
+        cmd!(sh, "docker logout 311141552572.dkr.ecr.us-west-2.amazonaws.com")
             .run()
             .inspect_err(|error| eprint!("{error}"))
             .ok();
