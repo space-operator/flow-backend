@@ -36,24 +36,44 @@ fi
 function remote_tag_exists {
     local image="$1"
     local tag="$2"
+    local output
+    local rc=0
 
-    aws ecr describe-images \
+    output=$(aws ecr describe-images \
         --region "$AWS_REGION" \
         --repository-name "$image" \
-        --image-ids imageTag="$tag" \
-        >/dev/null 2>&1
+        --image-ids imageTag="$tag" 2>&1) || rc=$?
+
+    if [[ $rc -eq 0 ]]; then
+        return 0  # tag exists
+    fi
+
+    # ImageNotFoundException / ImageNotFound → tag genuinely absent
+    if grep -qiE 'ImageNotFoundException|ImageNotFound|does not exist' <<<"$output"; then
+        return 1
+    fi
+
+    # Any other error (throttle, network, permissions) is unexpected;
+    # surface it and fail loudly so callers don't silently skip the push.
+    echo "ERROR: aws ecr describe-images failed unexpectedly for $image:$tag" >&2
+    echo "$output" >&2
+    return 2   # distinct from 1 so callers can tell the difference
 }
 
 function wait_for_remote_tag {
     local image="$1"
     local tag="$2"
-    local attempts="${ECR_TAG_WAIT_ATTEMPTS:-5}"
-    local sleep_seconds="${ECR_TAG_WAIT_SECONDS:-2}"
+    local attempts="${ECR_TAG_WAIT_ATTEMPTS:-8}"
+    local sleep_seconds="${ECR_TAG_WAIT_SECONDS:-3}"
     local attempt=1
 
     while (( attempt <= attempts )); do
-        if remote_tag_exists "$image" "$tag"; then
+        local rc=0
+        remote_tag_exists "$image" "$tag" || rc=$?
+        if [[ $rc -eq 0 ]]; then
             return 0
+        elif [[ $rc -eq 2 ]]; then
+            echo "WARNING: transient API error while waiting for $image:$tag (attempt $attempt/$attempts)" >&2
         fi
 
         if (( attempt < attempts )); then
@@ -80,29 +100,57 @@ function push_tag_if_missing {
     local image="$3"
     local tag="$4"
 
-    if remote_tag_exists "$image" "$tag"; then
+    local rc=0
+    remote_tag_exists "$image" "$tag" || rc=$?
+    if [[ $rc -eq 0 ]]; then
         echo "Skipping push for $image:$tag (tag already exists; immutable tags enabled)."
         return 0
+    elif [[ $rc -eq 2 ]]; then
+        echo "ERROR: cannot reliably check tag existence for $image:$tag; aborting push to avoid conflict." >&2
+        return 1
     fi
 
     $CMD tag "$local_ref" "$remote_ref"
 
+    local push_attempts="${ECR_PUSH_ATTEMPTS:-3}"
+    local push_attempt=1
     local push_output=""
     local push_status=0
-    if push_output="$($CMD push "$remote_ref" 2>&1)"; then
-        printf '%s\n' "$push_output"
-        return 0
-    else
-        push_status=$?
-        printf '%s\n' "$push_output"
-    fi
 
-    # A second job may win the race between describe-images and the final manifest push.
-    if push_failed_because_tag_is_immutable "$push_output" && wait_for_remote_tag "$image" "$tag"; then
-        echo "Skipping push for $image:$tag (tag appeared during push; treating immutable-tag conflict as success)."
-        return 0
-    fi
+    while (( push_attempt <= push_attempts )); do
+        push_output=""
+        push_status=0
 
+        if push_output="$($CMD push "$remote_ref" 2>&1)"; then
+            printf '%s\n' "$push_output"
+            return 0
+        else
+            push_status=$?
+            printf '%s\n' "$push_output"
+        fi
+
+        # A second job may win the race between describe-images and the final manifest push.
+        if push_failed_because_tag_is_immutable "$push_output"; then
+            if wait_for_remote_tag "$image" "$tag"; then
+                echo "Skipping push for $image:$tag (tag appeared during push; treating immutable-tag conflict as success)."
+                return 0
+            fi
+            # Immutable conflict but tag never became visible — don't retry, something is wrong.
+            echo "ERROR: push rejected (immutable tag) but $image:$tag is not visible in ECR." >&2
+            return "$push_status"
+        fi
+
+        # Transient failure — retry if attempts remain.
+        if (( push_attempt < push_attempts )); then
+            local backoff=$(( push_attempt * 5 ))
+            echo "Push attempt $push_attempt/$push_attempts failed (exit $push_status); retrying in ${backoff}s..." >&2
+            sleep "$backoff"
+        fi
+
+        push_attempt=$((push_attempt + 1))
+    done
+
+    echo "ERROR: push failed after $push_attempts attempts for $image:$tag" >&2
     return "$push_status"
 }
 
