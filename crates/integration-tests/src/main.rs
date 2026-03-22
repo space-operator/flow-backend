@@ -30,11 +30,19 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     cmd!(sh, "./gen-secrets.ts --force").run()?;
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let pull = if compile { "missing" } else { "always" };
-    let default_repo = if compile { "" } else { "311141552572.dkr.ecr.us-west-2.amazonaws.com/" };
+    let ecr = "311141552572.dkr.ecr.us-west-2.amazonaws.com";
     let flow_image = std::env::var("IMAGE")
-        .unwrap_or_else(|_| format!("{default_repo}space-operator/flow-server:{tag}"));
+        .unwrap_or_else(|_| if compile {
+            format!("flow-server:{tag}")
+        } else {
+            format!("{ecr}/flow-server:{tag}")
+        });
     let cmds_image = std::env::var("CMDS_IMAGE")
-        .unwrap_or_else(|_| format!("{default_repo}space-operator/cmds-server:{tag}"));
+        .unwrap_or_else(|_| if compile {
+            format!("cmds-server:{tag}")
+        } else {
+            format!("{ecr}/cmds-server:{tag}")
+        });
     cmd!(
         sh,
         "docker compose -f with-cmds-server.yml up --quiet-pull --pull {pull} -d --wait flow-server cmds-server deno-cmds-server webhook auth rest kong db"
