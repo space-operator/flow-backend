@@ -31,18 +31,20 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let pull = if compile { "missing" } else { "always" };
     let ecr = "311141552572.dkr.ecr.us-west-2.amazonaws.com";
-    let flow_image = std::env::var("IMAGE")
-        .unwrap_or_else(|_| if compile {
+    let flow_image = std::env::var("IMAGE").unwrap_or_else(|_| {
+        if compile {
             format!("flow-server:{tag}")
         } else {
             format!("{ecr}/flow-server:{tag}")
-        });
-    let cmds_image = std::env::var("CMDS_IMAGE")
-        .unwrap_or_else(|_| if compile {
+        }
+    });
+    let cmds_image = std::env::var("CMDS_IMAGE").unwrap_or_else(|_| {
+        if compile {
             format!("cmds-server:{tag}")
         } else {
             format!("{ecr}/cmds-server:{tag}")
-        });
+        }
+    });
     cmd!(
         sh,
         "docker compose -f with-cmds-server.yml up --quiet-pull --pull {pull} -d --wait flow-server cmds-server deno-cmds-server webhook auth rest kong db"
@@ -168,10 +170,13 @@ fn main() {
         .ok();
 
     if args.ecr_login {
-        cmd!(sh, "docker logout 311141552572.dkr.ecr.us-west-2.amazonaws.com")
-            .run()
-            .inspect_err(|error| eprint!("{error}"))
-            .ok();
+        cmd!(
+            sh,
+            "docker logout 311141552572.dkr.ecr.us-west-2.amazonaws.com"
+        )
+        .run()
+        .inspect_err(|error| eprint!("{error}"))
+        .ok();
     }
 
     if let Err(error) = result {
