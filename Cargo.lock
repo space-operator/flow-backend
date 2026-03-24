@@ -4303,6 +4303,7 @@ dependencies = [
  "tokio-util 0.7.18",
  "toml 0.5.11",
  "tower",
+ "tower-rpc",
  "tracing",
  "tracing-log",
  "tracing-subscriber",
