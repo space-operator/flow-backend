@@ -1,0 +1,14 @@
+#!/bin/sh
+# Auto-format Rust code before committing
+# This prevents CI failures from `cargo fmt --check`
+
+# Run cargo fmt on staged .rs files only (faster than formatting the whole workspace)
+STAGED_RS_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.rs$')
+
+if [ -n "$STAGED_RS_FILES" ]; then
+    echo "Running cargo fmt on staged Rust files..."
+    cargo fmt
+    # Re-stage the formatted files
+    echo "$STAGED_RS_FILES" | xargs git add
+    echo "cargo fmt complete."
+fi
