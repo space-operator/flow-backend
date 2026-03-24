@@ -23,6 +23,7 @@ cmds-solana = { workspace = true, optional = true }
 cmds-deno = { workspace = true, optional = true }
 rhai-script = { workspace = true }
 flow-rpc = { workspace = true }
+tower-rpc = { workspace = true }
 futures-metrics = { workspace = true }
 flow-lib-solana = { workspace = true }
 flow-tracing = { workspace = true }

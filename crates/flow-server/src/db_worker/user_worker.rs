@@ -437,6 +437,11 @@ impl UserWorker {
                 .new_flow_run(new_flow_run)
                 .signer(signer)
                 .new_flow_api_request(TowerClient::new(new_flow_api_request))
+                .maybe_rpc_server(
+                    tower_rpc::Server::start_http_server()
+                        .inspect_err(|error| tracing::error!("tower_rpc error: {}", error))
+                        .ok(),
+                )
                 .build())
         }
     }
