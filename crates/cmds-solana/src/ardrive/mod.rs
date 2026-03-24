@@ -7,6 +7,9 @@ pub mod helper;
 // Existing Solana transaction node
 pub mod turbo_fund_account;
 
+// Upload
+pub mod turbo_upload_file;
+
 // Pricing
 pub mod ardrive_get_price_bytes;
 pub mod ardrive_get_price_quote;

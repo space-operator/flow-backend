@@ -1,0 +1,95 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "turbo_upload_file",
+  "prefix": "ardrive",
+  "type": "native",
+  "description": "Upload a file to Arweave via ArDrive Turbo. Requires a pre-funded Turbo account (use turbo_fund_account first).",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/ardrive/turbo_upload_file.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Wallet whose Turbo credits will be used for the upload (must have sufficient balance)"
+      },
+      {
+        "name": "file_url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "URL of the file to fetch and upload. Provide either this or content."
+      },
+      {
+        "name": "content",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Content to upload directly. Accepts plain text or base64-encoded binary (auto-detected). Provide either this or file_url."
+      },
+      {
+        "name": "content_type",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "MIME type (e.g. application/json). Auto-detected from file_url, defaults to application/octet-stream."
+      },
+      {
+        "name": "tags",
+        "type_bounds": [
+          "json"
+        ],
+        "required": false,
+        "tooltip": "Optional JSON array of {name, value} custom tags to attach to the data item"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "data_item_id",
+        "type": "string",
+        "tooltip": "The Arweave data item (transaction) ID"
+      },
+      {
+        "name": "file_url",
+        "type": "string",
+        "tooltip": "The full URL to access the file on arweave.net"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "ArDrive",
+    "program": "ardrive",
+    "category": "storage",
+    "icon_url": "https://github.com/ardriveapp.png",
+    "tags": [
+      "storage",
+      "ardrive",
+      "turbo",
+      "upload",
+      "arweave"
+    ]
+  },
+  "external_version": {
+    "program_id": "ardrive_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://upload.ardrive.io/v1",
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/ardrive/turbo_upload_file.jsonc",
+    "repo": "flow-backend"
+  }
+}
