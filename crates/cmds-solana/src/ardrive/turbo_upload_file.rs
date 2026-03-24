@@ -17,7 +17,7 @@
 
 use crate::arweave::arweave_nft_upload::BundlrSigner;
 use crate::prelude::*;
-use bundlr_sdk::{tags::Tag, BundlrTx};
+use bundlr_sdk::{BundlrTx, tags::Tag};
 use tracing::info;
 
 pub const NAME: &str = "turbo_upload_file";
@@ -95,9 +95,7 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
             )));
         }
         let bytes = file_resp.bytes().await?.to_vec();
-        let mime = mime_guess::from_path(url)
-            .first()
-            .map(|m| m.to_string());
+        let mime = mime_guess::from_path(url).first().map(|m| m.to_string());
         info!("Fetched {} bytes", bytes.len());
         (bytes, mime)
     } else if let Some(content) = &input.content {
@@ -105,7 +103,10 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
         let data = if let Ok(decoded) = base64::decode(content) {
             if std::str::from_utf8(&decoded).is_err() {
                 // Decoded successfully and result is binary — treat as base64
-                info!("Auto-detected base64 content, decoded to {} bytes", decoded.len());
+                info!(
+                    "Auto-detected base64 content, decoded to {} bytes",
+                    decoded.len()
+                );
                 decoded
             } else {
                 // Decoded to valid UTF-8 — treat as raw text
@@ -123,9 +124,9 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     };
 
     // 2. Determine content type: explicit > auto-detected > default
-    let content_type = input
-        .content_type
-        .unwrap_or_else(|| auto_content_type.unwrap_or_else(|| "application/octet-stream".to_owned()));
+    let content_type = input.content_type.unwrap_or_else(|| {
+        auto_content_type.unwrap_or_else(|| "application/octet-stream".to_owned())
+    });
 
     // 3. Build tags
     let mut tags = vec![Tag::new("Content-Type".into(), content_type)];
@@ -136,13 +137,16 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     }
 
     // 4. Create and sign the ANS-104 data item
-    info!("Creating signed ANS-104 data item ({} bytes, {} tags)", data.len(), tags.len());
+    info!(
+        "Creating signed ANS-104 data item ({} bytes, {} tags)",
+        data.len(),
+        tags.len()
+    );
     let signer = BundlrSigner::new(input.fee_payer, ctx.clone());
-    let data_item = tokio::task::spawn_blocking(move || {
-        BundlrTx::create_with_tags(data, tags, &signer)
-    })
-    .await
-    .map_err(|e| CommandError::msg(format!("Failed to create data item: {e}")))?;
+    let data_item =
+        tokio::task::spawn_blocking(move || BundlrTx::create_with_tags(data, tags, &signer))
+            .await
+            .map_err(|e| CommandError::msg(format!("Failed to create data item: {e}")))?;
 
     let raw_bytes = data_item.into_inner();
 
