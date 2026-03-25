@@ -1,7 +1,4 @@
-use super::{
-    AddAuthorityInstruction, AuthorityConfig, AuthorityType, build_client_action,
-    to_instruction_v3, to_pubkey_v2,
-};
+use super::{AddAuthorityInstruction, AuthorityConfig, AuthorityType, build_client_action};
 use crate::prelude::*;
 
 const NAME: &str = "swig_add_authority";
@@ -64,21 +61,20 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         input.program_id_permission.as_ref(),
     );
 
-    let new_authority_v2 = to_pubkey_v2(&input.new_authority);
-    let ix_v2 = AddAuthorityInstruction::new_with_ed25519_authority(
-        to_pubkey_v2(&input.swig_account),
-        to_pubkey_v2(&input.fee_payer.pubkey()),
-        to_pubkey_v2(&input.acting_authority.pubkey()),
+    let ix = AddAuthorityInstruction::new_with_ed25519_authority(
+        input.swig_account,
+        input.fee_payer.pubkey(),
+        input.acting_authority.pubkey(),
         input.acting_role_id,
         AuthorityConfig {
             authority_type: AuthorityType::Ed25519,
-            authority: new_authority_v2.as_ref(),
+            authority: input.new_authority.as_ref(),
         },
         actions,
     )
     .map_err(|e| CommandError::msg(e.to_string()))?;
 
-    let instruction = to_instruction_v3(ix_v2);
+    let instruction = ix;
 
     let ins = Instructions {
         lookup_tables: None,
@@ -112,22 +108,22 @@ mod tests {
     fn test_instruction_builder_all() {
         let kp = Keypair::new();
         let swig_account = Keypair::new().pubkey();
-        let new_authority_v2 = to_pubkey_v2(&Keypair::new().pubkey());
+        let new_authority = Keypair::new().pubkey();
 
         let ix = AddAuthorityInstruction::new_with_ed25519_authority(
-            to_pubkey_v2(&swig_account),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&kp.pubkey()),
+            swig_account,
+            kp.pubkey(),
+            kp.pubkey(),
             0,
             AuthorityConfig {
                 authority_type: AuthorityType::Ed25519,
-                authority: new_authority_v2.as_ref(),
+                authority: new_authority.as_ref(),
             },
             build_client_action("all", None, None, None, None),
         )
         .unwrap();
 
-        let instruction = to_instruction_v3(ix);
+        let instruction = ix;
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
         assert!(!instruction.data.is_empty());
     }
@@ -136,22 +132,22 @@ mod tests {
     fn test_instruction_builder_sol_limit() {
         let kp = Keypair::new();
         let swig_account = Keypair::new().pubkey();
-        let new_authority_v2 = to_pubkey_v2(&Keypair::new().pubkey());
+        let new_authority = Keypair::new().pubkey();
 
         let ix = AddAuthorityInstruction::new_with_ed25519_authority(
-            to_pubkey_v2(&swig_account),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&kp.pubkey()),
+            swig_account,
+            kp.pubkey(),
+            kp.pubkey(),
             0,
             AuthorityConfig {
                 authority_type: AuthorityType::Ed25519,
-                authority: new_authority_v2.as_ref(),
+                authority: new_authority.as_ref(),
             },
             build_client_action("sol_limit", Some(1_000_000_000), None, None, None),
         )
         .unwrap();
 
-        let instruction = to_instruction_v3(ix);
+        let instruction = ix;
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
     }
 

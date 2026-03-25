@@ -1,4 +1,4 @@
-use super::{CreateSessionInstruction, to_instruction_v3, to_pubkey_v2};
+use super::CreateSessionInstruction;
 use crate::prelude::*;
 
 const NAME: &str = "swig_create_session";
@@ -43,17 +43,17 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let ix_v2 = CreateSessionInstruction::new_with_ed25519_authority(
-        to_pubkey_v2(&input.swig_account),
-        to_pubkey_v2(&input.fee_payer.pubkey()),
-        to_pubkey_v2(&input.authority.pubkey()),
+    let ix = CreateSessionInstruction::new_with_ed25519_authority(
+        input.swig_account,
+        input.fee_payer.pubkey(),
+        input.authority.pubkey(),
         input.role_id,
-        to_pubkey_v2(&input.session_key),
+        input.session_key,
         input.duration_slots,
     )
     .map_err(|e| CommandError::msg(e.to_string()))?;
 
-    let instruction = to_instruction_v3(ix_v2);
+    let instruction = ix;
 
     let ins = Instructions {
         lookup_tables: None,
@@ -90,16 +90,16 @@ mod tests {
         let session_key = Keypair::new().pubkey();
 
         let ix = CreateSessionInstruction::new_with_ed25519_authority(
-            to_pubkey_v2(&swig_account),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&kp.pubkey()),
+            swig_account,
+            kp.pubkey(),
+            kp.pubkey(),
             0,
-            to_pubkey_v2(&session_key),
+            session_key,
             216_000,
         )
         .unwrap();
 
-        let instruction = to_instruction_v3(ix);
+        let instruction = ix;
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
         assert!(!instruction.data.is_empty());
     }

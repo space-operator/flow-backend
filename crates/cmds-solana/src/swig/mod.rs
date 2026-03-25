@@ -41,8 +41,9 @@ pub const SWIG_PROGRAM_ID: Pubkey =
 /// System Program ID
 pub const SYSTEM_PROGRAM_ID: Pubkey = solana_pubkey::pubkey!("11111111111111111111111111111111");
 
-// Re-export shared v2↔v3 conversion helpers
-pub use crate::solana_v2_compat::{to_instruction_v3, to_pubkey_v2};
+// Note: to_pubkey_v2 / to_instruction_v3 are no longer needed for swig.
+// Latest swig-wallet uses Solana v3 types that match our workspace directly.
+// The solana_v2_compat module still exists for attestation_service, zk_compression, and tuktuk.
 
 // =============================================================================
 // ClientAction Builder Helper

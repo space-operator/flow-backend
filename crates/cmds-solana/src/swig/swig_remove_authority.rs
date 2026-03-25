@@ -1,4 +1,4 @@
-use super::{RemoveAuthorityInstruction, to_instruction_v3, to_pubkey_v2};
+use super::RemoveAuthorityInstruction;
 use crate::prelude::*;
 
 const NAME: &str = "swig_remove_authority";
@@ -36,16 +36,16 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let ix_v2 = RemoveAuthorityInstruction::new_with_ed25519_authority(
-        to_pubkey_v2(&input.swig_account),
-        to_pubkey_v2(&input.fee_payer.pubkey()),
-        to_pubkey_v2(&input.acting_authority.pubkey()),
+    let ix = RemoveAuthorityInstruction::new_with_ed25519_authority(
+        input.swig_account,
+        input.fee_payer.pubkey(),
+        input.acting_authority.pubkey(),
         input.acting_role_id,
         input.authority_to_remove_id,
     )
     .map_err(|e| CommandError::msg(e.to_string()))?;
 
-    let instruction = to_instruction_v3(ix_v2);
+    let instruction = ix;
 
     let ins = Instructions {
         lookup_tables: None,
@@ -81,15 +81,15 @@ mod tests {
         let swig_account = Keypair::new().pubkey();
 
         let ix = RemoveAuthorityInstruction::new_with_ed25519_authority(
-            to_pubkey_v2(&swig_account),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&kp.pubkey()),
+            swig_account,
+            kp.pubkey(),
+            kp.pubkey(),
             0,
             1,
         )
         .unwrap();
 
-        let instruction = to_instruction_v3(ix);
+        let instruction = ix;
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
         assert!(!instruction.data.is_empty());
     }

@@ -1,6 +1,6 @@
 use super::{
     AuthorityConfig, AuthorityType, CreateInstruction, build_client_action, find_swig_pda,
-    find_wallet_address, to_instruction_v3, to_pubkey_v2,
+    find_wallet_address,
 };
 use crate::prelude::*;
 
@@ -68,23 +68,22 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         input.program_id_permission.as_ref(),
     );
 
-    let authority_v2 = to_pubkey_v2(&input.authority);
-    let ix_v2 = CreateInstruction::new(
-        to_pubkey_v2(&swig_account),
+    let ix = CreateInstruction::new(
+        swig_account,
         swig_bump,
-        to_pubkey_v2(&input.fee_payer.pubkey()),
-        to_pubkey_v2(&wallet_address),
+        input.fee_payer.pubkey(),
+        wallet_address,
         wallet_bump,
         AuthorityConfig {
             authority_type: AuthorityType::Ed25519,
-            authority: authority_v2.as_ref(),
+            authority: input.authority.as_ref(),
         },
         actions,
         input.swig_id,
     )
     .map_err(|e| CommandError::msg(e.to_string()))?;
 
-    let instruction = to_instruction_v3(ix_v2);
+    let instruction = ix;
 
     let ins = Instructions {
         lookup_tables: None,
@@ -125,23 +124,23 @@ mod tests {
         let (swig_account, swig_bump) = find_swig_pda(&swig_id);
         let (wallet_address, wallet_bump) = find_wallet_address(&swig_account);
 
-        let authority_v2 = to_pubkey_v2(&kp.pubkey());
+        let authority = kp.pubkey();
         let ix = CreateInstruction::new(
-            to_pubkey_v2(&swig_account),
+            swig_account,
             swig_bump,
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&wallet_address),
+            kp.pubkey(),
+            wallet_address,
             wallet_bump,
             AuthorityConfig {
                 authority_type: AuthorityType::Ed25519,
-                authority: authority_v2.as_ref(),
+                authority: authority.as_ref(),
             },
             build_client_action("all", None, None, None, None),
             swig_id,
         )
         .unwrap();
 
-        let instruction = to_instruction_v3(ix);
+        let instruction = ix;
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
         assert!(!instruction.data.is_empty());
     }

@@ -1,4 +1,4 @@
-use super::{CreateSubAccountInstruction, find_sub_account_pda, to_instruction_v3, to_pubkey_v2};
+use super::{CreateSubAccountInstruction, find_sub_account_pda};
 use crate::prelude::*;
 
 const NAME: &str = "swig_create_sub_account";
@@ -40,17 +40,17 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (sub_account, sub_account_bump) = find_sub_account_pda(&input.swig_id, input.role_id);
 
-    let ix_v2 = CreateSubAccountInstruction::new_with_ed25519_authority(
-        to_pubkey_v2(&input.swig_account),
-        to_pubkey_v2(&input.authority.pubkey()),
-        to_pubkey_v2(&input.fee_payer.pubkey()),
-        to_pubkey_v2(&sub_account),
+    let ix = CreateSubAccountInstruction::new_with_ed25519_authority(
+        input.swig_account,
+        input.authority.pubkey(),
+        input.fee_payer.pubkey(),
+        sub_account,
         input.role_id,
         sub_account_bump,
     )
     .map_err(|e| CommandError::msg(e.to_string()))?;
 
-    let instruction = to_instruction_v3(ix_v2);
+    let instruction = ix;
 
     let ins = Instructions {
         lookup_tables: None,
@@ -91,16 +91,16 @@ mod tests {
         let (sub_account, sub_account_bump) = find_sub_account_pda(&swig_id, 0);
 
         let ix = CreateSubAccountInstruction::new_with_ed25519_authority(
-            to_pubkey_v2(&swig_account),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&sub_account),
+            swig_account,
+            kp.pubkey(),
+            kp.pubkey(),
+            sub_account,
             0,
             sub_account_bump,
         )
         .unwrap();
 
-        let instruction = to_instruction_v3(ix);
+        let instruction = ix;
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
         assert!(!instruction.data.is_empty());
     }

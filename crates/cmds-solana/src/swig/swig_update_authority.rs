@@ -1,7 +1,4 @@
-use super::{
-    UpdateAuthorityData, UpdateAuthorityInstruction, build_client_action, to_instruction_v3,
-    to_pubkey_v2,
-};
+use super::{UpdateAuthorityData, UpdateAuthorityInstruction, build_client_action};
 use crate::prelude::*;
 
 const NAME: &str = "swig_update_authority";
@@ -67,39 +64,33 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         input.token_limit_amount,
         input.program_id_permission.as_ref(),
     );
-
     let update_data = match input.operation.as_str() {
         "replace_all" => UpdateAuthorityData::ReplaceAll(actions),
         "add_actions" => UpdateAuthorityData::AddActions(actions),
         _ => UpdateAuthorityData::ReplaceAll(actions),
     };
-
-    let ix_v2 = UpdateAuthorityInstruction::new_with_ed25519_authority(
-        to_pubkey_v2(&input.swig_account),
-        to_pubkey_v2(&input.fee_payer.pubkey()),
-        to_pubkey_v2(&input.acting_authority.pubkey()),
+    let ix = UpdateAuthorityInstruction::new_with_ed25519_authority(
+        input.swig_account,
+        input.fee_payer.pubkey(),
+        input.acting_authority.pubkey(),
         input.acting_role_id,
         input.authority_to_update_id,
         update_data,
     )
     .map_err(|e| CommandError::msg(e.to_string()))?;
 
-    let instruction = to_instruction_v3(ix_v2);
-
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer, input.acting_authority].into(),
-        instructions: [instruction].into(),
+        instructions: [ix].into(),
     };
-
     let ins = if input.submit {
         ins
     } else {
         Default::default()
     };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
-
     Ok(Output { signature })
 }
 
@@ -119,20 +110,17 @@ mod tests {
         let kp = Keypair::new();
         let swig_account = Keypair::new().pubkey();
         let actions = build_client_action("all", None, None, None, None);
-
         let ix = UpdateAuthorityInstruction::new_with_ed25519_authority(
-            to_pubkey_v2(&swig_account),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&kp.pubkey()),
+            swig_account,
+            kp.pubkey(),
+            kp.pubkey(),
             0,
             1,
             UpdateAuthorityData::ReplaceAll(actions),
         )
         .unwrap();
-
-        let instruction = to_instruction_v3(ix);
-        assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
-        assert!(!instruction.data.is_empty());
+        assert_eq!(ix.program_id, SWIG_PROGRAM_ID);
+        assert!(!ix.data.is_empty());
     }
 
     #[test]
@@ -147,19 +135,16 @@ mod tests {
             Some(1_000_000),
             None,
         );
-
         let ix = UpdateAuthorityInstruction::new_with_ed25519_authority(
-            to_pubkey_v2(&swig_account),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&kp.pubkey()),
+            swig_account,
+            kp.pubkey(),
+            kp.pubkey(),
             0,
             1,
             UpdateAuthorityData::AddActions(actions),
         )
         .unwrap();
-
-        let instruction = to_instruction_v3(ix);
-        assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
+        assert_eq!(ix.program_id, SWIG_PROGRAM_ID);
     }
 
     #[tokio::test]
@@ -167,7 +152,6 @@ mod tests {
     async fn test_run_integration() {
         let wallet: Wallet = Keypair::new().into();
         let swig_account = Keypair::new().pubkey();
-
         let input = Input {
             fee_payer: wallet.clone(),
             swig_account,
@@ -182,7 +166,6 @@ mod tests {
             program_id_permission: None,
             submit: true,
         };
-
         let result = run(CommandContext::default(), input).await;
         assert!(result.is_ok(), "run failed: {:?}", result.err());
     }
