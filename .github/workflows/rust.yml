@@ -78,7 +78,7 @@ jobs:
           --start-point-hash '${{ github.event.pull_request.base.sha }}'
           --start-point-clone-thresholds
           --start-point-reset
-          --testbed hetzner-r3600
+          --testbed ec2-c6a-2xlarge
           --err
           --adapter rust_criterion
           --github-actions '${{ secrets.GITHUB_TOKEN }}'
@@ -86,8 +86,8 @@ jobs:
   benchmark_main:
     name: Benchmark main
     needs: unit-test
-    # DO NOT REMOVE: For handling Fork PRs see Pull Requests from Forks
-    if: github.event_name == 'push'
+    # Only runs when the 'benchmark' label is added to the merge commit's PR
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[benchmark]')
     permissions:
       checks: write
     runs-on: [self-hosted, rust-builder]
@@ -106,7 +106,7 @@ jobs:
           --project backend-e9b5559-25k6lbjiv95d0
           --token '${{ secrets.BENCHER_API_TOKEN }}'
           --branch main
-          --testbed hetzner-r3600
+          --testbed ec2-c6a-2xlarge
           --threshold-measure latency
           --threshold-test t_test
           --threshold-max-sample-size 64

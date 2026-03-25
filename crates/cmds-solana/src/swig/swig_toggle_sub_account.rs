@@ -1,4 +1,4 @@
-use super::{ToggleSubAccountInstruction, to_instruction_v3, to_pubkey_v2};
+use super::ToggleSubAccountInstruction;
 use crate::prelude::*;
 
 const NAME: &str = "swig_toggle_sub_account";
@@ -39,18 +39,18 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let ix_v2 = ToggleSubAccountInstruction::new_with_ed25519_authority(
-        to_pubkey_v2(&input.swig_account),
-        to_pubkey_v2(&input.authority.pubkey()),
-        to_pubkey_v2(&input.fee_payer.pubkey()),
-        to_pubkey_v2(&input.sub_account),
+    let ix = ToggleSubAccountInstruction::new_with_ed25519_authority(
+        input.swig_account,
+        input.authority.pubkey(),
+        input.fee_payer.pubkey(),
+        input.sub_account,
         input.role_id,
         input.auth_role_id,
         input.enabled,
     )
     .map_err(|e| CommandError::msg(e.to_string()))?;
 
-    let instruction = to_instruction_v3(ix_v2);
+    let instruction = ix;
 
     let ins = Instructions {
         lookup_tables: None,
@@ -87,17 +87,17 @@ mod tests {
         let sub_account = Keypair::new().pubkey();
 
         let ix = ToggleSubAccountInstruction::new_with_ed25519_authority(
-            to_pubkey_v2(&swig_account),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&sub_account),
+            swig_account,
+            kp.pubkey(),
+            kp.pubkey(),
+            sub_account,
             0,
             1,
             true,
         )
         .unwrap();
 
-        let instruction = to_instruction_v3(ix);
+        let instruction = ix;
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
         assert!(!instruction.data.is_empty());
         assert!(!instruction.accounts.is_empty());

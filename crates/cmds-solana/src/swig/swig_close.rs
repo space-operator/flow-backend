@@ -1,4 +1,4 @@
-use super::{CloseSwigV1Instruction, find_wallet_address, to_instruction_v3, to_pubkey_v2};
+use super::{CloseSwigV1Instruction, find_wallet_address};
 use crate::prelude::*;
 
 const NAME: &str = "swig_close";
@@ -39,16 +39,16 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (wallet_address, _) = find_wallet_address(&input.swig_account);
 
-    let ix_v2 = CloseSwigV1Instruction::new_with_ed25519_authority(
-        to_pubkey_v2(&input.swig_account),
-        to_pubkey_v2(&wallet_address),
-        to_pubkey_v2(&input.authority.pubkey()),
-        to_pubkey_v2(&input.destination),
+    let ix = CloseSwigV1Instruction::new_with_ed25519_authority(
+        input.swig_account,
+        wallet_address,
+        input.authority.pubkey(),
+        input.destination,
         input.role_id,
     )
     .map_err(|e| CommandError::msg(e.to_string()))?;
 
-    let instruction = to_instruction_v3(ix_v2);
+    let instruction = ix;
 
     let ins = Instructions {
         lookup_tables: None,
@@ -86,15 +86,15 @@ mod tests {
         let destination = Keypair::new().pubkey();
 
         let ix = CloseSwigV1Instruction::new_with_ed25519_authority(
-            to_pubkey_v2(&swig_account),
-            to_pubkey_v2(&wallet_address),
-            to_pubkey_v2(&kp.pubkey()),
-            to_pubkey_v2(&destination),
+            swig_account,
+            wallet_address,
+            kp.pubkey(),
+            destination,
             0,
         )
         .unwrap();
 
-        let instruction = to_instruction_v3(ix);
+        let instruction = ix;
         assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
         assert!(!instruction.data.is_empty());
     }

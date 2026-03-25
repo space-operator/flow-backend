@@ -110,6 +110,7 @@ pub(crate) struct WalletPermit {
     encryption_key: ChaCha20Poly1305,
 }
 
+#[allow(dead_code)]
 #[derive(borsh::BorshSerialize, borsh::BorshDeserialize)]
 struct Permit {
     nonce: [u8; 12],
@@ -125,6 +126,7 @@ impl WalletPermit {
         }
     }
 
+    #[allow(dead_code)]
     fn encrypt(&self, wallet_id: WalletId) -> Result<String, CommandError> {
         let nonce = ChaCha20Poly1305::generate_nonce(&mut rand_core::OsRng);
         let mut nonce_bytes = [0u8; 12];
@@ -139,6 +141,7 @@ impl WalletPermit {
         Ok(BASE64_STANDARD_NO_PAD.encode(encoded))
     }
 
+    #[allow(dead_code)]
     pub(crate) fn decrypt(&self, base64_permit: &str) -> Result<WalletId, CommandError> {
         let borsh_permit = BASE64_STANDARD_NO_PAD.decode(base64_permit)?;
         let permit: Permit = borsh::from_slice(&borsh_permit)?;

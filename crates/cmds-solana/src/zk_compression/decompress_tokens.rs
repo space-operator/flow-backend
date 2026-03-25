@@ -125,7 +125,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     }
 
     // 6. Build CTokenAccount and call decompress
-    let mut sender_account = CTokenAccount::new(mint_v2, owner_v2, token_data, 0);
+    let sender_account = CTokenAccount::new(mint_v2, owner_v2, token_data, 0);
 
     // 7. Tree pubkeys from proof response
     let mut tree_pubkeys = Vec::new();
