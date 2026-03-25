@@ -137,8 +137,15 @@ jobs:
       - name: Build and push flow-server
         run: |
           IMAGE=$ECR_REGISTRY/flow-server:$IMAGE_TAG
-          docker build -f crates/flow-server/Dockerfile -t $IMAGE .
-          docker push $IMAGE
+          # Check if tag already exists (immutable tags enabled)
+          if aws ecr describe-images --region $AWS_REGION \
+               --repository-name flow-server \
+               --image-ids imageTag=$IMAGE_TAG 2>/dev/null; then
+            echo "Image tag $IMAGE_TAG already exists, skipping build+push."
+          else
+            docker build -f crates/flow-server/Dockerfile -t $IMAGE .
+            docker push $IMAGE
+          fi
       - name: Configure kubectl
         run: |
           aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
