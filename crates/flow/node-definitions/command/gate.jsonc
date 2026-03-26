@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "gate",
+  "prefix": "command",
+  "description": "Pass a value through based on a boolean. When condition is true, outputs value on 'output'. When false, outputs value on 'rejected'. Use this when the condition and the routed value are separate inputs.",
+  "type": "native",
+  "author_handle": "spo",
+  "source_code": "crates/flow/src/command/gate.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "condition",
+        "type_bounds": ["bool"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Boolean: true passes value to 'output', false passes to 'rejected'"
+      },
+      {
+        "name": "value",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "The value to pass through or reject"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "type": "free",
+        "optional": true,
+        "tooltip": "Value when condition is true"
+      },
+      {
+        "name": "rejected",
+        "type": "free",
+        "optional": true,
+        "tooltip": "Value when condition is false"
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "config": {},
+  "classification": {
+    "vendor": "Native",
+    "program": "command",
+    "category": "core",
+    "icon_url": null,
+    "tags": ["core", "command", "gate", "condition", "control-flow"]
+  },
+  "external_version": {
+    "program_id": "command_native",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/flow/node-definitions/command/gate.jsonc",
+    "repo": "flow-backend"
+  }
+}

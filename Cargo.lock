@@ -4023,6 +4023,7 @@ dependencies = [
  "indexmap 2.13.0",
  "inventory",
  "mime_guess",
+ "num-bigint 0.4.6",
  "petgraph",
  "postgres-types",
  "reqwest 0.12.28",

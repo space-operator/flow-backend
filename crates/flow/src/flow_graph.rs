@@ -1055,7 +1055,16 @@ impl FlowGraph {
                         &mut s.result,
                         node.id,
                         times,
-                        format!("output not found: {missing:?}"),
+                        format!(
+                            "{} did not produce required output{} {}. \
+                             Mark {} as optional in the node definition, \
+                             or ensure the node returns {} in all code paths.",
+                            node.command.name(),
+                            if missing.len() > 1 { "s" } else { "" },
+                            missing.join(", "),
+                            missing.join(", "),
+                            missing.join(", "),
+                        ),
                     );
                 }
 

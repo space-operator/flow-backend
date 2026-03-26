@@ -95,11 +95,13 @@ pub struct CmdBuilder {
 
 #[derive(ThisError, Debug, Clone)]
 pub enum BuilderError {
-    #[error("{0}")]
+    #[error("invalid node definition: {0}")]
     Json(String),
-    #[error("wrong command name: {0}")]
+    #[error("node definition name \"{0}\" does not match the registered command name")]
     WrongName(String),
-    #[error("output not found: {0}")]
+    #[error(
+        "signature output \"{0}\" not found in node definition outputs — add it to the outputs list or check the name passed to simple_instruction_info()"
+    )]
     OutputNotFound(String),
 }
 
