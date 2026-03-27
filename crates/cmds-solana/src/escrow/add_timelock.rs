@@ -51,10 +51,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
     ];
 
-    // Data: lock_duration (u64) + bump (u8)
+    // Data: extensions_bump (u8) + lock_duration (u64)
     let mut args_data = Vec::with_capacity(9);
-    args_data.extend_from_slice(&input.lock_duration.to_le_bytes());
     args_data.push(bump);
+    args_data.extend_from_slice(&input.lock_duration.to_le_bytes());
 
     let instruction =
         build_escrow_instruction(EscrowDiscriminator::AddTimelock, accounts, args_data);
@@ -122,8 +122,8 @@ mod tests {
         ];
 
         let mut args_data = Vec::with_capacity(9);
-        args_data.extend_from_slice(&86400u64.to_le_bytes());
         args_data.push(bump);
+        args_data.extend_from_slice(&86400u64.to_le_bytes());
 
         let ix = build_escrow_instruction(EscrowDiscriminator::AddTimelock, accounts, args_data);
 

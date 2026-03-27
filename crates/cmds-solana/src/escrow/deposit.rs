@@ -76,10 +76,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(extensions, false),
     ];
 
-    // Data: amount (u64) + bump (u8)
+    // Data: bump (u8) + amount (u64)
     let mut args_data = Vec::with_capacity(9);
-    args_data.extend_from_slice(&input.amount.to_le_bytes());
     args_data.push(receipt_bump);
+    args_data.extend_from_slice(&input.amount.to_le_bytes());
 
     let instruction = build_escrow_instruction(EscrowDiscriminator::Deposit, accounts, args_data);
 
@@ -167,14 +167,14 @@ mod tests {
         ];
 
         let mut args_data = Vec::with_capacity(9);
-        args_data.extend_from_slice(&1000u64.to_le_bytes());
         args_data.push(receipt_bump);
+        args_data.extend_from_slice(&1000u64.to_le_bytes());
 
         let ix = build_escrow_instruction(EscrowDiscriminator::Deposit, accounts, args_data);
 
         assert_eq!(ix.program_id, ESCROW_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 14);
-        // 1-byte discriminator + 8-byte amount + 1-byte bump = 10
+        // 1-byte discriminator + 1-byte bump + 8-byte amount = 10
         assert_eq!(ix.data.len(), 10);
         assert_eq!(ix.data[0], 3); // Deposit discriminator
     }

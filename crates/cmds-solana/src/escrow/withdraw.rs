@@ -61,7 +61,6 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .unwrap_or_else(|| input.fee_payer.pubkey());
 
     let accounts = vec![
-        AccountMeta::new_readonly(input.fee_payer.pubkey(), true),
         AccountMeta::new(rent_recipient, false),
         AccountMeta::new_readonly(input.withdrawer.pubkey(), true),
         AccountMeta::new_readonly(input.escrow, false),
@@ -139,7 +138,6 @@ mod tests {
         let receipt = Pubkey::new_unique();
 
         let accounts = vec![
-            AccountMeta::new_readonly(fee_payer, true),
             AccountMeta::new(rent_recipient, false),
             AccountMeta::new_readonly(withdrawer, true),
             AccountMeta::new_readonly(escrow, false),
@@ -157,7 +155,7 @@ mod tests {
         let ix = build_escrow_instruction(EscrowDiscriminator::Withdraw, accounts, vec![]);
 
         assert_eq!(ix.program_id, ESCROW_PROGRAM_ID);
-        assert_eq!(ix.accounts.len(), 13);
+        assert_eq!(ix.accounts.len(), 12);
         assert_eq!(ix.data.len(), 1); // discriminator only
         assert_eq!(ix.data[0], 5); // Withdraw discriminator
     }
