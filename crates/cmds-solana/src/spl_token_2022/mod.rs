@@ -37,6 +37,10 @@ pub mod group_member_pointer;
 pub mod group_pointer;
 pub mod metadata_pointer;
 
+// ── Soulbound / delegation extensions ──────────────────────────────────
+pub mod non_transferable;
+pub mod permanent_delegate;
+
 // ── Access control extensions ───────────────────────────────────────────
 pub mod cpi_guard;
 pub mod memo_transfer;
