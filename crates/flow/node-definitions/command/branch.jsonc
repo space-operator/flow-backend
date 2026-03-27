@@ -21,7 +21,7 @@
         "type_bounds": ["string"],
         "required": true,
         "passthrough": false,
-        "tooltip": "Condition operator: is_null, is_not_null, is_true, is_false, eq, ne, gt, lt, gte, lte, is_empty, is_not_empty, contains"
+        "tooltip": "Condition operator. General: is_null, is_not_null, is_true, is_false, eq, ne, is_empty, is_not_empty. Numeric only: gt, lt, gte, lte. String only: contains, starts_with, ends_with."
       },
       {
         "name": "field",
@@ -35,7 +35,7 @@
         "type_bounds": ["free"],
         "required": false,
         "passthrough": false,
-        "tooltip": "Value to compare against (required for eq, ne, gt, lt, gte, lte, contains)"
+        "tooltip": "Value to compare against. Required for eq, ne, gt, lt, gte, lte, contains, starts_with, ends_with. Use numeric values for gt/lt/gte/lte and string values for starts_with/ends_with."
       }
     ],
     "outputs": [

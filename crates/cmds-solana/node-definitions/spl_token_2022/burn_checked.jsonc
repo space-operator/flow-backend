@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Burn Token-2022 tokens from an account with decimal validation",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/burn_checked.rs",
   "ports": {
     "inputs": [
       {

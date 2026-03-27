@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Initialize interest bearing configuration for a Token-2022 mint",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/interest_bearing/initialize.rs",
   "ports": {
     "inputs": [
       {

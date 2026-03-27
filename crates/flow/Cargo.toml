@@ -32,6 +32,7 @@ tracing = "0.1"
 actix = "0.13"
 derive_more = "0.99"
 indexmap = "2"
+num-bigint = "0.4"
 rust_decimal = { version = "1", features = ["serde-with-float"] }
 reqwest = { version = "0.12", features = ["json"] }
 mime_guess = "2.0.4"

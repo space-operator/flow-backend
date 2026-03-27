@@ -53,7 +53,7 @@
       {
         "name": "turbo_address",
         "type": "pubkey",
-        "optional": false,
+        "optional": true,
         "tooltip": "The Turbo SOL payment address that received the funds"
       }
     ]

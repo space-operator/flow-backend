@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Revoke a delegate's authority on a Token-2022 token account",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/revoke.rs",
   "ports": {
     "inputs": [
       {

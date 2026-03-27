@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Thaw a frozen Token-2022 token account, re-enabling transfers",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/thaw_account.rs",
   "ports": {
     "inputs": [
       {

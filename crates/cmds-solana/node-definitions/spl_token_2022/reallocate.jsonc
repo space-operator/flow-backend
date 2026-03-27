@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Reallocate a Token-2022 account to accommodate additional extensions",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/reallocate.rs",
   "ports": {
     "inputs": [
       {

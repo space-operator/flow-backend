@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Get the required account data size for a Token-2022 account with specified extensions",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/get_account_data_size.rs",
   "ports": {
     "inputs": [
       {

@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Initialize a new Token-2022 token account for a specific mint and owner",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/initialize_account.rs",
   "ports": {
     "inputs": [
       {

@@ -27,6 +27,13 @@
         "tooltip": "The address of the asset"
       },
       {
+        "name": "collection",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Collection the asset belongs to (required for collection-owned assets)"
+      },
+      {
         "name": "payer",
         "type_bounds": [
           "keypair"

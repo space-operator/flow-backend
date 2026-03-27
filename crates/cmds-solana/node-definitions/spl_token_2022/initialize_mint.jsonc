@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Initialize a new Token-2022 mint with decimals, mint authority, and optional freeze authority",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/initialize_mint.rs",
   "ports": {
     "inputs": [
       {

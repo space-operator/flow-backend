@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Create the native SOL mint for Token-2022",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/create_native_mint.rs",
   "ports": {
     "inputs": [
       {

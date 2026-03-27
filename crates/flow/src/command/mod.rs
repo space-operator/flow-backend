@@ -23,6 +23,7 @@ pub mod filter;
 pub mod flow_input;
 pub mod flow_output;
 pub mod foreach;
+pub mod gate;
 pub mod helper;
 pub mod interflow;
 pub mod interflow_instructions;

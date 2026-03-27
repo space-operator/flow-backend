@@ -69,6 +69,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer, input.collection]
             .into_iter()
+            .chain(input.update_authority)
             .chain(input.verified_creator)
             .collect(),
         instructions: [ins].into(),
