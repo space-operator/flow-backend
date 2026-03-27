@@ -53,7 +53,6 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let accounts = vec![
         AccountMeta::new_readonly(input.admin.pubkey(), true),
-        AccountMeta::new_readonly(input.fee_payer.pubkey(), true),
         AccountMeta::new(rent_recipient, false),
         AccountMeta::new_readonly(input.escrow, false),
         AccountMeta::new_readonly(input.mint, false),
@@ -118,12 +117,10 @@ mod tests {
         let (allowed_mint, _) = pda::find_allowed_mint(&escrow, &mint);
         let (event_authority, _) = pda::find_event_authority();
         let admin = Pubkey::new_unique();
-        let fee_payer = Pubkey::new_unique();
         let rent_recipient = Pubkey::new_unique();
 
         let accounts = vec![
             AccountMeta::new_readonly(admin, true),
-            AccountMeta::new_readonly(fee_payer, true),
             AccountMeta::new(rent_recipient, false),
             AccountMeta::new_readonly(escrow, false),
             AccountMeta::new_readonly(mint, false),
@@ -136,7 +133,7 @@ mod tests {
         let ix = build_escrow_instruction(EscrowDiscriminator::BlockMint, accounts, vec![]);
 
         assert_eq!(ix.program_id, ESCROW_PROGRAM_ID);
-        assert_eq!(ix.accounts.len(), 9);
+        assert_eq!(ix.accounts.len(), 8);
         assert_eq!(ix.data.len(), 1); // discriminator only
         assert_eq!(ix.data[0], 7); // BlockMint discriminator
     }

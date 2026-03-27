@@ -49,11 +49,11 @@ pub fn find_extensions(escrow: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[b"extensions", escrow.as_ref()], &ESCROW_PROGRAM_ID)
 }
 
-/// Find the Anchor-style event authority PDA.
+/// Find the event authority PDA.
 ///
-/// Seeds: `["__event_authority"]`
+/// Seeds: `["event_authority"]`
 pub fn find_event_authority() -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[b"__event_authority"], &ESCROW_PROGRAM_ID)
+    Pubkey::find_program_address(&[b"event_authority"], &ESCROW_PROGRAM_ID)
 }
 
 /// Find the Associated Token Account for a given wallet, mint, and token program.
