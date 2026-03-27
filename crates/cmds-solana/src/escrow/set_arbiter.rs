@@ -37,17 +37,22 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    let (extensions, bump) = pda::find_extensions(&input.escrow);
     let (event_authority, _) = pda::find_event_authority();
 
     let accounts = vec![
+        AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(input.admin.pubkey(), true),
-        AccountMeta::new(input.escrow, false),
+        AccountMeta::new_readonly(input.arbiter, false),
+        AccountMeta::new_readonly(input.escrow, false),
+        AccountMeta::new(extensions, false),
+        AccountMeta::new_readonly(solana_system_interface::program::ID, false),
         AccountMeta::new_readonly(event_authority, false),
         AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
     ];
 
-    // Data: arbiter (Pubkey = 32 bytes)
-    let args_data = input.arbiter.to_bytes().to_vec();
+    // Data: extensions_bump (u8)
+    let args_data = vec![bump];
 
     let instruction =
         build_escrow_instruction(EscrowDiscriminator::SetArbiter, accounts, args_data);
@@ -95,26 +100,32 @@ mod tests {
 
     #[test]
     fn test_instruction_construction() {
+        let fee_payer = Pubkey::new_unique();
         let admin = Pubkey::new_unique();
         let escrow = Pubkey::new_unique();
         let arbiter = Pubkey::new_unique();
+        let (extensions, bump) = pda::find_extensions(&escrow);
         let (event_authority, _) = pda::find_event_authority();
 
         let accounts = vec![
+            AccountMeta::new(fee_payer, true),
             AccountMeta::new_readonly(admin, true),
-            AccountMeta::new(escrow, false),
+            AccountMeta::new_readonly(arbiter, false),
+            AccountMeta::new_readonly(escrow, false),
+            AccountMeta::new(extensions, false),
+            AccountMeta::new_readonly(solana_system_interface::program::ID, false),
             AccountMeta::new_readonly(event_authority, false),
             AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
         ];
 
-        let args_data = arbiter.to_bytes().to_vec();
+        let args_data = vec![bump];
 
         let ix = build_escrow_instruction(EscrowDiscriminator::SetArbiter, accounts, args_data);
 
         assert_eq!(ix.program_id, ESCROW_PROGRAM_ID);
-        assert_eq!(ix.accounts.len(), 4);
-        // 1 discriminator + 32 pubkey = 33
-        assert_eq!(ix.data.len(), 33);
+        assert_eq!(ix.accounts.len(), 8);
+        // 1 discriminator + 1 extensions_bump = 2
+        assert_eq!(ix.data.len(), 2);
         assert_eq!(ix.data[0], 9); // SetArbiter discriminator
     }
 }
