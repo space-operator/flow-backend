@@ -23,6 +23,9 @@ pub struct Input {
     pub fee_payer: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub asset: Pubkey,
+    #[serde(default)]
+    #[serde_as(as = "Option<AsPubkey>")]
+    pub collection: Option<Pubkey>,
     pub payer: Option<Wallet>,
     pub init_info: ExternalPluginAdapterInitInfo,
     #[serde(default = "value::default::bool_true")]
@@ -41,11 +44,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .as_ref()
         .map_or_else(|| input.fee_payer.pubkey(), |p| p.pubkey());
     // Build instruction using builder pattern
-    let instruction = AddExternalPluginAdapterV1Builder::new()
+    let mut builder = AddExternalPluginAdapterV1Builder::new();
+    builder
         .asset(input.asset)
         .payer(payer)
-        .init_info(input.init_info)
-        .instruction();
+        .collection(input.collection)
+        .init_info(input.init_info);
+    let instruction = builder.instruction();
 
     let ins = Instructions {
         lookup_tables: None,
