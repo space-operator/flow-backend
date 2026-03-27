@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "smart_account_create_proposal",
+  "prefix": "smart_account",
+  "type": "native",
+  "description": "Create a proposal for a transaction",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/smart_account/create_proposal.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Account paying for transaction fees",
+        "passthrough": true
+      },
+      {
+        "name": "settings",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Settings PDA of the smart account"
+      },
+      {
+        "name": "creator",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Creator signer on the smart account"
+      },
+      {
+        "name": "transaction_index",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Transaction index within the smart account"
+      },
+      {
+        "name": "draft",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Create as draft (needs activation)"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature",
+        "optional": true
+      },
+      {
+        "name": "proposal",
+        "type": "pubkey",
+        "tooltip": "Derived proposal PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "smart_account",
+    "category": "utility",
+    "icon_url": "https://github.com/Squads-Protocol.png",
+    "tags": [
+      "squads",
+      "multisig",
+      "smart-account",
+      "create-proposal"
+    ]
+  },
+  "external_version": {
+    "program_id": "SMRTzfY6DfH5ik3TKiyLFfXexV8uSG3d2UksSCYdunG",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/Squads-Protocol/smart-account-program"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/smart_account/create_proposal.jsonc",
+    "repo": "flow-backend"
+  }
+}

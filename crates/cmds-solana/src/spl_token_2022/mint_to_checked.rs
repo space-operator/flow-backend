@@ -42,7 +42,16 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let account = derive_ata(&input.recipient_owner, &input.mint);
 
-    let ix = spl_token_2022_interface::instruction::mint_to_checked(
+    // Create the recipient's ATA if it doesn't exist (idempotent)
+    let create_ata_ix =
+        spl_associated_token_account_interface::instruction::create_associated_token_account_idempotent(
+            &input.fee_payer.pubkey(),
+            &input.recipient_owner,
+            &input.mint,
+            &spl_token_2022_interface::ID,
+        );
+
+    let mint_ix = spl_token_2022_interface::instruction::mint_to_checked(
         &spl_token_2022_interface::ID,
         &input.mint,
         &account,
@@ -56,7 +65,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer, input.mint_authority].into(),
-        instructions: [ix].into(),
+        instructions: vec![create_ata_ix, mint_ix],
     };
 
     let ins = if input.submit {
