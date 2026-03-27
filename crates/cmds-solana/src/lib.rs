@@ -40,6 +40,7 @@ pub mod pyth;
 pub mod reflect;
 pub mod scope;
 pub mod secp256k1;
+pub mod smart_account;
 pub mod solana_v2_compat;
 pub mod spl_memo;
 pub mod spl_record;

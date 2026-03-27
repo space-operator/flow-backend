@@ -1,0 +1,122 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "smart_account_add_transaction_to_batch",
+  "prefix": "smart_account",
+  "type": "native",
+  "description": "Add a transaction to a batch",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/smart_account/add_transaction_to_batch.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Account paying for transaction fees",
+        "passthrough": true
+      },
+      {
+        "name": "settings",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Settings PDA of the smart account"
+      },
+      {
+        "name": "signer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Signer on the smart account"
+      },
+      {
+        "name": "batch_index",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Batch transaction index"
+      },
+      {
+        "name": "batch_transaction_index",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": true,
+        "tooltip": "Index within the batch"
+      },
+      {
+        "name": "ephemeral_signers",
+        "type_bounds": [
+          "u8"
+        ],
+        "tooltip": "Number of ephemeral signers"
+      },
+      {
+        "name": "transaction_message",
+        "type_bounds": [
+          "bytes"
+        ],
+        "required": true,
+        "tooltip": "Serialized transaction message"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature",
+        "optional": true
+      },
+      {
+        "name": "transaction",
+        "type": "pubkey",
+        "tooltip": "Derived batch transaction PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "smart_account",
+    "category": "utility",
+    "icon_url": "https://github.com/Squads-Protocol.png",
+    "tags": [
+      "squads",
+      "multisig",
+      "smart-account",
+      "batch",
+      "add-transaction"
+    ]
+  },
+  "external_version": {
+    "program_id": "SMRTzfY6DfH5ik3TKiyLFfXexV8uSG3d2UksSCYdunG",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/Squads-Protocol/smart-account-program"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/smart_account/add_transaction_to_batch.jsonc",
+    "repo": "flow-backend"
+  }
+}

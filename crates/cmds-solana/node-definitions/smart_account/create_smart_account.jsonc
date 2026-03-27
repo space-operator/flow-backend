@@ -1,0 +1,118 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_smart_account",
+  "prefix": "smart_account",
+  "type": "native",
+  "description": "Create a new Squads smart account (multisig)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/smart_account/create_smart_account.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Account paying for transaction fees",
+        "passthrough": true
+      },
+      {
+        "name": "settings_authority",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Authority over settings (None for autonomous)"
+      },
+      {
+        "name": "threshold",
+        "type_bounds": [
+          "u16"
+        ],
+        "required": true,
+        "tooltip": "Number of approvals required"
+      },
+      {
+        "name": "signers",
+        "type_bounds": [
+          "object"
+        ],
+        "required": true,
+        "tooltip": "Array of {key, permissions} signer objects"
+      },
+      {
+        "name": "time_lock",
+        "type_bounds": [
+          "u32"
+        ],
+        "tooltip": "Time lock in seconds before execution (default 0)"
+      },
+      {
+        "name": "rent_collector",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Account to collect rent on closure"
+      },
+      {
+        "name": "memo",
+        "type_bounds": [
+          "string"
+        ],
+        "tooltip": "Optional memo"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "tooltip": "Transaction signature",
+        "optional": true
+      },
+      {
+        "name": "program_config",
+        "type": "pubkey",
+        "tooltip": "Program config PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "smart_account",
+    "category": "utility",
+    "icon_url": "https://github.com/Squads-Protocol.png",
+    "tags": [
+      "squads",
+      "multisig",
+      "smart-account",
+      "create"
+    ]
+  },
+  "external_version": {
+    "program_id": "SMRTzfY6DfH5ik3TKiyLFfXexV8uSG3d2UksSCYdunG",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/Squads-Protocol/smart-account-program"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/smart_account/create_smart_account.jsonc",
+    "repo": "flow-backend"
+  }
+}
