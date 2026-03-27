@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Withdraw withheld transfer fees from multiple token accounts",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/transfer_fee/withdraw_from_accounts.rs",
   "ports": {
     "inputs": [
       {

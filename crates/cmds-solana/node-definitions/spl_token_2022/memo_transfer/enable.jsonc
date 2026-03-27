@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Enable required transfer memos on a Token-2022 token account so incoming transfers must include a memo",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/memo_transfer/enable.rs",
   "ports": {
     "inputs": [
       {

@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Disable CPI guard on a Token-2022 token account to allow CPI callers to perform all actions",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/cpi_guard/disable.rs",
   "ports": {
     "inputs": [
       {

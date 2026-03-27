@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Update the transfer fee configuration on a Token-2022 mint",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/transfer_fee/set_fee.rs",
   "ports": {
     "inputs": [
       {

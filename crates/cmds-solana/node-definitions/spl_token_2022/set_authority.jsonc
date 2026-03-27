@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Set a new authority on a Token-2022 mint or account",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/set_authority.rs",
   "ports": {
     "inputs": [
       {

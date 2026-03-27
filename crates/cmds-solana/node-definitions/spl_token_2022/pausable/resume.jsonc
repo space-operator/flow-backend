@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Resume a paused Token-2022 mint to re-enable token operations",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/pausable/resume.rs",
   "ports": {
     "inputs": [
       {

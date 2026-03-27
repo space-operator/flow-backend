@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Mint new Token-2022 tokens to an account with decimal validation",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/mint_to_checked.rs",
   "ports": {
     "inputs": [
       {

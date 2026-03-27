@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Harvest withheld transfer fees from token accounts to the mint",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/transfer_fee/harvest.rs",
   "ports": {
     "inputs": [
       {

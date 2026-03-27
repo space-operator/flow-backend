@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Pause a Token-2022 mint to prevent all token operations",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/pausable/pause.rs",
   "ports": {
     "inputs": [
       {

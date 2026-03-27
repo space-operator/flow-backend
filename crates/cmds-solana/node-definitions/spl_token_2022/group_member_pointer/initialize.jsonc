@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Initialize the group member pointer extension on a Token-2022 mint, pointing to an account that stores group member data",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/group_member_pointer/initialize.rs",
   "ports": {
     "inputs": [
       {

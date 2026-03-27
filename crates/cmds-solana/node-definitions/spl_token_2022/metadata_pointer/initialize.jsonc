@@ -6,6 +6,7 @@
   "type": "native",
   "description": "Initialize the metadata pointer extension on a Token-2022 mint, pointing to an account that stores token metadata",
   "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token_2022/metadata_pointer/initialize.rs",
   "ports": {
     "inputs": [
       {
