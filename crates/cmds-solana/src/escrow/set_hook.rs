@@ -52,10 +52,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
     ];
 
-    // Data: hook_program (Pubkey = 32 bytes) + bump (u8)
+    // Data: extensions_bump (u8) + hook_program (Pubkey = 32 bytes)
     let mut args_data = Vec::with_capacity(33);
-    args_data.extend_from_slice(input.hook_program.as_ref());
     args_data.push(bump);
+    args_data.extend_from_slice(input.hook_program.as_ref());
 
     let instruction = build_escrow_instruction(EscrowDiscriminator::SetHook, accounts, args_data);
 
@@ -123,8 +123,8 @@ mod tests {
         ];
 
         let mut args_data = Vec::with_capacity(33);
-        args_data.extend_from_slice(hook_program.as_ref());
         args_data.push(bump);
+        args_data.extend_from_slice(hook_program.as_ref());
 
         let ix = build_escrow_instruction(EscrowDiscriminator::SetHook, accounts, args_data);
 

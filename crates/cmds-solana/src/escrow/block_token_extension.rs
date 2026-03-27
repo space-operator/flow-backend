@@ -51,10 +51,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
     ];
 
-    // Data: extension_type (u16) + bump (u8)
+    // Data: extensions_bump (u8) + blocked_extension (u16)
     let mut args_data = Vec::with_capacity(3);
-    args_data.extend_from_slice(&input.extension_type.to_le_bytes());
     args_data.push(bump);
+    args_data.extend_from_slice(&input.extension_type.to_le_bytes());
 
     let instruction = build_escrow_instruction(
         EscrowDiscriminator::BlockTokenExtension,
@@ -125,8 +125,8 @@ mod tests {
         ];
 
         let mut args_data = Vec::with_capacity(3);
-        args_data.extend_from_slice(&5u16.to_le_bytes());
         args_data.push(bump);
+        args_data.extend_from_slice(&5u16.to_le_bytes());
 
         let ix = build_escrow_instruction(
             EscrowDiscriminator::BlockTokenExtension,
