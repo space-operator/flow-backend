@@ -35,6 +35,15 @@
         "tooltip": "Wallet address of the recipient to mint tokens to"
       },
       {
+        "name": "mint_authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Mint authority keypair that can mint new tokens"
+      },
+      {
         "name": "amount",
         "type_bounds": [
           "u64"
