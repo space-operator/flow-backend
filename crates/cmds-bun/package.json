@@ -5,6 +5,7 @@
   "dependencies": {
     "@space-operator/bun-command-rpc": "workspace:*",
     "@space-operator/flow-lib-bun": "workspace:*",
-    "@umbra-privacy/sdk": "^1.0.0"
+    "@umbra-privacy/sdk": "^1.0.0",
+    "@umbra-privacy/web-zk-prover": "^1.0.0"
   }
 }

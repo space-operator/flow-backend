@@ -66,6 +66,32 @@ fn symlink_workspace_node_modules(dst: &Path) -> std::io::Result<()> {
     }
 }
 
+/// Known companion modules that may be imported by cmd.ts via relative paths.
+/// Maps the import specifier to the embedded source.
+const COMPANION_MODULES: &[(&str, &str)] = &[(
+    "./umbra_common.ts",
+    include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/src/umbra/umbra_common.ts"
+    )),
+)];
+
+/// If cmd.ts imports any known companion modules, write them into the temp dir.
+async fn write_companion_modules(
+    dir: &Path,
+    source: &str,
+) -> Result<(), flow_lib::command::CommandError> {
+    for (specifier, content) in COMPANION_MODULES {
+        if source.contains(specifier) {
+            let filename = specifier.strip_prefix("./").unwrap_or(specifier);
+            tokio::fs::write(dir.join(filename), content)
+                .await
+                .context(format!("write companion {filename}"))?;
+        }
+    }
+    Ok(())
+}
+
 pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
     let source = source_from_config(&nd)
         .ok_or_else(|| CommandError::msg("bun command source/code not found"))?;
@@ -75,6 +101,9 @@ pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, Com
     tokio::fs::write(dir.path().join("cmd.ts"), &source)
         .await
         .context("write cmd.ts")?;
+
+    // Write well-known companion modules that cmd.ts may import via relative paths.
+    write_companion_modules(dir.path(), &source).await?;
 
     let mut node_data = nd.clone();
     if let Some(obj) = node_data.config.as_object_mut() {
@@ -255,15 +284,16 @@ impl CommandTrait for BunCommand {
 }
 
 #[cfg(test)]
+pub mod test_utils;
+
+#[cfg(test)]
 mod tests {
     use super::*;
-    use flow_lib::{
-        config::{
-            client::{InputPort, OutputPort},
-            node::parse_definition,
-        },
-        context::CommandContext,
+    use flow_lib::config::{
+        client::{InputPort, OutputPort},
+        node::parse_definition,
     };
+    use solana_keypair::Signer;
     use tempfile::tempdir;
     use uuid::Uuid;
 
@@ -321,15 +351,267 @@ mod tests {
 
         let nd = node_data(JSON, SOURCE);
         let cmd = new(&nd).await.unwrap();
-        let mut ctx = CommandContext::test_context();
-        ctx.extensions_mut()
-            .unwrap()
-            .insert(tower_rpc::Server::start_http_server().unwrap());
+        let ctx = test_utils::test_context();
         let output = cmd
             .run(ctx, value::map! { "a" => 12, "b" => 13 })
             .await
             .unwrap();
         let c = value::from_value::<f64>(output["c"].clone()).unwrap();
         assert_eq!(c, 25.0);
+    }
+
+    /// Spawn a compiled bun node from its .jsonc + .ts pair under node-definitions/ and src/.
+    async fn spawn_umbra_node(name: &str) -> Box<dyn CommandTrait> {
+        let jsonc = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("node-definitions/umbra")
+                .join(format!("{name}.jsonc")),
+        )
+        .unwrap();
+        let ts_source: &str = match name {
+            "umbra_register" => {
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/umbra/umbra_register.ts"))
+            }
+            "umbra_query_account" => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/umbra/umbra_query_account.ts"
+                ))
+            }
+            "umbra_query_balance" => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/umbra/umbra_query_balance.ts"
+                ))
+            }
+            "umbra_deposit" => {
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/umbra/umbra_deposit.ts"))
+            }
+            "umbra_withdraw" => {
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/umbra/umbra_withdraw.ts"))
+            }
+            "umbra_fetch_utxos" => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/umbra/umbra_fetch_utxos.ts"
+                ))
+            }
+            "umbra_create_utxo" => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/umbra/umbra_create_utxo.ts"
+                ))
+            }
+            "umbra_claim_utxo" => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/umbra/umbra_claim_utxo.ts"
+                ))
+            }
+            _ => panic!("unknown umbra node: {name}"),
+        };
+        let nd = node_data(&jsonc, ts_source);
+        make_compiled_bun(&jsonc, ts_source, &nd).await.unwrap()
+    }
+
+    // ── Solana integration tests ───────────────────────────────────────
+
+    /// Spawn a compiled solana node from its .jsonc + .ts pair.
+    async fn spawn_solana_node(name: &str) -> Box<dyn CommandTrait> {
+        let jsonc = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("node-definitions/solana")
+                .join(format!("{name}.jsonc")),
+        )
+        .unwrap();
+        let ts_source: &str = match name {
+            "transfer_sol" => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/solana/transfer_sol.ts"
+                ))
+            }
+            _ => panic!("unknown solana node: {name}"),
+        };
+        let nd = node_data(&jsonc, ts_source);
+        make_compiled_bun(&jsonc, ts_source, &nd).await.unwrap()
+    }
+
+    #[actix_web::test]
+    #[ignore = "requires funded devnet wallet: TEST_WALLET_KEYPAIR"]
+    async fn test_transfer_sol_devnet() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        let cmd = spawn_solana_node("transfer_sol").await;
+        let ctx = test_utils::test_context();
+
+        let sender = test_utils::test_wallet();
+        let sender_kp = sender.keypair().unwrap();
+        let recipient = solana_keypair::Keypair::new();
+
+        let rpc = solana_rpc_client::nonblocking::rpc_client::RpcClient::new(
+            "https://api.devnet.solana.com".to_string(),
+        );
+        test_utils::ensure_funded(&rpc, &sender_kp.pubkey(), 0.1).await;
+
+        let output = cmd
+            .run(
+                ctx,
+                value::map! {
+                    "sender" => sender_kp.to_bytes(),
+                    "recipient" => recipient.pubkey().to_bytes(),
+                    "amount" => 1_000_000u64, // 0.001 SOL
+                },
+            )
+            .await
+            .unwrap();
+
+        assert!(
+            output.contains_key("signature"),
+            "expected signature in output"
+        );
+    }
+
+    // ── Umbra integration tests (mainnet, read-only) ──────────────────
+
+    #[actix_web::test]
+    async fn test_umbra_query_account_unregistered() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        let cmd = spawn_umbra_node("umbra_query_account").await;
+        let ctx = test_utils::test_context();
+
+        // Use a random keypair — guaranteed unregistered
+        let kp = solana_keypair::Keypair::new();
+
+        let output = cmd
+            .run(
+                ctx,
+                value::map! {
+                    "keypair" => kp.to_bytes(),
+                    "network" => "mainnet",
+                    "rpc_url" => "https://api.mainnet-beta.solana.com",
+                },
+            )
+            .await
+            .unwrap();
+
+        let exists = value::from_value::<bool>(output["exists"].clone()).unwrap();
+        assert!(!exists, "fresh keypair should not be registered");
+    }
+
+    #[actix_web::test]
+    async fn test_umbra_query_balance_unregistered() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        let cmd = spawn_umbra_node("umbra_query_balance").await;
+        let ctx = test_utils::test_context();
+
+        let kp = solana_keypair::Keypair::new();
+
+        let output = cmd
+            .run(
+                ctx,
+                value::map! {
+                    "keypair" => kp.to_bytes(),
+                    "network" => "mainnet",
+                    "rpc_url" => "https://api.mainnet-beta.solana.com",
+                    "mint" => "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                },
+            )
+            .await
+            .unwrap();
+
+        let balance = value::from_value::<String>(output["balance"].clone()).unwrap();
+        assert_eq!(balance, "0", "unregistered account should have zero balance");
+    }
+
+    #[actix_web::test]
+    async fn test_umbra_fetch_utxos_devnet_returns_empty() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        let cmd = spawn_umbra_node("umbra_fetch_utxos").await;
+        let ctx = test_utils::test_context();
+
+        let kp = solana_keypair::Keypair::new();
+
+        let output = cmd
+            .run(
+                ctx,
+                value::map! {
+                    "keypair" => kp.to_bytes(),
+                    "network" => "devnet",
+                    "rpc_url" => "https://api.devnet.solana.com",
+                },
+            )
+            .await
+            .unwrap();
+
+        let count = value::from_value::<f64>(output["count"].clone()).unwrap();
+        assert_eq!(count, 0.0, "devnet has no indexer, should return 0 UTXOs");
+    }
+
+    // ── Umbra write tests ──────────────────────────────────────────────
+    // NOTE: Umbra devnet program (342qFp...) has its programData closed,
+    //       so write operations only work on mainnet.
+
+    #[actix_web::test]
+    #[ignore = "requires funded mainnet wallet: TEST_WALLET_KEYPAIR"]
+    async fn test_umbra_register_devnet() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        let cmd = spawn_umbra_node("umbra_register").await;
+        let ctx = test_utils::test_context();
+
+        let wallet = test_utils::test_wallet();
+        let kp = wallet.keypair().unwrap();
+
+        let output = cmd
+            .run(
+                ctx,
+                value::map! {
+                    "keypair" => kp.to_bytes(),
+                    "network" => "devnet",
+                    "rpc_url" => "https://api.devnet.solana.com",
+                    "confidential" => true,
+                    "anonymous" => false,
+                },
+            )
+            .await
+            .unwrap();
+
+        let sig = value::from_value::<String>(output["signature"].clone()).unwrap();
+        assert!(!sig.is_empty(), "expected a transaction signature");
+        tracing::info!("register signature: {sig}");
+    }
+
+    #[actix_web::test]
+    #[ignore = "requires TEST_WALLET_KEYPAIR"]
+    async fn test_umbra_query_account_with_test_wallet() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        let cmd = spawn_umbra_node("umbra_query_account").await;
+        let ctx = test_utils::test_context();
+
+        let wallet = test_utils::test_wallet();
+        let kp = wallet.keypair().unwrap();
+
+        let output = cmd
+            .run(
+                ctx,
+                value::map! {
+                    "keypair" => kp.to_bytes(),
+                    "network" => "devnet",
+                    "rpc_url" => "https://api.devnet.solana.com",
+                },
+            )
+            .await
+            .unwrap();
+
+        let exists = value::from_value::<bool>(output["exists"].clone()).unwrap();
+        tracing::info!(
+            "test wallet {} registered on Umbra devnet: {exists}",
+            kp.pubkey()
+        );
     }
 }

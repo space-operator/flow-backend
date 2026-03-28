@@ -1,33 +1,27 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import {
-  getUmbraClientFromSigner,
-  createSignerFromPrivateKeyBytes,
-  getCreateReceiverClaimableUtxoFromPublicBalanceFunction,
-} from "@umbra-privacy/sdk";
-
-async function createUmbraClient(keypairBytes: Uint8Array, network: string, rpcUrl: string) {
-  const signer = await createSignerFromPrivateKeyBytes(keypairBytes);
-  const rpcSubscriptionsUrl = rpcUrl.replace(/^https:\/\//, "wss://").replace(/^http:\/\//, "ws://");
-  const indexerApiEndpoint = network === "mainnet" ? "https://acqzie0a1h.execute-api.eu-central-1.amazonaws.com" : undefined;
-  return getUmbraClientFromSigner({ signer, network, rpcUrl, rpcSubscriptionsUrl, indexerApiEndpoint } as any);
-}
+import { getCreateReceiverClaimableUtxoFromPublicBalanceFunction } from "@umbra-privacy/sdk";
+import { getCreateReceiverClaimableUtxoFromPublicBalanceProver } from "@umbra-privacy/web-zk-prover";
+import { createUmbraClient } from "./umbra_common.ts";
 
 export default class UmbraCreateUtxo extends BaseCommand {
-  override async run(_ctx: Context, inputs: any): Promise<any> {
+  override async run(ctx: Context, inputs: any): Promise<any> {
     const client = await createUmbraClient(
       new Uint8Array(inputs.keypair),
       inputs.network,
       inputs.rpc_url,
+      ctx,
     );
 
-    const createUtxo = (getCreateReceiverClaimableUtxoFromPublicBalanceFunction as any)({ client });
+    const zkProver = getCreateReceiverClaimableUtxoFromPublicBalanceProver();
+    const createUtxo = getCreateReceiverClaimableUtxoFromPublicBalanceFunction(
+      { client },
+      { zkProver } as any,
+    );
 
-    // SDK signature: (args: CreateUtxoArgs, options?) => Promise<TransactionSignature[]>
-    // CreateUtxoArgs = { amount: U64, destinationAddress: Address, mint: Address }
     const args = {
-      amount: BigInt(inputs.amount) as any,         // U64 branded type
-      destinationAddress: inputs.receiver as any,   // Address branded type
-      mint: inputs.mint as any,                     // Address branded type
+      amount: BigInt(inputs.amount) as any,
+      destinationAddress: inputs.receiver as any,
+      mint: inputs.mint as any,
     };
 
     console.log(`Creating receiver-claimable UTXO in mixer pool...`);
@@ -35,7 +29,7 @@ export default class UmbraCreateUtxo extends BaseCommand {
     console.log(`  mint: ${inputs.mint}`);
     console.log(`  amount: ${args.amount}`);
 
-    const signatures = await createUtxo(args);
+    const signatures = await (createUtxo as any)(args);
 
     console.log(`UTXO created with ${signatures.length} transaction(s)`);
     signatures.forEach((sig: any, i: number) => console.log(`  tx ${i}: ${sig}`));
@@ -46,21 +40,24 @@ export default class UmbraCreateUtxo extends BaseCommand {
   }
 }
 
-// ── Tests ──────────────────────────────────────────────────────────────
+// ── Tests (only run under `bun test`, safe to import elsewhere) ───────
 import { test, expect, describe } from "bun:test";
+try {
+  describe("UmbraCreateUtxo", () => {
+    test("build: class can be instantiated", () => {
+      const nd = { type: "bun", node_id: "test", inputs: [], outputs: [], config: {} } as any;
+      const cmd = new UmbraCreateUtxo(nd);
+      expect(cmd).toBeInstanceOf(BaseCommand);
+      expect(cmd.run).toBeInstanceOf(Function);
+    });
 
-describe("UmbraCreateUtxo", () => {
-  test("build: class can be instantiated", () => {
-    const nd = { type: "bun", node_id: "test", inputs: [], outputs: [], config: {} } as any;
-    const cmd = new UmbraCreateUtxo(nd);
-    expect(cmd).toBeInstanceOf(BaseCommand);
-    expect(cmd.run).toBeInstanceOf(Function);
+    test("run: rejects with missing inputs", async () => {
+      const nd = { type: "bun", node_id: "test", inputs: [], outputs: [], config: {} } as any;
+      const cmd = new UmbraCreateUtxo(nd);
+      const ctx = {} as Context;
+      await expect(cmd.run(ctx, {})).rejects.toThrow();
+    });
   });
-
-  test("run: rejects with missing inputs", async () => {
-    const nd = { type: "bun", node_id: "test", inputs: [], outputs: [], config: {} } as any;
-    const cmd = new UmbraCreateUtxo(nd);
-    const ctx = {} as Context;
-    await expect(cmd.run(ctx, {})).rejects.toThrow();
-  });
-});
+} catch (_) {
+  // Not running under `bun test`
+}

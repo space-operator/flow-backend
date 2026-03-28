@@ -28,6 +28,13 @@ flow-lib.workspace = true
 [dev-dependencies]
 tower-rpc.workspace = true
 value.workspace = true
+flow-lib-solana.workspace = true
+
+solana-keypair.workspace = true
+solana-signer.workspace = true
+solana-pubkey.workspace = true
+solana-rpc-client.workspace = true
+dotenvy = "0.15"
 
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 actix-web = "4.5.1"
