@@ -9,7 +9,7 @@ default = [
     "commands",
 ]
 import = []
-commands = ["dep:cmds-pdg", "dep:cmds-std", "dep:cmds-solana", "dep:cmds-deno"]
+commands = ["dep:cmds-pdg", "dep:cmds-std", "dep:cmds-solana", "dep:cmds-deno", "dep:cmds-bun"]
 
 [dependencies]
 db = { workspace = true }
@@ -21,6 +21,7 @@ cmds-pdg = { workspace = true, optional = true }
 cmds-std = { workspace = true, optional = true }
 cmds-solana = { workspace = true, optional = true }
 cmds-deno = { workspace = true, optional = true }
+cmds-bun = { workspace = true, optional = true }
 rhai-script = { workspace = true }
 flow-rpc = { workspace = true }
 tower-rpc = { workspace = true }
@@ -84,6 +85,7 @@ reqwest-middleware = "0.4.2"
 cdp-sdk.workspace = true
 jsonc-parser = { version = "0.28.0", features = ["preserve_order", "serde"] }
 schemars = "1.1.0"
+utoipa = { version = "5.4.0", features = ["chrono", "url", "uuid"] }
 
 [dev-dependencies]
 criterion = "0.5"

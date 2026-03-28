@@ -40,6 +40,7 @@ cmds-pdg = { path = "crates/cmds-pdg", version = "0.0.0" }
 cmds-solana = { path = "crates/cmds-solana", version = "0.0.0" }
 rhai-script = { path = "crates/rhai-script", version = "0.0.0" }
 cmds-deno = { path = "crates/cmds-deno", version = "0.0.0" }
+cmds-bun = { path = "crates/cmds-bun", version = "0.0.0" }
 cmds-image = { path = "crates/cmds-image", version = "0.0.0" }
 anchor-libs = { path = "crates/anchor-libs", version = "0.0.0" }
 flow-lib-solana = { path = "crates/flow-lib-solana", version = "0.0.0" }

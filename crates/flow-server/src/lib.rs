@@ -22,6 +22,7 @@ pub mod cmd_workers;
 pub mod db_worker;
 pub mod error;
 pub mod middleware;
+pub mod openapi;
 pub mod user;
 pub mod ws;
 

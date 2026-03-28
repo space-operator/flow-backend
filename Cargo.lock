@@ -2249,6 +2249,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmds-bun"
+version = "0.0.0"
+dependencies = [
+ "actix-web",
+ "anyhow",
+ "flow-lib",
+ "flow-rpc",
+ "flow-value",
+ "futures",
+ "home",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "tower-rpc",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid 1.22.0",
+]
+
+[[package]]
 name = "cmds-deno"
 version = "0.0.0"
 dependencies = [
@@ -4208,6 +4230,7 @@ dependencies = [
  "bytes",
  "cdp-sdk",
  "chrono",
+ "cmds-bun",
  "cmds-deno",
  "cmds-pdg",
  "cmds-solana",
@@ -4263,6 +4286,7 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "utils",
+ "utoipa",
  "uuid 1.22.0",
  "x402-kit",
 ]
@@ -4517,6 +4541,7 @@ dependencies = [
  "flow-server",
  "schemars 1.2.1",
  "serde_json",
+ "utoipa",
 ]
 
 [[package]]
@@ -4530,7 +4555,7 @@ dependencies = [
  "libc",
  "log",
  "rustversion",
- "windows-link 0.1.3",
+ "windows-link 0.2.1",
  "windows-result 0.4.1",
 ]
 
@@ -10848,7 +10873,7 @@ version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c1c97747dbf44bb1ca44a561ece23508e99cb592e862f22222dcf42f51d1e451"
 dependencies = [
- "heck 0.4.1",
+ "heck 0.5.0",
  "proc-macro2 1.0.106",
  "quote 1.0.45",
  "syn 2.0.117",
@@ -15451,6 +15476,31 @@ dependencies = [
  "serde",
  "thiserror 1.0.69",
  "tower",
+]
+
+[[package]]
+name = "utoipa"
+version = "5.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2fcc29c80c21c31608227e0912b2d7fddba57ad76b606890627ba8ee7964e993"
+dependencies = [
+ "indexmap 2.13.0",
+ "serde",
+ "serde_json",
+ "utoipa-gen",
+]
+
+[[package]]
+name = "utoipa-gen"
+version = "5.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d79d08d92ab8af4c5e8a6da20c47ae3f61a0f1dabc1997cdf2d082b757ca08b"
+dependencies = [
+ "proc-macro2 1.0.106",
+ "quote 1.0.45",
+ "syn 2.0.117",
+ "url",
+ "uuid 1.22.0",
 ]
 
 [[package]]

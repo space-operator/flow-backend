@@ -70,6 +70,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_utils;
 
     #[test]
     fn test_build() {
@@ -77,41 +78,33 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore]
-    async fn test_valid() {
+    #[ignore = "requires funded wallet and network access"]
+    async fn test_transfer_sol() {
         tracing_subscriber::fmt::try_init().ok();
-        let ctx = CommandContext::default();
 
-        let sender: Wallet = Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").into();
-        let recipient = solana_program::pubkey!("GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9");
+        let sender = test_utils::test_wallet();
+        let recipient = Keypair::new().pubkey();
+        let ctx = test_utils::test_context();
 
-        let balance = ctx
-            .solana_client()
-            .get_balance(&sender.pubkey())
-            .await
-            .unwrap() as f64
-            / 1_000_000_000.0;
+        test_utils::ensure_funded(ctx.solana_client(), &sender.pubkey(), 0.1).await;
 
-        if balance < 0.1 {
-            let _ = ctx
-                .solana_client()
-                .request_airdrop(&sender.pubkey(), 1_000_000_000)
-                .await;
-        }
-
-        // Transfer
         let output = run(
             ctx,
-            super::Input {
+            Input {
                 fee_payer: None,
                 sender,
                 recipient,
-                amount: rust_decimal_macros::dec!(0.1),
+                amount: rust_decimal_macros::dec!(0.001),
                 submit: true,
             },
         )
         .await
         .unwrap();
-        dbg!(output.signature.unwrap());
+
+        dbg!(&output.signature);
+        assert!(
+            output.signature.is_some(),
+            "expected a transaction signature"
+        );
     }
 }

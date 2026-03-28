@@ -1,0 +1,9 @@
+{
+  "name": "flow-backend",
+  "private": true,
+  "workspaces": [
+    "@space-operator/bun-command-rpc",
+    "@space-operator/flow-lib-bun",
+    "crates/cmds-bun"
+  ]
+}

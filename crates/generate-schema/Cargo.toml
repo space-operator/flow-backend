@@ -7,3 +7,4 @@ edition = "2024"
 flow-server = { version = "0.0.0", path = "../flow-server", default-features = false }
 schemars = "1.2.0"
 serde_json = { version = "1.0.149", features = ["preserve_order"] }
+utoipa = "5.4.0"

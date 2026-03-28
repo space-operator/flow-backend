@@ -1,0 +1,1317 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "flow-server",
+    "description": "",
+    "license": {
+      "name": ""
+    },
+    "version": "0.0.0"
+  },
+  "paths": {
+    "/apikey/create": {
+      "post": {
+        "tags": [
+          "apiKeys"
+        ],
+        "operationId": "create_apikey_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyParamsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Create API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateApiKeyOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/apikey/delete": {
+      "post": {
+        "tags": [
+          "apiKeys"
+        ],
+        "operationId": "delete_apikey_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteApiKeyParamsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Delete API key",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/apikey/info": {
+      "get": {
+        "tags": [
+          "apiKeys"
+        ],
+        "operationId": "apikey_info_doc",
+        "responses": {
+          "200": {
+            "description": "API key owner info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyInfoOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/claim_token": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "claim_token_doc",
+        "responses": {
+          "200": {
+            "description": "Claim bearer token from API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimTokenOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/confirm": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "confirm_auth_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmAuthParamsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Confirm wallet auth",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmAuthOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/init": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "init_auth_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthInitParamsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Initialize wallet auth",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthInitOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data/export": {
+      "post": {
+        "tags": [
+          "data"
+        ],
+        "operationId": "data_export_doc",
+        "responses": {
+          "200": {
+            "description": "Export user data",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deployment/start": {
+      "post": {
+        "tags": [
+          "deployments"
+        ],
+        "operationId": "start_deployment_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Deployment id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flow",
+            "in": "query",
+            "description": "Flow id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "Deployment tag",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartDeploymentParamsDoc"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Start deployment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowRunTokenOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flow/clone/{id}": {
+      "post": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "clone_flow_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clone flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloneFlowOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flow/start/{id}": {
+      "post": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "start_flow_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartFlowParamsDoc"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Start owned or shared flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowRunStartOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flow/start_shared/{id}": {
+      "post": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "start_flow_shared_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartFlowSharedParamsDoc"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Start shared flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowRunStartOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flow/start_unverified/{id}": {
+      "post": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "start_flow_unverified_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartFlowUnverifiedParamsDoc"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Start unverified flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowRunTokenOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flow/stop/{id}": {
+      "post": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "stop_flow_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow run id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StopFlowParamsDoc"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stop flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthcheck": {
+      "get": {
+        "tags": [
+          "service"
+        ],
+        "operationId": "healthcheck_doc",
+        "responses": {
+          "200": {
+            "description": "Healthcheck",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/info": {
+      "get": {
+        "tags": [
+          "service"
+        ],
+        "operationId": "get_info_doc",
+        "responses": {
+          "200": {
+            "description": "Service info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceInfoDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kv/create_store": {
+      "post": {
+        "tags": [
+          "kv"
+        ],
+        "operationId": "kv_create_store_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvStoreParamsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Create KV store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kv/delete_item": {
+      "post": {
+        "tags": [
+          "kv"
+        ],
+        "operationId": "kv_delete_item_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvReadParamsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Delete KV item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KvDeleteOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kv/delete_store": {
+      "post": {
+        "tags": [
+          "kv"
+        ],
+        "operationId": "kv_delete_store_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvStoreParamsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Delete KV store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kv/read_item": {
+      "post": {
+        "tags": [
+          "kv"
+        ],
+        "operationId": "kv_read_item_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvReadParamsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Read KV item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KvReadOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kv/write_item": {
+      "post": {
+        "tags": [
+          "kv"
+        ],
+        "operationId": "kv_write_item_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvWriteParamsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Write KV item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KvWriteOutputDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signature/submit": {
+      "post": {
+        "tags": [
+          "signatures"
+        ],
+        "operationId": "submit_signature_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitSignatureDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Submit signature",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wallets/upsert": {
+      "post": {
+        "tags": [
+          "wallets"
+        ],
+        "operationId": "wallet_upsert_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Upsert wallet",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiKeyInfoOutputDoc": {
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiKeyRecordDoc": {
+        "type": "object",
+        "required": [
+          "key_hash",
+          "trimmed_key",
+          "name",
+          "user_id",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "key_hash": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "trimmed_key": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthInitOutputDoc": {
+        "type": "object",
+        "required": [
+          "msg"
+        ],
+        "properties": {
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthInitParamsDoc": {
+        "type": "object",
+        "required": [
+          "pubkey"
+        ],
+        "properties": {
+          "pubkey": {
+            "type": "string"
+          }
+        }
+      },
+      "ClaimTokenOutputDoc": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "access_token",
+          "refresh_token",
+          "expires_at"
+        ],
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "refresh_token": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          }
+        }
+      },
+      "CloneFlowOutputDoc": {
+        "type": "object",
+        "required": [
+          "flow_id",
+          "id_map"
+        ],
+        "properties": {
+          "flow_id": {
+            "type": "string"
+          },
+          "id_map": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ConfirmAuthOutputDoc": {
+        "type": "object",
+        "required": [
+          "session",
+          "new_user"
+        ],
+        "properties": {
+          "new_user": {
+            "type": "boolean"
+          },
+          "session": {}
+        }
+      },
+      "ConfirmAuthParamsDoc": {
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateApiKeyOutputDoc": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiKeyRecordDoc"
+          },
+          {
+            "type": "object",
+            "required": [
+              "full_key"
+            ],
+            "properties": {
+              "full_key": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "CreateApiKeyParamsDoc": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "DeleteApiKeyParamsDoc": {
+        "type": "object",
+        "required": [
+          "key_hash"
+        ],
+        "properties": {
+          "key_hash": {
+            "type": "string"
+          }
+        }
+      },
+      "FlowRunStartOutputDoc": {
+        "type": "object",
+        "required": [
+          "flow_run_id"
+        ],
+        "properties": {
+          "flow_run_id": {
+            "type": "string"
+          }
+        }
+      },
+      "FlowRunTokenOutputDoc": {
+        "type": "object",
+        "required": [
+          "flow_run_id",
+          "token"
+        ],
+        "properties": {
+          "flow_run_id": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "IrohInfoDoc": {
+        "type": "object",
+        "required": [
+          "node_id",
+          "relay_url",
+          "direct_addresses"
+        ],
+        "properties": {
+          "direct_addresses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "node_id": {
+            "type": "string"
+          },
+          "relay_url": {
+            "type": "string"
+          }
+        }
+      },
+      "KvDeleteOutputDoc": {
+        "type": "object",
+        "required": [
+          "old_value"
+        ],
+        "properties": {
+          "old_value": {}
+        }
+      },
+      "KvReadOutputDoc": {
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "value": {}
+        }
+      },
+      "KvReadParamsDoc": {
+        "type": "object",
+        "required": [
+          "store",
+          "key"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "store": {
+            "type": "string"
+          }
+        }
+      },
+      "KvStoreParamsDoc": {
+        "type": "object",
+        "required": [
+          "store"
+        ],
+        "properties": {
+          "store": {
+            "type": "string"
+          }
+        }
+      },
+      "KvWriteOutputDoc": {
+        "type": "object",
+        "properties": {
+          "old_value": {}
+        }
+      },
+      "KvWriteParamsDoc": {
+        "type": "object",
+        "required": [
+          "store",
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "store": {
+            "type": "string"
+          },
+          "value": {}
+        }
+      },
+      "PartialConfigDoc": {
+        "type": "object",
+        "required": [
+          "only_nodes",
+          "values_config"
+        ],
+        "properties": {
+          "only_nodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "values_config": {
+            "$ref": "#/components/schemas/ValuesConfigDoc"
+          }
+        }
+      },
+      "ServiceInfoDoc": {
+        "type": "object",
+        "required": [
+          "supabase_url",
+          "anon_key",
+          "iroh",
+          "base_url"
+        ],
+        "properties": {
+          "anon_key": {
+            "type": "string"
+          },
+          "base_url": {
+            "type": "string"
+          },
+          "iroh": {
+            "$ref": "#/components/schemas/IrohInfoDoc"
+          },
+          "supabase_url": {
+            "type": "string"
+          }
+        }
+      },
+      "SolanaActionConfigDoc": {
+        "type": "object",
+        "required": [
+          "action_signer",
+          "action_identity"
+        ],
+        "properties": {
+          "action_identity": {
+            "type": "string"
+          },
+          "action_signer": {
+            "type": "string"
+          }
+        }
+      },
+      "StartDeploymentParamsDoc": {
+        "type": "object",
+        "properties": {
+          "action_signer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "inputs": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "StartFlowParamsDoc": {
+        "type": "object",
+        "properties": {
+          "environment": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "inputs": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "output_instructions": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "partial_config": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PartialConfigDoc"
+              }
+            ]
+          }
+        }
+      },
+      "StartFlowSharedParamsDoc": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "output_instructions": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
+      "StartFlowUnverifiedParamsDoc": {
+        "type": "object",
+        "properties": {
+          "action_config": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SolanaActionConfigDoc"
+              }
+            ]
+          },
+          "action_identity": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fees": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "array",
+              "items": false,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number",
+                  "format": "double"
+                }
+              ]
+            }
+          },
+          "inputs": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "output_instructions": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
+      "StopFlowParamsDoc": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timeout_millies": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "SubmitSignatureDoc": {
+        "type": "object",
+        "required": [
+          "id",
+          "signature"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "new_msg": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "signature": {
+            "type": "string"
+          }
+        }
+      },
+      "SuccessDoc": {
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ValuesConfigDoc": {
+        "type": "object",
+        "required": [
+          "nodes"
+        ],
+        "properties": {
+          "default_run_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nodes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "service",
+      "description": "Service metadata and health"
+    },
+    {
+      "name": "auth",
+      "description": "Authentication bootstrap and token exchange"
+    },
+    {
+      "name": "flows",
+      "description": "Flow execution and cloning"
+    },
+    {
+      "name": "deployments",
+      "description": "Deployment execution"
+    },
+    {
+      "name": "signatures",
+      "description": "Signature submission"
+    },
+    {
+      "name": "apiKeys",
+      "description": "API key management"
+    },
+    {
+      "name": "kv",
+      "description": "Key-value store operations"
+    },
+    {
+      "name": "wallets",
+      "description": "Wallet management"
+    },
+    {
+      "name": "data",
+      "description": "User data export"
+    }
+  ]
+}

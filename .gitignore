@@ -9,3 +9,6 @@ config.toml
 .env
 .ipynb_checkpoints
 .idea
+@space-operator/contracts/node_modules
+@space-operator/client-next/node_modules
+node_modules

@@ -3,6 +3,11 @@
     "version": "0.12.2",
     "nodeModulesDir": "auto",
     "exports": "./src/mod.ts",
+    "tasks": {
+        "test:bootstrap-fixtures": "deno run -A ../../docker/bootstrap-test-fixtures.ts",
+        "test:preflight-fixtures": "deno run -A ../../docker/bootstrap-test-fixtures.ts --preflight-only",
+        "test:integration": "deno test -A integration_tests"
+    },
     "imports": {
         "@oak/oak": "jsr:@oak/oak@^17.2.0",
         "@solana/kit": "npm:@solana/kit@^5.0.0",

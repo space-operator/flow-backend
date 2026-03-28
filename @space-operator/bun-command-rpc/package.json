@@ -1,0 +1,9 @@
+{
+  "name": "@space-operator/bun-command-rpc",
+  "version": "0.1.0",
+  "module": "src/mod.ts",
+  "type": "module",
+  "dependencies": {
+    "@space-operator/flow-lib-bun": "workspace:*"
+  }
+}
