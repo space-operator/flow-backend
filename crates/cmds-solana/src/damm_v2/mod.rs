@@ -184,6 +184,7 @@ pub mod lock_position;
 pub mod permanent_lock_position;
 pub mod refresh_vesting;
 pub mod split_position;
+pub mod split_position2;
 
 // =============================================================================
 // Node Modules - Config Management (Operator)
@@ -216,6 +217,7 @@ pub mod withdraw_ineligible_reward;
 
 pub mod fix_config_fee_params;
 pub mod fix_pool_fee_params;
+pub mod fix_pool_layout_version;
 pub mod set_pool_status;
 pub mod update_pool_fees;
 
