@@ -119,6 +119,9 @@ pub async fn get_decimals(client: &RpcClient, mint_account: Pubkey) -> crate::Re
 }
 
 #[cfg(test)]
+pub mod test_utils;
+
+#[cfg(test)]
 pub mod tests {
     use crate::prelude::*;
     use std::collections::BTreeSet;
