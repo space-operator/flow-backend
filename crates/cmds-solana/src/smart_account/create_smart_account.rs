@@ -49,12 +49,14 @@ pub struct Output {
     pub signature: Option<Signature>,
     #[serde_as(as = "AsPubkey")]
     pub program_config: Pubkey,
+    #[serde_as(as = "AsPubkey")]
+    pub settings: Pubkey,
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (program_config, _) = pda::find_program_config();
 
-    // Read treasury from program config on-chain
+    // Read program config on-chain to get treasury and smart_account_index
     let client = ctx.solana_client();
     let config_data = client
         .get_account_data(&program_config)
@@ -66,19 +68,33 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     // authority: Pubkey (32 bytes)
     // smart_account_creation_fee: u64 (8 bytes)
     // treasury: Pubkey (32 bytes)
-    let treasury_offset = 8 + 16 + 32 + 8;
-    if config_data.len() < treasury_offset + 32 {
+    if config_data.len() < 8 + 16 + 32 + 8 + 32 {
         return Err(CommandError::msg("Program config data too short"));
     }
+
+    // Read smart_account_index (u128 LE at offset 8)
+    let smart_account_index = u128::from_le_bytes(
+        config_data[8..24]
+            .try_into()
+            .map_err(|_| CommandError::msg("Invalid smart_account_index"))?,
+    );
+
+    let treasury_offset = 8 + 16 + 32 + 8;
     let treasury = Pubkey::try_from(&config_data[treasury_offset..treasury_offset + 32])
         .map_err(|_| CommandError::msg("Invalid treasury pubkey"))?;
 
+    // Derive the settings PDA for the new smart account (uses current index)
+    let (settings, _) = pda::find_settings(smart_account_index);
+
     let accounts = vec![
+        // Named accounts (matching the Anchor Accounts struct)
         AccountMeta::new(program_config, false),
         AccountMeta::new(treasury, false),
         AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
         AccountMeta::new_readonly(PROGRAM_ID, false),
+        // Remaining account: the settings PDA to be created
+        AccountMeta::new(settings, false),
     ];
 
     // Serialize args: CreateSmartAccountArgs
@@ -149,6 +165,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     Ok(Output {
         signature,
         program_config,
+        settings,
     })
 }
 

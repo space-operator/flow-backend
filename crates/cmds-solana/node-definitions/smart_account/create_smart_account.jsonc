@@ -81,6 +81,11 @@
         "name": "program_config",
         "type": "pubkey",
         "tooltip": "Program config PDA"
+      },
+      {
+        "name": "settings",
+        "type": "pubkey",
+        "tooltip": "Settings PDA of the newly created smart account"
       }
     ]
   },

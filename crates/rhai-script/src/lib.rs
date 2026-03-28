@@ -7,6 +7,7 @@ use rhai::{
     packages::{Package, StandardPackage},
 };
 use rhai_rand::RandomPackage;
+use sha2::{Digest, Sha256};
 
 pub mod convert;
 pub mod error;
@@ -89,6 +90,30 @@ fn json_value_to_dynamic(v: serde_json::Value) -> Dynamic {
     }
 }
 
+fn sha256_hash(input: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(input.as_bytes());
+    hex::encode(hasher.finalize())
+}
+
+fn sha256_hash_blob(input: rhai::Blob) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(&input);
+    hex::encode(hasher.finalize())
+}
+
+fn timestamp() -> i64 {
+    Utc::now().timestamp()
+}
+
+fn parse_json(input: &str) -> Result<Dynamic, Box<EvalAltResult>> {
+    json_decode(input)
+}
+
+fn to_string_repr(input: Dynamic) -> String {
+    format!("{input}")
+}
+
 pub fn setup_engine() -> Engine {
     let mut engine = Engine::new();
     engine
@@ -102,6 +127,11 @@ pub fn setup_engine() -> Engine {
         .register_fn("hex_decode", hex_decode)
         .register_fn("json_encode", json_encode)
         .register_fn("json_decode", json_decode)
+        .register_fn("sha256", sha256_hash)
+        .register_fn("sha256", sha256_hash_blob)
+        .register_fn("timestamp", timestamp)
+        .register_fn("parse_json", parse_json)
+        .register_fn("to_string", to_string_repr)
         .set_max_expr_depths(32, 32)
         .set_max_call_levels(256)
         .set_max_operations(10_000_000)
