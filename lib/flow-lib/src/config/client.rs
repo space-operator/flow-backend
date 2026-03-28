@@ -327,6 +327,7 @@ impl NodeData {
 fn parse_command_type(s: &str) -> Option<CommandType> {
     match s {
         "deno" => Some(CommandType::Deno),
+        "bun" => Some(CommandType::Bun),
         "WASM" => Some(CommandType::Wasm),
         "mock" => Some(CommandType::Mock),
         _ => None,
@@ -338,6 +339,8 @@ fn infer_command_type(node_type: &str, node_id: &str) -> CommandType {
         let name = node_id.rsplit('/').next().unwrap_or(node_id);
         if name == "deno_script" || name.starts_with("deno_") {
             CommandType::Deno
+        } else if name == "bun_script" || name.starts_with("bun_") {
+            CommandType::Bun
         } else {
             CommandType::Native
         }
@@ -590,21 +593,21 @@ mod tests {
     fn node_v2_uses_explicit_type_for_command_type() {
         let node = NodeV2 {
             id: Uuid::nil(),
-            r#type: "deno".to_owned(),
+            r#type: "bun".to_owned(),
             position: None,
             width: None,
             height: None,
             data: NodeDataV2 {
-                node_id: "deno_add".to_owned(),
+                node_id: "bun_add".to_owned(),
                 version: None,
-                name: Some("Deno Add".to_owned()),
+                name: Some("Bun Add".to_owned()),
                 ports: Ports::default(),
                 config: HashMap::new(),
                 style: None,
             },
         };
         let parsed: Node = node.into();
-        assert_eq!(parsed.data.r#type, CommandType::Deno);
+        assert_eq!(parsed.data.r#type, CommandType::Bun);
     }
 
     #[test]
@@ -626,5 +629,26 @@ mod tests {
         };
         let parsed: Node = node.into();
         assert_eq!(parsed.data.r#type, CommandType::Deno);
+    }
+
+    #[test]
+    fn node_v2_falls_back_to_node_id_for_legacy_bun_nodes() {
+        let node = NodeV2 {
+            id: Uuid::nil(),
+            r#type: "native".to_owned(),
+            position: None,
+            width: None,
+            height: None,
+            data: NodeDataV2 {
+                node_id: "bun_script".to_owned(),
+                version: None,
+                name: None,
+                ports: Ports::default(),
+                config: HashMap::new(),
+                style: None,
+            },
+        };
+        let parsed: Node = node.into();
+        assert_eq!(parsed.data.r#type, CommandType::Bun);
     }
 }

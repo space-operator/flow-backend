@@ -363,6 +363,7 @@ JSON schema for node definitions:
                 "native",
                 "WASM",
                 "deno",
+                "bun",
                 "rhai",
                 "mock"
             ]
