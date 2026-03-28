@@ -1,6 +1,7 @@
 {
     "name": "@space-operator/client",
     "version": "0.12.2",
+    "nodeModulesDir": "auto",
     "exports": "./src/mod.ts",
     "imports": {
         "@oak/oak": "jsr:@oak/oak@^17.2.0",

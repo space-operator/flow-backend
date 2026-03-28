@@ -1,0 +1,44 @@
+{
+  "name": "@space-operator/client-next",
+  "version": "0.0.0",
+  "nodeModulesDir": "auto",
+  "exports": {
+    ".": "./src/mod.ts",
+    "./solana": "./src/solana/mod.ts",
+    "./x402": "./src/x402/mod.ts"
+  },
+  "tasks": {
+    "check": "deno check src/mod.ts",
+    "test": "deno test tests",
+    "test:bootstrap-fixtures": "deno run -A ../../docker/bootstrap-test-fixtures.ts",
+    "test:preflight-fixtures": "deno run -A ../../docker/bootstrap-test-fixtures.ts --preflight-only",
+    "test:unit": "deno test tests/unit",
+    "test:contract": "deno test -A tests/contract",
+    "test:e2e": "deno test -A tests/contract",
+    "test:runtime": "deno test tests/runtime",
+    "test:playwright": "deno test -A tests/playwright",
+    "generate:openapi-types": "deno run -A scripts/generate_openapi_types.ts"
+  },
+  "imports": {
+    "@opentelemetry/api": "npm:@opentelemetry/api@^1.9.0",
+    "@playwright/test": "npm:@playwright/test@^1.57.0",
+    "@space-operator/contracts": "../contracts/src/mod.ts",
+    "@space-operator/flow-lib": "../flow-lib/src/mod.ts",
+    "@space-operator/flow-lib/value": "../flow-lib/src/value.ts",
+    "@space-operator/x402-fetch": "../x402-fetch/src/mod.ts",
+    "@solana/kit": "npm:@solana/kit@^5.0.0",
+    "@solana/web3.js": "npm:@solana/web3.js@^1.98.4",
+    "@std/assert": "jsr:@std/assert@^1.0.16",
+    "@std/dotenv": "jsr:@std/dotenv@^0.225.5",
+    "@supabase/auth-js": "npm:@supabase/auth-js@^2.86.2",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.86.2",
+    "@x402/fetch": "npm:@x402/fetch@^2.2.0",
+    "@x402/svm": "npm:@x402/svm@^2.2.0",
+    "effect": "npm:effect@^3.17.13",
+    "fast-check": "npm:fast-check@^3.23.2",
+    "openapi-typescript": "npm:openapi-typescript@^7",
+    "tweetnacl": "npm:tweetnacl@^1.0.3",
+    "x402": "npm:x402@^0.7.3",
+    "zod": "npm:zod@^4.1.13"
+  }
+}

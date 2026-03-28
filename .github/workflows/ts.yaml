@@ -16,11 +16,19 @@ jobs:
     runs-on: [self-hosted, rust-builder]
     steps:
       - uses: actions/checkout@v4
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.3
       - name: Install deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          deno-version: 2.6.4
+      - name: Install Bun workspace deps
+        run: bun install --frozen-lockfile
       - name: Check libraries
         run: bash -c 'for dir in @space-operator/*; do (cd "$dir"; deno check -r src/mod.ts); done'
       - name: Check all
         run: bash -c 'for dir in @space-operator/*; do (cd "$dir"; deno check -r **/*.ts); done'
+      - name: Run Bun tests
+        run: bun test @space-operator/flow-lib-bun/src/ @space-operator/bun-command-rpc/src/ crates/cmds-bun/src/umbra/

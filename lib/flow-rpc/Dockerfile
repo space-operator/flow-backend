@@ -27,7 +27,7 @@ RUN cargo build --profile=$PROFILE --bin all-cmds-server --bin deno-cmds-server 
 RUN cp /build/target/*/all-cmds-server /build/all-cmds-server
 RUN cp /build/target/*/deno-cmds-server /build/deno-cmds-server
 
-FROM docker.io/denoland/deno:debian AS deno
+FROM docker.io/denoland/deno:2.6.4 AS deno
 
 # Step 4:
 # Create a tiny output image.

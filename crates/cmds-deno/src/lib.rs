@@ -53,7 +53,7 @@ macro_rules! include {
     };
 }
 
-async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
+pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
     let source = source_from_config(&nd)
         .ok_or_else(|| CommandError::msg("deno_script source/code not found"))?;
 
@@ -103,8 +103,8 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
         home.display().to_string()
     });
 
-    // Note: Deno 1.x does not support IPv6 addresses in --deny-net.
-    // "localhost" covers both 127.0.0.1 and ::1 via hostname resolution.
+    // Keep localhost in the deny list so hostname resolution covers both
+    // 127.0.0.1 and ::1 for loopback traffic.
     let local_networks = [
         // "127.0.0.0/8",    // Loopback (127.0.0.1, etc.)
         "10.0.0.0/8",     // Private Class A (10.x.x.x)
