@@ -38,6 +38,7 @@ pub mod presale;
 pub mod privacy_cash;
 pub mod pyth;
 pub mod reflect;
+pub mod rewards;
 pub mod scope;
 pub mod secp256k1;
 pub mod smart_account;

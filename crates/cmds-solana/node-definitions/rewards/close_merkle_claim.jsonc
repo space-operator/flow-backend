@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "close_merkle_claim",
+  "prefix": "rewards",
+  "type": "native",
+  "description": "Close a merkle claim account, returning rent to the claimant",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/rewards/close_merkle_claim.rs",
+  "ports": {
+    "inputs": [
+      { "name": "claimant", "type_bounds": ["keypair"], "required": true, "passthrough": true, "tooltip": "Wallet of the claimant; receives rent refund" },
+      { "name": "distribution", "type_bounds": ["pubkey"], "required": true, "tooltip": "Merkle distribution PDA" },
+      { "name": "submit", "type_bounds": ["bool"], "tooltip": "Submit transaction to the network" }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "signature", "optional": true }
+    ]
+  },
+  "config_schema": {},
+  "config": { "submit": { "B": true } },
+  "classification": {
+    "vendor": "Solana", "program": "rewards", "category": "defi",
+    "icon_url": "https://github.com/solana-program.png",
+    "tags": ["rewards", "merkle", "claim", "close"]
+  },
+  "external_version": {
+    "program_id": "REWArDioXgQJ2fZKkfu9LCLjQfRwYWVVfsvcsR5hoXi",
+    "sdk_crate": null, "sdk_version": null, "api_base_url": null, "api_version": null,
+    "source_repo": "https://github.com/solana-program/rewards"
+  },
+  "internal": { "source": "crates", "source_code": "crates/cmds-solana/node-definitions/rewards/close_merkle_claim.jsonc", "repo": "flow-backend" }
+}

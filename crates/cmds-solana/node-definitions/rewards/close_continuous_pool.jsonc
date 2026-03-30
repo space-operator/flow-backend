@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "close_continuous_pool",
+  "prefix": "rewards",
+  "type": "native",
+  "description": "Close a continuous reward pool, returning remaining tokens and rent to the authority",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/rewards/close_continuous_pool.rs",
+  "ports": {
+    "inputs": [
+      { "name": "authority", "type_bounds": ["keypair"], "required": true, "passthrough": true, "tooltip": "Pool authority closing the pool" },
+      { "name": "reward_pool", "type_bounds": ["pubkey"], "required": true, "tooltip": "Continuous reward pool address to close" },
+      { "name": "reward_mint", "type_bounds": ["pubkey"], "required": true, "tooltip": "SPL token mint used for reward payouts" },
+      { "name": "reward_token_program", "type_bounds": ["pubkey"], "tooltip": "SPL Token or Token-2022 program for reward mint (defaults to SPL Token)" },
+      { "name": "submit", "type_bounds": ["bool"], "tooltip": "Submit transaction to the network" }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "signature", "optional": true, "tooltip": "Transaction signature" }
+    ]
+  },
+  "config_schema": {},
+  "config": { "submit": { "B": true } },
+  "classification": {
+    "vendor": "Solana",
+    "program": "rewards",
+    "category": "defi",
+    "icon_url": "https://github.com/solana-program.png",
+    "tags": ["rewards", "continuous", "pool", "close"]
+  },
+  "external_version": {
+    "program_id": "REWArDioXgQJ2fZKkfu9LCLjQfRwYWVVfsvcsR5hoXi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-program/rewards"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/rewards/close_continuous_pool.jsonc",
+    "repo": "flow-backend"
+  }
+}

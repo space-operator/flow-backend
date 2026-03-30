@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "revoke_merkle_claim",
+  "prefix": "rewards",
+  "type": "native",
+  "description": "Revoke a merkle claim, creating a revocation marker and returning tokens to authority",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/rewards/revoke_merkle_claim.rs",
+  "ports": {
+    "inputs": [
+      { "name": "authority", "type_bounds": ["keypair"], "required": true, "passthrough": true, "tooltip": "Distribution authority" },
+      { "name": "payer", "type_bounds": ["keypair"], "required": true, "tooltip": "Account paying for revocation PDA creation" },
+      { "name": "distribution", "type_bounds": ["pubkey"], "required": true, "tooltip": "Merkle distribution PDA" },
+      { "name": "claimant", "type_bounds": ["pubkey"], "required": true, "tooltip": "Wallet of the claimant being revoked" },
+      { "name": "mint", "type_bounds": ["pubkey"], "required": true, "tooltip": "SPL token mint" },
+      { "name": "token_program", "type_bounds": ["pubkey"], "tooltip": "SPL Token or Token-2022 program" },
+      { "name": "revoke_mode", "type_bounds": ["json"], "required": true, "tooltip": "Revoke mode: 'NonVested' or 'Full'" },
+      { "name": "total_amount", "type_bounds": ["u64"], "required": true, "tooltip": "Total allocated amount for this claimant" },
+      { "name": "schedule", "type_bounds": ["json"], "required": true, "tooltip": "Vesting schedule JSON" },
+      { "name": "proof", "type_bounds": ["json"], "required": true, "tooltip": "Merkle proof as JSON array" },
+      { "name": "submit", "type_bounds": ["bool"], "tooltip": "Submit transaction to the network" }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "signature", "optional": true },
+      { "name": "revocation_marker", "type": "pubkey", "tooltip": "Derived revocation marker PDA" }
+    ]
+  },
+  "config_schema": {},
+  "config": { "submit": { "B": true } },
+  "classification": {
+    "vendor": "Solana", "program": "rewards", "category": "defi",
+    "icon_url": "https://github.com/solana-program.png",
+    "tags": ["rewards", "merkle", "claim", "revoke"]
+  },
+  "external_version": {
+    "program_id": "REWArDioXgQJ2fZKkfu9LCLjQfRwYWVVfsvcsR5hoXi",
+    "sdk_crate": null, "sdk_version": null, "api_base_url": null, "api_version": null,
+    "source_repo": "https://github.com/solana-program/rewards"
+  },
+  "internal": { "source": "crates", "source_code": "crates/cmds-solana/node-definitions/rewards/revoke_merkle_claim.jsonc", "repo": "flow-backend" }
+}
