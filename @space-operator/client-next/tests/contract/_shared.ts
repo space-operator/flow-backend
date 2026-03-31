@@ -14,6 +14,20 @@ import {
 await load({
   export: true,
   envPath: decodeURIComponent(
+    new URL("../../../../docker/.flow-test.env", import.meta.url).pathname,
+  ),
+});
+
+await load({
+  export: true,
+  envPath: decodeURIComponent(
+    new URL("../../../../docker/.env", import.meta.url).pathname,
+  ),
+});
+
+await load({
+  export: true,
+  envPath: decodeURIComponent(
     new URL("../../../../.env", import.meta.url).pathname,
   ),
 });
@@ -94,6 +108,15 @@ let serviceInfoPromise: Promise<ServiceInfoOutput> | undefined;
 type VisibleFlowRow = {
   uuid: string;
 };
+
+function isLoopbackUrl(raw: string): boolean {
+  try {
+    const url = new URL(raw);
+    return url.hostname === "127.0.0.1" || url.hostname === "localhost";
+  } catch {
+    return false;
+  }
+}
 
 export function contractTest(
   name: string,
@@ -267,7 +290,7 @@ export function adminSupabase() {
 
 export async function serviceSupabase() {
   const info = await serviceInfo();
-  return createSupabaseClient<Database>(info.supabase_url, info.anon_key, {
+  return createSupabaseClient<Database>(SUPABASE_URL, info.anon_key, {
     auth: { autoRefreshToken: false },
   });
 }
@@ -392,6 +415,10 @@ export async function withWebhookUrl<T>(
   fn: (url: string) => Promise<T>,
 ): Promise<T> {
   if (Deno.env.get("FLOW_TEST_WEBHOOK_URL")) {
+    return await fn(TEST_WEBHOOK_URL);
+  }
+
+  if (isLoopbackUrl(FLOW_SERVER_URL)) {
     return await fn(TEST_WEBHOOK_URL);
   }
 

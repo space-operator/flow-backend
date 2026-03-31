@@ -86,10 +86,6 @@ jobs:
 
           echo "available=true" >> "$GITHUB_OUTPUT"
 
-      - name: Bootstrap fixtures
+      - name: Run local-first live E2E command
         if: steps.gate.outputs.available == 'true'
-        run: cd @space-operator/client-next && deno task test:bootstrap-fixtures
-
-      - name: Run live E2E suite
-        if: steps.gate.outputs.available == 'true'
-        run: cd @space-operator/client-next && deno task test:e2e
+        run: cd @space-operator/client-next && deno task test:e2e:local

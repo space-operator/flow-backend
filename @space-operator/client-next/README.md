@@ -11,6 +11,22 @@ new API is validated.
 - Provision the dedicated Flow Server/Supabase test environment secrets used by
   `.github/workflows/client-next-e2e.yaml`.
 
+## Testing Workflow
+
+The package now uses a local-first testing model:
+
+- `deno task test:verify` Runs the same non-live verification path used by the
+  main TypeScript workflow.
+- `deno task test:prepush` Runs the non-live verification path plus browser
+  smoke coverage.
+- `deno task test:e2e:local` Runs fixture bootstrap plus the live E2E suite with
+  the same command shape used by the live workflow once the environment is
+  configured.
+- `deno task test:e2e:local:up` Builds the checked-out `flow-server`, starts the
+  local docker stack, verifies it, then runs the local live E2E path.
+
+The detailed test guide lives in [tests/README.md](./tests/README.md).
+
 ## Goals
 
 - Explicit auth strategies instead of mutable `setToken()` state.

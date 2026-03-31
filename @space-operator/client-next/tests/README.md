@@ -16,11 +16,33 @@ the older `contract` name.
 
 ## Commands
 
+On a fresh checkout, install the workspace dependencies first:
+
+```bash
+bun install --frozen-lockfile
+```
+
 Bootstrap the checked-in sample flows into a fresh local stack:
 
 ```bash
 deno task test:bootstrap-fixtures
 ```
+
+Check that the local Flow Server + Supabase stack is reachable:
+
+```bash
+deno task test:stack:check
+```
+
+Bring the local docker stack up and wait for it to be ready:
+
+```bash
+deno task test:stack:up
+```
+
+This builds the checked-out `flow-server` into a local Docker image first, so
+local E2E uses the repo backend code instead of a drifting published `latest`
+image.
 
 Run the fixture/server preflight without reimporting:
 
@@ -34,6 +56,12 @@ Run all non-live tests from the package root:
 deno task test:ci
 ```
 
+Run the full local pre-push path used by the non-live CI plus browser smoke:
+
+```bash
+deno task test:prepush
+```
+
 Or run the non-live layers directly:
 
 ```bash
@@ -41,10 +69,28 @@ deno task test:unit
 deno task test:runtime
 ```
 
+Verify generated OpenAPI/client artifacts are up to date:
+
+```bash
+deno task verify:generated
+```
+
 Run the live E2E suite:
 
 ```bash
 RUN_SPACE_OPERATOR_E2E_TESTS=1 deno task test:e2e
+```
+
+Run the same local-first live sequence used by the live E2E workflow:
+
+```bash
+deno task test:e2e:local
+```
+
+If the local stack is not already running, use:
+
+```bash
+deno task test:e2e:local:up
 ```
 
 The default live suite is expected to pass in the supported test environment. It
@@ -80,6 +126,13 @@ Run the Playwright browser smoke test:
 RUN_SPACE_OPERATOR_PLAYWRIGHT_TESTS=1 deno task test:playwright
 ```
 
+Run the same command used by the browser CI workflow:
+
+```bash
+deno task setup:playwright
+deno task test:playwright:ci
+```
+
 Run a single live file:
 
 ```bash
@@ -104,6 +157,22 @@ These variables are used by the live suite:
   `keypair` and `OWNER_KEYPAIR` when present.
 - `SOLANA_DEVNET_URL` Required for the deployment action-signer test that sends
   a real devnet transaction.
+
+## Local-First CI Mapping
+
+The workflows are intentionally thin wrappers around package tasks:
+
+- `deno task test:verify` This is the same non-live verification path used in
+  [`.github/workflows/ts.yaml`](../../.github/workflows/ts.yaml).
+- `deno task setup:playwright && deno task test:playwright:ci` This is the same
+  browser smoke path used in
+  [`.github/workflows/client-next-browser.yaml`](../../.github/workflows/client-next-browser.yaml).
+- `deno task test:e2e:local` This is the same live path used in
+  [`.github/workflows/client-next-e2e.yaml`](../../.github/workflows/client-next-e2e.yaml)
+  once the required secrets/environment are present.
+
+If those commands pass locally, the corresponding workflows should be running
+the same logic rather than a separate CI-only path.
 
 The default live suite intentionally skips two known non-client blockers:
 
