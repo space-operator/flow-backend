@@ -30,5 +30,7 @@ jobs:
         run: bash -c 'for dir in @space-operator/*; do (cd "$dir"; deno check -r src/mod.ts); done'
       - name: Check all
         run: bash -c 'for dir in @space-operator/*; do (cd "$dir"; deno check -r **/*.ts); done'
+      - name: Run client-next CI suite
+        run: cd @space-operator/client-next && deno task test:ci
       - name: Run Bun tests
         run: bun test @space-operator/flow-lib-bun/src/ @space-operator/bun-command-rpc/src/ crates/cmds-bun/src/umbra/

@@ -5,6 +5,7 @@ import {
   fixApiInputUrl,
   resolveFixtureFlowId,
   Value,
+  withWebhookUrl,
 } from "./_shared.ts";
 
 contractTest("api input contract: subscribe and submit api input", async () => {
@@ -91,19 +92,21 @@ contractTest(
 );
 
 contractTest("api input contract: webhook mode still completes", async () => {
-  const client = apiClient();
-  const ws = client.ws();
-  await ws.authenticate();
-  const apiInputFlowId = await resolveFixtureFlowId("apiInput");
-  const run = await client.flows.start(apiInputFlowId, {
-    inputs: {
-      webhook_url: "http://webhook/webhook",
-    },
-  });
-  const subscription = await ws.subscribeFlowRun(run.id);
-  const output = await run.output();
+  await withWebhookUrl(async (webhookUrl) => {
+    const client = apiClient();
+    const ws = client.ws();
+    await ws.authenticate();
+    const apiInputFlowId = await resolveFixtureFlowId("apiInput");
+    const run = await client.flows.start(apiInputFlowId, {
+      inputs: {
+        webhook_url: webhookUrl,
+      },
+    });
+    const subscription = await ws.subscribeFlowRun(run.id);
+    const output = await run.output({ timeoutMs: 30_000 });
 
-  await subscription.close();
-  await ws.close();
-  assertEquals(output.toJSObject().c, "hello");
+    await subscription.close();
+    await ws.close();
+    assertEquals(output.toJSObject().c, "hello");
+  });
 });

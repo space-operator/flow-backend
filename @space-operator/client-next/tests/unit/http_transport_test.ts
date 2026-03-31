@@ -1,6 +1,10 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { createClient, TimeoutError } from "../../src/mod.ts";
 
+function readSignal(init: unknown): AbortSignal | null | undefined {
+  return (init as { signal?: AbortSignal | null } | undefined)?.signal;
+}
+
 function unitTest(name: string, fn: () => Promise<void>) {
   Deno.test({
     name,
@@ -42,7 +46,7 @@ unitTest("http transport still surfaces timeout errors", async () => {
     timeoutMs: 5,
     fetch: async (_input, init) =>
       await new Promise<Response>((_resolve, reject) => {
-        init?.signal?.addEventListener(
+        readSignal(init)?.addEventListener(
           "abort",
           () => reject(new DOMException("aborted", "AbortError")),
           { once: true },

@@ -6,7 +6,10 @@ import {
 } from "@space-operator/contracts";
 import { flowRunTokenAuth } from "./auth/mod.ts";
 import type { ClientCore } from "./internal/core.ts";
-import { FlowRunFailedError } from "./internal/transport/errors.ts";
+import {
+  ApiError,
+  FlowRunFailedError,
+} from "./internal/transport/errors.ts";
 import type {
   AuthStrategy,
   FlowFinish,
@@ -21,6 +24,25 @@ import type {
 } from "./types.ts";
 import { SignatureRequest as SignatureRequestModel } from "./types.ts";
 import { EventSubscription } from "./internal/transport/ws.ts";
+
+async function sleep(ms: number, signal?: AbortSignal) {
+  if (signal?.aborted) {
+    throw signal.reason ?? new DOMException("Aborted", "AbortError");
+  }
+  await new Promise<void>((resolve, reject) => {
+    const abortReason = () =>
+      signal?.reason ?? new DOMException("Aborted", "AbortError");
+    const timeoutId = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(timeoutId);
+      reject(abortReason());
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
 
 function resolveHandleAuth(
   auth?: AuthStrategy,
@@ -83,16 +105,31 @@ export class FlowRunHandle {
   async signatureRequest(
     options: RequestOptions = {},
   ): Promise<SignatureRequest> {
-    const value = await this.core.requestContract(signatureRequestSchema, {
-      method: "GET",
-      path: `/flow/signature_request/${this.id}`,
-      auth: this.authFor(options),
-      headers: options.headers,
-      signal: options.signal,
-      retry: options.retry,
-      timeoutMs: options.timeoutMs,
-    }, "signature request response");
-    return new SignatureRequestModel(value as ISignatureRequest);
+    const startedAt = Date.now();
+    const timeoutMs = options.timeoutMs ?? 30_000;
+    while (true) {
+      const remainingMs = timeoutMs - (Date.now() - startedAt);
+      if (remainingMs <= 0) {
+        throw new Error(`timed out waiting for signature request for flow run ${this.id}`);
+      }
+      try {
+        const value = await this.core.requestContract(signatureRequestSchema, {
+          method: "GET",
+          path: `/flow/signature_request/${this.id}`,
+          auth: this.authFor(options),
+          headers: options.headers,
+          signal: options.signal,
+          retry: options.retry,
+          timeoutMs: Math.min(remainingMs, 5_000),
+        }, "signature request response");
+        return new SignatureRequestModel(value as ISignatureRequest);
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 404) {
+          throw error;
+        }
+        await sleep(Math.min(250, remainingMs), options.signal);
+      }
+    }
   }
 
   async events(

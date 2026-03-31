@@ -1,6 +1,6 @@
 # `@space-operator/client-next`
 
-The in-progress rewrite of the Space Operator TypeScript client.
+The rewrite of the Space Operator TypeScript client.
 
 This package lives in `@space-operator/client-next` while the rewrite is under
 development. The intent is to promote it into `@space-operator/client` once the
@@ -8,12 +8,8 @@ new API is validated.
 
 ## TODO
 
-- Write a migration guide from the legacy `Client` / `WsClient` API to
-  `createClient(...)`, capability namespaces, `FlowRunHandle`, and
-  `client.ws()`.
-- Add CI regression coverage so unit/runtime tests run automatically and the
-  live E2E suite can run in a gated environment when the required services and
-  secrets are available.
+- Add a gated CI job for the live E2E suite when a dedicated Flow
+  Server/Supabase test environment and secrets are available.
 
 ## Goals
 
@@ -77,6 +73,11 @@ const run = await client.flows.start("6c949718-69e2-47c1-8b93-d56b8e34ec51", {
 const output = await run.output();
 console.log(output.toJSObject());
 ```
+
+## Migration
+
+For legacy `@space-operator/client` adopters, see
+[MIGRATION.md](/home/amir/code/space-operator/flow-backend/@space-operator/client-next/MIGRATION.md).
 
 ## Auth
 
@@ -351,6 +352,19 @@ The package includes unit, runtime, and live E2E coverage.
 - `tests/playwright` contains the browser websocket smoke coverage.
 - `tests/contract` is the live E2E suite for the full backend surface.
 
+Useful commands from the package root:
+
+```bash
+deno task test:ci
+RUN_SPACE_OPERATOR_E2E_TESTS=1 deno task test:e2e
+```
+
+The default live suite currently passes in the supported test environment. Two
+externally blocked cases remain opt-in:
+
+- `data export contract`
+- `x402 contract: start deployment with wrapped fetch`
+
 ## Status
 
 This is the rewrite branch of the client, not the final published cutover yet.
@@ -358,5 +372,7 @@ This is the rewrite branch of the client, not the final published cutover yet.
 - The old client remains in `@space-operator/client`.
 - The new API is namespace-based and intentionally not source-compatible with
   the old `Client` / `WsClient` class pair.
-- The staged rewrite currently has unit, runtime, and end-to-end coverage for
-  the exported namespaces in this folder.
+- The staged rewrite has passing unit, runtime, and default live E2E coverage
+  for the exported namespaces in this folder.
+- The remaining live tests are environment-gated rather than blocked on known
+  client bugs.

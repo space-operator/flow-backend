@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { encodeBase58, encodeBase64 } from "../../src/deps.ts";
 import { signAndSubmitSignature, web3 } from "../../src/mod.ts";
+import type { SubmitSignatureInput } from "../../src/types.ts";
 
 function unitTest(name: string, fn: () => Promise<void>) {
   Deno.test({
@@ -17,11 +18,7 @@ unitTest(
     const publicKey = new web3.PublicKey("11111111111111111111111111111111");
     const before = new Uint8Array([1, 2, 3]);
     const after = new Uint8Array([1, 2, 3, 4]);
-    const submitted: Array<{
-      id: number;
-      signature: string;
-      new_msg?: string;
-    }> = [];
+    const submitted: SubmitSignatureInput[] = [];
 
     const transaction = {
       message: {

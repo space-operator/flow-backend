@@ -26,10 +26,6 @@ contractTest(
   async () => {
     const owner = apiClient();
     const deployRunFlowId = await resolveFixtureFlowId("deployRun");
-    const { decodeBase58 } = await import("../../src/deps.ts");
-    const ownerKeypair = web3.Keypair.fromSecretKey(
-      decodeBase58(getEnv("KEYPAIR")),
-    );
     const deploymentId = await owner.flows.deploy(deployRunFlowId);
 
     const starterKeypair = web3.Keypair.generate();
@@ -44,19 +40,11 @@ contractTest(
       },
     );
 
-    const ownerRequest = await owner.flows.signatureRequest(run.id);
-    await signAndSubmitSignature(owner.signatures, ownerRequest, {
-      publicKey: ownerKeypair.publicKey,
-      signTransaction: (tx) => {
-        tx.sign([ownerKeypair]);
-        return tx;
-      },
-    });
-
-    const starterRequest = await run.signatureRequest();
-    await signAndSubmitSignature(starter.signatures, starterRequest, {
+    const request = await run.signatureRequest();
+    assertEquals(request.pubkey, starterKeypair.publicKey.toBase58());
+    await signAndSubmitSignature(starter.signatures, request, {
       publicKey: starterKeypair.publicKey,
-      signTransaction: (tx) => {
+      signTransaction: (tx: web3.VersionedTransaction) => {
         tx.sign([starterKeypair]);
         return tx;
       },

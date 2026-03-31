@@ -31,7 +31,14 @@ deno task test:preflight-fixtures
 Run all non-live tests from the package root:
 
 ```bash
-deno test --no-check tests/unit tests/runtime
+deno task test:ci
+```
+
+Or run the non-live layers directly:
+
+```bash
+deno task test:unit
+deno task test:runtime
 ```
 
 Run the live E2E suite:
@@ -40,10 +47,23 @@ Run the live E2E suite:
 RUN_SPACE_OPERATOR_E2E_TESTS=1 deno task test:e2e
 ```
 
+The default live suite is expected to pass in the supported test environment. It
+intentionally leaves the export and x402 cases ignored unless you opt in to
+them.
+
+Run the externally blocked live tests when the environment is ready:
+
+```bash
+RUN_SPACE_OPERATOR_E2E_TESTS=1 \
+RUN_SPACE_OPERATOR_EXPORT_TESTS=1 \
+RUN_SPACE_OPERATOR_X402_TESTS=1 \
+deno task test:e2e
+```
+
 On a fresh local stack, run `deno task test:bootstrap-fixtures` once before the
 live suite so the historical sample flows exist locally. On later runs,
-`deno task test:preflight-fixtures` is a faster way to catch broken fixture
-data or local auth/server drift before the E2E suite.
+`deno task test:preflight-fixtures` is a faster way to catch broken fixture data
+or local auth/server drift before the E2E suite.
 
 The older flag still works too:
 
@@ -68,6 +88,10 @@ RUN_SPACE_OPERATOR_E2E_TESTS=1 deno test --no-check -A tests/contract/kv_test.ts
 These variables are used by the live suite:
 
 - `RUN_SPACE_OPERATOR_E2E_TESTS=1` Enables the gated live tests.
+- `RUN_SPACE_OPERATOR_EXPORT_TESTS=1` Enables the export contract test, which
+  depends on a stable backend COPY-OUT connection.
+- `RUN_SPACE_OPERATOR_X402_TESTS=1` Enables the paid deployment contract test,
+  which depends on a funded devnet signer.
 - `FLOW_SERVER_URL` Defaults to `http://localhost:8080`.
 - `SUPABASE_URL` Defaults to `http://localhost:8000`.
 - `ANON_KEY` Required for auth bootstrap and Supabase session validation.
@@ -77,6 +101,15 @@ These variables are used by the live suite:
   `keypair` and `OWNER_KEYPAIR` when present.
 - `SOLANA_DEVNET_URL` Required for the deployment action-signer test that sends
   a real devnet transaction.
+
+The default live suite intentionally skips two known non-client blockers:
+
+- the export contract test
+- the x402 contract test
+
+Those tests are still available through the opt-in flags above. This keeps the
+default E2E pass/fail signal focused on SDK health rather than fixture, funding,
+or remote database infrastructure.
 
 The live fixture flow IDs can also be overridden per environment:
 
@@ -128,8 +161,10 @@ The live suite currently covers every public namespace:
 - `apiKeys` Create, inspect, and delete coverage in
   `tests/contract/api_keys_test.ts`.
 - `kv` Store and item CRUD coverage in `tests/contract/kv_test.ts`.
-- `data` Export coverage in `tests/contract/export_test.ts`.
-- `x402` Paid deployment start coverage in `tests/contract/x402_test.ts`.
+- `data` Export coverage in `tests/contract/export_test.ts`. This is opt-in
+  while the remote COPY-OUT path is unstable.
+- `x402` Paid deployment start coverage in `tests/contract/x402_test.ts`. This
+  is opt-in because it requires a funded devnet signer.
 
 ## State And Cleanup
 
@@ -157,11 +192,27 @@ The bootstrap/preflight script now checks more than simple flow existence:
 - the local server can still execute an unverified start against the `Add`
   fixture by temporarily enabling `start_unverified` and `is_public`
 - the local server can still execute an anonymous deployment start against a
-  temporary deployment of the `Add` fixture, which exercises the same
-  public-key user-creation/login path used by the failing deployment tests
+  temporary deployment of the `Add` fixture, which exercises the same public-key
+  user-creation/login path used by the failing deployment tests
+- the `API Input` fixture still completes through both direct submit and webhook
+  mode
+- the deployment fixture used by the signature tests still requests a signature
+  from the owner keypair configured in `KEYPAIR` / `OWNER_KEYPAIR`
 
 If those checks fail, the script exits early with a fixture/server diagnosis so
 the E2E suite does not fail later with opaque runtime errors.
+
+## Known External Blockers
+
+The following cases are currently outside the client harness itself:
+
+- `data export contract` This depends on the backend keeping the database
+  COPY-OUT connection alive for the full export stream.
+- `x402 contract: start deployment with wrapped fetch` This depends on a funded
+  devnet signer that can pay the on-chain x402 fee.
+
+The default `RUN_SPACE_OPERATOR_E2E_TESTS=1 deno task test:e2e` path leaves
+those two cases ignored so the suite remains a stable SDK regression signal.
 
 ## When Adding New E2E Coverage
 

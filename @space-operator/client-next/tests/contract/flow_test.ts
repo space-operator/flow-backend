@@ -5,7 +5,6 @@ import {
   contractTest,
   FLOW_SERVER_URL,
   getEnv,
-  ownerSupabase,
   resolveFixtureFlowId,
   SUPABASE_URL,
   web3,
@@ -18,7 +17,7 @@ type FlowV2Flags = {
 };
 
 async function requestFlowV2<T>(
-  method: "GET" | "PATCH",
+  method: "GET" | "PATCH" | "DELETE",
   query: string,
   body?: FlowV2Flags,
 ): Promise<T> {
@@ -40,6 +39,29 @@ async function requestFlowV2<T>(
     );
   }
   return text.length === 0 ? [] as T : JSON.parse(text) as T;
+}
+
+async function deleteFlowV2Rows(ids: string[]): Promise<void> {
+  if (ids.length === 0) {
+    return;
+  }
+  const serviceRoleKey = getEnv("SERVICE_ROLE_KEY");
+  const query =
+    `?uuid=in.(${ids.map((id) => `"${id}"`).join(",")})`;
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/flows_v2${query}`, {
+    method: "DELETE",
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+      prefer: "return=minimal",
+    },
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(
+      `flows_v2 DELETE failed: ${response.status} ${text || response.statusText}`,
+    );
+  }
 }
 
 async function withFlowFlags(
@@ -161,7 +183,6 @@ contractTest(
   "flow contract: clone still duplicates runnable flows",
   async () => {
     const client = apiClient();
-    const { supabase } = await ownerSupabase();
     let cloneIds: string[] = [];
 
     try {
@@ -183,13 +204,7 @@ contractTest(
       assertEquals(output.toJSObject().c, 9);
     } finally {
       if (cloneIds.length > 0) {
-        const cleanup = await supabase.from("flows").delete().in(
-          "uuid",
-          cloneIds,
-        );
-        if (cleanup.error) {
-          throw new Error(JSON.stringify(cleanup.error));
-        }
+        await deleteFlowV2Rows(cloneIds);
       }
     }
   },

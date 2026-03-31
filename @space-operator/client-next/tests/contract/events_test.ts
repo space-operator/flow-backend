@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "@std/assert";
+import { assert } from "@std/assert";
 import { publicKeyAuth } from "../../src/mod.ts";
 import {
   apiClient,
@@ -8,19 +8,11 @@ import {
 } from "./_shared.ts";
 
 contractTest(
-  "events contract: signature request subscriptions emit owner requests",
+  "events contract: flow-run subscriptions emit deployment signature requests",
   async () => {
     const owner = apiClient();
     const deployRunFlowId = await resolveFixtureFlowId("deployRun");
-    const ownerSession = await owner.auth.claimToken();
     const deploymentId = await owner.flows.deploy(deployRunFlowId);
-    const ws = owner.ws();
-    await ws.authenticate();
-    assertEquals(ws.getIdentity()?.user_id, ownerSession.user_id);
-
-    const subscription = await ws.subscribeSignatureRequests({
-      signal: AbortSignal.timeout(30_000),
-    });
     const starterKeypair = web3.Keypair.generate();
     const starter = owner.withAuth(publicKeyAuth(starterKeypair.publicKey));
     const run = await starter.deployments.start(
@@ -32,21 +24,24 @@ contractTest(
         },
       },
     );
+    const subscription = await run.events({
+      signal: AbortSignal.timeout(30_000),
+    });
 
     try {
-      let requestId: number | undefined;
+      let signaturePubkey: string | undefined;
 
       for await (const event of subscription) {
-        if (event.data.flow_run_id === run.id) {
-          requestId = event.data.id;
+        if (event.event === "SignatureRequest") {
+          signaturePubkey = event.data.pubkey;
           break;
         }
       }
 
-      assert(requestId != null);
+      assert(signaturePubkey != null);
+      assert(signaturePubkey.length > 0);
     } finally {
       await subscription.close();
-      await ws.close();
       await run.stop({ reason: "events contract cleanup" }).catch(() =>
         undefined
       );

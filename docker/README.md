@@ -70,6 +70,9 @@ also runs a fixture preflight that checks:
 - interflow fixture nodes still reference existing flows
 - the unverified-start path still works against the local server
 - the anonymous deployment-start path still works against the local server
+- the `API Input` fixture still works in both direct-submit and webhook mode
+- the deployment signature-request fixture still targets the configured owner
+  keypair
 
 To run only the fixture/server preflight without importing again:
 

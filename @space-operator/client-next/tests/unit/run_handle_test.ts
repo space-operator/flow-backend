@@ -8,6 +8,12 @@ import {
 } from "../../src/mod.ts";
 import { createMockWebSocketFactory } from "../support/mock_websocket.ts";
 
+function readHeaders(init: unknown): Headers {
+  return new Headers(
+    (init as { headers?: HeadersInit } | undefined)?.headers,
+  );
+}
+
 function unitTest(name: string, fn: () => Promise<void>) {
   Deno.test({
     name,
@@ -26,7 +32,7 @@ unitTest(
     const client = createClient({
       baseUrl: "http://example.test",
       fetch: async (input, init) => {
-        const headers = new Headers(init?.headers);
+        const headers = readHeaders(init);
         seen.push({
           url: String(input),
           auth: headers.get("authorization"),
@@ -62,7 +68,7 @@ unitTest(
     const client = createClient({
       baseUrl: "http://example.test",
       fetch: async (input, init) => {
-        const headers = new Headers(init?.headers);
+        const headers = readHeaders(init);
         seen.push(headers.get("authorization"));
         if (String(input).endsWith("/flow/start_unverified/flow-1")) {
           return Response.json({ flow_run_id: "run-1", token: "frt-1" });

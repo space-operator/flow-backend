@@ -23,13 +23,25 @@ export const RUN_CONTRACT_TESTS = Deno.env.get(
 ) === "1";
 export const RUN_E2E_TESTS = RUN_CONTRACT_TESTS ||
   Deno.env.get("RUN_SPACE_OPERATOR_E2E_TESTS") === "1";
+export const RUN_EXPORT_TESTS = RUN_E2E_TESTS &&
+  Deno.env.get("RUN_SPACE_OPERATOR_EXPORT_TESTS") === "1";
+export const RUN_X402_TESTS = RUN_E2E_TESTS &&
+  Deno.env.get("RUN_SPACE_OPERATOR_X402_TESTS") === "1";
 
 export const FLOW_SERVER_URL = Deno.env.get("FLOW_SERVER_URL") ??
   "http://localhost:8080";
 export const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ??
   "http://localhost:8000";
 export const ANON_KEY = Deno.env.get("ANON_KEY") ?? "";
+export const TEST_WEBHOOK_URL = Deno.env.get("FLOW_TEST_WEBHOOK_URL") ??
+  "http://webhook/webhook";
 const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY") ?? "";
+const ALLOW_LEGACY_FIXTURE_UUID_FALLBACK = Deno.env.get(
+  "ALLOW_LEGACY_FIXTURE_UUID_FALLBACK",
+) === "1";
+const ALLOW_FIXTURE_FLOW_ENV_OVERRIDE = Deno.env.get(
+  "ALLOW_FIXTURE_FLOW_ENV_OVERRIDE",
+) === "1";
 
 const FIXTURE_FLOW_IDS = {
   start: "6c949718-69e2-47c1-8b93-d56b8e34ec51",
@@ -76,7 +88,12 @@ const FIXTURE_ENV_KEYS = {
 type FixtureFlowKey = keyof typeof FIXTURE_FLOW_IDS;
 
 const fixtureFlowIdCache = new Map<FixtureFlowKey, Promise<string>>();
+const ignoredFixtureEnvOverrideWarnings = new Set<FixtureFlowKey>();
 let serviceInfoPromise: Promise<ServiceInfoOutput> | undefined;
+
+type VisibleFlowRow = {
+  uuid: string;
+};
 
 export function contractTest(
   name: string,
@@ -121,42 +138,55 @@ export async function resolveFixtureFlowId(
 
   const promise = (async () => {
     const override = Deno.env.get(FIXTURE_ENV_KEYS[key]);
-    if (override) {
+    if (override && ALLOW_FIXTURE_FLOW_ENV_OVERRIDE) {
       return override;
     }
+    if (override && !ignoredFixtureEnvOverrideWarnings.has(key)) {
+      ignoredFixtureEnvOverrideWarnings.add(key);
+      console.warn(
+        `Ignoring ${FIXTURE_ENV_KEYS[key]}=${override}. ` +
+          "Set ALLOW_FIXTURE_FLOW_ENV_OVERRIDE=1 to force fixture flow IDs from env.",
+      );
+    }
 
-    let supabase;
+    let rows: VisibleFlowRow[];
     try {
-      ({ supabase } = await ownerSupabase());
-    } catch {
-      return FIXTURE_FLOW_IDS[key];
+      rows = await requestOwnerFlowsV2<VisibleFlowRow[]>(
+        `?select=uuid&name=eq.${encodeURIComponent(FIXTURE_FLOW_NAMES[key])}&order=updated_at.desc&limit=1`,
+      );
+    } catch (error) {
+      if (ALLOW_LEGACY_FIXTURE_UUID_FALLBACK) {
+        return FIXTURE_FLOW_IDS[key];
+      }
+      throw new Error(
+        `could not resolve fixture flow "${FIXTURE_FLOW_NAMES[key]}" through owner-visible flows. ` +
+          `Fix APIKEY/bootstrap or set ${FIXTURE_ENV_KEYS[key]}. ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+      );
     }
 
-    const result = await supabase
-      .from("flows")
-      .select("uuid")
-      .eq("name", FIXTURE_FLOW_NAMES[key])
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (!result.error && result.data?.uuid) {
-      return result.data.uuid;
+    const result = rows[0];
+    if (result?.uuid) {
+      return result.uuid;
     }
 
-    const fallback = await supabase
-      .from("flows")
-      .select("uuid")
-      .eq("uuid", FIXTURE_FLOW_IDS[key])
-      .limit(1)
-      .maybeSingle();
+    if (ALLOW_LEGACY_FIXTURE_UUID_FALLBACK) {
+      const fallback = await requestOwnerFlowsV2<VisibleFlowRow[]>(
+        `?select=uuid&uuid=eq.${FIXTURE_FLOW_IDS[key]}&limit=1`,
+      );
 
-    if (!fallback.error && fallback.data?.uuid) {
-      return fallback.data.uuid;
+      if (fallback[0]?.uuid) {
+        return fallback[0].uuid;
+      }
     }
 
     throw new Error(
-      `missing fixture flow "${FIXTURE_FLOW_NAMES[key]}". Run \`deno task test:bootstrap-fixtures\` from @space-operator/client-next or set ${FIXTURE_ENV_KEYS[key]}.`,
+      `missing fixture flow "${FIXTURE_FLOW_NAMES[key]}". Run \`deno task test:bootstrap-fixtures\` from @space-operator/client-next or set ${FIXTURE_ENV_KEYS[key]}.${
+        ALLOW_LEGACY_FIXTURE_UUID_FALLBACK
+          ? ` Legacy fallback UUID ${FIXTURE_FLOW_IDS[key]} was not visible either.`
+          : ""
+      }`,
     );
   })();
 
@@ -179,6 +209,23 @@ export async function serviceInfo() {
 
 export async function ownerSession() {
   return await apiClient().auth.claimToken();
+}
+
+async function requestOwnerFlowsV2<T>(query: string): Promise<T> {
+  const session = await ownerSession();
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/flows_v2${query}`, {
+    headers: {
+      apikey: ANON_KEY,
+      authorization: `Bearer ${session.access_token}`,
+    },
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(
+      `flows_v2 query failed: ${response.status} ${text || response.statusText}`,
+    );
+  }
+  return JSON.parse(text) as T;
 }
 
 export async function ownerUserId() {
@@ -306,6 +353,54 @@ export function fixApiInputUrl(url: string) {
   const submit = new URL(url);
   return new URL(`${submit.pathname}${submit.search}`, FLOW_SERVER_URL)
     .toString();
+}
+
+type WebhookServerHandle = {
+  url: string;
+  close: () => Promise<void>;
+};
+
+async function startLocalWebhookEchoServer(): Promise<WebhookServerHandle> {
+  const server = Deno.serve({ hostname: "127.0.0.1", port: 0 }, async (request) => {
+    const payload = await request.json() as {
+      url?: string;
+      extra?: { output?: unknown };
+    };
+    if (typeof payload.url !== "string") {
+      return new Response("missing url", { status: 400 });
+    }
+    await fetch(payload.url, {
+      method: "POST",
+      headers: [["content-type", "application/json"]],
+      body: JSON.stringify({
+        value: payload.extra?.output ?? { S: "hello" },
+      }),
+    });
+    return new Response("ok");
+  });
+
+  const addr = server.addr as Deno.NetAddr;
+  return {
+    url: `http://127.0.0.1:${addr.port}/webhook`,
+    close: async () => {
+      await server.shutdown();
+    },
+  };
+}
+
+export async function withWebhookUrl<T>(
+  fn: (url: string) => Promise<T>,
+): Promise<T> {
+  if (Deno.env.get("FLOW_TEST_WEBHOOK_URL")) {
+    return await fn(TEST_WEBHOOK_URL);
+  }
+
+  const server = await startLocalWebhookEchoServer();
+  try {
+    return await fn(server.url);
+  } finally {
+    await server.close();
+  }
 }
 
 export function randomName(prefix: string) {

@@ -11,6 +11,7 @@ import type { ClientCore } from "../internal/core.ts";
 import { normalizeFlowInputs } from "../internal/transport/value.ts";
 import { FlowRunHandle } from "../run_handle.ts";
 import { publicKeyAuth } from "../auth/mod.ts";
+import { ApiError } from "../internal/transport/errors.ts";
 import type {
   CloneFlowOutput,
   DeploymentId,
@@ -27,6 +28,57 @@ import type {
   SuccessResponse,
 } from "../types.ts";
 import { SignatureRequest as SignatureRequestModel } from "../types.ts";
+
+async function sleep(ms: number, signal?: AbortSignal) {
+  if (signal?.aborted) {
+    throw signal.reason ?? new DOMException("Aborted", "AbortError");
+  }
+  await new Promise<void>((resolve, reject) => {
+    const abortReason = () =>
+      signal?.reason ?? new DOMException("Aborted", "AbortError");
+    const timeoutId = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(timeoutId);
+      reject(abortReason());
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
+async function requestSignatureRequestWithPolling(
+  core: ClientCore,
+  flowRunId: FlowRunId,
+  options: RequestOptions = {},
+): Promise<SignatureRequest> {
+  const startedAt = Date.now();
+  const timeoutMs = options.timeoutMs ?? 30_000;
+  while (true) {
+    const remainingMs = timeoutMs - (Date.now() - startedAt);
+    if (remainingMs <= 0) {
+      throw new Error(`timed out waiting for signature request for flow run ${flowRunId}`);
+    }
+    try {
+      const value = await core.requestContract(signatureRequestSchema, {
+        method: "GET",
+        path: `/flow/signature_request/${flowRunId}`,
+        auth: options.auth,
+        headers: options.headers,
+        signal: options.signal,
+        retry: options.retry,
+        timeoutMs: Math.min(remainingMs, 5_000),
+      }, "signature request response");
+      return new SignatureRequestModel(value as ISignatureRequest);
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 404) {
+        throw error;
+      }
+      await sleep(Math.min(250, remainingMs), options.signal);
+    }
+  }
+}
 
 function serializeStartFlowParams(params: StartFlowParams = {}) {
   return {
@@ -165,16 +217,7 @@ export function createFlowsNamespace(core: ClientCore) {
       flowRunId: FlowRunId,
       options: RequestOptions = {},
     ): Promise<SignatureRequest> {
-      const value = await core.requestContract(signatureRequestSchema, {
-        method: "GET",
-        path: `/flow/signature_request/${flowRunId}`,
-        auth: options.auth,
-        headers: options.headers,
-        signal: options.signal,
-        retry: options.retry,
-        timeoutMs: options.timeoutMs,
-      }, "signature request response");
-      return new SignatureRequestModel(value as ISignatureRequest);
+      return await requestSignatureRequestWithPolling(core, flowRunId, options);
     },
 
     async stop(

@@ -1,12 +1,16 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { createClient } from "../../src/mod.ts";
 
+function readBody(init: unknown): BodyInit | null | undefined {
+  return (init as { body?: BodyInit | null } | undefined)?.body;
+}
+
 Deno.test("normalizes plain js objects and IValue inputs into flow values", async () => {
   let requestBody: Record<string, unknown> | undefined;
   const client = createClient({
     baseUrl: "http://example.test",
     fetch: async (_input, init) => {
-      requestBody = JSON.parse(String(init?.body));
+      requestBody = JSON.parse(String(readBody(init)));
       return Response.json({ flow_run_id: "run-1" });
     },
   });

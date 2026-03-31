@@ -10,12 +10,13 @@
   "tasks": {
     "check": "deno check src/mod.ts",
     "test": "deno test tests",
+    "test:ci": "deno task check && deno task test:unit && deno task test:runtime",
     "test:bootstrap-fixtures": "deno run -A ../../docker/bootstrap-test-fixtures.ts",
     "test:preflight-fixtures": "deno run -A ../../docker/bootstrap-test-fixtures.ts --preflight-only",
-    "test:unit": "deno test tests/unit",
+    "test:unit": "deno test -A tests/unit",
     "test:contract": "deno test -A tests/contract",
     "test:e2e": "deno test -A tests/contract",
-    "test:runtime": "deno test tests/runtime",
+    "test:runtime": "deno test -A tests/runtime",
     "test:playwright": "deno test -A tests/playwright",
     "generate:openapi-types": "deno run -A scripts/generate_openapi_types.ts"
   },

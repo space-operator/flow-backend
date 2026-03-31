@@ -370,7 +370,10 @@ mod tests {
         .unwrap();
         let ts_source: &str = match name {
             "umbra_register" => {
-                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/umbra/umbra_register.ts"))
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/umbra/umbra_register.ts"
+                ))
             }
             "umbra_query_account" => {
                 include_str!(concat!(
@@ -385,10 +388,16 @@ mod tests {
                 ))
             }
             "umbra_deposit" => {
-                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/umbra/umbra_deposit.ts"))
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/umbra/umbra_deposit.ts"
+                ))
             }
             "umbra_withdraw" => {
-                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/umbra/umbra_withdraw.ts"))
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/umbra/umbra_withdraw.ts"
+                ))
             }
             "umbra_fetch_utxos" => {
                 include_str!(concat!(
@@ -523,7 +532,10 @@ mod tests {
             .unwrap();
 
         let balance = value::from_value::<String>(output["balance"].clone()).unwrap();
-        assert_eq!(balance, "0", "unregistered account should have zero balance");
+        assert_eq!(
+            balance, "0",
+            "unregistered account should have zero balance"
+        );
     }
 
     #[actix_web::test]

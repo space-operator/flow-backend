@@ -51,8 +51,8 @@ export async function signAndSubmitSignature(
     throw new Error("signature is null");
   }
 
-  const before = transaction.message.serialize();
-  const after = signedTransaction.message.serialize();
+  const before = Uint8Array.from(transaction.message.serialize());
+  const after = Uint8Array.from(signedTransaction.message.serialize());
   const new_msg = equalBytes(before, after) ? undefined : encodeBase64(after);
 
   await signatures.submit({

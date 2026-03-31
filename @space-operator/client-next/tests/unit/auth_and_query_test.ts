@@ -1,6 +1,19 @@
 import { assertEquals } from "@std/assert";
 import { apiKeyAuth, createClient, publicKeyAuth } from "../../src/mod.ts";
 
+function readInit(
+  init: unknown,
+): { headers: Headers; body: BodyInit | null | undefined } {
+  const value = init as {
+    headers?: HeadersInit;
+    body?: BodyInit | null;
+  } | undefined;
+  return {
+    headers: new Headers(value?.headers),
+    body: value?.body,
+  };
+}
+
 function unitTest(name: string, fn: () => Promise<void>) {
   Deno.test({
     name,
@@ -19,10 +32,11 @@ unitTest(
       baseUrl: "http://example.test/api/v1",
       auth: apiKeyAuth("b3-demo"),
       fetch: async (input, init) => {
+        const request = readInit(init);
         requests.push({
           url: String(input),
-          headers: new Headers(init?.headers),
-          body: init?.body,
+          headers: request.headers,
+          body: request.body,
         });
         return Response.json({
           user_id: "user-1",
@@ -50,9 +64,10 @@ unitTest("uses explicit public key auth for unverified starts", async () => {
     baseUrl: "http://example.test",
     auth: publicKeyAuth("PubKey1111111111111111111111111111111111"),
     fetch: async (_input, init) => {
+      const request = readInit(init);
       requests.push({
-        headers: new Headers(init?.headers),
-        body: init?.body,
+        headers: request.headers,
+        body: request.body,
       });
       return Response.json({
         flow_run_id: "run-1",
@@ -80,9 +95,10 @@ unitTest("signature auth uses the configured anon key header", async () => {
     baseUrl: "http://example.test",
     anonKey: "anon-123",
     fetch: async (input, init) => {
+      const request = readInit(init);
       requests.push({
         url: String(input),
-        headers: new Headers(init?.headers),
+        headers: request.headers,
       });
       return Response.json({ msg: "sign-me" });
     },
@@ -106,11 +122,11 @@ unitTest(
       baseUrl: "http://example.test",
       fetch: async (input, init) => {
         const url = String(input);
-        const headers = new Headers(init?.headers);
+        const request = readInit(init);
         requests.push({
           url,
-          headers,
-          body: init?.body,
+          headers: request.headers,
+          body: request.body,
         });
 
         if (url.endsWith("/info")) {
