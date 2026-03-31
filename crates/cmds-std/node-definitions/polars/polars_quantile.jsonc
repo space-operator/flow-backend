@@ -49,7 +49,7 @@
   },
   "config_schema": {},
   "config": {
-    "quantile": {
+    "polars_quantile": {
       "D": "0.5"
     }
   },
