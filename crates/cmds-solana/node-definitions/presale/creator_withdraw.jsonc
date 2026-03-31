@@ -52,6 +52,22 @@
         "tooltip": "Owner wallet (signer)"
       },
       {
+        "name": "quote_token_vault",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Quote token vault PDA (remaining account for withdraw)"
+      },
+      {
+        "name": "quote_mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Quote token mint"
+      },
+      {
         "name": "slices",
         "type_bounds": [
           "json"
