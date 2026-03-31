@@ -307,11 +307,18 @@ pub struct FlowStarter {
     pub action_signer: Option<Pubkey>,
 }
 
+#[derive(Debug, Clone)]
+pub struct PreservedBearerToken {
+    pub access_token: String,
+    pub expires_at: i64,
+}
+
 /// Start a flow deployment by starting the entrypoint
 #[derive(Debug)]
 pub struct StartFlowDeploymentOptions {
     pub inputs: ValueSet,
     pub starter: FlowStarter,
+    pub preserved_bearer_token: Option<PreservedBearerToken>,
 }
 
 pub enum StartFlowOrigin {

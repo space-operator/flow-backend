@@ -833,7 +833,9 @@
           "new_user": {
             "type": "boolean"
           },
-          "session": {}
+          "session": {
+            "$ref": "#/components/schemas/Value"
+          }
         }
       },
       "ConfirmAuthParamsDoc": {
@@ -887,6 +889,16 @@
           }
         }
       },
+      "FlowInputValueDoc": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IValueDoc"
+          },
+          {
+            "$ref": "#/components/schemas/JsonValueDoc"
+          }
+        ]
+      },
       "FlowRunStartOutputDoc": {
         "type": "object",
         "required": [
@@ -913,6 +925,174 @@
           }
         }
       },
+      "IValueDoc": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "S"
+            ],
+            "properties": {
+              "S": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "D"
+            ],
+            "properties": {
+              "D": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "I"
+            ],
+            "properties": {
+              "I": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "U"
+            ],
+            "properties": {
+              "U": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "I1"
+            ],
+            "properties": {
+              "I1": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "U1"
+            ],
+            "properties": {
+              "U1": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "F"
+            ],
+            "properties": {
+              "F": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "B"
+            ],
+            "properties": {
+              "B": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "N"
+            ],
+            "properties": {
+              "N": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "B3"
+            ],
+            "properties": {
+              "B3": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "B6"
+            ],
+            "properties": {
+              "B6": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "BY"
+            ],
+            "properties": {
+              "BY": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "A"
+            ],
+            "properties": {
+              "A": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IValueDoc"
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "M"
+            ],
+            "properties": {
+              "M": {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/IValueDoc"
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
       "IrohInfoDoc": {
         "type": "object",
         "required": [
@@ -935,13 +1115,54 @@
           }
         }
       },
+      "JsonValueDoc": {
+        "oneOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/components/schemas/JsonValueDocNonNull"
+          }
+        ]
+      },
+      "JsonValueDocNonNull": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number",
+            "format": "double"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JsonValueDoc"
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValueDoc"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          }
+        ]
+      },
       "KvDeleteOutputDoc": {
         "type": "object",
         "required": [
           "old_value"
         ],
         "properties": {
-          "old_value": {}
+          "old_value": {
+            "$ref": "#/components/schemas/Value"
+          }
         }
       },
       "KvReadOutputDoc": {
@@ -950,7 +1171,9 @@
           "value"
         ],
         "properties": {
-          "value": {}
+          "value": {
+            "$ref": "#/components/schemas/Value"
+          }
         }
       },
       "KvReadParamsDoc": {
@@ -982,7 +1205,16 @@
       "KvWriteOutputDoc": {
         "type": "object",
         "properties": {
-          "old_value": {}
+          "old_value": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value"
+              }
+            ]
+          }
         }
       },
       "KvWriteParamsDoc": {
@@ -999,7 +1231,9 @@
           "store": {
             "type": "string"
           },
-          "value": {}
+          "value": {
+            "$ref": "#/components/schemas/Value"
+          }
         }
       },
       "PartialConfigDoc": {
@@ -1072,7 +1306,9 @@
               "object",
               "null"
             ],
-            "additionalProperties": {},
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FlowInputValueDoc"
+            },
             "propertyNames": {
               "type": "string"
             }
@@ -1099,7 +1335,9 @@
               "object",
               "null"
             ],
-            "additionalProperties": {},
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FlowInputValueDoc"
+            },
             "propertyNames": {
               "type": "string"
             }
@@ -1130,7 +1368,9 @@
               "object",
               "null"
             ],
-            "additionalProperties": {},
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FlowInputValueDoc"
+            },
             "propertyNames": {
               "type": "string"
             }
@@ -1186,7 +1426,9 @@
               "object",
               "null"
             ],
-            "additionalProperties": {},
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FlowInputValueDoc"
+            },
             "propertyNames": {
               "type": "string"
             }
@@ -1251,6 +1493,7 @@
           }
         }
       },
+      "Value": {},
       "ValuesConfigDoc": {
         "type": "object",
         "required": [

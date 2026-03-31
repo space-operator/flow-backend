@@ -69,6 +69,12 @@ async fn start_flow_shared(
         .send(StartFlowShared {
             flow_id,
             input: inputs,
+            preserved_bearer_token: user.preserved_bearer_token().as_ref().map(|token| {
+                flow::flow_set::PreservedBearerToken {
+                    access_token: token.access_token().clone(),
+                    expires_at: *token.expires_at(),
+                }
+            }),
             partial_config: None,
             environment: <_>::default(),
             output_instructions,

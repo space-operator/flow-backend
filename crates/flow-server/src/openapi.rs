@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::Value as JsonValue;
+use std::collections::BTreeMap;
 use utoipa::{OpenApi, ToSchema};
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -40,7 +41,7 @@ struct ConfirmAuthParamsDoc {
 
 #[derive(Serialize, Deserialize, ToSchema)]
 struct ConfirmAuthOutputDoc {
-    session: Value,
+    session: JsonValue,
     new_user: bool,
 }
 
@@ -70,23 +71,96 @@ struct SolanaActionConfigDoc {
     action_identity: String,
 }
 
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, ToSchema)]
+#[serde(untagged)]
+enum IValueDoc {
+    String {
+        S: String,
+    },
+    Decimal {
+        D: String,
+    },
+    I64 {
+        I: String,
+    },
+    U64 {
+        U: String,
+    },
+    I128 {
+        I1: String,
+    },
+    U128 {
+        U1: String,
+    },
+    Float {
+        F: String,
+    },
+    Bool {
+        B: bool,
+    },
+    Null {
+        N: i32,
+    },
+    Pubkey {
+        B3: String,
+    },
+    Keypair {
+        B6: String,
+    },
+    Bytes {
+        BY: String,
+    },
+    Array {
+        #[schema(no_recursion)]
+        A: Vec<IValueDoc>,
+    },
+    Map {
+        #[schema(no_recursion)]
+        M: BTreeMap<String, IValueDoc>,
+    },
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+#[serde(untagged)]
+enum JsonValueDocNonNull {
+    String(String),
+    Number(f64),
+    Bool(bool),
+    #[schema(no_recursion)]
+    Array(Vec<JsonValueDoc>),
+    #[schema(no_recursion)]
+    Object(BTreeMap<String, JsonValueDoc>),
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+#[serde(transparent)]
+struct JsonValueDoc(Option<JsonValueDocNonNull>);
+
+#[derive(Serialize, Deserialize, ToSchema)]
+#[serde(untagged)]
+enum FlowInputValueDoc {
+    Typed(IValueDoc),
+    Json(JsonValueDoc),
+}
+
 #[derive(Serialize, Deserialize, ToSchema)]
 struct StartFlowParamsDoc {
-    inputs: Option<std::collections::BTreeMap<String, Value>>,
+    inputs: Option<BTreeMap<String, FlowInputValueDoc>>,
     partial_config: Option<PartialConfigDoc>,
-    environment: Option<std::collections::BTreeMap<String, String>>,
+    environment: Option<BTreeMap<String, String>>,
     output_instructions: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
 struct StartFlowSharedParamsDoc {
-    inputs: Option<std::collections::BTreeMap<String, Value>>,
+    inputs: Option<BTreeMap<String, FlowInputValueDoc>>,
     output_instructions: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
 struct StartFlowUnverifiedParamsDoc {
-    inputs: Option<std::collections::BTreeMap<String, Value>>,
+    inputs: Option<BTreeMap<String, FlowInputValueDoc>>,
     output_instructions: Option<bool>,
     action_identity: Option<String>,
     action_config: Option<SolanaActionConfigDoc>,
@@ -113,12 +187,12 @@ struct FlowRunTokenOutputDoc {
 #[derive(Serialize, Deserialize, ToSchema)]
 struct CloneFlowOutputDoc {
     flow_id: String,
-    id_map: std::collections::BTreeMap<String, String>,
+    id_map: BTreeMap<String, String>,
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
 struct StartDeploymentParamsDoc {
-    inputs: Option<std::collections::BTreeMap<String, Value>>,
+    inputs: Option<BTreeMap<String, FlowInputValueDoc>>,
     action_signer: Option<String>,
 }
 
@@ -168,22 +242,22 @@ struct KvReadParamsDoc {
 struct KvWriteParamsDoc {
     store: String,
     key: String,
-    value: Value,
+    value: JsonValue,
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
 struct KvWriteOutputDoc {
-    old_value: Option<Value>,
+    old_value: Option<JsonValue>,
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
 struct KvReadOutputDoc {
-    value: Value,
+    value: JsonValue,
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
 struct KvDeleteOutputDoc {
-    old_value: Value,
+    old_value: JsonValue,
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]

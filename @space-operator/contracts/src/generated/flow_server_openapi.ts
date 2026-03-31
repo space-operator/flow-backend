@@ -391,7 +391,7 @@ export interface components {
         };
         ConfirmAuthOutputDoc: {
             new_user: boolean;
-            session: unknown;
+            session: components["schemas"]["Value"];
         };
         ConfirmAuthParamsDoc: {
             token: string;
@@ -405,6 +405,7 @@ export interface components {
         DeleteApiKeyParamsDoc: {
             key_hash: string;
         };
+        FlowInputValueDoc: components["schemas"]["IValueDoc"] | components["schemas"]["Option"];
         FlowRunStartOutputDoc: {
             flow_run_id: string;
         };
@@ -412,16 +413,48 @@ export interface components {
             flow_run_id: string;
             token: string;
         };
+        IValueDoc: {
+            S: string;
+        } | {
+            D: string;
+        } | {
+            I: string;
+        } | {
+            U: string;
+        } | {
+            I1: string;
+        } | {
+            U1: string;
+        } | {
+            F: string;
+        } | {
+            B: boolean;
+        } | {
+            /** Format: int32 */
+            N: number;
+        } | {
+            B3: string;
+        } | {
+            B6: string;
+        } | {
+            BY: string;
+        } | {
+            A: components["schemas"]["IValueDoc"][];
+        } | {
+            M: {
+                [key: string]: components["schemas"]["IValueDoc"];
+            };
+        };
         IrohInfoDoc: {
             direct_addresses: string[];
             node_id: string;
             relay_url: string;
         };
         KvDeleteOutputDoc: {
-            old_value: unknown;
+            old_value: components["schemas"]["Value"];
         };
         KvReadOutputDoc: {
-            value: unknown;
+            value: components["schemas"]["Value"];
         };
         KvReadParamsDoc: {
             key: string;
@@ -431,13 +464,16 @@ export interface components {
             store: string;
         };
         KvWriteOutputDoc: {
-            old_value?: unknown;
+            old_value?: null | components["schemas"]["Value"];
         };
         KvWriteParamsDoc: {
             key: string;
             store: string;
-            value: unknown;
+            value: components["schemas"]["Value"];
         };
+        Option: null | (string | number | boolean | components["schemas"]["Option"][] | {
+            [key: string]: components["schemas"]["Option"];
+        });
         PartialConfigDoc: {
             only_nodes: string[];
             values_config: components["schemas"]["ValuesConfigDoc"];
@@ -455,7 +491,7 @@ export interface components {
         StartDeploymentParamsDoc: {
             action_signer?: string | null;
             inputs?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["FlowInputValueDoc"];
             } | null;
         };
         StartFlowParamsDoc: {
@@ -463,14 +499,14 @@ export interface components {
                 [key: string]: string;
             } | null;
             inputs?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["FlowInputValueDoc"];
             } | null;
             output_instructions?: boolean | null;
             partial_config?: null | components["schemas"]["PartialConfigDoc"];
         };
         StartFlowSharedParamsDoc: {
             inputs?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["FlowInputValueDoc"];
             } | null;
             output_instructions?: boolean | null;
         };
@@ -482,7 +518,7 @@ export interface components {
                 number
             ][] | null;
             inputs?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["FlowInputValueDoc"];
             } | null;
             output_instructions?: boolean | null;
         };
@@ -500,6 +536,7 @@ export interface components {
         SuccessDoc: {
             success: boolean;
         };
+        Value: unknown;
         ValuesConfigDoc: {
             default_run_id?: string | null;
             nodes: {

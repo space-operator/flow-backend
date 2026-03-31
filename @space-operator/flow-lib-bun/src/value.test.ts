@@ -1,4 +1,5 @@
 import { test, expect, describe } from "bun:test";
+import { web3 } from "./deps.ts";
 import { Value, isIValue } from "./value.ts";
 
 describe("Value constructors", () => {
@@ -115,6 +116,13 @@ describe("Value inference (constructor)", () => {
     expect(v.M).toBeDefined();
     expect(v.M!.x.D).toBe("1");
     expect(v.M!.y.S).toBe("z");
+  });
+
+  test("web3.Keypair → B6", () => {
+    const keypair = web3.Keypair.generate();
+    const v = new Value(keypair);
+
+    expect(v.B6).toBe(Value.Keypair(keypair).B6);
   });
 });
 

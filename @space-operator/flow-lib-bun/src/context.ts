@@ -66,6 +66,9 @@ export interface ExecuteResponse {
   signature?: Uint8Array;
 }
 
+const KV_UNAVAILABLE_MESSAGE =
+  "ctx.kv is not available in script runtimes; use kv_read_item/kv_write_item nodes";
+
 function isPubkey(x: web3.PublicKey | web3.Keypair): x is web3.PublicKey {
   return (x as any)._bn !== undefined;
 }
@@ -155,6 +158,13 @@ export class Context {
    */
   get endpoints(): Endpoints {
     return this.#data.data.flow.set.endpoints;
+  }
+
+  /**
+   * KV persistence is only available through dedicated flow nodes in Phase 1.
+   */
+  get kv(): never {
+    throw new Error(KV_UNAVAILABLE_MESSAGE);
   }
 
   /**

@@ -80,6 +80,7 @@ async fn start_flow_unverified(
         .send(StartFlowShared {
             flow_id,
             input: inputs,
+            preserved_bearer_token: None,
             partial_config: None,
             environment: <_>::default(),
             output_instructions: params.output_instructions,

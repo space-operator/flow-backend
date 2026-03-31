@@ -61,32 +61,25 @@
         "tooltip": "Instruction accounts"
       },
       {
-        "name": "additional_signers",
-        "type_bounds": [
-          "json"
-        ],
-        "tooltip": "Additional signers"
-      },
-      {
         "name": "signer_1",
         "type_bounds": [
-          "json"
+          "keypair"
         ],
-        "tooltip": "Signer 1"
+        "tooltip": "Additional signer 1"
       },
       {
         "name": "signer_2",
         "type_bounds": [
-          "json"
+          "keypair"
         ],
-        "tooltip": "Signer 2"
+        "tooltip": "Additional signer 2"
       },
       {
         "name": "signer_3",
         "type_bounds": [
-          "json"
+          "keypair"
         ],
-        "tooltip": "Signer 3"
+        "tooltip": "Additional signer 3"
       },
       {
         "name": "submit",
@@ -100,6 +93,7 @@
       {
         "name": "signature",
         "type": "signature",
+        "optional": true,
         "tooltip": "Transaction signature"
       },
       {

@@ -35,7 +35,22 @@ export const iValueSchema: z.ZodType = z.lazy(() =>
   ])
 );
 
-export const flowInputsSchema = z.record(z.string(), z.unknown());
+export const jsonValueSchema: z.ZodType = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(jsonValueSchema),
+    z.record(z.string(), jsonValueSchema),
+  ])
+);
+
+export const flowInputValueSchema: z.ZodType = z.lazy(() =>
+  z.union([iValueSchema, jsonValueSchema])
+);
+
+export const flowInputsSchema = z.record(z.string(), flowInputValueSchema);
 
 export const valuesConfigSchema = z.object({
   nodes: z.record(z.string(), z.string()),
@@ -352,6 +367,7 @@ const jsonSchemaOpts = { unrepresentable: "any" as const };
 
 export const clientJsonSchemas = {
   iValue: z.toJSONSchema(iValueSchema, jsonSchemaOpts),
+  flowInputValue: z.toJSONSchema(flowInputValueSchema, jsonSchemaOpts),
   startFlowParams: z.toJSONSchema(startFlowParamsSchema, jsonSchemaOpts),
   startFlowSharedParams: z.toJSONSchema(startFlowSharedParamsSchema, jsonSchemaOpts),
   startFlowUnverifiedParams: z.toJSONSchema(startFlowUnverifiedParamsSchema, jsonSchemaOpts),

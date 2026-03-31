@@ -89,6 +89,8 @@ describe("MyNode", () => {
 });
 ```
 
+`ctx.kv` is intentionally unavailable in Bun and Deno script runtimes in Phase 1. Use `kv_read_item` and `kv_write_item` nodes for persistence, and keep scripts focused on transformation.
+
 ## Package Layout
 
 | Package | Role |

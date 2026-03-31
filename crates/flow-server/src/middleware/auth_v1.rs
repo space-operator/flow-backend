@@ -168,6 +168,7 @@ impl AuthV1 {
             Ok(AuthEither::One(AuthenticatedUser {
                 user_id: key.user_id,
                 pubkey: key.pubkey,
+                preserved_bearer_token: None,
             }))
         } else if token.starts_with(FLOW_RUN_TOKEN_PREFIX) {
             Ok(AuthEither::Two(FlowRunToken {
@@ -178,9 +179,21 @@ impl AuthV1 {
             Ok(AuthEither::One(AuthenticatedUser {
                 user_id: jwt.user_id,
                 pubkey: jwt.pubkey,
+                preserved_bearer_token: Some(PreservedBearerToken {
+                    access_token: jwt.token,
+                    expires_at: jwt.expires_at,
+                }),
             }))
         }
     }
+}
+
+#[derive(Clone, Getters)]
+pub struct PreservedBearerToken {
+    #[get = "pub"]
+    access_token: String,
+    #[get = "pub"]
+    expires_at: i64,
 }
 
 #[derive(Getters)]
@@ -191,6 +204,8 @@ pub struct Jwt {
     user_id: UserId,
     #[get = "pub"]
     pubkey: [u8; 32],
+    #[get = "pub"]
+    expires_at: i64,
 }
 
 fn jwt_verify_inner(token: &[u8], auth: &AuthV1) -> Result<Jwt, AuthError> {
@@ -221,6 +236,7 @@ fn jwt_verify_inner(token: &[u8], auth: &AuthV1) -> Result<Jwt, AuthError> {
         token: token_str,
         user_id: payload.sub,
         pubkey,
+        expires_at: payload.exp,
     })
 }
 
@@ -356,6 +372,8 @@ pub struct AuthenticatedUser {
     user_id: UserId,
     #[get = "pub"]
     pubkey: [u8; 32],
+    #[get = "pub"]
+    preserved_bearer_token: Option<PreservedBearerToken>,
 }
 
 impl Identity for AuthenticatedUser {
@@ -366,12 +384,17 @@ impl Identity for AuthenticatedUser {
         let result = Jwt::verify(req, auth).await.map(|x| Self {
             user_id: x.user_id,
             pubkey: x.pubkey,
+            preserved_bearer_token: Some(PreservedBearerToken {
+                access_token: x.token,
+                expires_at: x.expires_at,
+            }),
         });
         early_return!(control_flow(result));
 
         ApiKey::verify(req, auth).await.map(|x| Self {
             user_id: x.user_id,
             pubkey: x.pubkey,
+            preserved_bearer_token: None,
         })
     }
 }

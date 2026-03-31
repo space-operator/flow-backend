@@ -75,7 +75,7 @@ function maybePublicKey(x: MaybePubkey): x is web3.PublicKey {
 
 function maybeKeypair(x: MaybeKeypair): x is web3.Keypair {
   if (x == null) return false;
-  return maybePublicKey(x.publicKey) && x.secretKey?.byteLength === 32;
+  return maybePublicKey(x.publicKey) && x.secretKey?.byteLength === 64;
 }
 
 function validateFloat(s: string) {
@@ -170,9 +170,7 @@ export class Value implements IValue {
         }
         if (maybeKeypair(x)) {
           return Value.fromJSON({
-            B6: bs58.encodeBase58(
-              new Uint8Array([...x.secretKey, ...x.publicKey.toBuffer()])
-            ),
+            B6: bs58.encodeBase58(x.secretKey),
           });
         }
         if (typeof x.byteLength === "number") {

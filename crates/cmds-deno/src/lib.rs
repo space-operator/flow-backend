@@ -8,6 +8,7 @@ use flow_lib::{
     utils::LocalBoxFuture,
 };
 use flow_rpc::client::RpcCommandClient;
+use std::path::Path;
 use std::process::Stdio;
 use tempfile::tempdir;
 use tokio::{
@@ -27,7 +28,6 @@ fn source_from_config(nd: &NodeData) -> Option<String> {
     })
 }
 
-#[cfg(feature = "local-deps")]
 fn copy_dir_all(
     src: impl AsRef<std::path::Path>,
     dst: impl AsRef<std::path::Path>,
@@ -56,6 +56,7 @@ macro_rules! include {
 pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
     let source = source_from_config(&nd)
         .ok_or_else(|| CommandError::msg("deno_script source/code not found"))?;
+    let use_local_deps = cfg!(feature = "local-deps") || cfg!(test);
 
     let dir = tempdir()?;
 
@@ -79,7 +80,7 @@ pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, Com
 
     tokio::fs::write(
         dir.path().join("deps.ts"),
-        if cfg!(feature = "local-deps") {
+        if use_local_deps {
             include!("/deps_local.ts")
         } else {
             include!("/deps_jsr.ts")
@@ -88,12 +89,26 @@ pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, Com
     .await
     .context("write deps.ts")?;
 
-    #[cfg(feature = "local-deps")]
-    {
-        let libs = concat!(env!("CARGO_MANIFEST_DIR"), "/@space-operator");
-        copy_dir_all(libs, dir.path().join("@space-operator"))
+    if use_local_deps {
+        let libs = std::fs::canonicalize(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../@space-operator"),
+        )
+        .context("resolve @space-operator workspace path")?;
+        let target = dir.path().join("@space-operator");
+        tokio::fs::create_dir_all(&target)
             .await
-            .context("copy dirs")?;
+            .context("create @space-operator temp dir")?;
+        for package in ["flow-lib", "deno-command-rpc"] {
+            copy_dir_all(libs.join(package), target.join(package))
+                .await
+                .context(format!("copy {package}"))?;
+        }
+        tokio::fs::copy(
+            target.join("deno-command-rpc/src/deps_local.ts"),
+            target.join("deno-command-rpc/src/deps.ts"),
+        )
+        .await
+        .context("activate local deno-command-rpc deps")?;
     }
 
     let deno_dir = std::env::var("DENO_DIR").unwrap_or_else(|_| {
@@ -318,6 +333,48 @@ mod tests {
             .unwrap();
         let c = value::from_value::<f64>(output["c"].clone()).unwrap();
         assert_eq!(c, 25.0);
+    }
+
+    #[actix_web::test]
+    async fn test_ctx_kv_reports_migration_guidance() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const JSON: &str = r#"{
+          "version": "0.1",
+          "name": "kv_unavailable",
+          "prefix": "deno",
+          "type": "deno",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [],
+            "outputs": []
+          },
+          "config_schema": {},
+          "config": {}
+        }"#;
+        const SOURCE: &str = r#"
+import * as lib from "jsr:@space-operator/flow-lib";
+
+export default class KvUnavailable implements lib.CommandTrait {
+  async run(ctx: lib.Context): Promise<Record<string, any>> {
+    await ctx.kv.set("foo", "bar");
+    return {};
+  }
+}
+"#;
+
+        let mut ctx = CommandContext::test_context();
+        ctx.extensions_mut()
+            .unwrap()
+            .insert(tower_rpc::Server::start_http_server().unwrap());
+
+        let cmd = new(&node_data(JSON, SOURCE)).await.unwrap();
+        let err = cmd.run(ctx, value::map! {}).await.unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("ctx.kv is not available in script runtimes"),
+            "{err:?}"
+        );
     }
 
     #[actix_web::test]

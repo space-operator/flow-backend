@@ -30,8 +30,6 @@ pub struct Input {
     #[serde(with = "value::pubkey")]
     pub instruction_program_id: Pubkey,
     pub instruction_accounts: Vec<AccountMeta>,
-    // TODO workaround for testing
-    pub additional_signers: Option<Vec<Wallet>>,
     pub signer_1: Option<Wallet>,
     pub signer_2: Option<Wallet>,
     pub signer_3: Option<Wallet>,
@@ -39,10 +37,13 @@ pub struct Input {
     pub submit: bool,
 }
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     pub signature: Option<Signature>,
+    #[serde_as(as = "AsPubkey")]
+    pub proposal_transaction_address: Pubkey,
 }
 
 pub fn execute_transaction(
@@ -83,16 +84,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         &input.instruction_accounts,
     );
 
-    // NOTE: this part used either additional_signers or signer_{1,2,3},
-    // I changed it to use both
-    let signers = input
-        .additional_signers
-        .into_iter()
-        .flatten()
-        .chain(input.signer_1)
-        .chain(input.signer_2)
-        .chain(input.signer_3)
-        .collect();
+    let mut signers: Vec<Wallet> = vec![input.fee_payer.clone()];
+    signers.extend(input.signer_1);
+    signers.extend(input.signer_2);
+    signers.extend(input.signer_3);
 
     let instructions = Instructions {
         lookup_tables: None,
@@ -103,7 +98,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let signature = ctx.execute(instructions, <_>::default()).await?.signature;
 
-    Ok(Output { signature })
+    Ok(Output {
+        signature,
+        proposal_transaction_address: input.proposal_transaction,
+    })
 }
 
 #[cfg(test)]

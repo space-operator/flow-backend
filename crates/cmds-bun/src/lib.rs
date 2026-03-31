@@ -400,6 +400,44 @@ mod tests {
     }
 
     #[actix_web::test]
+    async fn test_ctx_kv_reports_migration_guidance() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const JSON: &str = r#"{
+          "version": "0.1",
+          "name": "kv_unavailable",
+          "prefix": "bun",
+          "type": "bun",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [],
+            "outputs": []
+          },
+          "config_schema": {},
+          "config": {}
+        }"#;
+        const SOURCE: &str = r#"
+import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
+
+export default class KvUnavailable extends BaseCommand {
+  override async run(ctx: Context): Promise<Record<string, never>> {
+    await ctx.kv.set("foo", "bar");
+    return {};
+  }
+}
+"#;
+
+        let ctx = test_utils::test_context();
+        let cmd = new(&node_data(JSON, SOURCE)).await.unwrap();
+        let err = cmd.run(ctx, value::map! {}).await.unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("ctx.kv is not available in script runtimes"),
+            "{err:?}"
+        );
+    }
+
+    #[actix_web::test]
     async fn test_execute_with_public_key_signer_uses_adapter_wallet() {
         tracing_subscriber::fmt::try_init().ok();
 
