@@ -19,6 +19,7 @@ use hmac::{Hmac, Mac};
 use serde::Deserialize;
 use sha2::Sha256;
 use std::{
+    fmt,
     future::Future,
     ops::{ControlFlow, Deref},
 };
@@ -194,6 +195,15 @@ pub struct PreservedBearerToken {
     access_token: String,
     #[get = "pub"]
     expires_at: i64,
+}
+
+impl fmt::Debug for PreservedBearerToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PreservedBearerToken")
+            .field("access_token", &"[redacted]")
+            .field("expires_at", &self.expires_at)
+            .finish()
+    }
 }
 
 #[derive(Getters)]
@@ -480,5 +490,23 @@ impl AuthEither<AuthenticatedUser, FlowRunToken> {
             AuthEither::One(user) => Some(user.user_id),
             _ => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::PreservedBearerToken;
+
+    #[test]
+    fn preserved_bearer_token_debug_redacts_access_token() {
+        let token = PreservedBearerToken {
+            access_token: "super-secret-token".into(),
+            expires_at: 789,
+        };
+        let debug = format!("{token:?}");
+
+        assert!(!debug.contains("super-secret-token"));
+        assert!(debug.contains("[redacted]"));
+        assert!(debug.contains("789"));
     }
 }

@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::{
     collections::BTreeSet,
+    fmt,
     sync::{Arc, OnceLock},
 };
 use tokio::{sync::Semaphore, task::JoinHandle};
@@ -307,10 +308,19 @@ pub struct FlowStarter {
     pub action_signer: Option<Pubkey>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PreservedBearerToken {
     pub access_token: String,
     pub expires_at: i64,
+}
+
+impl fmt::Debug for PreservedBearerToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PreservedBearerToken")
+            .field("access_token", &"[redacted]")
+            .field("expires_at", &self.expires_at)
+            .finish()
+    }
 }
 
 /// Start a flow deployment by starting the entrypoint
@@ -563,5 +573,40 @@ mod tests {
         };
 
         assert_eq!(flow.wallets_id(), [7, 11].into());
+    }
+
+    #[test]
+    fn preserved_bearer_token_debug_redacts_access_token() {
+        let token = PreservedBearerToken {
+            access_token: "super-secret-token".into(),
+            expires_at: 123,
+        };
+        let debug = format!("{token:?}");
+
+        assert!(!debug.contains("super-secret-token"));
+        assert!(debug.contains("[redacted]"));
+        assert!(debug.contains("123"));
+    }
+
+    #[test]
+    fn start_flow_deployment_options_debug_redacts_nested_access_token() {
+        let options = StartFlowDeploymentOptions {
+            inputs: ValueSet::default(),
+            starter: FlowStarter {
+                user_id: Uuid::nil(),
+                pubkey: Pubkey::new_from_array([0; 32]),
+                authenticated: true,
+                action_signer: None,
+            },
+            preserved_bearer_token: Some(PreservedBearerToken {
+                access_token: "super-secret-token".into(),
+                expires_at: 456,
+            }),
+        };
+        let debug = format!("{options:?}");
+
+        assert!(!debug.contains("super-secret-token"));
+        assert!(debug.contains("[redacted]"));
+        assert!(debug.contains("456"));
     }
 }
