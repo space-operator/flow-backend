@@ -8,8 +8,8 @@ new API is validated.
 
 ## TODO
 
-- Add a gated CI job for the live E2E suite when a dedicated Flow
-  Server/Supabase test environment and secrets are available.
+- Provision the dedicated Flow Server/Supabase test environment secrets used by
+  `.github/workflows/client-next-e2e.yaml`.
 
 ## Goals
 
@@ -77,7 +77,7 @@ console.log(output.toJSObject());
 ## Migration
 
 For legacy `@space-operator/client` adopters, see
-[MIGRATION.md](/home/amir/code/space-operator/flow-backend/@space-operator/client-next/MIGRATION.md).
+[MIGRATION.md](./MIGRATION.md).
 
 ## Auth
 
@@ -346,8 +346,7 @@ Playwright smoke test assumes a Deno 2 toolchain.
 
 The package includes unit, runtime, and live E2E coverage.
 
-- Test guide:
-  [tests/README.md](/home/amir/code/space-operator/flow-backend/@space-operator/client-next/tests/README.md)
+- Test guide: [tests/README.md](./tests/README.md)
 - Unit and runtime tests validate transport and runtime behavior.
 - `tests/playwright` contains the browser websocket smoke coverage.
 - `tests/contract` is the live E2E suite for the full backend surface.

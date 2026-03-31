@@ -15,6 +15,11 @@ import {
   selectPaymentRequirements,
 } from "x402/client";
 
+// Keep x402 schema drift handling here. The backend already emits a newer
+// payment-requirements shape than the currently published JS x402 packages
+// accept, so this package is the compatibility boundary that normalizes backend
+// responses into the JS schema until upstream catches up.
+
 type LegacyPaymentRequired = {
   x402Version?: number;
   resource?: {

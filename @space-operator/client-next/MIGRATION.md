@@ -262,7 +262,7 @@ internally, so you do not need to manually wrap everything in `Value`.
 ## x402 Compatibility
 
 `@space-operator/client-next/x402` uses the compatibility shim in
-[@space-operator/x402-fetch](/home/amir/code/space-operator/flow-backend/@space-operator/x402-fetch/src/mod.ts).
+[`../x402-fetch/src/mod.ts`](../x402-fetch/src/mod.ts).
 
 In that code, `legacy` means the currently published JavaScript `x402` package
 shape that `PaymentRequirementsSchema` still expects:

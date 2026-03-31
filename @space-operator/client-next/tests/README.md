@@ -51,6 +51,9 @@ The default live suite is expected to pass in the supported test environment. It
 intentionally leaves the export and x402 cases ignored unless you opt in to
 them.
 
+The repo also includes a secret-gated GitHub Actions workflow for this path at
+[`../../.github/workflows/client-next-e2e.yaml`](../../.github/workflows/client-next-e2e.yaml).
+
 Run the externally blocked live tests when the environment is ready:
 
 ```bash
