@@ -225,7 +225,14 @@ mod tests {
             client::{InputPort, OutputPort},
             node::parse_definition,
         },
-        context::CommandContext,
+        context::{CommandContext, FlowServices, FlowSetServices, execute, get_jwt, signer},
+        flow_run_events,
+        solana::{Instructions, Pubkey, Signature, Wallet},
+        utils::tower_client::unimplemented_svc,
+    };
+    use std::{
+        sync::{Arc, Mutex},
+        time::Duration,
     };
     use uuid::Uuid;
 
@@ -265,6 +272,35 @@ mod tests {
         }
     }
 
+    fn test_context(execute_svc: execute::Svc, signer_svc: signer::Svc) -> CommandContext {
+        let base = CommandContext::test_context();
+        let data = base.raw().data.clone();
+        let node_id = data.node_id;
+        let times = data.times;
+        let (tx, _) = flow_run_events::channel();
+
+        CommandContext::builder()
+            .execute(execute_svc)
+            .get_jwt(unimplemented_svc::<
+                get_jwt::Request,
+                get_jwt::Response,
+                get_jwt::Error,
+            >())
+            .flow(FlowServices {
+                signer: signer_svc,
+                set: FlowSetServices {
+                    http: base.http().clone(),
+                    solana_client: base.solana_client().clone(),
+                    helius: None,
+                    extensions: Default::default(),
+                    api_input: unimplemented_svc(),
+                },
+            })
+            .data(data)
+            .node_log(flow_run_events::NodeLogSender::new(tx, node_id, times))
+            .build()
+    }
+
     #[actix_web::test]
     async fn test_run() {
         tracing_subscriber::fmt::try_init().ok();
@@ -282,5 +318,169 @@ mod tests {
             .unwrap();
         let c = value::from_value::<f64>(output["c"].clone()).unwrap();
         assert_eq!(c, 25.0);
+    }
+
+    #[actix_web::test]
+    async fn test_execute_with_public_key_signer_uses_adapter_wallet() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const JSON: &str = r#"{
+          "version": "0.1",
+          "name": "adapter_execute",
+          "prefix": "deno",
+          "type": "deno",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [
+              { "name": "signer", "type_bounds": ["string"], "required": true, "passthrough": false }
+            ],
+            "outputs": [
+              { "name": "ok", "type": "f64", "optional": false }
+            ]
+          },
+          "config_schema": {},
+          "config": {}
+        }"#;
+        const SOURCE: &str = r#"
+import * as lib from "jsr:@space-operator/flow-lib";
+import * as web3 from "npm:@solana/web3.js";
+import { Instructions } from "jsr:@space-operator/flow-lib/context";
+
+export default class AdapterExecute implements lib.CommandTrait {
+  async run(ctx: lib.Context, params: Record<string, any>): Promise<Record<string, any>> {
+    const signer = new web3.PublicKey(params.signer);
+    await ctx.execute(new Instructions(signer, [signer], []), {});
+    return { ok: 1 };
+  }
+}
+"#;
+
+        let observed = Arc::new(Mutex::new(None::<Instructions>));
+        let execute_svc = execute::Svc::new(tower::service_fn({
+            let observed = observed.clone();
+            move |req: execute::Request| {
+                let observed = observed.clone();
+                async move {
+                    *observed.lock().unwrap() = Some(req.instructions.clone());
+                    Ok(execute::Response {
+                        signature: Some(Signature::default()),
+                    })
+                }
+            }
+        }));
+
+        let mut ctx = test_context(
+            execute_svc,
+            unimplemented_svc::<signer::SignatureRequest, signer::SignatureResponse, signer::Error>(
+            ),
+        );
+        ctx.extensions_mut()
+            .unwrap()
+            .insert(tower_rpc::Server::start_http_server().unwrap());
+
+        let signer = Pubkey::new_unique();
+        let cmd = new(&node_data(JSON, SOURCE)).await.unwrap();
+        let output = cmd
+            .run(ctx, value::map! { "signer" => signer.to_string() })
+            .await
+            .unwrap();
+
+        assert_eq!(value::from_value::<f64>(output["ok"].clone()).unwrap(), 1.0);
+
+        let instructions = observed.lock().unwrap().clone().unwrap();
+        assert_eq!(instructions.fee_payer, signer);
+        assert_eq!(
+            instructions.signers,
+            vec![Wallet::Adapter {
+                public_key: signer,
+                token: None,
+            }]
+        );
+    }
+
+    #[actix_web::test]
+    async fn test_request_signature_uses_signer_service() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const JSON: &str = r#"{
+          "version": "0.1",
+          "name": "adapter_signature",
+          "prefix": "deno",
+          "type": "deno",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [
+              { "name": "signer", "type_bounds": ["string"], "required": true, "passthrough": false }
+            ],
+            "outputs": [
+              { "name": "signature_length", "type": "f64", "optional": false },
+              { "name": "new_message_length", "type": "f64", "optional": false }
+            ]
+          },
+          "config_schema": {},
+          "config": {}
+        }"#;
+        const SOURCE: &str = r#"
+import * as lib from "jsr:@space-operator/flow-lib";
+import * as web3 from "npm:@solana/web3.js";
+
+export default class AdapterSignature implements lib.CommandTrait {
+  async run(ctx: lib.Context, params: Record<string, any>): Promise<Record<string, any>> {
+    const signer = new web3.PublicKey(params.signer);
+    const { signature, new_message } = await ctx.requestSignature(
+      signer,
+      new Uint8Array([1, 2, 3, 4])
+    );
+    return {
+      signature_length: signature.length,
+      new_message_length: new_message ? new_message.length : 0,
+    };
+  }
+}
+"#;
+
+        let observed = Arc::new(Mutex::new(None::<signer::SignatureRequest>));
+        let signer_svc = signer::Svc::new(tower::service_fn({
+            let observed = observed.clone();
+            move |req: signer::SignatureRequest| {
+                let observed = observed.clone();
+                async move {
+                    *observed.lock().unwrap() = Some(req);
+                    Ok(signer::SignatureResponse {
+                        signature: Signature::from([7u8; 64]),
+                        new_message: Some(b"updated".to_vec().into()),
+                    })
+                }
+            }
+        }));
+
+        let mut ctx = test_context(
+            unimplemented_svc::<execute::Request, execute::Response, execute::Error>(),
+            signer_svc,
+        );
+        ctx.extensions_mut()
+            .unwrap()
+            .insert(tower_rpc::Server::start_http_server().unwrap());
+
+        let signer = Pubkey::new_unique();
+        let cmd = new(&node_data(JSON, SOURCE)).await.unwrap();
+        let output = cmd
+            .run(ctx, value::map! { "signer" => signer.to_string() })
+            .await
+            .unwrap();
+
+        assert_eq!(
+            value::from_value::<f64>(output["signature_length"].clone()).unwrap(),
+            64.0
+        );
+        assert_eq!(
+            value::from_value::<f64>(output["new_message_length"].clone()).unwrap(),
+            7.0
+        );
+
+        let request = observed.lock().unwrap().clone().unwrap();
+        assert_eq!(request.pubkey, signer);
+        assert_eq!(request.message.as_ref(), b"\x01\x02\x03\x04");
+        assert_eq!(request.timeout, Duration::from_secs(120));
     }
 }

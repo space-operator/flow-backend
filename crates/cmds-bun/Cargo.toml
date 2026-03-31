@@ -38,3 +38,4 @@ dotenvy = "0.15"
 
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 actix-web = "4.5.1"
+tower = "0.5"

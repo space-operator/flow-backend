@@ -70,10 +70,12 @@ function isPubkey(x: web3.PublicKey | web3.Keypair): x is web3.PublicKey {
   return (x as any)._bn !== undefined;
 }
 
+type EncodedSigner = Uint8Array | { public_key: Uint8Array; token: null };
+
 export class Instructions {
   #data: {
     fee_payer: Uint8Array;
-    signers: Uint8Array[];
+    signers: EncodedSigner[];
     instructions: msgpack.ValueMap[];
   };
 
@@ -84,14 +86,15 @@ export class Instructions {
   ) {
     this.#data = {
       fee_payer: feePayer.toBytes(),
-      signers: signers.map((x) => {
+      signers: signers.map((x): EncodedSigner => {
         if (isPubkey(x)) {
-          const bytes = new Uint8Array(64);
-          bytes.set(x.toBytes(), 32);
-          return bytes;
-        } else {
-          return x.secretKey;
+          return {
+            public_key: x.toBytes(),
+            token: null,
+          };
         }
+
+        return x.secretKey;
       }),
       instructions: instructions.map((i) => ({
         program_id: i.programId.toBytes(),

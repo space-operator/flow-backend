@@ -3,7 +3,7 @@ use flow_lib::{
     Value,
     command::CommandTrait,
     context::{
-        CommandContext, CommandContextData, FlowServices, FlowSetServices, execute, get_jwt,
+        CommandContext, CommandContextData, FlowServices, FlowSetServices, execute, get_jwt, signer,
     },
     flow_run_events::DEFAULT_LOG_FILTER,
     utils::{Extensions, tower_client::unimplemented_svc},
@@ -75,7 +75,7 @@ impl CommandTraitImpl {
                 .execute(execute::Svc::new(MakeSync::new(context.clone())))
                 .get_jwt(get_jwt::Svc::new(MakeSync::new(context.clone())))
                 .flow(FlowServices {
-                    signer: unimplemented_svc(),
+                    signer: signer::Svc::new(MakeSync::new(context.clone())),
                     set: FlowSetServices {
                         http: HTTP_CLIENT.clone(),
                         solana_client: Arc::new(
