@@ -47,7 +47,7 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let event_authority = derive_event_authority();
 
-    let mut accounts = vec![
+    let accounts = vec![
         // Fixed accounts (CreatorWithdrawCtx)
         AccountMeta::new(input.presale, false),
         AccountMeta::new_readonly(input.presale_authority, false),
