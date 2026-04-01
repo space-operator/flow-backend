@@ -11,49 +11,65 @@
     "inputs": [
       {
         "name": "fee_payer",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "passthrough": true,
         "tooltip": "Account paying for transaction and receipt creation fees"
       },
       {
         "name": "depositor",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "tooltip": "Token authority making the deposit"
       },
       {
         "name": "escrow",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "required": true,
         "tooltip": "Escrow PDA address"
       },
       {
         "name": "mint",
-        "type_bounds": ["pubkey"],
-        "required": true,
-        "tooltip": "Token mint to deposit"
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "tooltip": "Token mint to deposit (defaults to native SOL mint)"
       },
       {
         "name": "receipt_seed",
-        "type_bounds": ["keypair"],
+        "type_bounds": [
+          "keypair"
+        ],
         "required": true,
         "tooltip": "Seed for receipt uniqueness (generate a fresh keypair)"
       },
       {
         "name": "token_program",
-        "type_bounds": ["pubkey"],
+        "type_bounds": [
+          "pubkey"
+        ],
         "tooltip": "SPL Token or Token-2022 program ID (defaults to SPL Token)"
       },
       {
         "name": "amount",
-        "type_bounds": ["u64"],
+        "type_bounds": [
+          "u64"
+        ],
         "required": true,
         "tooltip": "Amount of tokens to deposit (in raw units)"
       },
       {
         "name": "submit",
-        "type_bounds": ["bool"],
+        "type_bounds": [
+          "bool"
+        ],
         "tooltip": "Submit transaction to the network"
       }
     ],
@@ -73,15 +89,24 @@
   },
   "config_schema": {},
   "config": {
-    "submit": { "B": true },
-    "token_program": { "S": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" }
+    "submit": {
+      "B": true
+    },
+    "token_program": {
+      "S": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    }
   },
   "classification": {
     "vendor": "Solana",
     "program": "escrow",
     "category": "utility",
     "icon_url": "https://github.com/solana-program.png",
-    "tags": ["escrow", "deposit", "token", "solana"]
+    "tags": [
+      "escrow",
+      "deposit",
+      "token",
+      "solana"
+    ]
   },
   "external_version": {
     "program_id": "Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg",

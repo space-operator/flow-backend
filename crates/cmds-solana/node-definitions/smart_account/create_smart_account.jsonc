@@ -36,7 +36,7 @@
       {
         "name": "signers",
         "type_bounds": [
-          "object"
+          "json"
         ],
         "required": true,
         "tooltip": "Array of {key, permissions} signer objects"
