@@ -1,0 +1,159 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "deposit_and_queue_transfer",
+  "prefix": "magicblock",
+  "type": "native",
+  "description": "Deposit tokens and queue a transfer in MagicBlock ephemeral rollup",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/magicblock/deposit_and_queue_transfer.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "queue",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Transfer queue account"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token mint"
+      },
+      {
+        "name": "source_token",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Source token account"
+      },
+      {
+        "name": "destination_token_or_owner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Destination token account or owner"
+      },
+      {
+        "name": "authority",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Authority over source token account"
+      },
+      {
+        "name": "shuttle_wallet_ata",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Shuttle wallet ATA"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Amount in base units"
+      },
+      {
+        "name": "min_delay_ms",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Minimum delay in milliseconds"
+      },
+      {
+        "name": "max_delay_ms",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Maximum delay in milliseconds"
+      },
+      {
+        "name": "split",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": true,
+        "tooltip": "Number of splits"
+      },
+      {
+        "name": "flags",
+        "type_bounds": [
+          "u8"
+        ],
+        "required": true,
+        "tooltip": "Transfer flags"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "MagicBlock",
+    "program": "ephemeral_spl_token",
+    "category": "token",
+    "icon_url": null,
+    "tags": [
+      "magicblock",
+      "ephemeral",
+      "token",
+      "transfer-queue",
+      "deposit"
+    ]
+  },
+  "external_version": {
+    "program_id": "SPLxh1LVZzEkX99H6rqYizhytLWPZVV296zyYDPagv2",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/magicblock/deposit_and_queue_transfer.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -28,6 +28,7 @@ pub mod kfarms;
 pub mod klend;
 pub mod kvault;
 pub mod limo;
+pub mod magicblock;
 pub mod merkle_distributor;
 pub mod mpl_bubblegum;
 pub mod mpl_core;

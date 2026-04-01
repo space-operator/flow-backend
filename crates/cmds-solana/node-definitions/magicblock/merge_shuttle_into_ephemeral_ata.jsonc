@@ -1,0 +1,103 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "merge_shuttle_into_ephemeral_ata",
+  "prefix": "magicblock",
+  "type": "native",
+  "description": "Merge shuttle tokens into an ephemeral ATA",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/magicblock/merge_shuttle_into_ephemeral_ata.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "owner",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Owner of the shuttle"
+      },
+      {
+        "name": "mint",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Token mint"
+      },
+      {
+        "name": "shuttle_id",
+        "type_bounds": [
+          "u32"
+        ],
+        "required": true,
+        "tooltip": "Shuttle identifier"
+      },
+      {
+        "name": "destination_token",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Destination token account to merge into"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "MagicBlock",
+    "program": "ephemeral_spl_token",
+    "category": "token",
+    "icon_url": null,
+    "tags": [
+      "magicblock",
+      "ephemeral",
+      "token",
+      "shuttle",
+      "merge"
+    ]
+  },
+  "external_version": {
+    "program_id": "SPLxh1LVZzEkX99H6rqYizhytLWPZVV296zyYDPagv2",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/magicblock/merge_shuttle_into_ephemeral_ata.jsonc",
+    "repo": "flow-backend"
+  }
+}
