@@ -73,6 +73,7 @@ pub struct FlowInfo {
     pub is_public: bool,
     pub start_shared: bool,
     pub start_unverified: bool,
+    pub read_enabled: bool,
 }
 
 impl TryFrom<Row> for FlowInfo {
@@ -89,6 +90,9 @@ impl TryFrom<Row> for FlowInfo {
             start_unverified: r
                 .try_get("start_unverified")
                 .map_err(Error::data("flow.start_unverified"))?,
+            read_enabled: r
+                .try_get("read_enabled")
+                .map_err(Error::data("flow.read_enabled"))?,
         })
     }
 }
@@ -106,7 +110,11 @@ impl tower::Service<get_flow_row::Request> for Box<dyn UserConnectionTrait> {
     fn call(&mut self, req: get_flow_row::Request) -> Self::Future {
         let this = self.clone_connection();
         Box::pin(async move {
-            let result = this.get_flow(req.flow_id).await;
+            let result = if req.fresh {
+                this.get_flow_fresh(req.flow_id).await
+            } else {
+                this.get_flow(req.flow_id).await
+            };
             match result {
                 Ok(row) => Ok(get_flow_row::Response { row }),
                 Err(error) => Err(match error {
@@ -164,6 +172,7 @@ pub trait UserConnectionTrait: Any + 'static {
     fn clone_connection(&self) -> Box<dyn UserConnectionTrait>;
 
     async fn get_flow(&self, id: FlowId) -> crate::Result<FlowRow>;
+    async fn get_flow_fresh(&self, id: FlowId) -> crate::Result<FlowRow>;
 
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()>;
 

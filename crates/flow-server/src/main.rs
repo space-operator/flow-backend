@@ -186,6 +186,7 @@ async fn main() {
     let root = db_worker.clone();
 
     let shutdown_timeout_secs = config.shutdown_timeout_secs;
+    let read_cache = config.read_cache();
     let server_hostname = config.server_hostname.clone();
 
     let config = Arc::new(config);
@@ -231,16 +232,23 @@ async fn main() {
             .service(api::start_flow::service(&config))
             .service(api::stop_flow::service(&config))
             .service(api::start_flow_shared::service(&config))
+            .service(api::read_flow::service(&config))
+            .service(api::read_flow::service_shared(&config))
             .service(api::clone_flow::service(&config))
             .service(api::get_flow_output::service(&config))
             .service(api::get_signature_request::service(&config))
             .service(api::deploy_flow::service(&config))
             .configure(api::flow_api_input::configure(store.clone()));
         if let Some(supabase_auth) = &supabase_auth {
-            flow = flow.service(api::start_flow_unverified::service(
-                &config,
-                web::Data::new(supabase_auth.clone()),
-            ))
+            flow = flow
+                .service(api::start_flow_unverified::service(
+                    &config,
+                    web::Data::new(supabase_auth.clone()),
+                ))
+                .service(api::read_flow::service_unverified(
+                    &config,
+                    web::Data::new(supabase_auth.clone()),
+                ))
         }
 
         let websocket = web::scope("/ws").service(ws::service(&config));
@@ -259,7 +267,9 @@ async fn main() {
             .service(api::kvstore::delete_item::service(&config))
             .service(api::kvstore::read_item::service(&config));
 
-        let deployment = web::scope("/deployment").service(api::start_deployment::service(&config));
+        let deployment = web::scope("/deployment")
+            .service(api::start_deployment::service(&config))
+            .service(api::read_deployment::service(&config));
 
         let logger = Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#)
             .exclude("/healthcheck")
@@ -269,6 +279,7 @@ async fn main() {
             .wrap(Compress::default())
             .wrap(logger)
             .app_data(web::Data::new(x402_1.clone()))
+            .app_data(web::Data::new(read_cache.clone()))
             .app_data(web::Data::new(db.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
             .configure(|cfg| flow_server::middleware::url::configure(cfg, &config))

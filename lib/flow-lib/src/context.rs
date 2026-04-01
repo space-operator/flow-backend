@@ -508,6 +508,8 @@ pub struct FlowContextData {
     pub flow_run_id: FlowRunId,
     pub environment: HashMap<String, String>,
     pub inputs: ValueSet,
+    #[serde(default)]
+    pub read_only: bool,
     pub set: FlowSetContextData,
 }
 
@@ -557,6 +559,7 @@ impl CommandContext {
                     flow_run_id: FlowRunId::nil(),
                     environment: HashMap::new(),
                     inputs: ValueSet::default(),
+                    read_only: false,
                     set: FlowSetContextData {
                         flow_owner: User::default(),
                         started_by: User::default(),
@@ -612,6 +615,14 @@ impl CommandContext {
 
     pub fn environment(&self) -> &HashMap<String, String> {
         &self.data.flow.environment
+    }
+
+    pub fn is_read_only(&self) -> bool {
+        self.data.flow.read_only
+    }
+
+    pub fn set_read_only(&mut self, read_only: bool) {
+        self.data.flow.read_only = read_only;
     }
 
     pub fn endpoints(&self) -> &Endpoints {

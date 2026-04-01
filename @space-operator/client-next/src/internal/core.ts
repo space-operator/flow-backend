@@ -5,7 +5,12 @@ import type {
   CreateClientOptions,
   ServiceInfoOutput,
 } from "../types.ts";
-import { type JsonRequestOptions, requestJson } from "./transport/http.ts";
+import {
+  type JsonRequestOptions,
+  type JsonResponseWithMeta,
+  requestJson,
+  requestJsonWithMeta,
+} from "./transport/http.ts";
 import {
   EventSubscription,
   subscribeFlowRun,
@@ -37,6 +42,12 @@ export class ClientCore {
 
   async requestJson<T>(options: JsonRequestOptions): Promise<T> {
     return await requestJson<T>(this.config, options);
+  }
+
+  async requestJsonWithMeta<T>(
+    options: JsonRequestOptions,
+  ): Promise<JsonResponseWithMeta<T>> {
+    return await requestJsonWithMeta<T>(this.config, options);
   }
 
   async requestContract<T>(

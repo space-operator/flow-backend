@@ -153,6 +153,12 @@ export interface StartFlowSharedParams {
   output_instructions?: boolean;
 }
 
+export interface ReadFlowParams {
+  inputs?: FlowInputs;
+  skipCache?: boolean;
+}
+
+
 export interface SolanaActionConfig {
   action_signer: string;
   action_identity: string;
@@ -179,6 +185,12 @@ export interface StartDeploymentParams {
   inputs?: FlowInputs;
   action_signer?: string;
 }
+
+export interface ReadDeploymentParams {
+  inputs?: FlowInputs;
+  skipCache?: boolean;
+}
+
 
 export interface ClaimTokenOutput {
   user_id: UserId;
@@ -380,6 +392,18 @@ export interface ApiInputEvent {
   flow_run_id: FlowRunId;
   time: string;
   url: string;
+}
+
+
+
+
+
+export interface ReadResult {
+  value: Value;
+  cached: boolean;
+  etag?: string;
+  cacheControl?: string;
+  lastModified?: string;
 }
 
 export type FlowRunEvent =

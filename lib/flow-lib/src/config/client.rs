@@ -33,6 +33,8 @@ pub struct FlowRow {
     pub is_public: bool,
     pub start_shared: bool,
     pub start_unverified: bool,
+    #[serde(default)]
+    pub read_enabled: bool,
 }
 
 impl FlowRow {
@@ -79,6 +81,7 @@ const fn default_origin() -> FlowRunOrigin {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FlowRunOrigin {
     Start {},
+    Read {},
     StartShared {
         started_by: UserId,
     },
@@ -291,6 +294,8 @@ pub struct FlowRowV2 {
     pub start_shared: bool,
     pub start_unverified: bool,
     #[serde(default)]
+    pub read_enabled: bool,
+    #[serde(default)]
     pub current_branch_id: Option<String>,
 }
 
@@ -411,6 +416,7 @@ impl From<FlowRowV2> for FlowRow {
             is_public: v2.is_public,
             start_shared: v2.start_shared,
             start_unverified: v2.start_unverified,
+            read_enabled: v2.read_enabled,
         }
     }
 }

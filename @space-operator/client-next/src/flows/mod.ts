@@ -8,7 +8,9 @@ import {
   successResponseSchema,
 } from "@space-operator/contracts";
 import type { ClientCore } from "../internal/core.ts";
+import { performReadRequest, resolveReadAuthScope } from "../internal/read.ts";
 import { normalizeFlowInputs } from "../internal/transport/value.ts";
+import { stableHash } from "../internal/transport/value.ts";
 import { FlowRunHandle } from "../run_handle.ts";
 import { publicKeyAuth } from "../auth/mod.ts";
 import { ApiError } from "../internal/transport/errors.ts";
@@ -19,6 +21,8 @@ import type {
   FlowRunId,
   ISignatureRequest,
   PublicKeyProvider,
+  ReadFlowParams,
+  ReadResult,
   RequestOptions,
   SignatureRequest,
   StartFlowParams,
@@ -128,6 +132,48 @@ function serializeStartFlowUnverifiedParams(
   };
 }
 
+
+const MAX_READ_QUERY_BYTES = 1500;
+
+function serializeReadParams(params: ReadFlowParams = {}) {
+  return {
+    ...(params.inputs !== undefined
+      ? { inputs: normalizeFlowInputs(params.inputs) }
+      : {}),
+    ...(params.skipCache !== undefined
+      ? { skip_cache: params.skipCache }
+      : {}),
+  };
+}
+
+function readRequestOptions(
+  path: string,
+  params: ReadFlowParams,
+) {
+  const payload = serializeReadParams(params);
+  const encodedInputs = payload.inputs === undefined
+    ? undefined
+    : JSON.stringify(payload.inputs);
+  if (
+    (encodedInputs === undefined || encodedInputs.length <= MAX_READ_QUERY_BYTES) &&
+    params.skipCache !== true
+  ) {
+    return {
+      method: "GET",
+      path,
+      query: {
+        ...(encodedInputs !== undefined ? { inputs: encodedInputs } : {}),
+      },
+    } as const;
+  }
+
+  return {
+    method: "POST",
+    path,
+    body: payload,
+  } as const;
+}
+
 export function createFlowsNamespace(core: ClientCore) {
   return {
     async start(
@@ -195,6 +241,82 @@ export function createFlowsNamespace(core: ClientCore) {
         timeoutMs: options.timeoutMs,
       }, "unverified flow start response");
       return new FlowRunHandle(core, result.flow_run_id, result.token);
+    },
+
+    async read(
+      flowId: FlowId,
+      params: ReadFlowParams = {},
+      options: RequestOptions = {},
+    ): Promise<ReadResult> {
+      const normalized = params.inputs ? normalizeFlowInputs(params.inputs) : undefined;
+      const authScope = await resolveReadAuthScope(core, options);
+      return await performReadRequest(core, {
+        cacheKey: `flow:read:${flowId}:${authScope}:${stableHash(normalized)}`,
+        options,
+        request: {
+          ...readRequestOptions(`/flow/read/${flowId}`, params),
+          headers: options.headers,
+          signal: options.signal,
+          retry: options.retry,
+          timeoutMs: options.timeoutMs,
+        },
+        skipCache: params.skipCache === true,
+        subject: "flow read response",
+      });
+    },
+
+    async readShared(
+      flowId: FlowId,
+      params: ReadFlowParams = {},
+      options: RequestOptions = {},
+    ): Promise<ReadResult> {
+      const normalized = params.inputs ? normalizeFlowInputs(params.inputs) : undefined;
+      const authScope = await resolveReadAuthScope(core, options);
+      return await performReadRequest(core, {
+        cacheKey: `flow:read_shared:${flowId}:${authScope}:${stableHash(normalized)}`,
+        options,
+        request: {
+          ...readRequestOptions(`/flow/read_shared/${flowId}`, params),
+          headers: options.headers,
+          signal: options.signal,
+          retry: options.retry,
+          timeoutMs: options.timeoutMs,
+        },
+        skipCache: params.skipCache === true,
+        subject: "shared flow read response",
+      });
+    },
+
+    async readUnverified(
+      flowId: FlowId,
+      params: ReadFlowParams = {},
+      options: RequestOptions & { publicKey?: PublicKeyProvider } = {},
+    ): Promise<ReadResult> {
+      const auth = options.publicKey
+        ? publicKeyAuth(options.publicKey)
+        : options.auth;
+      const normalized = params.inputs ? normalizeFlowInputs(params.inputs) : undefined;
+      const authScope = await resolveReadAuthScope(core, {
+        ...options,
+        auth,
+      });
+      return await performReadRequest(core, {
+        cacheKey: `flow:read_unverified:${flowId}:${authScope}:${stableHash(normalized)}`,
+        options: {
+          ...options,
+          auth,
+        },
+        request: {
+          ...readRequestOptions(`/flow/read_unverified/${flowId}`, params),
+          headers: options.headers,
+          signal: options.signal,
+          retry: options.retry,
+          timeoutMs: options.timeoutMs,
+          auth,
+        },
+        skipCache: params.skipCache === true,
+        subject: "unverified flow read response",
+      });
     },
 
     async output(

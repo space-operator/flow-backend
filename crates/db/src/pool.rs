@@ -169,12 +169,10 @@ impl DbPool {
     }
 
     pub async fn get_conn(&self) -> crate::Result<Connection> {
-        // let conn = tokio::time::timeout(Duration::from_secs(240), self.pg.get())
-        //     .await
-        //     .map_err(|_| Error::Timeout)?
-        //     .map_err(Error::GetDbConnection)?;
-        // Ok(conn)
-        self.pg.get().await.map_err(Error::GetDbConnection)
+        tokio::time::timeout(Duration::from_secs(5), self.pg.get())
+            .await
+            .map_err(|_| Error::Timeout)?
+            .map_err(Error::GetDbConnection)
     }
 
     pub async fn get_user_conn(

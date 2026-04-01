@@ -24,13 +24,20 @@ use value::Value;
 
 pub mod builder;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ReadCapability {
+    Snapshot,
+    Interactive,
+    Mutating,
+}
+
 /// Import common types for writing commands.
 pub mod prelude {
     pub use crate::{
         CmdInputDescription, CmdInputDescription as Input, CmdOutputDescription,
         CmdOutputDescription as Output, FlowId, Name, ValueSet, ValueType,
         command::{
-            CommandDescription, CommandError, CommandTrait, InstructionInfo,
+            CommandDescription, CommandError, CommandTrait, InstructionInfo, ReadCapability,
             builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
         },
         config::{client::NodeData, node::Permissions},
@@ -138,6 +145,11 @@ pub trait CommandTrait: 'static {
     /// Specify requested permissions of this command.
     fn permissions(&self) -> Permissions {
         Permissions::default()
+    }
+
+    /// Describe whether this command is safe to use in read-only execution modes.
+    fn read_capability(&self) -> ReadCapability {
+        ReadCapability::Snapshot
     }
 
     /// Async `Drop` method.

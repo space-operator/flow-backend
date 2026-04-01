@@ -23,6 +23,7 @@ pub mod db_worker;
 pub mod error;
 pub mod middleware;
 pub mod openapi;
+pub mod read_cache;
 pub mod user;
 pub mod ws;
 
@@ -323,6 +324,7 @@ impl Config {
         let mut cors = actix_cors::Cors::default()
             .allow_any_header()
             .allow_any_method()
+            .expose_headers(["ETag", "Cache-Control", "Last-Modified"])
             .supports_credentials();
         if self.cors_origins.iter().any(|v| v == "*") {
             cors = cors.allow_any_origin();
@@ -342,6 +344,10 @@ impl Config {
 
     pub fn signature_auth(&self) -> SignatureAuth {
         SignatureAuth::new(self.blake3_key)
+    }
+
+    pub fn read_cache(&self) -> read_cache::ReadCache {
+        read_cache::ReadCache::new(self.blake3_key)
     }
 
     /// Build a middleware to validate `apikey` header

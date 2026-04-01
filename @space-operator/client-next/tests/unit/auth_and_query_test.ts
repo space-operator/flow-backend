@@ -185,3 +185,26 @@ unitTest(
     assertEquals(requests[2].headers.get("apikey"), "anon-from-info");
   },
 );
+
+unitTest("deployment reads omit undefined inputs from GET queries", async () => {
+  const requests: string[] = [];
+  const client = createClient({
+    baseUrl: "http://example.test",
+    fetch: async (input) => {
+      requests.push(String(input));
+      return new Response(JSON.stringify({ N: 0 }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "private, max-age=60",
+          ETag: '"etag-1"',
+        },
+      });
+    },
+  });
+
+  const result = await client.deployments.read({ id: "dep-1" });
+
+  assertEquals(result.value.toJSObject(), null);
+  assertEquals(requests, ["http://example.test/deployment/read?id=dep-1"]);
+});

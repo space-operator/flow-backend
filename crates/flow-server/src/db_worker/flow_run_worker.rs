@@ -43,6 +43,7 @@ pub struct FlowRunWorker {
     subs: HashMap<SubscriptionID, Subscription>,
     all_events: Vec<Event>,
     done_tx: broadcast::Sender<()>,
+    finished: bool,
 }
 
 impl Actor for FlowRunWorker {
@@ -76,8 +77,28 @@ impl actix::Message for WaitFinish {
 impl actix::Handler<WaitFinish> for FlowRunWorker {
     type Result = ResponseFuture<<WaitFinish as actix::Message>::Result>;
     fn handle(&mut self, _: WaitFinish, _: &mut Self::Context) -> Self::Result {
+        if self.finished {
+            return async { Ok(()) }.boxed();
+        }
         let mut rx = self.done_tx.subscribe();
         async move { rx.recv().await }.boxed()
+    }
+}
+
+pub struct ForceStopFlow {
+    pub timeout_millies: u32,
+    pub reason: Option<String>,
+}
+
+impl actix::Message for ForceStopFlow {
+    type Result = ();
+}
+
+impl actix::Handler<ForceStopFlow> for FlowRunWorker {
+    type Result = ();
+
+    fn handle(&mut self, msg: ForceStopFlow, _: &mut Self::Context) -> Self::Result {
+        self.stop_signal.stop(msg.timeout_millies, msg.reason);
     }
 }
 
@@ -228,6 +249,7 @@ impl FlowRunWorker {
         let (tx, rx) = mpsc::unbounded();
         let fut = save_to_db(user_id, run_id, rx, db, root.recipient());
         ctx.spawn(wrap_future::<_, Self>(fut).map(move |_, act, _| {
+            act.finished = true;
             act.done_tx.send(()).ok();
         }));
         ctx.add_stream(stream);
@@ -243,6 +265,7 @@ impl FlowRunWorker {
             done_tx: broadcast::channel::<()>(1).0,
             subs: HashMap::new(),
             all_events: Vec::new(),
+            finished: false,
         }
     }
 

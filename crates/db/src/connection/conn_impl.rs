@@ -259,6 +259,10 @@ impl UserConnectionTrait for UserConnection {
             .await
     }
 
+    async fn get_flow_fresh(&self, id: FlowId) -> crate::Result<FlowRow> {
+        self.get_flow_impl(id).await
+    }
+
     async fn share_flow_run(&self, id: FlowRunId, user: UserId) -> crate::Result<()> {
         self.share_flow_run_impl(id, user).await
     }

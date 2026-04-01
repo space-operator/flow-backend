@@ -1,5 +1,6 @@
-import { assert, assertEquals } from "@std/assert";
+import { assert, assertEquals, assertRejects } from "@std/assert";
 import {
+  ApiError,
   bearerAuth,
   createClient,
   publicKeyAuth,
@@ -17,9 +18,90 @@ import {
   resolveFixtureFlowId,
   serviceInfo,
   signText,
+  SUPABASE_URL,
   Value,
   web3,
 } from "./_shared.ts";
+
+type FlowV2Flags = {
+  read_enabled?: boolean;
+};
+
+type FlowRunRow = {
+  id: string;
+  origin: Record<string, unknown>;
+  start_time: string | null;
+  end_time: string | null;
+};
+
+async function requestFlowV2<T>(
+  method: "GET" | "PATCH",
+  query: string,
+  body?: FlowV2Flags,
+): Promise<T> {
+  const serviceRoleKey = getEnv("SERVICE_ROLE_KEY");
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/flows_v2${query}`, {
+    method,
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+      ...(body ? { "content-type": "application/json" } : {}),
+      ...(method === "PATCH" ? { prefer: "return=representation" } : {}),
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(
+      `flows_v2 ${method} failed: ${response.status} ${text || response.statusText}`,
+    );
+  }
+  return text.length === 0 ? [] as T : JSON.parse(text) as T;
+}
+
+async function requestFlowRuns<T>(query: string): Promise<T> {
+  const serviceRoleKey = getEnv("SERVICE_ROLE_KEY");
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/flow_run${query}`, {
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+    },
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(
+      `flow_run GET failed: ${response.status} ${text || response.statusText}`,
+    );
+  }
+  return text.length === 0 ? [] as T : JSON.parse(text) as T;
+}
+
+async function withFlowReadEnabled(
+  flowId: string,
+  readEnabled: boolean,
+  fn: () => Promise<void>,
+) {
+  const query = `?uuid=eq.${flowId}&select=uuid,read_enabled`;
+  const [original] = await requestFlowV2<Array<{
+    uuid: string;
+    read_enabled: boolean;
+  }>>("GET", query);
+  if (!original) {
+    throw new Error(`missing flows_v2 row for ${flowId}`);
+  }
+
+  await requestFlowV2("PATCH", query, {
+    read_enabled: readEnabled,
+  });
+
+  try {
+    await fn();
+  } finally {
+    await requestFlowV2("PATCH", query, {
+      read_enabled: original.read_enabled,
+    });
+  }
+}
 
 contractTest(
   "deployment contract: deploy, start, sign, and fetch output",
@@ -52,6 +134,119 @@ contractTest(
 
     const output = await run.output();
     assert(output.M?.signature != null);
+  },
+);
+
+contractTest(
+  "deployment contract: read requires read_enabled at deploy time",
+  async () => {
+    const owner = apiClient();
+    const deploySimpleFlowId = await resolveFixtureFlowId("deploySimple");
+
+    await withFlowReadEnabled(
+      deploySimpleFlowId,
+      false,
+      async () => {
+        const deploymentId = await owner.flows.deploy(deploySimpleFlowId);
+        const error = await assertRejects(
+          () =>
+            owner.deployments.read(
+              { id: deploymentId },
+              {
+                inputs: {
+                  a: 2,
+                  b: 3,
+                },
+                skipCache: true,
+              },
+            ),
+          ApiError,
+        );
+        assertEquals(error.status, 403);
+      },
+    );
+
+    await withFlowReadEnabled(
+      deploySimpleFlowId,
+      true,
+      async () => {
+        const deploymentId = await owner.flows.deploy(deploySimpleFlowId);
+        const result = await owner.deployments.read(
+          { id: deploymentId },
+          {
+            inputs: {
+              a: 2,
+              b: 3,
+            },
+            skipCache: true,
+          },
+        );
+
+        assertEquals(result.value.toJSObject().c, 5);
+      },
+    );
+  },
+);
+
+contractTest(
+  "deployment contract: repeated reads stay under budget and collapse to one read run",
+  async () => {
+    const owner = apiClient();
+    const deploySimpleFlowId = await resolveFixtureFlowId("deploySimple");
+
+    await withFlowReadEnabled(
+      deploySimpleFlowId,
+      true,
+      async () => {
+        const deploymentId = await owner.flows.deploy(deploySimpleFlowId);
+        const startedAt = new Date();
+        const perRequestMs: number[] = [];
+
+        const wallStart = performance.now();
+        for (let i = 0; i < 10; i++) {
+          const requestStart = performance.now();
+          const result = await apiClient().deployments.read(
+            { id: deploymentId },
+            {
+              inputs: {
+                a: 2,
+                b: 3,
+              },
+            },
+          );
+          perRequestMs.push(performance.now() - requestStart);
+          assertEquals(result.value.toJSObject().c, 5);
+        }
+        const elapsedMs = performance.now() - wallStart;
+
+        const runs = await requestFlowRuns<FlowRunRow[]>(
+          `?deployment_id=eq.${deploymentId}&start_time=gte.${
+            encodeURIComponent(startedAt.toISOString())
+          }&select=id,origin,start_time,end_time&order=start_time.asc`,
+        );
+        const readRuns = runs.filter((row) =>
+          row.origin != null && Object.hasOwn(row.origin, "Read")
+        );
+
+        assert(
+          elapsedMs <= 2_000,
+          `expected 10 deployment reads in <= 2000ms, got ${
+            elapsedMs.toFixed(2)
+          }ms`,
+        );
+        assertEquals(
+          readRuns.length,
+          1,
+          `expected one persisted deployment read run, got ${readRuns.length}; per-request timings: ${
+            perRequestMs.map((ms) => ms.toFixed(2)).join(", ")
+          }`,
+        );
+        assert(
+          readRuns[0].end_time != null,
+          "expected cached deployment read run to finish",
+        );
+      },
+    );
   },
 );
 

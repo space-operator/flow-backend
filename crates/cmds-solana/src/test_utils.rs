@@ -113,6 +113,7 @@ pub fn test_context() -> CommandContext {
                 flow_run_id: FlowRunId::nil(),
                 environment: HashMap::new(),
                 inputs: ValueSet::default(),
+                read_only: false,
                 set: FlowSetContextData {
                     flow_owner: User::default(),
                     started_by: User::default(),

@@ -387,6 +387,22 @@ fn remove_wallet_token(v: &mut value::Map, keypair_outputs: &[String]) {
 }
 
 impl FlowGraph {
+    pub fn validate_read_only(&self) -> crate::Result<()> {
+        for node in self.nodes.values() {
+            let capability = node.command.read_capability();
+            if capability != flow_lib::command::ReadCapability::Snapshot {
+                return Err(crate::Error::ReadModeViolation(format!(
+                    "node {} ({}) is not allowed in read-only flows: {:?}",
+                    node.id,
+                    node.command.name(),
+                    capability
+                )));
+            }
+        }
+
+        Ok(())
+    }
+
     pub async fn from_cfg(
         c: FlowConfig,
         registry: FlowRegistry,
@@ -404,6 +420,7 @@ impl FlowGraph {
             environment: c.ctx.environment,
             flow_run_id: FlowRunId::nil(),
             inputs: ValueSet::default(),
+            read_only: false,
             set: FlowSetContextData {
                 endpoints: c.ctx.endpoints,
                 flow_owner: registry.flow_owner,
@@ -1189,6 +1206,16 @@ impl FlowGraph {
                             instructions: transfer_many(&ins.fee_payer, &self.fees),
                         })
                         .expect("same fee payer");
+                    }
+
+                    if self.ctx_data.read_only && !ins.instructions.is_empty() {
+                        let error = "read-only flow cannot execute instructions".to_owned();
+                        for resp in resp {
+                            resp.sender
+                                .send(Err(execute::Error::Canceled(Some(error.clone()))))
+                                .ok();
+                        }
+                        return ControlFlow::Break(Err(error));
                     }
 
                     // this flow is an "Interflow instructions"

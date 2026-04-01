@@ -26,7 +26,9 @@ use value::{Decimal, Value};
 use crate::{
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
-    flow_registry::{BackendServices, FlowRegistry, StartFlowOptions, new_flow_run, run_rhai},
+    flow_registry::{
+        BackendServices, ExecutionMode, FlowRegistry, StartFlowOptions, new_flow_run, run_rhai,
+    },
 };
 
 /// Who can start flows
@@ -261,7 +263,10 @@ impl FlowDeployment {
         let resp = get_flow_row
             .ready()
             .await?
-            .call(get_flow_row::Request { flow_id })
+            .call(get_flow_row::Request {
+                flow_id,
+                fresh: true,
+            })
             .await?;
         let mut dep = FlowDeployment::new(resp.row);
 
@@ -279,7 +284,10 @@ impl FlowDeployment {
             let row = get_flow_row
                 .ready()
                 .await?
-                .call(get_flow_row::Request { flow_id: id })
+                .call(get_flow_row::Request {
+                    flow_id: id,
+                    fresh: true,
+                })
                 .await?
                 .row;
             let flow = Flow::builder().row(row).build();
@@ -329,6 +337,8 @@ pub struct StartFlowDeploymentOptions {
     pub inputs: ValueSet,
     pub starter: FlowStarter,
     pub preserved_bearer_token: Option<PreservedBearerToken>,
+    pub execution_mode: ExecutionMode,
+    pub origin: FlowRunOrigin,
 }
 
 pub enum StartFlowOrigin {
@@ -355,6 +365,7 @@ pub mod get_flow_row {
 
     pub struct Request {
         pub flow_id: FlowId,
+        pub fresh: bool,
     }
 
     impl actix::Message for Request {
@@ -490,10 +501,11 @@ impl FlowSet {
                 StartFlowOptions {
                     partial_config: None,
                     collect_instructions: self.deployment.output_instructions,
+                    execution_mode: options.execution_mode,
                     action_identity: self.deployment.action_identity,
                     action_config,
                     fees: self.deployment.fees,
-                    origin: FlowRunOrigin::Start {},
+                    origin: options.origin,
                     solana_client: Some(self.deployment.solana_network),
                     parent_flow_execute: None,
                     deployment_id: Some(self.deployment.id),

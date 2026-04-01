@@ -23,6 +23,7 @@ export { FlowRunHandle } from "./run_handle.ts";
 export { signAndSubmitSignature, web3 } from "./solana/mod.ts";
 export { type IValue, Value } from "./deps.ts";
 export { SignatureRequest } from "./types.ts";
+export { stableHash } from "./internal/transport/value.ts";
 export type {
   ApiKeyAuth,
   ApiKeyInfoOutput,
@@ -64,6 +65,9 @@ export type {
   PublicKeyAuth,
   PublicKeyInput,
   PublicKeyProvider,
+  ReadDeploymentParams,
+  ReadFlowParams,
+  ReadResult,
   RequestOptions,
   RetryPolicy,
   ServiceInfoOutput,

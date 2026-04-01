@@ -3,6 +3,8 @@ use crate::{
     db_worker::{GetUserWorker, user_worker::StartFlowShared},
     user::{SignatureAuth, SupabaseAuth},
 };
+use flow::flow_registry::ExecutionMode;
+use flow_lib::config::client::FlowRunOrigin;
 use flow_lib::solana::{Pubkey, SolanaActionConfig};
 use hashbrown::HashMap;
 use serde_with::{DisplayFromStr, serde_as};
@@ -81,6 +83,10 @@ async fn start_flow_unverified(
             flow_id,
             input: inputs,
             preserved_bearer_token: None,
+            execution_mode: ExecutionMode::Write,
+            origin: FlowRunOrigin::StartShared {
+                started_by: user_id,
+            },
             partial_config: None,
             environment: <_>::default(),
             output_instructions: params.output_instructions,

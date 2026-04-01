@@ -7,6 +7,8 @@ pub mod upsert_wallet;
 pub mod flow_api_input;
 pub mod get_flow_output;
 pub mod get_signature_request;
+pub mod read_deployment;
+pub mod read_flow;
 
 pub mod start_flow;
 pub mod start_flow_shared;

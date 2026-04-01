@@ -1,7 +1,11 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
 import { Value } from "@space-operator/flow-lib";
 import { Keypair } from "@solana/web3.js";
 import { createClient } from "../../src/mod.ts";
+import {
+  normalizeFlowInputs,
+  stableHash,
+} from "../../src/internal/transport/value.ts";
 
 function readBody(init: unknown): BodyInit | null | undefined {
   return (init as { body?: BodyInit | null } | undefined)?.body;
@@ -62,4 +66,40 @@ Deno.test("normalizes keypair-shaped inputs into stable B6 values", async () => 
   assertEquals(inputs.raw_keypair.B6, expected);
   assertEquals(inputs.raw_bytes.B6, expected);
   assertEquals(inputs.explicit_b6.B6, expected);
+});
+
+Deno.test("stableHash canonicalizes normalized inputs recursively", () => {
+  const first = normalizeFlowInputs({
+    b: { nested: { y: 2, x: 1 } },
+    a: { U1: "1" },
+  });
+  const second = normalizeFlowInputs({
+    a: { U1: "1" },
+    b: { nested: { x: 1, y: 2 } },
+  });
+  const third = normalizeFlowInputs({
+    a: { U1: "2" },
+    b: { nested: { x: 1, y: 2 } },
+  });
+
+  assertExists(first);
+  assertExists(second);
+  assertExists(third);
+  assertEquals(stableHash(first), stableHash(second));
+  assertNotEquals(stableHash(first), stableHash(third));
+});
+
+Deno.test("stableHash operates on normalized BigInt and byte inputs", () => {
+  const first = normalizeFlowInputs({
+    amount: 100n,
+    bytes: new Uint8Array([1, 2, 3]),
+  });
+  const second = normalizeFlowInputs({
+    bytes: new Uint8Array([1, 2, 3]),
+    amount: 100n,
+  });
+
+  assertExists(first);
+  assertExists(second);
+  assertEquals(stableHash(first), stableHash(second));
 });

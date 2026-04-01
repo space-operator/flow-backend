@@ -68,7 +68,7 @@
 //! }
 //! ```
 
-use super::{CommandError, CommandTrait, FnNewResult};
+use super::{CommandError, CommandTrait, FnNewResult, ReadCapability};
 use crate::{
     Name,
     command::InstructionInfo,
@@ -91,6 +91,7 @@ pub type BuilderCache = LazyLock<Result<CmdBuilder, BuilderError>>;
 pub struct CmdBuilder {
     def: Definition,
     signature_name: Option<String>,
+    read_capability: ReadCapability,
 }
 
 #[derive(ThisError, Debug, Clone)]
@@ -119,6 +120,7 @@ impl CmdBuilder {
         Ok(Self {
             def,
             signature_name: None,
+            read_capability: ReadCapability::Snapshot,
         })
     }
 
@@ -172,6 +174,12 @@ impl CmdBuilder {
         }
     }
 
+    /// Set read-mode capability of the command.
+    pub fn read_capability(mut self, capability: ReadCapability) -> Self {
+        self.read_capability = capability;
+        self
+    }
+
     /// Build the command, `f` will be used as this command's [`fn run()`][CommandTrait::run].
     ///
     /// - `f` must be an `async fn(Context, Input) -> Result<Output, CommandError>`.
@@ -190,6 +198,7 @@ impl CmdBuilder {
             outputs: Vec<crate::CmdOutputDescription>,
             instruction_info: Option<InstructionInfo>,
             permissions: Permissions,
+            read_capability: ReadCapability,
             run: Box<dyn Fn(CommandContext, T) -> Fut + Send + Sync + 'static>,
         }
 
@@ -232,6 +241,10 @@ impl CmdBuilder {
             fn permissions(&self) -> Permissions {
                 self.permissions.clone()
             }
+
+            fn read_capability(&self) -> ReadCapability {
+                self.read_capability
+            }
         }
 
         let mut cmd = Command {
@@ -260,6 +273,7 @@ impl CmdBuilder {
                 .collect(),
             instruction_info: self.def.data.instruction_info,
             permissions: self.def.permissions,
+            read_capability: self.read_capability,
         };
 
         if let Some(name) = self.signature_name {

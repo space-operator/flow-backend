@@ -147,6 +147,7 @@ pub fn test_context_with_execute() -> flow_lib::context::CommandContext {
                 flow_run_id: FlowRunId::nil(),
                 environment: HashMap::new(),
                 inputs: Default::default(),
+                read_only: false,
                 set: FlowSetContextData {
                     flow_owner: Default::default(),
                     started_by: Default::default(),

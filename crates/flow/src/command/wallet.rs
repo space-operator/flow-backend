@@ -202,6 +202,14 @@ impl CommandTrait for WalletCmd {
         .to_vec()
     }
 
+    fn read_capability(&self) -> ReadCapability {
+        if self.api_input {
+            ReadCapability::Interactive
+        } else {
+            ReadCapability::Snapshot
+        }
+    }
+
     async fn run(&self, _: CommandContext, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let wallet = match inputs.swap_remove(INPUT_WALLET) {
             // Null keeps the fallback chain intact for optional edge/start bindings.

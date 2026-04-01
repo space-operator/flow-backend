@@ -11,7 +11,8 @@ fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
         Ok(CmdBuilder::new(DEFINITION)?
             .check_name(NAME)?
-            .permissions(Permissions { user_tokens: true }))
+            .permissions(Permissions { user_tokens: true })
+            .read_capability(ReadCapability::Mutating))
     });
 
     Ok(CACHE.clone()?.build(run))

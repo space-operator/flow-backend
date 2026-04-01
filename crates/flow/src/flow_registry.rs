@@ -32,6 +32,13 @@ use tracing::Instrument;
 
 pub const MAX_CALL_DEPTH: u32 = 1024;
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ExecutionMode {
+    #[default]
+    Write,
+    ReadSnapshot,
+}
+
 fn is_spo_builtin_node(node_id: &str, builtin: &str) -> bool {
     node_id == builtin
         || node_id.strip_prefix("@spo/").is_some_and(|name| name == builtin)
@@ -55,6 +62,7 @@ pub enum StopError {
 pub struct StartFlowOptions {
     pub partial_config: Option<PartialConfig>,
     pub collect_instructions: bool,
+    pub execution_mode: ExecutionMode,
     pub action_identity: Option<Pubkey>,
     pub action_config: Option<SolanaActionConfig>,
     pub fees: Vec<(Pubkey, u64)>,
@@ -496,6 +504,17 @@ impl FlowRegistry {
             let mut flow =
                 FlowGraph::from_cfg(flow_config, self.clone(), options.partial_config.as_ref())
                     .await?;
+            flow.ctx_data.read_only = matches!(options.execution_mode, ExecutionMode::ReadSnapshot);
+            if matches!(options.execution_mode, ExecutionMode::ReadSnapshot) {
+                if options.collect_instructions {
+                    return Err(new_flow_run::Error::BuildFlow(
+                        crate::Error::ReadModeViolation(
+                            "read-only flows cannot collect or return instructions".to_owned(),
+                        ),
+                    ));
+                }
+                flow.validate_read_only()?;
+            }
 
             if let Some(config) = options.action_config {
                 flow.tx_exec_config.execute_on = ExecuteOn::SolanaAction(config);

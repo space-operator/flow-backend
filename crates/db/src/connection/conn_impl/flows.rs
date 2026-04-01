@@ -74,6 +74,7 @@ impl UserConnection {
                         'is_public', is_public,
                         'start_shared', start_shared,
                         'start_unverified', start_unverified,
+                        'read_enabled', read_enabled,
                         'current_branch_id', current_branch_id
                     ) AS flow
                 FROM flows_v2
@@ -121,7 +122,7 @@ impl UserConnection {
     pub(crate) async fn get_flow_info_impl(&self, flow_id: FlowId) -> crate::Result<FlowInfo> {
         let conn = self.pool.get_conn().await?;
         conn.do_query_opt(
-            r#"SELECT user_id, start_shared, start_unverified, is_public FROM flows_v2
+            r#"SELECT user_id, start_shared, start_unverified, is_public, read_enabled FROM flows_v2
                 WHERE uuid = $1 AND (user_id = $2 OR is_public = TRUE)"#,
             &[&flow_id, &self.user_id],
         )
@@ -349,6 +350,7 @@ impl UserConnection {
                         current_network,
                         start_shared,
                         start_unverified,
+                        read_enabled,
                         current_branch_id,
                         parent_flow,
                         linked_flows,
@@ -369,6 +371,7 @@ impl UserConnection {
                         current_network,
                         start_shared,
                         start_unverified,
+                        read_enabled,
                         current_branch_id,
                         uuid as parent_flow,
                         linked_flows,

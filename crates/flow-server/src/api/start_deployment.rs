@@ -16,9 +16,11 @@ use actix_web::{
     middleware::Next,
 };
 use anyhow::anyhow;
+use flow::flow_registry::ExecutionMode;
 use flow::flow_set::{
     DeploymentId, FlowStarter, PreservedBearerToken, StartFlowDeploymentOptions, X402Network,
 };
+use flow_lib::config::client::FlowRunOrigin;
 use flow_lib::solana::Pubkey;
 use serde_with::serde_as;
 use std::collections::{BTreeMap, BTreeSet};
@@ -262,6 +264,8 @@ async fn start_deployment(
             inputs,
             starter,
             preserved_bearer_token,
+            execution_mode: ExecutionMode::Write,
+            origin: FlowRunOrigin::Start {},
         };
 
         let owner = deployment.user_id;

@@ -249,10 +249,20 @@ function describeAuthKind(auth?: AuthStrategy | false): string {
   return auth.kind;
 }
 
-export async function requestJson<T>(
+export interface JsonResponseWithMeta<T> {
+  body: T | undefined;
+  cacheControl?: string;
+  etag?: string;
+  headers: Headers;
+  lastModified?: string;
+  status: number;
+}
+
+async function requestJsonInternal<T>(
   config: ResolvedClientConfig,
   options: JsonRequestOptions,
-): Promise<T> {
+  allowNotModified: boolean,
+): Promise<JsonResponseWithMeta<T>> {
   const retry = mergeRetryPolicy(config.retry, options.retry);
   const attempts = Math.max(retry?.attempts ?? 1, 1);
   const method = options.method.toUpperCase();
@@ -292,7 +302,10 @@ export async function requestJson<T>(
         }),
       );
       if (Either.isLeft(result)) {
-        const error = normalizeClientError(result.left, `${method} ${url} failed`);
+        const error = normalizeClientError(
+          result.left,
+          `${method} ${url} failed`,
+        );
         if (attempt < attempts && error instanceof TransportError) {
           yield* delayEffect(parseBackoff(retry?.backoffMs, attempt));
           return yield* fetchResponseAttempt(attempt + 1, onStatus);
@@ -307,12 +320,30 @@ export async function requestJson<T>(
   const requestAttempt = (
     attempt: number,
     onStatus?: (status: number) => void,
-  ): Effect.Effect<T, ClientError> =>
+  ): Effect.Effect<JsonResponseWithMeta<T>, ClientError> =>
     Effect.gen(function* () {
       const response = yield* fetchResponseAttempt(attempt, onStatus);
+      if (allowNotModified && response.status === 304) {
+        return {
+          body: undefined,
+          cacheControl: response.headers.get("cache-control") ?? undefined,
+          etag: response.headers.get("etag") ?? undefined,
+          headers: response.headers,
+          lastModified: response.headers.get("last-modified") ?? undefined,
+          status: response.status,
+        };
+      }
+
       if (response.ok) {
         const parsed = yield* parseResponseBodyEffect(response, method, url);
-        return parsed as T;
+        return {
+          body: parsed as T,
+          cacheControl: response.headers.get("cache-control") ?? undefined,
+          etag: response.headers.get("etag") ?? undefined,
+          headers: response.headers,
+          lastModified: response.headers.get("last-modified") ?? undefined,
+          status: response.status,
+        };
       }
 
       const parsedBody = yield* parseResponseBodyEffect(response, method, url);
@@ -333,6 +364,7 @@ export async function requestJson<T>(
 
       if (
         attempt < attempts &&
+        response.status !== 304 &&
         (retry?.retryableStatusCodes ?? [429, 500, 502, 503, 504]).includes(
           response.status,
         )
@@ -355,13 +387,27 @@ export async function requestJson<T>(
       "space_operator.retry.attempts": attempts,
     },
     async (span) => {
-      const result = await runClientEffect(
+      return await runClientEffect(
         requestAttempt(
           1,
           (status) => span.setAttribute("http.response.status_code", status),
         ),
       );
-      return result;
     },
   );
+}
+
+export async function requestJson<T>(
+  config: ResolvedClientConfig,
+  options: JsonRequestOptions,
+): Promise<T> {
+  const response = await requestJsonInternal<T>(config, options, false);
+  return response.body as T;
+}
+
+export async function requestJsonWithMeta<T>(
+  config: ResolvedClientConfig,
+  options: JsonRequestOptions,
+): Promise<JsonResponseWithMeta<T>> {
+  return await requestJsonInternal<T>(config, options, true);
 }

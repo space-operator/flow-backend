@@ -16,8 +16,8 @@ use db::{Error as DbError, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
     flow_registry::{
-        BackendServices, FlowRegistry, StartFlowOptions, get_flow, get_previous_values,
-        new_flow_run,
+        BackendServices, ExecutionMode, FlowRegistry, StartFlowOptions, get_flow,
+        get_previous_values, new_flow_run,
     },
     flow_set::{
         FlowDeployment, FlowSet, FlowSetContext, PreservedBearerToken, StartFlowDeploymentOptions,
@@ -787,6 +787,8 @@ pub struct StartFlowFresh {
     pub flow_id: FlowId,
     pub input: value::Map,
     pub preserved_bearer_token: Option<PreservedBearerToken>,
+    pub execution_mode: ExecutionMode,
+    pub origin: FlowRunOrigin,
     pub output_instructions: bool,
     pub action_identity: Option<Pubkey>,
     pub action_config: Option<SolanaActionConfig>,
@@ -823,6 +825,7 @@ impl ResponseError for StartError {
                 flow::Error::ValueNotFound(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 flow::Error::CreateCmd(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 flow::Error::BuildGraphError(_) => StatusCode::BAD_REQUEST,
+                flow::Error::ReadModeViolation(_) => StatusCode::CONFLICT,
                 flow::Error::GetFlow(e) => match e {
                     get_flow::Error::NotFound => StatusCode::NOT_FOUND,
                     get_flow::Error::Unauthorized => StatusCode::UNAUTHORIZED,
@@ -989,10 +992,11 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     StartFlowOptions {
                         partial_config: msg.partial_config,
                         collect_instructions: msg.output_instructions,
+                        execution_mode: msg.execution_mode,
                         action_identity: msg.action_identity,
                         action_config: msg.action_config,
                         fees: msg.fees,
-                        origin: FlowRunOrigin::Start {},
+                        origin: msg.origin,
                         ..Default::default()
                     },
                 )
@@ -1008,6 +1012,8 @@ pub struct StartFlowShared {
     pub flow_id: FlowId,
     pub input: value::Map,
     pub preserved_bearer_token: Option<PreservedBearerToken>,
+    pub execution_mode: ExecutionMode,
+    pub origin: FlowRunOrigin,
     pub partial_config: Option<PartialConfig>,
     pub environment: HashMap<String, String>,
     pub output_instructions: bool,
@@ -1032,6 +1038,8 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     flow_id: msg.flow_id,
                     input: msg.input,
                     preserved_bearer_token: msg.preserved_bearer_token,
+                    execution_mode: msg.execution_mode,
+                    origin: msg.origin,
                     partial_config: msg.partial_config,
                     environment: msg.environment,
                     output_instructions: msg.output_instructions,
@@ -1116,11 +1124,10 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     StartFlowOptions {
                         partial_config: msg.partial_config,
                         collect_instructions: msg.output_instructions,
+                        execution_mode: msg.execution_mode,
                         action_identity: msg.action_identity,
                         action_config: msg.action_config,
-                        origin: FlowRunOrigin::StartShared {
-                            started_by: msg.started_by.0,
-                        },
+                        origin: msg.origin,
                         fees: msg.fees,
                         ..Default::default()
                     },
