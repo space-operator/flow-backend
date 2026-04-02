@@ -581,6 +581,7 @@ mod tests {
                 is_public: false,
                 start_shared: false,
                 start_unverified: false,
+                read_enabled: false,
             },
         };
 
@@ -614,6 +615,8 @@ mod tests {
                 access_token: "super-secret-token".into(),
                 expires_at: 456,
             }),
+            execution_mode: ExecutionMode::Write,
+            origin: FlowRunOrigin::Start {},
         };
         let debug = format!("{options:?}");
 

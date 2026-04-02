@@ -405,7 +405,7 @@ export interface components {
         DeleteApiKeyParamsDoc: {
             key_hash: string;
         };
-        FlowInputValueDoc: components["schemas"]["IValueDoc"] | components["schemas"]["Option"];
+        FlowInputValueDoc: components["schemas"]["IValueDoc"] | components["schemas"]["JsonValueDoc"];
         FlowRunStartOutputDoc: {
             flow_run_id: string;
         };
@@ -450,6 +450,10 @@ export interface components {
             node_id: string;
             relay_url: string;
         };
+        JsonValueDoc: null | components["schemas"]["JsonValueDocNonNull"];
+        JsonValueDocNonNull: string | number | boolean | components["schemas"]["JsonValueDoc"][] | {
+            [key: string]: components["schemas"]["JsonValueDoc"];
+        };
         KvDeleteOutputDoc: {
             old_value: components["schemas"]["Value"];
         };
@@ -471,9 +475,6 @@ export interface components {
             store: string;
             value: components["schemas"]["Value"];
         };
-        Option: null | (string | number | boolean | components["schemas"]["Option"][] | {
-            [key: string]: components["schemas"]["Option"];
-        });
         PartialConfigDoc: {
             only_nodes: string[];
             values_config: components["schemas"]["ValuesConfigDoc"];

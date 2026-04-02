@@ -185,6 +185,151 @@
         }
       }
     },
+    "/deployment/read": {
+      "get": {
+        "tags": [
+          "deployments"
+        ],
+        "operationId": "read_deployment_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Deployment id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flow",
+            "in": "query",
+            "description": "Flow id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "Deployment tag",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inputs",
+            "in": "query",
+            "description": "JSON-encoded typed or plain flow inputs",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip_cache",
+            "in": "query",
+            "description": "Bypass server read cache for this request",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read deployment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IValueDoc"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "403": {
+            "description": "Read not allowed"
+          },
+          "408": {
+            "description": "Read timed out"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "deployments"
+        ],
+        "operationId": "read_deployment_post_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Deployment id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flow",
+            "in": "query",
+            "description": "Flow id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "Deployment tag",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReadDeploymentParamsDoc"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Read deployment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IValueDoc"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Read not allowed"
+          },
+          "408": {
+            "description": "Read timed out"
+          }
+        }
+      }
+    },
     "/deployment/start": {
       "post": {
         "tags": [
@@ -277,6 +422,333 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/flow/read/{id}": {
+      "get": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "read_flow_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inputs",
+            "in": "query",
+            "description": "JSON-encoded typed or plain flow inputs",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip_cache",
+            "in": "query",
+            "description": "Bypass server read cache for this request",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read owned or adapter-authorized flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IValueDoc"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "403": {
+            "description": "Read not allowed"
+          },
+          "408": {
+            "description": "Read timed out"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "read_flow_post_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReadFlowParamsDoc"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Read owned or adapter-authorized flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IValueDoc"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Read not allowed"
+          },
+          "408": {
+            "description": "Read timed out"
+          }
+        }
+      }
+    },
+    "/flow/read_shared/{id}": {
+      "get": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "read_flow_shared_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inputs",
+            "in": "query",
+            "description": "JSON-encoded typed or plain flow inputs",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip_cache",
+            "in": "query",
+            "description": "Bypass server read cache for this request",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read shared flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IValueDoc"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "403": {
+            "description": "Read not allowed"
+          },
+          "408": {
+            "description": "Read timed out"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "read_flow_shared_post_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReadFlowParamsDoc"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Read shared flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IValueDoc"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Read not allowed"
+          },
+          "408": {
+            "description": "Read timed out"
+          }
+        }
+      }
+    },
+    "/flow/read_unverified/{id}": {
+      "get": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "read_flow_unverified_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inputs",
+            "in": "query",
+            "description": "JSON-encoded typed or plain flow inputs",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skip_cache",
+            "in": "query",
+            "description": "Bypass server read cache for this request",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read unverified flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IValueDoc"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "403": {
+            "description": "Read not allowed"
+          },
+          "408": {
+            "description": "Read timed out"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "flows"
+        ],
+        "operationId": "read_flow_unverified_post_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Flow id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReadFlowParamsDoc"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Read unverified flow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IValueDoc"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Read not allowed"
+          },
+          "408": {
+            "description": "Read timed out"
           }
         }
       }
@@ -1251,6 +1723,52 @@
           },
           "values_config": {
             "$ref": "#/components/schemas/ValuesConfigDoc"
+          }
+        }
+      },
+      "ReadDeploymentParamsDoc": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FlowInputValueDoc"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "skip_cache": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
+      "ReadFlowParamsDoc": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FlowInputValueDoc"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "skip_cache": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         }
       },

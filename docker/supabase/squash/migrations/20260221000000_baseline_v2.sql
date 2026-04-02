@@ -1073,6 +1073,7 @@ create table if not exists public.flows_v2 (
     current_network jsonb not null default '{"id":"01000000-0000-8000-8000-000000000000","url":"https://api.devnet.solana.com","type":"default","wallet":"Solana","cluster":"devnet"}'::jsonb,
     start_shared boolean not null default false,
     start_unverified boolean not null default false,
+    read_enabled boolean not null default false,
     current_branch_id integer,
 
     parent_flow integer,
@@ -1150,6 +1151,7 @@ alter table public.flows_v2
     add column if not exists current_network jsonb,
     add column if not exists start_shared boolean,
     add column if not exists start_unverified boolean,
+    add column if not exists read_enabled boolean,
     add column if not exists current_branch_id integer;
 
 update public.flows_v2
@@ -1164,17 +1166,24 @@ update public.flows_v2
 set start_unverified = false
 where start_unverified is null;
 
+update public.flows_v2
+set read_enabled = false
+where read_enabled is null;
+
 alter table public.flows_v2
     alter column current_network set default '{"id":"01000000-0000-8000-8000-000000000000","url":"https://api.devnet.solana.com","type":"default","wallet":"Solana","cluster":"devnet"}'::jsonb,
     alter column current_network set not null,
     alter column start_shared set default false,
     alter column start_shared set not null,
     alter column start_unverified set default false,
-    alter column start_unverified set not null;
+    alter column start_unverified set not null,
+    alter column read_enabled set default false,
+    alter column read_enabled set not null;
 
 comment on column public.flows_v2.current_network is 'Runtime network config used by backend start logic.';
 comment on column public.flows_v2.start_shared is 'Allow authenticated shared starts (/start_shared).';
 comment on column public.flows_v2.start_unverified is 'Allow unverified starts (/start_unverified).';
+comment on column public.flows_v2.read_enabled is 'Allow explicit snapshot read execution via /read endpoints.';
 comment on column public.flows_v2.current_branch_id is 'Git-like branch pointer for editor/runtime integration.';
 
 -- <<< END 20260220090100_flows_v2_runtime_fields.sql

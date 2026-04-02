@@ -197,6 +197,18 @@ struct StartDeploymentParamsDoc {
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
+struct ReadFlowParamsDoc {
+    inputs: Option<BTreeMap<String, FlowInputValueDoc>>,
+    skip_cache: Option<bool>,
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+struct ReadDeploymentParamsDoc {
+    inputs: Option<BTreeMap<String, FlowInputValueDoc>>,
+    skip_cache: Option<bool>,
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
 struct CreateApiKeyParamsDoc {
     name: String,
 }
@@ -340,6 +352,102 @@ fn start_flow_shared_doc() {}
 fn start_flow_unverified_doc() {}
 
 #[utoipa::path(
+    get,
+    path = "/flow/read/{id}",
+    tag = "flows",
+    params(
+        ("id" = String, Path, description = "Flow id"),
+        ("inputs" = Option<String>, Query, description = "JSON-encoded typed or plain flow inputs"),
+        ("skip_cache" = Option<bool>, Query, description = "Bypass server read cache for this request")
+    ),
+    responses(
+        (status = 200, description = "Read owned or adapter-authorized flow", body = IValueDoc),
+        (status = 304, description = "Not modified"),
+        (status = 403, description = "Read not allowed"),
+        (status = 408, description = "Read timed out")
+    )
+)]
+fn read_flow_doc() {}
+
+#[utoipa::path(
+    post,
+    path = "/flow/read/{id}",
+    tag = "flows",
+    params(("id" = String, Path, description = "Flow id")),
+    request_body = Option<ReadFlowParamsDoc>,
+    responses(
+        (status = 200, description = "Read owned or adapter-authorized flow", body = IValueDoc),
+        (status = 403, description = "Read not allowed"),
+        (status = 408, description = "Read timed out")
+    )
+)]
+fn read_flow_post_doc() {}
+
+#[utoipa::path(
+    get,
+    path = "/flow/read_shared/{id}",
+    tag = "flows",
+    params(
+        ("id" = String, Path, description = "Flow id"),
+        ("inputs" = Option<String>, Query, description = "JSON-encoded typed or plain flow inputs"),
+        ("skip_cache" = Option<bool>, Query, description = "Bypass server read cache for this request")
+    ),
+    responses(
+        (status = 200, description = "Read shared flow", body = IValueDoc),
+        (status = 304, description = "Not modified"),
+        (status = 403, description = "Read not allowed"),
+        (status = 408, description = "Read timed out")
+    )
+)]
+fn read_flow_shared_doc() {}
+
+#[utoipa::path(
+    post,
+    path = "/flow/read_shared/{id}",
+    tag = "flows",
+    params(("id" = String, Path, description = "Flow id")),
+    request_body = Option<ReadFlowParamsDoc>,
+    responses(
+        (status = 200, description = "Read shared flow", body = IValueDoc),
+        (status = 403, description = "Read not allowed"),
+        (status = 408, description = "Read timed out")
+    )
+)]
+fn read_flow_shared_post_doc() {}
+
+#[utoipa::path(
+    get,
+    path = "/flow/read_unverified/{id}",
+    tag = "flows",
+    params(
+        ("id" = String, Path, description = "Flow id"),
+        ("inputs" = Option<String>, Query, description = "JSON-encoded typed or plain flow inputs"),
+        ("skip_cache" = Option<bool>, Query, description = "Bypass server read cache for this request")
+    ),
+    responses(
+        (status = 200, description = "Read unverified flow", body = IValueDoc),
+        (status = 304, description = "Not modified"),
+        (status = 403, description = "Read not allowed"),
+        (status = 408, description = "Read timed out")
+    )
+)]
+fn read_flow_unverified_doc() {}
+
+#[utoipa::path(
+    post,
+    path = "/flow/read_unverified/{id}",
+    tag = "flows",
+    params(("id" = String, Path, description = "Flow id")),
+    request_body = Option<ReadFlowParamsDoc>,
+    responses(
+        (status = 200, description = "Read unverified flow", body = IValueDoc),
+        (status = 403, description = "Read not allowed"),
+        (status = 408, description = "Read timed out")
+    )
+)]
+fn read_flow_unverified_post_doc() {}
+
+#[utoipa::path(
     post,
     path = "/flow/stop/{id}",
     tag = "flows",
@@ -371,6 +479,44 @@ fn clone_flow_doc() {}
     responses((status = 200, description = "Start deployment", body = FlowRunTokenOutputDoc))
 )]
 fn start_deployment_doc() {}
+
+#[utoipa::path(
+    get,
+    path = "/deployment/read",
+    tag = "deployments",
+    params(
+        ("id" = Option<String>, Query, description = "Deployment id"),
+        ("flow" = Option<String>, Query, description = "Flow id"),
+        ("tag" = Option<String>, Query, description = "Deployment tag"),
+        ("inputs" = Option<String>, Query, description = "JSON-encoded typed or plain flow inputs"),
+        ("skip_cache" = Option<bool>, Query, description = "Bypass server read cache for this request")
+    ),
+    responses(
+        (status = 200, description = "Read deployment", body = IValueDoc),
+        (status = 304, description = "Not modified"),
+        (status = 403, description = "Read not allowed"),
+        (status = 408, description = "Read timed out")
+    )
+)]
+fn read_deployment_doc() {}
+
+#[utoipa::path(
+    post,
+    path = "/deployment/read",
+    tag = "deployments",
+    params(
+        ("id" = Option<String>, Query, description = "Deployment id"),
+        ("flow" = Option<String>, Query, description = "Flow id"),
+        ("tag" = Option<String>, Query, description = "Deployment tag")
+    ),
+    request_body = Option<ReadDeploymentParamsDoc>,
+    responses(
+        (status = 200, description = "Read deployment", body = IValueDoc),
+        (status = 403, description = "Read not allowed"),
+        (status = 408, description = "Read timed out")
+    )
+)]
+fn read_deployment_post_doc() {}
 
 #[utoipa::path(
     post,
@@ -480,9 +626,17 @@ fn data_export_doc() {}
         start_flow_doc,
         start_flow_shared_doc,
         start_flow_unverified_doc,
+        read_flow_doc,
+        read_flow_post_doc,
+        read_flow_shared_doc,
+        read_flow_shared_post_doc,
+        read_flow_unverified_doc,
+        read_flow_unverified_post_doc,
         stop_flow_doc,
         clone_flow_doc,
         start_deployment_doc,
+        read_deployment_doc,
+        read_deployment_post_doc,
         submit_signature_doc,
         create_apikey_doc,
         delete_apikey_doc,
@@ -511,11 +665,13 @@ fn data_export_doc() {}
             StartFlowParamsDoc,
             StartFlowSharedParamsDoc,
             StartFlowUnverifiedParamsDoc,
+            ReadFlowParamsDoc,
             StopFlowParamsDoc,
             FlowRunStartOutputDoc,
             FlowRunTokenOutputDoc,
             CloneFlowOutputDoc,
             StartDeploymentParamsDoc,
+            ReadDeploymentParamsDoc,
             CreateApiKeyParamsDoc,
             ApiKeyRecordDoc,
             CreateApiKeyOutputDoc,
