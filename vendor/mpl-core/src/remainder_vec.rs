@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::io::Write;
 use std::ops::{Deref, DerefMut};
 
-use borsh::{BorshDeserialize as CrateDeserialize, BorshSerialize as CrateSerialize, io::Read};
+use borsh::{io::Read, BorshDeserialize as CrateDeserialize, BorshSerialize as CrateSerialize};
 
 /// A vector that deserializes from a stream of bytes.
 ///

@@ -5,9 +5,9 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::TryToVec;
 #[cfg(feature = "anchor")]
 use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
-use crate::TryToVec;
 #[cfg(not(feature = "anchor"))]
 use borsh::{BorshDeserialize, BorshSerialize};
 

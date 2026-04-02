@@ -5,11 +5,11 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::remainder_vec::RemainderVec;
 #[cfg(feature = "anchor")]
 use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 #[cfg(not(feature = "anchor"))]
 use borsh::{BorshDeserialize, BorshSerialize};
-use crate::remainder_vec::RemainderVec;
 use solana_program::pubkey::Pubkey;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
