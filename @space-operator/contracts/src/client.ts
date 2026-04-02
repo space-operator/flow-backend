@@ -97,6 +97,16 @@ export const startDeploymentParamsSchema = z.object({
   action_signer: z.string().optional(),
 }).strict();
 
+export const readFlowParamsSchema = z.object({
+  inputs: flowInputsSchema.optional(),
+  skip_cache: z.boolean().optional(),
+}).strict();
+
+export const readDeploymentParamsSchema = z.object({
+  inputs: flowInputsSchema.optional(),
+  skip_cache: z.boolean().optional(),
+}).strict();
+
 export const claimTokenOutputSchema = z.object({
   user_id: z.string(),
   access_token: z.string(),
@@ -372,6 +382,8 @@ export const clientJsonSchemas = {
   startFlowSharedParams: z.toJSONSchema(startFlowSharedParamsSchema, jsonSchemaOpts),
   startFlowUnverifiedParams: z.toJSONSchema(startFlowUnverifiedParamsSchema, jsonSchemaOpts),
   startDeploymentParams: z.toJSONSchema(startDeploymentParamsSchema, jsonSchemaOpts),
+  readFlowParams: z.toJSONSchema(readFlowParamsSchema, jsonSchemaOpts),
+  readDeploymentParams: z.toJSONSchema(readDeploymentParamsSchema, jsonSchemaOpts),
   stopFlowParams: z.toJSONSchema(stopFlowParamsSchema, jsonSchemaOpts),
   signatureRequest: z.toJSONSchema(signatureRequestSchema, jsonSchemaOpts),
   executeFlowResultEnvelope: z.toJSONSchema(executeFlowResultEnvelopeSchema, jsonSchemaOpts),
@@ -388,6 +400,10 @@ export type StartFlowUnverifiedParamsContract = z.infer<
 export type StopFlowParamsContract = z.infer<typeof stopFlowParamsSchema>;
 export type StartDeploymentParamsContract = z.infer<
   typeof startDeploymentParamsSchema
+>;
+export type ReadFlowParamsContract = z.infer<typeof readFlowParamsSchema>;
+export type ReadDeploymentParamsContract = z.infer<
+  typeof readDeploymentParamsSchema
 >;
 export type ClaimTokenOutputContract = z.infer<typeof claimTokenOutputSchema>;
 export type ConfirmAuthOutputContract = z.infer<typeof confirmAuthOutputSchema>;
