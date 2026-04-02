@@ -1,6 +1,7 @@
 use super::{SWIG_PROGRAM_ID, SYSTEM_PROGRAM_ID, find_wallet_address};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
+use swig_interface::compact_instructions;
 
 const NAME: &str = "swig_sign";
 const DEFINITION: &str = flow_lib::node_definition!("swig/swig_sign.jsonc");
@@ -25,7 +26,9 @@ pub struct Input {
     pub authority: Wallet,
     #[serde(default)]
     pub role_id: u32,
-    pub instructions_data: Vec<u8>,
+    pub instructions: Vec<Instruction>,
+    #[serde(default)]
+    pub signers: Vec<Wallet>,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -38,27 +41,38 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (wallet_address, _) = find_wallet_address(&input.swig_account);
-    let instruction_payload = &input.instructions_data;
 
-    // SignV2Args (8 bytes):
-    // instruction(u16=11) + instruction_payload_len(u16) + role_id(u32)
-    let mut data = Vec::with_capacity(16 + instruction_payload.len());
-    data.extend_from_slice(&11u16.to_le_bytes()); // instruction = 11
-    data.extend_from_slice(&(instruction_payload.len() as u16).to_le_bytes()); // instruction_payload_len
-    data.extend_from_slice(&input.role_id.to_le_bytes()); // role_id
-
-    // Instruction payload (compact serialized inner instructions)
-    data.extend_from_slice(instruction_payload);
-
-    // Authority payload: signer index = 3
-    data.push(3u8);
-
-    let accounts = vec![
+    // Base accounts: [swig_account, wallet_address, system_program, authority]
+    // Authority is at index 3 → signer_index byte = 3
+    let base_accounts = vec![
         AccountMeta::new(input.swig_account, false),
         AccountMeta::new(wallet_address, false),
         AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
         AccountMeta::new_readonly(input.authority.pubkey(), true),
     ];
+
+    // compact_instructions deduplicates accounts and converts pubkeys to indexes
+    let (mut accounts, compact_ixs) =
+        compact_instructions(input.swig_account, base_accounts, input.instructions);
+
+    // Mark any additional signer wallets that appear in the accounts list
+    let signer_pubkeys: Vec<Pubkey> = input.signers.iter().map(|w| w.pubkey()).collect();
+    for account in &mut accounts {
+        if signer_pubkeys.contains(&account.pubkey) {
+            account.is_signer = true;
+        }
+    }
+
+    let ix_bytes = compact_ixs.into_bytes();
+
+    // SignV2Args layout (8 bytes):
+    // instruction(u16=11) + instruction_payload_len(u16) + role_id(u32)
+    let mut data = Vec::with_capacity(8 + ix_bytes.len() + 1);
+    data.extend_from_slice(&11u16.to_le_bytes());
+    data.extend_from_slice(&(ix_bytes.len() as u16).to_le_bytes());
+    data.extend_from_slice(&input.role_id.to_le_bytes());
+    data.extend_from_slice(&ix_bytes);
+    data.push(3u8); // authority signer index
 
     let instruction = Instruction {
         program_id: SWIG_PROGRAM_ID,
@@ -66,10 +80,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         data,
     };
 
+    let mut all_signers = vec![input.fee_payer.clone(), input.authority];
+    all_signers.extend(input.signers);
+
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer, input.authority].into(),
+        signers: all_signers.into(),
         instructions: [instruction].into(),
     };
 
@@ -86,7 +103,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solana_keypair::{Keypair, Signer};
+    use solana_keypair::Keypair;
 
     #[test]
     fn test_build() {
@@ -94,39 +111,54 @@ mod tests {
     }
 
     #[test]
-    fn test_instruction_data_layout() {
-        let kp = Keypair::new();
+    fn test_compact_instruction_layout() {
+        let authority = Keypair::new();
         let swig_account = Keypair::new().pubkey();
         let (wallet_address, _) = find_wallet_address(&swig_account);
-        let payload = vec![0u8; 4];
+        let recipient = Keypair::new().pubkey();
 
-        // Build the SignV2 instruction manually (same as run())
-        let mut data = Vec::with_capacity(16 + payload.len());
-        data.extend_from_slice(&11u16.to_le_bytes());
-        data.extend_from_slice(&(payload.len() as u16).to_le_bytes());
-        data.extend_from_slice(&0u32.to_le_bytes());
-        data.extend_from_slice(&payload);
-        data.push(3u8);
+        // A minimal inner instruction (e.g. SOL transfer) built directly
+        let inner_ix = Instruction {
+            program_id: SYSTEM_PROGRAM_ID,
+            accounts: vec![
+                AccountMeta::new(wallet_address, true),
+                AccountMeta::new(recipient, false),
+            ],
+            data: {
+                // system transfer discriminator (u32=2) + lamports (u64)
+                let mut d = 2u32.to_le_bytes().to_vec();
+                d.extend_from_slice(&1_000_000u64.to_le_bytes());
+                d
+            },
+        };
 
-        let accounts = vec![
+        let base_accounts = vec![
             AccountMeta::new(swig_account, false),
             AccountMeta::new(wallet_address, false),
             AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
-            AccountMeta::new_readonly(kp.pubkey(), true),
+            AccountMeta::new_readonly(authority.pubkey(), true),
         ];
 
-        let instruction = Instruction {
-            program_id: SWIG_PROGRAM_ID,
-            accounts,
-            data: data.clone(),
-        };
+        let (accounts, compact_ixs) =
+            compact_instructions(swig_account, base_accounts, vec![inner_ix]);
+        let ix_bytes = compact_ixs.into_bytes();
 
-        assert_eq!(instruction.program_id, SWIG_PROGRAM_ID);
-        assert_eq!(instruction.accounts.len(), 4);
+        let mut data = Vec::with_capacity(8 + ix_bytes.len() + 1);
+        data.extend_from_slice(&11u16.to_le_bytes());
+        data.extend_from_slice(&(ix_bytes.len() as u16).to_le_bytes());
+        data.extend_from_slice(&0u32.to_le_bytes());
+        data.extend_from_slice(&ix_bytes);
+        data.push(3u8);
+
         // Verify discriminator = 11 (SignV2)
         assert_eq!(u16::from_le_bytes([data[0], data[1]]), 11);
-        // Verify payload length
-        assert_eq!(u16::from_le_bytes([data[2], data[3]]), 4);
+        // Verify payload_len matches actual ix_bytes length
+        assert_eq!(
+            u16::from_le_bytes([data[2], data[3]]) as usize,
+            ix_bytes.len()
+        );
+        // Base accounts (4) + inner ix accounts deduped
+        assert!(accounts.len() >= 4);
     }
 
     #[tokio::test]
@@ -140,7 +172,8 @@ mod tests {
             swig_account,
             authority: wallet,
             role_id: 0,
-            instructions_data: vec![0u8; 4],
+            instructions: vec![],
+            signers: vec![],
             submit: true,
         };
 

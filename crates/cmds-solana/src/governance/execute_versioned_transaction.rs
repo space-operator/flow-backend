@@ -82,7 +82,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         &input.remaining_accounts,
     );
 
-    let signers = input.additional_signers.into_iter().flatten().collect();
+    let mut signers = vec![input.fee_payer.clone()];
+    signers.extend(input.additional_signers.into_iter().flatten());
 
     let instructions = Instructions {
         lookup_tables: None,

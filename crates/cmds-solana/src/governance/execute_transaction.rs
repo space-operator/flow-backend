@@ -27,12 +27,9 @@ pub struct Input {
     pub proposal: Pubkey,
     #[serde(with = "value::pubkey")]
     pub proposal_transaction: Pubkey,
-    #[serde(with = "value::pubkey")]
-    pub instruction_program_id: Pubkey,
     pub instruction_accounts: Vec<AccountMeta>,
-    pub signer_1: Option<Wallet>,
-    pub signer_2: Option<Wallet>,
-    pub signer_3: Option<Wallet>,
+    #[serde(default)]
+    pub additional_signers: Option<Vec<Wallet>>,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -46,20 +43,22 @@ pub struct Output {
     pub proposal_transaction_address: Pubkey,
 }
 
+/// SPL Governance ExecuteTransaction account layout:
+/// 0. `[]` Governance account
+/// 1. `[writable]` Proposal account
+/// 2. `[writable]` ProposalTransaction account
+/// + instruction accounts from the stored transaction
 pub fn execute_transaction(
     program_id: &Pubkey,
-    // Accounts
     governance: &Pubkey,
     proposal: &Pubkey,
     proposal_transaction: &Pubkey,
-    instruction_program_id: &Pubkey,
     instruction_accounts: &[AccountMeta],
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new_readonly(*governance, false),
         AccountMeta::new(*proposal, false),
         AccountMeta::new(*proposal_transaction, false),
-        AccountMeta::new_readonly(*instruction_program_id, false),
     ];
 
     accounts.extend_from_slice(instruction_accounts);
@@ -72,6 +71,7 @@ pub fn execute_transaction(
         data: borsh::to_vec(&instruction).unwrap(),
     }
 }
+
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let program_id = SPL_GOVERNANCE_ID;
 
@@ -80,14 +80,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         &input.governance,
         &input.proposal,
         &input.proposal_transaction,
-        &input.instruction_program_id,
         &input.instruction_accounts,
     );
 
-    let mut signers: Vec<Wallet> = vec![input.fee_payer.clone()];
-    signers.extend(input.signer_1);
-    signers.extend(input.signer_2);
-    signers.extend(input.signer_3);
+    let mut signers = vec![input.fee_payer.clone()];
+    signers.extend(input.additional_signers.into_iter().flatten());
 
     let instructions = Instructions {
         lookup_tables: None,
@@ -119,19 +116,17 @@ mod tests {
         let governance = Pubkey::new_unique();
         let proposal = Pubkey::new_unique();
         let proposal_transaction = Pubkey::new_unique();
-        let instruction_program_id = Pubkey::new_unique();
 
         let ix = execute_transaction(
             &SPL_GOVERNANCE_ID,
             &governance,
             &proposal,
             &proposal_transaction,
-            &instruction_program_id,
             &[],
         );
 
         assert_eq!(ix.program_id, SPL_GOVERNANCE_ID);
         assert!(!ix.data.is_empty());
-        assert!(ix.accounts.len() >= 4);
+        assert_eq!(ix.accounts.len(), 3);
     }
 }
