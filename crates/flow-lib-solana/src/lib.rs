@@ -224,16 +224,20 @@ async fn insert_priority_fee(
                             .map(|logs| logs.join("\n"))
                             .unwrap_or_default();
                         tracing::warn!("simulation error: {}\n{}", error, logs);
+                        // Don't trust units_consumed from failed simulations —
+                        // the program may have errored early with minimal CU,
+                        // producing a budget too low for the real execution.
+                        None
                     } else {
                         for log in response.value.logs.iter().flatten() {
                             tracing::debug!("{}", log);
                         }
-                    }
-                    let consumed = response.value.units_consumed;
-                    if consumed.is_none() || consumed == Some(0) {
-                        None
-                    } else {
-                        consumed.map(|x| 1000 + x * 3 / 2)
+                        let consumed = response.value.units_consumed;
+                        if consumed.is_none() || consumed == Some(0) {
+                            None
+                        } else {
+                            consumed.map(|x| 1000 + x * 3 / 2)
+                        }
                     }
                 }
             }
