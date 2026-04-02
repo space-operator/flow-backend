@@ -3,6 +3,12 @@ use super::{
 };
 use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
+use solana_program::pubkey;
+
+/// Native SOL mint (wrapped SOL)
+fn default_native_mint() -> Pubkey {
+    pubkey!("So11111111111111111111111111111111111111112")
+}
 
 const NAME: &str = "escrow_deposit";
 const DEFINITION: &str = flow_lib::node_definition!("escrow/deposit.jsonc");
@@ -26,6 +32,7 @@ pub struct Input {
     #[serde_as(as = "AsPubkey")]
     pub escrow: Pubkey,
     #[serde_as(as = "AsPubkey")]
+    #[serde(default = "default_native_mint")]
     pub mint: Pubkey,
     pub receipt_seed: Wallet,
     #[serde_as(as = "AsPubkey")]
@@ -131,6 +138,24 @@ mod tests {
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
         let parsed = result.unwrap();
         assert_eq!(parsed.token_program, super::super::DEFAULT_TOKEN_PROGRAM);
+    }
+
+    #[test]
+    fn test_input_parsing_no_mint_defaults_to_native_sol() {
+        // mint omitted — defaults to native SOL mint
+        let input = value::map! {
+            "fee_payer" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
+            "depositor" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
+            "escrow" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
+            "receipt_seed" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
+            "amount" => 1000u64,
+            "submit" => false,
+        };
+        let result = value::from_map::<Input>(input);
+        assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
+        let parsed = result.unwrap();
+        let native_sol_mint: Pubkey = "So11111111111111111111111111111111111111112".parse().unwrap();
+        assert_eq!(parsed.mint, native_sol_mint);
     }
 
     #[test]
