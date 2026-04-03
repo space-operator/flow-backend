@@ -28,6 +28,16 @@ pub struct Input {
     pub new_authority: Pubkey,
     #[serde(default = "default_permission")]
     pub permission_type: String,
+    /// Authority type: "ed25519" (default) or "ed25519_session"
+    #[serde(default = "default_authority_type")]
+    pub authority_type: String,
+    /// For ed25519_session: initial session key pubkey (defaults to new_authority if omitted)
+    #[serde(default)]
+    #[serde_as(as = "Option<AsPubkey>")]
+    pub initial_session_key: Option<Pubkey>,
+    /// For ed25519_session: max session duration in slots (default ~4 days)
+    #[serde(default = "default_max_session_length")]
+    pub max_session_length: u64,
     #[serde(default)]
     pub sol_limit_amount: Option<u64>,
     #[serde(default)]
@@ -46,6 +56,14 @@ fn default_permission() -> String {
     "all".to_string()
 }
 
+fn default_authority_type() -> String {
+    "ed25519".to_string()
+}
+
+fn default_max_session_length() -> u64 {
+    864_000 // ~4 days at 400ms/slot
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
@@ -61,14 +79,32 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         input.program_id_permission.as_ref(),
     );
 
+    // Build authority type and raw bytes based on authority_type field
+    let (authority_type, authority_bytes): (AuthorityType, Vec<u8>) =
+        match input.authority_type.as_str() {
+            "ed25519_session" => {
+                // CreateEd25519SessionAuthority layout: public_key[32] + session_key[32] + max_session_length[8]
+                let session_key = input.initial_session_key.unwrap_or(input.new_authority);
+                let mut bytes = Vec::with_capacity(72);
+                bytes.extend_from_slice(input.new_authority.as_ref());
+                bytes.extend_from_slice(session_key.as_ref());
+                bytes.extend_from_slice(&input.max_session_length.to_le_bytes());
+                (AuthorityType::Ed25519Session, bytes)
+            }
+            _ => (
+                AuthorityType::Ed25519,
+                input.new_authority.as_ref().to_vec(),
+            ),
+        };
+
     let ix = AddAuthorityInstruction::new_with_ed25519_authority(
         input.swig_account,
         input.fee_payer.pubkey(),
         input.acting_authority.pubkey(),
         input.acting_role_id,
         AuthorityConfig {
-            authority_type: AuthorityType::Ed25519,
-            authority: input.new_authority.as_ref(),
+            authority_type,
+            authority: &authority_bytes,
         },
         actions,
     )
