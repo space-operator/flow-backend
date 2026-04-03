@@ -89,6 +89,16 @@ pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, Com
     .await
     .context("write deps.ts")?;
 
+    // Deno 2.x requires a deno.json to resolve npm: specifiers.
+    // Use "none" so Deno resolves from its global cache instead of
+    // requiring a local node_modules directory in the temp dir.
+    tokio::fs::write(
+        dir.path().join("deno.json"),
+        r#"{"nodeModulesDir":"none"}"#,
+    )
+    .await
+    .context("write deno.json")?;
+
     if use_local_deps {
         let libs = std::fs::canonicalize(
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../@space-operator"),
