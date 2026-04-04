@@ -7,9 +7,9 @@ use tracing::info;
 use super::MetadataBubblegum;
 
 // Command Name
-const NAME: &str = "mint_compressed_NFT";
+const NAME: &str = "mint_compressed_nft";
 
-const DEFINITION: &str = flow_lib::node_definition!("mpl_bubblegum/mint_compressed_NFT.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("mpl_bubblegum/mint_compressed_nft.jsonc");
 
 fn build() -> BuildResult {
     static CACHE: BuilderCache = BuilderCache::new(|| {
