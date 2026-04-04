@@ -1,4 +1,4 @@
-use super::{build_instruction, pda};
+use super::{PROGRAM_ID, build_instruction, pda};
 use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
 
@@ -49,6 +49,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new(input.proposal_rent_collector, false),
         AccountMeta::new(input.transaction_rent_collector, false),
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
+        AccountMeta::new_readonly(PROGRAM_ID, false),
     ];
 
     let instruction = build_instruction("close_transaction", accounts, vec![]);

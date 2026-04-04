@@ -1,4 +1,4 @@
-use super::{build_instruction, pda};
+use super::{PROGRAM_ID, build_instruction, pda};
 use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
 
@@ -47,6 +47,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new(input.signer.pubkey(), true),
         AccountMeta::new(proposal, false),
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
+        AccountMeta::new_readonly(PROGRAM_ID, false),
     ];
 
     let mut args_data = Vec::new();

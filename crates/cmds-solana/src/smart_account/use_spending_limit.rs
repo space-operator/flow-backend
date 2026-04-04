@@ -28,11 +28,9 @@ pub struct Input {
     pub account_index: u8,
     #[serde_as(as = "AsPubkey")]
     pub destination: Pubkey,
-    #[serde_as(as = "Option<AsPubkey>")]
-    #[serde(default)]
+    #[serde(default, with = "value::pubkey::opt")]
     pub mint: Option<Pubkey>,
-    #[serde_as(as = "Option<AsPubkey>")]
-    #[serde(default)]
+    #[serde(default, with = "value::pubkey::opt")]
     pub token_program: Option<Pubkey>,
     pub amount: u64,
     pub decimals: u8,

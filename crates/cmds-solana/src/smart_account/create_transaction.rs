@@ -1,5 +1,6 @@
-use super::{build_instruction, pda};
+use super::{PROGRAM_ID, build_instruction, pda};
 use crate::prelude::*;
+use solana_compute_budget_interface::ComputeBudgetInstruction;
 use solana_program::instruction::AccountMeta;
 
 const NAME: &str = "smart_account_create_transaction";
@@ -53,10 +54,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(input.creator.pubkey(), true),
         AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
+        AccountMeta::new_readonly(PROGRAM_ID, false),
     ];
 
-    // CreateTransactionArgs { account_index: u8, ephemeral_signers: u8, transaction_message: bytes, memo: Option<String> }
+    // CreateTransactionArgs is a Borsh ENUM:
+    //   enum CreateTransactionArgs {
+    //     TransactionPayload(TransactionPayload),  // variant 0
+    //     PolicyPayload { payload: PolicyPayload }, // variant 1
+    //   }
+    // Must prepend variant discriminator byte (0 = TransactionPayload).
     let mut args_data = Vec::new();
+    args_data.push(0u8); // enum variant 0: TransactionPayload
     args_data.push(input.account_index);
     args_data.push(input.ephemeral_signers);
     // transaction_message as bytes (Vec<u8> borsh: u32 len + data)
@@ -73,13 +81,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let instruction = build_instruction("create_transaction", accounts, args_data);
 
+    // The Squads smart-account program requires more than the default 32KB heap
+    // for deserializing Settings and VaultTransactionMessage structs.
+    let heap_ix = ComputeBudgetInstruction::request_heap_frame(256 * 1024);
+
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer.clone(), input.creator.clone()]
             .into_iter()
             .collect(),
-        instructions: vec![instruction],
+        instructions: vec![heap_ix, instruction],
     };
 
     let ins = if input.submit {

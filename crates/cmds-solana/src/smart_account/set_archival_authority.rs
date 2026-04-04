@@ -23,8 +23,7 @@ pub struct Input {
     #[serde_as(as = "AsPubkey")]
     pub settings: Pubkey,
     pub settings_authority: Wallet,
-    #[serde_as(as = "Option<AsPubkey>")]
-    #[serde(default)]
+    #[serde(default, with = "value::pubkey::opt")]
     pub new_archival_authority: Option<Pubkey>,
     #[serde(default)]
     pub memo: Option<String>,
