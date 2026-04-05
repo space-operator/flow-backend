@@ -1,6 +1,6 @@
 use super::{
     CP_AMM_PROGRAM_ID, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator,
-    derive_event_authority, derive_reward_vault,
+    derive_event_authority, derive_pool_authority, derive_reward_vault,
 };
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
@@ -47,19 +47,21 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let reward_vault = derive_reward_vault(&input.pool, &input.reward_mint);
+    let pool_authority = derive_pool_authority();
+    let reward_vault = derive_reward_vault(&input.pool, input.reward_index);
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.payer.pubkey(), true), // payer (writable signer)
-        AccountMeta::new(input.pool, false),          // pool (writable)
-        AccountMeta::new(reward_vault, false),        // reward_vault (writable, init)
-        AccountMeta::new_readonly(input.reward_mint, false), // reward_mint
-        AccountMeta::new(input.signer.pubkey(), true), // signer (signer)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
-        AccountMeta::new_readonly(event_authority, false), // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
+        AccountMeta::new_readonly(pool_authority, false), // [0] pool_authority
+        AccountMeta::new(input.pool, false),              // [1] pool (writable)
+        AccountMeta::new(reward_vault, false),            // [2] reward_vault (writable, init)
+        AccountMeta::new_readonly(input.reward_mint, false), // [3] reward_mint
+        AccountMeta::new_readonly(input.signer.pubkey(), true), // [4] signer (readonly signer)
+        AccountMeta::new(input.payer.pubkey(), true),     // [5] payer (writable signer)
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // [6] token_program
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // [7] system_program
+        AccountMeta::new_readonly(event_authority, false), // [8] event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // [9] program
     ];
 
     let mut data = anchor_discriminator(IX_NAME).to_vec();

@@ -1,7 +1,6 @@
 use super::{
-    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID,
-    anchor_discriminator, derive_event_authority, derive_pool_authority, derive_position,
-    derive_reward_vault,
+    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, TOKEN_PROGRAM_ID, anchor_discriminator,
+    derive_event_authority, derive_pool_authority, derive_position, derive_reward_vault,
 };
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
@@ -72,23 +71,21 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         &CP_AMM_PROGRAM_ID,
     )
     .0;
-    let reward_vault = derive_reward_vault(&input.pool, &input.reward_mint);
+    let reward_vault = derive_reward_vault(&input.pool, input.args.reward_index);
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.owner.pubkey(), true), // owner (writable signer)
-        AccountMeta::new_readonly(pool_authority, false), // pool_authority
-        AccountMeta::new(input.pool, false),          // pool (writable)
-        AccountMeta::new(position, false),            // position (writable)
-        AccountMeta::new_readonly(input.position_nft_mint, false), // position_nft_mint
-        AccountMeta::new_readonly(position_nft_account, false), // position_nft_account
-        AccountMeta::new(reward_vault, false),        // reward_vault (writable)
-        AccountMeta::new_readonly(input.reward_mint, false), // reward_mint
-        AccountMeta::new(input.user_token_account, false), // user_token_account (writable)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
-        AccountMeta::new_readonly(event_authority, false), // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
+        AccountMeta::new_readonly(pool_authority, false), // [0] pool_authority
+        AccountMeta::new(input.pool, false),              // [1] pool (writable)
+        AccountMeta::new(position, false),                // [2] position (writable)
+        AccountMeta::new(reward_vault, false),            // [3] reward_vault (writable)
+        AccountMeta::new_readonly(input.reward_mint, false), // [4] reward_mint
+        AccountMeta::new(input.user_token_account, false), // [5] user_token_account (writable)
+        AccountMeta::new_readonly(position_nft_account, false), // [6] position_nft_account
+        AccountMeta::new_readonly(input.owner.pubkey(), true), // [7] owner (readonly signer)
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // [8] token_program
+        AccountMeta::new_readonly(event_authority, false), // [9] event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // [10] program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();

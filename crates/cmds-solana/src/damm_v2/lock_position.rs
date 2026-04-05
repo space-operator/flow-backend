@@ -1,6 +1,6 @@
 use super::{
     CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID, anchor_discriminator,
-    derive_event_authority, derive_position,
+    derive_event_authority,
 };
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
@@ -38,6 +38,8 @@ pub struct Input {
     #[serde_as(as = "AsPubkey")]
     pub position_nft_mint: Pubkey,
     pub owner: Wallet,
+    /// Fresh keypair for the new vesting account (init without seeds)
+    pub vesting: Wallet,
     pub cliff_point: Option<u64>,
     pub period_frequency: u64,
     pub cliff_unlock_liquidity: u128,
@@ -56,10 +58,16 @@ pub struct Output {
     pub position: Pubkey,
     #[serde_as(as = "AsPubkey")]
     pub position_nft_account: Pubkey,
+    #[serde_as(as = "AsPubkey")]
+    pub vesting: Pubkey,
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let position = derive_position(&input.pool, &input.position_nft_mint);
+    let position = Pubkey::find_program_address(
+        &[super::POSITION_PREFIX, input.position_nft_mint.as_ref()],
+        &CP_AMM_PROGRAM_ID,
+    )
+    .0;
     let position_nft_account = Pubkey::find_program_address(
         &[
             POSITION_NFT_ACCOUNT_PREFIX,
@@ -68,18 +76,19 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         &CP_AMM_PROGRAM_ID,
     )
     .0;
+    let vesting_pubkey = input.vesting.pubkey();
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.payer.pubkey(), true), // payer (writable signer)
-        AccountMeta::new(input.owner.pubkey(), true), // owner (signer)
-        AccountMeta::new(input.pool, false),          // pool (writable)
-        AccountMeta::new(position, false),            // position (writable)
-        AccountMeta::new_readonly(input.position_nft_mint, false), // position_nft_mint
-        AccountMeta::new_readonly(position_nft_account, false), // position_nft_account
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
-        AccountMeta::new_readonly(event_authority, false), // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
+        AccountMeta::new_readonly(input.pool, false), // [0] pool (readonly)
+        AccountMeta::new(position, false),            // [1] position (writable)
+        AccountMeta::new(vesting_pubkey, true),       // [2] vesting (writable signer, init)
+        AccountMeta::new_readonly(position_nft_account, false), // [3] position_nft_account
+        AccountMeta::new_readonly(input.owner.pubkey(), true), // [4] owner (readonly signer)
+        AccountMeta::new(input.payer.pubkey(), true), // [5] payer (writable signer)
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // [6] system_program
+        AccountMeta::new_readonly(event_authority, false), // [7] event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // [8] program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -101,7 +110,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.payer.pubkey(),
-        signers: [input.payer, input.owner].into(),
+        signers: [input.payer, input.owner, input.vesting].into(),
         instructions: [instruction].into(),
     };
 
@@ -115,6 +124,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         signature,
         position,
         position_nft_account,
+        vesting: vesting_pubkey,
     })
 }
 
@@ -138,6 +148,7 @@ mod tests {
             "pool" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "position_nft_mint" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "owner" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
+            "vesting" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
             "period_frequency" => 1000u64,
             "cliff_unlock_liquidity" => 0_u128,
             "liquidity_per_period" => 0_u128,
@@ -161,14 +172,11 @@ mod tests {
             pool: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").pubkey(),
             position_nft_mint: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").pubkey(),
             owner: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").into(),
+            vesting: Keypair::new().into(),
             cliff_point: None,
-
             period_frequency: 1000,
-
             cliff_unlock_liquidity: 1000,
-
             liquidity_per_period: 1000,
-
             number_of_period: 1,
             submit: false,
         };

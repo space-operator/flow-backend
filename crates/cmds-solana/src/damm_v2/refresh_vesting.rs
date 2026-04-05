@@ -1,6 +1,5 @@
 use super::{
-    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID, anchor_discriminator,
-    derive_event_authority, derive_position,
+    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, anchor_discriminator, derive_position,
 };
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
@@ -27,6 +26,9 @@ pub struct Input {
     pub pool: Pubkey,
     #[serde_as(as = "AsPubkey")]
     pub position_nft_mint: Pubkey,
+    /// The vesting account to refresh (passed as remaining_account)
+    #[serde_as(as = "AsPubkey")]
+    pub vesting: Pubkey,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -52,17 +54,14 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         &CP_AMM_PROGRAM_ID,
     )
     .0;
-    let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.owner.pubkey(), true), // owner (writable signer)
-        AccountMeta::new(input.pool, false),          // pool (writable)
-        AccountMeta::new(position, false),            // position (writable)
-        AccountMeta::new_readonly(input.position_nft_mint, false), // position_nft_mint
-        AccountMeta::new_readonly(position_nft_account, false), // position_nft_account
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
-        AccountMeta::new_readonly(event_authority, false), // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
+        AccountMeta::new_readonly(input.pool, false), // [0] pool (readonly)
+        AccountMeta::new(position, false),            // [1] position (writable)
+        AccountMeta::new_readonly(position_nft_account, false), // [2] position_nft_account
+        AccountMeta::new_readonly(input.owner.pubkey(), false), // [3] owner (not a signer in this ix)
+        // remaining_accounts: vesting accounts to refresh
+        AccountMeta::new(input.vesting, false), // remaining[0] vesting (writable)
     ];
 
     let data = anchor_discriminator(NAME).to_vec();
@@ -105,13 +104,14 @@ mod tests {
     }
 
     /// Tests that all required inputs can be parsed from value::map.
-    /// Required fields: owner, pool, position_nft_mint
+    /// Required fields: owner, pool, position_nft_mint, vesting
     #[tokio::test]
     async fn test_input_parsing() {
         let input = value::map! {
             "owner" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
             "pool" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "position_nft_mint" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
+            "vesting" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
 
@@ -130,6 +130,7 @@ mod tests {
             owner: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").into(),
             pool: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").pubkey(),
             position_nft_mint: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").pubkey(),
+            vesting: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").pubkey(),
             submit: false,
         };
 

@@ -83,6 +83,14 @@
         "tooltip": "Total number of vesting periods"
       },
       {
+        "name": "vesting",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "tooltip": "Fresh keypair for the new vesting account (initialized on-chain, no seeds)"
+      },
+      {
         "name": "submit",
         "type_bounds": [
           "bool"
@@ -106,6 +114,11 @@
         "name": "position_nft_account",
         "type": "pubkey",
         "tooltip": "Derived position NFT account PDA"
+      },
+      {
+        "name": "vesting",
+        "type": "pubkey",
+        "tooltip": "Address of the created vesting account"
       }
     ]
   },

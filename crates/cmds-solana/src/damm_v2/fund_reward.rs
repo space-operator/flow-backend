@@ -1,7 +1,4 @@
-use super::{
-    CP_AMM_PROGRAM_ID, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator,
-    derive_event_authority, derive_reward_vault,
-};
+use super::{CP_AMM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator, derive_reward_vault};
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
 
@@ -53,19 +50,15 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let reward_vault = derive_reward_vault(&input.pool, &input.reward_mint);
-    let event_authority = derive_event_authority();
+    let reward_vault = derive_reward_vault(&input.pool, input.args.reward_index);
 
     let accounts = vec![
-        AccountMeta::new(input.funder.pubkey(), true), // funder (writable signer)
-        AccountMeta::new(input.pool, false),           // pool (writable)
-        AccountMeta::new(reward_vault, false),         // reward_vault (writable)
-        AccountMeta::new_readonly(input.reward_mint, false), // reward_mint
-        AccountMeta::new(input.funder_token_account, false), // funder_token_account (writable)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
-        AccountMeta::new_readonly(event_authority, false), // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
+        AccountMeta::new(input.pool, false),   // [0] pool (writable)
+        AccountMeta::new(reward_vault, false), // [1] reward_vault (writable)
+        AccountMeta::new_readonly(input.reward_mint, false), // [2] reward_mint
+        AccountMeta::new(input.funder_token_account, false), // [3] funder_token_account (writable)
+        AccountMeta::new_readonly(input.funder.pubkey(), true), // [4] funder (readonly signer)
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // [5] token_program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();

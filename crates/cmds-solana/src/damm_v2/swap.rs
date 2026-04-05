@@ -1,6 +1,6 @@
 use super::{
-    CP_AMM_PROGRAM_ID, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator,
-    derive_event_authority, derive_pool_authority, derive_token_vault,
+    CP_AMM_PROGRAM_ID, TOKEN_PROGRAM_ID, anchor_discriminator, derive_event_authority,
+    derive_pool_authority, derive_token_vault,
 };
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
@@ -69,25 +69,27 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let mut accounts = vec![
-        AccountMeta::new(input.payer.pubkey(), true), // payer (writable signer)
-        AccountMeta::new_readonly(pool_authority, false), // pool_authority
-        AccountMeta::new(input.pool, false),          // pool (writable)
-        AccountMeta::new(input.input_token_account, false), // input_token_account (writable)
-        AccountMeta::new(input.output_token_account, false), // output_token_account (writable)
-        AccountMeta::new(token_a_vault, false),       // token_a_vault (writable)
-        AccountMeta::new(token_b_vault, false),       // token_b_vault (writable)
-        AccountMeta::new_readonly(input.token_a_mint, false), // token_a_mint
-        AccountMeta::new_readonly(input.token_b_mint, false), // token_b_mint
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
+        AccountMeta::new_readonly(pool_authority, false), // [0] pool_authority
+        AccountMeta::new(input.pool, false),              // [1] pool (writable)
+        AccountMeta::new(input.input_token_account, false), // [2] input_token_account (writable)
+        AccountMeta::new(input.output_token_account, false), // [3] output_token_account (writable)
+        AccountMeta::new(token_a_vault, false),           // [4] token_a_vault (writable)
+        AccountMeta::new(token_b_vault, false),           // [5] token_b_vault (writable)
+        AccountMeta::new_readonly(input.token_a_mint, false), // [6] token_a_mint
+        AccountMeta::new_readonly(input.token_b_mint, false), // [7] token_b_mint
+        AccountMeta::new(input.payer.pubkey(), true),     // [8] payer (writable signer)
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // [9] token_a_program
+        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // [10] token_b_program
     ];
 
-    if let Some(referral) = input.referral_token_account {
-        accounts.push(AccountMeta::new(referral, false));
+    // [11] referral: always present; use program ID as null sentinel when not provided
+    match input.referral_token_account {
+        Some(referral) => accounts.push(AccountMeta::new(referral, false)),
+        None => accounts.push(AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false)),
     }
 
-    accounts.push(AccountMeta::new_readonly(event_authority, false));
-    accounts.push(AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false));
+    accounts.push(AccountMeta::new_readonly(event_authority, false)); // [12] event_authority
+    accounts.push(AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false)); // [13] program
 
     let mut data = anchor_discriminator(IX_NAME).to_vec();
     data.extend(borsh::to_vec(&input.args)?);

@@ -35,6 +35,14 @@
         "tooltip": "Mint of the position NFT (used to derive position + nft_account)"
       },
       {
+        "name": "vesting",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Vesting account to refresh (passed as remaining_account to the program)"
+      },
+      {
         "name": "submit",
         "type_bounds": [
           "bool"

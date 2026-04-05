@@ -78,39 +78,41 @@ pub fn derive_config(index: u64) -> Pubkey {
     Pubkey::find_program_address(&[CONFIG_PREFIX, &index.to_le_bytes()], &CP_AMM_PROGRAM_ID).0
 }
 
-/// Derive pool PDA from config, token_a_mint, token_b_mint, and creator
-pub fn derive_pool(
-    config: &Pubkey,
-    token_a_mint: &Pubkey,
-    token_b_mint: &Pubkey,
-    creator: &Pubkey,
-) -> Pubkey {
+/// Derive pool PDA from config and sorted token mints (creator is NOT a seed)
+/// Seeds: [POOL_PREFIX, config, max(token_a_mint, token_b_mint), min(token_a_mint, token_b_mint)]
+pub fn derive_pool(config: &Pubkey, token_a_mint: &Pubkey, token_b_mint: &Pubkey) -> Pubkey {
+    let (max_mint, min_mint) = if token_a_mint > token_b_mint {
+        (token_a_mint, token_b_mint)
+    } else {
+        (token_b_mint, token_a_mint)
+    };
     Pubkey::find_program_address(
         &[
             POOL_PREFIX,
             config.as_ref(),
-            token_a_mint.as_ref(),
-            token_b_mint.as_ref(),
-            creator.as_ref(),
+            max_mint.as_ref(),
+            min_mint.as_ref(),
         ],
         &CP_AMM_PROGRAM_ID,
     )
     .0
 }
 
-/// Derive token vault PDA from pool and token_mint
+/// Derive token vault PDA from token_mint and pool
+/// Seeds: [TOKEN_VAULT_PREFIX, token_mint, pool] — note: mint before pool
 pub fn derive_token_vault(pool: &Pubkey, token_mint: &Pubkey) -> Pubkey {
     Pubkey::find_program_address(
-        &[TOKEN_VAULT_PREFIX, pool.as_ref(), token_mint.as_ref()],
+        &[TOKEN_VAULT_PREFIX, token_mint.as_ref(), pool.as_ref()],
         &CP_AMM_PROGRAM_ID,
     )
     .0
 }
 
-/// Derive position PDA from pool and position_nft_mint
-pub fn derive_position(pool: &Pubkey, position_nft_mint: &Pubkey) -> Pubkey {
+/// Derive position PDA from position_nft_mint only (pool is NOT a seed)
+/// Seeds: [POSITION_PREFIX, position_nft_mint]
+pub fn derive_position(_pool: &Pubkey, position_nft_mint: &Pubkey) -> Pubkey {
     Pubkey::find_program_address(
-        &[POSITION_PREFIX, pool.as_ref(), position_nft_mint.as_ref()],
+        &[POSITION_PREFIX, position_nft_mint.as_ref()],
         &CP_AMM_PROGRAM_ID,
     )
     .0
@@ -134,10 +136,15 @@ pub fn derive_token_badge(token_mint: &Pubkey) -> Pubkey {
     .0
 }
 
-/// Derive reward vault PDA
-pub fn derive_reward_vault(pool: &Pubkey, reward_mint: &Pubkey) -> Pubkey {
+/// Derive reward vault PDA from pool and reward_index
+/// Seeds: [REWARD_VAULT_PREFIX, pool, reward_index.to_le_bytes()]
+pub fn derive_reward_vault(pool: &Pubkey, reward_index: u8) -> Pubkey {
     Pubkey::find_program_address(
-        &[REWARD_VAULT_PREFIX, pool.as_ref(), reward_mint.as_ref()],
+        &[
+            REWARD_VAULT_PREFIX,
+            pool.as_ref(),
+            &reward_index.to_le_bytes(),
+        ],
         &CP_AMM_PROGRAM_ID,
     )
     .0

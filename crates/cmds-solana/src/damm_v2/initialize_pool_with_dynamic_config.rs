@@ -72,12 +72,7 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let pool = derive_pool(
-        &input.config,
-        &input.token_a_mint,
-        &input.token_b_mint,
-        &input.creator,
-    );
+    let pool = derive_pool(&input.config, &input.token_a_mint, &input.token_b_mint);
     let pool_authority = derive_pool_authority();
     let position_nft_mint_pubkey = input.position_nft_mint.pubkey();
     let token_a_vault = derive_token_vault(&pool, &input.token_a_mint);

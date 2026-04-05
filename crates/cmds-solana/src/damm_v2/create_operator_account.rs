@@ -45,16 +45,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.payer.pubkey(), true), // payer (writable signer)
-        AccountMeta::new(operator, false),            // operator (writable, init)
-        AccountMeta::new(input.signer.pubkey(), true), // signer (signer)
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
-        AccountMeta::new_readonly(event_authority, false), // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
+        AccountMeta::new(operator, false), // [0] operator (writable, init)
+        AccountMeta::new_readonly(input.whitelisted_address, false), // [1] whitelisted_address
+        AccountMeta::new_readonly(input.signer.pubkey(), true), // [2] signer (readonly signer)
+        AccountMeta::new(input.payer.pubkey(), true), // [3] payer (writable signer)
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // [4] system_program
+        AccountMeta::new_readonly(event_authority, false), // [5] event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // [6] program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
-    data.extend(borsh::to_vec(&input.whitelisted_address)?);
+    // Only permission is an instruction arg; whitelisted_address is an account
     data.extend(borsh::to_vec(&input.permission)?);
 
     let instruction = Instruction {
