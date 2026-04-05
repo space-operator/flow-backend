@@ -1,5 +1,6 @@
 use super::{build_instruction, pda};
 use crate::prelude::*;
+use solana_compute_budget_interface::ComputeBudgetInstruction;
 use solana_program::instruction::AccountMeta;
 
 const NAME: &str = "smart_account_create_transaction_from_buffer";
@@ -87,7 +88,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         signers: [input.fee_payer.clone(), input.creator.clone()]
             .into_iter()
             .collect(),
-        instructions: vec![instruction],
+        instructions: vec![
+            ComputeBudgetInstruction::request_heap_frame(256 * 1024),
+            instruction,
+        ],
     };
 
     let ins = if input.submit {

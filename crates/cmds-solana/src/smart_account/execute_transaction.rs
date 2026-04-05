@@ -1,5 +1,6 @@
-use super::{build_instruction, pda};
+use super::{PROGRAM_ID, build_instruction, pda};
 use crate::prelude::*;
+use solana_compute_budget_interface::ComputeBudgetInstruction;
 use solana_program::instruction::AccountMeta;
 
 const NAME: &str = "smart_account_execute_transaction";
@@ -48,13 +49,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let instruction = build_instruction("execute_transaction", accounts, vec![]);
 
+    // The Squads smart-account program requires more than the default 32KB heap.
+    let heap_ix = ComputeBudgetInstruction::request_heap_frame(256 * 1024);
+
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
         signers: [input.fee_payer.clone(), input.signer.clone()]
             .into_iter()
             .collect(),
-        instructions: vec![instruction],
+        instructions: vec![heap_ix, instruction],
     };
 
     let ins = if input.submit {

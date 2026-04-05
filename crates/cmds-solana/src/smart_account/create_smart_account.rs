@@ -20,15 +20,13 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
     pub fee_payer: Wallet,
-    #[serde_as(as = "Option<AsPubkey>")]
-    #[serde(default)]
+    #[serde(default, with = "value::pubkey::opt")]
     pub settings_authority: Option<Pubkey>,
     pub threshold: u16,
     pub signers: Vec<SmartAccountSignerInput>,
     #[serde(default)]
     pub time_lock: u32,
-    #[serde_as(as = "Option<AsPubkey>")]
-    #[serde(default)]
+    #[serde(default, with = "value::pubkey::opt")]
     pub rent_collector: Option<Pubkey>,
     #[serde(default)]
     pub memo: Option<String>,
@@ -56,12 +54,15 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (program_config, _) = pda::find_program_config();
 
-    // Read program config on-chain to get treasury and smart_account_index
-    let client = ctx.solana_client();
-    let config_data = client
-        .get_account_data(&program_config)
-        .await
-        .map_err(|e| CommandError::msg(format!("Failed to read program config: {e}")))?;
+    // Read program config on-chain to get treasury and smart_account_index.
+    // Scope the client borrow so ctx can be mutably borrowed later by execute().
+    let config_data = {
+        let client = ctx.solana_client();
+        client
+            .get_account_data(&program_config)
+            .await
+            .map_err(|e| CommandError::msg(format!("Failed to read program config: {e}")))?
+    };
 
     // ProgramConfig layout (after 8-byte Anchor discriminator):
     // smart_account_index: u128 (16 bytes)
@@ -72,7 +73,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         return Err(CommandError::msg("Program config data too short"));
     }
 
-    // Read smart_account_index (u128 LE at offset 8)
+    // Read smart_account_index (u128 LE at offset 8) for deriving the settings PDA
     let smart_account_index = u128::from_le_bytes(
         config_data[8..24]
             .try_into()
@@ -83,19 +84,30 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let treasury = Pubkey::try_from(&config_data[treasury_offset..treasury_offset + 32])
         .map_err(|_| CommandError::msg("Invalid treasury pubkey"))?;
 
-    // Derive the settings PDA for the new smart account (uses current index)
-    let (settings, _) = pda::find_settings(smart_account_index);
-
-    let accounts = vec![
+    // Derive settings PDAs for a range of indices. On a busy devnet the
+    // smart_account_index may increment between our RPC read and tx
+    // execution. The on-chain program scans remaining_accounts for the
+    // PDA matching its atomic index, so we include speculative PDAs for
+    // the next SPECULATION_RANGE indices to handle the race.
+    const SPECULATION_RANGE: u128 = 10;
+    let mut accounts = vec![
         // Named accounts (matching the Anchor Accounts struct)
         AccountMeta::new(program_config, false),
         AccountMeta::new(treasury, false),
         AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
         AccountMeta::new_readonly(PROGRAM_ID, false),
-        // Remaining account: the settings PDA to be created
-        AccountMeta::new(settings, false),
     ];
+
+    // Add speculative settings PDAs as remaining accounts
+    let mut settings = Pubkey::default();
+    for offset in 0..SPECULATION_RANGE {
+        let (pda, _) = pda::find_settings(smart_account_index + offset);
+        if offset == 0 {
+            settings = pda;
+        }
+        accounts.push(AccountMeta::new(pda, false));
+    }
 
     // Serialize args: CreateSmartAccountArgs
     let mut args_data = Vec::new();
@@ -162,10 +174,32 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
+    // After successful execution, re-read the program config to get the
+    // actual settings PDA. The index was incremented by the instruction,
+    // so the created settings is at (new_index - 1).
+    let actual_settings = if signature.is_some() {
+        match ctx.solana_client().get_account_data(&program_config).await {
+            Ok(new_data) if new_data.len() >= 24 => {
+                let new_index = u128::from_le_bytes(
+                    new_data[8..24].try_into().unwrap_or([0; 16]),
+                );
+                // The instruction incremented the index, so created account is at new_index - 1
+                if new_index > 0 {
+                    pda::find_settings(new_index - 1).0
+                } else {
+                    settings
+                }
+            }
+            _ => settings,
+        }
+    } else {
+        settings
+    };
+
     Ok(Output {
         signature,
         program_config,
-        settings,
+        settings: actual_settings,
     })
 }
 
