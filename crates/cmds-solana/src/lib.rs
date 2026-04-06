@@ -30,6 +30,7 @@ pub mod kvault;
 pub mod limo;
 pub mod magicblock;
 pub mod merkle_distributor;
+pub mod mpl_agent;
 pub mod mpl_bubblegum;
 pub mod mpl_core;
 pub mod mpl_core_candy_machine;

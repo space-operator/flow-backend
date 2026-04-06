@@ -88,6 +88,11 @@ mpl-bubblegum = { path = "../../vendor/mpl-bubblegum" }
 mpl-core-candy-machine-core.workspace = true
 mpl-core-candy-guard.workspace = true
 
+# mpl-agent (uses solana-program v2, bridged via solana_v2_compat)
+mpl-agent-identity = { git = "https://github.com/metaplex-foundation/mpl-agent" }
+mpl-agent-reputation = { git = "https://github.com/metaplex-foundation/mpl-agent" }
+mpl-agent-validation = { git = "https://github.com/metaplex-foundation/mpl-agent" }
+mpl-agent-tools = { git = "https://github.com/metaplex-foundation/mpl-agent" }
 
 # bundlr
 bundlr-sdk = { version = "=0.3.0", default-features = false, features = [
