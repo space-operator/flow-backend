@@ -39,7 +39,7 @@ await Deno.mkdir(new URL("../contracts/src/generated", packageRoot), {
   recursive: true,
 });
 
-const command = new Deno.Command("deno", {
+const command = new Deno.Command(Deno.execPath(), {
   cwd: packageRoot,
   args: [
     "run",
