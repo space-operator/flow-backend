@@ -40,6 +40,28 @@ pub struct Input {
     // SettingsChange fields
     #[serde(default)]
     pub allowed_actions: Option<Vec<String>>,
+    // ProgramInteraction fields
+    /// Target program ID for instruction constraints
+    #[serde_as(as = "Option<AsPubkey>")]
+    #[serde(default)]
+    pub target_program: Option<Pubkey>,
+    /// Instruction data constraint: offset to check
+    #[serde(default)]
+    pub data_offset: Option<u32>,
+    /// Instruction data constraint: expected value bytes
+    #[serde(default)]
+    pub data_value: Option<Vec<u8>>,
+    /// Instruction data constraint: operator (0=Eq, 1=Neq, 2=Gt, 3=Lt, 4=Gte, 5=Lte)
+    #[serde(default)]
+    pub data_operator: Option<u8>,
+    /// Pre-hook program ID
+    #[serde_as(as = "Option<AsPubkey>")]
+    #[serde(default)]
+    pub pre_hook_program: Option<Pubkey>,
+    /// Post-hook program ID
+    #[serde_as(as = "Option<AsPubkey>")]
+    #[serde(default)]
+    pub post_hook_program: Option<Pubkey>,
     // Common policy fields
     #[serde_as(as = "Vec<AsPubkey>")]
     pub policy_signers: Vec<Pubkey>,
@@ -90,24 +112,49 @@ fn read_transaction_index(data: &[u8]) -> Result<u64, CommandError> {
     Ok(tx_index)
 }
 
-async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    // 1. Derive policy PDA
-    let (policy_pda, _) = pda::find_policy(&input.settings, input.policy_seed);
+/// Read the settings account's policy_seed from on-chain data.
+/// The policy_seed is stored as Option<u64> near the end of the settings data.
+/// Offset 158: Option<u64> — 0=None, 1=Some(seed)
+fn read_policy_seed(data: &[u8]) -> Result<Option<u64>, CommandError> {
+    const POLICY_SEED_OFFSET: usize = 158;
+    if data.len() < POLICY_SEED_OFFSET + 9 {
+        return Ok(None); // Account too short, no policy_seed field
+    }
+    if data[POLICY_SEED_OFFSET] == 0 {
+        return Ok(None);
+    }
+    let seed = u64::from_le_bytes(
+        data[POLICY_SEED_OFFSET + 1..POLICY_SEED_OFFSET + 9]
+            .try_into()
+            .map_err(|_| CommandError::msg("Invalid policy_seed bytes"))?,
+    );
+    Ok(Some(seed))
+}
 
-    // 2. Read settings account to get next transaction_index
-    let transaction_index = {
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    // 1. Read settings account to get next transaction_index AND policy_seed
+    let (transaction_index, next_policy_seed) = {
         let client = ctx.solana_client();
         let settings_data = client
             .get_account_data(&input.settings)
             .await
             .map_err(|e| CommandError::msg(format!("Failed to read settings account: {e}")))?;
-        let current = read_transaction_index(&settings_data)?;
-        current + 1 // The program uses transaction_index + 1
+        let current_tx = read_transaction_index(&settings_data)?;
+        let current_policy = read_policy_seed(&settings_data)?;
+        // The program uses transaction_index + 1 and policy_seed + 1
+        let next_policy = current_policy.map(|s| s + 1).unwrap_or(input.policy_seed);
+        (current_tx + 1, next_policy)
     };
 
+    // Use the auto-detected policy seed, or fall back to user-provided
+    let effective_seed = next_policy_seed;
+
+    // 2. Derive policy PDA using the effective seed
+    let (policy_pda, _) = pda::find_policy(&input.settings, effective_seed);
+
     info!(
-        "build_policy_action: policy_type={}, seed={}, policy_pda={}, transaction_index={}",
-        input.policy_type, input.policy_seed, policy_pda, transaction_index
+        "build_policy_action: policy_type={}, seed={} (user={}, auto={}), policy_pda={}, transaction_index={}",
+        input.policy_type, effective_seed, input.policy_seed, next_policy_seed, policy_pda, transaction_index
     );
 
     // 3. Serialize SettingsAction::PolicyCreate
@@ -119,8 +166,8 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
     // SettingsAction variant 7 = PolicyCreate (Borsh enum = u8)
     actions.push(7);
 
-    // seed: u64
-    actions.extend_from_slice(&input.policy_seed.to_le_bytes());
+    // seed: u64 — the program auto-increments, but we still pass a value
+    actions.extend_from_slice(&effective_seed.to_le_bytes());
 
     // PolicyCreationPayload (u8 discriminant)
     match input.policy_type.as_str() {
@@ -199,23 +246,89 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
         "internal_fund_transfer" => {
             actions.push(0); // InternalFundTransfer
 
-            // source_account_mask: [u8; 32] — bit 0 = account 0, etc.
-            // Default: only account 0
-            let mut source_mask = [0u8; 32];
-            source_mask[0] = 1; // bit 0
-            actions.extend_from_slice(&source_mask);
+            // sourceAccountIndices: Vec<u8> — list of allowed source account indices
+            // Default: [0] (account 0 only)
+            actions.extend_from_slice(&1u32.to_le_bytes()); // Vec length = 1
+            actions.push(0); // account index 0
 
-            // destination_account_mask: [u8; 32]
-            let mut dest_mask = [0u8; 32];
-            dest_mask[0] = 2; // bit 1 (account 1)
-            actions.extend_from_slice(&dest_mask);
+            // destinationAccountIndices: Vec<u8> — list of allowed destination account indices
+            // Default: [1] (account 1 only)
+            actions.extend_from_slice(&1u32.to_le_bytes()); // Vec length = 1
+            actions.push(1); // account index 1
 
-            // allowed_mints: Vec<Pubkey> = empty (any)
+            // allowedMints: Vec<Pubkey>
+            // Default: [Pubkey::default] (native SOL)
+            actions.extend_from_slice(&1u32.to_le_bytes()); // Vec length = 1
+            actions.extend_from_slice(Pubkey::default().as_ref()); // native SOL
+        }
+        "program_interaction" => {
+            actions.push(3); // ProgramInteraction
+
+            // Borsh field order: accountIndex, instructionsConstraints, preHook, postHook, spendingLimits
+
+            // 1. accountIndex: u8
+            actions.push(input.account_index.unwrap_or(0));
+
+            // 2. instructionsConstraints: Vec<InstructionConstraint>
+            //    Field order: programId, accountConstraints, dataConstraints
+            if let Some(ref target) = input.target_program {
+                actions.extend_from_slice(&1u32.to_le_bytes()); // 1 constraint
+                actions.extend_from_slice(target.as_ref()); // programId
+                actions.extend_from_slice(&0u32.to_le_bytes()); // accountConstraints: empty
+                // dataConstraints: Vec<DataConstraint>
+                if let (Some(offset), Some(value), Some(op)) =
+                    (input.data_offset, input.data_value.as_ref(), input.data_operator)
+                {
+                    actions.extend_from_slice(&1u32.to_le_bytes()); // 1 constraint
+                    actions.extend_from_slice(&(offset as u64).to_le_bytes()); // dataOffset: u64
+                    // dataValue: 0=U8, 1=U16Le, 2=U32Le, 3=U64Le, 4=U128Le, 5=U8Slice
+                    if value.len() == 1 {
+                        actions.push(0); // U8
+                        actions.push(value[0]);
+                    } else {
+                        actions.push(5); // U8Slice
+                        actions.extend_from_slice(&(value.len() as u32).to_le_bytes());
+                        actions.extend_from_slice(value);
+                    }
+                    actions.push(op); // DataOperator: 0=Eq, 1=Neq, 2=Gt, 3=Gte, 4=Lt, 5=Lte
+                } else {
+                    actions.extend_from_slice(&0u32.to_le_bytes()); // 0 data constraints
+                }
+            } else {
+                actions.extend_from_slice(&0u32.to_le_bytes()); // 0 constraints
+            }
+
+            // 3. preHook: Option<Hook>
+            //    Hook field order: numExtraAccounts, accountConstraints, instructionData, programId, passInnerInstructions
+            if let Some(ref hook_program) = input.pre_hook_program {
+                actions.push(1); // Some
+                actions.push(0); // numExtraAccounts
+                actions.extend_from_slice(&0u32.to_le_bytes()); // accountConstraints: empty
+                actions.extend_from_slice(&0u32.to_le_bytes()); // instructionData: empty
+                actions.extend_from_slice(hook_program.as_ref()); // programId
+                actions.push(0); // passInnerInstructions
+            } else {
+                actions.push(0); // None
+            }
+
+            // 4. postHook: Option<Hook>
+            if let Some(ref hook_program) = input.post_hook_program {
+                actions.push(1); // Some
+                actions.push(0); // numExtraAccounts
+                actions.extend_from_slice(&0u32.to_le_bytes()); // accountConstraints
+                actions.extend_from_slice(&0u32.to_le_bytes()); // instructionData
+                actions.extend_from_slice(hook_program.as_ref()); // programId
+                actions.push(0); // passInnerInstructions
+            } else {
+                actions.push(0); // None
+            }
+
+            // 5. spendingLimits: Vec<LimitedSpendingLimit> = empty
             actions.extend_from_slice(&0u32.to_le_bytes());
         }
         other => {
             return Err(CommandError::msg(format!(
-                "Unsupported policy type: {other}. Use: spending_limit, settings_change, internal_fund_transfer"
+                "Unsupported policy type: {other}. Use: spending_limit, settings_change, internal_fund_transfer, program_interaction"
             )));
         }
     }

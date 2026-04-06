@@ -70,18 +70,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         accounts.push(AccountMeta::new(rent_payer, true));
     }
 
-    dbg!(
-        "execute_settings_transaction",
+    tracing::info!(
+        "execute_settings_transaction: {} accounts, policy_pdas={:?}",
         accounts.len(),
-        &input.policy_pdas,
-        &input.rent_payer,
+        input.policy_pdas,
     );
-    for (idx, acc) in accounts.iter().enumerate() {
-        eprintln!(
-            "  account[{}]: {} (signer={}, writable={})",
-            idx, acc.pubkey, acc.is_signer, acc.is_writable
-        );
-    }
 
     let instruction = build_instruction("execute_settings_transaction", accounts, vec![]);
 

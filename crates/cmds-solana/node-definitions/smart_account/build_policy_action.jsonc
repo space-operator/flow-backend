@@ -63,6 +63,36 @@
         "tooltip": "Allowed settings changes: [\"add_signer\", \"remove_signer\", \"change_threshold\", \"change_time_lock\"]"
       },
       {
+        "name": "target_program",
+        "type_bounds": ["pubkey"],
+        "tooltip": "Target program ID for ProgramInteraction instruction constraints"
+      },
+      {
+        "name": "data_offset",
+        "type_bounds": ["u32"],
+        "tooltip": "Instruction data constraint: byte offset to check"
+      },
+      {
+        "name": "data_value",
+        "type_bounds": ["bytes"],
+        "tooltip": "Instruction data constraint: expected value bytes"
+      },
+      {
+        "name": "data_operator",
+        "type_bounds": ["u8"],
+        "tooltip": "Data constraint operator: 0=Eq, 1=Neq, 2=Gt, 3=Lt, 4=Gte, 5=Lte"
+      },
+      {
+        "name": "pre_hook_program",
+        "type_bounds": ["pubkey"],
+        "tooltip": "Pre-hook program ID (called before policy execution)"
+      },
+      {
+        "name": "post_hook_program",
+        "type_bounds": ["pubkey"],
+        "tooltip": "Post-hook program ID (called after policy execution)"
+      },
+      {
         "name": "policy_signers",
         "type_bounds": ["object"],
         "required": true,

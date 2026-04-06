@@ -121,19 +121,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let instruction = build_instruction("use_spending_limit", accounts, args_data);
 
-    dbg!(
-        "use_spending_limit",
+    tracing::info!(
+        "use_spending_limit: {} accounts, smart_account={}, spending_limit={}",
         instruction.accounts.len(),
-        &smart_account,
-        &input.spending_limit,
-        &input.mint,
+        smart_account,
+        input.spending_limit,
     );
-    for (idx, acc) in instruction.accounts.iter().enumerate() {
-        eprintln!(
-            "  account[{}]: {} (signer={}, writable={})",
-            idx, acc.pubkey, acc.is_signer, acc.is_writable
-        );
-    }
 
     let ins = Instructions {
         lookup_tables: None,

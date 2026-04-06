@@ -297,8 +297,14 @@ async fn build_message(
     if let Some(pubkey) = config.lookup_table(network).as_ref()
         && !i.lookup_tables.iter().flatten().any(|pk| pk == pubkey)
     {
+        tracing::warn!("build_message: adding config-level ALT: {}", pubkey);
         let table = fetch_address_lookup_table(rpc, pubkey).await?;
         lookups.push(table);
+    }
+    if lookups.is_empty() {
+        tracing::info!("build_message: no address lookup tables");
+    } else {
+        tracing::info!("build_message: {} lookup table(s)", lookups.len());
     }
 
     let blockhash = rpc
@@ -328,9 +334,50 @@ async fn build_and_sign_tx(
     ),
     Error,
 > {
+    // Log pre-priority-fee instruction state
+    tracing::info!(
+        "build_and_sign_tx: {} instruction(s) before priority fee, fee_payer={}, lookup_tables={:?}",
+        i.instructions.len(),
+        i.fee_payer,
+        i.lookup_tables,
+    );
+    for (idx, ix) in i.instructions.iter().enumerate() {
+        tracing::info!(
+            "  ix[{}]: program={}, {} accounts, {} bytes data",
+            idx, ix.program_id, ix.accounts.len(), ix.data.len()
+        );
+    }
+
     let (inserted, simulate_result) =
         insert_priority_fee(&mut i, rpc, helius, network, config).await?;
+
+    tracing::info!(
+        "build_and_sign_tx: {} instruction(s) after priority fee ({} inserted)",
+        i.instructions.len(),
+        inserted
+    );
+
     let mut message = build_message(&i, rpc, network, config, config.tx_commitment_level).await?;
+
+    // Log the compiled V0 message details for debugging #51
+    tracing::info!(
+        "build_and_sign_tx: V0 message: {} account_keys, {} ALT lookups, header=[signers={}, ro_signed={}, ro_unsigned={}]",
+        message.account_keys.len(),
+        message.address_table_lookups.len(),
+        message.header.num_required_signatures,
+        message.header.num_readonly_signed_accounts,
+        message.header.num_readonly_unsigned_accounts,
+    );
+    for (idx, key) in message.account_keys.iter().enumerate() {
+        tracing::info!("  account_keys[{}]: {}", idx, key);
+    }
+    for atl in &message.address_table_lookups {
+        tracing::info!(
+            "  ALT {}: writable_indexes={:?}, readonly_indexes={:?}",
+            atl.account_key, atl.writable_indexes, atl.readonly_indexes
+        );
+    }
+
     let mut data: Bytes = message.serialize().into();
     let fee_payer_signature = {
         let keypair = i
