@@ -87,18 +87,15 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let instruction = build_escrow_instruction(EscrowDiscriminator::Withdraw, accounts, vec![]);
 
-    let mut signers: std::collections::BTreeSet<Wallet> =
-        [input.fee_payer.clone(), input.withdrawer.clone()]
-            .into_iter()
-            .collect();
+    let mut signers = vec![input.fee_payer.clone(), input.withdrawer.clone()];
     if let Some(ref arbiter) = input.arbiter {
-        signers.insert(arbiter.clone());
+        signers.push(arbiter.clone());
     }
 
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers,
+        signers: signers.into_iter().collect(),
         instructions: vec![instruction],
     };
 
