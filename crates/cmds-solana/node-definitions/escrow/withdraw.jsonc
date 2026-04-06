@@ -51,6 +51,11 @@
         "tooltip": "SPL Token or Token-2022 program ID (defaults to SPL Token)"
       },
       {
+        "name": "arbiter",
+        "type_bounds": ["keypair"],
+        "tooltip": "Optional arbiter wallet. Required when escrow has an arbiter extension set via set_arbiter. The arbiter must sign to authorize withdrawal."
+      },
+      {
         "name": "submit",
         "type_bounds": ["bool"],
         "tooltip": "Submit transaction to the network"

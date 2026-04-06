@@ -35,6 +35,10 @@ pub struct Input {
     #[serde_as(as = "AsPubkey")]
     #[serde(default = "default_token_program")]
     pub token_program: Pubkey,
+    /// Optional arbiter wallet. Required when the escrow has an arbiter extension
+    /// set via `set_arbiter`. The arbiter must sign to authorize the withdrawal.
+    #[serde(default)]
+    pub arbiter: Option<Wallet>,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -60,7 +64,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .rent_recipient
         .unwrap_or_else(|| input.fee_payer.pubkey());
 
-    let accounts = vec![
+    let mut accounts = vec![
         AccountMeta::new(rent_recipient, false),
         AccountMeta::new_readonly(input.withdrawer.pubkey(), true),
         AccountMeta::new_readonly(input.escrow, false),
@@ -75,14 +79,26 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(ESCROW_PROGRAM_ID, false),
     ];
 
+    // When an arbiter extension is set on the escrow, the arbiter must be passed
+    // as the first remaining account and must sign to authorize the withdrawal.
+    if let Some(ref arbiter) = input.arbiter {
+        accounts.push(AccountMeta::new_readonly(arbiter.pubkey(), true));
+    }
+
     let instruction = build_escrow_instruction(EscrowDiscriminator::Withdraw, accounts, vec![]);
+
+    let mut signers: std::collections::BTreeSet<Wallet> =
+        [input.fee_payer.clone(), input.withdrawer.clone()]
+            .into_iter()
+            .collect();
+    if let Some(ref arbiter) = input.arbiter {
+        signers.insert(arbiter.clone());
+    }
 
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer.clone(), input.withdrawer.clone()]
-            .into_iter()
-            .collect(),
+        signers,
         instructions: vec![instruction],
     };
 
