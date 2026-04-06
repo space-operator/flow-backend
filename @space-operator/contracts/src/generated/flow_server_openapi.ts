@@ -3,6 +3,11 @@
  * Do not make direct changes to the file.
  */
 
+export type JsonValueDoc = null | JsonValueDocNonNull;
+export type JsonValueDocNonNull = string | number | boolean | JsonValueDoc[] | {
+    [key: string]: JsonValueDoc;
+};
+
 export interface paths {
     "/apikey/create": {
         parameters: {
@@ -116,6 +121,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/deployment/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_deployment_doc"];
+        put?: never;
+        post: operations["read_deployment_post_doc"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/deployment/start": {
         parameters: {
             query?: never;
@@ -142,6 +163,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["clone_flow_doc"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/flow/read/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_flow_doc"];
+        put?: never;
+        post: operations["read_flow_post_doc"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/flow/read_shared/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_flow_shared_doc"];
+        put?: never;
+        post: operations["read_flow_shared_post_doc"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/flow/read_unverified/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_flow_unverified_doc"];
+        put?: never;
+        post: operations["read_flow_unverified_post_doc"];
         delete?: never;
         options?: never;
         head?: never;
@@ -450,10 +519,8 @@ export interface components {
             node_id: string;
             relay_url: string;
         };
-        JsonValueDoc: null | components["schemas"]["JsonValueDocNonNull"];
-        JsonValueDocNonNull: string | number | boolean | components["schemas"]["JsonValueDoc"][] | {
-            [key: string]: components["schemas"]["JsonValueDoc"];
-        };
+        JsonValueDoc: JsonValueDoc;
+        JsonValueDocNonNull: JsonValueDocNonNull;
         KvDeleteOutputDoc: {
             old_value: components["schemas"]["Value"];
         };
@@ -478,6 +545,18 @@ export interface components {
         PartialConfigDoc: {
             only_nodes: string[];
             values_config: components["schemas"]["ValuesConfigDoc"];
+        };
+        ReadDeploymentParamsDoc: {
+            inputs?: {
+                [key: string]: components["schemas"]["FlowInputValueDoc"];
+            } | null;
+            skip_cache?: boolean | null;
+        };
+        ReadFlowParamsDoc: {
+            inputs?: {
+                [key: string]: components["schemas"]["FlowInputValueDoc"];
+            } | null;
+            skip_cache?: boolean | null;
         };
         ServiceInfoDoc: {
             anon_key: string;
@@ -709,6 +788,103 @@ export interface operations {
             };
         };
     };
+    read_deployment_doc: {
+        parameters: {
+            query?: {
+                /** @description Deployment id */
+                id?: string;
+                /** @description Flow id */
+                flow?: string;
+                /** @description Deployment tag */
+                tag?: string;
+                /** @description JSON-encoded typed or plain flow inputs */
+                inputs?: string;
+                /** @description Bypass server read cache for this request */
+                skip_cache?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read deployment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IValueDoc"];
+                };
+            };
+            /** @description Not modified */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read timed out */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read_deployment_post_doc: {
+        parameters: {
+            query?: {
+                /** @description Deployment id */
+                id?: string;
+                /** @description Flow id */
+                flow?: string;
+                /** @description Deployment tag */
+                tag?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": null | components["schemas"]["ReadDeploymentParamsDoc"];
+            };
+        };
+        responses: {
+            /** @description Read deployment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IValueDoc"];
+                };
+            };
+            /** @description Read not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read timed out */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     start_deployment_doc: {
         parameters: {
             query?: {
@@ -760,6 +936,276 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CloneFlowOutputDoc"];
                 };
+            };
+        };
+    };
+    read_flow_doc: {
+        parameters: {
+            query?: {
+                /** @description JSON-encoded typed or plain flow inputs */
+                inputs?: string;
+                /** @description Bypass server read cache for this request */
+                skip_cache?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description Flow id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read owned or adapter-authorized flow */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IValueDoc"];
+                };
+            };
+            /** @description Not modified */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read timed out */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read_flow_post_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Flow id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": null | components["schemas"]["ReadFlowParamsDoc"];
+            };
+        };
+        responses: {
+            /** @description Read owned or adapter-authorized flow */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IValueDoc"];
+                };
+            };
+            /** @description Read not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read timed out */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read_flow_shared_doc: {
+        parameters: {
+            query?: {
+                /** @description JSON-encoded typed or plain flow inputs */
+                inputs?: string;
+                /** @description Bypass server read cache for this request */
+                skip_cache?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description Flow id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read shared flow */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IValueDoc"];
+                };
+            };
+            /** @description Not modified */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read timed out */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read_flow_shared_post_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Flow id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": null | components["schemas"]["ReadFlowParamsDoc"];
+            };
+        };
+        responses: {
+            /** @description Read shared flow */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IValueDoc"];
+                };
+            };
+            /** @description Read not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read timed out */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read_flow_unverified_doc: {
+        parameters: {
+            query?: {
+                /** @description JSON-encoded typed or plain flow inputs */
+                inputs?: string;
+                /** @description Bypass server read cache for this request */
+                skip_cache?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description Flow id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read unverified flow */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IValueDoc"];
+                };
+            };
+            /** @description Not modified */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read timed out */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read_flow_unverified_post_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Flow id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": null | components["schemas"]["ReadFlowParamsDoc"];
+            };
+        };
+        responses: {
+            /** @description Read unverified flow */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IValueDoc"];
+                };
+            };
+            /** @description Read not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Read timed out */
+            408: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
