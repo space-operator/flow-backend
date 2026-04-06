@@ -596,6 +596,7 @@ mod tests {
     }
 
     #[actix_web::test]
+    #[ignore = "requires CDP_API_KEY_ID and CDP_API_KEY_SECRET"]
     async fn need_key_test_cdp_x402() {
         let x = CdpConfig {
             api_key_id: std::env::var("CDP_API_KEY_ID").unwrap(),

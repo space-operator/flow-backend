@@ -7,8 +7,8 @@ use chrono::{DateTime, Utc};
 use flow_lib::{
     CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
     command::{
-        CommandError, CommandFactory, CommandTrait, InstructionInfo, input_is_required,
-        keypair_outputs, output_is_optional, passthrough_outputs,
+        CommandError, CommandFactory, CommandTrait, InstructionInfo, input_accepts_pubkey,
+        input_is_required, keypair_outputs, output_is_optional, passthrough_outputs,
     },
     config::client::{self, PartialConfig},
     context::{
@@ -177,6 +177,7 @@ pub struct Edge {
     pub to: Name,
     pub is_required_input: bool,
     pub is_optional_output: bool,
+    pub target_accepts_pubkey: bool,
     pub values: VecDeque<EdgeValue>,
 }
 
@@ -386,6 +387,14 @@ fn remove_wallet_token(v: &mut value::Map, keypair_outputs: &[String]) {
     }
 }
 
+fn narrow_edge_value_for_target(mut value: Value, target_accepts_pubkey: bool) -> Value {
+    if target_accepts_pubkey && let Ok(pubkey) = value::pubkey::deserialize(value.clone()) {
+        value = pubkey.into();
+    }
+
+    value
+}
+
 impl FlowGraph {
     pub fn validate_read_only(&self) -> crate::Result<()> {
         for node in self.nodes.values() {
@@ -528,7 +537,7 @@ impl FlowGraph {
                 return Err(BuildGraphError::EdgesSameTarget.into());
             }
 
-            let (to_idx, required) = match nodes.get(&to.0) {
+            let (to_idx, required, target_accepts_pubkey) = match nodes.get(&to.0) {
                 None => {
                     if !all_nodes.contains(&from.0) {
                         return Err(BuildGraphError::EdgeSourceNotFound(from.0).into());
@@ -543,7 +552,9 @@ impl FlowGraph {
                 Some(n) => {
                     let required = input_is_required(&*n.command, &to.1)
                         .ok_or_else(|| BuildGraphError::NoInput(to.clone(), n.command.name()))?;
-                    (n.idx, required)
+                    let target_accepts_pubkey =
+                        input_accepts_pubkey(&*n.command, &to.1).unwrap_or(false);
+                    (n.idx, required, target_accepts_pubkey)
                 }
             };
             let (from_idx, optional) = match nodes.get(&from.0) {
@@ -585,6 +596,7 @@ impl FlowGraph {
                     values: <_>::default(),
                     is_required_input: required,
                     is_optional_output: optional,
+                    target_accepts_pubkey,
                 },
             );
         }
@@ -661,6 +673,7 @@ impl FlowGraph {
                     to: e.to.clone(),
                     is_required_input: e.is_required_input,
                     is_optional_output: e.is_optional_output,
+                    target_accepts_pubkey: e.target_accepts_pubkey,
                     values: <_>::default(),
                 })
             },
@@ -957,22 +970,35 @@ impl FlowGraph {
                     );
 
                     let should_loop = info.command_name == crate::command::foreach::FOREACH;
+                    let tracker = info.tracker.clone();
 
                     if should_loop && matches!(value, Value::Array(_)) {
                         let Value::Array(array) = value else {
                             unreachable!()
                         };
-                        let array_iter =
-                            array.into_iter().enumerate().map(|(i, value)| EdgeValue {
+                        let target_accepts_pubkey = w.target_accepts_pubkey;
+                        let array_iter = array
+                            .into_iter()
+                            .enumerate()
+                            .map(move |(i, value)| EdgeValue {
                                 value: Some(value),
-                                tracker: info.tracker.nest((nid, i as u32)),
+                                tracker: tracker.nest((nid, i as u32)),
+                            })
+                            .map(|edge_value| EdgeValue {
+                                value: edge_value.value.map(|value| {
+                                    narrow_edge_value_for_target(value, target_accepts_pubkey)
+                                }),
+                                tracker: edge_value.tracker,
                             });
 
                         w.values.extend(array_iter);
                     } else {
                         w.values.push_back(EdgeValue {
-                            value: Some(value),
-                            tracker: info.tracker.clone(),
+                            value: Some(narrow_edge_value_for_target(
+                                value,
+                                w.target_accepts_pubkey,
+                            )),
+                            tracker,
                         });
                     }
                 }
@@ -1455,6 +1481,7 @@ impl FlowGraph {
                             values: <_>::default(),
                             is_required_input,
                             is_optional_output: !is_required_input,
+                            target_accepts_pubkey: false,
                         },
                     );
                 } else {
@@ -1974,6 +2001,7 @@ where
 mod tests {
     use super::*;
     use anyhow::anyhow;
+    use flow_lib::command::prelude::*;
     use flow_lib::flow_run_events::event_channel;
     use flow_lib::{
         CommandType, ValueType,
@@ -1981,6 +2009,7 @@ mod tests {
             ClientConfig, Edge as ClientEdge, FlowRunOrigin, InputPort, Node as ClientNode,
             NodeData, OutputPort, SourceHandle,
         },
+        solana::{Keypair, Wallet},
     };
     use serde_json::{Value as JsonValue, json};
 
@@ -1991,6 +2020,115 @@ mod tests {
     #[derive(serde::Deserialize)]
     struct TestFile {
         flow: ClientConfig,
+    }
+
+    const TEST_PASSTHROUGH_KEYPAIR_SOURCE: &str = "test_passthrough_keypair_source";
+    const TEST_PUBKEY_ECHO: &str = "test_pubkey_echo";
+
+    flow_lib::submit!(CommandDescription::new(
+        TEST_PASSTHROUGH_KEYPAIR_SOURCE,
+        |_| { build_test_passthrough_keypair_source() }
+    ));
+    flow_lib::submit!(CommandDescription::new(TEST_PUBKEY_ECHO, |_| {
+        build_test_pubkey_echo()
+    }));
+
+    fn build_test_passthrough_keypair_source() -> BuildResult {
+        const DEFINITION: &str = r#"
+        {
+          "version": "0.1",
+          "name": "test_passthrough_keypair_source",
+          "prefix": "std",
+          "type": "native",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [
+              {
+                "name": "signer",
+                "type_bounds": ["keypair"],
+                "required": true,
+                "passthrough": true
+              }
+            ],
+            "outputs": []
+          }
+        }
+        "#;
+        static CACHE: BuilderCache = BuilderCache::new(|| {
+            CmdBuilder::new(DEFINITION)?.check_name(TEST_PASSTHROUGH_KEYPAIR_SOURCE)
+        });
+        Ok(CACHE.clone()?.build(test_passthrough_keypair_source_run))
+    }
+
+    fn build_test_pubkey_echo() -> BuildResult {
+        const DEFINITION: &str = r#"
+        {
+          "version": "0.1",
+          "name": "test_pubkey_echo",
+          "prefix": "std",
+          "type": "native",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [
+              {
+                "name": "recipient",
+                "type_bounds": ["pubkey"],
+                "required": true,
+                "passthrough": false
+              }
+            ],
+            "outputs": [
+              {
+                "name": "recipient",
+                "type": "pubkey"
+              }
+            ]
+          }
+        }
+        "#;
+        static CACHE: BuilderCache =
+            BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(TEST_PUBKEY_ECHO));
+        Ok(CACHE.clone()?.build(test_pubkey_echo_run))
+    }
+
+    #[serde_as]
+    #[derive(Deserialize, Serialize, Debug)]
+    struct TestPassthroughKeypairSourceInput {
+        #[serde_as(as = "AsKeypair")]
+        signer: Keypair,
+    }
+
+    #[derive(Deserialize, Serialize, Debug)]
+    struct TestPassthroughKeypairSourceOutput {}
+
+    async fn test_passthrough_keypair_source_run(
+        _: CommandContext,
+        _: TestPassthroughKeypairSourceInput,
+    ) -> Result<TestPassthroughKeypairSourceOutput, CommandError> {
+        Ok(TestPassthroughKeypairSourceOutput {})
+    }
+
+    #[serde_as]
+    #[derive(Deserialize, Serialize, Debug)]
+    struct TestPubkeyEchoInput {
+        #[serde_as(as = "AsPubkey")]
+        recipient: Pubkey,
+    }
+
+    #[serde_as]
+    #[derive(Deserialize, Serialize, Debug)]
+    struct TestPubkeyEchoOutput {
+        #[serde_as(as = "AsPubkey")]
+        recipient: Pubkey,
+    }
+
+    async fn test_pubkey_echo_run(
+        _: CommandContext,
+        input: TestPubkeyEchoInput,
+    ) -> Result<TestPubkeyEchoOutput, CommandError> {
+        Ok(TestPubkeyEchoOutput {
+            recipient: input.recipient,
+        })
     }
 
     fn output_port(name: &str, r#type: ValueType) -> OutputPort {
@@ -2010,6 +2148,21 @@ mod tests {
             type_bounds,
             required,
             passthrough: false,
+            tooltip: None,
+        }
+    }
+
+    fn passthrough_input_port(
+        name: &str,
+        type_bounds: Vec<ValueType>,
+        required: bool,
+    ) -> InputPort {
+        InputPort {
+            id: Uuid::new_v4(),
+            name: name.to_owned(),
+            type_bounds,
+            required,
+            passthrough: true,
             tooltip: None,
         }
     }
@@ -2082,6 +2235,40 @@ mod tests {
                     "public_key": { "B3": static_pubkey },
                     "wallet_id": { "U": wallet_id.to_string() },
                 }),
+                wasm: None,
+                instruction_info: None,
+            },
+        }
+    }
+
+    fn passthrough_keypair_source_node() -> ClientNode {
+        ClientNode {
+            id: Uuid::new_v4(),
+            data: NodeData {
+                r#type: CommandType::Native,
+                node_id: TEST_PASSTHROUGH_KEYPAIR_SOURCE.into(),
+                outputs: vec![output_port("signer", ValueType::Keypair)],
+                inputs: vec![passthrough_input_port(
+                    "signer",
+                    vec![ValueType::Keypair],
+                    true,
+                )],
+                config: json!({}),
+                wasm: None,
+                instruction_info: None,
+            },
+        }
+    }
+
+    fn pubkey_echo_node() -> ClientNode {
+        ClientNode {
+            id: Uuid::new_v4(),
+            data: NodeData {
+                r#type: CommandType::Native,
+                node_id: TEST_PUBKEY_ECHO.into(),
+                outputs: vec![output_port("recipient", ValueType::Pubkey)],
+                inputs: vec![input_port("recipient", vec![ValueType::Pubkey], true)],
+                config: json!({}),
                 wasm: None,
                 instruction_info: None,
             },
@@ -2299,6 +2486,50 @@ mod tests {
         assert_eq!(
             res.output.get("pubkey"),
             Some(&Value::B32(edge_pubkey.to_bytes()))
+        );
+    }
+
+    #[actix::test]
+    async fn passthrough_keypair_edges_narrow_to_pubkey_targets() {
+        let flow_input = flow_input_node("signer");
+        let passthrough = passthrough_keypair_source_node();
+        let pubkey_echo = pubkey_echo_node();
+        let sink = flow_output_node("recipient");
+        let config = client_config(
+            vec![
+                flow_input.clone(),
+                passthrough.clone(),
+                pubkey_echo.clone(),
+                sink.clone(),
+            ],
+            vec![
+                edge(&flow_input, "signer", &passthrough, "signer"),
+                edge(&passthrough, "signer", &pubkey_echo, "recipient"),
+                edge(&pubkey_echo, "recipient", &sink, "recipient"),
+            ],
+        );
+
+        let mut flow = FlowGraph::from_cfg(FlowConfig::new(config), <_>::default(), None)
+            .await
+            .unwrap();
+        let (tx, _rx) = event_channel();
+        let signer = Wallet::Keypair(Keypair::new());
+        let expected_pubkey = signer.pubkey();
+        let res = flow
+            .run(
+                tx,
+                FlowRunId::nil(),
+                value::map! { "signer" => value::to_value(&signer).unwrap() },
+                <_>::default(),
+                <_>::default(),
+                <_>::default(),
+            )
+            .await;
+
+        assert!(res.node_errors.is_empty(), "{:?}", res.node_errors);
+        assert_eq!(
+            res.output.get("recipient"),
+            Some(&Value::B32(expected_pubkey.to_bytes()))
         );
     }
 

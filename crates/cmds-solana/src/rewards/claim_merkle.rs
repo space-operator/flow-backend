@@ -77,12 +77,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(REWARDS_PROGRAM_ID, false),
     ];
 
-    let mut args_data = Vec::new();
+    let mut args_data: Vec<u8> = Vec::new();
     args_data.push(claim_bump);
     args_data.extend_from_slice(&input.total_amount.to_le_bytes());
     args_data.extend_from_slice(&input.amount.to_le_bytes());
-    args_data.extend(borsh::to_vec(&schedule)?);
-    args_data.extend(borsh::to_vec(&proof_bytes)?);
+    args_data.extend_from_slice(&borsh::to_vec(&schedule)?);
+    args_data.extend_from_slice(&borsh::to_vec(&proof_bytes)?);
 
     let instruction =
         build_rewards_instruction(RewardsDiscriminator::ClaimMerkle, accounts, args_data);

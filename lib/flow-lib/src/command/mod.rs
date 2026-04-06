@@ -263,6 +263,12 @@ pub fn input_is_required<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Optio
         .find_map(|i| (i.name == name).then_some(i.required))
 }
 
+pub fn input_accepts_pubkey<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Option<bool> {
+    cmd.inputs()
+        .into_iter()
+        .find_map(|i| (i.name == name).then_some(i.type_bounds.contains(&ValueType::Pubkey)))
+}
+
 pub fn output_is_optional<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Option<bool> {
     cmd.outputs()
         .into_iter()

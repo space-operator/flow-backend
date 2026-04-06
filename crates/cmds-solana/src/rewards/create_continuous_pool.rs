@@ -81,9 +81,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(REWARDS_PROGRAM_ID, false),
     ];
 
-    let mut args_data = Vec::new();
+    let mut args_data: Vec<u8> = Vec::new();
     args_data.push(bump);
-    args_data.extend(borsh::to_vec(&balance_source)?);
+    args_data.extend_from_slice(&borsh::to_vec(&balance_source)?);
     args_data.push(input.revocable);
     args_data.extend_from_slice(&input.clawback_ts.to_le_bytes());
 

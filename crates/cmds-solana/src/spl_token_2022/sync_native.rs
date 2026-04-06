@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-const NAME: &str = "sync_native";
+const NAME: &str = "sync_native_t22";
 const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/sync_native.jsonc");
 
 fn build() -> BuildResult {

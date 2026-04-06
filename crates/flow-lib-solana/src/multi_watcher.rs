@@ -316,6 +316,7 @@ mod tests {
     use tower::util::CallAllUnordered;
 
     #[tokio::test]
+    #[ignore = "requires TEST_CONFIRM_KEYPAIR_FROM, TEST_CONFIRM_KEYPAIR_TO, and SOLANA_URL"]
     async fn need_key_test_confirm() {
         tracing_subscriber::fmt::try_init().ok();
         let from =
@@ -386,6 +387,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "requires TEST_CONFIRM_KEYPAIR_FROM, TEST_CONFIRM_KEYPAIR_TO, and SOLANA_URL"]
     async fn need_key_test_confirm_expired() {
         tracing_subscriber::fmt::try_init().ok();
         let from =

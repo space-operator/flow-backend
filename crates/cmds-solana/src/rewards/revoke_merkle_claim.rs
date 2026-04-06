@@ -82,11 +82,11 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(REWARDS_PROGRAM_ID, false),
     ];
 
-    let mut args_data = Vec::new();
-    args_data.extend(borsh::to_vec(&revoke_mode)?);
+    let mut args_data: Vec<u8> = Vec::new();
+    args_data.extend_from_slice(&borsh::to_vec(&revoke_mode)?);
     args_data.extend_from_slice(&input.total_amount.to_le_bytes());
-    args_data.extend(borsh::to_vec(&schedule)?);
-    args_data.extend(borsh::to_vec(&proof_bytes)?);
+    args_data.extend_from_slice(&borsh::to_vec(&schedule)?);
+    args_data.extend_from_slice(&borsh::to_vec(&proof_bytes)?);
 
     let instruction =
         build_rewards_instruction(RewardsDiscriminator::RevokeMerkleClaim, accounts, args_data);
