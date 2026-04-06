@@ -20,13 +20,15 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
     pub fee_payer: Wallet,
-    #[serde(default, with = "value::pubkey::opt")]
+    #[serde_as(as = "Option<AsPubkey>")]
+    #[serde(default)]
     pub settings_authority: Option<Pubkey>,
     pub threshold: u16,
     pub signers: Vec<SmartAccountSignerInput>,
     #[serde(default)]
     pub time_lock: u32,
-    #[serde(default, with = "value::pubkey::opt")]
+    #[serde_as(as = "Option<AsPubkey>")]
+    #[serde(default)]
     pub rent_collector: Option<Pubkey>,
     #[serde(default)]
     pub memo: Option<String>,
@@ -112,6 +114,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     // Serialize args: CreateSmartAccountArgs
     let mut args_data = Vec::new();
 
+    tracing::info!("create_smart_account: settings_authority = {:?}", input.settings_authority);
+
     // settings_authority: Option<Pubkey>
     match input.settings_authority {
         Some(pk) => {
@@ -174,24 +178,45 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    // After successful execution, re-read the program config to get the
-    // actual settings PDA. The index was incremented by the instruction,
-    // so the created settings is at (new_index - 1).
+    // After successful execution, find the actual settings PDA by scanning
+    // the speculative range for an account owned by our program.
+    // The re-read of program_config is unreliable on busy devnet due to
+    // concurrent account creation incrementing the index.
     let actual_settings = if signature.is_some() {
-        match ctx.solana_client().get_account_data(&program_config).await {
-            Ok(new_data) if new_data.len() >= 24 => {
-                let new_index = u128::from_le_bytes(
-                    new_data[8..24].try_into().unwrap_or([0; 16]),
-                );
-                // The instruction incremented the index, so created account is at new_index - 1
-                if new_index > 0 {
-                    pda::find_settings(new_index - 1).0
-                } else {
-                    settings
+        let client = ctx.solana_client();
+        let mut found = settings;
+        for offset in 0..SPECULATION_RANGE {
+            let (pda, _) = pda::find_settings(smart_account_index + offset);
+            match client.get_account(&pda).await {
+                Ok(account) => {
+                    // Check if this account is owned by our program and has
+                    // our fee_payer as a signer (member) in its data.
+                    if account.owner == PROGRAM_ID && account.data.len() >= 82 {
+                        // Settings struct: disc(8) + seed(16) + settingsAuthority(32) + threshold(2) + timeLock(4) + txIndex(8) + staleTxIndex(8) + archOpt(1+) + ...
+                        // Check if settingsAuthority matches what we sent
+                        let auth_bytes = &account.data[24..56];
+                        if let Some(ref pk) = input.settings_authority {
+                            if auth_bytes == pk.as_ref() {
+                                found = pda;
+                                tracing::info!("create_smart_account: found our settings at offset {offset}: {pda}");
+                                break;
+                            }
+                        } else {
+                            // For autonomous accounts, check if signer is our fee_payer
+                            // by scanning the data for the fee_payer pubkey
+                            let fp_bytes = input.fee_payer.pubkey().to_bytes();
+                            if account.data.windows(32).any(|w| w == fp_bytes) {
+                                found = pda;
+                                tracing::info!("create_smart_account: found our settings (autonomous) at offset {offset}: {pda}");
+                                break;
+                            }
+                        }
+                    }
                 }
+                Err(_) => continue,
             }
-            _ => settings,
         }
+        found
     } else {
         settings
     };

@@ -25,6 +25,15 @@ pub struct Input {
     pub settings: Pubkey,
     pub signer: Wallet,
     pub transaction_index: u64,
+    /// Optional policy PDAs to pass as remaining_accounts.
+    /// Required when the settings transaction creates/updates/removes policies.
+    #[serde_as(as = "Option<Vec<AsPubkey>>")]
+    #[serde(default)]
+    pub policy_pdas: Option<Vec<Pubkey>>,
+    /// Optional rent payer for policy account creation.
+    #[serde_as(as = "Option<AsPubkey>")]
+    #[serde(default)]
+    pub rent_payer: Option<Pubkey>,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -40,7 +49,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let (proposal, _) = pda::find_proposal(&input.settings, input.transaction_index);
     let (transaction, _) = pda::find_transaction(&input.settings, input.transaction_index);
 
-    let accounts = vec![
+    let mut accounts = vec![
         AccountMeta::new(input.settings, false),
         AccountMeta::new_readonly(input.signer.pubkey(), true),
         AccountMeta::new(proposal, false),
@@ -49,6 +58,30 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
         AccountMeta::new_readonly(PROGRAM_ID, false),
     ];
+
+    // remaining_accounts for policy operations:
+    // PolicyCreate needs: [policy_pda (writable), rent_payer (writable, signer)]
+    if let Some(pdas) = &input.policy_pdas {
+        for pda in pdas {
+            accounts.push(AccountMeta::new(*pda, false));
+        }
+        // rent_payer for policy account creation (defaults to fee_payer)
+        let rent_payer = input.rent_payer.unwrap_or(input.fee_payer.pubkey());
+        accounts.push(AccountMeta::new(rent_payer, true));
+    }
+
+    dbg!(
+        "execute_settings_transaction",
+        accounts.len(),
+        &input.policy_pdas,
+        &input.rent_payer,
+    );
+    for (idx, acc) in accounts.iter().enumerate() {
+        eprintln!(
+            "  account[{}]: {} (signer={}, writable={})",
+            idx, acc.pubkey, acc.is_signer, acc.is_writable
+        );
+    }
 
     let instruction = build_instruction("execute_settings_transaction", accounts, vec![]);
 

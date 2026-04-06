@@ -43,6 +43,20 @@
         "tooltip": "Transaction index within the smart account"
       },
       {
+        "name": "policy_pdas",
+        "type_bounds": [
+          "object"
+        ],
+        "tooltip": "Optional policy PDAs as remaining_accounts (for PolicyCreate/Update/Remove)"
+      },
+      {
+        "name": "rent_payer",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "tooltip": "Rent payer for policy account creation (defaults to fee_payer)"
+      },
+      {
         "name": "submit",
         "type_bounds": [
           "bool"

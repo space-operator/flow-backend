@@ -28,9 +28,11 @@ pub struct Input {
     pub account_index: u8,
     #[serde_as(as = "AsPubkey")]
     pub destination: Pubkey,
-    #[serde(default, with = "value::pubkey::opt")]
+    #[serde_as(as = "Option<AsPubkey>")]
+    #[serde(default)]
     pub mint: Option<Pubkey>,
-    #[serde(default, with = "value::pubkey::opt")]
+    #[serde_as(as = "Option<AsPubkey>")]
+    #[serde(default)]
     pub token_program: Option<Pubkey>,
     pub amount: u64,
     pub decimals: u8,
@@ -50,19 +52,20 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let (smart_account, _) = pda::find_smart_account(&input.settings, input.account_index);
 
+    // UseSpendingLimit Anchor struct has 11 accounts (6-10 are Option<>):
+    //  0: settings, 1: signer, 2: spending_limit, 3: smart_account,
+    //  4: destination, 5: system_program?, 6: mint?, 7: vault_ata?,
+    //  8: dest_ata?, 9: token_program?, 10: program
     let mut accounts = vec![
         AccountMeta::new_readonly(input.settings, false),
         AccountMeta::new_readonly(input.signer.pubkey(), true),
         AccountMeta::new(input.spending_limit, false),
         AccountMeta::new(smart_account, false),
         AccountMeta::new(input.destination, false),
-        // systemProgram (optional)
-        AccountMeta::new_readonly(solana_system_interface::program::ID, false),
     ];
 
-    // Optional SPL token accounts
     if let Some(mint) = input.mint {
-        accounts.push(AccountMeta::new_readonly(mint, false));
+        // SPL token transfer: all optional accounts present
         let tp = input.token_program.unwrap_or(solana_program::pubkey!(
             "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         ));
@@ -75,11 +78,32 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             &[input.destination.as_ref(), tp.as_ref(), mint.as_ref()],
             &ata_program,
         );
+        // [5] system_program = None (not needed for SPL)
+        accounts.push(AccountMeta::new_readonly(PROGRAM_ID, false));
+        // [6] mint
+        accounts.push(AccountMeta::new_readonly(mint, false));
+        // [7] vault ATA
         accounts.push(AccountMeta::new(vault_ata, false));
+        // [8] dest ATA
         accounts.push(AccountMeta::new(dest_ata, false));
+        // [9] token_program
         accounts.push(AccountMeta::new_readonly(tp, false));
+    } else {
+        // Native SOL transfer: system_program required, SPL accounts = None
+        // [5] system_program
+        accounts.push(AccountMeta::new_readonly(
+            solana_system_interface::program::ID,
+            false,
+        ));
+        // [6] mint = None, [7] vault_ata = None, [8] dest_ata = None, [9] token_program = None
+        // Anchor Option<> accounts: pass program ID as placeholder
+        accounts.push(AccountMeta::new_readonly(PROGRAM_ID, false));
+        accounts.push(AccountMeta::new_readonly(PROGRAM_ID, false));
+        accounts.push(AccountMeta::new_readonly(PROGRAM_ID, false));
+        accounts.push(AccountMeta::new_readonly(PROGRAM_ID, false));
     }
 
+    // [10] program (always required)
     accounts.push(AccountMeta::new_readonly(PROGRAM_ID, false));
 
     // UseSpendingLimitArgs { amount: u64, decimals: u8, memo: Option<String> }
@@ -96,6 +120,20 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     }
 
     let instruction = build_instruction("use_spending_limit", accounts, args_data);
+
+    dbg!(
+        "use_spending_limit",
+        instruction.accounts.len(),
+        &smart_account,
+        &input.spending_limit,
+        &input.mint,
+    );
+    for (idx, acc) in instruction.accounts.iter().enumerate() {
+        eprintln!(
+            "  account[{}]: {} (signer={}, writable={})",
+            idx, acc.pubkey, acc.is_signer, acc.is_writable
+        );
+    }
 
     let ins = Instructions {
         lookup_tables: None,
