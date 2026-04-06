@@ -46,7 +46,7 @@ export {
   wsResponseSchema,
   z,
 } from "./client.ts";
-export type { ZodIssue } from "zod";
+export type { ZodIssue } from "npm:zod@^4.1.13";
 export type * from "./generated/flow_server_openapi.ts";
 export type {
   ApiKeyInfoOutputContract,

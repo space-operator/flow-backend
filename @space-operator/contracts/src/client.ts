@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "npm:zod@^4.1.13";
 export { z };
 
 const nullToUndefined = <T extends z.ZodTypeAny>(schema: T) =>
