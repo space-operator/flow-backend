@@ -27,7 +27,7 @@ pub struct FundRewardArgs {
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
-    pub funder: Wallet,
+    pub payer: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub pool: Pubkey,
     #[serde_as(as = "AsPubkey")]
@@ -60,7 +60,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new(reward_vault, false), // [1] reward_vault (writable)
         AccountMeta::new_readonly(input.reward_mint, false), // [2] reward_mint
         AccountMeta::new(input.funder_token_account, false), // [3] funder_token_account (writable)
-        AccountMeta::new_readonly(input.funder.pubkey(), true), // [4] funder (signer)
+        AccountMeta::new_readonly(input.payer.pubkey(), true), // [4] funder (signer)
         AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // [5] token_program
         AccountMeta::new_readonly(event_authority, false), // [6] event_authority
         AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // [7] program
@@ -77,8 +77,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let ins = Instructions {
         lookup_tables: None,
-        fee_payer: input.funder.pubkey(),
-        signers: [input.funder].into(),
+        fee_payer: input.payer.pubkey(),
+        signers: [input.payer].into(),
         instructions: [instruction].into(),
     };
 
@@ -106,11 +106,11 @@ mod tests {
     }
 
     /// Tests that all required inputs can be parsed from value::map.
-    /// Required fields: funder, pool, reward_mint, funder_token_account, reward_index, amount, carry_forward
+    /// Required fields: payer, pool, reward_mint, funder_token_account, reward_index, amount, carry_forward
     #[tokio::test]
     async fn test_input_parsing() {
         let input = value::map! {
-            "funder" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
+            "payer" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
             "pool" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "reward_mint" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "funder_token_account" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
@@ -132,7 +132,7 @@ mod tests {
         use solana_keypair::Keypair;
 
         let input = Input {
-            funder: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").into(),
+            payer: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").into(),
             pool: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").pubkey(),
             reward_mint: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").pubkey(),
             funder_token_account: Keypair::from_base58_string("4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ").pubkey(),

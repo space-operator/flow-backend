@@ -83,8 +83,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             "BatchTransaction data too short for ephemeralSignerBumps",
         ));
     }
-    let bumps_len =
-        u32::from_le_bytes(tx_data[offset..offset + 4].try_into().unwrap()) as usize;
+    let bumps_len = u32::from_le_bytes(tx_data[offset..offset + 4].try_into().unwrap()) as usize;
     offset += 4 + bumps_len;
 
     // SmartAccountTransactionMessage header (Borsh)
@@ -104,8 +103,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
             "BatchTransaction data too short for account_keys length",
         ));
     }
-    let num_keys =
-        u32::from_le_bytes(tx_data[offset..offset + 4].try_into().unwrap()) as usize;
+    let num_keys = u32::from_le_bytes(tx_data[offset..offset + 4].try_into().unwrap()) as usize;
     offset += 4;
 
     let mut remaining_accounts = Vec::with_capacity(num_keys);

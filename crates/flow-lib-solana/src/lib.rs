@@ -344,7 +344,10 @@ async fn build_and_sign_tx(
     for (idx, ix) in i.instructions.iter().enumerate() {
         tracing::info!(
             "  ix[{}]: program={}, {} accounts, {} bytes data",
-            idx, ix.program_id, ix.accounts.len(), ix.data.len()
+            idx,
+            ix.program_id,
+            ix.accounts.len(),
+            ix.data.len()
         );
     }
 
@@ -374,7 +377,9 @@ async fn build_and_sign_tx(
     for atl in &message.address_table_lookups {
         tracing::info!(
             "  ALT {}: writable_indexes={:?}, readonly_indexes={:?}",
-            atl.account_key, atl.writable_indexes, atl.readonly_indexes
+            atl.account_key,
+            atl.writable_indexes,
+            atl.readonly_indexes
         );
     }
 

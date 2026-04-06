@@ -3,13 +3,11 @@ use crate::prelude::*;
 use tracing::info;
 
 const NAME: &str = "smart_account_build_policy_action";
-const DEFINITION: &str =
-    flow_lib::node_definition!("smart_account/build_policy_action.jsonc");
+const DEFINITION: &str = flow_lib::node_definition!("smart_account/build_policy_action.jsonc");
 
 fn build() -> BuildResult {
-    static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(DEFINITION)?.check_name(NAME)
-    });
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))
 }
 
@@ -102,7 +100,9 @@ pub struct Output {
 fn read_transaction_index(data: &[u8]) -> Result<u64, CommandError> {
     const TX_INDEX_OFFSET: usize = 62;
     if data.len() < TX_INDEX_OFFSET + 8 {
-        return Err(CommandError::msg("Settings account data too short for transaction_index"));
+        return Err(CommandError::msg(
+            "Settings account data too short for transaction_index",
+        ));
     }
     let tx_index = u64::from_le_bytes(
         data[TX_INDEX_OFFSET..TX_INDEX_OFFSET + 8]
@@ -154,7 +154,12 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
 
     info!(
         "build_policy_action: policy_type={}, seed={} (user={}, auto={}), policy_pda={}, transaction_index={}",
-        input.policy_type, effective_seed, input.policy_seed, next_policy_seed, policy_pda, transaction_index
+        input.policy_type,
+        effective_seed,
+        input.policy_seed,
+        next_policy_seed,
+        policy_pda,
+        transaction_index
     );
 
     // 3. Serialize SettingsAction::PolicyCreate
@@ -276,9 +281,11 @@ async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> 
                 actions.extend_from_slice(target.as_ref()); // programId
                 actions.extend_from_slice(&0u32.to_le_bytes()); // accountConstraints: empty
                 // dataConstraints: Vec<DataConstraint>
-                if let (Some(offset), Some(value), Some(op)) =
-                    (input.data_offset, input.data_value.as_ref(), input.data_operator)
-                {
+                if let (Some(offset), Some(value), Some(op)) = (
+                    input.data_offset,
+                    input.data_value.as_ref(),
+                    input.data_operator,
+                ) {
                     actions.extend_from_slice(&1u32.to_le_bytes()); // 1 constraint
                     actions.extend_from_slice(&(offset as u64).to_le_bytes()); // dataOffset: u64
                     // dataValue: 0=U8, 1=U16Le, 2=U32Le, 3=U64Le, 4=U128Le, 5=U8Slice

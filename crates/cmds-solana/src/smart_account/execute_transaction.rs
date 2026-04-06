@@ -74,9 +74,7 @@ struct ParsedTransactionMessage {
 ///   account_keys: Vec<Pubkey> (4 + N*32)
 ///   instructions: Vec<SmartAccountCompiledInstruction>
 ///   address_table_lookups: Vec<SmartAccountMessageAddressTableLookup>
-fn parse_vault_transaction(
-    data: &[u8],
-) -> Result<ParsedTransactionMessage, CommandError> {
+fn parse_vault_transaction(data: &[u8]) -> Result<ParsedTransactionMessage, CommandError> {
     // VaultTransaction fixed header:
     //   disc: 8 + settings: 32 + creator: 32 + rentCollector: 32 + index: 8 + bump: 1 + accountIndex: 1 = 114
     let mut offset = 114;
@@ -177,8 +175,7 @@ fn parse_vault_transaction(
                 "Transaction data too short for account_indexes",
             ));
         }
-        let ai_len =
-            u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap()) as usize;
+        let ai_len = u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap()) as usize;
         offset += 4 + ai_len;
 
         // data: Vec<u8> (Borsh: u32 + N)
@@ -187,8 +184,7 @@ fn parse_vault_transaction(
                 "Transaction data too short for instruction data",
             ));
         }
-        let ix_data_len =
-            u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap()) as usize;
+        let ix_data_len = u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap()) as usize;
         offset += 4 + ix_data_len;
     }
 
@@ -197,8 +193,7 @@ fn parse_vault_transaction(
     let lookup_resolved_metas = Vec::new();
 
     if offset + 4 <= data.len() {
-        let num_lookups =
-            u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap()) as usize;
+        let num_lookups = u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap()) as usize;
         offset += 4;
 
         for _ in 0..num_lookups {

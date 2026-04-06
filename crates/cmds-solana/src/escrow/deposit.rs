@@ -154,7 +154,9 @@ mod tests {
         let result = value::from_map::<Input>(input);
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
         let parsed = result.unwrap();
-        let native_sol_mint: Pubkey = "So11111111111111111111111111111111111111112".parse().unwrap();
+        let native_sol_mint: Pubkey = "So11111111111111111111111111111111111111112"
+            .parse()
+            .unwrap();
         assert_eq!(parsed.mint, native_sol_mint);
     }
 

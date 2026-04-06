@@ -114,7 +114,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     // Serialize args: CreateSmartAccountArgs
     let mut args_data = Vec::new();
 
-    tracing::info!("create_smart_account: settings_authority = {:?}", input.settings_authority);
+    tracing::info!(
+        "create_smart_account: settings_authority = {:?}",
+        input.settings_authority
+    );
 
     // settings_authority: Option<Pubkey>
     match input.settings_authority {
@@ -198,7 +201,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
                         if let Some(ref pk) = input.settings_authority {
                             if auth_bytes == pk.as_ref() {
                                 found = pda;
-                                tracing::info!("create_smart_account: found our settings at offset {offset}: {pda}");
+                                tracing::info!(
+                                    "create_smart_account: found our settings at offset {offset}: {pda}"
+                                );
                                 break;
                             }
                         } else {
@@ -207,7 +212,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
                             let fp_bytes = input.fee_payer.pubkey().to_bytes();
                             if account.data.windows(32).any(|w| w == fp_bytes) {
                                 found = pda;
-                                tracing::info!("create_smart_account: found our settings (autonomous) at offset {offset}: {pda}");
+                                tracing::info!(
+                                    "create_smart_account: found our settings (autonomous) at offset {offset}: {pda}"
+                                );
                                 break;
                             }
                         }
