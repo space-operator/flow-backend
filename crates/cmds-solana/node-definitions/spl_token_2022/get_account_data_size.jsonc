@@ -16,22 +16,9 @@
         ],
         "required": true,
         "tooltip": "Array of extension type IDs (u16) to include in size calculation"
-      },
-      {
-        "name": "submit",
-        "type_bounds": [
-          "bool"
-        ],
-        "tooltip": "Submit transaction to the network"
       }
     ],
     "outputs": [
-      {
-        "name": "signature",
-        "type": "signature",
-        "optional": true,
-        "tooltip": "Transaction signature"
-      },
       {
         "name": "size",
         "type": "u64",
@@ -45,11 +32,7 @@
     ]
   },
   "config_schema": {},
-  "config": {
-    "submit": {
-      "B": true
-    }
-  },
+  "config": {},
   "classification": {
     "vendor": "Solana",
     "program": "token_2022",

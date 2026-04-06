@@ -7,33 +7,25 @@ const NAME: &str = "get_account_data_size";
 const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/get_account_data_size.jsonc");
 
 fn build() -> BuildResult {
-    static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(DEFINITION)?
-            .check_name(NAME)?
-            .simple_instruction_info("signature")
-    });
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))
 }
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
-#[serde_as]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct Input {
     pub extension_types: Vec<InterfaceExtensionType>,
-    #[serde(default = "value::default::bool_true")]
-    pub submit: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct Output {
-    #[serde(default, with = "value::signature::opt")]
-    pub signature: Option<Signature>,
     pub size: u64,
     pub lamports: u64,
 }
 
-async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let extension_types: Vec<ExtensionType> = input
         .extension_types
         .iter()
@@ -51,14 +43,8 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .get_minimum_balance_for_rent_exemption(size)
         .await?;
 
-    let size = size as u64;
-
-    let ins = Instructions::default();
-    let signature = ctx.execute(ins, <_>::default()).await?.signature;
-
     Ok(Output {
-        signature,
-        size,
+        size: size as u64,
         lamports,
     })
 }
