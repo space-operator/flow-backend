@@ -92,7 +92,7 @@ contractTest(
 );
 
 contractTest("api input contract: webhook mode still completes", async () => {
-  await withWebhookUrl(async (webhookUrl) => {
+  const completed = await withWebhookUrl(async (webhookUrl) => {
     const client = apiClient();
     const ws = client.ws();
     await ws.authenticate();
@@ -108,5 +108,9 @@ contractTest("api input contract: webhook mode still completes", async () => {
     await subscription.close();
     await ws.close();
     assertEquals(output.toJSObject().c, "hello");
+    return true;
   });
+  if (!completed) {
+    return;
+  }
 });

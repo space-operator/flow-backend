@@ -70,74 +70,9 @@ function generateApiKeyMaterial(): {
   };
 }
 
-function configuredWebhookUrl(): string {
-  return Deno.env.get("FLOW_TEST_WEBHOOK_URL") ?? "http://webhook/webhook";
-}
-
-type WebhookServerHandle = {
-  url: string;
-  close: () => Promise<void>;
-};
-
-async function startLocalWebhookEchoServer(): Promise<WebhookServerHandle> {
-  const abort = new AbortController();
-  let resolvePort: ((port: number) => void) | undefined;
-  const portReady = new Promise<number>((resolve) => {
-    resolvePort = resolve;
-  });
-  const server = Deno.serve({
-    hostname: "127.0.0.1",
-    port: 0,
-    signal: abort.signal,
-    onListen: ({ port: listeningPort }) => {
-      resolvePort?.(listeningPort);
-    },
-  }, async (request: Request) => {
-    const payload = await request.json() as {
-      url?: string;
-      extra?: { output?: unknown };
-    };
-    if (typeof payload.url !== "string") {
-      return new Response("missing url", { status: 400 });
-    }
-    await fetch(payload.url, {
-      method: "POST",
-      headers: [["content-type", "application/json"]],
-      body: JSON.stringify({
-        value: payload.extra?.output ?? { S: "hello" },
-      }),
-    });
-    return new Response("ok");
-  });
-  const port = await portReady;
-
-  return {
-    url: `http://127.0.0.1:${port}/webhook`,
-    close: async () => {
-      abort.abort();
-      await server.finished.catch(() => undefined);
-    },
-  };
-}
-
-async function withWebhookUrl<T>(
-  serverUrl: string,
-  fn: (url: string) => Promise<T>,
-): Promise<T> {
-  if (Deno.env.get("FLOW_TEST_WEBHOOK_URL")) {
-    return await fn(configuredWebhookUrl());
-  }
-
-  if (isLoopbackUrl(serverUrl)) {
-    return await fn(configuredWebhookUrl());
-  }
-
-  const server = await startLocalWebhookEchoServer();
-  try {
-    return await fn(server.url);
-  } finally {
-    await server.close();
-  }
+function configuredWebhookUrl(serverUrl: string): string | undefined {
+  return Deno.env.get("FLOW_TEST_WEBHOOK_URL") ??
+    (isLoopbackUrl(serverUrl) ? "http://webhook/webhook" : undefined);
 }
 
 function normalizeApiInputUrl(url: string, serverUrl: string): string {
@@ -626,6 +561,7 @@ function getFixtureOwnerId(data: unknown): string | undefined {
 async function fetchFixtureFlows(
   supabaseUrl: string,
   serviceRoleKey: string,
+  userId?: string,
 ): Promise<Array<{ name: string; uuid: string }>> {
   const url = new URL("rest/v1/flows_v2", withTrailingSlash(supabaseUrl));
   url.searchParams.set("select", "name,uuid");
@@ -633,6 +569,9 @@ async function fetchFixtureFlows(
     "name",
     `in.(${REQUIRED_FIXTURE_FLOW_NAMES.map((name) => `"${name}"`).join(",")})`,
   );
+  if (userId) {
+    url.searchParams.set("user_id", `eq.${userId}`);
+  }
 
   const response = await fetch(url, {
     headers: {
@@ -679,6 +618,7 @@ type FlowNode = {
 async function fetchDetailedFixtureFlows(
   supabaseUrl: string,
   serviceRoleKey: string,
+  userId?: string,
 ): Promise<FlowRow[]> {
   const url = new URL("rest/v1/flows_v2", withTrailingSlash(supabaseUrl));
   url.searchParams.set(
@@ -689,6 +629,9 @@ async function fetchDetailedFixtureFlows(
     "name",
     `in.(${REQUIRED_FIXTURE_FLOW_NAMES.map((name) => `"${name}"`).join(",")})`,
   );
+  if (userId) {
+    url.searchParams.set("user_id", `eq.${userId}`);
+  }
 
   const response = await fetch(url, {
     headers: {
@@ -1636,26 +1579,32 @@ async function probeApiInputWebhook(
     return "api-input webhook probe skipped because APIKEY is not set";
   }
 
+  const webhookUrl = configuredWebhookUrl(serverUrl);
+  if (!webhookUrl) {
+    console.warn(
+      "Warning: api-input webhook probe skipped because FLOW_TEST_WEBHOOK_URL is not set " +
+        "and FLOW_SERVER_URL is not loopback.",
+    );
+    return undefined;
+  }
+
   try {
-    return await withWebhookUrl(serverUrl, async (webhookUrl) => {
-      const flowRunId = await startOwnerFlow(serverUrl, apiKey, flowId, {
-        inputs: {
-          webhook_url: { S: webhookUrl },
-        },
-      });
-      const output = await waitForOutputStringField(
-        serverUrl,
-        apiKey,
-        flowRunId,
-        "c",
-        "hello",
-      );
-      const result = readMapStringField(output, "c");
-      if (result !== "hello") {
-        return `api-input webhook probe returned unexpected output for ${flowRunId}: expected "hello" from ${webhookUrl}, got ${JSON.stringify(output)}.`;
-      }
-      return undefined;
+    const flowRunId = await startOwnerFlow(serverUrl, apiKey, flowId, {
+      inputs: {
+        webhook_url: { S: webhookUrl },
+      },
     });
+    const output = await waitForOutputStringField(
+      serverUrl,
+      apiKey,
+      flowRunId,
+      "c",
+      "hello",
+    );
+    const result = readMapStringField(output, "c");
+    if (result !== "hello") {
+      return `api-input webhook probe returned unexpected output for ${flowRunId}: expected "hello" from ${webhookUrl}, got ${JSON.stringify(output)}.`;
+    }
   } catch (error) {
     return error instanceof Error ? error.message : String(error);
   }
@@ -1748,11 +1697,15 @@ async function runFixturePreflight(
   supabaseUrl: string,
   serviceRoleKey: string,
 ): Promise<void> {
-  const flows = await fetchDetailedFixtureFlows(supabaseUrl, serviceRoleKey);
   const apiKey = Deno.env.get("APIKEY");
   const preferredUserId = apiKey
     ? await fetchApiKeyUserId(serverUrl, apiKey).catch(() => undefined)
     : undefined;
+  const flows = await fetchDetailedFixtureFlows(
+    supabaseUrl,
+    serviceRoleKey,
+    preferredUserId,
+  );
   const { selected, warnings } = selectPreferredFixtureFlows(flows, preferredUserId);
   for (const warning of warnings) {
     console.warn(`Warning: ${warning}`);
@@ -1854,12 +1807,12 @@ async function listMissingPreferredFixtureFlows(
     return await listMissingFixtureFlows(supabaseUrl, serviceRoleKey);
   }
 
-  const rows = await fetchDetailedFixtureFlows(supabaseUrl, serviceRoleKey);
-  const present = new Set(
-    rows
-      .filter((row) => row.user_id === preferredUserId)
-      .map((row) => row.name),
+  const rows = await fetchDetailedFixtureFlows(
+    supabaseUrl,
+    serviceRoleKey,
+    preferredUserId,
   );
+  const present = new Set(rows.map((row) => row.name));
   return REQUIRED_FIXTURE_FLOW_NAMES.filter((name) => !present.has(name));
 }
 
@@ -2226,7 +2179,7 @@ async function main() {
     }
   }
 
-  const rows = await fetchFixtureFlows(supabaseUrl, serviceRoleKey);
+  const rows = await fetchFixtureFlows(supabaseUrl, serviceRoleKey, expectedUserId);
   console.log("Fixture flows available:");
   for (const row of rows.sort((a, b) => a.name.localeCompare(b.name))) {
     console.log(`- ${row.name}: ${row.uuid}`);

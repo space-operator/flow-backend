@@ -149,6 +149,9 @@ These variables are used by the live suite:
 - `RUN_SPACE_OPERATOR_X402_TESTS=1` Enables the paid deployment contract test,
   which depends on a funded devnet signer.
 - `FLOW_SERVER_URL` Defaults to `http://localhost:8080`.
+- `FLOW_TEST_WEBHOOK_URL` Optional when `FLOW_SERVER_URL` is loopback. Required
+  for webhook-mode fixture preflight and contract coverage when
+  `FLOW_SERVER_URL` points at a non-loopback environment.
 - `SUPABASE_URL` Defaults to `http://localhost:8000`.
 - `ANON_KEY` Required for auth bootstrap and Supabase session validation.
 - `APIKEY` Required for owner-authenticated API calls.
@@ -273,6 +276,11 @@ The bootstrap/preflight script now checks more than simple flow existence:
 
 If those checks fail, the script exits early with a fixture/server diagnosis so
 the E2E suite does not fail later with opaque runtime errors.
+
+When `FLOW_SERVER_URL` is not loopback, the webhook-specific preflight and
+contract check require `FLOW_TEST_WEBHOOK_URL` to point at a callback endpoint
+the server can reach. Without it, those webhook-mode checks are skipped with a
+warning instead of failing against an unreachable local callback URL.
 
 ## Known External Blockers
 

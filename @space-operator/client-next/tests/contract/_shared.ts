@@ -378,56 +378,23 @@ export function fixApiInputUrl(url: string) {
     .toString();
 }
 
-type WebhookServerHandle = {
-  url: string;
-  close: () => Promise<void>;
-};
-
-async function startLocalWebhookEchoServer(): Promise<WebhookServerHandle> {
-  const server = Deno.serve({ hostname: "127.0.0.1", port: 0 }, async (request) => {
-    const payload = await request.json() as {
-      url?: string;
-      extra?: { output?: unknown };
-    };
-    if (typeof payload.url !== "string") {
-      return new Response("missing url", { status: 400 });
-    }
-    await fetch(payload.url, {
-      method: "POST",
-      headers: [["content-type", "application/json"]],
-      body: JSON.stringify({
-        value: payload.extra?.output ?? { S: "hello" },
-      }),
-    });
-    return new Response("ok");
-  });
-
-  const addr = server.addr as Deno.NetAddr;
-  return {
-    url: `http://127.0.0.1:${addr.port}/webhook`,
-    close: async () => {
-      await server.shutdown();
-    },
-  };
+function configuredWebhookUrl(): string | undefined {
+  return Deno.env.get("FLOW_TEST_WEBHOOK_URL") ??
+    (isLoopbackUrl(FLOW_SERVER_URL) ? TEST_WEBHOOK_URL : undefined);
 }
 
 export async function withWebhookUrl<T>(
   fn: (url: string) => Promise<T>,
-): Promise<T> {
-  if (Deno.env.get("FLOW_TEST_WEBHOOK_URL")) {
-    return await fn(TEST_WEBHOOK_URL);
+): Promise<T | undefined> {
+  const webhookUrl = configuredWebhookUrl();
+  if (!webhookUrl) {
+    console.warn(
+      "Skipping webhook callback test because FLOW_TEST_WEBHOOK_URL is not set " +
+        "and FLOW_SERVER_URL is not loopback.",
+    );
+    return undefined;
   }
-
-  if (isLoopbackUrl(FLOW_SERVER_URL)) {
-    return await fn(TEST_WEBHOOK_URL);
-  }
-
-  const server = await startLocalWebhookEchoServer();
-  try {
-    return await fn(server.url);
-  } finally {
-    await server.close();
-  }
+  return await fn(webhookUrl);
 }
 
 export function randomName(prefix: string) {
