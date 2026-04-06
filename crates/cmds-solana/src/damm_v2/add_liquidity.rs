@@ -43,6 +43,7 @@ pub struct Input {
     pub token_a_mint: Pubkey,
     #[serde_as(as = "AsPubkey")]
     pub token_b_mint: Pubkey,
+    #[serde(deserialize_with = "super::deserialize_flexible_u128")]
     pub liquidity_delta: u128,
     pub token_a_amount_threshold: u64,
     pub token_b_amount_threshold: u64,

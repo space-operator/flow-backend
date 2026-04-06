@@ -13,6 +13,44 @@
 
 use crate::prelude::*;
 
+/// Deserialize u128 from either a number or a nested map structure.
+/// Handles Flow2 platform's config serialization which wraps large u128 values
+/// as {"M": {"U": {"S": "bignum"}}} instead of flat {"U": "bignum"}.
+pub fn deserialize_flexible_u128<'de, D>(deserializer: D) -> Result<u128, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::Error;
+    let v = serde_json::Value::deserialize(deserializer)?;
+    if let Some(n) = v.as_u64() {
+        return Ok(n as u128);
+    }
+    if let Some(u) = v.get("U") {
+        if let Some(s) = u.as_str() {
+            return s.parse::<u128>().map_err(D::Error::custom);
+        }
+        if let Some(n) = u.as_u64() {
+            return Ok(n as u128);
+        }
+    }
+    if let Some(m) = v.get("M") {
+        if let Some(u) = m.get("U") {
+            if let Some(s_obj) = u.get("S") {
+                if let Some(s) = s_obj.as_str() {
+                    return s.parse::<u128>().map_err(D::Error::custom);
+                }
+            }
+            if let Some(s) = u.as_str() {
+                return s.parse::<u128>().map_err(D::Error::custom);
+            }
+        }
+    }
+    if let Some(s) = v.as_str() {
+        return s.parse::<u128>().map_err(D::Error::custom);
+    }
+    Err(D::Error::custom(format!("cannot parse u128 from: {v}")))
+}
+
 // =============================================================================
 // Program Constants
 // =============================================================================
@@ -59,7 +97,7 @@ pub fn derive_event_authority() -> Pubkey {
 // =============================================================================
 
 pub const POOL_PREFIX: &[u8] = b"pool";
-pub const CUSTOMIZABLE_POOL_PREFIX: &[u8] = b"customizable_pool";
+pub const CUSTOMIZABLE_POOL_PREFIX: &[u8] = b"cpool";
 pub const POSITION_PREFIX: &[u8] = b"position";
 pub const POSITION_NFT_ACCOUNT_PREFIX: &[u8] = b"position_nft_account";
 pub const TOKEN_VAULT_PREFIX: &[u8] = b"token_vault";

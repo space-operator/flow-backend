@@ -1,6 +1,6 @@
 use super::{
-    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID,
-    anchor_discriminator, derive_event_authority, derive_position,
+    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, TOKEN_2022_PROGRAM_ID, anchor_discriminator,
+    derive_event_authority, derive_pool_authority, derive_position,
 };
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
@@ -56,17 +56,19 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     .0;
     let event_authority = derive_event_authority();
 
+    let pool_authority = derive_pool_authority();
+
     let accounts = vec![
-        AccountMeta::new(input.owner.pubkey(), true), // owner (writable signer)
-        AccountMeta::new(input.pool, false),          // pool (writable)
-        AccountMeta::new(position, false),            // position (writable, close)
-        AccountMeta::new(input.position_nft_mint, false), // position_nft_mint (writable, burn)
-        AccountMeta::new(position_nft_account, false), // position_nft_account (writable)
-        AccountMeta::new(input.rent_receiver, false), // rent_receiver (writable)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
-        AccountMeta::new_readonly(event_authority, false), // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
+        AccountMeta::new(input.position_nft_mint, false), // [0] position_nft_mint (writable)
+        AccountMeta::new(position_nft_account, false),    // [1] position_nft_account (writable)
+        AccountMeta::new(input.pool, false),              // [2] pool (writable)
+        AccountMeta::new(position, false),                // [3] position (writable, close)
+        AccountMeta::new_readonly(pool_authority, false), // [4] pool_authority
+        AccountMeta::new(input.rent_receiver, false),     // [5] rent_receiver (writable)
+        AccountMeta::new_readonly(input.owner.pubkey(), true), // [6] owner (signer)
+        AccountMeta::new_readonly(TOKEN_2022_PROGRAM_ID, false), // [7] token_program (Token-2022)
+        AccountMeta::new_readonly(event_authority, false), // [8] event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // [9] program
     ];
 
     let data = anchor_discriminator(NAME).to_vec();

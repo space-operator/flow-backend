@@ -52,13 +52,18 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let reward_vault = derive_reward_vault(&input.pool, input.args.reward_index);
 
+    let event_authority =
+        Pubkey::find_program_address(&[b"__event_authority"], &CP_AMM_PROGRAM_ID).0;
+
     let accounts = vec![
         AccountMeta::new(input.pool, false),   // [0] pool (writable)
         AccountMeta::new(reward_vault, false), // [1] reward_vault (writable)
         AccountMeta::new_readonly(input.reward_mint, false), // [2] reward_mint
         AccountMeta::new(input.funder_token_account, false), // [3] funder_token_account (writable)
-        AccountMeta::new_readonly(input.funder.pubkey(), true), // [4] funder (readonly signer)
+        AccountMeta::new_readonly(input.funder.pubkey(), true), // [4] funder (signer)
         AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // [5] token_program
+        AccountMeta::new_readonly(event_authority, false), // [6] event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // [7] program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
