@@ -22,7 +22,7 @@ pub struct Input {
     pub fee_payer: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub settings: Pubkey,
-    pub settings_authority: Wallet,
+    pub signer: Wallet,
     pub time_lock: u32,
     #[serde(default)]
     pub memo: Option<String>,
@@ -40,7 +40,7 @@ pub struct Output {
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let accounts = vec![
         AccountMeta::new(input.settings, false),
-        AccountMeta::new_readonly(input.settings_authority.pubkey(), true),
+        AccountMeta::new_readonly(input.signer.pubkey(), true),
         AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
         AccountMeta::new_readonly(PROGRAM_ID, false),
@@ -62,7 +62,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer.clone(), input.settings_authority.clone()]
+        signers: [input.fee_payer.clone(), input.signer.clone()]
             .into_iter()
             .collect(),
         instructions: vec![instruction],
