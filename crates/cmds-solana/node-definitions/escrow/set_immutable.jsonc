@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "set_immutable",
+  "prefix": "escrow",
+  "type": "native",
+  "description": "Permanently lock the escrow against further configuration changes",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/escrow/set_immutable.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Transaction fee payer"
+      },
+      {
+        "name": "admin",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "tooltip": "Current escrow admin"
+      },
+      {
+        "name": "escrow",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Escrow PDA address to lock"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "escrow",
+    "category": "utility",
+    "icon_url": "https://github.com/solana-program.png",
+    "tags": ["escrow", "immutable", "lock", "solana"]
+  },
+  "external_version": {
+    "program_id": "Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-program/escrow"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/escrow/set_immutable.jsonc",
+    "repo": "flow-backend"
+  }
+}

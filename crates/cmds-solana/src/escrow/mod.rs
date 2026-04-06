@@ -16,8 +16,11 @@ pub mod block_token_extension;
 pub mod create_escrow;
 pub mod deposit;
 pub mod pda;
+pub mod remove_extension;
 pub mod set_arbiter;
 pub mod set_hook;
+pub mod set_immutable;
+pub mod unblock_token_extension;
 pub mod update_admin;
 pub mod withdraw;
 
@@ -45,6 +48,9 @@ pub enum EscrowDiscriminator {
     BlockMint = 7,
     BlockTokenExtension = 8,
     SetArbiter = 9,
+    RemoveExtension = 10,
+    UnblockTokenExtension = 11,
+    SetImmutable = 12,
 }
 
 /// Build an escrow instruction: 1-byte discriminator + args data.
@@ -79,6 +85,9 @@ mod tests {
         assert_eq!(EscrowDiscriminator::BlockMint as u8, 7);
         assert_eq!(EscrowDiscriminator::BlockTokenExtension as u8, 8);
         assert_eq!(EscrowDiscriminator::SetArbiter as u8, 9);
+        assert_eq!(EscrowDiscriminator::RemoveExtension as u8, 10);
+        assert_eq!(EscrowDiscriminator::UnblockTokenExtension as u8, 11);
+        assert_eq!(EscrowDiscriminator::SetImmutable as u8, 12);
     }
 
     #[test]
