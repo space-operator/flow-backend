@@ -419,7 +419,7 @@ mod tests {
         let settings = Pubkey::new_unique();
         let creator = Pubkey::new_unique();
         let vault = Pubkey::new_unique();
-        let system_program = solana_program::system_program::id();
+        let system_program = solana_sdk_ids::system_program::ID;
         let transaction = Pubkey::new_unique();
 
         // 2 account keys: vault (writable signer), system_program (readonly non-signer)

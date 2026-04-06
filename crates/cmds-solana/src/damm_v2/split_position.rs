@@ -185,6 +185,7 @@ mod tests {
                 reward_0_percentage: 0,
                 reward_1_percentage: 0,
                 inner_vesting_liquidity_percentage: 0,
+                padding: [0; 15],
             },
             submit: false,
         };

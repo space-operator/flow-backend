@@ -205,6 +205,9 @@ mod tests {
             token_mint: None,
             token_limit_amount: None,
             program_id_permission: None,
+            authority_type: "ed25519".to_string(),
+            initial_session_key: None,
+            max_session_length: 864_000,
             submit: true,
         };
 
