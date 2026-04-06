@@ -1,0 +1,86 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "fix_pool_layout_version",
+  "prefix": "damm_v2",
+  "type": "native",
+  "description": "Fix pool layout version for a DAMM v2 pool. Operator-only admin action (FixPool permission).",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/damm_v2/fix_pool_layout_version.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "signer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Operator signer (pays fees)"
+      },
+      {
+        "name": "pool",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Pool to fix layout version"
+      },
+      {
+        "name": "operator",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Operator account with FixPool permission"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "Meteora",
+    "program": "damm_v2",
+    "category": "defi",
+    "icon_url": "https://github.com/MeteoraAg.png",
+    "tags": [
+      "defi",
+      "damm v2",
+      "admin",
+      "fix",
+      "pool"
+    ]
+  },
+  "external_version": {
+    "program_id": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+    "sdk_crate": "damm-v2-interface",
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/damm_v2/fix_pool_layout_version.jsonc",
+    "repo": "flow-backend"
+  }
+}
