@@ -47,6 +47,12 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     }
 
     sh.change_dir("docker/");
+    // Tear down any leftover containers and volumes from previous runs to
+    // guarantee a clean database.  Without this, stale wallets or flows from
+    // a prior run (especially on self-hosted runners) can cause test failures.
+    cmd!(sh, "docker compose -f with-cmds-server.yml down -v")
+        .ignore_status()
+        .run()?;
     cmd!(sh, "./gen-secrets.ts --force").run()?;
     let tag = tag.map(Ok).unwrap_or_else(|| get_tag(sh))?;
     let pull = if compile { "missing" } else { "always" };

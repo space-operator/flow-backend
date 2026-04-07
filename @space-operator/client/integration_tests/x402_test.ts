@@ -46,10 +46,7 @@ Deno.test("run x402", async () => {
   const walletId = await sup
     .from("wallets")
     .select("id")
-    .eq(
-      "name",
-      "Main wallet",
-    )
+    .limit(1)
     .single()
     .then((result) => {
       return result.data?.id;
