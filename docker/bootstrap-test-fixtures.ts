@@ -5,6 +5,7 @@ import { decodeBase58, encodeBase58 } from "jsr:@std/encoding@^1.0.10/base58";
 import { dirname, fromFileUrl, join } from "jsr:@std/path@^1.1.2";
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import { blake3 } from "npm:@noble/hashes@^1.8.0/blake3";
+import nacl from "npm:tweetnacl@^1.0.3";
 
 const REQUIRED_FIXTURE_FLOW_NAMES = [
   "Add",
@@ -35,6 +36,44 @@ function withTrailingSlash(url: string): string {
 
 function buildUrl(base: string, pathname: string): string {
   return new URL(pathname, withTrailingSlash(base)).toString();
+}
+
+type ServerInfo = {
+  supabase_url?: string;
+  anon_key?: string;
+};
+
+type LocalServerConfig = {
+  supabase?: {
+    endpoint?: string;
+    service_key?: string;
+    anon_key?: string;
+  };
+};
+
+async function fetchServerInfo(serverUrl: string): Promise<ServerInfo | undefined> {
+  try {
+    const response = await fetchWithTimeout(
+      buildUrl(serverUrl, "info"),
+      {},
+      "fetch service info",
+    );
+    if (!response.ok) {
+      return undefined;
+    }
+    return await response.json() as ServerInfo;
+  } catch {
+    return undefined;
+  }
+}
+
+async function loadLocalServerConfig(dockerDir: string): Promise<LocalServerConfig | undefined> {
+  const configPath = join(dockerDir, "..", "local-config.jsonc");
+  try {
+    return JSON.parse(await Deno.readTextFile(configPath)) as LocalServerConfig;
+  } catch {
+    return undefined;
+  }
 }
 
 function isLoopbackUrl(raw: string): boolean {
@@ -70,9 +109,11 @@ function generateApiKeyMaterial(): {
   };
 }
 
-function configuredWebhookUrl(serverUrl: string): string | undefined {
+function configuredWebhookUrl(serverUrl: string, supabaseUrl: string): string | undefined {
   return Deno.env.get("FLOW_TEST_WEBHOOK_URL") ??
-    (isLoopbackUrl(serverUrl) ? "http://webhook/webhook" : undefined);
+    (isLoopbackUrl(serverUrl) && isLoopbackUrl(supabaseUrl)
+      ? "http://webhook/webhook"
+      : undefined);
 }
 
 function normalizeApiInputUrl(url: string, serverUrl: string): string {
@@ -116,6 +157,16 @@ type SemicolonTable = {
 type WalletTarget = {
   walletId: number;
   publicKey: string;
+};
+
+type OwnerWalletRow = {
+  id?: number;
+  name?: string | null;
+  public_key?: string;
+  purpose?: string | null;
+  type?: string | null;
+  created_at?: string | null;
+  encrypted_keypair?: unknown;
 };
 
 function parseSemicolonLine(line: string): string[] {
@@ -918,6 +969,8 @@ async function claimApiKeySession(
 
 async function ensureOwnerSigningWallet(
   serverUrl: string,
+  supabaseUrl: string,
+  serviceRoleKey: string,
   apiKey: string,
   userId: string,
 ): Promise<void> {
@@ -934,45 +987,78 @@ async function ensureOwnerSigningWallet(
     );
   }
 
-  const response = await fetchWithTimeout(
-    buildUrl(serverUrl, "wallets/upsert"),
-    {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${session.access_token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        type: "HARDCODED",
-        name: "e2e-owner-signing-wallet",
-        public_key: publicKey,
-        keypair,
-        user_id: userId,
-      }),
-    },
-    "upsert owner signing wallet",
+  let walletRows = await fetchOwnerWalletRows(
+    supabaseUrl,
+    serviceRoleKey,
+    userId,
+    publicKey,
   );
-
-  if (!response.ok) {
-    throw new Error(
-      `upsert owner signing wallet failed: ${response.status} ${await response.text()}`,
+  if (!walletRows.some((row) => row.encrypted_keypair !== null && row.encrypted_keypair !== undefined)) {
+    const response = await fetchWithTimeout(
+      buildUrl(serverUrl, "wallets/upsert"),
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${session.access_token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "HARDCODED",
+          name: "e2e-owner-signing-wallet",
+          public_key: publicKey,
+          keypair,
+          user_id: userId,
+        }),
+      },
+      "upsert owner signing wallet",
     );
+
+    if (!response.ok) {
+      throw new Error(
+        `upsert owner signing wallet failed: ${response.status} ${await response.text()}`,
+      );
+    }
+
+    walletRows = await fetchOwnerWalletRows(
+      supabaseUrl,
+      serviceRoleKey,
+      userId,
+      publicKey,
+    );
+  }
+
+  const keep = selectPreferredOwnerWalletRow(walletRows, publicKey);
+  const duplicateIds = walletRows
+    .filter((row) => typeof row.id === "number" && row.id !== keep?.id)
+    .map((row) => row.id as number);
+  if (duplicateIds.length > 0) {
+    console.warn(
+      `Warning: removing ${duplicateIds.length} duplicate wallet row(s) for ${publicKey} ` +
+        `owned by ${userId}.`,
+    );
+    await deleteWalletRows(supabaseUrl, serviceRoleKey, duplicateIds);
   }
 }
 
-async function fetchOwnerWalletTarget(
+async function fetchOwnerWalletRows(
   supabaseUrl: string,
   serviceRoleKey: string,
   userId?: string,
-): Promise<WalletTarget | undefined> {
+  publicKey?: string,
+): Promise<OwnerWalletRow[]> {
   if (!userId) {
-    return undefined;
+    return [];
   }
 
   const url = new URL("rest/v1/wallets", withTrailingSlash(supabaseUrl));
-  url.searchParams.set("select", "id,public_key,purpose,type,created_at");
+  url.searchParams.set(
+    "select",
+    "id,name,public_key,purpose,type,created_at,encrypted_keypair",
+  );
   url.searchParams.set("user_id", `eq.${userId}`);
-  const preferredPubkey = expectedOwnerPubkey();
+  if (publicKey) {
+    url.searchParams.set("public_key", `eq.${publicKey}`);
+  }
   url.searchParams.set("order", "created_at.desc");
 
   const response = await fetch(url, {
@@ -988,25 +1074,93 @@ async function fetchOwnerWalletTarget(
     );
   }
 
-  const rows = await response.json() as Array<{
-    id?: number;
-    public_key?: string;
-    purpose?: string | null;
-    type?: string | null;
-    created_at?: string | null;
-  }>;
-  const preferred = rows.find((row) =>
-    typeof row.id === "number" &&
-    typeof row.public_key === "string" &&
-    row.public_key === preferredPubkey
-  ) ?? rows.find((row) =>
-    typeof row.id === "number" &&
-    typeof row.public_key === "string" &&
-    row.purpose === "Main wallet"
-  ) ?? rows.find((row) =>
-    typeof row.id === "number" &&
-    typeof row.public_key === "string"
-  );
+  return await response.json() as OwnerWalletRow[];
+}
+
+function selectPreferredOwnerWalletRow(
+  rows: OwnerWalletRow[],
+  preferredPubkey?: string,
+): OwnerWalletRow | undefined {
+  return [...rows].sort((left, right) => {
+    const leftHasKeypair = left.encrypted_keypair !== null && left.encrypted_keypair !== undefined
+      ? 1
+      : 0;
+    const rightHasKeypair = right.encrypted_keypair !== null && right.encrypted_keypair !== undefined
+      ? 1
+      : 0;
+    if (leftHasKeypair !== rightHasKeypair) {
+      return rightHasKeypair - leftHasKeypair;
+    }
+
+    const leftPreferred = preferredPubkey !== undefined && left.public_key === preferredPubkey
+      ? 1
+      : 0;
+    const rightPreferred = preferredPubkey !== undefined && right.public_key === preferredPubkey
+      ? 1
+      : 0;
+    if (leftPreferred !== rightPreferred) {
+      return rightPreferred - leftPreferred;
+    }
+
+    const leftMain = left.purpose === "Main wallet" ? 1 : 0;
+    const rightMain = right.purpose === "Main wallet" ? 1 : 0;
+    if (leftMain !== rightMain) {
+      return rightMain - leftMain;
+    }
+
+    const leftTime = Date.parse(left.created_at ?? "");
+    const rightTime = Date.parse(right.created_at ?? "");
+    const normalizedLeftTime = Number.isNaN(leftTime) ? 0 : leftTime;
+    const normalizedRightTime = Number.isNaN(rightTime) ? 0 : rightTime;
+    if (normalizedLeftTime !== normalizedRightTime) {
+      return normalizedRightTime - normalizedLeftTime;
+    }
+
+    return (right.id ?? 0) - (left.id ?? 0);
+  })[0];
+}
+
+async function deleteWalletRows(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  ids: number[],
+): Promise<void> {
+  if (ids.length === 0) {
+    return;
+  }
+
+  const url = new URL("rest/v1/wallets", withTrailingSlash(supabaseUrl));
+  url.searchParams.set("id", `in.(${ids.join(",")})`);
+
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+      prefer: "return=minimal",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `failed to delete duplicate wallet rows ${ids.join(", ")}: ` +
+        `${response.status} ${await response.text()}`,
+    );
+  }
+}
+
+async function fetchOwnerWalletTarget(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  userId?: string,
+): Promise<WalletTarget | undefined> {
+  if (!userId) {
+    return undefined;
+  }
+
+  const preferredPubkey = expectedOwnerPubkey();
+  const rows = await fetchOwnerWalletRows(supabaseUrl, serviceRoleKey, userId);
+  const preferred = selectPreferredOwnerWalletRow(rows, preferredPubkey);
 
   if (!preferred || typeof preferred.id !== "number" || typeof preferred.public_key !== "string") {
     return undefined;
@@ -1572,6 +1726,7 @@ async function probeApiInputSubmit(
 
 async function probeApiInputWebhook(
   serverUrl: string,
+  supabaseUrl: string,
   flowId: string,
 ): Promise<string | undefined> {
   const apiKey = Deno.env.get("APIKEY");
@@ -1579,11 +1734,11 @@ async function probeApiInputWebhook(
     return "api-input webhook probe skipped because APIKEY is not set";
   }
 
-  const webhookUrl = configuredWebhookUrl(serverUrl);
+  const webhookUrl = configuredWebhookUrl(serverUrl, supabaseUrl);
   if (!webhookUrl) {
     console.warn(
       "Warning: api-input webhook probe skipped because FLOW_TEST_WEBHOOK_URL is not set " +
-        "and FLOW_SERVER_URL is not loopback.",
+        "and the current stack is not using the local Docker webhook service.",
     );
     return undefined;
   }
@@ -1759,7 +1914,11 @@ async function runFixturePreflight(
     if (submitIssue) {
       issues.push(`api-input submit probe failed: ${submitIssue}`);
     }
-    const webhookIssue = await probeApiInputWebhook(serverUrl, apiInputFlow.uuid);
+    const webhookIssue = await probeApiInputWebhook(
+      serverUrl,
+      supabaseUrl,
+      apiInputFlow.uuid,
+    );
     if (webhookIssue) {
       issues.push(`api-input webhook probe failed: ${webhookIssue}`);
     }
@@ -1824,6 +1983,7 @@ async function importFixtureData(
   const response = await fetch(buildUrl(serverUrl, "data/import"), {
     method: "POST",
     headers: {
+      apikey: serviceRoleKey,
       authorization: `Bearer ${serviceRoleKey}`,
       "content-type": "application/json",
     },
@@ -1897,10 +2057,176 @@ async function provisionLocalApiKey(
   return fullKey;
 }
 
+async function createLocalApiKeyViaAuth(
+  serverUrl: string,
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  anonKey: string,
+  localEnvPath?: string,
+): Promise<{ apiKey: string; userId: string }> {
+  const keypair = resolveOptionalEnv("KEYPAIR", ["keypair", "OWNER_KEYPAIR"]);
+  if (!keypair) {
+    throw new Error("KEYPAIR/keypair/OWNER_KEYPAIR not found for local APIKEY bootstrap");
+  }
+
+  const secretKey = decodeBase58(keypair);
+  if (secretKey.length < 64) {
+    throw new Error(
+      `expected KEYPAIR to decode to at least 64 bytes, got ${secretKey.length}`,
+    );
+  }
+  const pubkey = encodeBase58(secretKey.slice(secretKey.length - 32));
+
+  const initResponse = await fetchWithTimeout(
+    buildUrl(serverUrl, "auth/init"),
+    {
+      method: "POST",
+      headers: {
+        apikey: anonKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ pubkey }),
+    },
+    "initialize local owner auth",
+  );
+  if (!initResponse.ok) {
+    throw new Error(
+      `local owner auth init failed: ${initResponse.status} ${await initResponse.text()}`,
+    );
+  }
+  const initBody = await initResponse.json() as { msg?: string };
+  if (typeof initBody.msg !== "string" || initBody.msg.length === 0) {
+    throw new Error("local owner auth init returned no message");
+  }
+
+  const signature = nacl.sign.detached(
+    new TextEncoder().encode(initBody.msg),
+    secretKey.slice(0, 64),
+  );
+  const confirmResponse = await fetchWithTimeout(
+    buildUrl(serverUrl, "auth/confirm"),
+    {
+      method: "POST",
+      headers: {
+        apikey: anonKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        token: `${initBody.msg}.${encodeBase58(signature)}`,
+      }),
+    },
+    "confirm local owner auth",
+  );
+  if (!confirmResponse.ok) {
+    throw new Error(
+      `local owner auth confirm failed: ${confirmResponse.status} ${await confirmResponse.text()}`,
+    );
+  }
+  const confirmBody = await confirmResponse.json() as {
+    session?: {
+      access_token?: string;
+      user?: { id?: string };
+    };
+  };
+  const accessToken = confirmBody.session?.access_token;
+  const userId = confirmBody.session?.user?.id;
+  if (typeof accessToken !== "string" || typeof userId !== "string") {
+    throw new Error("local owner auth confirm returned no access token/user id");
+  }
+
+  const deleteUrl = new URL("rest/v1/apikeys", withTrailingSlash(supabaseUrl));
+  deleteUrl.searchParams.set("user_id", `eq.${userId}`);
+  deleteUrl.searchParams.set("name", `eq.${LOCAL_API_KEY_NAME}`);
+  const deleteResponse = await fetch(deleteUrl, {
+    method: "DELETE",
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+      prefer: "return=minimal",
+    },
+  });
+  if (!deleteResponse.ok) {
+    throw new Error(
+      `local APIKEY cleanup failed: ${deleteResponse.status} ${await deleteResponse.text()}`,
+    );
+  }
+
+  const createResponse = await fetchWithTimeout(
+    buildUrl(serverUrl, "apikey/create"),
+    {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ name: LOCAL_API_KEY_NAME }),
+    },
+    "create local APIKEY",
+  );
+  if (!createResponse.ok) {
+    throw new Error(
+      `create local APIKEY failed: ${createResponse.status} ${await createResponse.text()}`,
+    );
+  }
+  const createBody = await createResponse.json() as {
+    full_key?: string;
+    user_id?: string;
+  };
+  if (typeof createBody.full_key !== "string") {
+    throw new Error("create local APIKEY returned no full_key");
+  }
+
+  Deno.env.set("APIKEY", createBody.full_key);
+  if (localEnvPath) {
+    await writeLocalTestEnv(localEnvPath, { APIKEY: createBody.full_key });
+  }
+
+  return {
+    apiKey: createBody.full_key,
+    userId: typeof createBody.user_id === "string" ? createBody.user_id : userId,
+  };
+}
+
+async function readLocalTestEnv(path: string): Promise<Record<string, string>> {
+  try {
+    const text = await Deno.readTextFile(path);
+    const values: Record<string, string> = {};
+    for (const rawLine of text.split(/\r?\n/u)) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith("#")) {
+        continue;
+      }
+      const split = line.indexOf("=");
+      if (split === -1) {
+        continue;
+      }
+      const key = line.slice(0, split).trim();
+      const rawValue = line.slice(split + 1).trim();
+      if (!key) {
+        continue;
+      }
+      try {
+        values[key] = JSON.parse(rawValue);
+      } catch {
+        values[key] = rawValue;
+      }
+    }
+    return values;
+  } catch {
+    return {};
+  }
+}
+
 async function writeLocalTestEnv(path: string, values: Record<string, string>): Promise<void> {
+  const merged = {
+    ...await readLocalTestEnv(path),
+    ...values,
+  };
   const lines = [
     "# Generated by docker/bootstrap-test-fixtures.ts for local e2e runs.",
-    ...Object.entries(values).map(([key, value]) => `${key}=${JSON.stringify(value)}`),
+    ...Object.entries(merged)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, value]) => `${key}=${JSON.stringify(value)}`),
     "",
   ];
   await Deno.writeTextFile(path, lines.join("\n"));
@@ -1910,6 +2236,7 @@ async function ensureUsableApiKey(
   serverUrl: string,
   supabaseUrl: string,
   serviceRoleKey: string,
+  anonKey: string,
   expectedUserId?: string,
   localEnvPath?: string,
 ): Promise<string | undefined> {
@@ -1924,10 +2251,31 @@ async function ensureUsableApiKey(
 
   if (
     !expectedUserId ||
-    !isLoopbackUrl(serverUrl) ||
-    !isLoopbackUrl(supabaseUrl)
+    !isLoopbackUrl(serverUrl)
   ) {
     return configuredApiKey;
+  }
+
+  try {
+    const localOwner = await createLocalApiKeyViaAuth(
+      serverUrl,
+      supabaseUrl,
+      serviceRoleKey,
+      anonKey,
+      localEnvPath,
+    );
+    console.log(`Provisioned a local APIKEY for fixture owner ${localOwner.userId}.`);
+    return localOwner.apiKey;
+  } catch (error) {
+    if (!isLoopbackUrl(supabaseUrl)) {
+      throw error;
+    }
+    console.warn(
+      "Warning: could not create a local APIKEY through flow-server auth. " +
+        `Falling back to a direct apikeys insert. ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+    );
   }
 
   const localApiKey = await provisionLocalApiKey(supabaseUrl, serviceRoleKey, expectedUserId);
@@ -2010,16 +2358,61 @@ async function main() {
   const file = args.file ?? join(dockerDir, "export.json");
   const serverUrl = args.server ?? Deno.env.get("FLOW_SERVER_URL") ??
     "http://127.0.0.1:8080";
-  const supabaseUrl = args["supabase-url"] ?? Deno.env.get("SUPABASE_URL") ??
+  const serverInfo = await fetchServerInfo(serverUrl);
+  const localConfig = await loadLocalServerConfig(dockerDir);
+  const preferLoopbackServerConfig = isLoopbackUrl(serverUrl);
+  const supabaseUrl = args["supabase-url"] ??
+    (preferLoopbackServerConfig
+      ? serverInfo?.supabase_url ?? localConfig?.supabase?.endpoint ?? Deno.env.get("SUPABASE_URL")
+      : Deno.env.get("SUPABASE_URL") ?? serverInfo?.supabase_url ?? localConfig?.supabase?.endpoint) ??
     "http://127.0.0.1:8000";
-  const serviceRoleKey = getEnv("SERVICE_ROLE_KEY");
+  const anonKey = (preferLoopbackServerConfig
+    ? serverInfo?.anon_key ?? localConfig?.supabase?.anon_key ?? Deno.env.get("ANON_KEY")
+    : Deno.env.get("ANON_KEY") ?? serverInfo?.anon_key ?? localConfig?.supabase?.anon_key) ?? "";
+  const serviceRoleKey = (preferLoopbackServerConfig
+    ? localConfig?.supabase?.service_key ?? Deno.env.get("SERVICE_ROLE_KEY")
+    : Deno.env.get("SERVICE_ROLE_KEY") ?? localConfig?.supabase?.service_key) ?? "";
+  if (!serviceRoleKey) {
+    throw new Error("environment variable SERVICE_ROLE_KEY not found");
+  }
+  Deno.env.set("FLOW_SERVER_URL", serverUrl);
+  Deno.env.set("SUPABASE_URL", supabaseUrl);
+  if (anonKey) {
+    Deno.env.set("ANON_KEY", anonKey);
+  }
+  Deno.env.set("SERVICE_ROLE_KEY", serviceRoleKey);
   const rawData = await readFixtureFile(file) as FixtureExport;
   let apiKey = Deno.env.get("APIKEY");
-  const apiKeyUserId = apiKey
+  let apiKeyUserId = apiKey
     ? await fetchApiKeyUserId(serverUrl, apiKey).catch(() => undefined)
     : undefined;
+  await writeLocalTestEnv(localTestEnv, {
+    FLOW_SERVER_URL: serverUrl,
+    SUPABASE_URL: supabaseUrl,
+    ANON_KEY: anonKey,
+    SERVICE_ROLE_KEY: serviceRoleKey,
+    ...(apiKey ? { APIKEY: apiKey } : {}),
+  });
+  if (!apiKeyUserId && isLoopbackUrl(serverUrl)) {
+    const localOwner = await createLocalApiKeyViaAuth(
+      serverUrl,
+      supabaseUrl,
+      serviceRoleKey,
+      anonKey,
+      localTestEnv,
+    );
+    apiKey = localOwner.apiKey;
+    apiKeyUserId = localOwner.userId;
+    console.log(`Provisioned a local APIKEY for fixture owner ${apiKeyUserId}.`);
+  }
   if (apiKey && apiKeyUserId) {
-    await ensureOwnerSigningWallet(serverUrl, apiKey, apiKeyUserId).catch((error) => {
+    await ensureOwnerSigningWallet(
+      serverUrl,
+      supabaseUrl,
+      serviceRoleKey,
+      apiKey,
+      apiKeyUserId,
+    ).catch((error) => {
       console.warn(
         `Warning: could not upsert the owner signing wallet before fixture bootstrap. ${
           error instanceof Error ? error.message : String(error)
@@ -2055,11 +2448,18 @@ async function main() {
           serverUrl,
           supabaseUrl,
           serviceRoleKey,
+          anonKey,
           expectedUserId,
           localTestEnv,
         );
         if (apiKey && expectedUserId) {
-          await ensureOwnerSigningWallet(serverUrl, apiKey, expectedUserId).catch((error) => {
+          await ensureOwnerSigningWallet(
+            serverUrl,
+            supabaseUrl,
+            serviceRoleKey,
+            apiKey,
+            expectedUserId,
+          ).catch((error) => {
             console.warn(
               `Warning: could not upsert the owner signing wallet for the local APIKEY. ${
                 error instanceof Error ? error.message : String(error)
@@ -2105,11 +2505,18 @@ async function main() {
         serverUrl,
         supabaseUrl,
         serviceRoleKey,
+        anonKey,
         expectedUserId,
         localTestEnv,
       );
       if (apiKey && expectedUserId) {
-        await ensureOwnerSigningWallet(serverUrl, apiKey, expectedUserId).catch((error) => {
+        await ensureOwnerSigningWallet(
+          serverUrl,
+          supabaseUrl,
+          serviceRoleKey,
+          apiKey,
+          expectedUserId,
+        ).catch((error) => {
           console.warn(
             `Warning: could not upsert the owner signing wallet for the local APIKEY. ${
               error instanceof Error ? error.message : String(error)
@@ -2190,11 +2597,18 @@ async function main() {
       serverUrl,
       supabaseUrl,
       serviceRoleKey,
+      anonKey,
       expectedUserId,
       localTestEnv,
     );
     if (apiKey && expectedUserId) {
-      await ensureOwnerSigningWallet(serverUrl, apiKey, expectedUserId).catch((error) => {
+      await ensureOwnerSigningWallet(
+        serverUrl,
+        supabaseUrl,
+        serviceRoleKey,
+        apiKey,
+        expectedUserId,
+      ).catch((error) => {
         console.warn(
           `Warning: could not upsert the owner signing wallet for the local APIKEY. ${
             error instanceof Error ? error.message : String(error)

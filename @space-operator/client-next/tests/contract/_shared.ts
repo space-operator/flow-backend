@@ -32,6 +32,78 @@ await load({
   ),
 });
 
+type RuntimeServiceInfo = {
+  supabase_url?: string;
+  anon_key?: string;
+};
+
+type LocalServerConfig = {
+  supabase?: {
+    endpoint?: string;
+    service_key?: string;
+    anon_key?: string;
+  };
+};
+
+async function resolveRuntimeConfig() {
+  const flowServerUrl = Deno.env.get("FLOW_SERVER_URL") ??
+    "http://localhost:8080";
+  let supabaseUrl = Deno.env.get("SUPABASE_URL") ??
+    "http://localhost:8000";
+  let anonKey = Deno.env.get("ANON_KEY") ?? "";
+  let serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") ?? "";
+
+  if (isLoopbackUrl(flowServerUrl)) {
+    try {
+      const response = await fetch(
+        new URL("info", flowServerUrl.endsWith("/") ? flowServerUrl : `${flowServerUrl}/`),
+        { signal: AbortSignal.timeout(5_000) },
+      );
+      if (response.ok) {
+        const info = await response.json() as RuntimeServiceInfo;
+        supabaseUrl = info.supabase_url ?? supabaseUrl;
+        anonKey = info.anon_key ?? anonKey;
+      }
+    } catch {
+      // Fall back to env/local-config when /info is unavailable.
+    }
+
+    try {
+      const localConfigPath = decodeURIComponent(
+        new URL("../../../../local-config.jsonc", import.meta.url).pathname,
+      );
+      const localConfig = JSON.parse(
+        await Deno.readTextFile(localConfigPath),
+      ) as LocalServerConfig;
+      supabaseUrl = supabaseUrl || localConfig.supabase?.endpoint || "";
+      anonKey = anonKey || localConfig.supabase?.anon_key || "";
+      serviceRoleKey = localConfig.supabase?.service_key ?? serviceRoleKey;
+    } catch {
+      // local-config.jsonc is optional in CI/worktree setups.
+    }
+  }
+
+  Deno.env.set("FLOW_SERVER_URL", flowServerUrl);
+  if (supabaseUrl) {
+    Deno.env.set("SUPABASE_URL", supabaseUrl);
+  }
+  if (anonKey) {
+    Deno.env.set("ANON_KEY", anonKey);
+  }
+  if (serviceRoleKey) {
+    Deno.env.set("SERVICE_ROLE_KEY", serviceRoleKey);
+  }
+
+  return {
+    flowServerUrl,
+    supabaseUrl,
+    anonKey,
+    serviceRoleKey,
+  };
+}
+
+const RUNTIME_CONFIG = await resolveRuntimeConfig();
+
 export const RUN_CONTRACT_TESTS = Deno.env.get(
   "RUN_SPACE_OPERATOR_CONTRACT_TESTS",
 ) === "1";
@@ -42,14 +114,12 @@ export const RUN_EXPORT_TESTS = RUN_E2E_TESTS &&
 export const RUN_X402_TESTS = RUN_E2E_TESTS &&
   Deno.env.get("RUN_SPACE_OPERATOR_X402_TESTS") === "1";
 
-export const FLOW_SERVER_URL = Deno.env.get("FLOW_SERVER_URL") ??
-  "http://localhost:8080";
-export const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ??
-  "http://localhost:8000";
-export const ANON_KEY = Deno.env.get("ANON_KEY") ?? "";
+export const FLOW_SERVER_URL = RUNTIME_CONFIG.flowServerUrl;
+export const SUPABASE_URL = RUNTIME_CONFIG.supabaseUrl;
+export const ANON_KEY = RUNTIME_CONFIG.anonKey;
 export const TEST_WEBHOOK_URL = Deno.env.get("FLOW_TEST_WEBHOOK_URL") ??
   "http://webhook/webhook";
-const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY") ?? "";
+const SERVICE_ROLE_KEY = RUNTIME_CONFIG.serviceRoleKey;
 const ALLOW_LEGACY_FIXTURE_UUID_FALLBACK = Deno.env.get(
   "ALLOW_LEGACY_FIXTURE_UUID_FALLBACK",
 ) === "1";
@@ -104,6 +174,7 @@ type FixtureFlowKey = keyof typeof FIXTURE_FLOW_IDS;
 const fixtureFlowIdCache = new Map<FixtureFlowKey, Promise<string>>();
 const ignoredFixtureEnvOverrideWarnings = new Set<FixtureFlowKey>();
 let serviceInfoPromise: Promise<ServiceInfoOutput> | undefined;
+let ownerUserIdPromise: Promise<string> | undefined;
 
 type VisibleFlowRow = {
   uuid: string;
@@ -172,10 +243,12 @@ export async function resolveFixtureFlowId(
       );
     }
 
+    const ownerId = await ownerUserId();
     let rows: VisibleFlowRow[];
     try {
       rows = await requestOwnerFlowsV2<VisibleFlowRow[]>(
-        `?select=uuid&name=eq.${encodeURIComponent(FIXTURE_FLOW_NAMES[key])}&order=updated_at.desc&limit=1`,
+        `?select=uuid&name=eq.${encodeURIComponent(FIXTURE_FLOW_NAMES[key])}` +
+          `&user_id=eq.${ownerId}&order=updated_at.desc&limit=1`,
       );
     } catch (error) {
       if (ALLOW_LEGACY_FIXTURE_UUID_FALLBACK) {
@@ -196,7 +269,7 @@ export async function resolveFixtureFlowId(
 
     if (ALLOW_LEGACY_FIXTURE_UUID_FALLBACK) {
       const fallback = await requestOwnerFlowsV2<VisibleFlowRow[]>(
-        `?select=uuid&uuid=eq.${FIXTURE_FLOW_IDS[key]}&limit=1`,
+        `?select=uuid&uuid=eq.${FIXTURE_FLOW_IDS[key]}&user_id=eq.${ownerId}&limit=1`,
       );
 
       if (fallback[0]?.uuid) {
@@ -205,7 +278,7 @@ export async function resolveFixtureFlowId(
     }
 
     throw new Error(
-      `missing fixture flow "${FIXTURE_FLOW_NAMES[key]}". Run \`deno task test:bootstrap-fixtures\` from @space-operator/client-next or set ${FIXTURE_ENV_KEYS[key]}.${
+      `missing owner-owned fixture flow "${FIXTURE_FLOW_NAMES[key]}". Run \`deno task test:bootstrap-fixtures\` from @space-operator/client-next or set ${FIXTURE_ENV_KEYS[key]}.${
         ALLOW_LEGACY_FIXTURE_UUID_FALLBACK
           ? ` Legacy fallback UUID ${FIXTURE_FLOW_IDS[key]} was not visible either.`
           : ""
@@ -252,7 +325,8 @@ async function requestOwnerFlowsV2<T>(query: string): Promise<T> {
 }
 
 export async function ownerUserId() {
-  return (await apiClient().apiKeys.info()).user_id;
+  ownerUserIdPromise ??= (async () => (await apiClient().apiKeys.info()).user_id)();
+  return await ownerUserIdPromise;
 }
 
 export async function ownerBearerClient() {
@@ -380,7 +454,9 @@ export function fixApiInputUrl(url: string) {
 
 function configuredWebhookUrl(): string | undefined {
   return Deno.env.get("FLOW_TEST_WEBHOOK_URL") ??
-    (isLoopbackUrl(FLOW_SERVER_URL) ? TEST_WEBHOOK_URL : undefined);
+    (isLoopbackUrl(FLOW_SERVER_URL) && isLoopbackUrl(SUPABASE_URL)
+      ? TEST_WEBHOOK_URL
+      : undefined);
 }
 
 export async function withWebhookUrl<T>(
@@ -390,7 +466,7 @@ export async function withWebhookUrl<T>(
   if (!webhookUrl) {
     console.warn(
       "Skipping webhook callback test because FLOW_TEST_WEBHOOK_URL is not set " +
-        "and FLOW_SERVER_URL is not loopback.",
+        "and the current stack is not using the local Docker webhook service.",
     );
     return undefined;
   }
