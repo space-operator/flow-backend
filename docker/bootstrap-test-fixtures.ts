@@ -19,6 +19,10 @@ const REQUIRED_FIXTURE_FLOW_NAMES = [
   "Simple Transfer",
 ] as const;
 
+function flowNameToEnvKey(name: string): string {
+  return "FLOW_ID_" + name.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/_+$/, "");
+}
+
 const LOCAL_TEST_ENV_FILE = ".flow-test.env";
 const LOCAL_API_KEY_NAME = "local-e2e-bootstrap";
 
@@ -2232,6 +2236,28 @@ async function writeLocalTestEnv(path: string, values: Record<string, string>): 
   await Deno.writeTextFile(path, lines.join("\n"));
 }
 
+async function writeFixtureFlowIdsToEnv(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  expectedUserId: string | undefined,
+  localTestEnv: string,
+): Promise<void> {
+  const rows = await fetchFixtureFlows(supabaseUrl, serviceRoleKey, expectedUserId);
+  const missing = REQUIRED_FIXTURE_FLOW_NAMES.filter(
+    (name) => !rows.some((r) => r.name === name),
+  );
+  if (missing.length > 0) {
+    console.warn(
+      `Warning: fixture flow ID env vars incomplete, missing: ${missing.join(", ")}`,
+    );
+  }
+  const vars: Record<string, string> = {};
+  for (const row of rows) {
+    vars[flowNameToEnvKey(row.name)] = row.uuid;
+  }
+  await writeLocalTestEnv(localTestEnv, vars);
+}
+
 async function ensureUsableApiKey(
   serverUrl: string,
   supabaseUrl: string,
@@ -2439,6 +2465,7 @@ async function main() {
     if (missing.length === 0) {
       console.log("Local test fixtures already present.");
       if (!args.verify) {
+        await writeFixtureFlowIdsToEnv(supabaseUrl, serviceRoleKey, expectedUserId, localTestEnv);
         await verifyApiKey(serverUrl, expectedUserId);
         return;
       }
@@ -2467,6 +2494,7 @@ async function main() {
             );
           });
         }
+        await writeFixtureFlowIdsToEnv(supabaseUrl, serviceRoleKey, expectedUserId, localTestEnv);
         await runFixturePreflight(serverUrl, supabaseUrl, serviceRoleKey);
         await verifyApiKey(serverUrl, expectedUserId);
         return;
@@ -2590,6 +2618,22 @@ async function main() {
   console.log("Fixture flows available:");
   for (const row of rows.sort((a, b) => a.name.localeCompare(b.name))) {
     console.log(`- ${row.name}: ${row.uuid}`);
+  }
+
+  {
+    const missingFlows = REQUIRED_FIXTURE_FLOW_NAMES.filter(
+      (name) => !rows.some((r) => r.name === name),
+    );
+    if (missingFlows.length > 0) {
+      console.warn(
+        `Warning: fixture flow ID env vars incomplete, missing: ${missingFlows.join(", ")}`,
+      );
+    }
+    const flowIdVars: Record<string, string> = {};
+    for (const row of rows) {
+      flowIdVars[flowNameToEnvKey(row.name)] = row.uuid;
+    }
+    await writeLocalTestEnv(localTestEnv, flowIdVars);
   }
 
   if (args.verify) {

@@ -3,7 +3,7 @@ import * as client from "../src/mod.ts";
 import * as dotenv from "@std/dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { assertEquals } from "@std/assert";
-import { checkNoErrors, getEnv } from "./utils.ts";
+import { checkNoErrors, getEnv, getUuidEnv } from "./utils.ts";
 // import { Application, Router } from "@oak/oak";
 
 dotenv.loadSync({
@@ -13,7 +13,7 @@ dotenv.loadSync({
 const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
 const supabaseUrl = "http://localhost:8000";
-const API_INPUT_FLOW_ID = "78a7e826-7697-48cb-a2c0-67ad1be4e970"; // API Input
+const API_INPUT_FLOW_ID = getUuidEnv("FLOW_ID_API_INPUT");
 
 function fixUrl(url: string) {
   return url.replace("flow-server", "localhost");

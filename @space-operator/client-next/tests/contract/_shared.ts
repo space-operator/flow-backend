@@ -159,17 +159,17 @@ const FIXTURE_FLOW_NAMES = {
 } as const;
 
 const FIXTURE_ENV_KEYS = {
-  start: "START_FLOW_ID",
-  deno: "DENO_FLOW_ID",
-  interflow: "INTERFLOW_FLOW_ID",
-  interflowInstructions: "INTERFLOW_INSTRUCTIONS_FLOW_ID",
-  consts: "CONSTS_FLOW_ID",
-  apiInput: "API_INPUT_FLOW_ID",
-  deployRun: "DEPLOY_RUN_FLOW_ID",
-  deployDelete: "DEPLOY_DELETE_FLOW_ID",
-  deployAction: "DEPLOY_ACTION_FLOW_ID",
-  deploySimple: "DEPLOY_SIMPLE_FLOW_ID",
-  x402: "X402_FLOW_ID",
+  start: "FLOW_ID_ADD",
+  deno: "FLOW_ID_DENO_ADD",
+  interflow: "FLOW_ID_COLLATZ",
+  interflowInstructions: "FLOW_ID_INTERFLOW_INSTRUCTIONS",
+  consts: "FLOW_ID_CONSTS",
+  apiInput: "FLOW_ID_API_INPUT",
+  deployRun: "FLOW_ID_TRANSFER_SOL",
+  deployDelete: "FLOW_ID_COLLATZ_CORE",
+  deployAction: "FLOW_ID_SIMPLE_TRANSFER",
+  deploySimple: "FLOW_ID_ADD",
+  x402: "FLOW_ID_COLLATZ",
 } as const;
 
 type FixtureFlowKey = keyof typeof FIXTURE_FLOW_IDS;
