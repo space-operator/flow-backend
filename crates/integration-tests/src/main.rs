@@ -1,5 +1,6 @@
 #![allow(clippy::print_stderr, clippy::print_stdout)]
 
+use std::path::Path;
 use std::time::Duration;
 
 use clap::Parser;
@@ -16,6 +17,25 @@ fn get_tag(sh: &Shell) -> anyhow::Result<String> {
     let commit = cmd!(sh, "git rev-parse --verify HEAD").read()?;
 
     Ok(format!("{}{}", commit.trim(), dirty))
+}
+
+fn load_env_file_overriding(path: impl AsRef<Path>) -> anyhow::Result<()> {
+    let path = path.as_ref();
+    if !path.exists() {
+        return Ok(());
+    }
+
+    #[allow(deprecated)]
+    for item in dotenv::from_path_iter(path)? {
+        let (key, value) = item?;
+        // The integration test runner mutates env vars before spawning child
+        // processes so the Docker-local fixture config wins over repo-local .env.
+        unsafe {
+            std::env::set_var(key, value);
+        }
+    }
+
+    Ok(())
 }
 
 fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
@@ -52,13 +72,19 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     .env("IMAGE", flow_image)
     .env("CMDS_IMAGE", cmds_image)
     .run()?;
-    dotenv::from_path(meta.workspace_root.join("docker/.env"))?;
-    dotenv::from_path(
-        meta.workspace_root
+    load_env_file_overriding(&meta.workspace_root.join("docker/.env"))?;
+    load_env_file_overriding(
+        &meta
+            .workspace_root
             .join("@space-operator/client/integration_tests/.env"),
     )
     .ok();
-    cmd!(sh, "./import-data.ts --file=export.json").run()?;
+    cmd!(
+        sh,
+        "deno run -A ./bootstrap-test-fixtures.ts --file=export.json --server=http://127.0.0.1:8080 --supabase-url=http://127.0.0.1:8000"
+    )
+    .run()?;
+    load_env_file_overriding(&meta.workspace_root.join("docker/.flow-test.env")).ok();
 
     // wait for cmds-server to join
     std::thread::sleep(Duration::from_secs(5));
