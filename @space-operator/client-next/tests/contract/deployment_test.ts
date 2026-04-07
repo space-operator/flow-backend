@@ -15,6 +15,7 @@ import {
   FLOW_SERVER_URL,
   getEnv,
   ownerUserId,
+  RUN_READ_E2E_TESTS,
   resolveFixtureFlowId,
   serviceInfo,
   signText,
@@ -186,6 +187,7 @@ contractTest(
       },
     );
   },
+  { ignore: !RUN_READ_E2E_TESTS },
 );
 
 contractTest(
@@ -248,6 +250,7 @@ contractTest(
       },
     );
   },
+  { ignore: !RUN_READ_E2E_TESTS },
 );
 
 contractTest(

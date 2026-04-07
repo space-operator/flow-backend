@@ -182,6 +182,11 @@ The default live suite intentionally skips two known non-client blockers:
 - the export contract test
 - the x402 contract test
 
+When `FLOW_SERVER_URL` points at a non-loopback environment, the default live
+suite also skips the read-flow and read-deployment contract tests until that
+target stack has the new read endpoints deployed. Set
+`RUN_SPACE_OPERATOR_READ_E2E_TESTS=1` to opt into those remote read tests.
+
 Those tests are still available through the opt-in flags above. This keeps the
 default E2E pass/fail signal focused on SDK health rather than fixture, funding,
 or remote database infrastructure.

@@ -5,6 +5,7 @@ import {
   contractTest,
   FLOW_SERVER_URL,
   getEnv,
+  RUN_READ_E2E_TESTS,
   resolveFixtureFlowId,
   SUPABASE_URL,
   web3,
@@ -300,6 +301,7 @@ contractTest(
       },
     );
   },
+  { ignore: !RUN_READ_E2E_TESTS },
 );
 
 contractTest(
@@ -352,6 +354,7 @@ contractTest(
       },
     );
   },
+  { ignore: !RUN_READ_E2E_TESTS },
 );
 
 contractTest(
@@ -405,6 +408,7 @@ contractTest(
       },
     );
   },
+  { ignore: !RUN_READ_E2E_TESTS },
 );
 
 contractTest(
@@ -473,7 +477,11 @@ contractTest(
       }
     }
   },
-  { sanitizeOps: false, sanitizeResources: false },
+  {
+    ignore: !RUN_READ_E2E_TESTS,
+    sanitizeOps: false,
+    sanitizeResources: false,
+  },
 );
 
 contractTest(

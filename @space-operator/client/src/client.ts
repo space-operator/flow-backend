@@ -49,6 +49,13 @@ function header(key: string): string {
   }
 }
 
+function headerValue(key: string): string {
+  if (key.startsWith("b3-")) {
+    return key;
+  }
+  return key.startsWith("Bearer ") ? key : `Bearer ${key}`;
+}
+
 async function getToken(token?: TokenProvider): Promise<string> {
   switch (typeof token) {
     case "undefined":
@@ -133,15 +140,15 @@ export class Client {
       case "boolean":
         if (auth === true) {
           const token = await getToken(this.token);
-          req.headers.set(header(token), token);
+          req.headers.set(header(token), headerValue(token));
         }
         break;
       case "string":
-        req.headers.set(header(auth), auth);
+        req.headers.set(header(auth), headerValue(auth));
         break;
       case "function": {
         const token = await auth();
-        req.headers.set(header(token), token);
+        req.headers.set(header(token), headerValue(token));
         break;
       }
       default:

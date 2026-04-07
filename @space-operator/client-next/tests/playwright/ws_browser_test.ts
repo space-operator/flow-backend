@@ -33,10 +33,25 @@ Deno.test({
     const { build, stop } = await import("npm:esbuild@^0.25.12");
     const root = dirname(dirname(fromFileUrl(import.meta.url)));
     const packageRoot = dirname(root);
+    const contractsRoot = join(dirname(packageRoot), "contracts");
+    const clientNodeModulesPath = join(packageRoot, "node_modules");
+    const contractsNodeModulesPath = join(contractsRoot, "node_modules");
     const tmpDir = await Deno.makeTempDir({
       prefix: "client-next-playwright-",
     });
     const bundlePath = join(tmpDir, "client-next.bundle.js");
+    let createdContractsNodeModulesLink = false;
+
+    try {
+      await Deno.stat(contractsNodeModulesPath);
+    } catch {
+      await Deno.symlink(
+        clientNodeModulesPath,
+        contractsNodeModulesPath,
+        { type: "dir" },
+      );
+      createdContractsNodeModulesLink = true;
+    }
 
     const [
       entryPlugin,
@@ -186,6 +201,9 @@ try {
       stop();
       await browser.close();
       await server.shutdown();
+      if (createdContractsNodeModulesLink) {
+        await Deno.remove(contractsNodeModulesPath).catch(() => undefined);
+      }
       await Deno.remove(tmpDir, { recursive: true }).catch(() => undefined);
     }
   },

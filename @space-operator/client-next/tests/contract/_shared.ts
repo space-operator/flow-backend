@@ -113,6 +113,9 @@ export const RUN_EXPORT_TESTS = RUN_E2E_TESTS &&
   Deno.env.get("RUN_SPACE_OPERATOR_EXPORT_TESTS") === "1";
 export const RUN_X402_TESTS = RUN_E2E_TESTS &&
   Deno.env.get("RUN_SPACE_OPERATOR_X402_TESTS") === "1";
+export const RUN_READ_E2E_TESTS = RUN_E2E_TESTS &&
+  (isLoopbackUrl(RUNTIME_CONFIG.flowServerUrl) ||
+    Deno.env.get("RUN_SPACE_OPERATOR_READ_E2E_TESTS") === "1");
 
 export const FLOW_SERVER_URL = RUNTIME_CONFIG.flowServerUrl;
 export const SUPABASE_URL = RUNTIME_CONFIG.supabaseUrl;
@@ -187,6 +190,13 @@ function isLoopbackUrl(raw: string): boolean {
   } catch {
     return false;
   }
+}
+
+if (RUN_E2E_TESTS && !RUN_READ_E2E_TESTS) {
+  console.warn(
+    "Skipping read flow/deployment contract tests because FLOW_SERVER_URL is not loopback. " +
+      "Set RUN_SPACE_OPERATOR_READ_E2E_TESTS=1 to opt into remote read-endpoint coverage.",
+  );
 }
 
 export function contractTest(
