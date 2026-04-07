@@ -26,7 +26,7 @@ fn visit_dir(base: &Path, dir: &Path, src_dir: &Path, pairs: &mut Vec<(PathBuf, 
         let path = entry.path();
         if path.is_dir() {
             visit_dir(base, &path, src_dir, pairs);
-        } else if path.extension().map_or(false, |e| e == "jsonc") {
+        } else if path.extension().is_some_and(|e| e == "jsonc") {
             // Build matching .ts path under src_dir with same relative subdir
             let rel = path.strip_prefix(base).unwrap();
             let ts_path = src_dir.join(rel).with_extension("ts");
@@ -76,10 +76,6 @@ fn main() {
 
     for (jsonc_path, ts_path) in &pairs {
         let (command_type, scoped_name) = parse_registration(jsonc_path);
-        let log_name = jsonc_path
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .unwrap_or("<unknown>");
         let jsonc_abs = jsonc_path.display();
         let ts_abs = ts_path.display();
         let command_type_expr = command_type_expr(&command_type);
@@ -107,9 +103,5 @@ fn main() {
         writeln!(f, r#"    )),"#).unwrap();
         writeln!(f, r#"}});"#).unwrap();
         writeln!(f).unwrap();
-
-        eprintln!("  bun-node: {scoped_name} ({log_name})");
     }
-
-    eprintln!("cmds-bun: generated {} node registrations", pairs.len());
 }
