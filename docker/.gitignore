@@ -9,3 +9,4 @@
 #.deno-cmds-server-config.*
 # just ignore all hidden files
 .*
+!webhook/.dockerignore
