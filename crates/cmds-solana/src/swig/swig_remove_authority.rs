@@ -21,7 +21,7 @@ pub struct Input {
     pub fee_payer: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub swig_account: Pubkey,
-    pub acting_authority: Wallet,
+    pub signer: Wallet,
     #[serde(default)]
     pub acting_role_id: u32,
     pub authority_to_remove_id: u32,
@@ -39,7 +39,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ix = RemoveAuthorityInstruction::new_with_ed25519_authority(
         input.swig_account,
         input.fee_payer.pubkey(),
-        input.acting_authority.pubkey(),
+        input.signer.pubkey(),
         input.acting_role_id,
         input.authority_to_remove_id,
     )
@@ -50,7 +50,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer, input.acting_authority].into(),
+        signers: [input.fee_payer, input.signer].into(),
         instructions: [instruction].into(),
     };
 
@@ -103,7 +103,7 @@ mod tests {
         let input = Input {
             fee_payer: wallet.clone(),
             swig_account,
-            acting_authority: wallet,
+            signer: wallet,
             acting_role_id: 0,
             authority_to_remove_id: 1,
             submit: true,
