@@ -30,9 +30,9 @@
       },
       {
         "name": "arbiter",
-        "type_bounds": ["pubkey"],
+        "type_bounds": ["keypair"],
         "required": true,
-        "tooltip": "Arbiter address to set on the escrow"
+        "tooltip": "Arbiter wallet. Must sign to prove the address is valid at configuration time."
       },
       {
         "name": "submit",

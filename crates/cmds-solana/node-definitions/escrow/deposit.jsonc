@@ -84,6 +84,16 @@
         "name": "receipt",
         "type": "pubkey",
         "tooltip": "Derived receipt PDA address"
+      },
+      {
+        "name": "vault",
+        "type": "pubkey",
+        "tooltip": "Escrow vault token account (auto-created if needed)"
+      },
+      {
+        "name": "depositor_token_account",
+        "type": "pubkey",
+        "tooltip": "Depositor's token account (auto-created if needed)"
       }
     ]
   },

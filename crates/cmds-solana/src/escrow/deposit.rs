@@ -4,6 +4,7 @@ use super::{
 use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
 use solana_program::pubkey;
+use spl_associated_token_account_interface::instruction::create_associated_token_account_idempotent;
 
 /// Native SOL mint (wrapped SOL)
 fn default_native_mint() -> Pubkey {
@@ -50,6 +51,10 @@ pub struct Output {
     pub signature: Option<Signature>,
     #[serde_as(as = "AsPubkey")]
     pub receipt: Pubkey,
+    #[serde_as(as = "AsPubkey")]
+    pub vault: Pubkey,
+    #[serde_as(as = "AsPubkey")]
+    pub depositor_token_account: Pubkey,
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
@@ -90,6 +95,20 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let instruction = build_escrow_instruction(EscrowDiscriminator::Deposit, accounts, args_data);
 
+    // Auto-create ATAs for both vault and depositor (idempotent — no-op if they exist)
+    let vault_ata_ix = create_associated_token_account_idempotent(
+        &input.fee_payer.pubkey(),
+        &input.escrow,
+        &input.mint,
+        &input.token_program,
+    );
+    let depositor_ata_ix = create_associated_token_account_idempotent(
+        &input.fee_payer.pubkey(),
+        &input.depositor.pubkey(),
+        &input.mint,
+        &input.token_program,
+    );
+
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
@@ -100,7 +119,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         ]
         .into_iter()
         .collect(),
-        instructions: vec![instruction],
+        instructions: vec![vault_ata_ix, depositor_ata_ix, instruction],
     };
 
     let ins = if input.submit {
@@ -110,7 +129,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    Ok(Output { signature, receipt })
+    Ok(Output {
+        signature,
+        receipt,
+        vault,
+        depositor_token_account,
+    })
 }
 
 #[cfg(test)]
