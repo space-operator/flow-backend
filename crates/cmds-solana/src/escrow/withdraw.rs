@@ -95,7 +95,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: signers.into_iter().collect(),
+        signers,
         instructions: vec![instruction],
     };
 
