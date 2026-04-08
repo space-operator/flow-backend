@@ -37,9 +37,6 @@ Deno.test({ name: "deploy and run", sanitizeOps: false, sanitizeResources: false
     anonKey,
     token: apiKey,
   });
-  const ownerKeypair = web3.Keypair.fromSecretKey(
-    bs58.decodeBase58(getEnv("KEYPAIR")),
-  );
 
   const id = await owner.deployFlow(DEPLOY_RUN_FLOW_ID);
 
@@ -61,18 +58,6 @@ Deno.test({ name: "deploy and run", sanitizeOps: false, sanitizeResources: false
     },
   );
   starter.setToken(token);
-
-  {
-    const req = await owner.getSignatureRequest(flow_run_id);
-    await owner.signAndSubmitSignature(
-      req,
-      ownerKeypair.publicKey,
-      (tx) => {
-        tx.sign([ownerKeypair]);
-        return tx;
-      },
-    );
-  }
 
   {
     const req = await starter.getSignatureRequest(flow_run_id);
