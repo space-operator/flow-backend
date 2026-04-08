@@ -58,7 +58,7 @@
         "tooltip": "The mint of quote token"
       },
       {
-        "name": "fee_claimer",
+        "name": "signer",
         "type_bounds": [
           "keypair"
         ],

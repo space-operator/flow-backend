@@ -22,7 +22,7 @@ pub struct Input {
     pub fee_payer: Wallet,
     pub config: Wallet,
     #[serde_as(as = "AsPubkey")]
-    pub fee_claimer: Pubkey,
+    pub signer: Pubkey,
     #[serde_as(as = "AsPubkey")]
     pub leftover_receiver: Pubkey,
     #[serde_as(as = "AsPubkey")]
@@ -47,7 +47,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         // 0: config (writable, signer - new keypair)
         AccountMeta::new(input.config.pubkey(), true),
         // 1: fee_claimer (readonly)
-        AccountMeta::new_readonly(input.fee_claimer, false),
+        AccountMeta::new_readonly(input.signer, false),
         // 2: leftover_receiver (readonly)
         AccountMeta::new_readonly(input.leftover_receiver, false),
         // 3: quote_mint (readonly)

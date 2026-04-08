@@ -25,7 +25,7 @@ pub struct Input {
     pub config: Pubkey,
     #[serde_as(as = "AsPubkey")]
     pub pool: Pubkey,
-    pub fee_claimer: Wallet,
+    pub signer: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub fee_receiver: Pubkey,
     #[serde(default = "value::default::bool_true")]
@@ -44,7 +44,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let accounts = vec![
         AccountMeta::new_readonly(input.config, false),
         AccountMeta::new(input.pool, false),
-        AccountMeta::new_readonly(input.fee_claimer.pubkey(), true),
+        AccountMeta::new_readonly(input.signer.pubkey(), true),
         AccountMeta::new(input.fee_receiver, false),
         AccountMeta::new_readonly(event_authority, false),
         AccountMeta::new_readonly(DBC_PROGRAM_ID, false),
@@ -61,7 +61,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer, input.fee_claimer].into(),
+        signers: [input.fee_payer, input.signer].into(),
         instructions: [instruction].into(),
     };
 

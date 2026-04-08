@@ -19,7 +19,7 @@
         "tooltip": "Account paying for transaction fees"
       },
       {
-        "name": "fee_claimer",
+        "name": "signer",
         "type_bounds": [
           "pubkey"
         ],

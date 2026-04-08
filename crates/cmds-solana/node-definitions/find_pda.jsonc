@@ -22,17 +22,23 @@
         "name": "seed_1",
         "type_bounds": [
           "string",
-          "pubkey"
+          "pubkey",
+          "bytes",
+          "u64",
+          "u128"
         ],
         "required": false,
         "passthrough": false,
-        "tooltip": "First seed (string or pubkey bytes)"
+        "tooltip": "Seed value (string, pubkey, bytes, or integer as little-endian bytes)"
       },
       {
         "name": "seed_2",
         "type_bounds": [
           "string",
-          "pubkey"
+          "pubkey",
+          "bytes",
+          "u64",
+          "u128"
         ],
         "required": false,
         "passthrough": false,
@@ -42,7 +48,10 @@
         "name": "seed_3",
         "type_bounds": [
           "string",
-          "pubkey"
+          "pubkey",
+          "bytes",
+          "u64",
+          "u128"
         ],
         "required": false,
         "passthrough": false,
@@ -52,7 +61,10 @@
         "name": "seed_4",
         "type_bounds": [
           "string",
-          "pubkey"
+          "pubkey",
+          "bytes",
+          "u64",
+          "u128"
         ],
         "required": false,
         "passthrough": false,
@@ -62,7 +74,10 @@
         "name": "seed_5",
         "type_bounds": [
           "string",
-          "pubkey"
+          "pubkey",
+          "bytes",
+          "u64",
+          "u128"
         ],
         "required": false,
         "passthrough": false,

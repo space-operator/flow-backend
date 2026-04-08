@@ -33,7 +33,13 @@ pub struct Output {
 fn seed_bytes(value: &Value) -> Vec<u8> {
     match value {
         Value::B32(v) => v.to_vec(),
+        Value::B64(v) => v.to_vec(),
         Value::String(v) => v.as_bytes().to_vec(),
+        Value::Bytes(v) => v.to_vec(),
+        Value::U64(v) => v.to_le_bytes().to_vec(),
+        Value::I64(v) => v.to_le_bytes().to_vec(),
+        Value::U128(v) => v.to_le_bytes().to_vec(),
+        Value::I128(v) => v.to_le_bytes().to_vec(),
         _ => vec![],
     }
 }
@@ -131,6 +137,60 @@ mod tests {
                 CommandContext::default(),
                 value::map! {
                     "program_id" => program_id,
+                },
+            )
+            .await
+            .unwrap();
+
+        let output = value::from_map::<Output>(output).unwrap();
+        assert_eq!(output.pda, expected);
+    }
+
+    #[tokio::test]
+    async fn test_u64_seed() {
+        let program_id = Pubkey::new_unique();
+        let mint = Pubkey::new_unique();
+        let index: u64 = 42;
+        let expected = Pubkey::find_program_address(
+            &[b"token", mint.as_ref(), &index.to_le_bytes()],
+            &program_id,
+        )
+        .0;
+
+        let output = build()
+            .unwrap()
+            .run(
+                CommandContext::default(),
+                value::map! {
+                    "program_id" => program_id,
+                    "seed_1" => Value::String("token".to_owned()),
+                    "seed_2" => mint,
+                    "seed_3" => Value::U64(42),
+                },
+            )
+            .await
+            .unwrap();
+
+        let output = value::from_map::<Output>(output).unwrap();
+        assert_eq!(output.pda, expected);
+    }
+
+    #[tokio::test]
+    async fn test_bytes_seed() {
+        let program_id = Pubkey::new_unique();
+        let mint = Pubkey::new_unique();
+        let expected =
+            Pubkey::find_program_address(&[b"escrow", mint.as_ref(), &[0u8]], &program_id).0;
+
+        let output = build()
+            .unwrap()
+            .run(
+                CommandContext::default(),
+                value::map! {
+                    "program_id" => program_id,
+                    "seed_1" => Value::String("escrow".to_owned()),
+                    "seed_2" => mint,
+                    "seed_3" => Value::Bytes(bytes::Bytes::from_static(&[0u8])),
                 },
             )
             .await

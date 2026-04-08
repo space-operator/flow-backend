@@ -22,7 +22,7 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 pub struct Input {
     pub fee_payer: Wallet,
     #[serde_as(as = "AsPubkey")]
-    pub fee_claimer: Pubkey,
+    pub signer: Pubkey,
     pub creator: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub system_program: Pubkey,
@@ -44,11 +44,11 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let event_authority = pda::event_authority();
-    let partner_metadata = pda::partner_metadata(&input.fee_claimer);
+    let partner_metadata = pda::partner_metadata(&input.signer);
 
     let accounts = vec![
         AccountMeta::new(partner_metadata, false),
-        AccountMeta::new_readonly(input.fee_claimer, false),
+        AccountMeta::new_readonly(input.signer, false),
         AccountMeta::new(input.creator.pubkey(), true),
         AccountMeta::new_readonly(input.system_program, false),
         AccountMeta::new_readonly(event_authority, false),
