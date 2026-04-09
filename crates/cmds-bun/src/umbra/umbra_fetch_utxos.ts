@@ -9,7 +9,7 @@ export default class UmbraFetchUtxos extends BaseCommand {
     }
     if (inputs.network !== "mainnet") {
       console.warn(`Umbra indexer is mainnet-only. Devnet indexer not yet available.`);
-      return { utxos: [], count: 0 };
+      return { utxos: [], count: 0, error: "Umbra indexer is mainnet-only. Devnet indexer not yet available." };
     }
 
     const client = await createUmbraClient(
