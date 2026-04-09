@@ -2,7 +2,10 @@ import { z } from "npm:zod@^4.1.13";
 export { z };
 
 const nullToUndefined = <T extends z.ZodTypeAny>(schema: T) =>
-  z.preprocess((value) => value === null ? undefined : value, schema.optional());
+  z.preprocess(
+    (value) => value === null ? undefined : value,
+    schema.optional(),
+  );
 
 const timestampStringSchema = z.union([z.string(), z.number()]).transform((
   value,
@@ -216,12 +219,18 @@ export const signatureSchema = z.object({
   signature: z.string(),
 }).passthrough();
 
+export const signatureRequestKindSchema = z.enum([
+  "transaction_message",
+  "message",
+]);
+
 export const signatureRequestSchema = z.object({
   id: z.number(),
   time: timestampStringSchema,
   pubkey: z.string(),
   message: z.string(),
   timeout: z.number(),
+  kind: signatureRequestKindSchema.optional(),
   flow_run_id: nullToUndefined(z.string()),
   signatures: nullToUndefined(z.array(signatureSchema)),
 }).passthrough();
@@ -379,14 +388,29 @@ export const clientJsonSchemas = {
   iValue: z.toJSONSchema(iValueSchema, jsonSchemaOpts),
   flowInputValue: z.toJSONSchema(flowInputValueSchema, jsonSchemaOpts),
   startFlowParams: z.toJSONSchema(startFlowParamsSchema, jsonSchemaOpts),
-  startFlowSharedParams: z.toJSONSchema(startFlowSharedParamsSchema, jsonSchemaOpts),
-  startFlowUnverifiedParams: z.toJSONSchema(startFlowUnverifiedParamsSchema, jsonSchemaOpts),
-  startDeploymentParams: z.toJSONSchema(startDeploymentParamsSchema, jsonSchemaOpts),
+  startFlowSharedParams: z.toJSONSchema(
+    startFlowSharedParamsSchema,
+    jsonSchemaOpts,
+  ),
+  startFlowUnverifiedParams: z.toJSONSchema(
+    startFlowUnverifiedParamsSchema,
+    jsonSchemaOpts,
+  ),
+  startDeploymentParams: z.toJSONSchema(
+    startDeploymentParamsSchema,
+    jsonSchemaOpts,
+  ),
   readFlowParams: z.toJSONSchema(readFlowParamsSchema, jsonSchemaOpts),
-  readDeploymentParams: z.toJSONSchema(readDeploymentParamsSchema, jsonSchemaOpts),
+  readDeploymentParams: z.toJSONSchema(
+    readDeploymentParamsSchema,
+    jsonSchemaOpts,
+  ),
   stopFlowParams: z.toJSONSchema(stopFlowParamsSchema, jsonSchemaOpts),
   signatureRequest: z.toJSONSchema(signatureRequestSchema, jsonSchemaOpts),
-  executeFlowResultEnvelope: z.toJSONSchema(executeFlowResultEnvelopeSchema, jsonSchemaOpts),
+  executeFlowResultEnvelope: z.toJSONSchema(
+    executeFlowResultEnvelopeSchema,
+    jsonSchemaOpts,
+  ),
 };
 
 export type IValueContract = z.infer<typeof iValueSchema>;

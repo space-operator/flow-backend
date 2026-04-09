@@ -171,7 +171,10 @@ pub mod get_jwt {
 pub mod signer {
     use crate::{
         FlowRunId,
-        utils::{TowerClient, tower_client::CommonError},
+        utils::{
+            TowerClient,
+            tower_client::{CommonError, CommonErrorExt},
+        },
     };
     use actix::MailboxError;
     use chrono::{DateTime, Utc};
@@ -218,6 +221,31 @@ pub mod signer {
         }
     }
 
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        Default,
+        PartialEq,
+        Eq,
+        Serialize,
+        Deserialize,
+        bincode::Encode,
+        bincode::Decode,
+    )]
+    #[serde(rename_all = "snake_case")]
+    pub enum SignatureRequestKind {
+        #[default]
+        TransactionMessage,
+        Message,
+    }
+
+    impl SignatureRequestKind {
+        pub const fn allows_new_message(self) -> bool {
+            matches!(self, Self::TransactionMessage)
+        }
+    }
+
     #[serde_as]
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct SignatureRequest {
@@ -231,8 +259,28 @@ pub mod signer {
         pub message: bytes::Bytes,
         #[serde_as(as = "DurationSecondsWithFrac<f64>")]
         pub timeout: Duration,
+        #[serde(default)]
+        pub kind: SignatureRequestKind,
         pub flow_run_id: Option<FlowRunId>,
         pub signatures: Option<Vec<Presigner>>,
+    }
+
+    impl SignatureRequest {
+        pub fn validate(&self) -> Result<(), Error> {
+            if self.kind == SignatureRequestKind::Message
+                && self
+                    .signatures
+                    .as_ref()
+                    .map(|signatures| !signatures.is_empty())
+                    .unwrap_or(false)
+            {
+                return Err(Error::msg(
+                    "message signature requests do not support presigners",
+                ));
+            }
+
+            Ok(())
+        }
     }
 
     impl actix::Message for SignatureRequest {
@@ -705,6 +753,42 @@ impl CommandContext {
         message: Bytes,
         timeout: Duration,
     ) -> Result<signer::SignatureResponse, signer::Error> {
+        self.request_signature_with_kind(
+            pubkey,
+            token,
+            message,
+            timeout,
+            signer::SignatureRequestKind::TransactionMessage,
+        )
+        .await
+    }
+
+    /// Call [`signer`] service for arbitrary message signing.
+    pub async fn request_message_signature(
+        &mut self,
+        pubkey: Pubkey,
+        token: Option<String>,
+        message: Bytes,
+        timeout: Duration,
+    ) -> Result<signer::SignatureResponse, signer::Error> {
+        self.request_signature_with_kind(
+            pubkey,
+            token,
+            message,
+            timeout,
+            signer::SignatureRequestKind::Message,
+        )
+        .await
+    }
+
+    async fn request_signature_with_kind(
+        &mut self,
+        pubkey: Pubkey,
+        token: Option<String>,
+        message: Bytes,
+        timeout: Duration,
+        kind: signer::SignatureRequestKind,
+    ) -> Result<signer::SignatureResponse, signer::Error> {
         self.flow
             .signer
             .ready()
@@ -716,6 +800,7 @@ impl CommandContext {
                 token,
                 message,
                 timeout,
+                kind,
                 flow_run_id: Some(self.data.flow.flow_run_id),
                 signatures: None,
             })
@@ -740,6 +825,29 @@ impl CommandContext {
                 get_jwt: &self.get_jwt,
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::signer::{SignatureRequest, SignatureRequestKind};
+    use serde_json::json;
+
+    #[test]
+    fn signature_request_kind_defaults_to_transaction_message() {
+        let request: SignatureRequest = serde_json::from_value(json!({
+            "id": null,
+            "time": 0,
+            "token": null,
+            "pubkey": "11111111111111111111111111111111",
+            "message": "AQIDBA==",
+            "timeout": 1.0,
+            "flow_run_id": null,
+            "signatures": null
+        }))
+        .unwrap();
+
+        assert_eq!(request.kind, SignatureRequestKind::TransactionMessage);
     }
 }
 

@@ -1,5 +1,5 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import { getQueryUserAccountFunction } from "@umbra-privacy/sdk";
+import { getUserAccountQuerierFunction } from "@umbra-privacy/sdk";
 import { createUmbraClient } from "./umbra_common.ts";
 
 export default class UmbraQueryAccount extends BaseCommand {
@@ -11,16 +11,18 @@ export default class UmbraQueryAccount extends BaseCommand {
       ctx,
     );
 
-    const queryAccount = getQueryUserAccountFunction({ client });
+    const queryAccount = getUserAccountQuerierFunction({ client });
     const address = (inputs.address || client.signer.address) as any;
 
     console.log(`Querying Umbra user account: ${address}`);
 
     const result = await queryAccount(address);
-    console.log("Query result:", JSON.stringify(result, null, 2));
+    console.log("Query result:", JSON.stringify(result, (_k, v) => typeof v === "bigint" ? v.toString() : v, 2));
 
     const exists = result?.state !== "non_existent";
-    return { exists, account: exists ? result : null };
+    // Serialize BigInt values for JSON transport
+    const account = exists ? JSON.parse(JSON.stringify(result, (_k, v) => typeof v === "bigint" ? v.toString() : v)) : null;
+    return { exists, account };
   }
 }
 

@@ -546,5 +546,90 @@ export default class AdapterSignature implements lib.CommandTrait {
         assert_eq!(request.pubkey, signer);
         assert_eq!(request.message.as_ref(), b"\x01\x02\x03\x04");
         assert_eq!(request.timeout, Duration::from_secs(120));
+        assert_eq!(
+            request.kind,
+            signer::SignatureRequestKind::TransactionMessage
+        );
+    }
+
+    #[actix_web::test]
+    async fn test_request_message_signature_uses_signer_service() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const JSON: &str = r#"{
+          "version": "0.1",
+          "name": "adapter_message_signature",
+          "prefix": "deno",
+          "type": "deno",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [
+              { "name": "signer", "type_bounds": ["string"], "required": true, "passthrough": false }
+            ],
+            "outputs": [
+              { "name": "signature_length", "type": "f64", "optional": false }
+            ]
+          },
+          "config_schema": {},
+          "config": {}
+        }"#;
+        const SOURCE: &str = r#"
+import * as lib from "jsr:@space-operator/flow-lib";
+import * as web3 from "npm:@solana/web3.js";
+
+export default class AdapterMessageSignature implements lib.CommandTrait {
+  async run(ctx: lib.Context, params: Record<string, any>): Promise<Record<string, any>> {
+    const signer = new web3.PublicKey(params.signer);
+    const { signature } = await ctx.requestMessageSignature(
+      signer,
+      new Uint8Array([9, 8, 7, 6])
+    );
+    return {
+      signature_length: signature.length,
+    };
+  }
+}
+"#;
+
+        let observed = Arc::new(Mutex::new(None::<signer::SignatureRequest>));
+        let signer_svc = signer::Svc::new(tower::service_fn({
+            let observed = observed.clone();
+            move |req: signer::SignatureRequest| {
+                let observed = observed.clone();
+                async move {
+                    *observed.lock().unwrap() = Some(req);
+                    Ok(signer::SignatureResponse {
+                        signature: Signature::from([9u8; 64]),
+                        new_message: None,
+                    })
+                }
+            }
+        }));
+
+        let mut ctx = test_context(
+            unimplemented_svc::<execute::Request, execute::Response, execute::Error>(),
+            signer_svc,
+        );
+        ctx.extensions_mut()
+            .unwrap()
+            .insert(tower_rpc::Server::start_http_server().unwrap());
+
+        let signer = Pubkey::new_unique();
+        let cmd = new(&node_data(JSON, SOURCE)).await.unwrap();
+        let output = cmd
+            .run(ctx, value::map! { "signer" => signer.to_string() })
+            .await
+            .unwrap();
+
+        assert_eq!(
+            value::from_value::<f64>(output["signature_length"].clone()).unwrap(),
+            64.0
+        );
+
+        let request = observed.lock().unwrap().clone().unwrap();
+        assert_eq!(request.pubkey, signer);
+        assert_eq!(request.message.as_ref(), b"\x09\x08\x07\x06");
+        assert_eq!(request.timeout, Duration::from_secs(120));
+        assert_eq!(request.kind, signer::SignatureRequestKind::Message);
     }
 }

@@ -1,5 +1,5 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import { getFetchClaimableUtxosFunction } from "@umbra-privacy/sdk";
+import { getClaimableUtxoScannerFunction } from "@umbra-privacy/sdk";
 import { createUmbraClient } from "./umbra_common.ts";
 
 export default class UmbraFetchUtxos extends BaseCommand {
@@ -20,7 +20,7 @@ export default class UmbraFetchUtxos extends BaseCommand {
       ctx,
     );
 
-    const fetchUtxos = getFetchClaimableUtxosFunction({ client });
+    const fetchUtxos = getClaimableUtxoScannerFunction({ client });
 
     const treeIndex = inputs.tree_index !== undefined ? Number(inputs.tree_index) : 0;
     const startIndex = inputs.start_index !== undefined ? Number(inputs.start_index) : 0;

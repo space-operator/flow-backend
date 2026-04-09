@@ -12,15 +12,24 @@ use flow_lib::{
 };
 use flow_rpc::client::RpcCommandClient;
 use std::{
+    collections::VecDeque,
     path::{Path, PathBuf},
     process::Stdio,
+    sync::{Arc, Mutex},
+    time::Instant,
 };
 use tempfile::tempdir;
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, BufReader},
     process::{Child, Command},
+    sync::Mutex as AsyncMutex,
 };
 use url::Url;
+
+#[cfg(unix)]
+use std::os::unix::process::ExitStatusExt;
+
+const STDERR_TAIL_LIMIT: usize = 64;
 
 fn source_from_config(nd: &NodeData) -> Option<String> {
     ["source", "code"].into_iter().find_map(|key| {
@@ -66,6 +75,60 @@ fn symlink_workspace_node_modules(dst: &Path) -> std::io::Result<()> {
     }
 }
 
+fn env_flag(name: &str) -> bool {
+    matches!(
+        std::env::var(name),
+        Ok(value)
+            if matches!(
+                value.trim().to_ascii_lowercase().as_str(),
+                "1" | "true" | "yes" | "on"
+            )
+    )
+}
+
+fn push_stderr_line(stderr_tail: &Arc<Mutex<VecDeque<String>>>, line: String) {
+    let mut stderr_tail = stderr_tail.lock().unwrap();
+    if stderr_tail.len() >= STDERR_TAIL_LIMIT {
+        stderr_tail.pop_front();
+    }
+    stderr_tail.push_back(line);
+}
+
+fn stderr_tail_text(stderr_tail: &Arc<Mutex<VecDeque<String>>>) -> Option<String> {
+    let stderr_tail = stderr_tail.lock().unwrap();
+    (!stderr_tail.is_empty()).then(|| stderr_tail.iter().cloned().collect::<Vec<_>>().join("\n"))
+}
+
+fn exit_status_summary(status: std::process::ExitStatus) -> String {
+    if let Some(code) = status.code() {
+        return format!("exit code {code}");
+    }
+
+    #[cfg(unix)]
+    if let Some(signal) = status.signal() {
+        return format!("signal {signal}");
+    }
+
+    "unknown exit status".to_owned()
+}
+
+fn runtime_failure_details(
+    started_at: Instant,
+    status: std::process::ExitStatus,
+    stderr_tail: &Arc<Mutex<VecDeque<String>>>,
+) -> String {
+    let elapsed_ms = started_at.elapsed().as_millis();
+    let mut details = format!(
+        "bun subprocess exited after {elapsed_ms}ms ({})",
+        exit_status_summary(status)
+    );
+    if let Some(stderr) = stderr_tail_text(stderr_tail) {
+        details.push_str("\nlast bun stderr:\n");
+        details.push_str(&stderr);
+    }
+    details
+}
+
 /// Known companion modules that may be imported by cmd.ts via relative paths.
 /// Maps the import specifier to the embedded source.
 const COMPANION_MODULES: &[(&str, &str)] = &[(
@@ -95,6 +158,7 @@ async fn write_companion_modules(
 pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
     let source = source_from_config(&nd)
         .ok_or_else(|| CommandError::msg("bun command source/code not found"))?;
+    let started_at = Instant::now();
 
     let dir = tempdir()?;
 
@@ -131,7 +195,15 @@ pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, Com
     symlink_workspace_node_modules(&dir.path().join("node_modules"))
         .context("symlink workspace node_modules")?;
 
-    let mut spawned = Command::new("bun")
+    let use_smol = env_flag("SPACE_OPERATOR_BUN_SMOL");
+
+    let mut bun = Command::new("bun");
+    if use_smol {
+        tracing::info!("starting bun subprocess with --smol");
+        bun.arg("--smol");
+    }
+
+    let mut spawned = bun
         .current_dir(dir.path())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -152,14 +224,34 @@ pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, Com
                 tracing::warn!("read error: {}", error);
                 CommandError::msg("could not start bun command")
             })?;
-            return Err(CommandError::msg(error));
+            let status_suffix = match spawned.wait().await {
+                Ok(status) => format!(" ({})", exit_status_summary(status)),
+                Err(_) => String::new(),
+            };
+            return Err(CommandError::msg(format!(
+                "could not start bun command{status_suffix}\n{error}"
+            )));
         }
     };
+
+    let stderr_tail = Arc::new(Mutex::new(VecDeque::new()));
+    let stderr_tail_reader = Arc::clone(&stderr_tail);
+    let stderr = spawned.stderr.take().unwrap();
+    tokio::spawn(async move {
+        let mut stderr = BufReader::new(stderr).lines();
+        while let Ok(Some(line)) = stderr.next_line().await {
+            tracing::warn!("{}", line);
+            push_stderr_line(&stderr_tail_reader, line);
+        }
+    });
+
     let base_url = Url::parse(&format!("http://127.0.0.1:{port}")).unwrap();
     let cmd = RpcCommandClient::new(base_url, String::new(), node_data.clone());
     let cmd = BunCommand {
         inner: cmd,
-        spawned,
+        spawned: AsyncMutex::new(spawned),
+        started_at,
+        stderr_tail,
         source,
     };
     tokio::spawn(async move {
@@ -243,7 +335,9 @@ include!(concat!(env!("OUT_DIR"), "/bun_nodes_generated.rs"));
 
 pub struct BunCommand {
     inner: RpcCommandClient,
-    spawned: Child,
+    spawned: AsyncMutex<Child>,
+    started_at: Instant,
+    stderr_tail: Arc<Mutex<VecDeque<String>>>,
     source: String,
 }
 
@@ -269,10 +363,36 @@ impl CommandTrait for BunCommand {
         ctx: flow_lib::context::CommandContext,
         params: flow_lib::ValueSet,
     ) -> Result<flow_lib::value::Map, CommandError> {
-        self.inner.run(ctx, params).await
+        match self.inner.run(ctx, params).await {
+            Ok(output) => Ok(output),
+            Err(error) => {
+                let diagnostics = {
+                    let mut spawned = self.spawned.lock().await;
+                    match spawned.try_wait() {
+                        Ok(Some(status)) => Some(runtime_failure_details(
+                            self.started_at,
+                            status,
+                            &self.stderr_tail,
+                        )),
+                        Ok(None) => None,
+                        Err(wait_error) => Some(format!(
+                            "bun subprocess status check failed after {}ms: {}",
+                            self.started_at.elapsed().as_millis(),
+                            wait_error
+                        )),
+                    }
+                };
+
+                let message = diagnostics.map_or_else(
+                    || error.to_string(),
+                    |details| format!("{error}\n{details}"),
+                );
+                Err(CommandError::msg(message))
+            }
+        }
     }
     async fn destroy(&mut self) {
-        self.spawned.kill().await.ok();
+        self.spawned.get_mut().kill().await.ok();
     }
     fn node_data(&self) -> client::NodeData {
         let mut data = default_node_data(self);
@@ -602,6 +722,94 @@ export default class AdapterSignature extends BaseCommand {
         assert_eq!(request.pubkey, signer);
         assert_eq!(request.message.as_ref(), b"\x01\x02\x03\x04");
         assert_eq!(request.timeout, Duration::from_secs(120));
+        assert_eq!(
+            request.kind,
+            signer::SignatureRequestKind::TransactionMessage
+        );
+    }
+
+    #[actix_web::test]
+    async fn test_request_message_signature_uses_signer_service() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const JSON: &str = r#"{
+          "version": "0.1",
+          "name": "adapter_message_signature",
+          "prefix": "bun",
+          "type": "bun",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [
+              { "name": "signer", "type_bounds": ["string"], "required": true, "passthrough": false }
+            ],
+            "outputs": [
+              { "name": "signature_length", "type": "f64", "optional": false }
+            ]
+          },
+          "config_schema": {},
+          "config": {}
+        }"#;
+        const SOURCE: &str = r#"
+import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
+import { PublicKey } from "@solana/web3.js";
+
+export default class AdapterMessageSignature extends BaseCommand {
+  override async run(
+    ctx: Context,
+    inputs: { signer: string },
+  ): Promise<{ signature_length: number }> {
+    const signer = new PublicKey(inputs.signer);
+    const { signature } = await ctx.requestMessageSignature(
+      signer,
+      new Uint8Array([9, 8, 7, 6]),
+    );
+    return {
+      signature_length: signature.length,
+    };
+  }
+}
+"#;
+
+        let observed = Arc::new(Mutex::new(None::<signer::SignatureRequest>));
+        let signer_svc = signer::Svc::new(tower::service_fn({
+            let observed = observed.clone();
+            move |req: signer::SignatureRequest| {
+                let observed = observed.clone();
+                async move {
+                    *observed.lock().unwrap() = Some(req);
+                    Ok(signer::SignatureResponse {
+                        signature: Signature::from([9u8; 64]),
+                        new_message: None,
+                    })
+                }
+            }
+        }));
+
+        let mut ctx = test_context(
+            unimplemented_svc::<execute::Request, execute::Response, execute::Error>(),
+            signer_svc,
+        );
+        ctx.extensions_mut()
+            .unwrap()
+            .insert(tower_rpc::Server::start_http_server().unwrap());
+
+        let signer = Pubkey::new_unique();
+        let cmd = new(&node_data(JSON, SOURCE)).await.unwrap();
+        let output = cmd
+            .run(ctx, value::map! { "signer" => signer.to_string() })
+            .await
+            .unwrap();
+
+        assert_eq!(
+            value::from_value::<f64>(output["signature_length"].clone()).unwrap(),
+            64.0
+        );
+
+        let request = observed.lock().unwrap().clone().unwrap();
+        assert_eq!(request.pubkey, signer);
+        assert_eq!(request.message.as_ref(), b"\x09\x08\x07\x06");
+        assert_eq!(request.timeout, Duration::from_secs(120));
+        assert_eq!(request.kind, signer::SignatureRequestKind::Message);
     }
 
     /// Spawn a compiled bun node from its .jsonc + .ts pair under node-definitions/ and src/.

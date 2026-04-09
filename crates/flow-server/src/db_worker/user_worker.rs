@@ -436,6 +436,7 @@ impl UserWorker {
                 }
             }
 
+            let hardcoded_wallets = signer.hardcoded_wallets.clone();
             let signer = signer.start();
             let signer = TowerClient::new(ActixService::from(signer.recipient()));
 
@@ -445,6 +446,7 @@ impl UserWorker {
                 .get_jwt(get_jwt)
                 .new_flow_run(new_flow_run)
                 .signer(signer)
+                .hardcoded_wallets(hardcoded_wallets)
                 .new_flow_api_request(TowerClient::new(new_flow_api_request))
                 .maybe_rpc_server(
                     tower_rpc::Server::start_http_server()
@@ -657,6 +659,10 @@ impl actix::Handler<signer::SignatureRequest> for UserWorker {
     type Result = ResponseActFuture<Self, Result<signer::SignatureResponse, signer::Error>>;
 
     fn handle(&mut self, msg: signer::SignatureRequest, _: &mut Self::Context) -> Self::Result {
+        if let Err(error) = msg.validate() {
+            return Box::pin(actix::fut::ready(Err(error)));
+        }
+
         let db = self.db.clone();
         let user_id = self.user_id;
         async move {
@@ -739,6 +745,10 @@ impl actix::Handler<SubmitSignature> for UserWorker {
         let req = self.sigreg.remove(&msg.id).unwrap();
         let mut message = req.req.message.clone();
         if let Some(new) = msg.new_msg {
+            if !req.req.kind.allows_new_message() {
+                self.sigreg.insert(msg.id, req);
+                return Box::pin(ready(Err(SubmitError::NotAllowChangeTx)));
+            }
             if new == req.req.message {
                 msg.new_msg = None;
             } else {
@@ -959,7 +969,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 addr_to_service(&wrk),
             );
 
-            let (signer, signers_info) =
+            let (signer, signers_info, hardcoded_wallets) =
                 SignerWorker::fetch_all_and_start(db, &[(user_id, addr.clone().recipient())])
                     .await?;
 
@@ -971,6 +981,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 .environment(msg.environment)
                 .endpoints(endpoints)
                 .signers_info(signers_info)
+                .hardcoded_wallets(hardcoded_wallets)
                 .backend(BackendServices {
                     api_input: TowerClient::new(new_flow_api_request),
                     signer: addr_to_service(&signer),
@@ -1069,7 +1080,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
             let shared_wallet_remap =
                 build_shared_wallet_remap(&db, user_id, msg.started_by.0).await?;
 
-            let (signer, signers_info) = SignerWorker::fetch_all_and_start(
+            let (signer, signers_info, hardcoded_wallets) = SignerWorker::fetch_all_and_start(
                 db.clone(),
                 &[
                     (msg.started_by.0, msg.started_by.1.recipient()),
@@ -1103,6 +1114,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                 .environment(msg.environment)
                 .endpoints(endpoints)
                 .signers_info(signers_info)
+                .hardcoded_wallets(hardcoded_wallets)
                 .backend(BackendServices {
                     api_input: TowerClient::new(new_flow_api_request),
                     signer: addr_to_service(&signer),

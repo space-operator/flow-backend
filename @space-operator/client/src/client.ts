@@ -343,6 +343,36 @@ export class Client {
     });
   }
 
+  async signAndSubmitMessageSignature(
+    req: SignatureRequest,
+    publicKey: web3.PublicKey,
+    signMessage: (
+      message: Uint8Array,
+    ) =>
+      | string
+      | Uint8Array
+      | ArrayBuffer
+      | Promise<string | Uint8Array | ArrayBuffer>,
+  ) {
+    const requestedPublicKey = new web3.PublicKey(req.pubkey);
+    if (!publicKey.equals(requestedPublicKey)) {
+      throw new Error(
+        `different public key:\nrequested: ${req.pubkey}}\nwallet: ${publicKey.toBase58()}`,
+      );
+    }
+
+    const message = req.buildMessage();
+    const signature = await signMessage(message);
+    await this.submitSignature({
+      id: req.id,
+      signature: typeof signature === "string" ? signature : bs58.encodeBase58(
+        signature instanceof ArrayBuffer
+          ? new Uint8Array(signature)
+          : signature,
+      ),
+    });
+  }
+
   async deployFlow(id: FlowId): Promise<DeploymentId> {
     const result: {
       deployment_id: string;

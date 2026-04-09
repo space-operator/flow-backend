@@ -62,6 +62,10 @@ export interface RequestSignatureResponse {
   new_message?: Uint8Array;
 }
 
+export interface RequestMessageSignatureResponse {
+  signature: Uint8Array;
+}
+
 export interface ExecuteResponse {
   signature?: Uint8Array;
 }
@@ -197,6 +201,33 @@ export class Context {
     pubkey: web3.PublicKey,
     data: Uint8Array,
   ): Promise<RequestSignatureResponse> {
+    return await this.#requestSignature(pubkey, data, "transaction_message");
+  }
+
+  /**
+   * Request a signature over an arbitrary message.
+   *
+   * @param pubkey Public key
+   * @param message Message bytes
+   * @returns Signature over the message
+   */
+  async requestMessageSignature(
+    pubkey: web3.PublicKey,
+    message: Uint8Array,
+  ): Promise<RequestMessageSignatureResponse> {
+    const { signature } = await this.#requestSignature(
+      pubkey,
+      message,
+      "message",
+    );
+    return { signature };
+  }
+
+  async #requestSignature(
+    pubkey: web3.PublicKey,
+    data: Uint8Array,
+    kind: "transaction_message" | "message",
+  ): Promise<RequestSignatureResponse> {
     const resp = await fetch(new URL("call", this.#data.signer.base_url), {
       method: "POST",
       body: JSON.stringify({
@@ -209,6 +240,7 @@ export class Context {
           pubkey: pubkey.toBase58(),
           message: base64.encodeBase64(data),
           timeout: 60 * 2,
+          kind,
           flow_run_id: this.command?.flow_run_id,
           signatures: null,
         },

@@ -30,6 +30,8 @@ use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
 #[cfg(feature = "commands")]
+use cmds_bun as _;
+#[cfg(feature = "commands")]
 use cmds_deno as _;
 #[cfg(feature = "commands")]
 use cmds_pdg as _;

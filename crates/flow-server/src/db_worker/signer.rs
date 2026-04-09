@@ -1,5 +1,6 @@
 use actix::{Actor, ResponseFuture};
 use db::{Error as DbError, Wallet, pool::DbPool};
+use flow::command::wallet::HardcodedWallets;
 use flow_lib::{
     UserId,
     context::signer::{self, SignatureRequest},
@@ -40,6 +41,7 @@ impl std::fmt::Debug for SignerType {
 
 pub struct SignerWorker {
     pub signers: HashMap<Pubkey, SignerType>,
+    pub hardcoded_wallets: HardcodedWallets,
 }
 
 impl Actor for SignerWorker {
@@ -50,6 +52,10 @@ impl actix::Handler<SignatureRequest> for SignerWorker {
     type Result = ResponseFuture<<SignatureRequest as actix::Message>::Result>;
 
     fn handle(&mut self, msg: SignatureRequest, _: &mut Self::Context) -> Self::Result {
+        if let Err(error) = msg.validate() {
+            return ready(Err(error)).boxed();
+        }
+
         match self.signers.get(&msg.pubkey) {
             None => ready(Err(signer::Error::Pubkey(msg.pubkey.to_string()))).boxed(),
             Some(SignerType::Keypair(keypair)) => ready(Ok(signer::SignatureResponse {
@@ -103,6 +109,7 @@ impl SignerWorker {
         I: IntoIterator<Item = &'a (UserId, actix::Recipient<SignatureRequest>)>,
     {
         let mut signers = HashMap::new();
+        let mut hardcoded_wallets = HardcodedWallets::default();
 
         for (user_id, sender) in users {
             let conn = db.get_user_conn(*user_id).await?;
@@ -131,6 +138,7 @@ impl SignerWorker {
                                 continue;
                             }
                         };
+                        hardcoded_wallets.insert(w.id, keypair.to_bytes());
                         SignerType::Keypair(Box::new(keypair))
                     }
                 };
@@ -151,17 +159,21 @@ impl SignerWorker {
             }
         }
 
-        Ok(Self { signers })
+        Ok(Self {
+            signers,
+            hardcoded_wallets,
+        })
     }
 
     pub async fn fetch_all_and_start<'a, I>(
         db: DbPool,
         users: I,
-    ) -> Result<(actix::Addr<Self>, JsonValue), DbError>
+    ) -> Result<(actix::Addr<Self>, JsonValue, HardcodedWallets), DbError>
     where
         I: IntoIterator<Item = &'a (UserId, actix::Recipient<SignatureRequest>)>,
     {
         let signer = Self::fetch(db, users).await?;
+        let hardcoded_wallets = signer.hardcoded_wallets.clone();
         let signers_info = signer
             .signers
             .iter()
@@ -175,7 +187,7 @@ impl SignerWorker {
                 )
             })
             .collect::<JsonValue>();
-        Ok((signer.start(), signers_info))
+        Ok((signer.start(), signers_info, hardcoded_wallets))
     }
 
     pub fn add_wallet(
@@ -190,6 +202,7 @@ impl SignerWorker {
         }
         let s = if let Some(keypair) = w.keypair {
             let keypair = Self::keypair_from_secret_bytes(&keypair)?;
+            self.hardcoded_wallets.insert(w.id, keypair.to_bytes());
             SignerType::Keypair(Box::new(keypair))
         } else {
             SignerType::UserWallet {
@@ -259,6 +272,7 @@ impl SignerWorker {
     ) -> Result<Self, DbError> {
         let mut signer = Self {
             signers: HashMap::new(),
+            hardcoded_wallets: HardcodedWallets::default(),
         };
         let conn = db.get_user_conn(user_id).await?;
         let wallets = conn.get_some_wallets(ids).await?;
@@ -281,6 +295,7 @@ mod tests {
         let keypair = Keypair::new();
         let mut signer = SignerWorker {
             signers: HashMap::new(),
+            hardcoded_wallets: HardcodedWallets::default(),
         };
         signer
             .add_swig_session(keypair.pubkey(), &keypair.to_base58_string())
@@ -298,6 +313,7 @@ mod tests {
         let secret_only = bs58::encode(&full[..32]).into_string();
         let mut signer = SignerWorker {
             signers: HashMap::new(),
+            hardcoded_wallets: HardcodedWallets::default(),
         };
         signer
             .add_swig_session(keypair.pubkey(), &secret_only)
@@ -316,6 +332,7 @@ mod tests {
         let malformed = bs58::encode(bytes).into_string();
         let mut signer = SignerWorker {
             signers: HashMap::new(),
+            hardcoded_wallets: HardcodedWallets::default(),
         };
         assert!(matches!(
             signer.add_swig_session(keypair.pubkey(), &malformed),

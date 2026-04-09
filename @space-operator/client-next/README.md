@@ -61,6 +61,7 @@ The detailed test guide lives in [tests/README.md](./tests/README.md).
   - `FlowRunHandle`
   - `WebSocketSession`
   - `signAndSubmitSignature(...)`
+  - `signAndSubmitMessageSignature(...)`
 - Internal platform pieces:
   - shared schemas from `@space-operator/contracts`
   - OpenTelemetry spans for HTTP and websocket operations
@@ -287,6 +288,7 @@ Or use the Solana helper:
 
 ```ts
 import {
+  signAndSubmitMessageSignature,
   signAndSubmitSignature,
   web3,
 } from "@space-operator/client-next/solana";
@@ -297,6 +299,15 @@ await signAndSubmitSignature(client.signatures, request, {
     tx.sign([keypair]);
     return tx;
   },
+});
+```
+
+For raw message-sign requests:
+
+```ts
+await signAndSubmitMessageSignature(client.signatures, request, {
+  publicKey: wallet.publicKey,
+  signMessage: async (message) => await wallet.signMessage(message),
 });
 ```
 

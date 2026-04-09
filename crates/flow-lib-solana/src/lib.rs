@@ -146,6 +146,7 @@ async fn action_identity_memo(
             token: None,
             message: reference_bytes.into(),
             timeout: SIGNATURE_TIMEOUT,
+            kind: signer::SignatureRequestKind::TransactionMessage,
             flow_run_id: Some(run_id),
             signatures: None,
         })
@@ -402,6 +403,7 @@ async fn build_and_sign_tx(
                 token: None,
                 message: data.clone(),
                 timeout: SIGNATURE_TIMEOUT,
+                kind: signer::SignatureRequestKind::TransactionMessage,
                 flow_run_id,
                 signatures: None,
             });
@@ -439,6 +441,7 @@ async fn build_and_sign_tx(
             token: None,
             message: data.clone(),
             timeout: SIGNATURE_TIMEOUT,
+            kind: signer::SignatureRequestKind::TransactionMessage,
             flow_run_id,
             signatures: Some(
                 [signer::Presigner {
@@ -565,6 +568,7 @@ async fn execute_solana_action(
         token: None,
         message: tx.message.serialize().into(),
         timeout: SIGNATURE_TIMEOUT,
+        kind: signer::SignatureRequestKind::TransactionMessage,
         flow_run_id,
         signatures: if tx.signatures.is_empty() {
             None
@@ -731,6 +735,7 @@ impl InstructionsExt for Instructions {
                 token: None,
                 message: data.clone(),
                 timeout: SIGNATURE_TIMEOUT,
+                kind: signer::SignatureRequestKind::TransactionMessage,
                 flow_run_id,
                 signatures: None,
             })

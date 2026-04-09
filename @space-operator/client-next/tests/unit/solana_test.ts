@@ -1,6 +1,10 @@
 import { assertEquals } from "@std/assert";
 import { encodeBase58, encodeBase64 } from "../../src/deps.ts";
-import { signAndSubmitSignature, web3 } from "../../src/mod.ts";
+import {
+  signAndSubmitMessageSignature,
+  signAndSubmitSignature,
+  web3,
+} from "../../src/mod.ts";
 import type { SubmitSignatureInput } from "../../src/types.ts";
 
 function unitTest(name: string, fn: () => Promise<void>) {
@@ -59,6 +63,44 @@ unitTest(
       id: 42,
       signature: encodeBase58(new Uint8Array(64).fill(7)),
       new_msg: encodeBase64(after),
+    }]);
+  },
+);
+
+unitTest(
+  "signAndSubmitMessageSignature submits a base58 signature without new_msg",
+  async () => {
+    const publicKey = new web3.PublicKey("11111111111111111111111111111111");
+    const message = new Uint8Array([5, 6, 7, 8]);
+    const signature = new Uint8Array(64).fill(9);
+    const submitted: SubmitSignatureInput[] = [];
+
+    await signAndSubmitMessageSignature(
+      {
+        submit: async (input) => {
+          submitted.push(input);
+          return { success: true };
+        },
+      },
+      {
+        id: 43,
+        pubkey: publicKey.toBase58(),
+        buildMessage() {
+          return message;
+        },
+      } as unknown as Parameters<typeof signAndSubmitMessageSignature>[1],
+      {
+        publicKey,
+        signMessage: async (input) => {
+          assertEquals(input, message);
+          return signature;
+        },
+      },
+    );
+
+    assertEquals(submitted, [{
+      id: 43,
+      signature: encodeBase58(signature),
     }]);
   },
 );

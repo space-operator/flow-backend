@@ -1,10 +1,17 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import { getCreateReceiverClaimableUtxoFromPublicBalanceFunction } from "@umbra-privacy/sdk";
-import { getCreateReceiverClaimableUtxoFromPublicBalanceProver } from "@umbra-privacy/web-zk-prover";
-import { createUmbraClient } from "./umbra_common.ts";
+import { getPublicBalanceToReceiverClaimableUtxoCreatorFunction } from "@umbra-privacy/sdk";
+import {
+  createUmbraClient,
+  createRustProver,
+  getPrimarySignature,
+  logUmbraError,
+  safeJsonStringify,
+  wrapZkProver,
+} from "./umbra_common.ts";
 
 export default class UmbraCreateUtxo extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
+    console.log("[create_utxo] phase: client_creation");
     const client = await createUmbraClient(
       new Uint8Array(inputs.keypair),
       inputs.network,
@@ -12,10 +19,37 @@ export default class UmbraCreateUtxo extends BaseCommand {
       ctx,
     );
 
-    const zkProver = getCreateReceiverClaimableUtxoFromPublicBalanceProver();
-    const createUtxo = getCreateReceiverClaimableUtxoFromPublicBalanceFunction(
+    console.log("[create_utxo] phase: prover_init");
+    let zkProver: any;
+    try {
+      zkProver = wrapZkProver(
+        "create_utxo",
+        createRustProver("createDepositWithPublicAmount"),
+      );
+      console.log("[create_utxo] prover created:", typeof zkProver);
+    } catch (err: any) {
+      const details = logUmbraError("create_utxo:prover_init", err);
+      throw new Error(`ZK prover initialization failed: ${details.message}`);
+    }
+
+    console.log("[create_utxo] phase: function_creation");
+    const createUtxo = getPublicBalanceToReceiverClaimableUtxoCreatorFunction(
       { client },
-      { zkProver } as any,
+      {
+        zkProver,
+        hooks: {
+          createUtxo: {
+            pre: async () => {
+              console.log("[create_utxo] phase: deposit_transaction_sign_start");
+            },
+            post: async (_tx: any, signature: string) => {
+              console.log(
+                `[create_utxo] phase: deposit_transaction_sign_complete signature=${signature}`,
+              );
+            },
+          },
+        },
+      } as any,
     );
 
     const args = {
@@ -24,19 +58,27 @@ export default class UmbraCreateUtxo extends BaseCommand {
       mint: inputs.mint as any,
     };
 
-    console.log(`Creating receiver-claimable UTXO in mixer pool...`);
+    console.log(`[create_utxo] phase: execution`);
     console.log(`  receiver: ${inputs.receiver}`);
     console.log(`  mint: ${inputs.mint}`);
     console.log(`  amount: ${args.amount}`);
+    console.log(
+      "[create_utxo] Umbra mixer docs require sender and receiver to be fully registered with anonymous=true.",
+    );
 
-    const signatures = await (createUtxo as any)(args);
+    try {
+      const result = await (createUtxo as any)(args);
 
-    console.log(`UTXO created with ${signatures.length} transaction(s)`);
-    signatures.forEach((sig: any, i: number) => console.log(`  tx ${i}: ${sig}`));
+      console.log("[create_utxo] result type:", typeof result, Array.isArray(result) ? `(len=${result.length})` : "");
+      console.log("[create_utxo] result:", safeJsonStringify(result, 2));
 
-    return {
-      signature: signatures.map(String).join(","),
-    };
+      return { signature: getPrimarySignature(result) };
+    } catch (err: any) {
+      const details = logUmbraError("create_utxo", err);
+      throw new Error(
+        `Create UTXO failed (${details.phase}): ${details.message}${details.cause ? ` — cause: ${details.cause}` : ""}`,
+      );
+    }
   }
 }
 

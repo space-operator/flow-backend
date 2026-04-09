@@ -26,8 +26,9 @@
       "dependencies": {
         "@space-operator/bun-command-rpc": "workspace:*",
         "@space-operator/flow-lib-bun": "workspace:*",
-        "@umbra-privacy/sdk": "^1.0.0",
-        "@umbra-privacy/web-zk-prover": "^1.0.0",
+        "@umbra-privacy/sdk": "^2.1.1",
+        "@umbra-privacy/web-zk-prover": "^2.0.1",
+        "snarkjs": "^0.7.6",
       },
     },
   },
@@ -156,15 +157,17 @@
 
     "@types/ws": ["@types/ws@7.4.7", "", { "dependencies": { "@types/node": "*" } }, "sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww=="],
 
-    "@umbra-privacy/codama": ["@umbra-privacy/codama@1.0.0", "", { "dependencies": { "@solana-program/system": "^0.11.0", "@solana-program/token-2022": "^0.9.0", "@solana/kit": "^6.0.1", "@solana/sysvars": "^6.0.1" } }, "sha512-e8nBb98+nN36AejZKI3o5kbK32AjE/OKwHGGOOf2I4pMrbvJlJbhdJZPiLOb+2I5CrieEAPdy7rHwsgqycOznQ=="],
+    "@umbra-privacy/arcium-codama": ["@umbra-privacy/arcium-codama@2.0.1", "", { "dependencies": { "@solana-program/system": "^0.11.0", "@solana/kit": "^6.0.1", "@solana/sysvars": "^6.0.1" } }, "sha512-59UDBZsPD7RTHbr08TXnCWitHZZ8qOsvtYReSP6Ig3jVeY2mYdx1KBnKnpBlm8UQH8U1HFG1AzIgp2R0SCjtWQ=="],
 
-    "@umbra-privacy/indexer-proto-gen": ["@umbra-privacy/indexer-proto-gen@1.0.0", "", { "dependencies": { "@bufbuild/protobuf": "^2.0.0" } }, "sha512-0E2I9PH+DiFMCU9kP8R+CfyBD3gRUoP+J/DO+9OjSm/PICx8t6ojOblyPjTXU2U0yqE+JwpDYlaclQWeeL1QDg=="],
+    "@umbra-privacy/indexer-proto-gen": ["@umbra-privacy/indexer-proto-gen@2.0.1", "", { "dependencies": { "@bufbuild/protobuf": "^2.0.0" } }, "sha512-IQW7ua1I5wu346FfSLAllUfciO3iKNzybsFYBCD4wj6R5DMGNrtJq3MoSR3JchRT/UroVFB7J38z3S6r1KNK+Q=="],
 
-    "@umbra-privacy/indexer-read-service-client": ["@umbra-privacy/indexer-read-service-client@1.0.0", "", { "dependencies": { "@bufbuild/protobuf": "^2.0.0", "@umbra-privacy/indexer-proto-gen": "1.0.0" } }, "sha512-+vBkRjHdQ2kaeycQ7kXc5uwLikD3K/yO4ib+nGFzaUDbjYZB6jPeRhO8n4/UDl/Cu5R5VcX8Kj5sfINLkLyBpw=="],
+    "@umbra-privacy/indexer-read-service-client": ["@umbra-privacy/indexer-read-service-client@2.0.1", "", { "dependencies": { "@bufbuild/protobuf": "^2.0.0", "@umbra-privacy/indexer-proto-gen": "2.0.1" } }, "sha512-sIlN8TwUBjKUO8ZFE9teGbO3GiqjPMpB2uqlFeF2O7XGNBXkQ5g9PjqNiCBZ8xJOIq8bEJNxUceezj64EAhOjA=="],
 
-    "@umbra-privacy/sdk": ["@umbra-privacy/sdk@1.0.0", "", { "dependencies": { "@noble/ciphers": "^2.1.1", "@noble/curves": "^2.0.1", "@noble/hashes": "^2.0.1", "@solana/kit": "^6.0.1", "@solana/wallet-standard-features": "^1.3.0", "@umbra-privacy/codama": "1.0.0", "@umbra-privacy/indexer-read-service-client": "1.0.0", "@wallet-standard/core": "^1.1.0" } }, "sha512-HUXBvImZ2og6ucAGJOJilOThaWoi3R3AvcJd45M8LAvkGIthFOErfA31th5zZyX1aUL6APEwbVhU5SbAzWdAnw=="],
+    "@umbra-privacy/sdk": ["@umbra-privacy/sdk@2.1.1", "", { "dependencies": { "@noble/ciphers": "^2.1.1", "@noble/curves": "^2.0.1", "@noble/hashes": "^2.0.1", "@solana/kit": "^6.0.1", "@solana/wallet-standard-features": "^1.3.0", "@umbra-privacy/arcium-codama": "2.0.1", "@umbra-privacy/indexer-read-service-client": "2.0.1", "@umbra-privacy/umbra-codama": "2.0.2", "@wallet-standard/core": "^1.1.0" } }, "sha512-GHV4UXxdcQmCO42asPQVN+Tl5PpOGjvYmnQtUIMuh3MezDdGXPXlRHn07POx65774kF62Mv3zAuvsw9Ukf9gsw=="],
 
-    "@umbra-privacy/web-zk-prover": ["@umbra-privacy/web-zk-prover@1.0.0", "", { "dependencies": { "snarkjs": "^0.7.6" }, "peerDependencies": { "@umbra-privacy/sdk": "1.0.0" } }, "sha512-4sqW5DM7O4L3sxox92oFnV/75F6laF1QoY0DTEBFklelCJ/GtWeorpFH0ySivbDZ3imRxhLlFvyzW9KYi9+Kcw=="],
+    "@umbra-privacy/umbra-codama": ["@umbra-privacy/umbra-codama@2.0.2", "", { "dependencies": { "@solana-program/system": "^0.11.0", "@solana-program/token-2022": "^0.9.0", "@solana/kit": "^6.0.1", "@solana/sysvars": "^6.0.1" } }, "sha512-ogGoHbxTQyvEdaPOyYTAx48XNQgvXcvkt5CdTKwPbRrcb3J6zhYEvrdyFBlOuI8GKjcpITi+5AiPnd41BikRHQ=="],
+
+    "@umbra-privacy/web-zk-prover": ["@umbra-privacy/web-zk-prover@2.0.1", "", { "peerDependencies": { "@umbra-privacy/sdk": "2.0.3", "snarkjs": "^0.7.6" } }, "sha512-iRHwjTalJUp5MZ4MsEx1fsdKHP9VT6UnneQRopC0aVFV1Ty4QSRU3VMufoPIMQT/NvTUNa9xVKngLTqfFkDAgQ=="],
 
     "@wallet-standard/app": ["@wallet-standard/app@1.1.0", "", { "dependencies": { "@wallet-standard/base": "^1.1.0" } }, "sha512-3CijvrO9utx598kjr45hTbbeeykQrQfKmSnxeWOgU25TOEpvcipD/bYDQWIqUv1Oc6KK4YStokSMu/FBNecGUQ=="],
 

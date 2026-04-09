@@ -158,7 +158,6 @@ export interface ReadFlowParams {
   skipCache?: boolean;
 }
 
-
 export interface SolanaActionConfig {
   action_signer: string;
   action_identity: string;
@@ -190,7 +189,6 @@ export interface ReadDeploymentParams {
   inputs?: FlowInputs;
   skipCache?: boolean;
 }
-
 
 export interface ClaimTokenOutput {
   user_id: UserId;
@@ -256,6 +254,8 @@ export interface SubmitSignatureInput {
   new_msg?: string | Uint8Array | ArrayBuffer;
 }
 
+export type SignatureRequestKind = "transaction_message" | "message";
+
 export interface WalletUpsertBody {
   [key: string]: unknown;
 }
@@ -274,6 +274,7 @@ export interface ISignatureRequest {
   pubkey: string;
   message: string;
   timeout: number;
+  kind?: SignatureRequestKind;
   flow_run_id?: FlowRunId;
   signatures?: Array<{ pubkey: string; signature: string }>;
 }
@@ -284,6 +285,7 @@ export class SignatureRequest implements ISignatureRequest {
   pubkey: string;
   message: string;
   timeout: number;
+  kind: SignatureRequestKind;
   flow_run_id?: FlowRunId;
   signatures?: Array<{ pubkey: string; signature: string }>;
 
@@ -293,11 +295,18 @@ export class SignatureRequest implements ISignatureRequest {
     this.pubkey = value.pubkey;
     this.message = value.message;
     this.timeout = value.timeout;
+    this.kind = value.kind ?? "transaction_message";
     this.flow_run_id = value.flow_run_id;
     this.signatures = value.signatures;
   }
 
   buildTransaction(): web3.VersionedTransaction {
+    if (this.kind !== "transaction_message") {
+      throw new Error(
+        `signature request ${this.id} is ${this.kind}, not transaction_message`,
+      );
+    }
+
     const buffer = decodeBase64(this.message);
     const solMsg = web3.VersionedMessage.deserialize(buffer);
 
@@ -318,6 +327,16 @@ export class SignatureRequest implements ISignatureRequest {
     }
 
     return new web3.VersionedTransaction(solMsg, sigs);
+  }
+
+  buildMessage(): Uint8Array {
+    if (this.kind !== "message") {
+      throw new Error(
+        `signature request ${this.id} is ${this.kind}, not message`,
+      );
+    }
+
+    return decodeBase64(this.message);
   }
 }
 
@@ -393,10 +412,6 @@ export interface ApiInputEvent {
   time: string;
   url: string;
 }
-
-
-
-
 
 export interface ReadResult {
   value: Value;

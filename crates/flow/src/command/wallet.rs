@@ -7,8 +7,9 @@ use chacha20poly1305::{
 use flow_lib::{
     CmdInputDescription, CmdOutputDescription,
     config::{WalletId, client::NodeData},
-    solana::{Pubkey, Wallet, WalletOrPubkey},
+    solana::{Keypair, Pubkey, Wallet, WalletOrPubkey},
 };
+use hashbrown::HashMap;
 use serde_with::DisplayFromStr;
 use serde_with::serde_as;
 use zeroize::ZeroizeOnDrop;
@@ -29,6 +30,7 @@ pub(crate) struct FormData {
     #[serde_as(as = "DisplayFromStr")]
     public_key: Pubkey,
     wallet_id: i64,
+    wallet_type: Option<String>,
 }
 
 impl WalletCmd {
@@ -98,11 +100,31 @@ fn parse_wallet_form(json: JsonValue) -> Result<FormData, serde_json::Error> {
         .get("wallet_id")
         .and_then(parse_wallet_id)
         .ok_or_else(|| invalid_data_error("wallet.wallet_id"))?;
+    let wallet_type = json.get("wallet_type").and_then(parse_string_value);
 
     Ok(FormData {
         public_key,
         wallet_id,
+        wallet_type,
     })
+}
+
+#[derive(Clone, Default)]
+pub struct HardcodedWallets {
+    by_wallet_id: HashMap<i64, [u8; 64]>,
+}
+
+impl HardcodedWallets {
+    pub fn insert(&mut self, wallet_id: i64, keypair: [u8; 64]) {
+        self.by_wallet_id.insert(wallet_id, keypair);
+    }
+
+    fn resolve(&self, wallet_id: i64) -> Option<Wallet> {
+        self.by_wallet_id
+            .get(&wallet_id)
+            .and_then(|bytes| Keypair::try_from(&bytes[..]).ok())
+            .map(Wallet::Keypair)
+    }
 }
 
 #[derive(ZeroizeOnDrop)]
@@ -163,7 +185,14 @@ struct Output {
 pub const WALLET: &str = "wallet";
 const INPUT_WALLET: &str = "wallet";
 
-fn wallet_from_form(form: &FormData) -> Wallet {
+fn wallet_from_form(ctx: &CommandContext, form: &FormData) -> Wallet {
+    if form.wallet_type.as_deref() == Some("HARDCODED")
+        && let Some(hardcoded_wallets) = ctx.get::<HardcodedWallets>()
+        && let Some(wallet) = hardcoded_wallets.resolve(form.wallet_id)
+    {
+        return wallet;
+    }
+
     Wallet::Adapter {
         public_key: form.public_key,
         token: None,
@@ -210,11 +239,15 @@ impl CommandTrait for WalletCmd {
         }
     }
 
-    async fn run(&self, _: CommandContext, mut inputs: ValueSet) -> Result<ValueSet, CommandError> {
+    async fn run(
+        &self,
+        ctx: CommandContext,
+        mut inputs: ValueSet,
+    ) -> Result<ValueSet, CommandError> {
         let wallet = match inputs.swap_remove(INPUT_WALLET) {
             // Null keeps the fallback chain intact for optional edge/start bindings.
             Some(Value::Null) | None => match &self.form {
-                Ok(form) => wallet_from_form(form),
+                Ok(form) => wallet_from_form(&ctx, form),
                 Err(error) => {
                     return Err(CommandError::msg(format!(
                         "wallet requires either an input wallet or valid static wallet config: {error}"
@@ -319,7 +352,8 @@ mod tests {
             &WalletCmd::new(&nd).form,
             Ok(FormData {
                 public_key,
-                wallet_id: 7
+                wallet_id: 7,
+                ..
             }) if *public_key == Pubkey::from_str_const(PUBKEY_STR)
         ));
     }
@@ -352,6 +386,30 @@ mod tests {
         let output: Output = value::from_map(output).unwrap();
         assert_eq!(output.pubkey, Pubkey::from_str_const(PUBKEY_STR));
         assert!(output.keypair.is_adapter_wallet());
+    }
+
+    #[tokio::test]
+    async fn run_uses_hardcoded_keypair_when_wallet_type_is_hardcoded() {
+        let keypair = flow_lib::solana::Keypair::new();
+        let expected_pubkey = Wallet::Keypair(keypair.insecure_clone()).pubkey();
+        let mut ctx = CommandContext::default();
+        ctx.extensions_mut().unwrap().insert({
+            let mut wallets = HardcodedWallets::default();
+            wallets.insert(7, keypair.to_bytes());
+            wallets
+        });
+
+        let nd = test_node(json!({
+            "public_key": { "B3": expected_pubkey.to_string() },
+            "wallet_id": { "U": "7" },
+            "wallet_type": { "S": "HARDCODED" }
+        }));
+        let cmd = WalletCmd::new(&nd);
+        let output = cmd.run(ctx, ValueSet::new()).await.unwrap();
+        let output: Output = value::from_map(output).unwrap();
+
+        assert_eq!(output.pubkey, expected_pubkey);
+        assert!(matches!(output.keypair, Wallet::Keypair(_)));
     }
 
     #[tokio::test]

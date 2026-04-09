@@ -1,5 +1,5 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import { getDirectDepositIntoEncryptedBalanceFunction } from "@umbra-privacy/sdk";
+import { getPublicBalanceToEncryptedBalanceDirectDepositorFunction } from "@umbra-privacy/sdk";
 import { createUmbraClient } from "./umbra_common.ts";
 
 export default class UmbraDeposit extends BaseCommand {
@@ -11,7 +11,7 @@ export default class UmbraDeposit extends BaseCommand {
       ctx,
     );
 
-    const deposit = getDirectDepositIntoEncryptedBalanceFunction({ client });
+    const deposit = getPublicBalanceToEncryptedBalanceDirectDepositorFunction({ client });
     const amount = BigInt(inputs.amount) as any;
 
     console.log(`Depositing ${amount} tokens into encrypted balance...`);
@@ -24,9 +24,15 @@ export default class UmbraDeposit extends BaseCommand {
       amount,
     );
 
-    console.log("Deposit complete:", String(result));
+    console.log("Deposit complete:", JSON.stringify(result, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v));
 
-    return { signature: String(result) };
+    const signature = Array.isArray(result)
+      ? result.map(String).join(",")
+      : typeof result === "string"
+        ? result
+        : JSON.stringify(result, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v);
+
+    return { signature };
   }
 }
 

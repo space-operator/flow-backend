@@ -28,7 +28,8 @@
     "test:runtime": "deno test -A tests/runtime",
     "test:playwright": "deno test -A tests/playwright",
     "test:playwright:ci": "RUN_SPACE_OPERATOR_PLAYWRIGHT_TESTS=1 deno task test:playwright",
-    "generate:openapi-types": "deno run -A scripts/generate_openapi_types.ts"
+    "generate:openapi-types": "deno run -A scripts/generate_openapi_types.ts",
+    "playground": "deno run -A playground/serve.ts"
   },
   "imports": {
     "@opentelemetry/api": "npm:@opentelemetry/api@^1.9.0",

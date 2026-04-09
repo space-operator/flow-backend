@@ -110,6 +110,7 @@ pub struct FlowRegistry {
 
     pub(crate) backend: BackendServices,
     pub(crate) parent_flow_execute: Option<execute::Svc>,
+    pub(crate) hardcoded_wallets: crate::command::wallet::HardcodedWallets,
 
     pub(crate) rhai_permit: Arc<Semaphore>,
     rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,
@@ -132,6 +133,7 @@ impl Default for FlowRegistry {
             endpoints: <_>::default(),
             signers_info: <_>::default(),
             parent_flow_execute: None,
+            hardcoded_wallets: <_>::default(),
             backend: BackendServices::unimplemented(),
             rhai_permit: Arc::new(Semaphore::new(rhai_pool_size())),
             rhai_tx: <_>::default(),
@@ -340,6 +342,7 @@ impl FlowRegistry {
         signers_info: JsonValue,
         remotes: Option<AddressBook>,
         backend: BackendServices,
+        hardcoded_wallets: Option<crate::command::wallet::HardcodedWallets>,
         http: Option<reqwest::Client>,
         get_flow: S,
     ) -> crate::Result<Self>
@@ -362,6 +365,7 @@ impl FlowRegistry {
             flows: Arc::new(flows),
             signers_info,
             parent_flow_execute: None,
+            hardcoded_wallets: hardcoded_wallets.unwrap_or_default(),
             endpoints,
             backend,
             rhai_permit: Arc::new(Semaphore::new(rhai_pool_size())),

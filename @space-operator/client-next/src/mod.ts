@@ -20,7 +20,11 @@ export {
   WebSocketSession,
 } from "./internal/transport/ws.ts";
 export { FlowRunHandle } from "./run_handle.ts";
-export { signAndSubmitSignature, web3 } from "./solana/mod.ts";
+export {
+  signAndSubmitMessageSignature,
+  signAndSubmitSignature,
+  web3,
+} from "./solana/mod.ts";
 export { type IValue, Value } from "./deps.ts";
 export { SignatureRequest } from "./types.ts";
 export { stableHash } from "./internal/transport/value.ts";
@@ -71,6 +75,7 @@ export type {
   RequestOptions,
   RetryPolicy,
   ServiceInfoOutput,
+  SignatureRequestKind,
   SignatureRequestsEvent,
   StartDeploymentParams,
   StartFlowParams,

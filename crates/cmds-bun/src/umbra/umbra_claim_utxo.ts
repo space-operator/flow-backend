@@ -1,10 +1,18 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import { getClaimReceiverClaimableUtxoIntoEncryptedBalanceFunction } from "@umbra-privacy/sdk";
-import { getClaimReceiverClaimableUtxoIntoEncryptedBalanceProver } from "@umbra-privacy/web-zk-prover";
-import { createUmbraClient, createRelayer } from "./umbra_common.ts";
+import { getReceiverClaimableUtxoToEncryptedBalanceClaimerFunction } from "@umbra-privacy/sdk";
+import {
+  createRelayer,
+  createUmbraClient,
+  createRustProver,
+  getPrimarySignature,
+  logUmbraError,
+  safeJsonStringify,
+  wrapZkProver,
+} from "./umbra_common.ts";
 
 export default class UmbraClaimUtxo extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
+    console.log("[claim_utxo] phase: client_creation");
     const client = await createUmbraClient(
       new Uint8Array(inputs.keypair),
       inputs.network,
@@ -12,23 +20,37 @@ export default class UmbraClaimUtxo extends BaseCommand {
       ctx,
     );
 
-    const zkProver = getClaimReceiverClaimableUtxoIntoEncryptedBalanceProver();
+    console.log("[claim_utxo] phase: prover_init");
+    const zkProver = wrapZkProver(
+      "claim_utxo",
+      createRustProver("claimDepositIntoConfidentialAmount"),
+    );
     const relayer = createRelayer();
-    const claimUtxo = getClaimReceiverClaimableUtxoIntoEncryptedBalanceFunction(
+
+    console.log("[claim_utxo] phase: function_creation");
+    const claimUtxo = getReceiverClaimableUtxoToEncryptedBalanceClaimerFunction(
       { client },
       { zkProver, relayer } as any,
     );
 
+    console.log("[claim_utxo] phase: execution");
     console.log(`Claiming UTXO into encrypted balance...`);
-    console.log(`  utxo data: ${JSON.stringify(inputs.utxo_data).substring(0, 100)}...`);
+    console.log(`  utxo data: ${safeJsonStringify(inputs.utxo_data).substring(0, 200)}...`);
 
-    const result = await (claimUtxo as any)(inputs.utxo_data);
+    try {
+      const result = await (claimUtxo as any)(inputs.utxo_data);
 
-    console.log("UTXO claimed:", JSON.stringify(result, null, 2));
+      console.log("UTXO claimed:", safeJsonStringify(result, 2));
 
-    return {
-      signature: typeof result === "string" ? result : JSON.stringify(result),
-    };
+      return {
+        signature: getPrimarySignature(result),
+      };
+    } catch (err: any) {
+      const details = logUmbraError("claim_utxo", err);
+      throw new Error(
+        `Claim UTXO failed (${details.phase}): ${details.message}${details.cause ? ` — cause: ${details.cause}` : ""}`,
+      );
+    }
   }
 }
 

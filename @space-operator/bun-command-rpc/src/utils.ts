@@ -51,7 +51,7 @@ export class CaptureLog implements Console {
         case "boolean": str += value.toString(); break;
         case "symbol": str += value.description; break;
         case "undefined": str += "undefined"; break;
-        case "object": str += JSON.stringify(value); break;
+        case "object": try { str += JSON.stringify(value, (_k, v) => typeof v === "bigint" ? v.toString() : v); } catch { str += String(value); } break;
         case "function": str += "[Function]"; break;
       }
     });

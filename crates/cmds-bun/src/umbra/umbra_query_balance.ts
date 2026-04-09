@@ -1,5 +1,5 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import { getQueryEncryptedBalanceFunction } from "@umbra-privacy/sdk";
+import { getEncryptedBalanceQuerierFunction } from "@umbra-privacy/sdk";
 import { createUmbraClient } from "./umbra_common.ts";
 
 export default class UmbraQueryBalance extends BaseCommand {
@@ -11,7 +11,7 @@ export default class UmbraQueryBalance extends BaseCommand {
       ctx,
     );
 
-    const queryBalance = getQueryEncryptedBalanceFunction({ client });
+    const queryBalance = getEncryptedBalanceQuerierFunction({ client });
     const mints = [inputs.mint as any];
 
     console.log(`Querying encrypted balance for mint: ${inputs.mint}`);
@@ -29,9 +29,11 @@ export default class UmbraQueryBalance extends BaseCommand {
       result[String(key)] = value;
     }
 
-    console.log("Balance result:", JSON.stringify(result, null, 2));
+    console.log("Balance result:", JSON.stringify(result, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v, 2));
 
-    return { balance, result };
+    // Ensure result is BigInt-safe for JSON serialization
+    const safeResult = JSON.parse(JSON.stringify(result, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v));
+    return { balance, result: safeResult };
   }
 }
 

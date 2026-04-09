@@ -1,10 +1,37 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
 import { getUserRegistrationFunction } from "@umbra-privacy/sdk";
-import { getUserRegistrationProver } from "@umbra-privacy/web-zk-prover";
-import { createUmbraClient } from "./umbra_common.ts";
+import {
+  createUmbraClient,
+  createRustProver,
+  getPrimarySignature,
+  logUmbraError,
+  safeJsonStringify,
+  wrapZkProver,
+} from "./umbra_common.ts";
+
+function createRegistrationCallbacks() {
+  const stepLogger = (step: string) => ({
+    pre: async (ctx: any) => {
+      console.log(`[register] phase: ${step}_start skipped=${Boolean(ctx?.skipped)}`);
+    },
+    post: async (ctx: any) => {
+      const signature = typeof ctx?.signature === "string" ? ` signature=${ctx.signature}` : "";
+      console.log(
+        `[register] phase: ${step}_complete skipped=${Boolean(ctx?.skipped)}${signature}`,
+      );
+    },
+  });
+
+  return {
+    userAccountInitialisation: stepLogger("user_account_initialisation"),
+    registerX25519PublicKey: stepLogger("register_x25519_public_key"),
+    registerUserForAnonymousUsage: stepLogger("register_user_for_anonymous_usage"),
+  };
+}
 
 export default class UmbraRegister extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
+    console.log("[register] phase: client_creation");
     const client = await createUmbraClient(
       new Uint8Array(inputs.keypair),
       inputs.network,
@@ -15,19 +42,40 @@ export default class UmbraRegister extends BaseCommand {
     const confidential = inputs.confidential !== undefined ? inputs.confidential : true;
     const anonymous = inputs.anonymous !== undefined ? inputs.anonymous : true;
 
-    const zkProver = anonymous ? getUserRegistrationProver() : undefined;
-    const register = getUserRegistrationFunction({ client }, { zkProver } as any);
+    console.log("[register] phase: prover_init");
+    const zkProver = anonymous
+      ? wrapZkProver("register", createRustProver("userRegistration"))
+      : undefined;
+
+    console.log("[register] phase: function_creation");
+    const register = getUserRegistrationFunction({ client }, zkProver ? { zkProver } as any : undefined);
 
     console.log(`Registering Umbra user on ${inputs.network}...`);
     console.log(`  confidential: ${confidential}, anonymous: ${anonymous}`);
+    if (!anonymous) {
+      console.warn(
+        "[register] Umbra mixer docs require anonymous=true registration before UTXO mixer flows.",
+      );
+    }
 
-    const result = await register({ confidential, anonymous });
+    try {
+      console.log("[register] phase: execution");
+      const result = await register({
+        confidential,
+        anonymous,
+        callbacks: createRegistrationCallbacks(),
+      } as any);
 
-    console.log("Registration complete:", JSON.stringify(result, null, 2));
+      console.log("Registration result type:", typeof result, Array.isArray(result) ? `(array len=${result.length})` : "");
+      console.log("Registration complete:", safeJsonStringify(result, 2));
 
-    return {
-      signature: typeof result === "string" ? result : JSON.stringify(result),
-    };
+      return { signature: getPrimarySignature(result) };
+    } catch (err: any) {
+      const details = logUmbraError("register", err);
+      throw new Error(
+        `Registration failed (${details.phase}): ${details.message}${details.cause ? ` — cause: ${details.cause}` : ""}`,
+      );
+    }
   }
 }
 

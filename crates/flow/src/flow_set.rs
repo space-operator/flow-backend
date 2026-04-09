@@ -474,6 +474,7 @@ impl FlowSet {
             .rhai_tx(self.context.rhai_tx)
             .maybe_parent_flow_execute(self.context.parent_flow_execute)
             .maybe_rpc_server(self.context.rpc_server)
+            .hardcoded_wallets(self.context.hardcoded_wallets)
             .backend(BackendServices {
                 api_input: self.context.new_flow_api_request,
                 signer: self.context.signer,
@@ -524,6 +525,7 @@ pub struct FlowSetContext {
     get_jwt: get_jwt::Svc,
     new_flow_run: new_flow_run::Svc,
     parent_flow_execute: Option<execute::Svc>,
+    hardcoded_wallets: crate::command::wallet::HardcodedWallets,
 
     #[builder(default = Arc::new(Semaphore::new(crate::flow_registry::rhai_pool_size())))]
     rhai_permit: Arc<Semaphore>,

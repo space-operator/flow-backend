@@ -64,30 +64,31 @@ Construct a new client up front for different `fetch`, `logger`, `retry`, or
 
 ## Method Mapping
 
-| Legacy                                                           | New                                                                              | Notes                                                                      |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `new Client({ host, token, anonKey })`                           | `createClient({ baseUrl, auth, anonKey })`                                       | Auth is explicit via helpers like `apiKeyAuth(...)` and `bearerAuth(...)`. |
-| `client.setToken(token)`                                         | `client.withAuth(...)`                                                           | Returns a new client view with different auth.                             |
-| `client.setFetch(fetch)`                                         | `createClient({ fetch })`                                                        | Configure at construction time.                                            |
-| `client.setLogger(logger)`                                       | `createClient({ logger })`                                                       | Configure at construction time.                                            |
-| `client.initAuth(pubkey)`                                        | `client.auth.init(pubkey)`                                                       | Same backend route.                                                        |
-| `client.confirmAuth(msg, signature)`                             | `client.auth.confirm(msg, signature)`                                            | Same backend route.                                                        |
-| `client.claimToken()`                                            | `client.auth.claimToken()`                                                       | Same auth claim path.                                                      |
-| `client.startFlow(id, params)`                                   | `client.flows.start(id, params)`                                                 | Returns `FlowRunHandle`, not a raw DTO.                                    |
-| `client.startFlowShared(id, params)`                             | `client.flows.startShared(id, params)`                                           | Returns `FlowRunHandle`.                                                   |
-| `client.startFlowUnverified(id, publicKey, params)`              | `client.flows.startUnverified(id, params, { publicKey })`                        | `publicKey` moves into options.                                            |
-| `client.getFlowOutput(runId, token?)`                            | `client.flows.output(runId, { auth })` or `run.output()`                         | Prefer the handle form when you already started the run.                   |
-| `client.getSignatureRequest(runId, token?)`                      | `client.flows.signatureRequest(runId, { auth })` or `run.signatureRequest()`     | The new API polls through transient `404`s for you.                        |
-| `client.stopFlow(runId, params)`                                 | `client.flows.stop(runId, params)` or `run.stop(params)`                         | Prefer the handle form.                                                    |
-| `client.submitSignature(params)`                                 | `client.signatures.submit(params)`                                               | Same route, namespaced API.                                                |
-| `client.signAndSubmitSignature(req, publicKey, signTransaction)` | `signAndSubmitSignature(client.signatures, req, { publicKey, signTransaction })` | Helper moved to the Solana subpath.                                        |
-| `client.deployFlow(id)`                                          | `client.flows.deploy(id)`                                                        | Same route.                                                                |
-| `client.startDeployment(spec, params, token?)`                   | `client.deployments.start(spec, params, { auth })`                               | Returns `FlowRunHandle`.                                                   |
-| `client.export()`                                                | `client.data.export()`                                                           | Namespaced.                                                                |
-| `client.upsertWallet(body)`                                      | `client.wallets.upsert(body)`                                                    | Namespaced.                                                                |
-| `client.ws()`                                                    | `client.ws()`                                                                    | Returns `WebSocketSession`, not `WsClient`.                                |
-| `ws.subscribeFlowRunEvents(...)`                                 | `ws.subscribeFlowRun(...)` or `run.events()`                                     | `run.events()` is usually simpler.                                         |
-| `ws.subscribeSignatureRequest(...)`                              | `ws.subscribeSignatureRequests(...)`                                             | Requires bearer/api-key websocket auth.                                    |
+| Legacy                                                              | New                                                                                 | Notes                                                                      |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `new Client({ host, token, anonKey })`                              | `createClient({ baseUrl, auth, anonKey })`                                          | Auth is explicit via helpers like `apiKeyAuth(...)` and `bearerAuth(...)`. |
+| `client.setToken(token)`                                            | `client.withAuth(...)`                                                              | Returns a new client view with different auth.                             |
+| `client.setFetch(fetch)`                                            | `createClient({ fetch })`                                                           | Configure at construction time.                                            |
+| `client.setLogger(logger)`                                          | `createClient({ logger })`                                                          | Configure at construction time.                                            |
+| `client.initAuth(pubkey)`                                           | `client.auth.init(pubkey)`                                                          | Same backend route.                                                        |
+| `client.confirmAuth(msg, signature)`                                | `client.auth.confirm(msg, signature)`                                               | Same backend route.                                                        |
+| `client.claimToken()`                                               | `client.auth.claimToken()`                                                          | Same auth claim path.                                                      |
+| `client.startFlow(id, params)`                                      | `client.flows.start(id, params)`                                                    | Returns `FlowRunHandle`, not a raw DTO.                                    |
+| `client.startFlowShared(id, params)`                                | `client.flows.startShared(id, params)`                                              | Returns `FlowRunHandle`.                                                   |
+| `client.startFlowUnverified(id, publicKey, params)`                 | `client.flows.startUnverified(id, params, { publicKey })`                           | `publicKey` moves into options.                                            |
+| `client.getFlowOutput(runId, token?)`                               | `client.flows.output(runId, { auth })` or `run.output()`                            | Prefer the handle form when you already started the run.                   |
+| `client.getSignatureRequest(runId, token?)`                         | `client.flows.signatureRequest(runId, { auth })` or `run.signatureRequest()`        | The new API polls through transient `404`s for you.                        |
+| `client.stopFlow(runId, params)`                                    | `client.flows.stop(runId, params)` or `run.stop(params)`                            | Prefer the handle form.                                                    |
+| `client.submitSignature(params)`                                    | `client.signatures.submit(params)`                                                  | Same route, namespaced API.                                                |
+| `client.signAndSubmitSignature(req, publicKey, signTransaction)`    | `signAndSubmitSignature(client.signatures, req, { publicKey, signTransaction })`    | Helper moved to the Solana subpath.                                        |
+| `client.signAndSubmitMessageSignature(req, publicKey, signMessage)` | `signAndSubmitMessageSignature(client.signatures, req, { publicKey, signMessage })` | Use this for raw `message` signature requests.                             |
+| `client.deployFlow(id)`                                             | `client.flows.deploy(id)`                                                           | Same route.                                                                |
+| `client.startDeployment(spec, params, token?)`                      | `client.deployments.start(spec, params, { auth })`                                  | Returns `FlowRunHandle`.                                                   |
+| `client.export()`                                                   | `client.data.export()`                                                              | Namespaced.                                                                |
+| `client.upsertWallet(body)`                                         | `client.wallets.upsert(body)`                                                       | Namespaced.                                                                |
+| `client.ws()`                                                       | `client.ws()`                                                                       | Returns `WebSocketSession`, not `WsClient`.                                |
+| `ws.subscribeFlowRunEvents(...)`                                    | `ws.subscribeFlowRun(...)` or `run.events()`                                        | `run.events()` is usually simpler.                                         |
+| `ws.subscribeSignatureRequest(...)`                                 | `ws.subscribeSignatureRequests(...)`                                                | Requires bearer/api-key websocket auth.                                    |
 
 ## Common Migrations
 
@@ -156,7 +157,10 @@ const output = await client.getFlowOutput(started.flow_run_id);
 New:
 
 ```ts
-import { signAndSubmitSignature } from "@space-operator/client-next/solana";
+import {
+  signAndSubmitMessageSignature,
+  signAndSubmitSignature,
+} from "@space-operator/client-next/solana";
 
 const run = await client.deployments.start({ id: deploymentId }, params);
 const req = await run.signatureRequest();
@@ -168,6 +172,15 @@ await signAndSubmitSignature(client.signatures, req, {
   },
 });
 const output = await run.output();
+```
+
+If the flow emits a raw message-sign request instead of a transaction request:
+
+```ts
+await signAndSubmitMessageSignature(client.signatures, req, {
+  publicKey: wallet.publicKey,
+  signMessage: async (message) => await wallet.signMessage(message),
+});
 ```
 
 ### Wallet Login

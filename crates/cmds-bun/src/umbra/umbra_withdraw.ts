@@ -1,5 +1,5 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import { getDirectWithdrawIntoPublicBalanceV3Function } from "@umbra-privacy/sdk";
+import { getEncryptedBalanceToPublicBalanceDirectWithdrawerFunction } from "@umbra-privacy/sdk";
 import { createUmbraClient } from "./umbra_common.ts";
 
 export default class UmbraWithdraw extends BaseCommand {
@@ -11,7 +11,7 @@ export default class UmbraWithdraw extends BaseCommand {
       ctx,
     );
 
-    const withdraw = getDirectWithdrawIntoPublicBalanceV3Function({ client });
+    const withdraw = getEncryptedBalanceToPublicBalanceDirectWithdrawerFunction({ client });
     const amount = BigInt(inputs.amount) as any;
     const destination = (inputs.destination || client.signer.address) as any;
 
@@ -21,9 +21,15 @@ export default class UmbraWithdraw extends BaseCommand {
 
     const result = await withdraw(destination, inputs.mint as any, amount);
 
-    console.log("Withdrawal complete:", String(result));
+    console.log("Withdrawal complete:", JSON.stringify(result, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v));
 
-    return { signature: String(result) };
+    const signature = Array.isArray(result)
+      ? result.map(String).join(",")
+      : typeof result === "string"
+        ? result
+        : JSON.stringify(result, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v);
+
+    return { signature };
   }
 }
 
