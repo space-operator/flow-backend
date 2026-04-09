@@ -184,6 +184,7 @@ export async function createUmbraClient(
   const rpcSubscriptionsUrl = rpcUrl
     .replace(/^https:\/\//, "wss://")
     .replace(/^http:\/\//, "ws://");
+  // Indexer is mainnet-only — devnet indexer not yet available
   const indexerApiEndpoint = network === "mainnet"
     ? INDEXER_ENDPOINT
     : undefined;

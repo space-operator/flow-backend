@@ -8,9 +8,8 @@ export default class UmbraFetchUtxos extends BaseCommand {
       throw new Error("Missing required inputs: keypair, network, rpc_url");
     }
     if (inputs.network !== "mainnet") {
-      console.warn(`No public indexer available for ${inputs.network}. Umbra indexer is mainnet-only.`);
-      console.warn(`  See: https://sdk.umbraprivacy.com/indexer/overview`);
-      return { utxos: [], count: 0, error: `No indexer available for ${inputs.network}` };
+      console.warn(`Umbra indexer is mainnet-only. Devnet indexer not yet available.`);
+      return { utxos: [], count: 0 };
     }
 
     const client = await createUmbraClient(
@@ -22,9 +21,9 @@ export default class UmbraFetchUtxos extends BaseCommand {
 
     const fetchUtxos = getClaimableUtxoScannerFunction({ client });
 
-    const treeIndex = inputs.tree_index !== undefined ? Number(inputs.tree_index) : 0;
-    const startIndex = inputs.start_index !== undefined ? Number(inputs.start_index) : 0;
-    const endIndex = inputs.end_index !== undefined ? Number(inputs.end_index) : undefined;
+    const treeIndex = inputs.tree_index !== undefined ? BigInt(inputs.tree_index) : 0n;
+    const startIndex = inputs.start_index !== undefined ? BigInt(inputs.start_index) : 0n;
+    const endIndex = inputs.end_index !== undefined ? BigInt(inputs.end_index) : undefined;
 
     console.log(`Fetching claimable UTXOs from indexer...`);
     console.log(`  tree_index: ${treeIndex}, start_index: ${startIndex}`);
