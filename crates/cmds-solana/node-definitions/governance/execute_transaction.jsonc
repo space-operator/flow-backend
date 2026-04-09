@@ -45,48 +45,20 @@
         "tooltip": "Proposal transaction account address"
       },
       {
-        "name": "instruction_program_id",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "required": true,
-        "tooltip": "Instruction program id account address"
-      },
-      {
         "name": "instruction_accounts",
         "type_bounds": [
           "json"
         ],
         "required": true,
-        "tooltip": "Instruction accounts"
+        "tooltip": "Instruction accounts from the stored transaction"
       },
       {
         "name": "additional_signers",
         "type_bounds": [
-          "json"
+          "array"
         ],
-        "tooltip": "Additional signers"
-      },
-      {
-        "name": "signer_1",
-        "type_bounds": [
-          "json"
-        ],
-        "tooltip": "Signer 1"
-      },
-      {
-        "name": "signer_2",
-        "type_bounds": [
-          "json"
-        ],
-        "tooltip": "Signer 2"
-      },
-      {
-        "name": "signer_3",
-        "type_bounds": [
-          "json"
-        ],
-        "tooltip": "Signer 3"
+        "required": false,
+        "tooltip": "Additional keypair signers required by the transaction"
       },
       {
         "name": "submit",
@@ -100,6 +72,7 @@
       {
         "name": "signature",
         "type": "signature",
+        "optional": true,
         "tooltip": "Transaction signature"
       },
       {

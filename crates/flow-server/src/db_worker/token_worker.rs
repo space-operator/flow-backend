@@ -423,6 +423,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    #[ignore = "requires ANON_KEY for live Supabase refresh"]
     async fn need_key_refresh() {
         let error = refresh(
             "Hello".to_owned(),

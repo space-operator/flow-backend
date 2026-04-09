@@ -1,7 +1,7 @@
 use super::derive_ata;
 use crate::prelude::*;
 
-const NAME: &str = "close_account";
+const NAME: &str = "close_account_t22";
 const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/close_account.jsonc");
 
 fn build() -> BuildResult {

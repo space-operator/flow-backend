@@ -33,7 +33,7 @@ pub struct Input {
     pub token_base_account: Pubkey,
     #[serde_as(as = "AsPubkey")]
     pub token_quote_account: Pubkey,
-    pub operator: Wallet,
+    pub signer: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub token_base_program: Pubkey,
     #[serde_as(as = "AsPubkey")]
@@ -59,7 +59,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = pda::event_authority();
     let base_vault = pda::base_vault(&input.base_mint, &input.pool);
     let quote_vault = pda::quote_vault(&input.quote_mint, &input.pool);
-    let claim_fee_operator = pda::claim_fee_operator(&input.operator.pubkey());
+    let claim_fee_operator = pda::claim_fee_operator(&input.signer.pubkey());
 
     let accounts = vec![
         AccountMeta::new_readonly(POOL_AUTHORITY, false),
@@ -72,7 +72,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new(input.token_base_account, false),
         AccountMeta::new(input.token_quote_account, false),
         AccountMeta::new_readonly(claim_fee_operator, false),
-        AccountMeta::new_readonly(input.operator.pubkey(), true),
+        AccountMeta::new_readonly(input.signer.pubkey(), true),
         AccountMeta::new_readonly(input.token_base_program, false),
         AccountMeta::new_readonly(input.token_quote_program, false),
         AccountMeta::new_readonly(event_authority, false),
@@ -90,7 +90,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer, input.operator].into(),
+        signers: [input.fee_payer, input.signer].into(),
         instructions: [instruction].into(),
     };
 

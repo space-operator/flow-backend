@@ -1,7 +1,7 @@
 use super::derive_ata;
 use crate::prelude::*;
 
-const NAME: &str = "revoke";
+const NAME: &str = "revoke_t22";
 const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/revoke.jsonc");
 
 fn build() -> BuildResult {

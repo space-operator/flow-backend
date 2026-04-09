@@ -17,6 +17,28 @@ fn build() -> BuildResult {
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
+/// On-chain instruction argument: CreateVirtualPoolMetadataParameters
+/// IDL fields: padding ([u8; 96]), name (String), website (String), logo (String)
+#[derive(borsh::BorshSerialize, Debug)]
+struct CreateVirtualPoolMetadataParameters {
+    padding: [u8; 96],
+    name: String,
+    website: String,
+    logo: String,
+}
+
+/// The `padding` port accepts a JSON object with { name, website, logo } fields.
+/// These are encoded into the on-chain CreateVirtualPoolMetadataParameters struct.
+#[derive(Serialize, Deserialize, Debug, Default)]
+struct MetadataInput {
+    #[serde(default)]
+    name: String,
+    #[serde(default)]
+    website: String,
+    #[serde(default)]
+    logo: String,
+}
+
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
@@ -26,7 +48,8 @@ pub struct Input {
     pub creator: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub system_program: Pubkey,
-    pub padding: Vec<u64>,
+    #[serde(default)]
+    pub padding: MetadataInput,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -44,17 +67,33 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = pda::event_authority();
     let virtual_pool_metadata = pda::virtual_pool_metadata(&input.pool);
 
+    // IDL account order:
+    // 0: virtual_pool (writable)
+    // 1: virtual_pool_metadata (writable, PDA)
+    // 2: creator (signer, relation to virtual_pool)
+    // 3: payer (writable, signer)
+    // 4: system_program
+    // 5: event_authority (PDA)
+    // 6: program
     let accounts = vec![
+        AccountMeta::new(input.pool, false),
         AccountMeta::new(virtual_pool_metadata, false),
-        AccountMeta::new_readonly(input.pool, false),
-        AccountMeta::new(input.creator.pubkey(), true),
+        AccountMeta::new_readonly(input.creator.pubkey(), true),
+        AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(input.system_program, false),
         AccountMeta::new_readonly(event_authority, false),
         AccountMeta::new_readonly(DBC_PROGRAM_ID, false),
     ];
 
+    let metadata_params = CreateVirtualPoolMetadataParameters {
+        padding: [0u8; 96],
+        name: input.padding.name,
+        website: input.padding.website,
+        logo: input.padding.logo,
+    };
+
     let mut data = discriminators::CREATE_VIRTUAL_POOL_METADATA.to_vec();
-    data.extend(borsh::to_vec(&input.padding)?);
+    data.extend(borsh::to_vec(&metadata_params)?);
 
     let instruction = Instruction {
         program_id: DBC_PROGRAM_ID,

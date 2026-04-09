@@ -1,0 +1,91 @@
+name: Client Next E2E
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/client-next-e2e.yaml"
+      - "@space-operator/client-next/**"
+      - "@space-operator/contracts/**"
+      - "@space-operator/x402-fetch/**"
+      - "docker/bootstrap-test-fixtures.ts"
+      - "docker/export.json"
+      - "docker/supabase/**"
+      - "crates/flow-server/**"
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/client-next-e2e.yaml"
+      - "@space-operator/client-next/**"
+      - "@space-operator/contracts/**"
+      - "@space-operator/x402-fetch/**"
+      - "docker/bootstrap-test-fixtures.ts"
+      - "docker/export.json"
+      - "docker/supabase/**"
+      - "crates/flow-server/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  client-next-live-e2e:
+    name: client-next live e2e
+    runs-on: [self-hosted, rust-builder]
+    permissions:
+      contents: read
+    env:
+      RUN_SPACE_OPERATOR_E2E_TESTS: "1"
+      FLOW_SERVER_URL: ${{ secrets.FLOW_SERVER_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      ANON_KEY: ${{ secrets.ANON_KEY }}
+      APIKEY: ${{ secrets.APIKEY }}
+      SERVICE_ROLE_KEY: ${{ secrets.SERVICE_ROLE_KEY }}
+      KEYPAIR: ${{ secrets.KEYPAIR }}
+      SOLANA_DEVNET_URL: ${{ secrets.SOLANA_DEVNET_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.3
+
+      - name: Install Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.6.4
+
+      - name: Install Bun workspace deps
+        run: bun install --frozen-lockfile
+
+      - name: Check live E2E secret availability
+        id: gate
+        shell: bash
+        run: |
+          missing=()
+          for key in \
+            FLOW_SERVER_URL \
+            SUPABASE_URL \
+            ANON_KEY \
+            APIKEY \
+            SERVICE_ROLE_KEY \
+            KEYPAIR \
+            SOLANA_DEVNET_URL; do
+            if [ -z "${!key}" ]; then
+              missing+=("$key")
+            fi
+          done
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Skipping client-next live E2E::Missing required secrets: ${missing[*]}"
+            exit 0
+          fi
+
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
+      - name: Run local-first live E2E command
+        if: steps.gate.outputs.available == 'true'
+        run: cd @space-operator/client-next && deno task test:e2e:local

@@ -34,14 +34,14 @@ CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
   VALUES (
     new.email,
     new.id,
-    new.raw_user_meta_data->>'pub_key',
-    new.raw_user_meta_data->>'pub_key'
+    new.raw_user_meta_data->>'pubkey',
+    new.raw_user_meta_data->>'pubkey'
   );
 
   INSERT INTO public.user_quotas (user_id) VALUES (new.id);
 
   INSERT INTO public.wallets (user_id, public_key, type, name, description)
-  VALUES (new.id, new.raw_user_meta_data->>'pub_key', 'ADAPTER', 'Main wallet', 'Wallet used to sign up');
+  VALUES (new.id, new.raw_user_meta_data->>'pubkey', 'ADAPTER', 'Main wallet', 'Wallet used to sign up');
 
   RETURN new;
 END;$$;
@@ -577,9 +577,9 @@ declare
 myrec record;
 begin
     select * into myrec from public.pubkey_whitelists
-    where pubkey = new.raw_user_meta_data->>'pub_key' and pubkey is not null;
+    where pubkey = new.raw_user_meta_data->>'pubkey' and pubkey is not null;
     if not found then
-        raise exception 'pubkey is not in whitelists, %', new.raw_user_meta_data->>'pub_key';
+        raise exception 'pubkey is not in whitelists, %', new.raw_user_meta_data->>'pubkey';
     end if;
 
     return new;
@@ -685,14 +685,14 @@ BEGIN
   VALUES (
     new.email,
     new.id,
-    new.raw_user_meta_data->>'pub_key',
-    new.raw_user_meta_data->>'pub_key'
+    new.raw_user_meta_data->>'pubkey',
+    new.raw_user_meta_data->>'pubkey'
   );
 
   INSERT INTO public.user_quotas (user_id) VALUES (new.id);
 
   INSERT INTO public.wallets (user_id, public_key, type, name, description)
-  VALUES (new.id, new.raw_user_meta_data->>'pub_key', 'ADAPTER', 'Main wallet', 'Wallet used to sign up');
+  VALUES (new.id, new.raw_user_meta_data->>'pubkey', 'ADAPTER', 'Main wallet', 'Wallet used to sign up');
 
   RETURN new;
 END;

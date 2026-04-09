@@ -24,13 +24,20 @@ use value::Value;
 
 pub mod builder;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ReadCapability {
+    Snapshot,
+    Interactive,
+    Mutating,
+}
+
 /// Import common types for writing commands.
 pub mod prelude {
     pub use crate::{
         CmdInputDescription, CmdInputDescription as Input, CmdOutputDescription,
         CmdOutputDescription as Output, FlowId, Name, ValueSet, ValueType,
         command::{
-            CommandDescription, CommandError, CommandTrait, InstructionInfo,
+            CommandDescription, CommandError, CommandTrait, InstructionInfo, ReadCapability,
             builder::{BuildResult, BuilderCache, BuilderError, CmdBuilder},
         },
         config::{client::NodeData, node::Permissions},
@@ -138,6 +145,11 @@ pub trait CommandTrait: 'static {
     /// Specify requested permissions of this command.
     fn permissions(&self) -> Permissions {
         Permissions::default()
+    }
+
+    /// Describe whether this command is safe to use in read-only execution modes.
+    fn read_capability(&self) -> ReadCapability {
+        ReadCapability::Snapshot
     }
 
     /// Async `Drop` method.
@@ -249,6 +261,12 @@ pub fn input_is_required<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Optio
     cmd.inputs()
         .into_iter()
         .find_map(|i| (i.name == name).then_some(i.required))
+}
+
+pub fn input_accepts_pubkey<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Option<bool> {
+    cmd.inputs()
+        .into_iter()
+        .find_map(|i| (i.name == name).then_some(i.type_bounds.contains(&ValueType::Pubkey)))
 }
 
 pub fn output_is_optional<T: CommandTrait + ?Sized>(cmd: &T, name: &str) -> Option<bool> {

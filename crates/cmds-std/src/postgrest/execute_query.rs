@@ -1,5 +1,6 @@
 use crate::supabase_error;
 use flow_lib::command::prelude::*;
+use reqwest::Method;
 use reqwest::header::{AUTHORIZATION, HeaderName};
 use std::{collections::HashMap, str::FromStr};
 
@@ -13,6 +14,13 @@ struct Input {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<ValueSet, CommandError> {
+    if ctx.is_read_only() && input.query.method != Method::GET && input.query.method != Method::HEAD
+    {
+        return Err(CommandError::msg(
+            "postgrest_execute_query only allows GET/HEAD in read mode",
+        ));
+    }
+
     let contain_auth_header = !input.headers.iter().any(|(k, _)| {
         HeaderName::from_str(k)
             .ok()
@@ -78,6 +86,7 @@ fn build() -> BuildResult {
         CmdBuilder::new(flow_lib::node_definition!("postgrest/execute_query.jsonc"))?
             .check_name(NAME)?
             .permissions(Permissions { user_tokens: true })
+            .read_capability(ReadCapability::Snapshot)
             .build(run),
     )
 }
@@ -87,9 +96,40 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 #[cfg(test)]
 mod tests {
     use super::*;
+    use reqwest::header::HeaderMap;
 
     #[test]
     fn test_build() {
         build().unwrap();
+    }
+
+    #[tokio::test]
+    async fn read_mode_rejects_non_get_and_head_queries() {
+        let mut ctx = CommandContext::test_context();
+        ctx.set_read_only(true);
+
+        let error = run(
+            ctx,
+            Input {
+                query: postgrest::Query {
+                    method: Method::POST,
+                    url: "https://example.com/rest/v1/items".to_owned(),
+                    schema: None,
+                    queries: Vec::new(),
+                    headers: HeaderMap::new(),
+                    body: None,
+                    is_rpc: false,
+                },
+                headers: Vec::new(),
+            },
+        )
+        .await
+        .expect_err("POST should be rejected in read mode");
+
+        assert!(
+            error
+                .to_string()
+                .contains("only allows GET/HEAD in read mode")
+        );
     }
 }

@@ -14,6 +14,15 @@ import {
   type PaymentRequirementsSelector,
   selectPaymentRequirements,
 } from "x402/client";
+import {
+  type LegacyPaymentRequired,
+  normalizePaymentRequirement,
+} from "./internal.ts";
+
+// Keep x402 schema drift handling here. The backend already emits a newer
+// payment-requirements shape than the currently published JS x402 packages
+// accept, so this package is the compatibility boundary that normalizes backend
+// responses into the JS schema until upstream catches up.
 
 /**
  * Enables the payment of APIs using the x402 payment protocol.
@@ -74,12 +83,17 @@ export function wrapFetchWithPayment(
       throw new Error("Payment already attempted");
     }
 
-    const { x402Version, accepts } = (await response.json()) as {
-      x402Version: number;
-      accepts: unknown[];
-    };
-    const parsedPaymentRequirements = accepts.map((x) =>
-      PaymentRequirementsSchema.parse(x)
+    const paymentRequired = (await response.json()) as LegacyPaymentRequired;
+    const x402Version = paymentRequired.x402Version ?? 1;
+    const accepts = paymentRequired.accepts ?? [];
+    const parsedPaymentRequirements = accepts.map((requirement) =>
+      PaymentRequirementsSchema.parse(
+        normalizePaymentRequirement(
+          requirement,
+          paymentRequired.resource,
+          request.url,
+        ),
+      )
     );
 
     const network = isMultiNetworkSigner(walletClient)

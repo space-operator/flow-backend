@@ -1,6 +1,6 @@
 use super::{
-    ATA_PROGRAM_ID, CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID,
-    TOKEN_PROGRAM_ID, anchor_discriminator, derive_event_authority, derive_position,
+    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID, TOKEN_2022_PROGRAM_ID,
+    anchor_discriminator, derive_event_authority, derive_pool_authority, derive_position,
 };
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
@@ -45,6 +45,7 @@ pub struct Output {
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
     let position_nft_mint_pubkey = input.position_nft_mint.pubkey();
+    let pool_authority = derive_pool_authority();
     let position = derive_position(&input.pool, &position_nft_mint_pubkey);
     let position_nft_account = Pubkey::find_program_address(
         &[
@@ -57,17 +58,17 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.payer.pubkey(), true), // payer (writable signer)
-        AccountMeta::new_readonly(input.owner, false), // owner
-        AccountMeta::new(input.pool, false),          // pool (writable)
-        AccountMeta::new(position, false),            // position (writable, init)
-        AccountMeta::new(position_nft_mint_pubkey, true), // position_nft_mint (writable signer)
-        AccountMeta::new(position_nft_account, false), // position_nft_account (writable)
-        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false), // token_program
-        AccountMeta::new_readonly(ATA_PROGRAM_ID, false), // associated_token_program
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
-        AccountMeta::new_readonly(event_authority, false), // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
+        AccountMeta::new_readonly(input.owner, false), // [0] owner
+        AccountMeta::new(position_nft_mint_pubkey, true), // [1] position_nft_mint (writable signer, init)
+        AccountMeta::new(position_nft_account, false), // [2] position_nft_account (writable, init)
+        AccountMeta::new(input.pool, false),           // [3] pool (writable)
+        AccountMeta::new(position, false),             // [4] position (writable, init)
+        AccountMeta::new_readonly(pool_authority, false), // [5] pool_authority
+        AccountMeta::new(input.payer.pubkey(), true),  // [6] payer (writable signer)
+        AccountMeta::new_readonly(TOKEN_2022_PROGRAM_ID, false), // [7] token_2022_program
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // [8] system_program
+        AccountMeta::new_readonly(event_authority, false), // [9] event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // [10] program
     ];
 
     let data = anchor_discriminator(NAME).to_vec();

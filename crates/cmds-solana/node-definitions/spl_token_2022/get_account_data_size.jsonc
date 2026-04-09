@@ -10,53 +10,29 @@
   "ports": {
     "inputs": [
       {
-        "name": "fee_payer",
-        "type_bounds": [
-          "keypair"
-        ],
-        "required": true,
-        "passthrough": true,
-        "tooltip": "Account paying for transaction fees"
-      },
-      {
-        "name": "mint",
-        "type_bounds": [
-          "pubkey"
-        ],
-        "required": true,
-        "tooltip": "The mint to check"
-      },
-      {
         "name": "extension_types",
         "type_bounds": [
           "json"
         ],
         "required": true,
         "tooltip": "Array of extension type IDs (u16) to include in size calculation"
-      },
-      {
-        "name": "submit",
-        "type_bounds": [
-          "bool"
-        ],
-        "tooltip": "Submit transaction to the network"
       }
     ],
     "outputs": [
       {
-        "name": "signature",
-        "type": "signature",
-        "optional": true,
-        "tooltip": "Transaction signature"
+        "name": "size",
+        "type": "u64",
+        "tooltip": "Account data size in bytes"
+      },
+      {
+        "name": "lamports",
+        "type": "u64",
+        "tooltip": "Minimum lamports for rent exemption"
       }
     ]
   },
   "config_schema": {},
-  "config": {
-    "submit": {
-      "B": true
-    }
-  },
+  "config": {},
   "classification": {
     "vendor": "Solana",
     "program": "token_2022",

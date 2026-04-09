@@ -1,9 +1,9 @@
-import { Value } from "../src/deps.ts";
+import { bs58, Value, web3 } from "../src/deps.ts";
 import * as client from "../src/mod.ts";
 import * as dotenv from "@std/dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { assert, assertEquals } from "@std/assert";
-import { checkNoErrors, getEnv } from "./utils.ts";
+import { checkNoErrors, getEnv, getUuidEnv } from "./utils.ts";
 
 dotenv.loadSync({
   export: true,
@@ -12,12 +12,12 @@ dotenv.loadSync({
 const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
 const supabaseUrl = "http://localhost:8000";
-const START_FLOW_ID = "6c949718-69e2-47c1-8b93-d56b8e34ec51"; // Add
-const DENO_FLOW_ID = "c349c074-0f4f-41bd-976d-d8df32ba867a"; // Deno Add
-const INTERFLOW_FLOW_ID = "b3c95f36-2a1c-4e33-be2a-28758a0c4b9d"; // Collatz
-const INTERFLOW_INSTRUCTIONS_FLOW_ID =
-  "69401e5a-375e-49d0-bb95-33c9d70eb582"; // Interflow Instructions
-const CONSTS_FLOW_ID = "27b35933-7165-4da5-a2ea-a6342bbb3da7"; // Consts
+const START_FLOW_ID = getUuidEnv("FLOW_ID_ADD");
+const DENO_FLOW_ID = getUuidEnv("FLOW_ID_DENO_ADD");
+const INTERFLOW_FLOW_ID = getUuidEnv("FLOW_ID_COLLATZ");
+const INTERFLOW_INSTRUCTIONS_FLOW_ID = getUuidEnv("FLOW_ID_INTERFLOW_INSTRUCTIONS");
+const CONSTS_FLOW_ID = getUuidEnv("FLOW_ID_CONSTS");
+const TRANSFER_SOL_FLOW_ID = getUuidEnv("FLOW_ID_TRANSFER_SOL");
 
 Deno.test("start flow", async () => {
   const owner = new client.Client({
@@ -134,4 +134,43 @@ Deno.test("consts", async () => {
   });
   await sup.auth.setSession(jwt);
   await checkNoErrors(sup, flow_run_id);
+});
+
+Deno.test({
+  name: "start flow with direct keypair input over bearer auth",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    const owner = new client.Client({
+      host: "http://localhost:8080",
+      anonKey,
+      token: apiKey,
+    });
+    const jwt = await owner.claimToken();
+    const bearer = new client.Client({
+      host: "http://localhost:8080",
+      anonKey,
+      token: jwt.access_token,
+    });
+    const ownerKeypair = web3.Keypair.fromSecretKey(
+      bs58.decodeBase58(getEnv("KEYPAIR")),
+    );
+
+    const { flow_run_id } = await bearer.startFlow(TRANSFER_SOL_FLOW_ID, {
+      inputs: new Value({
+        sender: Value.Keypair(ownerKeypair.secretKey),
+        recipient: ownerKeypair.publicKey,
+        amount: 0.000001,
+      }).M!,
+    });
+
+    const result = await bearer.getFlowOutput(flow_run_id);
+    assert(result.M?.signature != null);
+
+    const sup = createClient<client.Database>(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false },
+    });
+    await sup.auth.setSession(jwt);
+    await checkNoErrors(sup, flow_run_id);
+  },
 });

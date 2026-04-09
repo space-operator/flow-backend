@@ -16,7 +16,11 @@ use actix_web::{
     middleware::Next,
 };
 use anyhow::anyhow;
-use flow::flow_set::{DeploymentId, FlowStarter, StartFlowDeploymentOptions, X402Network};
+use flow::flow_registry::ExecutionMode;
+use flow::flow_set::{
+    DeploymentId, FlowStarter, PreservedBearerToken, StartFlowDeploymentOptions, X402Network,
+};
+use flow_lib::config::client::FlowRunOrigin;
 use flow_lib::solana::Pubkey;
 use serde_with::serde_as;
 use std::collections::{BTreeMap, BTreeSet};
@@ -148,6 +152,17 @@ async fn start_deployment(
         Some(params) => (params.action_signer, params.inputs.unwrap_or_default()),
         None => (None, Default::default()),
     };
+    let preserved_bearer_token = match &user {
+        AuthEither::One(user) => {
+            user.preserved_bearer_token()
+                .as_ref()
+                .map(|token| PreservedBearerToken {
+                    access_token: token.access_token().clone(),
+                    expires_at: *token.expires_at(),
+                })
+        }
+        AuthEither::Two(_) => None,
+    };
     let mut starter = match &user {
         AuthEither::One(user) => FlowStarter {
             user_id: *user.user_id(),
@@ -245,7 +260,13 @@ async fn start_deployment(
             starter.user_id = sup.get_or_create_user(&starter.pubkey.to_bytes()).await?.0;
         }
 
-        let options = StartFlowDeploymentOptions { inputs, starter };
+        let options = StartFlowDeploymentOptions {
+            inputs,
+            starter,
+            preserved_bearer_token,
+            execution_mode: ExecutionMode::Write,
+            origin: FlowRunOrigin::Start {},
+        };
 
         let owner = deployment.user_id;
         let db_worker = DBWorker::from_registry();

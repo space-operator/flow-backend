@@ -11,14 +11,17 @@ use actix::{
 };
 use actix_web::{ResponseError, http::StatusCode};
 use bytes::Bytes;
+use chrono::Utc;
 use db::{Error as DbError, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
     flow_registry::{
-        BackendServices, FlowRegistry, StartFlowOptions, get_flow, get_previous_values,
-        new_flow_run,
+        BackendServices, ExecutionMode, FlowRegistry, StartFlowOptions, get_flow,
+        get_previous_values, get_secret, new_flow_run,
     },
-    flow_set::{FlowDeployment, FlowSet, FlowSetContext, StartFlowDeploymentOptions},
+    flow_set::{
+        FlowDeployment, FlowSet, FlowSetContext, PreservedBearerToken, StartFlowDeploymentOptions,
+    },
 };
 use flow_lib::{
     FlowId, FlowRunId, User, UserId,
@@ -50,6 +53,7 @@ use std::{
     sync::Arc,
 };
 use thiserror::Error as ThisError;
+use tower::ServiceExt;
 use utils::{actix_service::ActixService, address_book::ManagableActor};
 
 fn is_wallet_node(node_id: &str) -> bool {
@@ -316,6 +320,9 @@ impl UserWorker {
     ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static + use<>
     {
         let new_flow_run = TowerClient::new(ActixService::from(ctx.address().recipient()));
+        let get_secret = TowerClient::new(ActixService::from(
+            ctx.address().recipient::<get_secret::Request>(),
+        ));
 
         let root = DBWorker::from_registry();
         let db = self.db.clone();
@@ -326,11 +333,16 @@ impl UserWorker {
         let endpoints = self.endpoints.clone();
         let base_url = endpoints.flow_server.clone();
         let starter = options.starter;
+        let preserved_bearer_token = options.preserved_bearer_token.clone();
         let action_identity = d.action_identity;
         let new_flow_api_request = self.new_flow_api_request.clone();
         async move {
             let get_jwt = root.send(GetTokenWorker { user_id }).await??;
-            let get_jwt = TowerClient::new(ActixService::from(get_jwt.recipient()));
+            let get_jwt = make_run_get_jwt_service(
+                starter.user_id,
+                preserved_bearer_token,
+                TowerClient::new(ActixService::from(get_jwt.recipient())),
+            );
 
             let mut signer = SignerWorker::fetch_wallets_from_ids(
                 &db,
@@ -427,6 +439,7 @@ impl UserWorker {
                 }
             }
 
+            let hardcoded_wallets = signer.hardcoded_wallets.clone();
             let signer = signer.start();
             let signer = TowerClient::new(ActixService::from(signer.recipient()));
 
@@ -434,8 +447,10 @@ impl UserWorker {
                 .depth(0)
                 .endpoints(endpoints)
                 .get_jwt(get_jwt)
+                .get_secret(get_secret)
                 .new_flow_run(new_flow_run)
                 .signer(signer)
+                .hardcoded_wallets(hardcoded_wallets)
                 .new_flow_api_request(TowerClient::new(new_flow_api_request))
                 .maybe_rpc_server(
                     tower_rpc::Server::start_http_server()
@@ -564,6 +579,27 @@ impl actix::Handler<get_flow::Request> for UserWorker {
     }
 }
 
+impl actix::Handler<get_secret::Request> for UserWorker {
+    type Result = ResponseFuture<Result<get_secret::Response, get_secret::Error>>;
+
+    fn handle(&mut self, msg: get_secret::Request, _: &mut Self::Context) -> Self::Result {
+        let db = self.db.clone();
+        let user_id = self.user_id;
+        Box::pin(async move {
+            if user_id != msg.user_id {
+                return Err(get_secret::Error::Unauthorized);
+            }
+
+            let secret = db
+                .get_user_vault_secret(msg.user_id, &msg.provider, &msg.key_label)
+                .await
+                .map_err(get_secret::Error::other)?;
+
+            Ok(get_secret::Response { secret })
+        })
+    }
+}
+
 impl actix::Handler<new_flow_run::Request> for UserWorker {
     type Result = ResponseFuture<Result<new_flow_run::Response, new_flow_run::Error>>;
 
@@ -604,11 +640,16 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                         let stop_signal = stop_signal.clone();
                         let stop_shared_signal = stop_shared_signal.clone();
                         let root = root.clone();
+                        let vault_placeholders =
+                            super::flow_run_worker::VaultPlaceholderConfig::from_client_config(
+                                &msg.config,
+                            );
                         move |ctx| {
                             FlowRunWorker::new(
                                 run_id,
                                 user_id,
                                 msg.shared_with,
+                                vault_placeholders.clone(),
                                 counter,
                                 msg.stream,
                                 db,
@@ -648,6 +689,10 @@ impl actix::Handler<signer::SignatureRequest> for UserWorker {
     type Result = ResponseActFuture<Self, Result<signer::SignatureResponse, signer::Error>>;
 
     fn handle(&mut self, msg: signer::SignatureRequest, _: &mut Self::Context) -> Self::Result {
+        if let Err(error) = msg.validate() {
+            return Box::pin(actix::fut::ready(Err(error)));
+        }
+
         let db = self.db.clone();
         let user_id = self.user_id;
         async move {
@@ -730,6 +775,10 @@ impl actix::Handler<SubmitSignature> for UserWorker {
         let req = self.sigreg.remove(&msg.id).unwrap();
         let mut message = req.req.message.clone();
         if let Some(new) = msg.new_msg {
+            if !req.req.kind.allows_new_message() {
+                self.sigreg.insert(msg.id, req);
+                return Box::pin(ready(Err(SubmitError::NotAllowChangeTx)));
+            }
             if new == req.req.message {
                 msg.new_msg = None;
             } else {
@@ -777,6 +826,9 @@ pub struct StartFlowFresh {
     pub user: User,
     pub flow_id: FlowId,
     pub input: value::Map,
+    pub preserved_bearer_token: Option<PreservedBearerToken>,
+    pub execution_mode: ExecutionMode,
+    pub origin: FlowRunOrigin,
     pub output_instructions: bool,
     pub action_identity: Option<Pubkey>,
     pub action_config: Option<SolanaActionConfig>,
@@ -813,6 +865,7 @@ impl ResponseError for StartError {
                 flow::Error::ValueNotFound(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 flow::Error::CreateCmd(_) => StatusCode::INTERNAL_SERVER_ERROR,
                 flow::Error::BuildGraphError(_) => StatusCode::BAD_REQUEST,
+                flow::Error::ReadModeViolation(_) => StatusCode::CONFLICT,
                 flow::Error::GetFlow(e) => match e {
                     get_flow::Error::NotFound => StatusCode::NOT_FOUND,
                     get_flow::Error::Unauthorized => StatusCode::UNAUTHORIZED,
@@ -884,6 +937,44 @@ where
     TowerClient::new(ActixService::from(addr.clone().recipient()))
 }
 
+fn make_run_get_jwt_service(
+    authenticated_user_id: UserId,
+    preserved_bearer_token: Option<PreservedBearerToken>,
+    fallback: get_jwt::Svc,
+) -> get_jwt::Svc {
+    let preserved_bearer_token = preserved_bearer_token.map(Arc::new);
+    TowerClient::new(tower::service_fn(move |req: get_jwt::Request| {
+        let fallback = fallback.clone();
+        let preserved_bearer_token = preserved_bearer_token.clone();
+        async move {
+            if req.user_id == authenticated_user_id
+                && let Some(token) = preserved_bearer_token
+                && token.expires_at > Utc::now().timestamp() + 5 * 60
+            {
+                tracing::debug!(
+                    authenticated_user_id = %authenticated_user_id,
+                    requested_user_id = %req.user_id,
+                    "reusing preserved bearer token for get_jwt"
+                );
+                metrics::counter!("flow_server_get_jwt_requests_total", "mode" => "preserved")
+                    .increment(1);
+                return Ok(get_jwt::Response {
+                    access_token: token.access_token.clone(),
+                });
+            }
+
+            tracing::debug!(
+                authenticated_user_id = %authenticated_user_id,
+                requested_user_id = %req.user_id,
+                "falling back to token worker for get_jwt"
+            );
+            metrics::counter!("flow_server_get_jwt_requests_total", "mode" => "fallback")
+                .increment(1);
+            fallback.oneshot(req).await
+        }
+    }))
+}
+
 impl actix::Handler<StartFlowFresh> for UserWorker {
     type Result = ResponseFuture<Result<FlowRunId, StartError>>;
 
@@ -902,8 +993,13 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
             }
 
             let wrk = root.send(GetTokenWorker { user_id }).await??;
+            let get_jwt = make_run_get_jwt_service(
+                msg.user.id,
+                msg.preserved_bearer_token.clone(),
+                addr_to_service(&wrk),
+            );
 
-            let (signer, signers_info) =
+            let (signer, signers_info, hardcoded_wallets) =
                 SignerWorker::fetch_all_and_start(db, &[(user_id, addr.clone().recipient())])
                     .await?;
 
@@ -915,10 +1011,12 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                 .environment(msg.environment)
                 .endpoints(endpoints)
                 .signers_info(signers_info)
+                .hardcoded_wallets(hardcoded_wallets)
                 .backend(BackendServices {
                     api_input: TowerClient::new(new_flow_api_request),
                     signer: addr_to_service(&signer),
-                    token: addr_to_service(&wrk),
+                    token: get_jwt,
+                    get_secret: addr_to_service(&addr),
                     new_flow_run: addr_to_service(&addr),
                     get_previous_values: addr_to_service(&addr),
                     helius,
@@ -936,10 +1034,11 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     StartFlowOptions {
                         partial_config: msg.partial_config,
                         collect_instructions: msg.output_instructions,
+                        execution_mode: msg.execution_mode,
                         action_identity: msg.action_identity,
                         action_config: msg.action_config,
                         fees: msg.fees,
-                        origin: FlowRunOrigin::Start {},
+                        origin: msg.origin,
                         ..Default::default()
                     },
                 )
@@ -954,6 +1053,9 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
 pub struct StartFlowShared {
     pub flow_id: FlowId,
     pub input: value::Map,
+    pub preserved_bearer_token: Option<PreservedBearerToken>,
+    pub execution_mode: ExecutionMode,
+    pub origin: FlowRunOrigin,
     pub partial_config: Option<PartialConfig>,
     pub environment: HashMap<String, String>,
     pub output_instructions: bool,
@@ -977,6 +1079,9 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     user: User { id: self.user_id },
                     flow_id: msg.flow_id,
                     input: msg.input,
+                    preserved_bearer_token: msg.preserved_bearer_token,
+                    execution_mode: msg.execution_mode,
+                    origin: msg.origin,
                     partial_config: msg.partial_config,
                     environment: msg.environment,
                     output_instructions: msg.output_instructions,
@@ -998,10 +1103,15 @@ impl actix::Handler<StartFlowShared> for UserWorker {
         let remotes = AddressBook::new(self.remote_command_address_book.clone(), Some(user_id));
         Box::pin(async move {
             let wrk = root.send(GetTokenWorker { user_id }).await??;
+            let get_jwt = make_run_get_jwt_service(
+                msg.started_by.0,
+                msg.preserved_bearer_token.clone(),
+                addr_to_service(&wrk),
+            );
             let shared_wallet_remap =
                 build_shared_wallet_remap(&db, user_id, msg.started_by.0).await?;
 
-            let (signer, signers_info) = SignerWorker::fetch_all_and_start(
+            let (signer, signers_info, hardcoded_wallets) = SignerWorker::fetch_all_and_start(
                 db.clone(),
                 &[
                     (msg.started_by.0, msg.started_by.1.recipient()),
@@ -1035,10 +1145,12 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                 .environment(msg.environment)
                 .endpoints(endpoints)
                 .signers_info(signers_info)
+                .hardcoded_wallets(hardcoded_wallets)
                 .backend(BackendServices {
                     api_input: TowerClient::new(new_flow_api_request),
                     signer: addr_to_service(&signer),
-                    token: addr_to_service(&wrk),
+                    token: get_jwt,
+                    get_secret: addr_to_service(&addr),
                     new_flow_run: addr_to_service(&addr),
                     get_previous_values: addr_to_service(&addr),
                     helius,
@@ -1056,11 +1168,10 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     StartFlowOptions {
                         partial_config: msg.partial_config,
                         collect_instructions: msg.output_instructions,
+                        execution_mode: msg.execution_mode,
                         action_identity: msg.action_identity,
                         action_config: msg.action_config,
-                        origin: FlowRunOrigin::StartShared {
-                            started_by: msg.started_by.0,
-                        },
+                        origin: msg.origin,
                         fees: msg.fees,
                         ..Default::default()
                     },
@@ -1186,5 +1297,118 @@ impl actix::Handler<StartDeployment> for UserWorker {
                 })
         })
         .boxed_local()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    };
+    use tower::ServiceExt;
+    use uuid::Uuid;
+
+    #[tokio::test]
+    async fn run_get_jwt_service_reuses_preserved_bearer_token_for_matching_user() {
+        let fallback_calls = Arc::new(AtomicUsize::new(0));
+        let fallback = TowerClient::new(tower::service_fn({
+            let fallback_calls = fallback_calls.clone();
+            move |_req: get_jwt::Request| {
+                let fallback_calls = fallback_calls.clone();
+                async move {
+                    fallback_calls.fetch_add(1, Ordering::Relaxed);
+                    Ok::<_, get_jwt::Error>(get_jwt::Response {
+                        access_token: "fallback-token".into(),
+                    })
+                }
+            }
+        }));
+        let user_id = Uuid::new_v4();
+        let response = make_run_get_jwt_service(
+            user_id,
+            Some(PreservedBearerToken {
+                access_token: "preserved-token".into(),
+                expires_at: Utc::now().timestamp() + 3600,
+            }),
+            fallback,
+        )
+        .oneshot(get_jwt::Request { user_id })
+        .await
+        .unwrap();
+
+        assert_eq!(response.access_token, "preserved-token");
+        assert_eq!(fallback_calls.load(Ordering::Relaxed), 0);
+    }
+
+    #[tokio::test]
+    async fn run_get_jwt_service_falls_back_for_other_users() {
+        let fallback_calls = Arc::new(AtomicUsize::new(0));
+        let fallback = TowerClient::new(tower::service_fn({
+            let fallback_calls = fallback_calls.clone();
+            move |req: get_jwt::Request| {
+                let fallback_calls = fallback_calls.clone();
+                async move {
+                    fallback_calls.fetch_add(1, Ordering::Relaxed);
+                    Ok::<_, get_jwt::Error>(get_jwt::Response {
+                        access_token: format!("fallback-{}", req.user_id),
+                    })
+                }
+            }
+        }));
+        let authenticated_user_id = Uuid::new_v4();
+        let requested_user_id = Uuid::new_v4();
+        let response = make_run_get_jwt_service(
+            authenticated_user_id,
+            Some(PreservedBearerToken {
+                access_token: "preserved-token".into(),
+                expires_at: Utc::now().timestamp() + 3600,
+            }),
+            fallback,
+        )
+        .oneshot(get_jwt::Request {
+            user_id: requested_user_id,
+        })
+        .await
+        .unwrap();
+
+        assert_eq!(
+            response.access_token,
+            format!("fallback-{requested_user_id}")
+        );
+        assert_eq!(fallback_calls.load(Ordering::Relaxed), 1);
+    }
+
+    #[tokio::test]
+    async fn run_get_jwt_service_falls_back_when_preserved_token_is_expiring() {
+        let fallback_calls = Arc::new(AtomicUsize::new(0));
+        let fallback = TowerClient::new(tower::service_fn({
+            let fallback_calls = fallback_calls.clone();
+            move |_req: get_jwt::Request| {
+                let fallback_calls = fallback_calls.clone();
+                async move {
+                    fallback_calls.fetch_add(1, Ordering::Relaxed);
+                    Ok::<_, get_jwt::Error>(get_jwt::Response {
+                        access_token: "fallback-token".into(),
+                    })
+                }
+            }
+        }));
+        let user_id = Uuid::new_v4();
+        let response = make_run_get_jwt_service(
+            user_id,
+            Some(PreservedBearerToken {
+                access_token: "preserved-token".into(),
+                expires_at: Utc::now().timestamp() + 60,
+            }),
+            fallback,
+        )
+        .oneshot(get_jwt::Request { user_id })
+        .await
+        .unwrap();
+
+        assert_eq!(response.access_token, "fallback-token");
+        assert_eq!(fallback_calls.load(Ordering::Relaxed), 1);
     }
 }

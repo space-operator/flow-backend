@@ -3,6 +3,13 @@ use super::{
 };
 use crate::prelude::*;
 use solana_program::instruction::AccountMeta;
+use solana_program::pubkey;
+use spl_associated_token_account_interface::instruction::create_associated_token_account_idempotent;
+
+/// Native SOL mint (wrapped SOL)
+fn default_native_mint() -> Pubkey {
+    pubkey!("So11111111111111111111111111111111111111112")
+}
 
 const NAME: &str = "escrow_deposit";
 const DEFINITION: &str = flow_lib::node_definition!("escrow/deposit.jsonc");
@@ -26,6 +33,7 @@ pub struct Input {
     #[serde_as(as = "AsPubkey")]
     pub escrow: Pubkey,
     #[serde_as(as = "AsPubkey")]
+    #[serde(default = "default_native_mint")]
     pub mint: Pubkey,
     pub receipt_seed: Wallet,
     #[serde_as(as = "AsPubkey")]
@@ -43,6 +51,10 @@ pub struct Output {
     pub signature: Option<Signature>,
     #[serde_as(as = "AsPubkey")]
     pub receipt: Pubkey,
+    #[serde_as(as = "AsPubkey")]
+    pub vault: Pubkey,
+    #[serde_as(as = "AsPubkey")]
+    pub depositor_token_account: Pubkey,
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
@@ -83,6 +95,20 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
 
     let instruction = build_escrow_instruction(EscrowDiscriminator::Deposit, accounts, args_data);
 
+    // Auto-create ATAs for both vault and depositor (idempotent — no-op if they exist)
+    let vault_ata_ix = create_associated_token_account_idempotent(
+        &input.fee_payer.pubkey(),
+        &input.escrow,
+        &input.mint,
+        &input.token_program,
+    );
+    let depositor_ata_ix = create_associated_token_account_idempotent(
+        &input.fee_payer.pubkey(),
+        &input.depositor.pubkey(),
+        &input.mint,
+        &input.token_program,
+    );
+
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
@@ -93,7 +119,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         ]
         .into_iter()
         .collect(),
-        instructions: vec![instruction],
+        instructions: vec![vault_ata_ix, depositor_ata_ix, instruction],
     };
 
     let ins = if input.submit {
@@ -103,7 +129,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     };
     let signature = ctx.execute(ins, <_>::default()).await?.signature;
 
-    Ok(Output { signature, receipt })
+    Ok(Output {
+        signature,
+        receipt,
+        vault,
+        depositor_token_account,
+    })
 }
 
 #[cfg(test)]
@@ -131,6 +162,26 @@ mod tests {
         assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
         let parsed = result.unwrap();
         assert_eq!(parsed.token_program, super::super::DEFAULT_TOKEN_PROGRAM);
+    }
+
+    #[test]
+    fn test_input_parsing_no_mint_defaults_to_native_sol() {
+        // mint omitted — defaults to native SOL mint
+        let input = value::map! {
+            "fee_payer" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
+            "depositor" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
+            "escrow" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
+            "receipt_seed" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
+            "amount" => 1000u64,
+            "submit" => false,
+        };
+        let result = value::from_map::<Input>(input);
+        assert!(result.is_ok(), "Failed to parse input: {:?}", result.err());
+        let parsed = result.unwrap();
+        let native_sol_mint: Pubkey = "So11111111111111111111111111111111111111112"
+            .parse()
+            .unwrap();
+        assert_eq!(parsed.mint, native_sol_mint);
     }
 
     #[test]

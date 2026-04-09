@@ -1,0 +1,151 @@
+name: Client Next Browser
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/client-next-browser.yaml"
+      - "@space-operator/client-next/**"
+      - "@space-operator/contracts/**"
+      - "@space-operator/x402-fetch/**"
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/client-next-browser.yaml"
+      - "@space-operator/client-next/**"
+      - "@space-operator/contracts/**"
+      - "@space-operator/x402-fetch/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  client-next-browser-smoke:
+    name: client-next browser smoke
+    runs-on: [self-hosted, rust-builder]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.3
+
+      - name: Install Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.6.4
+
+      - name: Install Bun workspace deps
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browser dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if command -v sudo >/dev/null 2>&1; then
+            SUDO="sudo"
+          else
+            SUDO=""
+          fi
+
+          if command -v apt-get >/dev/null 2>&1; then
+            $SUDO apt-get update
+            $SUDO apt-get install -y \
+              libasound2 \
+              libatk-bridge2.0-0 \
+              libatk1.0-0 \
+              libatspi2.0-0 \
+              libcairo2 \
+              libcups2 \
+              libdbus-1-3 \
+              libdrm2 \
+              libexpat1 \
+              libfontconfig1 \
+              libgbm1 \
+              libglib2.0-0 \
+              libgtk-3-0 \
+              libnspr4 \
+              libnss3 \
+              libpango-1.0-0 \
+              libpangocairo-1.0-0 \
+              libx11-6 \
+              libx11-xcb1 \
+              libxcb1 \
+              libxcomposite1 \
+              libxdamage1 \
+              libxext6 \
+              libxfixes3 \
+              libxkbcommon0 \
+              libxrandr2 \
+              libxshmfence1
+          elif command -v dnf >/dev/null 2>&1; then
+            $SUDO dnf install -y \
+              alsa-lib \
+              atk \
+              at-spi2-core \
+              at-spi2-atk \
+              cairo \
+              cups-libs \
+              dbus-libs \
+              expat \
+              fontconfig \
+              glib2 \
+              gtk3 \
+              libdrm \
+              libX11 \
+              libX11-xcb \
+              libxcb \
+              libXcomposite \
+              libXdamage \
+              libXext \
+              libXfixes \
+              libxkbcommon \
+              libXrandr \
+              libxshmfence \
+              mesa-libgbm \
+              nspr \
+              nss \
+              pango
+          elif command -v yum >/dev/null 2>&1; then
+            $SUDO yum install -y \
+              alsa-lib \
+              atk \
+              at-spi2-core \
+              at-spi2-atk \
+              cairo \
+              cups-libs \
+              dbus-libs \
+              expat \
+              fontconfig \
+              glib2 \
+              gtk3 \
+              libdrm \
+              libX11 \
+              libX11-xcb \
+              libxcb \
+              libXcomposite \
+              libXdamage \
+              libXext \
+              libXfixes \
+              libxkbcommon \
+              libXrandr \
+              libxshmfence \
+              mesa-libgbm \
+              nspr \
+              nss \
+              pango
+          else
+            echo "No supported package manager found for Playwright browser dependencies" >&2
+            exit 1
+          fi
+
+      - name: Install Playwright browser
+        run: cd @space-operator/client-next && deno task setup:playwright
+
+      - name: Run browser smoke suite
+        run: cd @space-operator/client-next && deno task test:playwright:ci

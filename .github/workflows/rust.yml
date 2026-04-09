@@ -46,7 +46,13 @@ jobs:
       - name: Install deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          deno-version: 2.6.4
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.3
+      - name: Install Bun workspace deps
+        run: bun install --frozen-lockfile
       - name: Run tests
         run: cargo test -- --skip need_key_
       - name: cargo fmt

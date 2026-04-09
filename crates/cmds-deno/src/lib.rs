@@ -8,6 +8,7 @@ use flow_lib::{
     utils::LocalBoxFuture,
 };
 use flow_rpc::client::RpcCommandClient;
+use std::path::Path;
 use std::process::Stdio;
 use tempfile::tempdir;
 use tokio::{
@@ -27,7 +28,6 @@ fn source_from_config(nd: &NodeData) -> Option<String> {
     })
 }
 
-#[cfg(feature = "local-deps")]
 fn copy_dir_all(
     src: impl AsRef<std::path::Path>,
     dst: impl AsRef<std::path::Path>,
@@ -53,9 +53,10 @@ macro_rules! include {
     };
 }
 
-async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
+pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
     let source = source_from_config(&nd)
         .ok_or_else(|| CommandError::msg("deno_script source/code not found"))?;
+    let use_local_deps = cfg!(feature = "local-deps") || cfg!(test);
 
     let dir = tempdir()?;
 
@@ -79,7 +80,7 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
 
     tokio::fs::write(
         dir.path().join("deps.ts"),
-        if cfg!(feature = "local-deps") {
+        if use_local_deps {
             include!("/deps_local.ts")
         } else {
             include!("/deps_jsr.ts")
@@ -88,12 +89,33 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
     .await
     .context("write deps.ts")?;
 
-    #[cfg(feature = "local-deps")]
-    {
-        let libs = concat!(env!("CARGO_MANIFEST_DIR"), "/@space-operator");
-        copy_dir_all(libs, dir.path().join("@space-operator"))
+    // Deno 2.x requires a deno.json to resolve npm: specifiers.
+    // Use "none" so Deno resolves from its global cache instead of
+    // requiring a local node_modules directory in the temp dir.
+    tokio::fs::write(dir.path().join("deno.json"), r#"{"nodeModulesDir":"none"}"#)
+        .await
+        .context("write deno.json")?;
+
+    if use_local_deps {
+        let libs = std::fs::canonicalize(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../@space-operator"),
+        )
+        .context("resolve @space-operator workspace path")?;
+        let target = dir.path().join("@space-operator");
+        tokio::fs::create_dir_all(&target)
             .await
-            .context("copy dirs")?;
+            .context("create @space-operator temp dir")?;
+        for package in ["flow-lib", "deno-command-rpc"] {
+            copy_dir_all(libs.join(package), target.join(package))
+                .await
+                .context(format!("copy {package}"))?;
+        }
+        tokio::fs::copy(
+            target.join("deno-command-rpc/src/deps_local.ts"),
+            target.join("deno-command-rpc/src/deps.ts"),
+        )
+        .await
+        .context("activate local deno-command-rpc deps")?;
     }
 
     let deno_dir = std::env::var("DENO_DIR").unwrap_or_else(|_| {
@@ -103,8 +125,8 @@ async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> 
         home.display().to_string()
     });
 
-    // Note: Deno 1.x does not support IPv6 addresses in --deny-net.
-    // "localhost" covers both 127.0.0.1 and ::1 via hostname resolution.
+    // Keep localhost in the deny list so hostname resolution covers both
+    // 127.0.0.1 and ::1 for loopback traffic.
     let local_networks = [
         // "127.0.0.0/8",    // Loopback (127.0.0.1, etc.)
         "10.0.0.0/8",     // Private Class A (10.x.x.x)
@@ -225,7 +247,14 @@ mod tests {
             client::{InputPort, OutputPort},
             node::parse_definition,
         },
-        context::CommandContext,
+        context::{CommandContext, FlowServices, FlowSetServices, execute, get_jwt, signer},
+        flow_run_events,
+        solana::{Instructions, Pubkey, Signature, Wallet},
+        utils::tower_client::unimplemented_svc,
+    };
+    use std::{
+        sync::{Arc, Mutex},
+        time::Duration,
     };
     use uuid::Uuid;
 
@@ -265,6 +294,35 @@ mod tests {
         }
     }
 
+    fn test_context(execute_svc: execute::Svc, signer_svc: signer::Svc) -> CommandContext {
+        let base = CommandContext::test_context();
+        let data = base.raw().data.clone();
+        let node_id = data.node_id;
+        let times = data.times;
+        let (tx, _) = flow_run_events::channel();
+
+        CommandContext::builder()
+            .execute(execute_svc)
+            .get_jwt(unimplemented_svc::<
+                get_jwt::Request,
+                get_jwt::Response,
+                get_jwt::Error,
+            >())
+            .flow(FlowServices {
+                signer: signer_svc,
+                set: FlowSetServices {
+                    http: base.http().clone(),
+                    solana_client: base.solana_client().clone(),
+                    helius: None,
+                    extensions: Default::default(),
+                    api_input: unimplemented_svc(),
+                },
+            })
+            .data(data)
+            .node_log(flow_run_events::NodeLogSender::new(tx, node_id, times))
+            .build()
+    }
+
     #[actix_web::test]
     async fn test_run() {
         tracing_subscriber::fmt::try_init().ok();
@@ -282,5 +340,296 @@ mod tests {
             .unwrap();
         let c = value::from_value::<f64>(output["c"].clone()).unwrap();
         assert_eq!(c, 25.0);
+    }
+
+    #[actix_web::test]
+    async fn test_ctx_kv_reports_migration_guidance() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const JSON: &str = r#"{
+          "version": "0.1",
+          "name": "kv_unavailable",
+          "prefix": "deno",
+          "type": "deno",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [],
+            "outputs": []
+          },
+          "config_schema": {},
+          "config": {}
+        }"#;
+        const SOURCE: &str = r#"
+import * as lib from "jsr:@space-operator/flow-lib";
+
+export default class KvUnavailable implements lib.CommandTrait {
+  async run(ctx: lib.Context): Promise<Record<string, any>> {
+    await ctx.kv.set("foo", "bar");
+    return {};
+  }
+}
+"#;
+
+        let mut ctx = CommandContext::test_context();
+        ctx.extensions_mut()
+            .unwrap()
+            .insert(tower_rpc::Server::start_http_server().unwrap());
+
+        let cmd = new(&node_data(JSON, SOURCE)).await.unwrap();
+        let err = cmd.run(ctx, value::map! {}).await.unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("ctx.kv is not available in script runtimes"),
+            "{err:?}"
+        );
+    }
+
+    #[actix_web::test]
+    async fn test_execute_with_public_key_signer_uses_adapter_wallet() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const JSON: &str = r#"{
+          "version": "0.1",
+          "name": "adapter_execute",
+          "prefix": "deno",
+          "type": "deno",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [
+              { "name": "signer", "type_bounds": ["string"], "required": true, "passthrough": false }
+            ],
+            "outputs": [
+              { "name": "ok", "type": "f64", "optional": false }
+            ]
+          },
+          "config_schema": {},
+          "config": {}
+        }"#;
+        const SOURCE: &str = r#"
+import * as lib from "jsr:@space-operator/flow-lib";
+import * as web3 from "npm:@solana/web3.js";
+import { Instructions } from "jsr:@space-operator/flow-lib/context";
+
+export default class AdapterExecute implements lib.CommandTrait {
+  async run(ctx: lib.Context, params: Record<string, any>): Promise<Record<string, any>> {
+    const signer = new web3.PublicKey(params.signer);
+    await ctx.execute(new Instructions(signer, [signer], []), {});
+    return { ok: 1 };
+  }
+}
+"#;
+
+        let observed = Arc::new(Mutex::new(None::<Instructions>));
+        let execute_svc = execute::Svc::new(tower::service_fn({
+            let observed = observed.clone();
+            move |req: execute::Request| {
+                let observed = observed.clone();
+                async move {
+                    *observed.lock().unwrap() = Some(req.instructions.clone());
+                    Ok(execute::Response {
+                        signature: Some(Signature::default()),
+                    })
+                }
+            }
+        }));
+
+        let mut ctx = test_context(
+            execute_svc,
+            unimplemented_svc::<signer::SignatureRequest, signer::SignatureResponse, signer::Error>(
+            ),
+        );
+        ctx.extensions_mut()
+            .unwrap()
+            .insert(tower_rpc::Server::start_http_server().unwrap());
+
+        let signer = Pubkey::new_unique();
+        let cmd = new(&node_data(JSON, SOURCE)).await.unwrap();
+        let output = cmd
+            .run(ctx, value::map! { "signer" => signer.to_string() })
+            .await
+            .unwrap();
+
+        assert_eq!(value::from_value::<f64>(output["ok"].clone()).unwrap(), 1.0);
+
+        let instructions = observed.lock().unwrap().clone().unwrap();
+        assert_eq!(instructions.fee_payer, signer);
+        assert_eq!(
+            instructions.signers,
+            vec![Wallet::Adapter {
+                public_key: signer,
+                token: None,
+            }]
+        );
+    }
+
+    #[actix_web::test]
+    async fn test_request_signature_uses_signer_service() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const JSON: &str = r#"{
+          "version": "0.1",
+          "name": "adapter_signature",
+          "prefix": "deno",
+          "type": "deno",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [
+              { "name": "signer", "type_bounds": ["string"], "required": true, "passthrough": false }
+            ],
+            "outputs": [
+              { "name": "signature_length", "type": "f64", "optional": false },
+              { "name": "new_message_length", "type": "f64", "optional": false }
+            ]
+          },
+          "config_schema": {},
+          "config": {}
+        }"#;
+        const SOURCE: &str = r#"
+import * as lib from "jsr:@space-operator/flow-lib";
+import * as web3 from "npm:@solana/web3.js";
+
+export default class AdapterSignature implements lib.CommandTrait {
+  async run(ctx: lib.Context, params: Record<string, any>): Promise<Record<string, any>> {
+    const signer = new web3.PublicKey(params.signer);
+    const { signature, new_message } = await ctx.requestSignature(
+      signer,
+      new Uint8Array([1, 2, 3, 4])
+    );
+    return {
+      signature_length: signature.length,
+      new_message_length: new_message ? new_message.length : 0,
+    };
+  }
+}
+"#;
+
+        let observed = Arc::new(Mutex::new(None::<signer::SignatureRequest>));
+        let signer_svc = signer::Svc::new(tower::service_fn({
+            let observed = observed.clone();
+            move |req: signer::SignatureRequest| {
+                let observed = observed.clone();
+                async move {
+                    *observed.lock().unwrap() = Some(req);
+                    Ok(signer::SignatureResponse {
+                        signature: Signature::from([7u8; 64]),
+                        new_message: Some(b"updated".to_vec().into()),
+                    })
+                }
+            }
+        }));
+
+        let mut ctx = test_context(
+            unimplemented_svc::<execute::Request, execute::Response, execute::Error>(),
+            signer_svc,
+        );
+        ctx.extensions_mut()
+            .unwrap()
+            .insert(tower_rpc::Server::start_http_server().unwrap());
+
+        let signer = Pubkey::new_unique();
+        let cmd = new(&node_data(JSON, SOURCE)).await.unwrap();
+        let output = cmd
+            .run(ctx, value::map! { "signer" => signer.to_string() })
+            .await
+            .unwrap();
+
+        assert_eq!(
+            value::from_value::<f64>(output["signature_length"].clone()).unwrap(),
+            64.0
+        );
+        assert_eq!(
+            value::from_value::<f64>(output["new_message_length"].clone()).unwrap(),
+            7.0
+        );
+
+        let request = observed.lock().unwrap().clone().unwrap();
+        assert_eq!(request.pubkey, signer);
+        assert_eq!(request.message.as_ref(), b"\x01\x02\x03\x04");
+        assert_eq!(request.timeout, Duration::from_secs(120));
+        assert_eq!(
+            request.kind,
+            signer::SignatureRequestKind::TransactionMessage
+        );
+    }
+
+    #[actix_web::test]
+    async fn test_request_message_signature_uses_signer_service() {
+        tracing_subscriber::fmt::try_init().ok();
+
+        const JSON: &str = r#"{
+          "version": "0.1",
+          "name": "adapter_message_signature",
+          "prefix": "deno",
+          "type": "deno",
+          "author_handle": "spo",
+          "ports": {
+            "inputs": [
+              { "name": "signer", "type_bounds": ["string"], "required": true, "passthrough": false }
+            ],
+            "outputs": [
+              { "name": "signature_length", "type": "f64", "optional": false }
+            ]
+          },
+          "config_schema": {},
+          "config": {}
+        }"#;
+        const SOURCE: &str = r#"
+import * as lib from "jsr:@space-operator/flow-lib";
+import * as web3 from "npm:@solana/web3.js";
+
+export default class AdapterMessageSignature implements lib.CommandTrait {
+  async run(ctx: lib.Context, params: Record<string, any>): Promise<Record<string, any>> {
+    const signer = new web3.PublicKey(params.signer);
+    const { signature } = await ctx.requestMessageSignature(
+      signer,
+      new Uint8Array([9, 8, 7, 6])
+    );
+    return {
+      signature_length: signature.length,
+    };
+  }
+}
+"#;
+
+        let observed = Arc::new(Mutex::new(None::<signer::SignatureRequest>));
+        let signer_svc = signer::Svc::new(tower::service_fn({
+            let observed = observed.clone();
+            move |req: signer::SignatureRequest| {
+                let observed = observed.clone();
+                async move {
+                    *observed.lock().unwrap() = Some(req);
+                    Ok(signer::SignatureResponse {
+                        signature: Signature::from([9u8; 64]),
+                        new_message: None,
+                    })
+                }
+            }
+        }));
+
+        let mut ctx = test_context(
+            unimplemented_svc::<execute::Request, execute::Response, execute::Error>(),
+            signer_svc,
+        );
+        ctx.extensions_mut()
+            .unwrap()
+            .insert(tower_rpc::Server::start_http_server().unwrap());
+
+        let signer = Pubkey::new_unique();
+        let cmd = new(&node_data(JSON, SOURCE)).await.unwrap();
+        let output = cmd
+            .run(ctx, value::map! { "signer" => signer.to_string() })
+            .await
+            .unwrap();
+
+        assert_eq!(
+            value::from_value::<f64>(output["signature_length"].clone()).unwrap(),
+            64.0
+        );
+
+        let request = observed.lock().unwrap().clone().unwrap();
+        assert_eq!(request.pubkey, signer);
+        assert_eq!(request.message.as_ref(), b"\x09\x08\x07\x06");
+        assert_eq!(request.timeout, Duration::from_secs(120));
+        assert_eq!(request.kind, signer::SignatureRequestKind::Message);
     }
 }

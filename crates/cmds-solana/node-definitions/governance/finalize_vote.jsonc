@@ -79,12 +79,8 @@
       {
         "name": "signature",
         "type": "signature",
+        "optional": true,
         "tooltip": "Transaction signature"
-      },
-      {
-        "name": "vote_record_address",
-        "type": "pubkey",
-        "tooltip": "Vote record address"
       }
     ]
   },

@@ -1,58 +1,52 @@
 use crate::prelude::*;
-use spl_token_2022_interface::extension::ExtensionType;
+use spl_token_2022::extension::ExtensionType;
+use spl_token_2022::state::Mint;
+use spl_token_2022_interface::extension::ExtensionType as InterfaceExtensionType;
 
 const NAME: &str = "get_account_data_size";
 const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/get_account_data_size.jsonc");
 
 fn build() -> BuildResult {
-    static CACHE: BuilderCache = BuilderCache::new(|| {
-        CmdBuilder::new(DEFINITION)?
-            .check_name(NAME)?
-            .simple_instruction_info("signature")
-    });
+    static CACHE: BuilderCache =
+        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
     Ok(CACHE.clone()?.build(run))
 }
 
 flow_lib::submit!(CommandDescription::new(NAME, |_| { build() }));
 
-#[serde_as]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct Input {
-    pub fee_payer: Wallet,
-    #[serde_as(as = "AsPubkey")]
-    pub mint: Pubkey,
-    pub extension_types: Vec<ExtensionType>,
-    #[serde(default = "value::default::bool_true")]
-    pub submit: bool,
+    pub extension_types: Vec<InterfaceExtensionType>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct Output {
-    #[serde(default, with = "value::signature::opt")]
-    pub signature: Option<Signature>,
+    pub size: u64,
+    pub lamports: u64,
 }
 
-async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let ix = spl_token_2022_interface::instruction::get_account_data_size(
-        &spl_token_2022_interface::ID,
-        &input.mint,
-        &input.extension_types,
-    )?;
+async fn run(ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
+    let extension_types: Vec<ExtensionType> = input
+        .extension_types
+        .iter()
+        .map(|et| {
+            let discriminant: u16 = (*et).into();
+            ExtensionType::try_from(discriminant)
+                .map_err(|_| CommandError::msg(format!("unknown extension type: {}", discriminant)))
+        })
+        .collect::<Result<_, _>>()?;
 
-    let ins = Instructions {
-        lookup_tables: None,
-        fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer].into(),
-        instructions: [ix].into(),
-    };
+    let size = ExtensionType::try_calculate_account_len::<Mint>(&extension_types)?;
 
-    let ins = if input.submit {
-        ins
-    } else {
-        Default::default()
-    };
-    let signature = ctx.execute(ins, <_>::default()).await?.signature;
-    Ok(Output { signature })
+    let lamports = ctx
+        .solana_client()
+        .get_minimum_balance_for_rent_exemption(size)
+        .await?;
+
+    Ok(Output {
+        size: size as u64,
+        lamports,
+    })
 }
 
 #[cfg(test)]
@@ -65,20 +59,11 @@ mod tests {
     }
 
     #[test]
-    fn test_instruction() {
-        let mint = Pubkey::new_unique();
-
-        let ix = spl_token_2022_interface::instruction::get_account_data_size(
-            &spl_token_2022_interface::ID,
-            &mint,
-            &[
-                ExtensionType::TransferFeeAmount,
-                ExtensionType::ImmutableOwner,
-            ],
-        )
-        .unwrap();
-
-        assert_eq!(ix.program_id, spl_token_2022_interface::ID);
-        assert!(!ix.data.is_empty());
+    fn test_calculate_size() {
+        let size =
+            ExtensionType::try_calculate_account_len::<Mint>(&[ExtensionType::TransferFeeConfig])
+                .unwrap();
+        // Base Mint (82) + account type (1) + extension header + TransferFeeConfig
+        assert!(size > 82);
     }
 }

@@ -19,6 +19,7 @@ use hmac::{Hmac, Mac};
 use serde::Deserialize;
 use sha2::Sha256;
 use std::{
+    fmt,
     future::Future,
     ops::{ControlFlow, Deref},
 };
@@ -168,6 +169,7 @@ impl AuthV1 {
             Ok(AuthEither::One(AuthenticatedUser {
                 user_id: key.user_id,
                 pubkey: key.pubkey,
+                preserved_bearer_token: None,
             }))
         } else if token.starts_with(FLOW_RUN_TOKEN_PREFIX) {
             Ok(AuthEither::Two(FlowRunToken {
@@ -178,8 +180,29 @@ impl AuthV1 {
             Ok(AuthEither::One(AuthenticatedUser {
                 user_id: jwt.user_id,
                 pubkey: jwt.pubkey,
+                preserved_bearer_token: Some(PreservedBearerToken {
+                    access_token: jwt.token,
+                    expires_at: jwt.expires_at,
+                }),
             }))
         }
+    }
+}
+
+#[derive(Clone, Getters)]
+pub struct PreservedBearerToken {
+    #[get = "pub"]
+    access_token: String,
+    #[get = "pub"]
+    expires_at: i64,
+}
+
+impl fmt::Debug for PreservedBearerToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PreservedBearerToken")
+            .field("access_token", &"[redacted]")
+            .field("expires_at", &self.expires_at)
+            .finish()
     }
 }
 
@@ -191,6 +214,8 @@ pub struct Jwt {
     user_id: UserId,
     #[get = "pub"]
     pubkey: [u8; 32],
+    #[get = "pub"]
+    expires_at: i64,
 }
 
 fn jwt_verify_inner(token: &[u8], auth: &AuthV1) -> Result<Jwt, AuthError> {
@@ -221,6 +246,7 @@ fn jwt_verify_inner(token: &[u8], auth: &AuthV1) -> Result<Jwt, AuthError> {
         token: token_str,
         user_id: payload.sub,
         pubkey,
+        expires_at: payload.exp,
     })
 }
 
@@ -356,6 +382,8 @@ pub struct AuthenticatedUser {
     user_id: UserId,
     #[get = "pub"]
     pubkey: [u8; 32],
+    #[get = "pub"]
+    preserved_bearer_token: Option<PreservedBearerToken>,
 }
 
 impl Identity for AuthenticatedUser {
@@ -366,12 +394,17 @@ impl Identity for AuthenticatedUser {
         let result = Jwt::verify(req, auth).await.map(|x| Self {
             user_id: x.user_id,
             pubkey: x.pubkey,
+            preserved_bearer_token: Some(PreservedBearerToken {
+                access_token: x.token,
+                expires_at: x.expires_at,
+            }),
         });
         early_return!(control_flow(result));
 
         ApiKey::verify(req, auth).await.map(|x| Self {
             user_id: x.user_id,
             pubkey: x.pubkey,
+            preserved_bearer_token: None,
         })
     }
 }
@@ -457,5 +490,23 @@ impl AuthEither<AuthenticatedUser, FlowRunToken> {
             AuthEither::One(user) => Some(user.user_id),
             _ => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::PreservedBearerToken;
+
+    #[test]
+    fn preserved_bearer_token_debug_redacts_access_token() {
+        let token = PreservedBearerToken {
+            access_token: "super-secret-token".into(),
+            expires_at: 789,
+        };
+        let debug = format!("{token:?}");
+
+        assert!(!debug.contains("super-secret-token"));
+        assert!(debug.contains("[redacted]"));
+        assert!(debug.contains("789"));
     }
 }

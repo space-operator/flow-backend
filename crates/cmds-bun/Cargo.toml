@@ -1,0 +1,43 @@
+[package]
+name = "cmds-bun"
+version = "0.0.0"
+edition = "2024"
+
+[features]
+default = []
+
+[dependencies]
+flow-rpc.workspace = true
+flow-lib.workspace = true
+
+serde_json = { version = "1", features = ["preserve_order"] }
+serde = { version = "1", features = ["derive"] }
+anyhow = "1"
+
+tempfile = "3.10.1"
+tokio = "1"
+tokio-util = "0.7"
+url = "2.5.0"
+home = "0.5.9"
+tracing = "0.1"
+uuid = { version = "1", features = ["v4", "serde"] }
+futures = "0.3"
+libc = "0.2"
+
+[build-dependencies]
+flow-lib.workspace = true
+
+[dev-dependencies]
+tower-rpc.workspace = true
+value.workspace = true
+flow-lib-solana.workspace = true
+
+solana-keypair.workspace = true
+solana-signer.workspace = true
+solana-pubkey.workspace = true
+solana-rpc-client.workspace = true
+dotenvy = "0.15"
+
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+actix-web = "4.5.1"
+tower = "0.5"

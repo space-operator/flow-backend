@@ -50,6 +50,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new(input.proposal_rent_collector, false),
         AccountMeta::new(input.transaction_rent_collector, false),
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
+        AccountMeta::new_readonly(super::PROGRAM_ID, false),
     ];
 
     let instruction = build_instruction("close_settings_transaction", accounts, vec![]);

@@ -26,7 +26,7 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 RUN cargo build --profile=$PROFILE --bin flow-server --quiet
 RUN cp /build/target/*/flow-server /build/flow-server
 
-FROM docker.io/denoland/deno:debian AS deno
+FROM docker.io/denoland/deno:2.6.4 AS deno
 
 # Step 4:
 # Create a tiny output image.

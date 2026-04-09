@@ -582,6 +582,106 @@ export type Database = {
           },
         ]
       }
+      flows_v2: {
+        Row: {
+          backend_endpoint: string | null
+          created_at: string
+          current_branch_id: number | null
+          current_network: Json
+          default_viewport: Json
+          description: string
+          edges: Json
+          environment: Json
+          gg_marketplace: boolean
+          guide: Json | null
+          id: number
+          instructions_bundling: Json
+          is_public: boolean
+          lifecycle: Json | null
+          linked_flows: Json | null
+          meta_nodes: Json
+          name: string
+          nodes: Json
+          parent_flow: number | null
+          read_enabled: boolean
+          slug: string | null
+          start_shared: boolean
+          start_unverified: boolean
+          updated_at: string
+          user_id: string
+          uuid: string
+          viewport: Json
+          visibility_profile: string | null
+        }
+        Insert: {
+          backend_endpoint?: string | null
+          created_at?: string
+          current_branch_id?: number | null
+          current_network?: Json
+          default_viewport?: Json
+          description?: string
+          edges?: Json
+          environment?: Json
+          gg_marketplace?: boolean
+          guide?: Json | null
+          id?: never
+          instructions_bundling?: Json
+          is_public?: boolean
+          lifecycle?: Json | null
+          linked_flows?: Json | null
+          meta_nodes?: Json
+          name?: string
+          nodes?: Json
+          parent_flow?: number | null
+          read_enabled?: boolean
+          slug?: string | null
+          start_shared?: boolean
+          start_unverified?: boolean
+          updated_at?: string
+          user_id: string
+          uuid?: string
+          viewport?: Json
+          visibility_profile?: string | null
+        }
+        Update: {
+          backend_endpoint?: string | null
+          created_at?: string
+          current_branch_id?: number | null
+          current_network?: Json
+          default_viewport?: Json
+          description?: string
+          edges?: Json
+          environment?: Json
+          gg_marketplace?: boolean
+          guide?: Json | null
+          id?: never
+          instructions_bundling?: Json
+          is_public?: boolean
+          lifecycle?: Json | null
+          linked_flows?: Json | null
+          meta_nodes?: Json
+          name?: string
+          nodes?: Json
+          parent_flow?: number | null
+          read_enabled?: boolean
+          slug?: string | null
+          start_shared?: boolean
+          start_unverified?: boolean
+          updated_at?: string
+          user_id?: string
+          uuid?: string
+          viewport?: Json
+          visibility_profile?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flows_v2_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kvstore: {
         Row: {
           key: string

@@ -28,6 +28,10 @@ pub struct Input {
     #[serde_as(as = "AsPubkey")]
     pub owner_token: Pubkey,
     pub owner: Wallet,
+    #[serde_as(as = "AsPubkey")]
+    pub quote_token_vault: Pubkey,
+    #[serde_as(as = "AsPubkey")]
+    pub quote_mint: Pubkey,
     #[serde(default)]
     pub slices: Vec<super::RemainingAccountsSlice>,
     #[serde(default = "value::default::bool_true")]
@@ -44,6 +48,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
+        // Fixed accounts (CreatorWithdrawCtx)
         AccountMeta::new(input.presale, false),
         AccountMeta::new_readonly(input.presale_authority, false),
         AccountMeta::new(input.owner_token, false),
@@ -52,6 +57,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(spl_memo_interface::v3::ID, false),
         AccountMeta::new_readonly(event_authority, false),
         AccountMeta::new_readonly(PRESALE_PROGRAM_ID, false),
+        // Remaining accounts: quote vault context (CreatorWithdrawQuoteCtx)
+        AccountMeta::new(input.quote_token_vault, false),
+        AccountMeta::new_readonly(input.quote_mint, false),
     ];
 
     let mut data = discriminators::CREATOR_WITHDRAW.to_vec();
@@ -100,6 +108,8 @@ mod tests {
             "presale_authority" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "owner_token" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "owner" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
+            "quote_token_vault" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
+            "quote_mint" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
             "submit" => false,
         };
         let result = value::from_map::<Input>(input);

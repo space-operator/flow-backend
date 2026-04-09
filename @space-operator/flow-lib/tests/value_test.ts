@@ -1,4 +1,5 @@
 import { Value, isIValue } from "../src/value.ts";
+import { web3 } from "../src/deps.ts";
 import { assertStrictEquals, assert, assertThrows } from "jsr:@std/assert";
 
 Deno.test("isIValue", () => {
@@ -51,4 +52,11 @@ Deno.test("Value.fromJSON", () => {
   assertThrows(() => Value.fromJSON({ F: "" }));
   assertThrows(() => Value.fromJSON({ I: "1.1" }));
   assertThrows(() => Value.fromJSON({ I1: "1.1" }));
+});
+
+Deno.test("Value infers web3.Keypair as a B6 value", () => {
+  const keypair = web3.Keypair.generate();
+  const value = new Value(keypair);
+
+  assertStrictEquals(value.B6, Value.Keypair(keypair).B6);
 });

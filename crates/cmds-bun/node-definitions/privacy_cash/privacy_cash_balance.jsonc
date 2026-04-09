@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "privacy_cash_balance",
+  "prefix": "privacy_cash",
+  "description": "Query the private shielded balance in a Privacy Cash pool for a given wallet.",
+  "type": "bun",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-bun/src/privacy_cash/privacy_cash_balance.ts",
+  "ports": {
+    "inputs": [
+      {
+        "name": "keypair",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "64-byte Solana keypair (secret key || public key)"
+      },
+      {
+        "name": "rpc_url",
+        "type_bounds": [
+          "string"
+        ],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Solana JSON-RPC URL"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "balance",
+        "type": "string",
+        "optional": false,
+        "tooltip": "Private balance in lamports"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Privacy Cash",
+    "program": "privacy_cash",
+    "category": "privacy",
+    "icon_url": null,
+    "tags": [
+      "privacy-cash",
+      "privacy",
+      "balance",
+      "query",
+      "solana"
+    ]
+  },
+  "external_version": {
+    "program_id": "ATZj4jZ4FFzkvAcvk27DW9GRkgSbFnHo49fKKPQXU7VS",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/Privacy-Cash/privacy-cash"
+  }
+}

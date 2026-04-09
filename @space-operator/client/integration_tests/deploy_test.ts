@@ -6,7 +6,7 @@ import { assert, assertEquals } from "@std/assert";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import * as nacl from "tweetnacl";
 import { decodeBase64 } from "@std/encoding/base64";
-import { checkNoErrors, getEnv } from "./utils.ts";
+import { checkNoErrors, getEnv, getUuidEnv } from "./utils.ts";
 import { encodeBase58 } from "@std/encoding/base58";
 
 dotenv.loadSync({
@@ -23,10 +23,10 @@ function ed25519SignText(keypair: web3.Keypair, message: string): Uint8Array {
 const anonKey = getEnv("ANON_KEY");
 const apiKey = getEnv("APIKEY");
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "http://localhost:8000";
-const DEPLOY_RUN_FLOW_ID = "92b480ad-1a18-4a52-a459-4d5420890272"; // Transfer SOL
-const DEPLOY_DELETE_FLOW_ID = "102244df-74aa-4f77-a556-d9d279c64655"; // Collatz-Core
-const DEPLOY_ACTION_FLOW_ID = "9647ba16-de20-4209-9056-1a3dd8c2d6ab"; // Simple Transfer
-const DEPLOY_SIMPLE_FLOW_ID = "6c949718-69e2-47c1-8b93-d56b8e34ec51"; // Add
+const DEPLOY_RUN_FLOW_ID = getUuidEnv("FLOW_ID_TRANSFER_SOL");
+const DEPLOY_DELETE_FLOW_ID = getUuidEnv("FLOW_ID_COLLATZ_CORE");
+const DEPLOY_ACTION_FLOW_ID = getUuidEnv("FLOW_ID_SIMPLE_TRANSFER");
+const DEPLOY_SIMPLE_FLOW_ID = getUuidEnv("FLOW_ID_ADD");
 
 // sanitizeOps/sanitizeResources disabled on tests because @solana/web3.js
 // rpc-websockets and Supabase client create internal timers/connections that
@@ -37,9 +37,6 @@ Deno.test({ name: "deploy and run", sanitizeOps: false, sanitizeResources: false
     anonKey,
     token: apiKey,
   });
-  const ownerKeypair = web3.Keypair.fromSecretKey(
-    bs58.decodeBase58(getEnv("KEYPAIR")),
-  );
 
   const id = await owner.deployFlow(DEPLOY_RUN_FLOW_ID);
 
@@ -61,18 +58,6 @@ Deno.test({ name: "deploy and run", sanitizeOps: false, sanitizeResources: false
     },
   );
   starter.setToken(token);
-
-  {
-    const req = await owner.getSignatureRequest(flow_run_id);
-    await owner.signAndSubmitSignature(
-      req,
-      ownerKeypair.publicKey,
-      (tx) => {
-        tx.sign([ownerKeypair]);
-        return tx;
-      },
-    );
-  }
 
   {
     const req = await starter.getSignatureRequest(flow_run_id);

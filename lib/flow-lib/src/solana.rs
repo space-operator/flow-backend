@@ -1,6 +1,6 @@
 use crate::SolanaNet;
 use anyhow::anyhow;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de};
 use serde_with::{DisplayFromStr, serde_as, serde_conv};
 use solana_commitment_config::CommitmentLevel;
 use solana_program::instruction::{AccountMeta, Instruction};
@@ -32,16 +32,84 @@ impl KeypairExt for Keypair {
     }
 }
 
-#[serde_as]
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(untagged)]
+#[derive(Debug, PartialEq)]
 pub enum Wallet {
+    Keypair(Keypair),
+    Adapter {
+        public_key: Pubkey,
+        token: Option<String>,
+    },
+}
+
+#[serde_as]
+#[derive(Serialize)]
+#[serde(untagged)]
+enum WalletSerializeRepr {
     Keypair(#[serde_as(as = "AsKeypair")] Keypair),
     Adapter {
         #[serde_as(as = "AsPubkey")]
         public_key: Pubkey,
         token: Option<String>,
     },
+}
+
+#[serde_as]
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum WalletDeserializeRepr {
+    Keypair(#[serde_as(as = "AsKeypair")] Keypair),
+    Adapter {
+        #[serde_as(as = "AsPubkey")]
+        public_key: Pubkey,
+        token: Option<String>,
+    },
+    Legacy(#[serde_as(as = "serde_with::Bytes")] Vec<u8>),
+}
+
+fn decode_legacy_adapter_wallet(bytes: Vec<u8>) -> Option<Wallet> {
+    if bytes.len() != 64 || !bytes[..32].iter().all(|byte| *byte == 0) {
+        return None;
+    }
+
+    let public_key = Pubkey::new_from_array(bytes[32..].try_into().ok()?);
+    Some(Wallet::Adapter {
+        public_key,
+        token: None,
+    })
+}
+
+impl Serialize for Wallet {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Wallet::Keypair(keypair) => {
+                WalletSerializeRepr::Keypair(keypair.insecure_clone()).serialize(serializer)
+            }
+            Wallet::Adapter { public_key, token } => WalletSerializeRepr::Adapter {
+                public_key: *public_key,
+                token: token.clone(),
+            }
+            .serialize(serializer),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Wallet {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        match WalletDeserializeRepr::deserialize(deserializer)? {
+            WalletDeserializeRepr::Keypair(keypair) => Ok(Wallet::Keypair(keypair)),
+            WalletDeserializeRepr::Adapter { public_key, token } => {
+                Ok(Wallet::Adapter { public_key, token })
+            }
+            WalletDeserializeRepr::Legacy(bytes) => decode_legacy_adapter_wallet(bytes)
+                .ok_or_else(|| de::Error::custom("invalid legacy adapter wallet encoding")),
+        }
+    }
 }
 
 impl bincode::Encode for Wallet {
@@ -507,6 +575,96 @@ mod tests {
             })
         );
         assert_eq!(value::from_value::<Wallet>(value).unwrap(), x);
+    }
+
+    fn legacy_adapter_bytes(pubkey: Pubkey) -> [u8; 64] {
+        let mut bytes = [0u8; 64];
+        bytes[32..].copy_from_slice(&pubkey.to_bytes());
+        bytes
+    }
+
+    #[test]
+    fn test_wallet_legacy_adapter_bytes() {
+        let pubkey = Pubkey::new_unique();
+        let value = Value::B64(legacy_adapter_bytes(pubkey));
+        assert_eq!(
+            value::from_value::<Wallet>(value).unwrap(),
+            Wallet::Adapter {
+                public_key: pubkey,
+                token: None,
+            }
+        );
+    }
+
+    #[test]
+    fn test_wallet_rejects_invalid_legacy_bytes() {
+        let value = Value::B64([1u8; 64]);
+        assert!(value::from_value::<Wallet>(value).is_err());
+    }
+
+    #[test]
+    fn test_instructions_msgpack_adapter_signer() {
+        let fee_payer = Pubkey::new_unique();
+        let signer = Pubkey::new_unique();
+        let payload = serde_json::json!({
+            "fee_payer": fee_payer.to_bytes(),
+            "signers": [{
+                "public_key": signer.to_bytes(),
+                "token": null,
+            }],
+            "instructions": [],
+            "lookup_tables": null,
+        });
+
+        let encoded = rmp_serde::to_vec_named(&payload).unwrap();
+        let decoded: Instructions = rmp_serde::from_slice(&encoded).unwrap();
+
+        assert_eq!(decoded.fee_payer, fee_payer);
+        assert_eq!(
+            decoded.signers,
+            vec![Wallet::Adapter {
+                public_key: signer,
+                token: None,
+            }]
+        );
+        assert!(decoded.instructions.is_empty());
+    }
+
+    #[test]
+    fn test_instructions_msgpack_legacy_adapter_signer() {
+        let fee_payer = Pubkey::new_unique();
+        let signer = Pubkey::new_unique();
+        let payload = serde_json::json!({
+            "fee_payer": fee_payer.to_bytes(),
+            "signers": [legacy_adapter_bytes(signer).to_vec()],
+            "instructions": [],
+            "lookup_tables": null,
+        });
+
+        let encoded = rmp_serde::to_vec_named(&payload).unwrap();
+        let decoded: Instructions = rmp_serde::from_slice(&encoded).unwrap();
+
+        assert_eq!(decoded.fee_payer, fee_payer);
+        assert_eq!(
+            decoded.signers,
+            vec![Wallet::Adapter {
+                public_key: signer,
+                token: None,
+            }]
+        );
+    }
+
+    #[test]
+    fn test_instructions_msgpack_rejects_invalid_legacy_signer() {
+        let payload = serde_json::json!({
+            "fee_payer": Pubkey::new_unique().to_bytes(),
+            "signers": [vec![1u8; 64]],
+            "instructions": [],
+            "lookup_tables": null,
+        });
+
+        let encoded = rmp_serde::to_vec_named(&payload).unwrap();
+        assert!(rmp_serde::from_slice::<Instructions>(&encoded).is_err());
     }
 
     #[test]

@@ -21,6 +21,8 @@ pub enum Error {
     Any(#[from] BoxedError),
     #[error("canceled by user {}", unwrap(.0))]
     Canceled(Option<String>),
+    #[error("read mode violation: {0}")]
+    ReadModeViolation(String),
     #[error("value not found in field \"{0}\"")]
     ValueNotFound(Name),
     #[error("failed to create command: {}", .0)]

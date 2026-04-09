@@ -23,8 +23,10 @@ pub struct Input {
     pub admin: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub escrow: Pubkey,
-    #[serde_as(as = "AsPubkey")]
-    pub arbiter: Pubkey,
+    /// The arbiter must sign to prove the address is valid at configuration time.
+    /// Changed from Pubkey to Wallet in Apr 2026 after the on-chain program update
+    /// (Feb 2026) that requires arbiter as a signer.
+    pub arbiter: Wallet,
     #[serde(default = "value::default::bool_true")]
     pub submit: bool,
 }
@@ -43,7 +45,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let accounts = vec![
         AccountMeta::new(input.fee_payer.pubkey(), true),
         AccountMeta::new_readonly(input.admin.pubkey(), true),
-        AccountMeta::new_readonly(input.arbiter, false),
+        AccountMeta::new_readonly(input.arbiter.pubkey(), true),
         AccountMeta::new_readonly(input.escrow, false),
         AccountMeta::new(extensions, false),
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
@@ -60,9 +62,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer.clone(), input.admin.clone()]
-            .into_iter()
-            .collect(),
+        signers: [
+            input.fee_payer.clone(),
+            input.admin.clone(),
+            input.arbiter.clone(),
+        ]
+        .into_iter()
+        .collect(),
         instructions: vec![instruction],
     };
 
@@ -91,7 +97,7 @@ mod tests {
             "fee_payer" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
             "admin" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
             "escrow" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
-            "arbiter" => "GQZRKDqVzM4DXGGMEUNdnBD3CC4TTywh3PwgjYPBm8W9",
+            "arbiter" => "4rQanLxTFvdgtLsGirizXejgYXACawB5ShoZgvz4wwXi4jnii7XHSyUFJbvAk4ojRiEAHvzK6Qnjq7UyJFNbydeQ",
             "submit" => false,
         };
         let result = value::from_map::<Input>(input);
@@ -110,7 +116,7 @@ mod tests {
         let accounts = vec![
             AccountMeta::new(fee_payer, true),
             AccountMeta::new_readonly(admin, true),
-            AccountMeta::new_readonly(arbiter, false),
+            AccountMeta::new_readonly(arbiter, true),
             AccountMeta::new_readonly(escrow, false),
             AccountMeta::new(extensions, false),
             AccountMeta::new_readonly(solana_system_interface::program::ID, false),

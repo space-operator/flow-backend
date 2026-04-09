@@ -1,0 +1,7 @@
+{
+  "name": "@space-operator/umbra",
+  "version": "0.1.0",
+  "nodeModulesDir": "auto",
+  "exports": "./src/mod.ts",
+  "imports": {}
+}

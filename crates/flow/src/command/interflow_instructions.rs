@@ -78,6 +78,10 @@ impl CommandTrait for Interflow {
         .into()
     }
 
+    fn read_capability(&self) -> ReadCapability {
+        ReadCapability::Mutating
+    }
+
     async fn run(&self, ctx: CommandContext, inputs: ValueSet) -> Result<ValueSet, CommandError> {
         let start = ctx
             .get::<start_flow::Svc>()

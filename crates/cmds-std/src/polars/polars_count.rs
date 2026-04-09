@@ -19,7 +19,7 @@ pub struct Input {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Output {
-    pub count: u64,
+    pub polars_count: u64,
     pub null_counts: JsonValue,
 }
 
@@ -48,7 +48,7 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
     }
 
     Ok(Output {
-        count,
+        polars_count: count,
         null_counts: JsonValue::Object(null_map),
     })
 }
@@ -84,7 +84,7 @@ mod tests {
         )
         .await
         .unwrap();
-        assert_eq!(output.count, 5);
+        assert_eq!(output.polars_count, 5);
         let null_counts = output.null_counts.as_object().unwrap();
         for (_col_name, count) in null_counts {
             assert_eq!(count.as_u64().unwrap(), 0, "no nulls expected in test data");

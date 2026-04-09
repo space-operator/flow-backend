@@ -11,6 +11,7 @@ resolver = "3"
 [patch.crates-io]
 rhai = { git = "https://github.com/space-operator/rhai", rev = "b39d2bfb" }
 anchor-lang = { git = "https://github.com/space-operator/anchor", rev = "6469201c5399f95f9414839282ea91471bd20260" }
+n0-snafu = { path = "vendor/n0-snafu" }
 
 [profile.dev]
 debug = 0
@@ -40,6 +41,7 @@ cmds-pdg = { path = "crates/cmds-pdg", version = "0.0.0" }
 cmds-solana = { path = "crates/cmds-solana", version = "0.0.0" }
 rhai-script = { path = "crates/rhai-script", version = "0.0.0" }
 cmds-deno = { path = "crates/cmds-deno", version = "0.0.0" }
+cmds-bun = { path = "crates/cmds-bun", version = "0.0.0" }
 cmds-image = { path = "crates/cmds-image", version = "0.0.0" }
 anchor-libs = { path = "crates/anchor-libs", version = "0.0.0" }
 flow-lib-solana = { path = "crates/flow-lib-solana", version = "0.0.0" }

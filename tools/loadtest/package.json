@@ -1,0 +1,8 @@
+{
+  "name": "@space-operator/loadtest",
+  "private": true,
+  "scripts": {
+    "flow:start": "k6 run src/start-flow.js",
+    "deployment:start": "k6 run src/start-deployment.js"
+  }
+}

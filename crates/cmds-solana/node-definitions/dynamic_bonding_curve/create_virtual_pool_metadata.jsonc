@@ -49,7 +49,7 @@
           "json"
         ],
         "required": true,
-        "tooltip": "Padding data"
+        "tooltip": "Metadata: JSON object with name, website, logo fields"
       },
       {
         "name": "submit",

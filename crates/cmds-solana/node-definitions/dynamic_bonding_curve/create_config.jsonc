@@ -28,7 +28,7 @@
         "tooltip": "Config account (new keypair)"
       },
       {
-        "name": "fee_claimer",
+        "name": "signer",
         "type_bounds": [
           "pubkey"
         ],

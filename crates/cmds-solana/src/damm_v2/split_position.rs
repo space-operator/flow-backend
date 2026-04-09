@@ -1,6 +1,6 @@
 use super::{
-    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, SYSTEM_PROGRAM_ID, anchor_discriminator,
-    derive_event_authority, derive_position,
+    CP_AMM_PROGRAM_ID, POSITION_NFT_ACCOUNT_PREFIX, anchor_discriminator, derive_event_authority,
+    derive_position,
 };
 use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
@@ -29,6 +29,8 @@ pub struct SplitPositionArgs {
     pub reward_0_percentage: u8,
     pub reward_1_percentage: u8,
     pub inner_vesting_liquidity_percentage: u8,
+    #[serde(default)]
+    pub padding: [u8; 15],
 }
 
 #[serde_as]
@@ -85,18 +87,15 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.first_owner.pubkey(), true), // first_owner (writable signer)
-        AccountMeta::new(input.second_owner.pubkey(), true), // second_owner (signer)
-        AccountMeta::new(input.pool, false),                // pool (writable)
-        AccountMeta::new(first_position, false),            // first_position (writable)
-        AccountMeta::new_readonly(input.first_position_nft_mint, false), // first_position_nft_mint
-        AccountMeta::new_readonly(first_position_nft_account, false), // first_position_nft_account
-        AccountMeta::new(second_position, false),           // second_position (writable)
-        AccountMeta::new_readonly(input.second_position_nft_mint, false), // second_position_nft_mint
-        AccountMeta::new_readonly(second_position_nft_account, false), // second_position_nft_account
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),           // system_program
-        AccountMeta::new_readonly(event_authority, false),             // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false),           // program
+        AccountMeta::new(input.pool, false),     // [0] pool (writable)
+        AccountMeta::new(first_position, false), // [1] first_position (writable)
+        AccountMeta::new_readonly(first_position_nft_account, false), // [2] first_position_nft_account
+        AccountMeta::new(second_position, false), // [3] second_position (writable)
+        AccountMeta::new_readonly(second_position_nft_account, false), // [4] second_position_nft_account
+        AccountMeta::new_readonly(input.first_owner.pubkey(), true),   // [5] first_owner (signer)
+        AccountMeta::new_readonly(input.second_owner.pubkey(), true),  // [6] second_owner (signer)
+        AccountMeta::new_readonly(event_authority, false),             // [7] event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false),           // [8] program
     ];
 
     let mut data = anchor_discriminator(NAME).to_vec();
@@ -186,6 +185,7 @@ mod tests {
                 reward_0_percentage: 0,
                 reward_1_percentage: 0,
                 inner_vesting_liquidity_percentage: 0,
+                padding: [0; 15],
             },
             submit: false,
         };

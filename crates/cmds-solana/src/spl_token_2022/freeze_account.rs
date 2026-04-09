@@ -1,7 +1,7 @@
 use super::derive_ata;
 use crate::prelude::*;
 
-const NAME: &str = "freeze_account";
+const NAME: &str = "freeze_account_t22";
 const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/freeze_account.jsonc");
 
 fn build() -> BuildResult {

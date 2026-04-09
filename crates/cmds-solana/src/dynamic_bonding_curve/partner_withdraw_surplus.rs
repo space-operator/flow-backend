@@ -29,7 +29,7 @@ pub struct Input {
     pub token_quote_account: Pubkey,
     #[serde_as(as = "AsPubkey")]
     pub quote_mint: Pubkey,
-    pub fee_claimer: Wallet,
+    pub signer: Wallet,
     #[serde_as(as = "AsPubkey")]
     pub token_quote_program: Pubkey,
     #[serde(default = "value::default::bool_true")]
@@ -62,7 +62,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         // 5: quote_mint (readonly)
         AccountMeta::new_readonly(input.quote_mint, false),
         // 6: fee_claimer (signer)
-        AccountMeta::new_readonly(input.fee_claimer.pubkey(), true),
+        AccountMeta::new_readonly(input.signer.pubkey(), true),
         // 7: token_quote_program (readonly)
         AccountMeta::new_readonly(input.token_quote_program, false),
         // 8: event_authority (readonly, PDA)
@@ -79,7 +79,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let ins = Instructions {
         lookup_tables: None,
         fee_payer: input.fee_payer.pubkey(),
-        signers: [input.fee_payer, input.fee_claimer].into(),
+        signers: [input.fee_payer, input.signer].into(),
         instructions: [instruction].into(),
     };
     let ins = if input.submit {

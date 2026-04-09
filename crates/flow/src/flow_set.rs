@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::{
     collections::BTreeSet,
+    fmt,
     sync::{Arc, OnceLock},
 };
 use tokio::{sync::Semaphore, task::JoinHandle};
@@ -25,7 +26,10 @@ use value::{Decimal, Value};
 use crate::{
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
-    flow_registry::{BackendServices, FlowRegistry, StartFlowOptions, new_flow_run, run_rhai},
+    flow_registry::{
+        BackendServices, ExecutionMode, FlowRegistry, StartFlowOptions, get_secret, new_flow_run,
+        run_rhai,
+    },
 };
 
 /// Who can start flows
@@ -260,7 +264,10 @@ impl FlowDeployment {
         let resp = get_flow_row
             .ready()
             .await?
-            .call(get_flow_row::Request { flow_id })
+            .call(get_flow_row::Request {
+                flow_id,
+                fresh: true,
+            })
             .await?;
         let mut dep = FlowDeployment::new(resp.row);
 
@@ -278,7 +285,10 @@ impl FlowDeployment {
             let row = get_flow_row
                 .ready()
                 .await?
-                .call(get_flow_row::Request { flow_id: id })
+                .call(get_flow_row::Request {
+                    flow_id: id,
+                    fresh: true,
+                })
                 .await?
                 .row;
             let flow = Flow::builder().row(row).build();
@@ -307,11 +317,29 @@ pub struct FlowStarter {
     pub action_signer: Option<Pubkey>,
 }
 
+#[derive(Clone)]
+pub struct PreservedBearerToken {
+    pub access_token: String,
+    pub expires_at: i64,
+}
+
+impl fmt::Debug for PreservedBearerToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PreservedBearerToken")
+            .field("access_token", &"[redacted]")
+            .field("expires_at", &self.expires_at)
+            .finish()
+    }
+}
+
 /// Start a flow deployment by starting the entrypoint
 #[derive(Debug)]
 pub struct StartFlowDeploymentOptions {
     pub inputs: ValueSet,
     pub starter: FlowStarter,
+    pub preserved_bearer_token: Option<PreservedBearerToken>,
+    pub execution_mode: ExecutionMode,
+    pub origin: FlowRunOrigin,
 }
 
 pub enum StartFlowOrigin {
@@ -338,6 +366,7 @@ pub mod get_flow_row {
 
     pub struct Request {
         pub flow_id: FlowId,
+        pub fresh: bool,
     }
 
     impl actix::Message for Request {
@@ -443,13 +472,16 @@ impl FlowSet {
             .endpoints(self.context.endpoints)
             .depth(self.context.depth)
             .rhai_permit(self.context.rhai_permit)
+            .bun_permit(self.context.bun_permit)
             .rhai_tx(self.context.rhai_tx)
             .maybe_parent_flow_execute(self.context.parent_flow_execute)
             .maybe_rpc_server(self.context.rpc_server)
+            .hardcoded_wallets(self.context.hardcoded_wallets)
             .backend(BackendServices {
                 api_input: self.context.new_flow_api_request,
                 signer: self.context.signer,
                 token: self.context.get_jwt,
+                get_secret: self.context.get_secret,
                 new_flow_run: self.context.new_flow_run,
                 get_previous_values: unimplemented_svc(),
                 helius: None,
@@ -473,10 +505,11 @@ impl FlowSet {
                 StartFlowOptions {
                     partial_config: None,
                     collect_instructions: self.deployment.output_instructions,
+                    execution_mode: options.execution_mode,
                     action_identity: self.deployment.action_identity,
                     action_config,
                     fees: self.deployment.fees,
-                    origin: FlowRunOrigin::Start {},
+                    origin: options.origin,
                     solana_client: Some(self.deployment.solana_network),
                     parent_flow_execute: None,
                     deployment_id: Some(self.deployment.id),
@@ -493,11 +526,15 @@ pub struct FlowSetContext {
 
     signer: signer::Svc,
     get_jwt: get_jwt::Svc,
+    get_secret: get_secret::Svc,
     new_flow_run: new_flow_run::Svc,
     parent_flow_execute: Option<execute::Svc>,
+    hardcoded_wallets: crate::command::wallet::HardcodedWallets,
 
     #[builder(default = Arc::new(Semaphore::new(crate::flow_registry::rhai_pool_size())))]
     rhai_permit: Arc<Semaphore>,
+    #[builder(default = Arc::new(Semaphore::new(crate::flow_registry::bun_pool_size())))]
+    bun_permit: Arc<Semaphore>,
     #[builder(default)]
     rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,
 
@@ -552,9 +589,47 @@ mod tests {
                 is_public: false,
                 start_shared: false,
                 start_unverified: false,
+                read_enabled: false,
             },
         };
 
         assert_eq!(flow.wallets_id(), [7, 11].into());
+    }
+
+    #[test]
+    fn preserved_bearer_token_debug_redacts_access_token() {
+        let token = PreservedBearerToken {
+            access_token: "super-secret-token".into(),
+            expires_at: 123,
+        };
+        let debug = format!("{token:?}");
+
+        assert!(!debug.contains("super-secret-token"));
+        assert!(debug.contains("[redacted]"));
+        assert!(debug.contains("123"));
+    }
+
+    #[test]
+    fn start_flow_deployment_options_debug_redacts_nested_access_token() {
+        let options = StartFlowDeploymentOptions {
+            inputs: ValueSet::default(),
+            starter: FlowStarter {
+                user_id: Uuid::nil(),
+                pubkey: Pubkey::new_from_array([0; 32]),
+                authenticated: true,
+                action_signer: None,
+            },
+            preserved_bearer_token: Some(PreservedBearerToken {
+                access_token: "super-secret-token".into(),
+                expires_at: 456,
+            }),
+            execution_mode: ExecutionMode::Write,
+            origin: FlowRunOrigin::Start {},
+        };
+        let debug = format!("{options:?}");
+
+        assert!(!debug.contains("super-secret-token"));
+        assert!(debug.contains("[redacted]"));
+        assert!(debug.contains("456"));
     }
 }

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "register_identity_v1",
+  "prefix": "mpl_agent",
+  "type": "native",
+  "description": "Register an agent identity on a Core asset with an external plugin",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/mpl_agent/register_identity_v1.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying transaction fees"
+      },
+      {
+        "name": "asset",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "The Core asset to register the agent identity on"
+      },
+      {
+        "name": "agent_registration_uri",
+        "type_bounds": ["string"],
+        "required": true,
+        "tooltip": "Registration URI for the agent identity"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["keypair"],
+        "tooltip": "Asset authority. Defaults to fee_payer if not provided"
+      },
+      {
+        "name": "collection",
+        "type_bounds": ["pubkey"],
+        "tooltip": "Optional collection address for the asset"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "required": true,
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "agent_identity",
+        "type": "pubkey",
+        "tooltip": "Derived agent identity PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Metaplex",
+    "program": "mpl_agent",
+    "category": "agent",
+    "icon_url": "https://github.com/metaplex-foundation.png",
+    "tags": ["agent", "identity", "register"]
+  },
+  "external_version": {
+    "program_id": "1DREGFgysWYxLnRnKQnwrxnJQeSMk2HmGaC6whw2B2p",
+    "sdk_crate": "mpl-agent-identity",
+    "sdk_version": "0.2.1",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/metaplex-foundation/mpl-agent"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/mpl_agent/register_identity_v1.jsonc",
+    "repo": "flow-backend"
+  }
+}

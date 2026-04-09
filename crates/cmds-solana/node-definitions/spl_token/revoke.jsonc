@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "revoke",
+  "prefix": "spl_token",
+  "type": "native",
+  "description": "Revoke a delegate's approval to transfer SPL tokens",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token/revoke.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Token mint address"
+      },
+      {
+        "name": "owner",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Token account owner"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "source",
+        "type": "pubkey",
+        "tooltip": "Derived source token account (ATA of owner for mint)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "spl_token",
+    "category": "token",
+    "icon_url": "https://github.com/solana-labs.png",
+    "tags": ["token", "spl token", "revoke", "delegate"]
+  },
+  "external_version": {
+    "program_id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "sdk_crate": "spl-token-interface",
+    "sdk_version": "2",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_token/revoke.jsonc",
+    "repo": "flow-backend"
+  }
+}

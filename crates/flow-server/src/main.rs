@@ -30,6 +30,8 @@ use utils::address_book::AddressBook;
 
 // avoid commands being optimized out by the compiler
 #[cfg(feature = "commands")]
+use cmds_bun as _;
+#[cfg(feature = "commands")]
 use cmds_deno as _;
 #[cfg(feature = "commands")]
 use cmds_pdg as _;
@@ -186,6 +188,7 @@ async fn main() {
     let root = db_worker.clone();
 
     let shutdown_timeout_secs = config.shutdown_timeout_secs;
+    let read_cache = config.read_cache();
     let server_hostname = config.server_hostname.clone();
 
     let config = Arc::new(config);
@@ -207,6 +210,64 @@ async fn main() {
                 (
                     Matcher::Full("new_flow_run".to_owned()),
                     &[0.05, 0.1, 0.2, 0.5, 1.0],
+                ),
+                (
+                    Matcher::Full("flow_graph_build_seconds".to_owned()),
+                    &[0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
+                ),
+                (
+                    Matcher::Full("flow_graph_run_seconds".to_owned()),
+                    &[0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0],
+                ),
+                (
+                    Matcher::Full("flow_command_init_seconds".to_owned()),
+                    &[0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
+                ),
+                (
+                    Matcher::Full("flow_node_permit_wait_seconds".to_owned()),
+                    &[0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
+                ),
+                (
+                    Matcher::Full("flow_node_run_seconds".to_owned()),
+                    &[
+                        0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0,
+                    ],
+                ),
+                (
+                    Matcher::Full("flow_instruction_execute_seconds".to_owned()),
+                    &[0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0],
+                ),
+                (
+                    Matcher::Full("flow_instruction_batch_size".to_owned()),
+                    &[0.0, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0],
+                ),
+                (
+                    Matcher::Full("flow_run_subscribe_replay_events".to_owned()),
+                    &[0.0, 1.0, 10.0, 100.0, 1000.0, 5000.0, 10000.0],
+                ),
+                (
+                    Matcher::Full("flow_run_save_to_db_chunk_events".to_owned()),
+                    &[0.0, 8.0, 16.0, 32.0, 64.0],
+                ),
+                (
+                    Matcher::Full("flow_run_logs_batch_rows".to_owned()),
+                    &[0.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0],
+                ),
+                (
+                    Matcher::Full("flow_run_save_to_db_chunk_seconds".to_owned()),
+                    &[0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
+                ),
+                (
+                    Matcher::Full("flow_server_db_copy_in_chunk_batches".to_owned()),
+                    &[0.0, 1.0, 2.0, 4.0, 8.0, 16.0],
+                ),
+                (
+                    Matcher::Full("flow_server_db_copy_in_chunk_rows".to_owned()),
+                    &[0.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0],
+                ),
+                (
+                    Matcher::Full("flow_server_db_copy_in_seconds".to_owned()),
+                    &[0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
                 ),
             ],
         };
@@ -231,16 +292,23 @@ async fn main() {
             .service(api::start_flow::service(&config))
             .service(api::stop_flow::service(&config))
             .service(api::start_flow_shared::service(&config))
+            .service(api::read_flow::service(&config))
+            .service(api::read_flow::service_shared(&config))
             .service(api::clone_flow::service(&config))
             .service(api::get_flow_output::service(&config))
             .service(api::get_signature_request::service(&config))
             .service(api::deploy_flow::service(&config))
             .configure(api::flow_api_input::configure(store.clone()));
         if let Some(supabase_auth) = &supabase_auth {
-            flow = flow.service(api::start_flow_unverified::service(
-                &config,
-                web::Data::new(supabase_auth.clone()),
-            ))
+            flow = flow
+                .service(api::start_flow_unverified::service(
+                    &config,
+                    web::Data::new(supabase_auth.clone()),
+                ))
+                .service(api::read_flow::service_unverified(
+                    &config,
+                    web::Data::new(supabase_auth.clone()),
+                ))
         }
 
         let websocket = web::scope("/ws").service(ws::service(&config));
@@ -259,7 +327,9 @@ async fn main() {
             .service(api::kvstore::delete_item::service(&config))
             .service(api::kvstore::read_item::service(&config));
 
-        let deployment = web::scope("/deployment").service(api::start_deployment::service(&config));
+        let deployment = web::scope("/deployment")
+            .service(api::start_deployment::service(&config))
+            .service(api::read_deployment::service(&config));
 
         let logger = Logger::new(r#""%r" %s %b %{content-encoding}o %Dms"#)
             .exclude("/healthcheck")
@@ -269,6 +339,7 @@ async fn main() {
             .wrap(Compress::default())
             .wrap(logger)
             .app_data(web::Data::new(x402_1.clone()))
+            .app_data(web::Data::new(read_cache.clone()))
             .app_data(web::Data::new(db.clone()))
             .configure(|cfg| auth_v1::configure(cfg, &config, &db))
             .configure(|cfg| flow_server::middleware::url::configure(cfg, &config))

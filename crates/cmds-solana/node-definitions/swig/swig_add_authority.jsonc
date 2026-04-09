@@ -27,7 +27,7 @@
         "tooltip": "Swig wallet account address"
       },
       {
-        "name": "acting_authority",
+        "name": "signer",
         "type_bounds": [
           "keypair"
         ],
@@ -49,7 +49,31 @@
           "pubkey"
         ],
         "required": true,
-        "tooltip": "New Ed25519 authority public key to add"
+        "tooltip": "New authority public key to add"
+      },
+      {
+        "name": "authority_type",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "tooltip": "Authority type: 'ed25519' (default) or 'ed25519_session'"
+      },
+      {
+        "name": "initial_session_key",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "tooltip": "For ed25519_session: initial session key (defaults to new_authority)"
+      },
+      {
+        "name": "max_session_length",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": false,
+        "tooltip": "For ed25519_session: max session duration in slots (default 864000 ≈ 4 days)"
       },
       {
         "name": "permission_type",
@@ -109,6 +133,9 @@
   "config": {
     "acting_role_id": {
       "U": "0"
+    },
+    "authority_type": {
+      "S": "ed25519"
     },
     "permission_type": {
       "S": "all"

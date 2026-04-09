@@ -1,0 +1,13 @@
+{
+  "name": "@space-operator/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/mod.ts"
+  },
+  "dependencies": {
+    "zod": "^4.1.13"
+  }
+}

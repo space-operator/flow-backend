@@ -104,6 +104,8 @@ pub enum CommandType {
     Wasm,
     #[serde(rename = "deno")]
     Deno,
+    #[serde(rename = "bun")]
+    Bun,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -1,0 +1,165 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "smart_account_build_policy_action",
+  "prefix": "smart_account",
+  "type": "native",
+  "description": "Build a PolicyCreate settings action for a Squads smart account. Serializes the Borsh payload, derives the policy PDA, and reads the next transaction index from on-chain. Wire outputs to create_settings_transaction → proposal → execute chain.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/smart_account/build_policy_action.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "settings",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Settings PDA of the smart account"
+      },
+      {
+        "name": "policy_seed",
+        "type_bounds": ["u64"],
+        "required": true,
+        "tooltip": "Seed for deriving the policy PDA (unique per policy)"
+      },
+      {
+        "name": "policy_type",
+        "type_bounds": ["string"],
+        "required": true,
+        "tooltip": "Policy type: spending_limit, settings_change, or internal_fund_transfer"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "tooltip": "Token mint for spending limit (omit for native SOL)"
+      },
+      {
+        "name": "account_index",
+        "type_bounds": ["u8"],
+        "tooltip": "Smart account (vault) index for spending limit"
+      },
+      {
+        "name": "amount",
+        "type_bounds": ["u64"],
+        "tooltip": "Max amount per period for spending limit"
+      },
+      {
+        "name": "max_per_use",
+        "type_bounds": ["u64"],
+        "tooltip": "Max amount per use for spending limit"
+      },
+      {
+        "name": "period",
+        "type_bounds": ["u8"],
+        "tooltip": "Period for spending limit: 0=OneTime, 1=Daily, 2=Weekly, 3=Monthly"
+      },
+      {
+        "name": "destinations",
+        "type_bounds": ["object"],
+        "tooltip": "Allowed destinations for spending limit (empty = any)"
+      },
+      {
+        "name": "allowed_actions",
+        "type_bounds": ["object"],
+        "tooltip": "Allowed settings changes: [\"add_signer\", \"remove_signer\", \"change_threshold\", \"change_time_lock\"]"
+      },
+      {
+        "name": "target_program",
+        "type_bounds": ["pubkey"],
+        "tooltip": "Target program ID for ProgramInteraction instruction constraints"
+      },
+      {
+        "name": "data_offset",
+        "type_bounds": ["u32"],
+        "tooltip": "Instruction data constraint: byte offset to check"
+      },
+      {
+        "name": "data_value",
+        "type_bounds": ["bytes"],
+        "tooltip": "Instruction data constraint: expected value bytes"
+      },
+      {
+        "name": "data_operator",
+        "type_bounds": ["u8"],
+        "tooltip": "Data constraint operator: 0=Eq, 1=Neq, 2=Gt, 3=Lt, 4=Gte, 5=Lte"
+      },
+      {
+        "name": "pre_hook_program",
+        "type_bounds": ["pubkey"],
+        "tooltip": "Pre-hook program ID (called before policy execution)"
+      },
+      {
+        "name": "post_hook_program",
+        "type_bounds": ["pubkey"],
+        "tooltip": "Post-hook program ID (called after policy execution)"
+      },
+      {
+        "name": "policy_signers",
+        "type_bounds": ["object"],
+        "required": true,
+        "tooltip": "Policy signer pubkeys (array of base58 strings)"
+      },
+      {
+        "name": "permissions_mask",
+        "type_bounds": ["u8"],
+        "tooltip": "Permissions mask for policy signers (default: 7 = all)"
+      },
+      {
+        "name": "threshold",
+        "type_bounds": ["u16"],
+        "tooltip": "Approval threshold for the policy (default: 1)"
+      },
+      {
+        "name": "time_lock",
+        "type_bounds": ["u32"],
+        "tooltip": "Time lock in seconds (default: 0)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "actions",
+        "type": "bytes",
+        "tooltip": "Serialized SettingsAction bytes for create_settings_transaction"
+      },
+      {
+        "name": "policy_pdas",
+        "type": "object",
+        "tooltip": "Derived policy PDA(s) as array for wiring to execute_settings_transaction"
+      },
+      {
+        "name": "transaction_index",
+        "type": "u64",
+        "tooltip": "Next transaction index (read from on-chain settings)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Solana",
+    "program": "smart_account",
+    "category": "utility",
+    "icon_url": "https://github.com/Squads-Protocol.png",
+    "tags": [
+      "squads",
+      "multisig",
+      "smart-account",
+      "policy",
+      "create",
+      "spending-limit",
+      "settings-change"
+    ]
+  },
+  "external_version": {
+    "program_id": "SMRTzfY6DfH5ik3TKiyLFfXexV8uSG3d2UksSCYdunG",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/Squads-Protocol/smart-account-program"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/smart_account/build_policy_action.jsonc",
+    "repo": "flow-backend"
+  }
+}

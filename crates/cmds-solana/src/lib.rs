@@ -28,7 +28,9 @@ pub mod kfarms;
 pub mod klend;
 pub mod kvault;
 pub mod limo;
+pub mod magicblock;
 pub mod merkle_distributor;
+pub mod mpl_agent;
 pub mod mpl_bubblegum;
 pub mod mpl_core;
 pub mod mpl_core_candy_machine;
@@ -38,6 +40,7 @@ pub mod presale;
 pub mod privacy_cash;
 pub mod pyth;
 pub mod reflect;
+pub mod rewards;
 pub mod scope;
 pub mod secp256k1;
 pub mod smart_account;
@@ -117,6 +120,9 @@ pub async fn get_decimals(client: &RpcClient, mint_account: Pubkey) -> crate::Re
     info!("source_account: {:?}", source_account);
     Ok(source_account.decimals)
 }
+
+#[cfg(test)]
+pub mod test_utils;
 
 #[cfg(test)]
 pub mod tests {

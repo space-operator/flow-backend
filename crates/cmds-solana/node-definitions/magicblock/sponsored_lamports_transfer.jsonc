@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "sponsored_lamports_transfer",
+  "prefix": "magicblock",
+  "type": "native",
+  "description": "Sponsored lamports transfer with delegation in MagicBlock ephemeral rollup",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/magicblock/sponsored_lamports_transfer.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair"
+        ],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "destination",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": true,
+        "tooltip": "Destination account for lamports"
+      },
+      {
+        "name": "amount",
+        "type_bounds": [
+          "u64"
+        ],
+        "required": true,
+        "tooltip": "Amount of lamports to transfer"
+      },
+      {
+        "name": "salt",
+        "type_bounds": [
+          "json"
+        ],
+        "required": true,
+        "tooltip": "32-byte salt for PDA derivation"
+      },
+      {
+        "name": "submit",
+        "type_bounds": [
+          "bool"
+        ],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "lamports_pda",
+        "type": "pubkey",
+        "tooltip": "Lamports PDA"
+      },
+      {
+        "name": "rent_pda",
+        "type": "pubkey",
+        "tooltip": "Rent PDA"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": {
+      "B": true
+    }
+  },
+  "classification": {
+    "vendor": "MagicBlock",
+    "program": "ephemeral_spl_token",
+    "category": "token",
+    "icon_url": null,
+    "tags": [
+      "magicblock",
+      "ephemeral",
+      "token",
+      "sponsored",
+      "lamports",
+      "transfer"
+    ]
+  },
+  "external_version": {
+    "program_id": "SPLxh1LVZzEkX99H6rqYizhytLWPZVV296zyYDPagv2",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/magicblock/sponsored_lamports_transfer.jsonc",
+    "repo": "flow-backend"
+  }
+}

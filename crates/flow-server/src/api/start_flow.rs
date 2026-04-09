@@ -4,6 +4,8 @@ use crate::db_worker::{
     user_worker::{StartFlowFresh, StartFlowShared},
 };
 use db::connection::DbClient;
+use flow::flow_registry::ExecutionMode;
+use flow_lib::config::client::FlowRunOrigin;
 use flow_lib::config::client::PartialConfig;
 use hashbrown::{HashMap, HashSet};
 use value::Value;
@@ -78,6 +80,14 @@ async fn start_flow(
                 user: flow_lib::User { id: user_id },
                 flow_id,
                 input: inputs,
+                preserved_bearer_token: user.preserved_bearer_token().as_ref().map(|token| {
+                    flow::flow_set::PreservedBearerToken {
+                        access_token: token.access_token().clone(),
+                        expires_at: *token.expires_at(),
+                    }
+                }),
+                execution_mode: ExecutionMode::Write,
+                origin: FlowRunOrigin::Start {},
                 partial_config,
                 environment,
                 output_instructions,
@@ -125,6 +135,16 @@ async fn start_flow(
             .send(StartFlowShared {
                 flow_id,
                 input: inputs,
+                preserved_bearer_token: user.preserved_bearer_token().as_ref().map(|token| {
+                    flow::flow_set::PreservedBearerToken {
+                        access_token: token.access_token().clone(),
+                        expires_at: *token.expires_at(),
+                    }
+                }),
+                execution_mode: ExecutionMode::Write,
+                origin: FlowRunOrigin::StartShared {
+                    started_by: user_id,
+                },
                 partial_config,
                 environment,
                 output_instructions,

@@ -22,6 +22,8 @@ pub mod cmd_workers;
 pub mod db_worker;
 pub mod error;
 pub mod middleware;
+pub mod openapi;
+pub mod read_cache;
 pub mod user;
 pub mod ws;
 
@@ -322,6 +324,7 @@ impl Config {
         let mut cors = actix_cors::Cors::default()
             .allow_any_header()
             .allow_any_method()
+            .expose_headers(["ETag", "Cache-Control", "Last-Modified"])
             .supports_credentials();
         if self.cors_origins.iter().any(|v| v == "*") {
             cors = cors.allow_any_origin();
@@ -341,6 +344,10 @@ impl Config {
 
     pub fn signature_auth(&self) -> SignatureAuth {
         SignatureAuth::new(self.blake3_key)
+    }
+
+    pub fn read_cache(&self) -> read_cache::ReadCache {
+        read_cache::ReadCache::new(self.blake3_key)
     }
 
     /// Build a middleware to validate `apikey` header
@@ -589,6 +596,7 @@ mod tests {
     }
 
     #[actix_web::test]
+    #[ignore = "requires CDP_API_KEY_ID and CDP_API_KEY_SECRET"]
     async fn need_key_test_cdp_x402() {
         let x = CdpConfig {
             api_key_id: std::env::var("CDP_API_KEY_ID").unwrap(),

@@ -36,7 +36,7 @@
       {
         "name": "signers",
         "type_bounds": [
-          "object"
+          "json"
         ],
         "required": true,
         "tooltip": "Array of {key, permissions} signer objects"
@@ -81,6 +81,11 @@
         "name": "program_config",
         "type": "pubkey",
         "tooltip": "Program config PDA"
+      },
+      {
+        "name": "settings",
+        "type": "pubkey",
+        "tooltip": "Settings PDA of the newly created smart account"
       }
     ]
   },

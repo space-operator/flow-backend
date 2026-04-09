@@ -16,7 +16,8 @@ flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
     pub dataframe: String,
-    pub quantile: f64,
+    #[serde(alias = "quantile")]
+    pub polars_quantile: f64,
     #[serde(default)]
     pub columns: Option<JsonValue>,
 }
@@ -28,7 +29,7 @@ pub struct Output {
 }
 
 async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    if input.quantile < 0.0 || input.quantile > 1.0 {
+    if input.polars_quantile < 0.0 || input.polars_quantile > 1.0 {
         return Err(CommandError::msg("quantile must be between 0.0 and 1.0"));
     }
 
@@ -45,7 +46,7 @@ async fn run(_ctx: CommandContext, input: Input) -> Result<Output, CommandError>
 
     let exprs: Vec<Expr> = col_list
         .iter()
-        .map(|name| col(name.as_str()).quantile(lit(input.quantile), QuantileMethod::Linear))
+        .map(|name| col(name.as_str()).quantile(lit(input.polars_quantile), QuantileMethod::Linear))
         .collect();
 
     let mut result = df
@@ -87,7 +88,7 @@ mod tests {
             CommandContext::default(),
             Input {
                 dataframe: test_df_ipc(),
-                quantile: 0.5,
+                polars_quantile: 0.5,
                 columns: Some(serde_json::json!(["value"])),
             },
         )
@@ -108,7 +109,7 @@ mod tests {
             CommandContext::default(),
             Input {
                 dataframe: test_df_ipc(),
-                quantile: 0.0,
+                polars_quantile: 0.0,
                 columns: Some(serde_json::json!(["value"])),
             },
         )
@@ -128,7 +129,7 @@ mod tests {
             CommandContext::default(),
             Input {
                 dataframe: test_df_ipc(),
-                quantile: 1.0,
+                polars_quantile: 1.0,
                 columns: Some(serde_json::json!(["value"])),
             },
         )

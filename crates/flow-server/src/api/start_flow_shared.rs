@@ -1,6 +1,8 @@
 use super::prelude::*;
 use crate::db_worker::{GetUserWorker, user_worker::StartFlowShared};
 use db::pool::DbPool;
+use flow::flow_registry::ExecutionMode;
+use flow_lib::config::client::FlowRunOrigin;
 use hashbrown::HashMap;
 use value::Value;
 
@@ -69,6 +71,16 @@ async fn start_flow_shared(
         .send(StartFlowShared {
             flow_id,
             input: inputs,
+            preserved_bearer_token: user.preserved_bearer_token().as_ref().map(|token| {
+                flow::flow_set::PreservedBearerToken {
+                    access_token: token.access_token().clone(),
+                    expires_at: *token.expires_at(),
+                }
+            }),
+            execution_mode: ExecutionMode::Write,
+            origin: FlowRunOrigin::StartShared {
+                started_by: user_id,
+            },
             partial_config: None,
             environment: <_>::default(),
             output_instructions,

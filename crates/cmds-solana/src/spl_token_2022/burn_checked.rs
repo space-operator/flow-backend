@@ -1,7 +1,7 @@
 use super::derive_ata;
 use crate::prelude::*;
 
-const NAME: &str = "burn_checked";
+const NAME: &str = "burn_checked_t22";
 const DEFINITION: &str = flow_lib::node_definition!("spl_token_2022/burn_checked.jsonc");
 
 fn build() -> BuildResult {

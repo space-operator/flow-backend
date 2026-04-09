@@ -6,7 +6,7 @@ use crate::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
 
 const NAME: &str = "damm_v2_create_config";
-const IX_NAME: &str = "create_config";
+const IX_NAME: &str = "create_static_config";
 const DEFINITION: &str = flow_lib::node_definition!("damm_v2/create_config.jsonc");
 
 fn build() -> BuildResult {
@@ -55,13 +55,13 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let event_authority = derive_event_authority();
 
     let accounts = vec![
-        AccountMeta::new(input.payer.pubkey(), true), // payer (writable signer)
-        AccountMeta::new(config, false),              // config (writable, init)
-        AccountMeta::new_readonly(input.operator, false), // operator
-        AccountMeta::new(input.signer.pubkey(), true), // signer (signer)
-        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // system_program
-        AccountMeta::new_readonly(event_authority, false), // event_authority
-        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // program
+        AccountMeta::new(config, false), // [0] config (writable, init)
+        AccountMeta::new_readonly(input.operator, false), // [1] operator
+        AccountMeta::new_readonly(input.signer.pubkey(), true), // [2] signer (readonly signer)
+        AccountMeta::new(input.payer.pubkey(), true), // [3] payer (writable signer)
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false), // [4] system_program
+        AccountMeta::new_readonly(event_authority, false), // [5] event_authority
+        AccountMeta::new_readonly(CP_AMM_PROGRAM_ID, false), // [6] program
     ];
 
     let mut data = anchor_discriminator(IX_NAME).to_vec();

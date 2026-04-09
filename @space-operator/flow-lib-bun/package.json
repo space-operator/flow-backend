@@ -1,0 +1,19 @@
+{
+  "name": "@space-operator/flow-lib-bun",
+  "version": "0.15.0",
+  "module": "src/mod.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/mod.ts",
+    "./common": "./src/common.ts",
+    "./context": "./src/context.ts",
+    "./value": "./src/value.ts",
+    "./command": "./src/command.ts"
+  },
+  "dependencies": {
+    "@solana/web3.js": "1.94.0",
+    "@stablelib/base64": "^2.0.0",
+    "bs58": "^6.0.0",
+    "@msgpack/msgpack": "^3.0.0"
+  }
+}

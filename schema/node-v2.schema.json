@@ -43,6 +43,7 @@
                 "native",
                 "wasm",
                 "deno",
+                "bun",
                 "mock"
             ]
         },

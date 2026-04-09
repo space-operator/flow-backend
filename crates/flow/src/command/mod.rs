@@ -4,7 +4,7 @@ pub mod prelude {
         CmdInputDescription as Input, CmdOutputDescription as Output, FlowId, Name, Value,
         ValueSet, ValueType,
         command::{
-            CommandDescription, CommandError, CommandTrait,
+            CommandDescription, CommandError, CommandTrait, ReadCapability,
             builder::{BuildResult, BuilderCache, CmdBuilder},
         },
         config::client::NodeData,

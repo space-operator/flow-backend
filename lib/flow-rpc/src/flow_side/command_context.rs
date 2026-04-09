@@ -41,6 +41,7 @@ impl tower::Service<signer::SignatureRequest> for Client {
                         pubkey: req.pubkey,
                         message: req.message,
                         timeout: req.timeout,
+                        kind: req.kind,
                     },
                     standard(),
                 )
@@ -152,6 +153,7 @@ pub struct RequestSignatureData {
     pub pubkey: Pubkey,
     pub message: bytes::Bytes,
     pub timeout: Duration,
+    pub kind: signer::SignatureRequestKind,
 }
 
 impl bincode::Encode for RequestSignatureData {
@@ -162,6 +164,7 @@ impl bincode::Encode for RequestSignatureData {
         self.pubkey.as_array().encode(encoder)?;
         self.message.as_ref().encode(encoder)?;
         bincode::serde::Compat(&self.timeout).encode(encoder)?;
+        self.kind.encode(encoder)?;
         Ok(())
     }
 }
@@ -173,10 +176,12 @@ impl<C> bincode::Decode<C> for RequestSignatureData {
         let pubkey = Pubkey::new_from_array(<[u8; 32]>::decode(decoder)?);
         let message = bytes::Bytes::from(Vec::<u8>::decode(decoder)?);
         let timeout = bincode::serde::Compat::<Duration>::decode(decoder)?.0;
+        let kind = signer::SignatureRequestKind::decode(decoder)?;
         Ok(Self {
             pubkey,
             message,
             timeout,
+            kind,
         })
     }
 }
@@ -277,9 +282,16 @@ impl CommandContextImpl {
                 standard(),
             )?
             .0;
-            let result = ctx
-                .request_signature(data.pubkey, None, data.message, data.timeout)
-                .await?;
+            let result = match data.kind {
+                signer::SignatureRequestKind::TransactionMessage => {
+                    ctx.request_signature(data.pubkey, None, data.message, data.timeout)
+                        .await?
+                }
+                signer::SignatureRequestKind::Message => {
+                    ctx.request_message_signature(data.pubkey, None, data.message, data.timeout)
+                        .await?
+                }
+            };
             results
                 .get()
                 .set_response(&bincode::encode_to_vec(result, standard())?);

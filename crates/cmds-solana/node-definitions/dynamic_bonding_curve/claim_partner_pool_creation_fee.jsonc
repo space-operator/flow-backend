@@ -35,7 +35,7 @@
         "tooltip": "Pool account"
       },
       {
-        "name": "fee_claimer",
+        "name": "signer",
         "type_bounds": [
           "keypair"
         ],

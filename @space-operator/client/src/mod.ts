@@ -51,6 +51,7 @@ export {
   type NodeOutput,
   type NodeStart,
   SignatureRequest,
+  type SignatureRequestKind,
   type SignatureRequestsEvent,
   type SubscribeFlowRunEventsRequest,
   type SubscribeFlowRunEventsResponse,

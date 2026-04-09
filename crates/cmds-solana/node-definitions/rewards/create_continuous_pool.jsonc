@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "create_continuous_pool",
+  "prefix": "rewards",
+  "type": "native",
+  "description": "Create a continuous reward pool that distributes rewards proportionally to tracked token holders",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/rewards/create_continuous_pool.rs",
+  "ports": {
+    "inputs": [
+      { "name": "payer", "type_bounds": ["keypair"], "required": true, "passthrough": true, "tooltip": "Account paying for transaction and rent fees" },
+      { "name": "authority", "type_bounds": ["keypair"], "required": true, "tooltip": "Pool authority; stored on-chain" },
+      { "name": "seed", "type_bounds": ["keypair"], "required": true, "tooltip": "Arbitrary signer used as PDA seed for uniqueness" },
+      { "name": "tracked_mint", "type_bounds": ["pubkey"], "required": true, "tooltip": "SPL token mint whose holders are tracked for reward distribution" },
+      { "name": "reward_mint", "type_bounds": ["pubkey"], "required": true, "tooltip": "SPL token mint used for reward payouts" },
+      { "name": "reward_token_program", "type_bounds": ["pubkey"], "tooltip": "SPL Token or Token-2022 program for reward mint (defaults to SPL Token)" },
+      { "name": "balance_source", "type_bounds": ["json"], "required": true, "tooltip": "Balance source: 'OnChain' or 'AuthoritySet'" },
+      { "name": "revocable", "type_bounds": ["u8"], "required": true, "tooltip": "Whether user participation is revocable (1=yes, 0=no)" },
+      { "name": "clawback_ts", "type_bounds": ["i64"], "required": true, "tooltip": "Unix timestamp after which authority can claw back (0 to disable)" },
+      { "name": "submit", "type_bounds": ["bool"], "tooltip": "Submit transaction to the network" }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "signature", "optional": true, "tooltip": "Transaction signature" },
+      { "name": "reward_pool", "type": "pubkey", "tooltip": "Derived reward pool PDA address" },
+      { "name": "reward_vault", "type": "pubkey", "tooltip": "Reward pool token vault (ATA)" }
+    ]
+  },
+  "config_schema": {},
+  "config": { "submit": { "B": true } },
+  "classification": {
+    "vendor": "Solana",
+    "program": "rewards",
+    "category": "defi",
+    "icon_url": "https://github.com/solana-program.png",
+    "tags": ["rewards", "continuous", "pool", "create"]
+  },
+  "external_version": {
+    "program_id": "REWArDioXgQJ2fZKkfu9LCLjQfRwYWVVfsvcsR5hoXi",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-program/rewards"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/rewards/create_continuous_pool.jsonc",
+    "repo": "flow-backend"
+  }
+}

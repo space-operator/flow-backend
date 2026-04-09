@@ -169,12 +169,10 @@ impl DbPool {
     }
 
     pub async fn get_conn(&self) -> crate::Result<Connection> {
-        // let conn = tokio::time::timeout(Duration::from_secs(240), self.pg.get())
-        //     .await
-        //     .map_err(|_| Error::Timeout)?
-        //     .map_err(Error::GetDbConnection)?;
-        // Ok(conn)
-        self.pg.get().await.map_err(Error::GetDbConnection)
+        tokio::time::timeout(Duration::from_secs(5), self.pg.get())
+            .await
+            .map_err(|_| Error::Timeout)?
+            .map_err(Error::GetDbConnection)
     }
 
     pub async fn get_user_conn(
@@ -262,6 +260,33 @@ impl DbPool {
         let secret =
             String::from_utf8(decrypted).map_err(|e| crate::Error::LogicError(e.into()))?;
         Ok(Some(secret))
+    }
+
+    pub async fn get_user_vault_secret(
+        &self,
+        owner_user_id: UserId,
+        provider: &str,
+        key_label: &str,
+    ) -> crate::Result<Option<String>> {
+        use crate::connection::DbClient;
+
+        let conn = self.get_conn().await?;
+        let row = conn
+            .do_query_opt(
+                "SELECT ds.decrypted_secret
+                 FROM public.user_api_keys uak
+                 JOIN vault.decrypted_secrets ds
+                   ON ds.id = uak.vault_secret_id
+                 WHERE uak.user_id = $1
+                   AND uak.provider = $2
+                   AND uak.key_label = $3
+                 LIMIT 1",
+                &[&owner_user_id, &provider, &key_label],
+            )
+            .await
+            .map_err(crate::Error::exec("get_user_vault_secret"))?;
+
+        Ok(row.and_then(|r| r.get::<_, Option<String>>(0)))
     }
 }
 

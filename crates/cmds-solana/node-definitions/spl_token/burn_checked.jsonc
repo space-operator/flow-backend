@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "burn_checked",
+  "prefix": "spl_token",
+  "type": "native",
+  "description": "Burn SPL tokens with decimal validation",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/spl_token/burn_checked.rs",
+  "ports": {
+    "inputs": [
+      {
+        "name": "fee_payer",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Account paying for transaction fees"
+      },
+      {
+        "name": "mint",
+        "type_bounds": ["pubkey"],
+        "required": true,
+        "tooltip": "Token mint address"
+      },
+      {
+        "name": "authority",
+        "type_bounds": ["keypair"],
+        "required": true,
+        "passthrough": true,
+        "tooltip": "Token account owner or delegate"
+      },
+      {
+        "name": "amount",
+        "type_bounds": ["u64"],
+        "required": true,
+        "tooltip": "Amount of tokens to burn"
+      },
+      {
+        "name": "decimals",
+        "type_bounds": ["u8"],
+        "required": true,
+        "tooltip": "Expected decimals of the mint"
+      },
+      {
+        "name": "submit",
+        "type_bounds": ["bool"],
+        "tooltip": "Submit transaction to the network"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "signature",
+        "type": "signature",
+        "optional": true,
+        "tooltip": "Transaction signature"
+      },
+      {
+        "name": "account",
+        "type": "pubkey",
+        "tooltip": "Derived token account (ATA of authority for mint)"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {
+    "submit": { "B": true }
+  },
+  "classification": {
+    "vendor": "Solana",
+    "program": "spl_token",
+    "category": "token",
+    "icon_url": "https://github.com/solana-labs.png",
+    "tags": ["token", "spl token", "burn", "checked"]
+  },
+  "external_version": {
+    "program_id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "sdk_crate": "spl-token-interface",
+    "sdk_version": "2",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/spl_token/burn_checked.jsonc",
+    "repo": "flow-backend"
+  }
+}

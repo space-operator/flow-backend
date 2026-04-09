@@ -49,6 +49,13 @@ function header(key: string): string {
   }
 }
 
+function headerValue(key: string): string {
+  if (key.startsWith("b3-")) {
+    return key;
+  }
+  return key.startsWith("Bearer ") ? key : `Bearer ${key}`;
+}
+
 async function getToken(token?: TokenProvider): Promise<string> {
   switch (typeof token) {
     case "undefined":
@@ -133,15 +140,15 @@ export class Client {
       case "boolean":
         if (auth === true) {
           const token = await getToken(this.token);
-          req.headers.set(header(token), token);
+          req.headers.set(header(token), headerValue(token));
         }
         break;
       case "string":
-        req.headers.set(header(auth), auth);
+        req.headers.set(header(auth), headerValue(auth));
         break;
       case "function": {
         const token = await auth();
-        req.headers.set(header(token), token);
+        req.headers.set(header(token), headerValue(token));
         break;
       }
       default:
@@ -333,6 +340,36 @@ export class Client {
       id: req.id,
       signature: bs58.encodeBase58(signature),
       new_msg,
+    });
+  }
+
+  async signAndSubmitMessageSignature(
+    req: SignatureRequest,
+    publicKey: web3.PublicKey,
+    signMessage: (
+      message: Uint8Array,
+    ) =>
+      | string
+      | Uint8Array
+      | ArrayBuffer
+      | Promise<string | Uint8Array | ArrayBuffer>,
+  ) {
+    const requestedPublicKey = new web3.PublicKey(req.pubkey);
+    if (!publicKey.equals(requestedPublicKey)) {
+      throw new Error(
+        `different public key:\nrequested: ${req.pubkey}}\nwallet: ${publicKey.toBase58()}`,
+      );
+    }
+
+    const message = req.buildMessage();
+    const signature = await signMessage(message);
+    await this.submitSignature({
+      id: req.id,
+      signature: typeof signature === "string" ? signature : bs58.encodeBase58(
+        signature instanceof ArrayBuffer
+          ? new Uint8Array(signature)
+          : signature,
+      ),
     });
   }
 

@@ -118,6 +118,21 @@ pub fn find_spending_limit(settings: &Pubkey, seed: &Pubkey) -> (Pubkey, u8) {
     )
 }
 
+/// Find the policy PDA.
+///
+/// Seeds: `["smart_account", "policy", settings, seed_as_u64_le]`
+pub fn find_policy(settings: &Pubkey, seed: u64) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            b"smart_account",
+            b"policy",
+            settings.as_ref(),
+            &seed.to_le_bytes(),
+        ],
+        &PROGRAM_ID,
+    )
+}
+
 /// Find the transaction buffer PDA.
 ///
 /// Seeds: `["smart_account", settings, "transaction_buffer", creator, buffer_index_u8]`

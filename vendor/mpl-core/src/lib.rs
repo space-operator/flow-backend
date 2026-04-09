@@ -1,9 +1,9 @@
 #![allow(warnings)]
 
-pub mod remainder_vec;
 mod generated;
 mod hooked;
 mod indexable_asset;
+pub mod remainder_vec;
 
 pub use generated::programs::MPL_CORE_ID as ID;
 pub use generated::*;

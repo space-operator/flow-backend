@@ -6,8 +6,11 @@ const NAME: &str = "api_input";
 flow_lib::submit!(CommandDescription::new(NAME, |_| build()));
 fn build() -> BuildResult {
     const DEFINITION: &str = flow_lib::node_definition!("command/api_input.jsonc");
-    static CACHE: BuilderCache =
-        BuilderCache::new(|| CmdBuilder::new(DEFINITION)?.check_name(NAME));
+    static CACHE: BuilderCache = BuilderCache::new(|| {
+        Ok(CmdBuilder::new(DEFINITION)?
+            .check_name(NAME)?
+            .read_capability(ReadCapability::Interactive))
+    });
     Ok(CACHE.clone()?.build(run))
 }
 #[serde_as]

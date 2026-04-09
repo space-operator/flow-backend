@@ -80,8 +80,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(input.token_quote_program, false),
     ];
 
-    if let Some(referral) = input.referral_token_account {
-        accounts.push(AccountMeta::new(referral, false));
+    // Anchor optional accounts: pass program ID as sentinel when None
+    match input.referral_token_account {
+        Some(referral) => accounts.push(AccountMeta::new(referral, false)),
+        None => accounts.push(AccountMeta::new_readonly(DBC_PROGRAM_ID, false)),
     }
 
     accounts.push(AccountMeta::new_readonly(event_authority, false));

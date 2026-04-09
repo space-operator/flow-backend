@@ -44,12 +44,20 @@
         "tooltip": "Role ID of the authority"
       },
       {
-        "name": "instructions_data",
+        "name": "instructions",
         "type_bounds": [
-          "bytes"
+          "array"
         ],
         "required": true,
-        "tooltip": "Serialized inner instructions payload (compact format)"
+        "tooltip": "Inner instructions to execute through the Swig wallet"
+      },
+      {
+        "name": "signers",
+        "type_bounds": [
+          "array"
+        ],
+        "required": false,
+        "tooltip": "Additional keypair signers required by the inner instructions"
       },
       {
         "name": "submit",

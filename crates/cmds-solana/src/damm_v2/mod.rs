@@ -13,6 +13,44 @@
 
 use crate::prelude::*;
 
+/// Deserialize u128 from either a number or a nested map structure.
+/// Handles Flow2 platform's config serialization which wraps large u128 values
+/// as {"M": {"U": {"S": "bignum"}}} instead of flat {"U": "bignum"}.
+pub fn deserialize_flexible_u128<'de, D>(deserializer: D) -> Result<u128, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::Error;
+    let v = serde_json::Value::deserialize(deserializer)?;
+    if let Some(n) = v.as_u64() {
+        return Ok(n as u128);
+    }
+    if let Some(u) = v.get("U") {
+        if let Some(s) = u.as_str() {
+            return s.parse::<u128>().map_err(D::Error::custom);
+        }
+        if let Some(n) = u.as_u64() {
+            return Ok(n as u128);
+        }
+    }
+    if let Some(m) = v.get("M") {
+        if let Some(u) = m.get("U") {
+            if let Some(s_obj) = u.get("S") {
+                if let Some(s) = s_obj.as_str() {
+                    return s.parse::<u128>().map_err(D::Error::custom);
+                }
+            }
+            if let Some(s) = u.as_str() {
+                return s.parse::<u128>().map_err(D::Error::custom);
+            }
+        }
+    }
+    if let Some(s) = v.as_str() {
+        return s.parse::<u128>().map_err(D::Error::custom);
+    }
+    Err(D::Error::custom(format!("cannot parse u128 from: {v}")))
+}
+
 // =============================================================================
 // Program Constants
 // =============================================================================
@@ -59,7 +97,7 @@ pub fn derive_event_authority() -> Pubkey {
 // =============================================================================
 
 pub const POOL_PREFIX: &[u8] = b"pool";
-pub const CUSTOMIZABLE_POOL_PREFIX: &[u8] = b"customizable_pool";
+pub const CUSTOMIZABLE_POOL_PREFIX: &[u8] = b"cpool";
 pub const POSITION_PREFIX: &[u8] = b"position";
 pub const POSITION_NFT_ACCOUNT_PREFIX: &[u8] = b"position_nft_account";
 pub const TOKEN_VAULT_PREFIX: &[u8] = b"token_vault";
@@ -78,39 +116,41 @@ pub fn derive_config(index: u64) -> Pubkey {
     Pubkey::find_program_address(&[CONFIG_PREFIX, &index.to_le_bytes()], &CP_AMM_PROGRAM_ID).0
 }
 
-/// Derive pool PDA from config, token_a_mint, token_b_mint, and creator
-pub fn derive_pool(
-    config: &Pubkey,
-    token_a_mint: &Pubkey,
-    token_b_mint: &Pubkey,
-    creator: &Pubkey,
-) -> Pubkey {
+/// Derive pool PDA from config and sorted token mints (creator is NOT a seed)
+/// Seeds: [POOL_PREFIX, config, max(token_a_mint, token_b_mint), min(token_a_mint, token_b_mint)]
+pub fn derive_pool(config: &Pubkey, token_a_mint: &Pubkey, token_b_mint: &Pubkey) -> Pubkey {
+    let (max_mint, min_mint) = if token_a_mint > token_b_mint {
+        (token_a_mint, token_b_mint)
+    } else {
+        (token_b_mint, token_a_mint)
+    };
     Pubkey::find_program_address(
         &[
             POOL_PREFIX,
             config.as_ref(),
-            token_a_mint.as_ref(),
-            token_b_mint.as_ref(),
-            creator.as_ref(),
+            max_mint.as_ref(),
+            min_mint.as_ref(),
         ],
         &CP_AMM_PROGRAM_ID,
     )
     .0
 }
 
-/// Derive token vault PDA from pool and token_mint
+/// Derive token vault PDA from token_mint and pool
+/// Seeds: [TOKEN_VAULT_PREFIX, token_mint, pool] — note: mint before pool
 pub fn derive_token_vault(pool: &Pubkey, token_mint: &Pubkey) -> Pubkey {
     Pubkey::find_program_address(
-        &[TOKEN_VAULT_PREFIX, pool.as_ref(), token_mint.as_ref()],
+        &[TOKEN_VAULT_PREFIX, token_mint.as_ref(), pool.as_ref()],
         &CP_AMM_PROGRAM_ID,
     )
     .0
 }
 
-/// Derive position PDA from pool and position_nft_mint
-pub fn derive_position(pool: &Pubkey, position_nft_mint: &Pubkey) -> Pubkey {
+/// Derive position PDA from position_nft_mint only (pool is NOT a seed)
+/// Seeds: [POSITION_PREFIX, position_nft_mint]
+pub fn derive_position(_pool: &Pubkey, position_nft_mint: &Pubkey) -> Pubkey {
     Pubkey::find_program_address(
-        &[POSITION_PREFIX, pool.as_ref(), position_nft_mint.as_ref()],
+        &[POSITION_PREFIX, position_nft_mint.as_ref()],
         &CP_AMM_PROGRAM_ID,
     )
     .0
@@ -134,10 +174,15 @@ pub fn derive_token_badge(token_mint: &Pubkey) -> Pubkey {
     .0
 }
 
-/// Derive reward vault PDA
-pub fn derive_reward_vault(pool: &Pubkey, reward_mint: &Pubkey) -> Pubkey {
+/// Derive reward vault PDA from pool and reward_index
+/// Seeds: [REWARD_VAULT_PREFIX, pool, reward_index.to_le_bytes()]
+pub fn derive_reward_vault(pool: &Pubkey, reward_index: u8) -> Pubkey {
     Pubkey::find_program_address(
-        &[REWARD_VAULT_PREFIX, pool.as_ref(), reward_mint.as_ref()],
+        &[
+            REWARD_VAULT_PREFIX,
+            pool.as_ref(),
+            &reward_index.to_le_bytes(),
+        ],
         &CP_AMM_PROGRAM_ID,
     )
     .0
@@ -184,6 +229,7 @@ pub mod lock_position;
 pub mod permanent_lock_position;
 pub mod refresh_vesting;
 pub mod split_position;
+pub mod split_position2;
 
 // =============================================================================
 // Node Modules - Config Management (Operator)
@@ -216,6 +262,7 @@ pub mod withdraw_ineligible_reward;
 
 pub mod fix_config_fee_params;
 pub mod fix_pool_fee_params;
+pub mod fix_pool_layout_version;
 pub mod set_pool_status;
 pub mod update_pool_fees;
 

@@ -1,0 +1,18 @@
+{
+  "version": "0.1",
+  "name": "add",
+  "prefix": "test",
+  "type": "bun",
+  "author_handle": "spo",
+  "ports": {
+    "inputs": [
+      { "name": "a", "type_bounds": ["number"], "required": true, "passthrough": false },
+      { "name": "b", "type_bounds": ["number"], "required": true, "passthrough": false }
+    ],
+    "outputs": [
+      { "name": "c", "type": "number", "optional": false }
+    ]
+  },
+  "config_schema": {},
+  "config": {}
+}

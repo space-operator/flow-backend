@@ -72,7 +72,7 @@
         "tooltip": "[Auto-derived: pda] The treasury token b account"
       },
       {
-        "name": "operator",
+        "name": "signer",
         "type_bounds": [
           "keypair"
         ],

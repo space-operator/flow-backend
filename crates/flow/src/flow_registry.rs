@@ -32,6 +32,13 @@ use tracing::Instrument;
 
 pub const MAX_CALL_DEPTH: u32 = 1024;
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ExecutionMode {
+    #[default]
+    Write,
+    ReadSnapshot,
+}
+
 fn is_spo_builtin_node(node_id: &str, builtin: &str) -> bool {
     node_id == builtin
         || node_id.strip_prefix("@spo/").is_some_and(|name| name == builtin)
@@ -55,6 +62,7 @@ pub enum StopError {
 pub struct StartFlowOptions {
     pub partial_config: Option<PartialConfig>,
     pub collect_instructions: bool,
+    pub execution_mode: ExecutionMode,
     pub action_identity: Option<Pubkey>,
     pub action_config: Option<SolanaActionConfig>,
     pub fees: Vec<(Pubkey, u64)>,
@@ -69,6 +77,7 @@ pub struct BackendServices {
     pub api_input: api_input::Svc,
     pub signer: signer::Svc,
     pub token: get_jwt::Svc,
+    pub get_secret: get_secret::Svc,
     pub new_flow_run: new_flow_run::Svc,
     pub get_previous_values: get_previous_values::Svc,
     pub helius: Option<Arc<Helius>>,
@@ -80,6 +89,7 @@ impl BackendServices {
             api_input: unimplemented_svc(),
             signer: unimplemented_svc(),
             token: unimplemented_svc(),
+            get_secret: unimplemented_svc(),
             new_flow_run: unimplemented_svc(),
             get_previous_values: unimplemented_svc(),
             helius: None,
@@ -102,8 +112,10 @@ pub struct FlowRegistry {
 
     pub(crate) backend: BackendServices,
     pub(crate) parent_flow_execute: Option<execute::Svc>,
+    pub(crate) hardcoded_wallets: crate::command::wallet::HardcodedWallets,
 
     pub(crate) rhai_permit: Arc<Semaphore>,
+    pub(crate) bun_permit: Arc<Semaphore>,
     rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,
 
     pub(crate) rpc_server: Option<actix::Addr<tower_rpc::Server>>,
@@ -124,8 +136,10 @@ impl Default for FlowRegistry {
             endpoints: <_>::default(),
             signers_info: <_>::default(),
             parent_flow_execute: None,
+            hardcoded_wallets: <_>::default(),
             backend: BackendServices::unimplemented(),
             rhai_permit: Arc::new(Semaphore::new(rhai_pool_size())),
+            bun_permit: Arc::new(Semaphore::new(bun_pool_size())),
             rhai_tx: <_>::default(),
             rpc_server: None, // TODO: try this
             remotes: None,
@@ -248,6 +262,21 @@ pub fn rhai_pool_size() -> usize {
     })
 }
 
+pub fn bun_pool_size() -> usize {
+    static POOL_SIZE: OnceLock<usize> = OnceLock::new();
+    *POOL_SIZE.get_or_init(|| {
+        std::env::var("BUN_POOL_SIZE")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or_else(|| {
+                std::thread::available_parallelism()
+                    .map(|parallelism| parallelism.get().min(2))
+                    .unwrap_or(1)
+            })
+            .max(1)
+    })
+}
+
 fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) {
     tokio::task::spawn_blocking(move || {
         let mut engine = rhai_script::setup_engine();
@@ -332,6 +361,7 @@ impl FlowRegistry {
         signers_info: JsonValue,
         remotes: Option<AddressBook>,
         backend: BackendServices,
+        hardcoded_wallets: Option<crate::command::wallet::HardcodedWallets>,
         http: Option<reqwest::Client>,
         get_flow: S,
     ) -> crate::Result<Self>
@@ -354,9 +384,11 @@ impl FlowRegistry {
             flows: Arc::new(flows),
             signers_info,
             parent_flow_execute: None,
+            hardcoded_wallets: hardcoded_wallets.unwrap_or_default(),
             endpoints,
             backend,
             rhai_permit: Arc::new(Semaphore::new(rhai_pool_size())),
+            bun_permit: Arc::new(Semaphore::new(bun_pool_size())),
             rhai_tx: <_>::default(),
             rpc_server: tower_rpc::Server::start_http_server()
                 .inspect_err(|error| tracing::error!("tower_rpc error: {}", error))
@@ -496,6 +528,17 @@ impl FlowRegistry {
             let mut flow =
                 FlowGraph::from_cfg(flow_config, self.clone(), options.partial_config.as_ref())
                     .await?;
+            flow.ctx_data.read_only = matches!(options.execution_mode, ExecutionMode::ReadSnapshot);
+            if matches!(options.execution_mode, ExecutionMode::ReadSnapshot) {
+                if options.collect_instructions {
+                    return Err(new_flow_run::Error::BuildFlow(
+                        crate::Error::ReadModeViolation(
+                            "read-only flows cannot collect or return instructions".to_owned(),
+                        ),
+                    ));
+                }
+                flow.validate_read_only()?;
+            }
 
             if let Some(config) = options.action_config {
                 flow.tx_exec_config.execute_on = ExecuteOn::SolanaAction(config);
@@ -723,6 +766,45 @@ pub mod get_previous_values {
 
     pub struct Response {
         pub values: HashMap<NodeId, Vec<Value>>,
+    }
+
+    #[derive(ThisError, Debug)]
+    pub enum Error {
+        #[error("unauthorized")]
+        Unauthorized,
+        #[error(transparent)]
+        Common(#[from] CommonError),
+    }
+
+    impl From<actix::MailboxError> for Error {
+        fn from(value: actix::MailboxError) -> Self {
+            CommonError::from(value).into()
+        }
+    }
+}
+
+pub mod get_secret {
+    use flow_lib::{
+        UserId,
+        utils::{TowerClient, tower_client::CommonError},
+    };
+    use thiserror::Error as ThisError;
+
+    pub type Svc = TowerClient<Request, Response, Error>;
+
+    #[derive(Clone)]
+    pub struct Request {
+        pub user_id: UserId,
+        pub provider: String,
+        pub key_label: String,
+    }
+
+    impl actix::Message for Request {
+        type Result = Result<Response, Error>;
+    }
+
+    pub struct Response {
+        pub secret: Option<String>,
     }
 
     #[derive(ThisError, Debug)]

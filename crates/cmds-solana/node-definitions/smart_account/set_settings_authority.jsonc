@@ -27,7 +27,7 @@
         "tooltip": "Settings PDA of the smart account"
       },
       {
-        "name": "settings_authority",
+        "name": "signer",
         "type_bounds": [
           "keypair"
         ],

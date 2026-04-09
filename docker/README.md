@@ -44,6 +44,42 @@ Visit http://localhost:8000/ .
 
 Follow steps from [here](https://docs.spaceoperator.com/self-hosting/export-data-to-your-instance).
 
+# Bootstrap local test fixtures
+
+The repo includes a checked-in fixture export at
+[export.json](./export.json)
+with the historical sample flows used by the client integration and E2E tests.
+
+After the local stack is running, import and verify those fixtures with:
+
+```bash
+deno run -A ./bootstrap-test-fixtures.ts
+```
+
+For the full verification path, make sure your shell has:
+
+- `SERVICE_ROLE_KEY` so the script can inspect and patch fixture rows directly
+- `APIKEY` so the script can probe owner-authenticated deploys and anonymous
+  deployment starts against the real server API
+
+This will skip the import if the sample flows are already present, and it now
+also runs a fixture preflight that checks:
+
+- the required historical sample flows are present
+- Deno fixture nodes still have inline source/code
+- interflow fixture nodes still reference existing flows
+- the unverified-start path still works against the local server
+- the anonymous deployment-start path still works against the local server
+- the `API Input` fixture still works in both direct-submit and webhook mode
+- the deployment signature-request fixture still targets the configured owner
+  keypair
+
+To run only the fixture/server preflight without importing again:
+
+```bash
+deno run -A ./bootstrap-test-fixtures.ts --preflight-only
+```
+
 # Stop and clean up
 
 To stop services:
