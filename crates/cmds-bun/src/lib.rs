@@ -131,13 +131,22 @@ fn runtime_failure_details(
 
 /// Known companion modules that may be imported by cmd.ts via relative paths.
 /// Maps the import specifier to the embedded source.
-const COMPANION_MODULES: &[(&str, &str)] = &[(
-    "./umbra_common.ts",
-    include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/src/umbra/umbra_common.ts"
-    )),
-)];
+const COMPANION_MODULES: &[(&str, &str)] = &[
+    (
+        "./umbra_common.ts",
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/umbra/umbra_common.ts"
+        )),
+    ),
+    (
+        "./privacy_cash_common.ts",
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/privacy_cash/privacy_cash_common.ts"
+        )),
+    ),
+];
 
 /// If cmd.ts imports any known companion modules, write them into the temp dir.
 async fn write_companion_modules(
