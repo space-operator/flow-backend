@@ -7,6 +7,21 @@ import type { ServiceProxy } from "@space-operator/flow-lib-bun";
 
 type Console = typeof globalThis.console;
 type Level = "INFO" | "ERROR" | "WARN" | "DEBUG" | "TRACE";
+const LOG_TIMEOUT_MS = 2_000;
+
+async function fetchWithTimeout(
+  input: URL,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export class PromiseSet {
   #counter: bigint = 0n;
@@ -59,7 +74,7 @@ export class CaptureLog implements Console {
   }
 
   #call(level: Level, data: any[]) {
-    const promise = fetch(new URL("call", this.#service.base_url), {
+    const promise = fetchWithTimeout(new URL("call", this.#service.base_url), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -68,7 +83,7 @@ export class CaptureLog implements Console {
         svc_id: this.#service.id,
         input: { level, content: this.#formatLogContent(data) },
       }),
-    });
+    }, LOG_TIMEOUT_MS);
     this.#promises.push(promise);
   }
 

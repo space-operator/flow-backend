@@ -16,7 +16,7 @@ use db::{Error as DbError, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
     flow_registry::{
-        BackendServices, ExecutionMode, FlowRegistry, StartFlowOptions, get_flow,
+        BackendServices, ExecutionMode, FlowRegistry, StartFlowOptions, get_flow, get_secret,
         get_previous_values, new_flow_run,
     },
     flow_set::{
@@ -320,6 +320,8 @@ impl UserWorker {
     ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static + use<>
     {
         let new_flow_run = TowerClient::new(ActixService::from(ctx.address().recipient()));
+        let get_secret =
+            TowerClient::new(ActixService::from(ctx.address().recipient::<get_secret::Request>()));
 
         let root = DBWorker::from_registry();
         let db = self.db.clone();
@@ -444,6 +446,7 @@ impl UserWorker {
                 .depth(0)
                 .endpoints(endpoints)
                 .get_jwt(get_jwt)
+                .get_secret(get_secret)
                 .new_flow_run(new_flow_run)
                 .signer(signer)
                 .hardcoded_wallets(hardcoded_wallets)
@@ -575,6 +578,27 @@ impl actix::Handler<get_flow::Request> for UserWorker {
     }
 }
 
+impl actix::Handler<get_secret::Request> for UserWorker {
+    type Result = ResponseFuture<Result<get_secret::Response, get_secret::Error>>;
+
+    fn handle(&mut self, msg: get_secret::Request, _: &mut Self::Context) -> Self::Result {
+        let db = self.db.clone();
+        let user_id = self.user_id;
+        Box::pin(async move {
+            if user_id != msg.user_id {
+                return Err(get_secret::Error::Unauthorized);
+            }
+
+            let secret = db
+                .get_user_vault_secret(msg.user_id, &msg.provider, &msg.key_label)
+                .await
+                .map_err(get_secret::Error::other)?;
+
+            Ok(get_secret::Response { secret })
+        })
+    }
+}
+
 impl actix::Handler<new_flow_run::Request> for UserWorker {
     type Result = ResponseFuture<Result<new_flow_run::Response, new_flow_run::Error>>;
 
@@ -615,11 +639,16 @@ impl actix::Handler<new_flow_run::Request> for UserWorker {
                         let stop_signal = stop_signal.clone();
                         let stop_shared_signal = stop_shared_signal.clone();
                         let root = root.clone();
+                        let vault_placeholders =
+                            super::flow_run_worker::VaultPlaceholderConfig::from_client_config(
+                                &msg.config,
+                            );
                         move |ctx| {
                             FlowRunWorker::new(
                                 run_id,
                                 user_id,
                                 msg.shared_with,
+                                vault_placeholders.clone(),
                                 counter,
                                 msg.stream,
                                 db,
@@ -986,6 +1015,7 @@ impl actix::Handler<StartFlowFresh> for UserWorker {
                     api_input: TowerClient::new(new_flow_api_request),
                     signer: addr_to_service(&signer),
                     token: get_jwt,
+                    get_secret: addr_to_service(&addr),
                     new_flow_run: addr_to_service(&addr),
                     get_previous_values: addr_to_service(&addr),
                     helius,
@@ -1119,6 +1149,7 @@ impl actix::Handler<StartFlowShared> for UserWorker {
                     api_input: TowerClient::new(new_flow_api_request),
                     signer: addr_to_service(&signer),
                     token: get_jwt,
+                    get_secret: addr_to_service(&addr),
                     new_flow_run: addr_to_service(&addr),
                     get_previous_values: addr_to_service(&addr),
                     helius,

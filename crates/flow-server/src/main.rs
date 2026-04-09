@@ -211,6 +211,64 @@ async fn main() {
                     Matcher::Full("new_flow_run".to_owned()),
                     &[0.05, 0.1, 0.2, 0.5, 1.0],
                 ),
+                (
+                    Matcher::Full("flow_graph_build_seconds".to_owned()),
+                    &[0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
+                ),
+                (
+                    Matcher::Full("flow_graph_run_seconds".to_owned()),
+                    &[0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0],
+                ),
+                (
+                    Matcher::Full("flow_command_init_seconds".to_owned()),
+                    &[0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
+                ),
+                (
+                    Matcher::Full("flow_node_permit_wait_seconds".to_owned()),
+                    &[0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
+                ),
+                (
+                    Matcher::Full("flow_node_run_seconds".to_owned()),
+                    &[
+                        0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0,
+                    ],
+                ),
+                (
+                    Matcher::Full("flow_instruction_execute_seconds".to_owned()),
+                    &[0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0],
+                ),
+                (
+                    Matcher::Full("flow_instruction_batch_size".to_owned()),
+                    &[0.0, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0],
+                ),
+                (
+                    Matcher::Full("flow_run_subscribe_replay_events".to_owned()),
+                    &[0.0, 1.0, 10.0, 100.0, 1000.0, 5000.0, 10000.0],
+                ),
+                (
+                    Matcher::Full("flow_run_save_to_db_chunk_events".to_owned()),
+                    &[0.0, 8.0, 16.0, 32.0, 64.0],
+                ),
+                (
+                    Matcher::Full("flow_run_logs_batch_rows".to_owned()),
+                    &[0.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0],
+                ),
+                (
+                    Matcher::Full("flow_run_save_to_db_chunk_seconds".to_owned()),
+                    &[0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
+                ),
+                (
+                    Matcher::Full("flow_server_db_copy_in_chunk_batches".to_owned()),
+                    &[0.0, 1.0, 2.0, 4.0, 8.0, 16.0],
+                ),
+                (
+                    Matcher::Full("flow_server_db_copy_in_chunk_rows".to_owned()),
+                    &[0.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0],
+                ),
+                (
+                    Matcher::Full("flow_server_db_copy_in_seconds".to_owned()),
+                    &[0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
+                ),
             ],
         };
         let metrics_scope = create_metrics_actx_scope(&dashboard_input).unwrap();

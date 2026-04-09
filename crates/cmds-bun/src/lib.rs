@@ -16,20 +16,42 @@ use std::{
     path::{Path, PathBuf},
     process::Stdio,
     sync::{Arc, Mutex},
-    time::Instant,
+    time::{Duration, Instant},
 };
-use tempfile::tempdir;
+use tempfile::{TempDir, tempdir};
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, BufReader},
     process::{Child, Command},
     sync::Mutex as AsyncMutex,
 };
+use tokio_util::sync::CancellationToken;
 use url::Url;
 
 #[cfg(unix)]
 use std::os::unix::process::ExitStatusExt;
 
 const STDERR_TAIL_LIMIT: usize = 64;
+const DEFAULT_BUN_STARTUP_TIMEOUT_SECS: u64 = 30;
+const DEFAULT_BUN_RUN_TIMEOUT_SECS: u64 = 180;
+const BUN_ENV_ALLOWLIST: &[&str] = &[
+    "ALL_PROXY",
+    "HOME",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "LANG",
+    "LC_ALL",
+    "LOGNAME",
+    "NODE_EXTRA_CA_CERTS",
+    "NO_PROXY",
+    "PATH",
+    "SSL_CERT_DIR",
+    "SSL_CERT_FILE",
+    "TEMP",
+    "TMP",
+    "TMPDIR",
+    "TZ",
+    "USER",
+];
 
 fn source_from_config(nd: &NodeData) -> Option<String> {
     ["source", "code"].into_iter().find_map(|key| {
@@ -86,6 +108,44 @@ fn env_flag(name: &str) -> bool {
     )
 }
 
+fn duration_from_env(name: &str, default_secs: u64) -> Duration {
+    std::env::var(name)
+        .ok()
+        .and_then(|value| value.trim().parse::<u64>().ok())
+        .filter(|secs| *secs > 0)
+        .map(Duration::from_secs)
+        .unwrap_or_else(|| Duration::from_secs(default_secs))
+}
+
+fn bun_startup_timeout() -> Duration {
+    duration_from_env(
+        "SPACE_OPERATOR_BUN_STARTUP_TIMEOUT_SECS",
+        DEFAULT_BUN_STARTUP_TIMEOUT_SECS,
+    )
+}
+
+fn bun_run_timeout() -> Duration {
+    duration_from_env(
+        "SPACE_OPERATOR_BUN_TIMEOUT_SECS",
+        DEFAULT_BUN_RUN_TIMEOUT_SECS,
+    )
+}
+
+fn copy_allowed_environment(command: &mut Command) {
+    command.env_clear();
+    for key in BUN_ENV_ALLOWLIST {
+        if let Some(value) = std::env::var_os(key) {
+            command.env(key, value);
+        }
+    }
+    command.env("NO_COLOR", "1");
+}
+
+fn configure_bun_process(command: &mut Command) {
+    #[cfg(unix)]
+    command.process_group(0);
+}
+
 fn push_stderr_line(stderr_tail: &Arc<Mutex<VecDeque<String>>>, line: String) {
     let mut stderr_tail = stderr_tail.lock().unwrap();
     if stderr_tail.len() >= STDERR_TAIL_LIMIT {
@@ -129,6 +189,30 @@ fn runtime_failure_details(
     details
 }
 
+async fn terminate_child_process(child: &mut Child) -> std::io::Result<std::process::ExitStatus> {
+    #[cfg(unix)]
+    {
+        if let Some(pid) = child.id() {
+            let result = unsafe { libc::kill(-(pid as i32), libc::SIGKILL) };
+            if result == -1 {
+                let error = std::io::Error::last_os_error();
+                if error.raw_os_error() != Some(libc::ESRCH) {
+                    return Err(error);
+                }
+            }
+        } else {
+            child.start_kill()?;
+        }
+        child.wait().await
+    }
+
+    #[cfg(not(unix))]
+    {
+        child.start_kill()?;
+        child.wait().await
+    }
+}
+
 /// Known companion modules that may be imported by cmd.ts via relative paths.
 /// Maps the import specifier to the embedded source.
 const COMPANION_MODULES: &[(&str, &str)] = &[
@@ -164,26 +248,55 @@ async fn write_companion_modules(
     Ok(())
 }
 
-pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
-    let source = source_from_config(&nd)
-        .ok_or_else(|| CommandError::msg("bun command source/code not found"))?;
-    let started_at = Instant::now();
-
-    let dir = tempdir()?;
-
-    tokio::fs::write(dir.path().join("cmd.ts"), &source)
-        .await
-        .context("write cmd.ts")?;
-
-    // Write well-known companion modules that cmd.ts may import via relative paths.
-    write_companion_modules(dir.path(), &source).await?;
-
-    let mut node_data = nd.clone();
-    if let Some(obj) = node_data.config.as_object_mut() {
+fn sanitized_node_data(mut nd: NodeData) -> NodeData {
+    if let Some(obj) = nd.config.as_object_mut() {
         obj.remove("code");
         obj.remove("source");
     }
-    let node_data_json = serde_json::to_string(&node_data).context("serialize NodeData")?;
+    nd
+}
+
+async fn startup_failure_details(mut child: Child, summary: String) -> CommandError {
+    let status = terminate_child_process(&mut child).await.ok();
+
+    let mut stderr = String::new();
+    if let Some(pipe) = child.stderr.take() {
+        let mut reader = BufReader::new(pipe);
+        if let Err(error) = reader.read_to_string(&mut stderr).await {
+            tracing::warn!("read error: {}", error);
+        }
+    }
+
+    let mut message = summary;
+    if let Some(status) = status {
+        message.push_str(&format!(" ({})", exit_status_summary(status)));
+    }
+    let stderr = stderr.trim();
+    if !stderr.is_empty() {
+        message.push('\n');
+        message.push_str(stderr);
+    }
+    CommandError::msg(message)
+}
+
+struct RunningBun {
+    base_url: Url,
+    child: Child,
+    started_at: Instant,
+    stderr_tail: Arc<Mutex<VecDeque<String>>>,
+    _dir: TempDir,
+}
+
+async fn spawn_running_bun(source: &str, node_data: &NodeData) -> Result<RunningBun, CommandError> {
+    let dir = tempdir()?;
+
+    tokio::fs::write(dir.path().join("cmd.ts"), source)
+        .await
+        .context("write cmd.ts")?;
+
+    write_companion_modules(dir.path(), source).await?;
+
+    let node_data_json = serde_json::to_string(node_data).context("serialize NodeData")?;
     tokio::fs::write(dir.path().join("node-data.json"), node_data_json)
         .await
         .context("write node-data.json")?;
@@ -207,6 +320,8 @@ pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, Com
     let use_smol = env_flag("SPACE_OPERATOR_BUN_SMOL");
 
     let mut bun = Command::new("bun");
+    configure_bun_process(&mut bun);
+    copy_allowed_environment(&mut bun);
     if use_smol {
         tracing::info!("starting bun subprocess with --smol");
         bun.arg("--smol");
@@ -216,32 +331,37 @@ pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, Com
         .current_dir(dir.path())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .env("NO_COLOR", "1")
         .kill_on_drop(true)
         .arg("run")
         .arg("run.ts")
         .spawn()
         .context("spawn bun")?;
 
+    let startup_timeout = bun_startup_timeout();
     let mut stdout = BufReader::new(spawned.stdout.take().unwrap()).lines();
-    let port = match stdout.next_line().await? {
-        Some(line) => line.parse::<u16>().context("parse port")?,
-        None => {
-            let mut error = String::new();
-            let mut stderr = BufReader::new(spawned.stderr.take().unwrap());
-            stderr.read_to_string(&mut error).await.map_err(|error| {
-                tracing::warn!("read error: {}", error);
-                CommandError::msg("could not start bun command")
-            })?;
-            let status_suffix = match spawned.wait().await {
-                Ok(status) => format!(" ({})", exit_status_summary(status)),
-                Err(_) => String::new(),
-            };
-            return Err(CommandError::msg(format!(
-                "could not start bun command{status_suffix}\n{error}"
-            )));
+    let port = match tokio::time::timeout(startup_timeout, stdout.next_line()).await {
+        Ok(line) => match line? {
+            Some(line) => line.parse::<u16>().context("parse port")?,
+            None => {
+                return Err(startup_failure_details(
+                    spawned,
+                    "could not start bun command".to_owned(),
+                )
+                .await);
+            }
+        },
+        Err(_) => {
+            return Err(startup_failure_details(
+                spawned,
+                format!(
+                    "timed out waiting {}s for bun command startup",
+                    startup_timeout.as_secs()
+                ),
+            )
+            .await);
         }
     };
+    let started_at = Instant::now();
 
     let stderr_tail = Arc::new(Mutex::new(VecDeque::new()));
     let stderr_tail_reader = Arc::clone(&stderr_tail);
@@ -254,22 +374,46 @@ pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, Com
         }
     });
 
-    let base_url = Url::parse(&format!("http://127.0.0.1:{port}")).unwrap();
-    let cmd = RpcCommandClient::new(base_url, String::new(), node_data.clone());
-    let cmd = BunCommand {
-        inner: cmd,
-        spawned: AsyncMutex::new(spawned),
-        started_at,
-        stderr_tail,
-        source,
-    };
     tokio::spawn(async move {
         while let Ok(Some(line)) = stdout.next_line().await {
             tracing::debug!("{}", line);
         }
     });
 
-    Ok(Box::new(cmd))
+    Ok(RunningBun {
+        base_url: Url::parse(&format!("http://127.0.0.1:{port}")).unwrap(),
+        child: spawned,
+        started_at,
+        stderr_tail,
+        _dir: dir,
+    })
+}
+
+async fn terminate_running_bun(state: &mut RunningBun, reason: &str) -> String {
+    match terminate_child_process(&mut state.child).await {
+        Ok(status) => format!(
+            "{reason}\n{}",
+            runtime_failure_details(state.started_at, status, &state.stderr_tail)
+        ),
+        Err(error) => {
+            let mut details = format!("{reason}\nfailed to terminate bun subprocess: {error}");
+            if let Some(stderr) = stderr_tail_text(&state.stderr_tail) {
+                details.push_str("\nlast bun stderr:\n");
+                details.push_str(&stderr);
+            }
+            details
+        }
+    }
+}
+
+pub(crate) async fn new_owned(nd: NodeData) -> Result<Box<dyn CommandTrait>, CommandError> {
+    let source = source_from_config(&nd)
+        .ok_or_else(|| CommandError::msg("bun command source/code not found"))?;
+    Ok(Box::new(BunCommand {
+        node_data: sanitized_node_data(nd),
+        source,
+        running: AsyncMutex::new(None),
+    }))
 }
 
 pub fn new(nd: &NodeData) -> LocalBoxFuture<'static, Result<Box<dyn CommandTrait>, CommandError>> {
@@ -343,11 +487,55 @@ pub fn make_compiled_bun(
 include!(concat!(env!("OUT_DIR"), "/bun_nodes_generated.rs"));
 
 pub struct BunCommand {
-    inner: RpcCommandClient,
-    spawned: AsyncMutex<Child>,
-    started_at: Instant,
-    stderr_tail: Arc<Mutex<VecDeque<String>>>,
+    node_data: NodeData,
     source: String,
+    running: AsyncMutex<Option<RunningBun>>,
+}
+
+enum BunRunOutcome {
+    Success(flow_lib::value::Map),
+    Failure {
+        error: CommandError,
+        diagnostics: Option<String>,
+        reset_process: bool,
+    },
+    Timeout {
+        details: String,
+    },
+    Canceled {
+        details: String,
+    },
+}
+
+impl BunCommand {
+    async fn ensure_running(
+        &self,
+        running: &mut Option<RunningBun>,
+    ) -> Result<(), flow_lib::command::CommandError> {
+        let needs_spawn = match running.as_mut() {
+            Some(state) => match state.child.try_wait() {
+                Ok(Some(status)) => {
+                    tracing::warn!(
+                        "{}",
+                        runtime_failure_details(state.started_at, status, &state.stderr_tail)
+                    );
+                    true
+                }
+                Ok(None) => false,
+                Err(error) => {
+                    tracing::warn!("bun subprocess status check failed: {}", error);
+                    true
+                }
+            },
+            None => true,
+        };
+
+        if needs_spawn {
+            *running = Some(spawn_running_bun(&self.source, &self.node_data).await?);
+        }
+
+        Ok(())
+    }
 }
 
 #[async_trait(?Send)]
@@ -356,52 +544,144 @@ impl CommandTrait for BunCommand {
         flow_lib::CommandType::Bun
     }
     fn name(&self) -> flow_lib::Name {
-        self.inner.name()
+        self.node_data.node_id.clone()
     }
     fn inputs(&self) -> Vec<flow_lib::CmdInputDescription> {
-        self.inner.inputs()
+        self.node_data.cmd_inputs()
     }
     fn outputs(&self) -> Vec<flow_lib::CmdOutputDescription> {
-        self.inner.outputs()
-    }
-    fn permissions(&self) -> flow_lib::command::prelude::Permissions {
-        self.inner.permissions()
+        self.node_data.cmd_outputs()
     }
     async fn run(
         &self,
         ctx: flow_lib::context::CommandContext,
         params: flow_lib::ValueSet,
     ) -> Result<flow_lib::value::Map, CommandError> {
-        match self.inner.run(ctx, params).await {
-            Ok(output) => Ok(output),
-            Err(error) => {
-                let diagnostics = {
-                    let mut spawned = self.spawned.lock().await;
-                    match spawned.try_wait() {
-                        Ok(Some(status)) => Some(runtime_failure_details(
-                            self.started_at,
-                            status,
-                            &self.stderr_tail,
-                        )),
-                        Ok(None) => None,
-                        Err(wait_error) => Some(format!(
-                            "bun subprocess status check failed after {}ms: {}",
-                            self.started_at.elapsed().as_millis(),
-                            wait_error
-                        )),
-                    }
-                };
+        let cancel_token = ctx.get::<CancellationToken>().cloned();
+        let timeout = bun_run_timeout();
+        let mut running = self.running.lock().await;
+        self.ensure_running(&mut running).await?;
 
+        let outcome = {
+            let state = running
+                .as_mut()
+                .expect("ensure_running always populates the Bun runtime");
+            let client = RpcCommandClient::new(
+                state.base_url.clone(),
+                String::new(),
+                self.node_data.clone(),
+            );
+            let run = client.run(ctx, params);
+            tokio::pin!(run);
+
+            if let Some(cancel_token) = cancel_token {
+                tokio::select! {
+                    _ = cancel_token.cancelled() => BunRunOutcome::Canceled {
+                        details: terminate_running_bun(state, "bun command canceled").await,
+                    },
+                    result = tokio::time::timeout(timeout, &mut run) => match result {
+                        Ok(Ok(output)) => BunRunOutcome::Success(output),
+                        Ok(Err(error)) => {
+                            let (diagnostics, reset_process) = match state.child.try_wait() {
+                                Ok(Some(status)) => (
+                                    Some(runtime_failure_details(
+                                        state.started_at,
+                                        status,
+                                        &state.stderr_tail,
+                                    )),
+                                    true,
+                                ),
+                                Ok(None) => (None, false),
+                                Err(wait_error) => (
+                                    Some(format!(
+                                        "bun subprocess status check failed after {}ms: {}",
+                                        state.started_at.elapsed().as_millis(),
+                                        wait_error
+                                    )),
+                                    true,
+                                ),
+                            };
+                            BunRunOutcome::Failure {
+                                error,
+                                diagnostics,
+                                reset_process,
+                            }
+                        }
+                        Err(_) => BunRunOutcome::Timeout {
+                            details: terminate_running_bun(
+                                state,
+                                &format!("bun command timed out after {}s", timeout.as_secs()),
+                            )
+                            .await,
+                        },
+                    }
+                }
+            } else {
+                match tokio::time::timeout(timeout, &mut run).await {
+                    Ok(Ok(output)) => BunRunOutcome::Success(output),
+                    Ok(Err(error)) => {
+                        let (diagnostics, reset_process) = match state.child.try_wait() {
+                            Ok(Some(status)) => (
+                                Some(runtime_failure_details(
+                                    state.started_at,
+                                    status,
+                                    &state.stderr_tail,
+                                )),
+                                true,
+                            ),
+                            Ok(None) => (None, false),
+                            Err(wait_error) => (
+                                Some(format!(
+                                    "bun subprocess status check failed after {}ms: {}",
+                                    state.started_at.elapsed().as_millis(),
+                                    wait_error
+                                )),
+                                true,
+                            ),
+                        };
+                        BunRunOutcome::Failure {
+                            error,
+                            diagnostics,
+                            reset_process,
+                        }
+                    }
+                    Err(_) => BunRunOutcome::Timeout {
+                        details: terminate_running_bun(
+                            state,
+                            &format!("bun command timed out after {}s", timeout.as_secs()),
+                        )
+                        .await,
+                    },
+                }
+            }
+        };
+
+        match outcome {
+            BunRunOutcome::Success(output) => Ok(output),
+            BunRunOutcome::Failure {
+                error,
+                diagnostics,
+                reset_process,
+            } => {
+                if reset_process {
+                    running.take();
+                }
                 let message = diagnostics.map_or_else(
                     || error.to_string(),
                     |details| format!("{error}\n{details}"),
                 );
                 Err(CommandError::msg(message))
             }
+            BunRunOutcome::Timeout { details } | BunRunOutcome::Canceled { details } => {
+                running.take();
+                Err(CommandError::msg(details))
+            }
         }
     }
     async fn destroy(&mut self) {
-        self.spawned.get_mut().kill().await.ok();
+        if let Some(mut state) = self.running.get_mut().take() {
+            terminate_child_process(&mut state.child).await.ok();
+        }
     }
     fn node_data(&self) -> client::NodeData {
         let mut data = default_node_data(self);

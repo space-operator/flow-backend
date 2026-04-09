@@ -77,6 +77,7 @@ pub struct BackendServices {
     pub api_input: api_input::Svc,
     pub signer: signer::Svc,
     pub token: get_jwt::Svc,
+    pub get_secret: get_secret::Svc,
     pub new_flow_run: new_flow_run::Svc,
     pub get_previous_values: get_previous_values::Svc,
     pub helius: Option<Arc<Helius>>,
@@ -88,6 +89,7 @@ impl BackendServices {
             api_input: unimplemented_svc(),
             signer: unimplemented_svc(),
             token: unimplemented_svc(),
+            get_secret: unimplemented_svc(),
             new_flow_run: unimplemented_svc(),
             get_previous_values: unimplemented_svc(),
             helius: None,
@@ -113,6 +115,7 @@ pub struct FlowRegistry {
     pub(crate) hardcoded_wallets: crate::command::wallet::HardcodedWallets,
 
     pub(crate) rhai_permit: Arc<Semaphore>,
+    pub(crate) bun_permit: Arc<Semaphore>,
     rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,
 
     pub(crate) rpc_server: Option<actix::Addr<tower_rpc::Server>>,
@@ -136,6 +139,7 @@ impl Default for FlowRegistry {
             hardcoded_wallets: <_>::default(),
             backend: BackendServices::unimplemented(),
             rhai_permit: Arc::new(Semaphore::new(rhai_pool_size())),
+            bun_permit: Arc::new(Semaphore::new(bun_pool_size())),
             rhai_tx: <_>::default(),
             rpc_server: None, // TODO: try this
             remotes: None,
@@ -258,6 +262,21 @@ pub fn rhai_pool_size() -> usize {
     })
 }
 
+pub fn bun_pool_size() -> usize {
+    static POOL_SIZE: OnceLock<usize> = OnceLock::new();
+    *POOL_SIZE.get_or_init(|| {
+        std::env::var("BUN_POOL_SIZE")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or_else(|| {
+                std::thread::available_parallelism()
+                    .map(|parallelism| parallelism.get().min(2))
+                    .unwrap_or(1)
+            })
+            .max(1)
+    })
+}
+
 fn spawn_rhai_thread(rx: crossbeam_channel::Receiver<run_rhai::ChannelMessage>) {
     tokio::task::spawn_blocking(move || {
         let mut engine = rhai_script::setup_engine();
@@ -369,6 +388,7 @@ impl FlowRegistry {
             endpoints,
             backend,
             rhai_permit: Arc::new(Semaphore::new(rhai_pool_size())),
+            bun_permit: Arc::new(Semaphore::new(bun_pool_size())),
             rhai_tx: <_>::default(),
             rpc_server: tower_rpc::Server::start_http_server()
                 .inspect_err(|error| tracing::error!("tower_rpc error: {}", error))
@@ -746,6 +766,45 @@ pub mod get_previous_values {
 
     pub struct Response {
         pub values: HashMap<NodeId, Vec<Value>>,
+    }
+
+    #[derive(ThisError, Debug)]
+    pub enum Error {
+        #[error("unauthorized")]
+        Unauthorized,
+        #[error(transparent)]
+        Common(#[from] CommonError),
+    }
+
+    impl From<actix::MailboxError> for Error {
+        fn from(value: actix::MailboxError) -> Self {
+            CommonError::from(value).into()
+        }
+    }
+}
+
+pub mod get_secret {
+    use flow_lib::{
+        UserId,
+        utils::{TowerClient, tower_client::CommonError},
+    };
+    use thiserror::Error as ThisError;
+
+    pub type Svc = TowerClient<Request, Response, Error>;
+
+    #[derive(Clone)]
+    pub struct Request {
+        pub user_id: UserId,
+        pub provider: String,
+        pub key_label: String,
+    }
+
+    impl actix::Message for Request {
+        type Result = Result<Response, Error>;
+    }
+
+    pub struct Response {
+        pub secret: Option<String>,
     }
 
     #[derive(ThisError, Debug)]

@@ -5,7 +5,8 @@ use crate::{
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
 use flow_lib::{
-    CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, ValueSet,
+    CmdInputDescription, CommandType, FlowConfig, FlowId, FlowRunId, Name, NodeId, UserId,
+    ValueSet, ValueType,
     command::{
         CommandError, CommandFactory, CommandTrait, InstructionInfo, input_accepts_pubkey,
         input_is_required, keypair_outputs, output_is_optional, passthrough_outputs,
@@ -48,7 +49,7 @@ use std::{
         atomic::{AtomicU32, Ordering},
     },
     task::Poll,
-    time::Duration,
+    time::{Duration, Instant},
 };
 use thiserror::Error as ThisError;
 use tokio::{
@@ -62,6 +63,16 @@ use uuid::Uuid;
 use value::Value;
 
 pub const MAX_STOP_TIMEOUT: u32 = Duration::from_secs(5 * 60).as_millis() as u32;
+
+fn command_type_label(command_type: CommandType) -> &'static str {
+    match command_type {
+        CommandType::Native => "native",
+        CommandType::Mock => "mock",
+        CommandType::Wasm => "wasm",
+        CommandType::Deno => "deno",
+        CommandType::Bun => "bun",
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct StopSignal {
@@ -132,6 +143,7 @@ pub struct FlowGraph {
     pub output_instructions: bool,
     pub action_identity: Option<Pubkey>,
     pub rhai_permit: Arc<Semaphore>,
+    pub bun_permit: Arc<Semaphore>,
     pub tx_exec_config: ExecutionConfig,
     pub parent_flow_execute: Option<execute::Svc>,
     pub fees: Vec<(Pubkey, u64)>,
@@ -375,6 +387,37 @@ pub enum BuildGraphError {
     NoInput((NodeId, String), String),
     #[error("node {:?}:{} has no output {:?}", .0.0, .1, .0.1)]
     NoOutput((NodeId, String), String),
+    #[error("node {node_id}:{input_name} has malformed vault_ref: {reason}")]
+    InvalidVaultRef {
+        node_id: NodeId,
+        input_name: String,
+        reason: String,
+    },
+    #[error(
+        "node {node_id}:{input_name} vault_ref requires a string-compatible input, found {type_bounds:?}"
+    )]
+    VaultRefRequiresStringInput {
+        node_id: NodeId,
+        input_name: String,
+        type_bounds: Vec<ValueType>,
+    },
+    #[error("node {node_id}:{input_name} references missing vault secret {provider}/{key_label}")]
+    MissingVaultSecret {
+        node_id: NodeId,
+        input_name: String,
+        provider: String,
+        key_label: String,
+    },
+    #[error(
+        "node {node_id}:{input_name} failed to resolve vault secret {provider}/{key_label}: {error}"
+    )]
+    VaultLookupFailed {
+        node_id: NodeId,
+        input_name: String,
+        provider: String,
+        key_label: String,
+        error: String,
+    },
 }
 
 fn remove_wallet_token(v: &mut value::Map, keypair_outputs: &[String]) {
@@ -393,6 +436,112 @@ fn narrow_edge_value_for_target(mut value: Value, target_accepts_pubkey: bool) -
     }
 
     value
+}
+
+fn parse_vault_ref(value: &serde_json::Value) -> Result<Option<(String, String)>, String> {
+    let Some(object) = value.as_object() else {
+        return Ok(None);
+    };
+    let Some(vault_ref) = object.get("vault_ref") else {
+        return Ok(None);
+    };
+    if object.len() != 1 {
+        return Ok(None);
+    }
+    let Some(vault_ref) = vault_ref.as_str() else {
+        return Err("vault_ref must be a string".to_owned());
+    };
+    let vault_ref = vault_ref.trim();
+    if vault_ref.is_empty() {
+        return Err("vault_ref cannot be empty".to_owned());
+    }
+    let Some((provider, key_label)) = vault_ref.split_once('/') else {
+        return Err("vault_ref must use provider/keyLabel format".to_owned());
+    };
+    let provider = provider.trim();
+    let key_label = key_label.trim();
+    if provider.is_empty() || key_label.is_empty() {
+        return Err("vault_ref must use provider/keyLabel format".to_owned());
+    }
+    Ok(Some((provider.to_owned(), key_label.to_owned())))
+}
+
+fn input_accepts_string_secret(input: &CmdInputDescription) -> bool {
+    input.type_bounds.is_empty()
+        || input
+            .type_bounds
+            .iter()
+            .any(|ty| matches!(ty, ValueType::String | ValueType::Free | ValueType::Other))
+}
+
+async fn resolve_node_vault_refs(
+    node_id: NodeId,
+    mut config: serde_json::Value,
+    command: &dyn CommandTrait,
+    flow_owner_id: UserId,
+    mut get_secret: crate::flow_registry::get_secret::Svc,
+) -> Result<serde_json::Value, BuildGraphError> {
+    let Some(config_obj) = config.as_object_mut() else {
+        return Ok(config);
+    };
+
+    for input in command.inputs() {
+        let Some(raw_value) = config_obj.get(&input.name) else {
+            continue;
+        };
+        let parsed =
+            parse_vault_ref(raw_value).map_err(|reason| BuildGraphError::InvalidVaultRef {
+                node_id,
+                input_name: input.name.clone(),
+                reason,
+            })?;
+        let Some((provider, key_label)) = parsed else {
+            continue;
+        };
+
+        if !input_accepts_string_secret(&input) {
+            return Err(BuildGraphError::VaultRefRequiresStringInput {
+                node_id,
+                input_name: input.name,
+                type_bounds: input.type_bounds,
+            });
+        }
+
+        let secret = get_secret
+            .ready()
+            .await
+            .map_err(|error| BuildGraphError::VaultLookupFailed {
+                node_id,
+                input_name: input.name.clone(),
+                provider: provider.clone(),
+                key_label: key_label.clone(),
+                error: error.to_string(),
+            })?
+            .call(crate::flow_registry::get_secret::Request {
+                user_id: flow_owner_id,
+                provider: provider.clone(),
+                key_label: key_label.clone(),
+            })
+            .await
+            .map_err(|error| BuildGraphError::VaultLookupFailed {
+                node_id,
+                input_name: input.name.clone(),
+                provider: provider.clone(),
+                key_label: key_label.clone(),
+                error: error.to_string(),
+            })?
+            .secret
+            .ok_or(BuildGraphError::MissingVaultSecret {
+                node_id,
+                input_name: input.name.clone(),
+                provider,
+                key_label,
+            })?;
+
+        config_obj.insert(input.name, serde_json::json!({ "S": secret }));
+    }
+
+    Ok(config)
 }
 
 impl FlowGraph {
@@ -417,7 +566,10 @@ impl FlowGraph {
         registry: FlowRegistry,
         partial_config: Option<&PartialConfig>,
     ) -> crate::Result<Self> {
+        let build_started = Instant::now();
         let rhai_permit = registry.rhai_permit.clone();
+        let bun_permit = registry.bun_permit.clone();
+        let flow_owner_id = registry.flow_owner.id;
         let tx_exec_config = ExecutionConfig::from_env(&c.ctx.environment)
             .inspect_err(|error| tracing::error!("error parsing ExecutionConfig: {}", error))
             .unwrap_or_default();
@@ -499,7 +651,11 @@ impl FlowGraph {
             }
 
             let mut f = f.clone();
+            let command_type = n.client_node_data.r#type;
+            let command_name = n.client_node_data.node_id.clone();
+            let get_secret = registry.backend.get_secret.clone();
             let task = async move {
+                let init_started = Instant::now();
                 let command = f
                     .init(&n.client_node_data)
                     .await
@@ -509,21 +665,36 @@ impl FlowGraph {
                             "not found: {}",
                             n.client_node_data.node_id
                         )))
-                    })?;
-                Ok::<_, crate::Error>((n, command))
+                    });
+                metrics::histogram!(
+                    "flow_command_init_seconds",
+                    "command_type" => command_type_label(command_type),
+                    "command_name" => command_name,
+                )
+                .record(init_started.elapsed().as_secs_f64());
+                let command = command?;
+                let resolved_config = resolve_node_vault_refs(
+                    n.id,
+                    n.config.clone(),
+                    &*command,
+                    flow_owner_id,
+                    get_secret,
+                )
+                .await?;
+                Ok::<_, crate::Error>((n, command, resolved_config))
             };
             join_set.spawn_local(task);
         }
 
         let results = join_set.join_all().await;
         for result in results {
-            let (n, command) = result?;
+            let (n, command, resolved_config) = result?;
             let id = n.id;
             let idx = g.add_node(id);
             let node = Node {
                 id,
                 idx,
-                form_inputs: command.read_config(n.config),
+                form_inputs: command.read_config(resolved_config),
                 command,
                 use_previous_values: <_>::default(),
             };
@@ -602,7 +773,7 @@ impl FlowGraph {
             );
         }
 
-        Ok(Self {
+        let graph = Self {
             id: c.id,
             ctx_data,
             ctx_svcs,
@@ -614,9 +785,13 @@ impl FlowGraph {
             action_identity: None,
             fees: Vec::new(),
             rhai_permit,
+            bun_permit,
             tx_exec_config,
             parent_flow_execute,
-        })
+        };
+        metrics::histogram!("flow_graph_build_seconds")
+            .record(build_started.elapsed().as_secs_f64());
+        Ok(graph)
     }
 
     pub fn get_interflow_instruction_info(&self) -> crate::Result<InstructionInfo> {
@@ -1253,6 +1428,8 @@ impl FlowGraph {
                         s.early_return = true;
                         return ControlFlow::Break(Ok(ins));
                     }
+                    metrics::histogram!("flow_instruction_batch_size")
+                        .record(ins.instructions.len() as f64);
                     let res = if s.stop.token.is_cancelled() {
                         Err(execute::Error::Canceled(s.stop.get_reason()))
                     } else if s.stop_shared.token.is_cancelled() {
@@ -1261,9 +1438,11 @@ impl FlowGraph {
                         Ok(execute::Response { signature: None })
                     } else if let Some(exec) = &self.parent_flow_execute {
                         self.collect_flow_output(s).await;
+                        let execute_started = Instant::now();
                         match exec.clone().ready().await {
                             Ok(exec) => {
-                                s.stop
+                                let res = s
+                                    .stop
                                     .race(
                                         std::pin::pin!(s.stop_shared.race(
                                             std::pin::pin!(exec.call(execute::Request {
@@ -1274,7 +1453,13 @@ impl FlowGraph {
                                         )),
                                         execute::Error::Canceled,
                                     )
-                                    .await
+                                    .await;
+                                metrics::histogram!(
+                                    "flow_instruction_execute_seconds",
+                                    "mode" => "parent",
+                                )
+                                .record(execute_started.elapsed().as_secs_f64());
+                                res
                             }
                             Err(error) => Err(error),
                         }
@@ -1282,7 +1467,9 @@ impl FlowGraph {
                         tracing::info!("executing instructions");
                         let config = self.tx_exec_config.clone();
                         let network = self.ctx_data.set.solana.cluster;
-                        s.stop
+                        let execute_started = Instant::now();
+                        let res = s
+                            .stop
                             .race(
                                 std::pin::pin!(s.stop_shared.race(
                                     std::pin::pin!(ins.execute(
@@ -1297,10 +1484,15 @@ impl FlowGraph {
                                 )),
                                 execute::Error::Canceled,
                             )
-                            .await
-                            .map(|signature| execute::Response {
-                                signature: Some(signature),
-                            })
+                            .await;
+                        metrics::histogram!(
+                            "flow_instruction_execute_seconds",
+                            "mode" => "local",
+                        )
+                        .record(execute_started.elapsed().as_secs_f64());
+                        res.map(|signature| execute::Response {
+                            signature: Some(signature),
+                        })
                     };
 
                     let failed_instruction = res.as_ref().err().and_then(|e| match e {
@@ -1411,6 +1603,7 @@ impl FlowGraph {
         stop_shared: StopSignal,
         previous_values: HashMap<NodeId, Vec<Value>>,
     ) -> FlowRunResult {
+        let run_started = Instant::now();
         self.ctx_data.inputs = flow_inputs.clone();
         self.ctx_data.flow_run_id = flow_run_id;
 
@@ -1610,6 +1803,7 @@ impl FlowGraph {
 
         s.event_tx.close_channel();
 
+        metrics::histogram!("flow_graph_run_seconds").record(run_started.elapsed().as_secs_f64());
         s.result
     }
 
@@ -1672,8 +1866,10 @@ impl FlowGraph {
         let node = self.nodes.remove(&id).unwrap();
         let idx = node.idx;
         let times = *s.ran.entry(node.id).and_modify(|t| *t += 1).or_insert(0);
+        let command_name = node.command.name();
+        let command_type = command_type_label(node.command.r#type());
 
-        let (mut inputs, tracker) = match node.command.name().as_str() {
+        let (mut inputs, tracker) = match command_name.as_str() {
             crate::command::collect::COLLECT => self.collect_array_input(idx),
             _ => {
                 // Commands opt into start/deployment input binding, and graph edges still win.
@@ -1695,7 +1891,7 @@ impl FlowGraph {
                 id: node.id,
                 times,
                 node_idx: node.idx,
-                command_name: node.command.name(),
+                command_name: command_name.clone(),
                 tracker,
                 instruction_info: node.command.instruction_info(),
                 passthrough: passthrough_outputs(&*node.command, &inputs),
@@ -1708,7 +1904,9 @@ impl FlowGraph {
         debug_assert_eq!(outputs.len(), times as usize);
         outputs.push(<_>::default());
         let rhai_permit = self.rhai_permit.clone();
-        let is_rhai_script = rhai_script::is_rhai_script(&node.command.name());
+        let bun_permit = self.bun_permit.clone();
+        let is_rhai_script = rhai_script::is_rhai_script(&command_name);
+        let is_bun_command = node.command.r#type() == CommandType::Bun;
         let span =
             tracing::error_span!(NODE_SPAN_NAME, node_id = node.id.to_string(), times = times);
         let task = run_command()
@@ -1729,12 +1927,51 @@ impl FlowGraph {
         let handler = tokio::task::spawn_local(
             async move {
                 if is_rhai_script {
+                    let wait_started = Instant::now();
                     let p = rhai_permit.acquire().await;
+                    metrics::histogram!(
+                        "flow_node_permit_wait_seconds",
+                        "runtime" => "rhai",
+                    )
+                    .record(wait_started.elapsed().as_secs_f64());
+                    let run_started = Instant::now();
                     let result = task.await;
+                    metrics::histogram!(
+                        "flow_node_run_seconds",
+                        "command_type" => command_type,
+                        "command_name" => command_name.clone(),
+                    )
+                    .record(run_started.elapsed().as_secs_f64());
                     std::mem::drop(p);
                     result
+                } else if is_bun_command {
+                    let wait_started = Instant::now();
+                    let permit = bun_permit.acquire_owned().await.ok();
+                    metrics::histogram!(
+                        "flow_node_permit_wait_seconds",
+                        "runtime" => "bun",
+                    )
+                    .record(wait_started.elapsed().as_secs_f64());
+                    let run_started = Instant::now();
+                    let result = task.await;
+                    metrics::histogram!(
+                        "flow_node_run_seconds",
+                        "command_type" => command_type,
+                        "command_name" => command_name.clone(),
+                    )
+                    .record(run_started.elapsed().as_secs_f64());
+                    std::mem::drop(permit);
+                    result
                 } else {
-                    task.await
+                    let run_started = Instant::now();
+                    let result = task.await;
+                    metrics::histogram!(
+                        "flow_node_run_seconds",
+                        "command_type" => command_type,
+                        "command_name" => command_name,
+                    )
+                    .record(run_started.elapsed().as_secs_f64());
+                    result
                 }
             }
             .instrument(span),
@@ -2531,6 +2768,34 @@ mod tests {
         assert_eq!(
             res.output.get("recipient"),
             Some(&Value::B32(expected_pubkey.to_bytes()))
+        );
+    }
+
+    #[test]
+    fn parse_vault_ref_only_accepts_exact_sentinel_objects() {
+        assert_eq!(
+            parse_vault_ref(&json!({ "vault_ref": "jupiter/default" })).unwrap(),
+            Some(("jupiter".to_owned(), "default".to_owned()))
+        );
+        assert_eq!(
+            parse_vault_ref(&json!({
+                "vault_ref": "jupiter/default",
+                "mode": "test",
+            }))
+            .unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn parse_vault_ref_rejects_malformed_single_key_refs() {
+        assert_eq!(
+            parse_vault_ref(&json!({ "vault_ref": "jupiter" })),
+            Err("vault_ref must use provider/keyLabel format".to_owned())
+        );
+        assert_eq!(
+            parse_vault_ref(&json!({ "vault_ref": "" })),
+            Err("vault_ref cannot be empty".to_owned())
         );
     }
 

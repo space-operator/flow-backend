@@ -124,9 +124,10 @@ export async function start(
           } catch (error: any) {
             data = { Err: error.toString() };
             success = false;
+          } finally {
+            await logPromises.wait();
+            globalThis.console = realConsole;
           }
-
-          await logPromises.wait();
 
           const resp: IResponse<RunOutput> = {
             envelope: req.envelope,

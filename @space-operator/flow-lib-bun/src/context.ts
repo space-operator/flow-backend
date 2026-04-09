@@ -73,6 +73,20 @@ export interface ExecuteResponse {
 const KV_UNAVAILABLE_MESSAGE =
   "ctx.kv is not available in script runtimes; use kv_read_item/kv_write_item nodes";
 
+async function fetchWithTimeout(
+  input: URL,
+  init: RequestInit,
+  timeoutMs: number,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function isPubkey(x: web3.PublicKey | web3.Keypair): x is web3.PublicKey {
   return (x as any)._bn !== undefined;
 }
@@ -184,6 +198,13 @@ export class Context {
     };
   }
 
+  #httpTimeoutMs(extraSeconds = 0): number {
+    return Math.max(
+      1,
+      this.#data.data.flow.set.http.timeout_in_secs + extraSeconds,
+    ) * 1000;
+  }
+
   /**
    * Request a signature from user.
    * The backend with automaticaly find out who is the owner of the specified public key.
@@ -228,7 +249,7 @@ export class Context {
     data: Uint8Array,
     kind: "transaction_message" | "message",
   ): Promise<RequestSignatureResponse> {
-    const resp = await fetch(new URL("call", this.#data.signer.base_url), {
+    const resp = await fetchWithTimeout(new URL("call", this.#data.signer.base_url), {
       method: "POST",
       body: JSON.stringify({
         envelope: "",
@@ -248,7 +269,7 @@ export class Context {
       headers: {
         "content-type": "application/json",
       },
-    });
+    }, this.#httpTimeoutMs(20));
 
     const result = await resp.json();
     if (result.success === false) {
@@ -272,7 +293,7 @@ export class Context {
     const svc = this.command?.svc;
     if (!svc) throw new Error("service not available");
 
-    const resp = await fetch(new URL("call", svc.base_url), {
+    const resp = await fetchWithTimeout(new URL("call", svc.base_url), {
       method: "POST",
       body: JSON.stringify({
         envelope: "",
@@ -286,7 +307,7 @@ export class Context {
       headers: {
         "content-type": "application/json",
       },
-    });
+    }, this.#httpTimeoutMs());
 
     const result = await resp.json();
     if (result.success === false) {

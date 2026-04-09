@@ -261,6 +261,33 @@ impl DbPool {
             String::from_utf8(decrypted).map_err(|e| crate::Error::LogicError(e.into()))?;
         Ok(Some(secret))
     }
+
+    pub async fn get_user_vault_secret(
+        &self,
+        owner_user_id: UserId,
+        provider: &str,
+        key_label: &str,
+    ) -> crate::Result<Option<String>> {
+        use crate::connection::DbClient;
+
+        let conn = self.get_conn().await?;
+        let row = conn
+            .do_query_opt(
+                "SELECT ds.decrypted_secret
+                 FROM public.user_api_keys uak
+                 JOIN vault.decrypted_secrets ds
+                   ON ds.id = uak.vault_secret_id
+                 WHERE uak.user_id = $1
+                   AND uak.provider = $2
+                   AND uak.key_label = $3
+                 LIMIT 1",
+                &[&owner_user_id, &provider, &key_label],
+            )
+            .await
+            .map_err(crate::Error::exec("get_user_vault_secret"))?;
+
+        Ok(row.and_then(|r| r.get::<_, Option<String>>(0)))
+    }
 }
 
 async fn ping(conn: &Connection) -> crate::Result<(f64, f64)> {

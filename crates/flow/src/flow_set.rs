@@ -27,7 +27,8 @@ use crate::{
     command::{interflow, interflow_instructions},
     flow_graph::FlowRunResult,
     flow_registry::{
-        BackendServices, ExecutionMode, FlowRegistry, StartFlowOptions, new_flow_run, run_rhai,
+        BackendServices, ExecutionMode, FlowRegistry, StartFlowOptions, get_secret, new_flow_run,
+        run_rhai,
     },
 };
 
@@ -471,6 +472,7 @@ impl FlowSet {
             .endpoints(self.context.endpoints)
             .depth(self.context.depth)
             .rhai_permit(self.context.rhai_permit)
+            .bun_permit(self.context.bun_permit)
             .rhai_tx(self.context.rhai_tx)
             .maybe_parent_flow_execute(self.context.parent_flow_execute)
             .maybe_rpc_server(self.context.rpc_server)
@@ -479,6 +481,7 @@ impl FlowSet {
                 api_input: self.context.new_flow_api_request,
                 signer: self.context.signer,
                 token: self.context.get_jwt,
+                get_secret: self.context.get_secret,
                 new_flow_run: self.context.new_flow_run,
                 get_previous_values: unimplemented_svc(),
                 helius: None,
@@ -523,12 +526,15 @@ pub struct FlowSetContext {
 
     signer: signer::Svc,
     get_jwt: get_jwt::Svc,
+    get_secret: get_secret::Svc,
     new_flow_run: new_flow_run::Svc,
     parent_flow_execute: Option<execute::Svc>,
     hardcoded_wallets: crate::command::wallet::HardcodedWallets,
 
     #[builder(default = Arc::new(Semaphore::new(crate::flow_registry::rhai_pool_size())))]
     rhai_permit: Arc<Semaphore>,
+    #[builder(default = Arc::new(Semaphore::new(crate::flow_registry::bun_pool_size())))]
+    bun_permit: Arc<Semaphore>,
     #[builder(default)]
     rhai_tx: Arc<OnceLock<crossbeam_channel::Sender<run_rhai::ChannelMessage>>>,
 

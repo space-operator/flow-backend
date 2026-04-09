@@ -16,11 +16,13 @@ anyhow = "1"
 
 tempfile = "3.10.1"
 tokio = "1"
+tokio-util = "0.7"
 url = "2.5.0"
 home = "0.5.9"
 tracing = "0.1"
 uuid = { version = "1", features = ["v4", "serde"] }
 futures = "0.3"
+libc = "0.2"
 
 [build-dependencies]
 flow-lib.workspace = true

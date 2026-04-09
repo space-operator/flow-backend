@@ -19,7 +19,10 @@ use serde::Serialize;
 use std::{
     convert::Infallible,
     net::SocketAddr,
-    sync::{Arc, LazyLock, atomic::AtomicU64},
+    sync::{
+        Arc, LazyLock,
+        atomic::{AtomicU64, Ordering},
+    },
     time::Duration,
 };
 use tokio::sync::broadcast;
@@ -60,10 +63,19 @@ pub struct DBWorker {
     counter: Counter,
     tracing_data: flow_tracing::FlowLogs,
     tx: mpsc::UnboundedSender<Vec<FlowRunLogsRow>>,
+    pending_log_batches: Arc<AtomicU64>,
+    pending_log_rows: Arc<AtomicU64>,
     done_tx: broadcast::Sender<()>,
     new_flow_api_request: NewRequestService,
     remote_command_address_book: BaseAddressBook,
     helius: Option<Arc<Helius>>,
+}
+
+fn update_db_copy_in_gauges(pending_batches: &AtomicU64, pending_rows: &AtomicU64) {
+    metrics::gauge!("flow_server_db_copy_in_pending_batches")
+        .set(pending_batches.load(Ordering::Relaxed) as f64);
+    metrics::gauge!("flow_server_db_copy_in_pending_rows")
+        .set(pending_rows.load(Ordering::Relaxed) as f64);
 }
 
 #[derive(Serialize)]
@@ -117,8 +129,17 @@ impl DBWorker {
         ctx: &mut actix::Context<Self>,
     ) -> Self {
         let (tx, rx) = mpsc::unbounded();
+        let pending_log_batches = Arc::new(AtomicU64::new(0));
+        let pending_log_rows = Arc::new(AtomicU64::new(0));
+        update_db_copy_in_gauges(&pending_log_batches, &pending_log_rows);
         ctx.spawn(
-            wrap_future::<_, Self>(db_copy_in(rx, db.clone())).map(|_, act, _| {
+            wrap_future::<_, Self>(db_copy_in(
+                rx,
+                db.clone(),
+                pending_log_batches.clone(),
+                pending_log_rows.clone(),
+            ))
+            .map(|_, act, _| {
                 act.done_tx.send(()).ok();
             }),
         );
@@ -133,6 +154,8 @@ impl DBWorker {
             actors,
             counter: Counter::default(),
             tx,
+            pending_log_batches,
+            pending_log_rows,
             tracing_data,
             done_tx: broadcast::channel(1).0,
             new_flow_api_request,
@@ -387,15 +410,34 @@ impl actix::Handler<CopyIn<Vec<FlowRunLogsRow>>> for DBWorker {
     type Result = ();
 
     fn handle(&mut self, msg: CopyIn<Vec<FlowRunLogsRow>>, _: &mut Self::Context) -> Self::Result {
-        self.tx.unbounded_send(msg.0).ok();
+        let rows = msg.0.len() as u64;
+        self.pending_log_batches.fetch_add(1, Ordering::Relaxed);
+        self.pending_log_rows.fetch_add(rows, Ordering::Relaxed);
+        update_db_copy_in_gauges(&self.pending_log_batches, &self.pending_log_rows);
+        if self.tx.unbounded_send(msg.0).is_err() {
+            self.pending_log_batches.fetch_sub(1, Ordering::Relaxed);
+            self.pending_log_rows.fetch_sub(rows, Ordering::Relaxed);
+            update_db_copy_in_gauges(&self.pending_log_batches, &self.pending_log_rows);
+            metrics::counter!("flow_server_db_copy_in_rejected_batches_total").increment(1);
+        }
     }
 }
 
-async fn db_copy_in(rx: mpsc::UnboundedReceiver<Vec<FlowRunLogsRow>>, db: DbPool) {
+async fn db_copy_in(
+    rx: mpsc::UnboundedReceiver<Vec<FlowRunLogsRow>>,
+    db: DbPool,
+    pending_log_batches: Arc<AtomicU64>,
+    pending_log_rows: Arc<AtomicU64>,
+) {
     const CHUNK_SIZE: usize = 16;
     let mut chunks = rx.ready_chunks(CHUNK_SIZE);
 
     while let Some(events) = chunks.next().await {
+        let batch_started = std::time::Instant::now();
+        let batch_count = events.len() as u64;
+        let row_count = events.iter().map(|vec| vec.len() as u64).sum::<u64>();
+        metrics::histogram!("flow_server_db_copy_in_chunk_batches").record(batch_count as f64);
+        metrics::histogram!("flow_server_db_copy_in_chunk_rows").record(row_count as f64);
         let conn = match db.get_admin_conn().await {
             Ok(conn) => conn,
             Err(error) => {
@@ -403,6 +445,12 @@ async fn db_copy_in(rx: mpsc::UnboundedReceiver<Vec<FlowRunLogsRow>>, db: DbPool
                     "could not get DB connection, dropping events. detail: {}",
                     error
                 );
+                metrics::counter!("flow_server_db_copy_in_dropped_batches_total")
+                    .increment(batch_count);
+                metrics::counter!("flow_server_db_copy_in_dropped_rows_total").increment(row_count);
+                pending_log_batches.fetch_sub(batch_count, Ordering::Relaxed);
+                pending_log_rows.fetch_sub(row_count, Ordering::Relaxed);
+                update_db_copy_in_gauges(&pending_log_batches, &pending_log_rows);
                 continue;
             }
         };
@@ -411,7 +459,17 @@ async fn db_copy_in(rx: mpsc::UnboundedReceiver<Vec<FlowRunLogsRow>>, db: DbPool
             .await;
         match res {
             Ok(count) => tracing::debug!("inserted {} rows", count),
-            Err(error) => tracing::error!("{}, dropping events.", error),
+            Err(error) => {
+                metrics::counter!("flow_server_db_copy_in_dropped_batches_total")
+                    .increment(batch_count);
+                metrics::counter!("flow_server_db_copy_in_dropped_rows_total").increment(row_count);
+                tracing::error!("{}, dropping events.", error)
+            }
         }
+        pending_log_batches.fetch_sub(batch_count, Ordering::Relaxed);
+        pending_log_rows.fetch_sub(row_count, Ordering::Relaxed);
+        update_db_copy_in_gauges(&pending_log_batches, &pending_log_rows);
+        metrics::histogram!("flow_server_db_copy_in_seconds")
+            .record(batch_started.elapsed().as_secs_f64());
     }
 }
