@@ -78,10 +78,9 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
     .env("IMAGE", flow_image)
     .env("CMDS_IMAGE", cmds_image)
     .run()?;
-    load_env_file_overriding(&meta.workspace_root.join("docker/.env"))?;
+    load_env_file_overriding(meta.workspace_root.join("docker/.env"))?;
     load_env_file_overriding(
-        &meta
-            .workspace_root
+        meta.workspace_root
             .join("@space-operator/client/integration_tests/.env"),
     )
     .ok();
@@ -90,7 +89,7 @@ fn run(sh: &Shell, compile: bool, tag: Option<String>) -> anyhow::Result<()> {
         "deno run -A ./bootstrap-test-fixtures.ts --file=export.json --server=http://127.0.0.1:8080 --supabase-url=http://127.0.0.1:8000"
     )
     .run()?;
-    load_env_file_overriding(&meta.workspace_root.join("docker/.flow-test.env")).ok();
+    load_env_file_overriding(meta.workspace_root.join("docker/.flow-test.env")).ok();
 
     // wait for cmds-server to join
     std::thread::sleep(Duration::from_secs(5));

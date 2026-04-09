@@ -1,3 +1,5 @@
+#![allow(clippy::print_stderr, clippy::print_stdout)]
+
 use anyhow::{Context, Result};
 use clap::Parser;
 use std::io::Read;

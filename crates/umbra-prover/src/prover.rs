@@ -1,3 +1,5 @@
+#![allow(clippy::print_stderr)]
+
 use anyhow::{Context, Result};
 use ark_bn254::Bn254;
 use ark_ff::PrimeField;

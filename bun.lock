@@ -32,6 +32,9 @@
         "snarkjs": "^0.7.6",
       },
     },
+    "tools/loadtest": {
+      "name": "@space-operator/loadtest",
+    },
   },
   "packages": {
     "@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.10.1", "", {}, "sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw=="],
@@ -171,6 +174,8 @@
     "@space-operator/bun-command-rpc": ["@space-operator/bun-command-rpc@workspace:@space-operator/bun-command-rpc"],
 
     "@space-operator/flow-lib-bun": ["@space-operator/flow-lib-bun@workspace:@space-operator/flow-lib-bun"],
+
+    "@space-operator/loadtest": ["@space-operator/loadtest@workspace:tools/loadtest"],
 
     "@stablelib/base64": ["@stablelib/base64@2.0.1", "", {}, "sha512-P2z89A7N1ETt6RxgpVdDT2xlg8cnm3n6td0lY9gyK7EiWK3wdq388yFX/hLknkCC0we05OZAD1rfxlQJUbl5VQ=="],
 

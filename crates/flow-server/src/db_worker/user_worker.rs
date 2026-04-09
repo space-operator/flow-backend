@@ -16,8 +16,8 @@ use db::{Error as DbError, pool::DbPool};
 use flow::{
     flow_graph::StopSignal,
     flow_registry::{
-        BackendServices, ExecutionMode, FlowRegistry, StartFlowOptions, get_flow, get_secret,
-        get_previous_values, new_flow_run,
+        BackendServices, ExecutionMode, FlowRegistry, StartFlowOptions, get_flow,
+        get_previous_values, get_secret, new_flow_run,
     },
     flow_set::{
         FlowDeployment, FlowSet, FlowSetContext, PreservedBearerToken, StartFlowDeploymentOptions,
@@ -320,8 +320,9 @@ impl UserWorker {
     ) -> impl Future<Output = Result<FlowSetContext, MakeFlowSetContextError>> + 'static + use<>
     {
         let new_flow_run = TowerClient::new(ActixService::from(ctx.address().recipient()));
-        let get_secret =
-            TowerClient::new(ActixService::from(ctx.address().recipient::<get_secret::Request>()));
+        let get_secret = TowerClient::new(ActixService::from(
+            ctx.address().recipient::<get_secret::Request>(),
+        ));
 
         let root = DBWorker::from_registry();
         let db = self.db.clone();
