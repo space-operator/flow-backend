@@ -55,7 +55,7 @@
     }
   },
   "classification": {
-    "vendor": "Native",
+    "vendor": "PostgREST",
     "program": "postgrest",
     "category": "data",
     "icon_url": null,

@@ -46,7 +46,7 @@
     }
   },
   "classification": {
-    "vendor": "Native",
+    "vendor": "Polars",
     "program": "polars",
     "category": "data",
     "icon_url": null,
