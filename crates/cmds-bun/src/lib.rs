@@ -230,6 +230,13 @@ const COMPANION_MODULES: &[(&str, &str)] = &[
             "/src/privacy_cash/privacy_cash_common.ts"
         )),
     ),
+    (
+        "./relay_common.ts",
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/relay/relay_common.ts"
+        )),
+    ),
 ];
 
 /// If cmd.ts imports any known companion modules, write them into the temp dir.

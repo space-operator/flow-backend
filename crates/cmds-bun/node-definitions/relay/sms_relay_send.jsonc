@@ -1,0 +1,97 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "twilio_send_sms",
+  "prefix": "twilio",
+  "description": "Send an SMS or MMS via the Twilio API. Supports text messages, media URLs (MMS), and status callbacks. Use with upstream nodes to construct relay message bodies.",
+  "type": "bun",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-bun/src/relay/sms_relay_send.ts",
+  "ports": {
+    "inputs": [
+      {
+        "name": "account_sid",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Twilio Account SID"
+      },
+      {
+        "name": "auth_token",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Twilio Auth Token"
+      },
+      {
+        "name": "from",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Twilio phone number to send from (E.164 format, e.g. +15551234567)"
+      },
+      {
+        "name": "to",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Recipient phone number (E.164 format)"
+      },
+      {
+        "name": "body",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Message body text (max 1600 chars)"
+      },
+      {
+        "name": "media_url",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "URL of media to attach (MMS). Supports images, GIFs, video."
+      },
+      {
+        "name": "status_callback",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "URL for delivery status webhooks"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "message_sid",
+        "type": "string",
+        "tooltip": "Twilio Message SID"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "tooltip": "Message status (queued/sending/sent/delivered/failed)"
+      },
+      {
+        "name": "date_created",
+        "type": "string",
+        "tooltip": "Timestamp when Twilio accepted the message"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Twilio",
+    "program": "twilio",
+    "category": "notification",
+    "icon_url": null,
+    "tags": ["sms", "twilio", "notification", "send", "mms"]
+  },
+  "external_version": {
+    "program_id": "twilio_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://api.twilio.com",
+    "api_version": "2010-04-01",
+    "source_repo": "https://github.com/twilio/twilio-node"
+  }
+}
