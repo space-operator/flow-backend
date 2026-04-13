@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "auction_house_create",
+  "prefix": "auction_house",
+  "type": "native",
+  "description": "Create a new Auction House with fee + treasury PDAs",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/auction_house/create_auction_house.rs",
+  "ports": {
+    "inputs": [
+      { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": true, "tooltip": "Transaction fee payer" },
+      { "name": "payer", "type_bounds": ["keypair"], "required": true, "tooltip": "Rent payer for new accounts" },
+      { "name": "authority", "type_bounds": ["pubkey"], "required": true, "tooltip": "Auction House authority" },
+      { "name": "treasury_mint", "type_bounds": ["pubkey"], "required": true, "tooltip": "Treasury mint (use wrapped SOL for native)" },
+      { "name": "fee_withdrawal_destination", "type_bounds": ["pubkey"], "required": true },
+      { "name": "treasury_withdrawal_destination_owner", "type_bounds": ["pubkey"], "required": true, "tooltip": "Owner of the treasury withdrawal destination; the ATA (or wallet itself for native SOL) is derived from this" },
+      { "name": "seller_fee_basis_points", "type_bounds": ["u16"], "required": true, "tooltip": "Seller fee in basis points (<= 10000)" },
+      { "name": "requires_sign_off", "type_bounds": ["bool"], "required": true },
+      { "name": "can_change_sale_price", "type_bounds": ["bool"], "required": true },
+      { "name": "submit", "type_bounds": ["bool"], "tooltip": "Submit transaction" }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "signature", "optional": true },
+      { "name": "auction_house", "type": "pubkey" },
+      { "name": "auction_house_fee_account", "type": "pubkey" },
+      { "name": "auction_house_treasury", "type": "pubkey" },
+      { "name": "treasury_withdrawal_destination", "type": "pubkey" }
+    ]
+  },
+  "config_schema": {},
+  "config": { "submit": { "B": true } },
+  "classification": {
+    "vendor": "Solana",
+    "program": "auction_house",
+    "category": "marketplace",
+    "icon_url": "https://www.metaplex.com/favicon.ico",
+    "tags": ["auction_house", "metaplex", "nft", "marketplace"]
+  },
+  "external_version": {
+    "program_id": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-foundation/anchor/tree/master/tests/auction-house"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/auction_house/create_auction_house.jsonc",
+    "repo": "flow-backend"
+  }
+}

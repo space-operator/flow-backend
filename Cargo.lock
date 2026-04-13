@@ -4436,6 +4436,7 @@ dependencies = [
  "chrono",
  "cmds-bun",
  "cmds-deno",
+ "cmds-image",
  "cmds-pdg",
  "cmds-solana",
  "cmds-std",

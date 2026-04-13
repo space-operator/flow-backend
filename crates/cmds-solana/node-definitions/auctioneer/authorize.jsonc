@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "auctioneer_authorize",
+  "prefix": "auctioneer",
+  "type": "native",
+  "description": "Create the Auctioneer-side authority PDA for an Auction House. Call after auction_house_delegate_auctioneer.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/auctioneer/authorize.rs",
+  "ports": {
+    "inputs": [
+      { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": true },
+      { "name": "wallet", "type_bounds": ["keypair"], "required": true, "tooltip": "AH authority (signs, pays rent)" },
+      { "name": "treasury_mint", "type_bounds": ["pubkey"], "required": true },
+      { "name": "submit", "type_bounds": ["bool"] }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "signature", "optional": true },
+      { "name": "auction_house", "type": "pubkey" },
+      { "name": "auctioneer_authority", "type": "pubkey" }
+    ]
+  },
+  "config_schema": {},
+  "config": { "submit": { "B": true } },
+  "classification": {
+    "vendor": "Solana",
+    "program": "auctioneer",
+    "category": "marketplace",
+    "icon_url": "https://www.metaplex.com/favicon.ico",
+    "tags": ["auctioneer", "english-auction", "authorize"]
+  },
+  "external_version": {
+    "program_id": "neer8g6yJq2mQM6KbnViEDAD4gr3gRZyMMf4F2p3MEh",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/metaplex-foundation/metaplex-program-library/tree/master/auctioneer"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/auctioneer/authorize.jsonc",
+    "repo": "flow-backend"
+  }
+}
