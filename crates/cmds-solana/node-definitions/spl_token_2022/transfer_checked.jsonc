@@ -4,7 +4,7 @@
   "name": "transfer_checked_t22",
   "prefix": "spl_token_2022",
   "type": "native",
-  "description": "Transfer Token-2022 tokens with decimal validation",
+  "description": "Transfer Token-2022 tokens with decimal validation. By default the source ATA is derived from the authority (owner-initiated transfer). Set the optional `source_owner` to transfer from a different holder's ATA while the authority signs as a delegate — used for PermanentDelegate clawback and for spl_token::approve-style delegated transfers.",
   "author_handle": "spo",
   "source_code": "crates/cmds-solana/src/spl_token_2022/transfer_checked.rs",
   "ports": {
@@ -41,7 +41,15 @@
         ],
         "required": true,
         "passthrough": true,
-        "tooltip": "Token account owner/delegate"
+        "tooltip": "Signer authorizing the transfer. When `source_owner` is unset, this MUST be the source-account owner (normal transfer). When `source_owner` is set, this is a delegate (mint's PermanentDelegate, or an account approved via spl_token::approve)."
+      },
+      {
+        "name": "source_owner",
+        "type_bounds": [
+          "pubkey"
+        ],
+        "required": false,
+        "tooltip": "Optional. Wallet address of the holder whose ATA will be debited. If omitted, source ATA is derived from `authority`. Set this for PermanentDelegate clawback or approved-delegate transfers, where the signer is NOT the source-account owner."
       },
       {
         "name": "amount",
@@ -58,6 +66,14 @@
         ],
         "required": true,
         "tooltip": "Expected decimals of the mint"
+      },
+      {
+        "name": "resolve_transfer_hook",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "tooltip": "Set true for mints with the TransferHook extension. Fetches the mint's ExtraAccountMetaList PDA and appends the hook program + extra accounts to the instruction. Default false (one fewer RPC round-trip)."
       },
       {
         "name": "submit",
@@ -90,6 +106,9 @@
   "config": {
     "submit": {
       "B": true
+    },
+    "resolve_transfer_hook": {
+      "B": false
     }
   },
   "classification": {

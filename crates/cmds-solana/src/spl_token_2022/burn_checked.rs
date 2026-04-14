@@ -22,6 +22,14 @@ pub struct Input {
     #[serde_as(as = "AsPubkey")]
     pub mint: Pubkey,
     pub authority: Wallet,
+    /// Optional source-account owner for delegate / clawback burns.
+    /// When omitted, the account to burn from is derived from `authority.pubkey()`
+    /// (normal owner-initiated burn). When set, the account is derived from this
+    /// pubkey and `authority` acts as a signing delegate (PermanentDelegate
+    /// revocation, or an account previously approved via spl_token::approve).
+    #[serde(default)]
+    #[serde_as(as = "Option<AsPubkey>")]
+    pub account_owner: Option<Pubkey>,
     pub amount: u64,
     pub decimals: u8,
     #[serde(default = "value::default::bool_true")]
@@ -38,7 +46,10 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let account = derive_ata(&input.authority.pubkey(), &input.mint);
+    let account_owner = input
+        .account_owner
+        .unwrap_or_else(|| input.authority.pubkey());
+    let account = derive_ata(&account_owner, &input.mint);
 
     let ix = spl_token_2022_interface::instruction::burn_checked(
         &spl_token_2022_interface::ID,
@@ -94,5 +105,29 @@ mod tests {
 
         assert_eq!(ix.program_id, spl_token_2022_interface::ID);
         assert!(!ix.data.is_empty());
+    }
+
+    #[test]
+    fn test_delegate_account_override() {
+        // When account_owner is set, the burn target must derive from it, not from authority.
+        let mint = Pubkey::new_unique();
+        let delegate = Pubkey::new_unique();
+        let account_owner = Pubkey::new_unique();
+        let account = derive_ata(&account_owner, &mint);
+
+        assert_ne!(account, derive_ata(&delegate, &mint));
+
+        let ix = spl_token_2022_interface::instruction::burn_checked(
+            &spl_token_2022_interface::ID,
+            &account,
+            &mint,
+            &delegate,
+            &[],
+            1000,
+            9,
+        )
+        .unwrap();
+
+        assert_eq!(ix.program_id, spl_token_2022_interface::ID);
     }
 }
