@@ -51,6 +51,12 @@
         "type": "string",
         "optional": false,
         "tooltip": "Transaction signature"
+      },
+      {
+        "name": "mint_config_pda",
+        "type": "string",
+        "optional": false,
+        "tooltip": "Derived MintConfig PDA address (delegated freeze authority)"
       }
     ]
   },

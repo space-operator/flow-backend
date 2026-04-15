@@ -1,27 +1,24 @@
 /**
- * Token ACL: rotate the MintConfig.authority.
+ * Token ACL Gate: add a wallet to an allow/block list.
+ * Creates the per-wallet entry PDA that the gate's can-thaw/freeze check reads.
  */
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import {
-  getSetAuthorityInstruction,
-  findMintConfigPda,
-} from "@solana/token-acl-sdk";
+import { getAddWalletInstructionAsync } from "@solana/token-acl-gate-sdk";
 import { newSignerCache, signAndSendSingle, toAddress, toKitSigner } from "./token_acl_common.ts";
 
-export default class TokenAclSetAuthority extends BaseCommand {
+export default class TokenAclGateAddWallet extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
     const signerCache = newSignerCache();
     const payerSigner = await toKitSigner(inputs.fee_payer, signerCache);
     const authoritySigner = await toKitSigner(inputs.authority, signerCache);
-    const mint = toAddress(inputs.mint);
-    const newAuthority = toAddress(inputs.new_authority);
+    const listConfig = toAddress(inputs.list_config);
+    const wallet = toAddress(inputs.wallet);
 
-    const [mintConfig] = await findMintConfigPda({ mint });
-
-    const ix = getSetAuthorityInstruction({
+    const ix = await getAddWalletInstructionAsync({
       authority: authoritySigner,
-      mintConfig,
-      newAuthority,
+      payer: payerSigner,
+      listConfig,
+      wallet,
     });
 
     const rpcUrl = inputs.rpc_url ?? "https://api.devnet.solana.com";
@@ -32,10 +29,10 @@ export default class TokenAclSetAuthority extends BaseCommand {
 
 import { test, expect, describe } from "bun:test";
 try {
-  describe("TokenAclSetAuthority", () => {
+  describe("TokenAclGateAddWallet", () => {
     test("build", () => {
       const nd = { type: "bun", node_id: "t", inputs: [], outputs: [], config: {} } as any;
-      expect(new TokenAclSetAuthority(nd)).toBeInstanceOf(BaseCommand);
+      expect(new TokenAclGateAddWallet(nd)).toBeInstanceOf(BaseCommand);
     });
   });
 } catch (_) {}

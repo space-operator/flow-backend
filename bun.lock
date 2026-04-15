@@ -26,6 +26,7 @@
       "dependencies": {
         "@solana-program/token-2022": "^0.6.1",
         "@solana/kit": "^5.0.0",
+        "@solana/token-acl-gate-sdk": "^0.2.0",
         "@solana/token-acl-sdk": "^0.3.0",
         "@space-operator/bun-command-rpc": "workspace:*",
         "@space-operator/flow-lib-bun": "workspace:*",
@@ -163,6 +164,8 @@
     "@solana/subscribable": ["@solana/subscribable@5.5.1", "", { "dependencies": { "@solana/errors": "5.5.1" }, "peerDependencies": { "typescript": "^5.0.0" }, "optionalPeers": ["typescript"] }, "sha512-9K0PsynFq0CsmK1CDi5Y2vUIJpCqkgSS5yfDN0eKPgHqEptLEaia09Kaxc90cSZDZU5mKY/zv1NBmB6Aro9zQQ=="],
 
     "@solana/sysvars": ["@solana/sysvars@5.5.1", "", { "dependencies": { "@solana/accounts": "5.5.1", "@solana/codecs": "5.5.1", "@solana/errors": "5.5.1", "@solana/rpc-types": "5.5.1" }, "peerDependencies": { "typescript": "^5.0.0" }, "optionalPeers": ["typescript"] }, "sha512-k3Quq87Mm+geGUu1GWv6knPk0ALsfY6EKSJGw9xUJDHzY/RkYSBnh0RiOrUhtFm2TDNjOailg8/m0VHmi3reFA=="],
+
+    "@solana/token-acl-gate-sdk": ["@solana/token-acl-gate-sdk@0.2.0", "", { "dependencies": { "@solana/kit": "^5.0.0" }, "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-jCbt1J8SI+jPdi8DLajKpN9V3x2B9FXbDRltXcM4jrIVuWsNQ6W6/yn8N65uwUUw4wrTD6MJUT2sMD+QDbY7Gg=="],
 
     "@solana/token-acl-sdk": ["@solana/token-acl-sdk@0.3.0", "", { "dependencies": { "@solana-program/token-2022": "0.6.1", "@solana/kit": "^5.0.0" } }, "sha512-EobWRJ5G31wPQ0au1ZaW/0cbLDkrY/XBomuRMhO0pzsW/gSLaLRNenj2NBU3lh4bi6VdV8Qb+INb9g4LgCoCbA=="],
 

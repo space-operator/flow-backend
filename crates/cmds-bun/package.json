@@ -11,6 +11,7 @@
     "privacycash": "^1.1.20",
     "@solana/kit": "^5.0.0",
     "@solana/token-acl-sdk": "^0.3.0",
+    "@solana/token-acl-gate-sdk": "^0.2.0",
     "@solana-program/token-2022": "^0.6.1"
   }
 }

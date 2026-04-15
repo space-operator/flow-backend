@@ -19,9 +19,7 @@ import {
   createTransactionMessage,
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
-  appendTransactionMessageInstruction,
   appendTransactionMessageInstructions,
-  signAndSendTransactionMessageWithSigners,
   getSignatureFromTransaction,
   signTransactionMessageWithSigners,
   type Address,
@@ -61,12 +59,31 @@ function toSecretKeyBytes(keypairInput: any): Uint8Array {
   );
 }
 
-/** Convert raw 64-byte secret → `@solana/kit` `TransactionSigner` */
+/**
+ * Convert raw 64-byte secret → `@solana/kit` `TransactionSigner`.
+ *
+ * `@solana/kit`'s tx builder requires a *single* signer instance per address;
+ * passing two separately-constructed signers for the same pubkey raises
+ * "Multiple distinct signers were identified for address". We dedupe against
+ * `cache` (pass the same Map across multiple `toKitSigner` calls within a
+ * single node run) so `fee_payer === authority` wiring works naturally.
+ */
 export async function toKitSigner(
   keypairInput: any,
+  cache?: Map<string, TransactionSigner>,
 ): Promise<TransactionSigner> {
   const bytes = toSecretKeyBytes(keypairInput);
-  return await createKeyPairSignerFromBytes(bytes);
+  const signer = await createKeyPairSignerFromBytes(bytes);
+  if (!cache) return signer;
+  const existing = cache.get(signer.address);
+  if (existing) return existing;
+  cache.set(signer.address, signer);
+  return signer;
+}
+
+/** Fresh signer cache for one node run — pass to every `toKitSigner` call. */
+export function newSignerCache(): Map<string, TransactionSigner> {
+  return new Map();
 }
 
 /**
@@ -91,11 +108,27 @@ export function createRpc(
   };
 }
 
-/** Coerce a pubkey-ish input (string or web3.js PublicKey-like) to kit `Address`. */
+/**
+ * Coerce a pubkey-ish input to kit `Address`.
+ *
+ * Handles:
+ *   - plain base58 string
+ *   - web3.js PublicKey-like (has `.toBase58()`)
+ *   - IValue-wrapped strings (`{S: "..."}`, `{B3: "..."}` — the shapes the
+ *     flow2 runtime uses when handing typed values to bun nodes).
+ */
 export function toAddress(v: any): Address {
   if (typeof v === "string") return address(v);
-  if (v?.toBase58) return address(v.toBase58());
-  throw new Error(`Cannot coerce to Address: ${typeof v}`);
+  if (v && typeof v === "object") {
+    if (typeof v.S === "string") return address(v.S);
+    if (typeof v.B3 === "string") return address(v.B3);
+    if (typeof v.toBase58 === "function") return address(v.toBase58());
+  }
+  throw new Error(
+    `Cannot coerce to Address: ${typeof v} ${
+      v && typeof v === "object" ? `keys=${Object.keys(v).join(",")}` : String(v)
+    }`,
+  );
 }
 
 /**

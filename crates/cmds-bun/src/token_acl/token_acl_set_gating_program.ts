@@ -6,12 +6,13 @@ import {
   getSetGatingProgramInstruction,
   findMintConfigPda,
 } from "@solana/token-acl-sdk";
-import { signAndSendSingle, toAddress, toKitSigner } from "./token_acl_common.ts";
+import { newSignerCache, signAndSendSingle, toAddress, toKitSigner } from "./token_acl_common.ts";
 
 export default class TokenAclSetGatingProgram extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
-    const payerSigner = await toKitSigner(inputs.fee_payer);
-    const authoritySigner = await toKitSigner(inputs.authority);
+    const signerCache = newSignerCache();
+    const payerSigner = await toKitSigner(inputs.fee_payer, signerCache);
+    const authoritySigner = await toKitSigner(inputs.authority, signerCache);
     const mint = toAddress(inputs.mint);
     const newGatingProgram = toAddress(inputs.new_gating_program);
 

@@ -1,40 +1,40 @@
 {
   "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
   "version": "0.1",
-  "name": "token_acl_toggle_permissionless",
+  "name": "gate_setup_extra_metas",
   "prefix": "token_acl",
-  "description": "Token ACL: enable/disable permissionless thaw and/or permissionless freeze on a MintConfig.",
+  "description": "Token ACL Gate: initialize the thaw/freeze extra-metas PDA for a mint so the Token ACL program can resolve gate-specific accounts. Pass the set of lists to consult.",
   "type": "bun",
   "author_handle": "spo",
-  "source_code": "crates/cmds-bun/src/token_acl/token_acl_toggle_permissionless.ts",
+  "source_code": "crates/cmds-bun/src/token_acl/gate_setup_extra_metas.ts",
   "ports": {
     "inputs": [
       { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": false, "tooltip": "Tx fee payer" },
       { "name": "authority", "type_bounds": ["keypair"], "required": true, "passthrough": false, "tooltip": "MintConfig.authority signer" },
       { "name": "mint", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "Token-2022 mint" },
-      { "name": "thaw_enabled", "type_bounds": ["bool"], "required": true, "passthrough": false, "tooltip": "Enable permissionless thaw" },
-      { "name": "freeze_enabled", "type_bounds": ["bool"], "required": true, "passthrough": false, "tooltip": "Enable permissionless freeze" },
+      { "name": "lists", "type_bounds": ["array", "json"], "required": true, "passthrough": false, "tooltip": "Array of ListConfig PDAs to consult during thaw/freeze checks" },
       { "name": "rpc_url", "type_bounds": ["string"], "required": false, "passthrough": false, "tooltip": "RPC URL (default: devnet)" }
     ],
     "outputs": [
-      { "name": "signature", "type": "string", "optional": false, "tooltip": "Transaction signature" }
+      { "name": "signature", "type": "string", "optional": false, "tooltip": "Transaction signature" },
+      { "name": "extra_metas", "type": "string", "optional": false, "tooltip": "Address of the created extra-metas PDA" }
     ]
   },
   "config_schema": {},
   "config": {},
   "classification": {
     "vendor": "Solana",
-    "program": "token_acl",
+    "program": "token_acl_gate",
     "category": "token",
     "icon_url": null,
-    "tags": ["token-acl", "srfc37", "token-2022", "permissioned-tokens"]
+    "tags": ["token-acl", "abl-gate", "srfc37", "extra-metas", "tlv"]
   },
   "external_version": {
-    "program_id": "TACLkU6CiCdkQN2MjoyDkVg2yAH9zkxiHDsiztQ52TP",
+    "program_id": "GATEzzqxhJnsWF6vHRsgtixxSB8PaQdcqGEVTEHWiULz",
     "sdk_crate": null,
-    "sdk_version": "0.3.0",
+    "sdk_version": "0.2.0",
     "api_base_url": null,
     "api_version": null,
-    "source_repo": "https://github.com/solana-program/token-acl"
+    "source_repo": "https://github.com/solana-foundation/token-acl-gate"
   }
 }

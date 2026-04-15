@@ -4,12 +4,13 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
 import { getThawInstructionAsync } from "@solana/token-acl-sdk";
 import { TOKEN_2022_PROGRAM_ADDRESS } from "@solana-program/token-2022";
-import { signAndSendSingle, toAddress, toKitSigner } from "./token_acl_common.ts";
+import { newSignerCache, signAndSendSingle, toAddress, toKitSigner } from "./token_acl_common.ts";
 
 export default class TokenAclThaw extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
-    const payerSigner = await toKitSigner(inputs.fee_payer);
-    const authoritySigner = await toKitSigner(inputs.authority);
+    const signerCache = newSignerCache();
+    const payerSigner = await toKitSigner(inputs.fee_payer, signerCache);
+    const authoritySigner = await toKitSigner(inputs.authority, signerCache);
     const mint = toAddress(inputs.mint);
     const tokenAccount = toAddress(inputs.token_account);
 

@@ -12,13 +12,15 @@
       { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": false, "tooltip": "Tx fee payer (also acts as caller/authority if `authority` omitted)" },
       { "name": "authority", "type_bounds": ["keypair"], "required": false, "passthrough": false, "tooltip": "Optional override signer — otherwise uses fee_payer" },
       { "name": "mint", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "Token-2022 mint" },
-      { "name": "token_account", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "Token account to thaw" },
-      { "name": "token_account_owner", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "Owner wallet of the token account (needed for gate program checks)" },
-      { "name": "idempotent", "type_bounds": ["boolean"], "required": false, "passthrough": false, "tooltip": "Use idempotent variant (default true)" },
+      { "name": "token_account", "type_bounds": ["pubkey", "string"], "required": false, "passthrough": false, "tooltip": "Token account to thaw. If omitted, derived as the ATA of mint+owner." },
+      { "name": "token_account_owner", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "Owner wallet of the token account (needed for gate program checks and ATA derivation)" },
+      { "name": "create_ata", "type_bounds": ["bool"], "required": false, "passthrough": false, "tooltip": "When true, bundles an ATA-create instruction before the thaw (holder self-onboarding path)" },
+      { "name": "idempotent", "type_bounds": ["bool"], "required": false, "passthrough": false, "tooltip": "Use idempotent variant (default true)" },
       { "name": "rpc_url", "type_bounds": ["string"], "required": false, "passthrough": false, "tooltip": "RPC URL (default: devnet)" }
     ],
     "outputs": [
-      { "name": "signature", "type": "string", "optional": false, "tooltip": "Transaction signature" }
+      { "name": "signature", "type": "string", "optional": false, "tooltip": "Transaction signature" },
+      { "name": "token_account", "type": "string", "optional": false, "tooltip": "The (possibly newly created) token account address" }
     ]
   },
   "config_schema": {},

@@ -10,10 +10,14 @@
  * thaw / freeze token accounts.
  */
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import { getCreateConfigInstructionAsync } from "@solana/token-acl-sdk";
+import {
+  getCreateConfigInstructionAsync,
+  findMintConfigPda,
+} from "@solana/token-acl-sdk";
 import { TOKEN_2022_PROGRAM_ADDRESS } from "@solana-program/token-2022";
 import {
   ABL_GATE_PROGRAM_ID,
+  newSignerCache,
   signAndSendSingle,
   toAddress,
   toKitSigner,
@@ -22,8 +26,9 @@ import type { Address } from "@solana/kit";
 
 export default class TokenAclCreateConfig extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
-    const payerSigner = await toKitSigner(inputs.fee_payer);
-    const authoritySigner = await toKitSigner(inputs.authority);
+    const signerCache = newSignerCache();
+    const payerSigner = await toKitSigner(inputs.fee_payer, signerCache);
+    const authoritySigner = await toKitSigner(inputs.authority, signerCache);
 
     const mint = toAddress(inputs.mint);
     const gatingProgram: Address = inputs.gating_program
@@ -38,10 +43,12 @@ export default class TokenAclCreateConfig extends BaseCommand {
       tokenProgram: TOKEN_2022_PROGRAM_ADDRESS,
     });
 
+    const [mintConfig] = await findMintConfigPda({ mint });
+
     const rpcUrl = inputs.rpc_url ?? "https://api.devnet.solana.com";
     const signature = await signAndSendSingle(rpcUrl, payerSigner, ix);
 
-    return { signature };
+    return { signature, mint_config_pda: mintConfig };
   }
 }
 
