@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "token_acl_toggle_permissionless",
+  "prefix": "token_acl",
+  "description": "Token ACL: enable/disable permissionless thaw and/or permissionless freeze on a MintConfig.",
+  "type": "bun",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-bun/src/token_acl/token_acl_toggle_permissionless.ts",
+  "ports": {
+    "inputs": [
+      { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": false, "tooltip": "Tx fee payer" },
+      { "name": "authority", "type_bounds": ["keypair"], "required": true, "passthrough": false, "tooltip": "MintConfig.authority signer" },
+      { "name": "mint", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "Token-2022 mint" },
+      { "name": "thaw_enabled", "type_bounds": ["boolean"], "required": true, "passthrough": false, "tooltip": "Enable permissionless thaw" },
+      { "name": "freeze_enabled", "type_bounds": ["boolean"], "required": true, "passthrough": false, "tooltip": "Enable permissionless freeze" },
+      { "name": "rpc_url", "type_bounds": ["string"], "required": false, "passthrough": false, "tooltip": "RPC URL (default: devnet)" }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "string", "optional": false, "tooltip": "Transaction signature" }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Solana",
+    "program": "token_acl",
+    "category": "token",
+    "icon_url": null,
+    "tags": ["token-acl", "srfc37", "token-2022", "permissioned-tokens"]
+  },
+  "external_version": {
+    "program_id": "TACLkU6CiCdkQN2MjoyDkVg2yAH9zkxiHDsiztQ52TP",
+    "sdk_crate": null,
+    "sdk_version": "0.3.0",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-program/token-acl"
+  }
+}

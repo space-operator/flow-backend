@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "token_acl_thaw_permissionless",
+  "prefix": "token_acl",
+  "description": "Token ACL: permissionless thaw — anyone can call; gating program decides whether to succeed. Auto-resolves thaw-extra-metas PDA + remaining accounts. Idempotent variant by default.",
+  "type": "bun",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-bun/src/token_acl/token_acl_thaw_permissionless.ts",
+  "ports": {
+    "inputs": [
+      { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": false, "tooltip": "Tx fee payer (also acts as caller/authority if `authority` omitted)" },
+      { "name": "authority", "type_bounds": ["keypair"], "required": false, "passthrough": false, "tooltip": "Optional override signer — otherwise uses fee_payer" },
+      { "name": "mint", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "Token-2022 mint" },
+      { "name": "token_account", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "Token account to thaw" },
+      { "name": "token_account_owner", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "Owner wallet of the token account (needed for gate program checks)" },
+      { "name": "idempotent", "type_bounds": ["boolean"], "required": false, "passthrough": false, "tooltip": "Use idempotent variant (default true)" },
+      { "name": "rpc_url", "type_bounds": ["string"], "required": false, "passthrough": false, "tooltip": "RPC URL (default: devnet)" }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "string", "optional": false, "tooltip": "Transaction signature" }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Solana",
+    "program": "token_acl",
+    "category": "token",
+    "icon_url": null,
+    "tags": ["token-acl", "srfc37", "token-2022", "permissioned-tokens", "thaw", "permissionless"]
+  },
+  "external_version": {
+    "program_id": "TACLkU6CiCdkQN2MjoyDkVg2yAH9zkxiHDsiztQ52TP",
+    "sdk_crate": null,
+    "sdk_version": "0.3.0",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-program/token-acl"
+  }
+}

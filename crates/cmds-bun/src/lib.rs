@@ -231,6 +231,13 @@ const COMPANION_MODULES: &[(&str, &str)] = &[
         )),
     ),
     (
+        "./token_acl_common.ts",
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/token_acl/token_acl_common.ts"
+        )),
+    ),
+    (
         "./relay_common.ts",
         include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),

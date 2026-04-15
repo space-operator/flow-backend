@@ -8,6 +8,9 @@
     "@umbra-privacy/sdk": "^2.1.1",
     "@umbra-privacy/web-zk-prover": "^2.0.1",
     "snarkjs": "^0.7.6",
-    "privacycash": "^1.1.20"
+    "privacycash": "^1.1.20",
+    "@solana/kit": "^5.0.0",
+    "@solana/token-acl-sdk": "^0.3.0",
+    "@solana-program/token-2022": "^0.6.1"
   }
 }
