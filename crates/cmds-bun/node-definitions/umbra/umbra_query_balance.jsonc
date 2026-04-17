@@ -10,13 +10,22 @@
   "ports": {
     "inputs": [
       {
+        "name": "pubkey",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Base58 public key of the signer. Signs via the connected wallet (private key stays in the wallet). Preferred over `keypair` for user flows. Provide either `pubkey` or `keypair`."
+      },
+      {
         "name": "keypair",
         "type_bounds": [
           "bytes"
         ],
-        "required": true,
+        "required": false,
         "passthrough": false,
-        "tooltip": "64-byte Solana keypair (secret key ∥ public key)"
+        "tooltip": "64-byte Solana keypair (secret ∥ public) for local signing. Use only for automation/CI. Provide either `pubkey` or `keypair`; `keypair` wins if both are set."
       },
       {
         "name": "network",

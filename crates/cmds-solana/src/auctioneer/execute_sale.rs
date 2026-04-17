@@ -122,6 +122,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         input.token_size,
     );
 
+    // See auctioneer/deposit.rs for the AH sign-off rationale.
+    let authority_is_signer = input.authority == input.fee_payer.pubkey();
+
     let accounts = vec![
         AccountMeta::new_readonly(AUCTION_HOUSE_PROGRAM_ID, false),
         AccountMeta::new(listing_config, false),
@@ -134,7 +137,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new(escrow_payment_account, false),
         AccountMeta::new(seller_payment_receipt_account, false),
         AccountMeta::new(buyer_receipt_token_account, false),
-        AccountMeta::new_readonly(input.authority, false),
+        AccountMeta::new_readonly(input.authority, authority_is_signer),
         AccountMeta::new_readonly(auction_house, false),
         AccountMeta::new(fee_acc, false),
         AccountMeta::new(treasury, false),

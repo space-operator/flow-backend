@@ -45,6 +45,22 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let (auction_house, _) = ah_pda::find_auction_house(&wallet_pk, &input.treasury_mint);
     let (auctioneer_authority, _) = pda::find_auctioneer_authority(&auction_house);
 
+    // Idempotent fast-path: if the auctioneer_authority PDA is already
+    // initialized on-chain, authorize has already run. Return existing PDAs
+    // so this flow can re-run as verification against an existing setup.
+    if ctx
+        .solana_client()
+        .get_account(&auctioneer_authority)
+        .await
+        .is_ok()
+    {
+        return Ok(Output {
+            signature: None,
+            auction_house,
+            auctioneer_authority,
+        });
+    }
+
     let accounts = vec![
         AccountMeta::new(wallet_pk, true),
         AccountMeta::new_readonly(auction_house, false),

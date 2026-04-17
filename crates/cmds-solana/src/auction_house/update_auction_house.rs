@@ -3,7 +3,7 @@ use super::{
     payment_account_for, pda,
 };
 use crate::prelude::*;
-use solana_program::instruction::AccountMeta;
+use solana_program::{instruction::AccountMeta, sysvar};
 
 const NAME: &str = "auction_house_update";
 const DEFINITION: &str = flow_lib::node_definition!("auction_house/update_auction_house.jsonc");
@@ -96,6 +96,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
         AccountMeta::new_readonly(ATA_PROGRAM_ID, false),
+        AccountMeta::new_readonly(sysvar::rent::ID, false),
     ];
 
     let mut args_data = Vec::new();

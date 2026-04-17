@@ -57,6 +57,12 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     let payment_account = payment_account_for(&wallet_pk, &input.treasury_mint, &TOKEN_PROGRAM_ID);
     let transfer_authority = wallet_pk;
 
+    // When the AH was created with requires_sign_off=true, mpl-auction-house's
+    // get_fee_payer demands either authority.is_signer OR !requires_sign_off.
+    // If authority == fee_payer, the fee_payer IS signing the tx — mark the
+    // authority slot is_signer=true so Anchor's AccountInfo check passes.
+    let authority_is_signer = input.authority == input.fee_payer.pubkey();
+
     let accounts = vec![
         AccountMeta::new_readonly(AUCTION_HOUSE_PROGRAM_ID, false),
         AccountMeta::new_readonly(wallet_pk, true),
@@ -64,7 +70,7 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(transfer_authority, false),
         AccountMeta::new(escrow_payment_account, false),
         AccountMeta::new_readonly(input.treasury_mint, false),
-        AccountMeta::new_readonly(input.authority, false),
+        AccountMeta::new_readonly(input.authority, authority_is_signer),
         AccountMeta::new_readonly(auction_house, false),
         AccountMeta::new(fee_acc, false),
         AccountMeta::new_readonly(auctioneer_authority, false),

@@ -70,6 +70,23 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .unwrap_or_else(|| auctioneer_pda::find_auctioneer_authority(&auction_house).0);
     let (ah_auctioneer_pda, _) = pda::find_ah_auctioneer_pda(&auction_house, &auctioneer_authority);
 
+    // Idempotent fast-path: if the auctioneer has already been delegated to
+    // this AH (ah_auctioneer_pda exists), skip the tx so this flow can re-run
+    // as a verification step without re-submitting a duplicate delegation.
+    if ctx
+        .solana_client()
+        .get_account(&ah_auctioneer_pda)
+        .await
+        .is_ok()
+    {
+        return Ok(Output {
+            signature: None,
+            auction_house,
+            ah_auctioneer_pda,
+            auctioneer_authority,
+        });
+    }
+
     let accounts = vec![
         AccountMeta::new(auction_house, false),
         AccountMeta::new(input.authority.pubkey(), true),

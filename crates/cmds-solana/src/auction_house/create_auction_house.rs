@@ -56,14 +56,35 @@ pub struct Output {
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
-    let (auction_house, _) = pda::find_auction_house(&input.authority, &input.treasury_mint);
-    let (auction_house_fee_account, _) = pda::find_auction_house_fee_account(&auction_house);
-    let (auction_house_treasury, _) = pda::find_auction_house_treasury(&auction_house);
+    let (auction_house, auction_house_bump) =
+        pda::find_auction_house(&input.authority, &input.treasury_mint);
+    let (auction_house_fee_account, fee_payer_bump) =
+        pda::find_auction_house_fee_account(&auction_house);
+    let (auction_house_treasury, treasury_bump) = pda::find_auction_house_treasury(&auction_house);
     let treasury_withdrawal_destination = payment_account_for(
         &input.treasury_withdrawal_destination_owner,
         &input.treasury_mint,
         &TOKEN_PROGRAM_ID,
     );
+
+    // Idempotent fast-path: if the AH PDA already exists on-chain, return its
+    // deterministic pubkeys without submitting a duplicate create_auction_house
+    // tx (which would fail with AccountAlreadyInUse). This lets downstream
+    // flows re-run the "create" step as a verification op against an existing AH.
+    if ctx
+        .solana_client()
+        .get_account(&auction_house)
+        .await
+        .is_ok()
+    {
+        return Ok(Output {
+            signature: None,
+            auction_house,
+            auction_house_fee_account,
+            auction_house_treasury,
+            treasury_withdrawal_destination,
+        });
+    }
 
     let accounts = vec![
         AccountMeta::new_readonly(input.treasury_mint, false),
@@ -81,7 +102,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(sysvar::rent::ID, false),
     ];
 
-    let mut args_data = Vec::with_capacity(4);
+    let mut args_data = Vec::with_capacity(7);
+    args_data.push(auction_house_bump);
+    args_data.push(fee_payer_bump);
+    args_data.push(treasury_bump);
     args_data.extend_from_slice(&input.seller_fee_basis_points.to_le_bytes());
     args_data.push(input.requires_sign_off as u8);
     args_data.push(input.can_change_sale_price as u8);
