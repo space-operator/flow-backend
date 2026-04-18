@@ -53,7 +53,7 @@
     }
   },
   "classification": {
-    "vendor": "Native",
+    "vendor": "Solana",
     "program": "record",
     "category": "data",
     "icon_url": "https://github.com/space-operator.png",

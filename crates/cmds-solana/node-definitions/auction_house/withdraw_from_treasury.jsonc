@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "auction_house_withdraw_from_treasury",
+  "prefix": "auction_house",
+  "type": "native",
+  "description": "Withdraw funds from the Auction House treasury",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/auction_house/withdraw_from_treasury.rs",
+  "ports": {
+    "inputs": [
+      { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": true },
+      { "name": "authority", "type_bounds": ["keypair"], "required": true },
+      { "name": "treasury_mint", "type_bounds": ["pubkey"], "required": true },
+      { "name": "treasury_withdrawal_destination", "type_bounds": ["pubkey"], "required": true },
+      { "name": "amount", "type_bounds": ["u64"], "required": true },
+      { "name": "submit", "type_bounds": ["bool"] }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "signature", "optional": true },
+      { "name": "auction_house", "type": "pubkey" }
+    ]
+  },
+  "config_schema": {},
+  "config": { "submit": { "B": true } },
+  "classification": {
+    "vendor": "Solana",
+    "program": "auction_house",
+    "category": "marketplace",
+    "icon_url": "https://www.metaplex.com/favicon.ico",
+    "tags": ["auction_house", "metaplex", "withdraw", "treasury"]
+  },
+  "external_version": {
+    "program_id": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-foundation/anchor/tree/master/tests/auction-house"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/auction_house/withdraw_from_treasury.jsonc",
+    "repo": "flow-backend"
+  }
+}

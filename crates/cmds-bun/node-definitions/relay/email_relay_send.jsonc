@@ -1,0 +1,106 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "resend_send_email",
+  "prefix": "resend",
+  "description": "Send an email via the Resend API. Supports text, HTML, reply-to, CC, and BCC. Use with upstream nodes to build relay addresses for privacy patterns.",
+  "type": "bun",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-bun/src/relay/email_relay_send.ts",
+  "ports": {
+    "inputs": [
+      {
+        "name": "api_key",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Resend API key"
+      },
+      {
+        "name": "from",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Sender email address (e.g. 'Name <noreply@example.com>')"
+      },
+      {
+        "name": "to",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Recipient email address"
+      },
+      {
+        "name": "subject",
+        "type_bounds": ["string"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Email subject line"
+      },
+      {
+        "name": "text",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Plain text body (provide text and/or html)"
+      },
+      {
+        "name": "html",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "HTML body (provide text and/or html)"
+      },
+      {
+        "name": "reply_to",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Reply-to address (useful for relay patterns)"
+      },
+      {
+        "name": "cc",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "CC recipient(s) — comma-separated or single address"
+      },
+      {
+        "name": "bcc",
+        "type_bounds": ["string"],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "BCC recipient(s) — comma-separated or single address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "message_id",
+        "type": "string",
+        "tooltip": "Resend message ID"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "tooltip": "Send status"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Resend",
+    "program": "resend",
+    "category": "notification",
+    "icon_url": null,
+    "tags": ["email", "resend", "notification", "send"]
+  },
+  "external_version": {
+    "program_id": "resend_api",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": "https://api.resend.com",
+    "api_version": null,
+    "source_repo": "https://github.com/resend/resend-node"
+  }
+}

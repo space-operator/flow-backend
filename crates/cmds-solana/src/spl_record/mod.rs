@@ -6,6 +6,7 @@ use solana_program::pubkey::Pubkey;
 use solana_program::{program_pack::IsInitialized, pubkey};
 use {bytemuck::Pod, solana_program::program_error::ProgramError};
 
+pub mod close_record;
 pub mod initialize_record_with_seed;
 pub mod read_record;
 pub mod reallocate;

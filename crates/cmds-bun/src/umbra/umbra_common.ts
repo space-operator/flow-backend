@@ -17,10 +17,21 @@ import * as snarkjs from "snarkjs";
 import { PublicKey } from "@solana/web3.js";
 import type { Context } from "@space-operator/flow-lib-bun";
 
-export const INDEXER_ENDPOINT =
+export const INDEXER_ENDPOINT_MAINNET =
   "https://acqzie0a1h.execute-api.eu-central-1.amazonaws.com";
-export const RELAYER_ENDPOINT =
+export const INDEXER_ENDPOINT_DEVNET =
+  "https://utxo-indexer.api-devnet.umbraprivacy.com";
+// Backward-compatible alias; prefer the network-specific constants above.
+export const INDEXER_ENDPOINT = INDEXER_ENDPOINT_MAINNET;
+export const RELAYER_ENDPOINT_MAINNET =
   "https://6yn4ndrv2i.execute-api.eu-central-1.amazonaws.com";
+// Devnet relayer inferred from the indexer URL pattern
+// (utxo-indexer.api-devnet.umbraprivacy.com → relayer.api-devnet.umbraprivacy.com).
+// If Umbra publishes a different devnet relayer domain, override via env or update here.
+export const RELAYER_ENDPOINT_DEVNET =
+  "https://relayer.api-devnet.umbraprivacy.com";
+// Backward-compatible alias; prefer the network-specific constants above.
+export const RELAYER_ENDPOINT = RELAYER_ENDPOINT_MAINNET;
 
 const SUPPORTED_NETWORKS = ["mainnet", "devnet"] as const;
 
@@ -156,6 +167,75 @@ export function getPrimarySignature(result: unknown): string {
 }
 
 /**
+ * Resolve signer bytes for an Umbra node from its raw inputs.
+ *
+ * Accepts either:
+ * - `inputs.pubkey` (base58 string) — signs via the flow framework's
+ *   wallet adapter through ctx.requestSignature / ctx.requestMessageSignature.
+ *   Preferred for user-initiated flows: the private key never leaves the
+ *   wallet. The Umbra SDK's master seed is derived from signMessage, so
+ *   this path supports ZK operations too.
+ * - `inputs.keypair` (64-byte secret ∥ public) — signs locally. Intended
+ *   for automation or CI where a server-side key is appropriate.
+ *
+ * If both are provided, `keypair` wins (explicit-over-implicit).
+ */
+export function resolveUmbraSignerBytes(inputs: {
+  keypair?: unknown;
+  pubkey?: unknown;
+}): Uint8Array {
+  if (inputs.keypair !== undefined && inputs.keypair !== null) {
+    return new Uint8Array(inputs.keypair as ArrayLike<number>);
+  }
+  const pubkeyBytes = extractPubkeyBytes(inputs.pubkey);
+  if (pubkeyBytes) {
+    return pubkeyBytes;
+  }
+  throw new Error(
+    "Umbra node requires either `pubkey` (base58 string or 32-byte array; signs via wallet adapter) or `keypair` (64-byte secret; signs locally).",
+  );
+}
+
+// Accept every shape a `pubkey`-typed or `string`-typed input may take in
+// bun nodes: raw 32-byte array-likes (Uint8Array, Array, or index-keyed
+// objects the way the flow runtime serializes pubkeys), IValue wrappers
+// ({B3: "..."}, {S: "..."}), plain base58 strings, and PublicKey-likes.
+function extractPubkeyBytes(value: unknown): Uint8Array | null {
+  if (value === undefined || value === null) return null;
+  if (value instanceof Uint8Array) {
+    return value.length === 32 ? value : null;
+  }
+  if (Array.isArray(value) && value.length === 32) {
+    return new Uint8Array(value as number[]);
+  }
+  if (typeof value === "string" && value.length > 0) {
+    return new PublicKey(value).toBytes();
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.B3 === "string" && record.B3.length > 0) {
+      return new PublicKey(record.B3).toBytes();
+    }
+    if (typeof record.S === "string" && record.S.length > 0) {
+      return new PublicKey(record.S).toBytes();
+    }
+    const maybePk = value as { toBase58?: () => string };
+    if (typeof maybePk.toBase58 === "function") {
+      return new PublicKey(maybePk.toBase58()).toBytes();
+    }
+    // Index-keyed plain object: {0: 255, 1: 130, ..., 31: 42}
+    if ("0" in record && "31" in record) {
+      const bytes = new Uint8Array(32);
+      for (let i = 0; i < 32; i++) {
+        bytes[i] = Number(record[String(i)] ?? 0);
+      }
+      return bytes;
+    }
+  }
+  return null;
+}
+
+/**
  * Create an Umbra SDK client.
  *
  * Accepts either:
@@ -184,9 +264,10 @@ export async function createUmbraClient(
   const rpcSubscriptionsUrl = rpcUrl
     .replace(/^https:\/\//, "wss://")
     .replace(/^http:\/\//, "ws://");
-  // Indexer is mainnet-only — devnet indexer not yet available
   const indexerApiEndpoint = network === "mainnet"
-    ? INDEXER_ENDPOINT
+    ? INDEXER_ENDPOINT_MAINNET
+    : network === "devnet"
+    ? INDEXER_ENDPOINT_DEVNET
     : undefined;
 
   const transactionForwarder = ctx ? createFrameworkForwarder(ctx) : undefined;
@@ -315,6 +396,19 @@ function createFrameworkForwarder(ctx: Context) {
     return signature;
   };
 
+  // Send a signed tx without waiting for confirmation. Used by the SDK
+  // for rent-reclaim after deposit/withdraw — we want the main result to
+  // return as soon as the primary tx confirms, and let the rent-reclaim
+  // follow-up land on its own. Without this method, the SDK logs
+  // "config.transactionForwarder.fireAndForget is not a function" and
+  // surfaces a non-fatal rentClaimError.
+  const fireAndForget = async (transaction: any): Promise<string> => {
+    const wireBytes = encodeWireTransaction(transaction);
+    return await ctx.solana.sendRawTransaction(wireBytes, {
+      skipPreflight: true,
+    });
+  };
+
   return {
     forwardSequentially: async (transactions: any[], _options: any = {}) => {
       const signatures: string[] = [];
@@ -326,14 +420,20 @@ function createFrameworkForwarder(ctx: Context) {
     forwardInParallel: async (transactions: any[], _options: any = {}) => {
       return Promise.all(transactions.map(sendViaFramework));
     },
+    fireAndForget,
   };
 }
 
 /**
  * Create the Umbra relayer client (needed for UTXO claims).
+ * Picks the mainnet or devnet relayer URL per the `network` argument;
+ * defaults to mainnet when unspecified for backward compatibility.
  */
-export function createRelayer() {
-  return getUmbraRelayer({ apiEndpoint: RELAYER_ENDPOINT });
+export function createRelayer(network?: string) {
+  const apiEndpoint = network === "devnet"
+    ? RELAYER_ENDPOINT_DEVNET
+    : RELAYER_ENDPOINT_MAINNET;
+  return getUmbraRelayer({ apiEndpoint });
 }
 
 // ── Rust Native Prover ──────────────────────────────────────────────────

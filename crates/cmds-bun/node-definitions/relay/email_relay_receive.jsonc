@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "resend_receive_email",
+  "prefix": "resend",
+  "description": "Parse an inbound email from a Resend or SendGrid webhook. Extracts sender, recipient, subject, and body. Strips quoted reply content automatically.",
+  "type": "bun",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-bun/src/relay/email_relay_receive.ts",
+  "ports": {
+    "inputs": [
+      {
+        "name": "webhook_payload",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Parsed webhook payload from Resend or SendGrid inbound parse"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "from",
+        "type": "string",
+        "tooltip": "Sender email address"
+      },
+      {
+        "name": "to",
+        "type": "string",
+        "tooltip": "Recipient email address"
+      },
+      {
+        "name": "subject",
+        "type": "string",
+        "tooltip": "Email subject line"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "tooltip": "Cleaned message body (quoted reply content stripped)"
+      },
+      {
+        "name": "raw_body",
+        "type": "string",
+        "tooltip": "Full original plain text body"
+      },
+      {
+        "name": "html_body",
+        "type": "string",
+        "tooltip": "HTML body if present"
+      },
+      {
+        "name": "headers",
+        "type": "object",
+        "tooltip": "Email headers"
+      },
+      {
+        "name": "received_at",
+        "type": "string",
+        "tooltip": "ISO timestamp when parsed"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Resend",
+    "program": "resend",
+    "category": "notification",
+    "icon_url": null,
+    "tags": ["email", "resend", "webhook", "inbound", "receive"]
+  },
+  "external_version": {
+    "program_id": "resend_webhook",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  }
+}

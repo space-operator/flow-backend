@@ -9,6 +9,14 @@ config.toml
 .env
 .ipynb_checkpoints
 .idea
-@space-operator/contracts/node_modules
 @space-operator/client-next/node_modules
+@space-operator/client/node_modules
+@space-operator/contracts/node_modules
+@space-operator/flow-lib/node_modules
+crates/cmds-deno/node_modules
 node_modules
+.claude/settings.local.json
+local-config.jsonc
+.gitignore
+.claude/settings.json
+.claude/settings.local.json

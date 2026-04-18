@@ -1,19 +1,15 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
 import { getClaimableUtxoScannerFunction } from "@umbra-privacy/sdk";
-import { createUmbraClient } from "./umbra_common.ts";
+import { createUmbraClient, resolveUmbraSignerBytes } from "./umbra_common.ts";
 
 export default class UmbraFetchUtxos extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
-    if (!inputs.keypair || !inputs.network || !inputs.rpc_url) {
-      throw new Error("Missing required inputs: keypair, network, rpc_url");
-    }
-    if (inputs.network !== "mainnet") {
-      console.warn(`Umbra indexer is mainnet-only. Devnet indexer not yet available.`);
-      return { utxos: [], count: 0, error: "Umbra indexer is mainnet-only. Devnet indexer not yet available." };
+    if (!inputs.network || !inputs.rpc_url) {
+      throw new Error("Missing required inputs: network, rpc_url");
     }
 
     const client = await createUmbraClient(
-      new Uint8Array(inputs.keypair),
+      resolveUmbraSignerBytes(inputs),
       inputs.network,
       inputs.rpc_url,
       ctx,
@@ -41,13 +37,60 @@ export default class UmbraFetchUtxos extends BaseCommand {
       throw err;
     }
 
-    const ephemeral = result?.ephemeral ?? [];
-    const receiver = result?.receiver ?? [];
-    const allUtxos = [...ephemeral, ...receiver];
+    // SDK returns { selfBurnable, received, publicSelfBurnable, publicReceived, nextScanStartIndex }
+    const selfBurnable = result?.selfBurnable ?? [];
+    const received = result?.received ?? [];
+    const publicSelfBurnable = result?.publicSelfBurnable ?? [];
+    const publicReceived = result?.publicReceived ?? [];
 
-    console.log(`Found ${allUtxos.length} claimable UTXO(s) (${ephemeral.length} ephemeral, ${receiver.length} receiver)`);
+    // Public UTXOs carry a plaintext destinationAddress. Filter public lists to
+    // only those addressed to our signer for safe downstream use.
+    const signerAddress = String(client.signer.address);
+    const mineOnly = (u: any) =>
+      !u?.destinationAddress || String(u.destinationAddress) === signerAddress;
+    const myPublicSelfBurnable = publicSelfBurnable.filter(mineOnly);
+    const myPublicReceived = publicReceived.filter(mineOnly);
 
-    return { utxos: allUtxos, count: allUtxos.length };
+    // `utxos` feeds umbra_claim_utxo, which is wired to the SDK's
+    // getReceiverClaimableUtxoToEncryptedBalanceClaimerFunction. That claimer
+    // consumes the scanner's `received` category (encrypted receiver-claimable
+    // UTXOs). Public-tagged UTXOs have a different on-chain shape and make
+    // the claimer throw byte-size errors, so we expose them via separate
+    // outputs instead and keep `utxos` restricted to what Claim can process.
+    //
+    // SDK 4.0 note: as of @umbra-privacy/sdk@4.0.0, both
+    // getPublicBalanceToReceiverClaimableUtxoCreatorFunction AND
+    // getEncryptedBalanceToReceiverClaimableUtxoCreatorFunction round-trip
+    // through the indexer as `public-received` (not `received`). Until that
+    // upstream behavior changes, end-to-end Create→Fetch→Claim of
+    // receiver-claimable UTXOs on devnet will see the UTXO land in
+    // `publicReceived` and `utxos` stay empty. See docs/issues.md.
+    const claimableByReceiver = [...received];
+    const allUtxos = [
+      ...selfBurnable,
+      ...received,
+      ...myPublicSelfBurnable,
+      ...myPublicReceived,
+    ];
+
+    console.log(
+      `Found ${allUtxos.length} UTXO(s) total — ` +
+        `claimable by Receiver claim: ${claimableByReceiver.length} ` +
+        `(selfBurnable=${selfBurnable.length}, received=${received.length}, ` +
+        `publicSelfBurnable=${myPublicSelfBurnable.length}, ` +
+        `publicReceived=${myPublicReceived.length})`,
+    );
+
+    return {
+      utxos: claimableByReceiver,
+      count: claimableByReceiver.length,
+      allUtxos,
+      publicReceived: myPublicReceived,
+      publicSelfBurnable: myPublicSelfBurnable,
+      selfBurnable,
+      received,
+      nextScanStartIndex: result?.nextScanStartIndex,
+    };
   }
 }
 
