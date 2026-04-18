@@ -44,12 +44,16 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         pda::find_auction_house(&input.authority.pubkey(), &input.treasury_mint);
     let (treasury, _) = pda::find_auction_house_treasury(&auction_house);
 
+    // Account order per Metaplex AH WithdrawFromTreasury IDL:
+    // 0: treasury_mint, 1: authority (signer), 2: treasury_withdrawal_destination,
+    // 3: auction_house_treasury (bare PDA for WSOL / ATA for SPL treasury_mint),
+    // 4: auction_house (AH-owned account), 5: token_program, 6: system_program.
     let accounts = vec![
         AccountMeta::new_readonly(input.treasury_mint, false),
         AccountMeta::new_readonly(input.authority.pubkey(), true),
         AccountMeta::new(input.treasury_withdrawal_destination, false),
-        AccountMeta::new(auction_house, false),
         AccountMeta::new(treasury, false),
+        AccountMeta::new(auction_house, false),
         AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),
         AccountMeta::new_readonly(solana_system_interface::program::ID, false),
     ];
