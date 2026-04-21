@@ -16,7 +16,7 @@
         ],
         "required": true,
         "passthrough": false,
-        "tooltip": "64-byte Solana keypair (secret key || public key)"
+        "tooltip": "Local Solana keypair with secret key bytes. Flow adapter wallets are not supported by the Privacy Cash SDK."
       },
       {
         "name": "rpc_url",
@@ -39,11 +39,12 @@
       {
         "name": "recipient",
         "type_bounds": [
+          "pubkey",
           "string"
         ],
         "required": true,
         "passthrough": false,
-        "tooltip": "Recipient address (Base58 public key)"
+        "tooltip": "Recipient wallet address"
       }
     ],
     "outputs": [

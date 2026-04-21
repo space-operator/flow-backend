@@ -162,10 +162,26 @@ mod tests {
 
     #[test]
     fn test_instruction_construction() {
-        let ix =
-            build_auction_house_instruction(DISC_DELEGATE_AUCTIONEER, vec![], vec![0, 0, 0, 0]);
+        // Mirror run()'s default args: scopes = [0,1,2,3,4,5,6], len-prefix u32 LE + 7 scope bytes.
+        // run() at line 98-101: `input.scopes.unwrap_or_else(|| vec![0,1,2,3,4,5,6])` then
+        // `(scopes.len() as u32).to_le_bytes()` followed by scope bytes. Any reordering of the
+        // length prefix vs scope bytes would be caught by the per-byte assertions below.
+        let scopes: Vec<u8> = vec![0, 1, 2, 3, 4, 5, 6];
+        let mut args = Vec::with_capacity(4 + scopes.len());
+        args.extend_from_slice(&(scopes.len() as u32).to_le_bytes());
+        args.extend_from_slice(&scopes);
+
+        let ix = build_auction_house_instruction(DISC_DELEGATE_AUCTIONEER, vec![], args);
         assert_eq!(ix.program_id, AUCTION_HOUSE_PROGRAM_ID);
+        // 8 disc + 4 len + 7 scopes = 19
+        assert_eq!(ix.data.len(), 19);
         assert_eq!(ix.data[..8], DISC_DELEGATE_AUCTIONEER);
-        assert_eq!(ix.data.len(), 12);
+        // Length prefix at 8..12 must be 7 (little-endian u32)
+        assert_eq!(
+            u32::from_le_bytes([ix.data[8], ix.data[9], ix.data[10], ix.data[11]]),
+            7
+        );
+        // Scope bytes at 12..19 must be the canonical order 0..6
+        assert_eq!(&ix.data[12..19], &[0, 1, 2, 3, 4, 5, 6]);
     }
 }

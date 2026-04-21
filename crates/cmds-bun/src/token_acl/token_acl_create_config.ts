@@ -27,8 +27,8 @@ import type { Address } from "@solana/kit";
 export default class TokenAclCreateConfig extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
     const signerCache = newSignerCache();
-    const payerSigner = await toKitSigner(inputs.fee_payer, signerCache);
-    const authoritySigner = await toKitSigner(inputs.authority, signerCache);
+    const payerSigner = await toKitSigner(ctx, inputs.fee_payer, signerCache);
+    const authoritySigner = await toKitSigner(ctx, inputs.authority, signerCache);
 
     const mint = toAddress(inputs.mint);
     const gatingProgram: Address = inputs.gating_program

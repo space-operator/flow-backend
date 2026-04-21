@@ -13,8 +13,8 @@ import { newSignerCache, signAndSendSingle, toAddress, toKitSigner } from "./tok
 export default class TokenAclGateCreateList extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
     const signerCache = newSignerCache();
-    const payerSigner = await toKitSigner(inputs.fee_payer, signerCache);
-    const authoritySigner = await toKitSigner(inputs.authority, signerCache);
+    const payerSigner = await toKitSigner(ctx, inputs.fee_payer, signerCache);
+    const authoritySigner = await toKitSigner(ctx, inputs.authority, signerCache);
     const seed = toAddress(inputs.seed);
     const modeInput = inputs.mode ?? "Allow";
     const mode =

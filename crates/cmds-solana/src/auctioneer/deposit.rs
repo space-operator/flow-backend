@@ -63,6 +63,22 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
     // authority slot is_signer=true so Anchor's AccountInfo check passes.
     let authority_is_signer = input.authority == input.fee_payer.pubkey();
 
+    // NOTE for SPL treasury: Metaplex Auctioneer's Deposit struct declares
+    // `pub wallet: Signer<'info>` WITHOUT `#[account(mut)]` (verified verbatim in
+    // metaplex-program-library auctioneer/program/src/deposit/mod.rs), so Anchor
+    // strips wallet's writable flag when CPI'ing into AH. AH's inner Deposit
+    // handler needs wallet writable for SPL treasury to fund escrow_payment_account's
+    // ~2039280-lamport SPL-token-account rent; it fails with "writable privilege
+    // escalated" otherwise. Upstream's own tests only cover native SOL, so this
+    // path was never exercised.
+    //
+    // Workaround (no client change needed): pre-fund the escrow_payment_account
+    // PDA with >=2039280 lamports via a plain SystemTransfer before calling this
+    // node. AH's create_program_token_account_if_not_present early-returns the
+    // rent transfer when the PDA already has lamports, then Allocate+Assign+Init
+    // use the AH program's own signing seeds — no wallet writability required.
+    // Proven 2026-04-18 against USDC treasury AH 4RZUSD4...rQTv. See
+    // flow2/docs/issues.md gap #3 for the full proof + production considerations.
     let accounts = vec![
         AccountMeta::new_readonly(AUCTION_HOUSE_PROGRAM_ID, false),
         AccountMeta::new_readonly(wallet_pk, true),

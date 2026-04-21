@@ -33,9 +33,9 @@ import {
 export default class TokenAclThawPermissionless extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
     const signerCache = newSignerCache();
-    const payerSigner = await toKitSigner(inputs.fee_payer, signerCache);
+    const payerSigner = await toKitSigner(ctx, inputs.fee_payer, signerCache);
     const authoritySigner = inputs.authority
-      ? await toKitSigner(inputs.authority, signerCache)
+      ? await toKitSigner(ctx, inputs.authority, signerCache)
       : payerSigner;
 
     const mint = toAddress(inputs.mint);

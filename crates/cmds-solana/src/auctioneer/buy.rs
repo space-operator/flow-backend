@@ -97,6 +97,9 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         AccountMeta::new_readonly(AUCTION_HOUSE_PROGRAM_ID, false),
         AccountMeta::new(listing_config, false),
         AccountMeta::new_readonly(input.seller, false),
+        // See auctioneer/deposit.rs: wallet is left readonly because Metaplex
+        // Auctioneer's struct strips the writable flag on CPI. SPL-treasury
+        // Buy blocks on the same upstream limitation as Deposit.
         AccountMeta::new_readonly(wallet_pk, true),
         AccountMeta::new(payment_account, false),
         AccountMeta::new_readonly(transfer_authority, false),

@@ -9,8 +9,8 @@ import { newSignerCache, signAndSendSingle, toAddress, toKitSigner } from "./tok
 export default class TokenAclGateAddWallet extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
     const signerCache = newSignerCache();
-    const payerSigner = await toKitSigner(inputs.fee_payer, signerCache);
-    const authoritySigner = await toKitSigner(inputs.authority, signerCache);
+    const payerSigner = await toKitSigner(ctx, inputs.fee_payer, signerCache);
+    const authoritySigner = await toKitSigner(ctx, inputs.authority, signerCache);
     const listConfig = toAddress(inputs.list_config);
     const wallet = toAddress(inputs.wallet);
 

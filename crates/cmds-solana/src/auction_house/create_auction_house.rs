@@ -86,13 +86,20 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         });
     }
 
+    // Metaplex AH CreateAuctionHouse IDL account order:
+    // 0 treasury_mint, 1 payer (signer), 2 authority,
+    // 3 fee_withdrawal_destination (writable),
+    // 4 treasury_withdrawal_destination (writable: ATA for SPL, owner wallet for WSOL),
+    // 5 treasury_withdrawal_destination_owner (readonly),
+    // 6 auction_house, 7 auction_house_fee_account, 8 auction_house_treasury,
+    // 9 token_program, 10 system_program, 11 ata_program, 12 rent.
     let accounts = vec![
         AccountMeta::new_readonly(input.treasury_mint, false),
         AccountMeta::new(input.payer.pubkey(), true),
         AccountMeta::new_readonly(input.authority, false),
         AccountMeta::new(input.fee_withdrawal_destination, false),
-        AccountMeta::new_readonly(input.treasury_withdrawal_destination_owner, false),
         AccountMeta::new(treasury_withdrawal_destination, false),
+        AccountMeta::new_readonly(input.treasury_withdrawal_destination_owner, false),
         AccountMeta::new(auction_house, false),
         AccountMeta::new(auction_house_fee_account, false),
         AccountMeta::new(auction_house_treasury, false),
@@ -170,19 +177,21 @@ mod tests {
     fn test_instruction_construction() {
         let auth = Pubkey::new_unique();
         let mint = Pubkey::new_unique();
-        let (ah, _) = pda::find_auction_house(&auth, &mint);
-        let (fee, _) = pda::find_auction_house_fee_account(&ah);
-        let (tre, _) = pda::find_auction_house_treasury(&ah);
+        let (ah, ah_bump) = pda::find_auction_house(&auth, &mint);
+        let (fee, fee_bump) = pda::find_auction_house_fee_account(&ah);
+        let (tre, tre_bump) = pda::find_auction_house_treasury(&ah);
         let payer = Pubkey::new_unique();
-        let dest = Pubkey::new_unique();
+        let fee_dest = Pubkey::new_unique();
+        let treasury_dest = Pubkey::new_unique();
+        let treasury_owner = Pubkey::new_unique();
 
         let accounts = vec![
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new(payer, true),
             AccountMeta::new_readonly(auth, false),
-            AccountMeta::new(dest, false),
-            AccountMeta::new_readonly(dest, false),
-            AccountMeta::new(dest, false),
+            AccountMeta::new(fee_dest, false),
+            AccountMeta::new(treasury_dest, false),
+            AccountMeta::new_readonly(treasury_owner, false),
             AccountMeta::new(ah, false),
             AccountMeta::new(fee, false),
             AccountMeta::new(tre, false),
@@ -192,16 +201,27 @@ mod tests {
             AccountMeta::new_readonly(sysvar::rent::ID, false),
         ];
 
-        let mut args = Vec::new();
+        // Mirror run()'s arg encoding exactly so any reordering of bumps,
+        // sale-price flag, or sign-off flag fails this test.
+        let mut args = Vec::with_capacity(7);
+        args.push(ah_bump);
+        args.push(fee_bump);
+        args.push(tre_bump);
         args.extend_from_slice(&500u16.to_le_bytes());
-        args.push(0);
-        args.push(1);
+        args.push(1); // requires_sign_off
+        args.push(0); // can_change_sale_price
 
         let ix = build_auction_house_instruction(DISC_CREATE_AUCTION_HOUSE, accounts, args);
         assert_eq!(ix.program_id, AUCTION_HOUSE_PROGRAM_ID);
         assert_eq!(ix.accounts.len(), 13);
-        // 8 disc + 2 u16 + 2 bools = 12
-        assert_eq!(ix.data.len(), 12);
+        // 8 disc + 3 bumps + 2 u16 + 2 bools = 15
+        assert_eq!(ix.data.len(), 15);
         assert_eq!(ix.data[..8], DISC_CREATE_AUCTION_HOUSE);
+        assert_eq!(ix.data[8], ah_bump);
+        assert_eq!(ix.data[9], fee_bump);
+        assert_eq!(ix.data[10], tre_bump);
+        assert_eq!(u16::from_le_bytes([ix.data[11], ix.data[12]]), 500);
+        assert_eq!(ix.data[13], 1);
+        assert_eq!(ix.data[14], 0);
     }
 }

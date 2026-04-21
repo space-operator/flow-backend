@@ -12,6 +12,7 @@
       {
         "name": "pubkey",
         "type_bounds": [
+          "pubkey",
           "string"
         ],
         "required": false,
@@ -21,11 +22,11 @@
       {
         "name": "keypair",
         "type_bounds": [
-          "bytes"
+          "keypair"
         ],
         "required": false,
         "passthrough": false,
-        "tooltip": "64-byte Solana keypair (secret ∥ public) for local signing. Use only for automation/CI. Provide either `pubkey` or `keypair`; `keypair` wins if both are set."
+        "tooltip": "Solana keypair or Flow wallet output. Local wallets sign directly; adapter wallets fall back to connected-wallet signing. Provide either `pubkey` or `keypair`; `keypair` wins if both are set."
       },
       {
         "name": "network",
