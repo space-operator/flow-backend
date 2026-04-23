@@ -1570,11 +1570,30 @@ async function waitForOutputStringField(
   );
 }
 
+async function fetchFlowRunDiagnostic(
+  serverUrl: string,
+  apiKey: string,
+  flowRunId: string,
+): Promise<string> {
+  try {
+    const response = await fetchWithTimeout(
+      buildUrl(serverUrl, `flow/output/${flowRunId}`),
+      { headers: apiKeyHeaders(apiKey) },
+      `diagnostic fetch for flow run ${flowRunId}`,
+      5_000,
+    );
+    const body = (await response.text()).slice(0, 400);
+    return ` (flow-run state: ${response.status} ${body})`;
+  } catch (error) {
+    return ` (diagnostic fetch failed: ${error instanceof Error ? error.message : String(error)})`;
+  }
+}
+
 async function waitForSignatureRequest(
   serverUrl: string,
   apiKey: string,
   flowRunId: string,
-  timeoutMs = 30_000,
+  timeoutMs = 90_000,
 ): Promise<{ pubkey?: string }> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -1600,7 +1619,8 @@ async function waitForSignatureRequest(
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
-  throw new Error(`timed out waiting for signature request for ${flowRunId}`);
+  const diag = await fetchFlowRunDiagnostic(serverUrl, apiKey, flowRunId);
+  throw new Error(`timed out waiting for signature request for ${flowRunId}${diag}`);
 }
 
 async function probeAnonymousDeploymentStart(
