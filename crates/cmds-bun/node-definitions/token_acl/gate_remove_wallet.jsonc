@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "gate_remove_wallet",
+  "prefix": "token_acl",
+  "description": "Token ACL Gate: remove a wallet from an allow/block list (closes entry PDA).",
+  "type": "bun",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-bun/src/token_acl/gate_remove_wallet.ts",
+  "ports": {
+    "inputs": [
+      { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": false, "tooltip": "Tx fee payer" },
+      { "name": "authority", "type_bounds": ["keypair"], "required": true, "passthrough": false, "tooltip": "List authority" },
+      { "name": "list_config", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "ListConfig PDA" },
+      { "name": "wallet", "type_bounds": ["pubkey", "string"], "required": true, "passthrough": false, "tooltip": "Wallet to remove" },
+      { "name": "rpc_url", "type_bounds": ["string"], "required": false, "passthrough": false, "tooltip": "RPC URL (default: devnet)" }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "string", "optional": false, "tooltip": "Transaction signature" }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Solana",
+    "program": "token_acl_gate",
+    "category": "token",
+    "icon_url": null,
+    "tags": ["token-acl", "abl-gate", "srfc37"]
+  },
+  "external_version": {
+    "program_id": "GATEzzqxhJnsWF6vHRsgtixxSB8PaQdcqGEVTEHWiULz",
+    "sdk_crate": null,
+    "sdk_version": "0.2.0",
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-foundation/token-acl-gate"
+  }
+}

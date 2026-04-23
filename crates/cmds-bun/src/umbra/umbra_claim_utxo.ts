@@ -6,6 +6,7 @@ import {
   createRustProver,
   getPrimarySignature,
   logUmbraError,
+  resolveUmbraSignerBytes,
   safeJsonStringify,
   wrapZkProver,
 } from "./umbra_common.ts";
@@ -14,7 +15,7 @@ export default class UmbraClaimUtxo extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
     console.log("[claim_utxo] phase: client_creation");
     const client = await createUmbraClient(
-      new Uint8Array(inputs.keypair),
+      resolveUmbraSignerBytes(inputs),
       inputs.network,
       inputs.rpc_url,
       ctx,
@@ -25,12 +26,20 @@ export default class UmbraClaimUtxo extends BaseCommand {
       "claim_utxo",
       createRustProver("claimDepositIntoConfidentialAmount"),
     );
-    const relayer = createRelayer();
+    const relayer = createRelayer(inputs.network);
 
     console.log("[claim_utxo] phase: function_creation");
+    // SDK requires fetchBatchMerkleProof in deps. It's attached to the
+    // client when indexerApiEndpoint is configured (see SDK index.js:784).
+    const fetchBatchMerkleProof = (client as any).fetchBatchMerkleProof;
+    if (!fetchBatchMerkleProof) {
+      throw new Error(
+        "Umbra client is missing fetchBatchMerkleProof — indexerApiEndpoint not configured for this network.",
+      );
+    }
     const claimUtxo = getReceiverClaimableUtxoToEncryptedBalanceClaimerFunction(
       { client },
-      { zkProver, relayer } as any,
+      { zkProver, relayer, fetchBatchMerkleProof } as any,
     );
 
     console.log("[claim_utxo] phase: execution");

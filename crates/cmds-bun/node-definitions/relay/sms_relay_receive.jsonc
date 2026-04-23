@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "twilio_receive_sms",
+  "prefix": "twilio",
+  "description": "Parse an inbound SMS/MMS from a Twilio webhook. Extracts sender, recipient, body, media URLs, and geo-location data. Wire outputs to Deno/Rhai for relay routing.",
+  "type": "bun",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-bun/src/relay/sms_relay_receive.ts",
+  "ports": {
+    "inputs": [
+      {
+        "name": "webhook_payload",
+        "type_bounds": ["free"],
+        "required": true,
+        "passthrough": false,
+        "tooltip": "Parsed webhook payload from Twilio"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "from",
+        "type": "string",
+        "tooltip": "Sender phone number"
+      },
+      {
+        "name": "to",
+        "type": "string",
+        "tooltip": "Twilio number that received the message"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "tooltip": "SMS/MMS message body"
+      },
+      {
+        "name": "message_sid",
+        "type": "string",
+        "tooltip": "Twilio Message SID"
+      },
+      {
+        "name": "num_media",
+        "type": "number",
+        "tooltip": "Number of media attachments"
+      },
+      {
+        "name": "media_urls",
+        "type": "json",
+        "tooltip": "Array of media attachment URLs (MMS)"
+      },
+      {
+        "name": "from_location",
+        "type": "string",
+        "tooltip": "Sender's location (City, State, Country)"
+      },
+      {
+        "name": "received_at",
+        "type": "string",
+        "tooltip": "ISO timestamp when parsed"
+      }
+    ]
+  },
+  "config_schema": {},
+  "config": {},
+  "classification": {
+    "vendor": "Twilio",
+    "program": "twilio",
+    "category": "notification",
+    "icon_url": null,
+    "tags": ["sms", "twilio", "webhook", "inbound", "receive", "mms"]
+  },
+  "external_version": {
+    "program_id": "twilio_webhook",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": null
+  }
+}

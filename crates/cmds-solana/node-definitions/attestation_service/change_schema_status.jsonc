@@ -75,7 +75,7 @@
     }
   },
   "classification": {
-    "vendor": "Native",
+    "vendor": "Solana",
     "program": "attestation_service",
     "category": "identity",
     "icon_url": "https://github.com/space-operator.png",

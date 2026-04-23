@@ -1,5 +1,28 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
 import { createPrivacyCashClient } from "./privacy_cash_common.ts";
+import type { PrivacyCash } from "privacycash";
+
+type PrivacyCashDepositClient = Pick<PrivacyCash, "deposit">;
+
+export async function executePrivacyCashDeposit(
+  client: PrivacyCashDepositClient,
+  amount: unknown,
+): Promise<{ signature: string }> {
+  const amountLamports = Number(amount);
+  if (!Number.isFinite(amountLamports) || amountLamports <= 0) {
+    throw new Error(`Invalid amount: ${amount}. Must be a positive number of lamports.`);
+  }
+
+  console.log(`Depositing ${amountLamports} lamports into Privacy Cash...`);
+
+  const result = await client.deposit({ lamports: amountLamports });
+
+  console.log("Deposit complete:", JSON.stringify(result));
+
+  return {
+    signature: result.tx ?? String(result),
+  };
+}
 
 export default class PrivacyCashDeposit extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
@@ -7,21 +30,7 @@ export default class PrivacyCashDeposit extends BaseCommand {
       inputs.keypair,
       inputs.rpc_url,
     );
-
-    const amountLamports = Number(inputs.amount);
-    if (!Number.isFinite(amountLamports) || amountLamports <= 0) {
-      throw new Error(`Invalid amount: ${inputs.amount}. Must be a positive number of lamports.`);
-    }
-
-    console.log(`Depositing ${amountLamports} lamports into Privacy Cash...`);
-
-    const result = await client.deposit();
-
-    console.log("Deposit complete:", JSON.stringify(result));
-
-    return {
-      signature: result.tx ?? String(result),
-    };
+    return await executePrivacyCashDeposit(client, inputs.amount);
   }
 }
 
@@ -41,6 +50,21 @@ try {
       const cmd = new PrivacyCashDeposit(nd);
       const ctx = {} as Context;
       await expect(cmd.run(ctx, {})).rejects.toThrow();
+    });
+
+    test("executePrivacyCashDeposit: forwards lamports to the SDK", async () => {
+      let received: unknown;
+      const client = {
+        async deposit(args: unknown) {
+          received = args;
+          return { tx: "deposit-signature" };
+        },
+      } satisfies PrivacyCashDepositClient;
+
+      await expect(executePrivacyCashDeposit(client, "12345")).resolves.toEqual({
+        signature: "deposit-signature",
+      });
+      expect(received).toEqual({ lamports: 12345 });
     });
   });
 } catch (_) {

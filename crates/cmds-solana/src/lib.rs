@@ -11,6 +11,8 @@ pub mod error;
 pub mod ardrive;
 pub mod arweave;
 pub mod attestation_service;
+pub mod auction_house;
+pub mod auctioneer;
 pub mod bridge;
 pub mod damm_v2;
 pub mod das;

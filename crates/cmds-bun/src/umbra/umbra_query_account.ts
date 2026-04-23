@@ -1,11 +1,11 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
 import { getUserAccountQuerierFunction } from "@umbra-privacy/sdk";
-import { createUmbraClient } from "./umbra_common.ts";
+import { createUmbraClient, resolveUmbraSignerBytes } from "./umbra_common.ts";
 
 export default class UmbraQueryAccount extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
     const client = await createUmbraClient(
-      new Uint8Array(inputs.keypair),
+      resolveUmbraSignerBytes(inputs),
       inputs.network,
       inputs.rpc_url,
       ctx,

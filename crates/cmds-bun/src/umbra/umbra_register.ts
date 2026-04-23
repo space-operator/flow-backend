@@ -5,6 +5,7 @@ import {
   createRustProver,
   getPrimarySignature,
   logUmbraError,
+  resolveUmbraSignerBytes,
   safeJsonStringify,
   wrapZkProver,
 } from "./umbra_common.ts";
@@ -33,7 +34,7 @@ export default class UmbraRegister extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
     console.log("[register] phase: client_creation");
     const client = await createUmbraClient(
-      new Uint8Array(inputs.keypair),
+      resolveUmbraSignerBytes(inputs),
       inputs.network,
       inputs.rpc_url,
       ctx,

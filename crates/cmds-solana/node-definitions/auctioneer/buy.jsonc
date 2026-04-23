@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "auctioneer_buy",
+  "prefix": "auctioneer",
+  "type": "native",
+  "description": "Place an ascending bid on an Auctioneer auction. Enforces reserve, min increment, active window, and updates highest_bid.",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/auctioneer/buy.rs",
+  "ports": {
+    "inputs": [
+      { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": true },
+      { "name": "wallet", "type_bounds": ["keypair"], "required": true, "tooltip": "Buyer" },
+      { "name": "authority", "type_bounds": ["pubkey"], "required": true },
+      { "name": "seller", "type_bounds": ["pubkey"], "required": true, "tooltip": "Seller of the listing" },
+      { "name": "token_mint", "type_bounds": ["pubkey"], "required": true },
+      { "name": "treasury_mint", "type_bounds": ["pubkey"], "required": true },
+      { "name": "buyer_price", "type_bounds": ["u64"], "required": true, "tooltip": "Must exceed current high bid by min_bid_increment" },
+      { "name": "token_size", "type_bounds": ["u64"], "required": true },
+      { "name": "submit", "type_bounds": ["bool"] }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "signature", "optional": true },
+      { "name": "auction_house", "type": "pubkey" },
+      { "name": "listing_config", "type": "pubkey" },
+      { "name": "buyer_trade_state", "type": "pubkey" },
+      { "name": "escrow_payment_account", "type": "pubkey" },
+      { "name": "token_account", "type": "pubkey" },
+      { "name": "metadata", "type": "pubkey" }
+    ]
+  },
+  "config_schema": {},
+  "config": { "submit": { "B": true } },
+  "classification": {
+    "vendor": "Solana",
+    "program": "auctioneer",
+    "category": "marketplace",
+    "icon_url": "https://www.metaplex.com/favicon.ico",
+    "tags": ["auctioneer", "english-auction", "bid", "buy"]
+  },
+  "external_version": {
+    "program_id": "neer8g6yJq2mQM6KbnViEDAD4gr3gRZyMMf4F2p3MEh",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/metaplex-foundation/metaplex-program-library/tree/master/auctioneer"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/auctioneer/buy.jsonc",
+    "repo": "flow-backend"
+  }
+}

@@ -93,7 +93,7 @@
     }
   },
   "classification": {
-    "vendor": "Native",
+    "vendor": "Metaplex",
     "program": "v1",
     "category": "core",
     "icon_url": "https://github.com/space-operator.png",
