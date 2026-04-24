@@ -23,8 +23,9 @@ COPY . .
 # Copy over the cached dependencies from above
 COPY --from=cacher /build/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
-RUN cargo build --profile=$PROFILE --bin flow-server --quiet
-RUN cp /build/target/*/flow-server /build/flow-server
+RUN cargo build --profile=$PROFILE --bin flow-server --bin umbra-prover --quiet
+RUN cp /build/target/*/flow-server /build/flow-server && \
+    cp /build/target/*/umbra-prover /build/umbra-prover
 
 FROM docker.io/denoland/deno:2.6.4 AS deno
 
@@ -60,7 +61,8 @@ COPY --from=bun-deps /usr/local/bin/bun /usr/local/bin/bun
 RUN bun --version
 WORKDIR /space-operator/
 COPY --from=builder /build/flow-server /usr/local/bin
+COPY --from=builder /build/umbra-prover /usr/local/bin
 COPY --from=bun-deps /workspace/node_modules /space-operator/node_modules
 COPY --from=bun-deps /workspace/@space-operator /space-operator/@space-operator
-RUN bash -c "ldd /usr/local/bin/flow-server /usr/local/bin/deno /usr/local/bin/bun | (! grep 'not found')" && apt-get remove -y lld && rm -rf /var/lib/apt/lists/*
+RUN bash -c "ldd /usr/local/bin/flow-server /usr/local/bin/umbra-prover /usr/local/bin/deno /usr/local/bin/bun | (! grep 'not found')" && apt-get remove -y lld && rm -rf /var/lib/apt/lists/*
 ENTRYPOINT ["./entrypoint.bash"]
