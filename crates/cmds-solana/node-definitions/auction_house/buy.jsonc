@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "auction_house_buy",
+  "prefix": "auction_house",
+  "type": "native",
+  "description": "Place a bid (offer) on an NFT via the Auction House",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/auction_house/buy.rs",
+  "ports": {
+    "inputs": [
+      { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": true },
+      { "name": "wallet", "type_bounds": ["keypair"], "required": true, "tooltip": "Buyer wallet" },
+      { "name": "authority", "type_bounds": ["keypair"], "required": true },
+      { "name": "seller", "type_bounds": ["pubkey"], "required": true, "tooltip": "Seller wallet (used to derive the listing token account)" },
+      { "name": "token_mint", "type_bounds": ["pubkey"], "required": true },
+      { "name": "treasury_mint", "type_bounds": ["pubkey"], "required": true },
+      { "name": "buyer_price", "type_bounds": ["u64"], "required": true },
+      { "name": "token_size", "type_bounds": ["u64"], "required": true },
+      { "name": "submit", "type_bounds": ["bool"] }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "signature", "optional": true },
+      { "name": "buyer_trade_state", "type": "pubkey" },
+      { "name": "escrow_payment_account", "type": "pubkey" },
+      { "name": "auction_house", "type": "pubkey" },
+      { "name": "token_account", "type": "pubkey" },
+      { "name": "payment_account", "type": "pubkey" },
+      { "name": "metadata", "type": "pubkey" }
+    ]
+  },
+  "config_schema": {},
+  "config": { "submit": { "B": true } },
+  "classification": {
+    "vendor": "Solana",
+    "program": "auction_house",
+    "category": "marketplace",
+    "icon_url": "https://www.metaplex.com/favicon.ico",
+    "tags": ["auction_house", "metaplex", "buy", "bid"]
+  },
+  "external_version": {
+    "program_id": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-foundation/anchor/tree/master/tests/auction-house"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/auction_house/buy.jsonc",
+    "repo": "flow-backend"
+  }
+}

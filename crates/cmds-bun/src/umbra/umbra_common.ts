@@ -14,13 +14,24 @@ import {
   getUmbraRelayer,
 } from "@umbra-privacy/sdk";
 import * as snarkjs from "snarkjs";
-import { PublicKey } from "@solana/web3.js";
-import type { Context } from "@space-operator/flow-lib-bun";
+import { Keypair, PublicKey } from "@solana/web3.js";
+import { BaseCommand, Value, type Context } from "@space-operator/flow-lib-bun";
 
-export const INDEXER_ENDPOINT =
+export const INDEXER_ENDPOINT_MAINNET =
   "https://acqzie0a1h.execute-api.eu-central-1.amazonaws.com";
-export const RELAYER_ENDPOINT =
+export const INDEXER_ENDPOINT_DEVNET =
+  "https://utxo-indexer.api-devnet.umbraprivacy.com";
+// Backward-compatible alias; prefer the network-specific constants above.
+export const INDEXER_ENDPOINT = INDEXER_ENDPOINT_MAINNET;
+export const RELAYER_ENDPOINT_MAINNET =
   "https://6yn4ndrv2i.execute-api.eu-central-1.amazonaws.com";
+// Devnet relayer inferred from the indexer URL pattern
+// (utxo-indexer.api-devnet.umbraprivacy.com → relayer.api-devnet.umbraprivacy.com).
+// If Umbra publishes a different devnet relayer domain, override via env or update here.
+export const RELAYER_ENDPOINT_DEVNET =
+  "https://relayer.api-devnet.umbraprivacy.com";
+// Backward-compatible alias; prefer the network-specific constants above.
+export const RELAYER_ENDPOINT = RELAYER_ENDPOINT_MAINNET;
 
 const SUPPORTED_NETWORKS = ["mainnet", "devnet"] as const;
 
@@ -156,6 +167,165 @@ export function getPrimarySignature(result: unknown): string {
 }
 
 /**
+ * Resolve signer bytes for an Umbra node from its raw inputs.
+ *
+ * Accepts either:
+ * - `inputs.pubkey` (base58 string) — signs via the flow framework's
+ *   wallet adapter through ctx.requestSignature / ctx.requestMessageSignature.
+ *   Preferred for user-initiated flows: the private key never leaves the
+ *   wallet. The Umbra SDK's master seed is derived from signMessage, so
+ *   this path supports ZK operations too.
+ * - `inputs.keypair` — a `@solana/web3.js` Keypair object as delivered by
+ *   the SO wallet adapter (any wallet node: hardcoded / generated /
+ *   api_input). The framework materialises the Keypair for us; we pull
+ *   its `.secretKey` (64-byte secret ∥ public). Intended for automation
+ *   where a programmatic caller hands us the private half through the
+ *   normal wallet binding machinery — no raw-bytes plumbing in the flow
+ *   graph.
+ *
+ *   Also accepts raw bytes / ArrayLike<number> for backward compatibility
+ *   with any legacy callers that wired bytes into this port before the
+ *   type_bounds tightened to `keypair`.
+ *
+ * If both are provided, `keypair` wins (explicit-over-implicit).
+ */
+export function resolveUmbraSignerBytes(inputs: {
+  keypair?: unknown;
+  pubkey?: unknown;
+}): Uint8Array {
+  if (inputs.keypair !== undefined && inputs.keypair !== null) {
+    const kp: any = inputs.keypair;
+    // Already raw bytes wired in.
+    if (kp instanceof Uint8Array) return kp;
+
+    const secretKeyBytes = extractSecretKeyBytes(kp);
+    if (secretKeyBytes) {
+      return secretKeyBytes;
+    }
+
+    // Flow wallet nodes can emit adapter-wallet objects on a `keypair`
+    // port when the backing wallet is user-controlled and the secret key
+    // is not available to the backend.
+    const adapterPubkeyBytes = extractAdapterWalletPubkeyBytes(kp);
+    if (adapterPubkeyBytes) {
+      return adapterPubkeyBytes;
+    }
+
+    // Legacy: caller wired in a plain array / ArrayLike<number>.
+    if (typeof kp?.length === "number") {
+      return new Uint8Array(kp as ArrayLike<number>);
+    }
+
+    throw new Error(
+      "Umbra node received an unsupported `keypair` input shape. Expected a Solana Keypair, 64-byte secret key, or Flow adapter wallet object with `public_key`.",
+    );
+  }
+  const pubkeyBytes = extractPubkeyBytes(inputs.pubkey);
+  if (pubkeyBytes) {
+    return pubkeyBytes;
+  }
+  throw new Error(
+    "Umbra node requires either `pubkey` (base58 string or 32-byte array; signs via wallet adapter) or `keypair` (Solana Keypair from the framework wallet adapter; signs locally).",
+  );
+}
+
+// Accept every shape a `pubkey`-typed or `string`-typed input may take in
+// bun nodes: raw 32-byte array-likes (Uint8Array, Array, or index-keyed
+// objects the way the flow runtime serializes pubkeys), IValue wrappers
+// ({B3: "..."}, {S: "..."}), plain base58 strings, and PublicKey-likes.
+function extractPubkeyBytes(value: unknown): Uint8Array | null {
+  if (value === undefined || value === null) return null;
+  if (value instanceof Uint8Array) {
+    return value.length === 32 ? value : null;
+  }
+  if (Array.isArray(value) && value.length === 32) {
+    return new Uint8Array(value as number[]);
+  }
+  if (typeof value === "string" && value.length > 0) {
+    return new PublicKey(value).toBytes();
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.B3 === "string" && record.B3.length > 0) {
+      return new PublicKey(record.B3).toBytes();
+    }
+    if (typeof record.S === "string" && record.S.length > 0) {
+      return new PublicKey(record.S).toBytes();
+    }
+    const maybePk = value as { toBase58?: () => string };
+    if (typeof maybePk.toBase58 === "function") {
+      return new PublicKey(maybePk.toBase58()).toBytes();
+    }
+    // Index-keyed plain object: {0: 255, 1: 130, ..., 31: 42}
+    if ("0" in record && "31" in record) {
+      const bytes = new Uint8Array(32);
+      for (let i = 0; i < 32; i++) {
+        bytes[i] = Number(record[String(i)] ?? 0);
+      }
+      return bytes;
+    }
+  }
+  return null;
+}
+
+function extractSecretKeyBytes(value: unknown): Uint8Array | null {
+  if (value === undefined || value === null) return null;
+  if (value instanceof Uint8Array) {
+    return value.length === 64 ? value : null;
+  }
+  if (Array.isArray(value) && value.length === 64) {
+    return new Uint8Array(value as number[]);
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const nestedSecretKey = record.secretKey;
+    if (nestedSecretKey instanceof Uint8Array && nestedSecretKey.length === 64) {
+      return nestedSecretKey;
+    }
+    if (Array.isArray(nestedSecretKey) && nestedSecretKey.length === 64) {
+      return new Uint8Array(nestedSecretKey as number[]);
+    }
+    const directIndexed = extractIndexedBytes(record, 64);
+    if (directIndexed) {
+      return directIndexed;
+    }
+    if (typeof nestedSecretKey === "object" && nestedSecretKey !== null) {
+      return extractIndexedBytes(nestedSecretKey as Record<string, unknown>, 64);
+    }
+  }
+  return null;
+}
+
+function extractAdapterWalletPubkeyBytes(value: unknown): Uint8Array | null {
+  if (!isRustWalletAdapterRecord(value)) return null;
+  return extractPubkeyBytes(value.public_key);
+}
+
+function isRustWalletAdapterRecord(
+  value: unknown,
+): value is { public_key: unknown; token: string | null } {
+  if (typeof value !== "object" || value === null) return false;
+  const record = value as Record<string, unknown>;
+  return "public_key" in record &&
+    "token" in record &&
+    (record.token === null || typeof record.token === "string");
+}
+
+function extractIndexedBytes(
+  record: Record<string, unknown>,
+  size: number,
+): Uint8Array | null {
+  if (!(String(0) in record) || !(String(size - 1) in record)) {
+    return null;
+  }
+  const bytes = new Uint8Array(size);
+  for (let i = 0; i < size; i++) {
+    bytes[i] = Number(record[String(i)] ?? 0);
+  }
+  return bytes;
+}
+
+/**
  * Create an Umbra SDK client.
  *
  * Accepts either:
@@ -184,9 +354,10 @@ export async function createUmbraClient(
   const rpcSubscriptionsUrl = rpcUrl
     .replace(/^https:\/\//, "wss://")
     .replace(/^http:\/\//, "ws://");
-  // Indexer is mainnet-only — devnet indexer not yet available
   const indexerApiEndpoint = network === "mainnet"
-    ? INDEXER_ENDPOINT
+    ? INDEXER_ENDPOINT_MAINNET
+    : network === "devnet"
+    ? INDEXER_ENDPOINT_DEVNET
     : undefined;
 
   const transactionForwarder = ctx ? createFrameworkForwarder(ctx) : undefined;
@@ -265,6 +436,113 @@ function createFlowSigner(ctx: Context, pubkeyBytes: Uint8Array) {
   };
 }
 
+// ── Tests (only run under `bun test`, safe to import elsewhere) ───────
+import { test, expect, describe } from "bun:test";
+try {
+  describe("resolveUmbraSignerBytes", () => {
+    const probe = new BaseCommand({
+      type: "bun",
+      node_id: "umbra_signer_probe",
+      config: {},
+      outputs: [],
+      inputs: [
+        {
+          id: "pubkey",
+          name: "pubkey",
+          type_bounds: ["pubkey", "string"],
+          required: false,
+          passthrough: false,
+        },
+        {
+          id: "keypair",
+          name: "keypair",
+          type_bounds: ["keypair"],
+          required: false,
+          passthrough: false,
+        },
+      ],
+    });
+
+    test("uses adapter wallet object from Flow wallet output", () => {
+      const pubkey = new PublicKey(new Uint8Array(32).fill(7));
+      const result = resolveUmbraSignerBytes({
+        keypair: {
+          public_key: pubkey.toBytes(),
+          token: null,
+        },
+      });
+
+      expect(result.length).toBe(32);
+      expect(Array.from(result)).toEqual(Array.from(pubkey.toBytes()));
+    });
+
+    test("rejects non-Rust wallet-shaped adapter objects on the keypair port", () => {
+      const pubkey = new PublicKey(new Uint8Array(32).fill(11));
+      expect(() =>
+        resolveUmbraSignerBytes({
+          keypair: {
+            publicKey: pubkey.toBytes(),
+          },
+        })
+      ).toThrow("unsupported `keypair` input shape");
+    });
+
+    test("uses local keypair secret key when available", () => {
+      const secretKey = new Uint8Array(64).fill(9);
+      const result = resolveUmbraSignerBytes({
+        keypair: {
+          secretKey,
+        },
+      });
+
+      expect(result.length).toBe(64);
+      expect(Array.from(result)).toEqual(Array.from(secretKey));
+    });
+
+    test("accepts Flow wallet pubkey output through Bun input deserialization", () => {
+      const pubkey = Keypair.generate().publicKey;
+      const inputs = probe.deserializeInputs({
+        pubkey: Value.PublicKey(pubkey),
+      });
+
+      const result = resolveUmbraSignerBytes(inputs);
+      expect(result.length).toBe(32);
+      expect(new PublicKey(result).toBase58()).toBe(pubkey.toBase58());
+    });
+
+    test("accepts Flow wallet keypair output for local wallets through Bun input deserialization", () => {
+      const keypair = Keypair.generate();
+      const inputs = probe.deserializeInputs({
+        keypair: Value.Keypair(keypair),
+      });
+
+      const result = resolveUmbraSignerBytes(inputs);
+      expect(result.length).toBe(64);
+      expect(new PublicKey(result.slice(32)).toBase58()).toBe(
+        keypair.publicKey.toBase58(),
+      );
+    });
+
+    test("accepts Flow wallet keypair output for adapter wallets through Bun input deserialization", () => {
+      const pubkey = Keypair.generate().publicKey;
+      const inputs = probe.deserializeInputs({
+        keypair: Value.fromJSON({
+          M: {
+            public_key: { B3: pubkey.toBase58() },
+            token: { N: 0 },
+          },
+        }),
+      });
+
+      const result = resolveUmbraSignerBytes(inputs);
+      expect(result.length).toBe(32);
+      expect(new PublicKey(result).toBase58()).toBe(pubkey.toBase58());
+    });
+  });
+} catch (_) {
+  // Not running under `bun test`
+}
+
 /**
  * Encode a @solana/kit v2 signed transaction into the Solana wire format.
  *
@@ -315,6 +593,19 @@ function createFrameworkForwarder(ctx: Context) {
     return signature;
   };
 
+  // Send a signed tx without waiting for confirmation. Used by the SDK
+  // for rent-reclaim after deposit/withdraw — we want the main result to
+  // return as soon as the primary tx confirms, and let the rent-reclaim
+  // follow-up land on its own. Without this method, the SDK logs
+  // "config.transactionForwarder.fireAndForget is not a function" and
+  // surfaces a non-fatal rentClaimError.
+  const fireAndForget = async (transaction: any): Promise<string> => {
+    const wireBytes = encodeWireTransaction(transaction);
+    return await ctx.solana.sendRawTransaction(wireBytes, {
+      skipPreflight: true,
+    });
+  };
+
   return {
     forwardSequentially: async (transactions: any[], _options: any = {}) => {
       const signatures: string[] = [];
@@ -326,14 +617,20 @@ function createFrameworkForwarder(ctx: Context) {
     forwardInParallel: async (transactions: any[], _options: any = {}) => {
       return Promise.all(transactions.map(sendViaFramework));
     },
+    fireAndForget,
   };
 }
 
 /**
  * Create the Umbra relayer client (needed for UTXO claims).
+ * Picks the mainnet or devnet relayer URL per the `network` argument;
+ * defaults to mainnet when unspecified for backward compatibility.
  */
-export function createRelayer() {
-  return getUmbraRelayer({ apiEndpoint: RELAYER_ENDPOINT });
+export function createRelayer(network?: string) {
+  const apiEndpoint = network === "devnet"
+    ? RELAYER_ENDPOINT_DEVNET
+    : RELAYER_ENDPOINT_MAINNET;
+  return getUmbraRelayer({ apiEndpoint });
 }
 
 // ── Rust Native Prover ──────────────────────────────────────────────────

@@ -34,6 +34,8 @@ use cmds_bun as _;
 #[cfg(feature = "commands")]
 use cmds_deno as _;
 #[cfg(feature = "commands")]
+use cmds_image as _;
+#[cfg(feature = "commands")]
 use cmds_pdg as _;
 #[cfg(feature = "commands")]
 use cmds_solana as _;

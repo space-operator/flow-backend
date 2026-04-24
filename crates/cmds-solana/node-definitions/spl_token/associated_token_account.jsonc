@@ -3,7 +3,7 @@
   "version": "0.1",
   "name": "associated_token_account",
   "prefix": "spl_token",
-  "description": "Create or get the associated token account for an owner and mint",
+  "description": "Create or get the associated token account for an owner and mint. Auto-detects the mint's owning token program on-chain, so works for both legacy SPL Token and Token-2022 (T22) mints — use this single node regardless of which program owns the mint.",
   "type": "native",
   "author_handle": "spo",
   "source_code": "crates/cmds-solana/src/associated_token_account.rs",
@@ -73,8 +73,12 @@
     "tags": [
       "token",
       "spl token",
+      "spl_token_2022",
+      "token-2022",
+      "t22",
       "associated",
-      "account"
+      "account",
+      "ata"
     ]
   },
   "external_version": {

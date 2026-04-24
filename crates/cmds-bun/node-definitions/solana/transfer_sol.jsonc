@@ -16,7 +16,7 @@
         ],
         "required": false,
         "passthrough": false,
-        "tooltip": "Transaction fee payer (defaults to sender)"
+        "tooltip": "Transaction fee payer. Accepts local keypairs or Flow wallet adapter outputs (defaults to sender)."
       },
       {
         "name": "sender",
@@ -25,7 +25,7 @@
         ],
         "required": true,
         "passthrough": false,
-        "tooltip": "Sender keypair that signs and sends SOL"
+        "tooltip": "Sender wallet. Accepts local keypairs or Flow wallet adapter outputs."
       },
       {
         "name": "recipient",

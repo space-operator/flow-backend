@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.spaceoperator.com/node-v2.schema.json",
+  "version": "0.1",
+  "name": "auction_house_update",
+  "prefix": "auction_house",
+  "type": "native",
+  "description": "Update Auction House settings (optional fields left empty are unchanged)",
+  "author_handle": "spo",
+  "source_code": "crates/cmds-solana/src/auction_house/update_auction_house.rs",
+  "ports": {
+    "inputs": [
+      { "name": "fee_payer", "type_bounds": ["keypair"], "required": true, "passthrough": true },
+      { "name": "payer", "type_bounds": ["keypair"], "required": true },
+      { "name": "authority", "type_bounds": ["keypair"], "required": true },
+      { "name": "new_authority", "type_bounds": ["pubkey"], "required": true },
+      { "name": "treasury_mint", "type_bounds": ["pubkey"], "required": true },
+      { "name": "fee_withdrawal_destination", "type_bounds": ["pubkey"], "required": true },
+      { "name": "treasury_withdrawal_destination_owner", "type_bounds": ["pubkey"], "required": true, "tooltip": "Treasury destination ATA is derived from this owner; must match what was set at create time" },
+      { "name": "seller_fee_basis_points", "type_bounds": ["u16"], "tooltip": "Leave empty to keep current" },
+      { "name": "requires_sign_off", "type_bounds": ["bool"] },
+      { "name": "can_change_sale_price", "type_bounds": ["bool"] },
+      { "name": "submit", "type_bounds": ["bool"] }
+    ],
+    "outputs": [
+      { "name": "signature", "type": "signature", "optional": true },
+      { "name": "auction_house", "type": "pubkey" },
+      { "name": "treasury_withdrawal_destination", "type": "pubkey" }
+    ]
+  },
+  "config_schema": {},
+  "config": { "submit": { "B": true } },
+  "classification": {
+    "vendor": "Solana",
+    "program": "auction_house",
+    "category": "marketplace",
+    "icon_url": "https://www.metaplex.com/favicon.ico",
+    "tags": ["auction_house", "metaplex", "update"]
+  },
+  "external_version": {
+    "program_id": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
+    "sdk_crate": null,
+    "sdk_version": null,
+    "api_base_url": null,
+    "api_version": null,
+    "source_repo": "https://github.com/solana-foundation/anchor/tree/master/tests/auction-house"
+  },
+  "internal": {
+    "source": "crates",
+    "source_code": "crates/cmds-solana/node-definitions/auction_house/update_auction_house.jsonc",
+    "repo": "flow-backend"
+  }
+}
