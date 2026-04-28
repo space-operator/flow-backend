@@ -25,6 +25,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { BaseCommand, Value, type Context } from "@space-operator/flow-lib-bun";
+import bs58 from "bs58";
 
 export const INDEXER_ENDPOINT_MAINNET =
   "https://acqzie0a1h.execute-api.eu-central-1.amazonaws.com";
@@ -247,7 +248,11 @@ export function resolveUmbraSignerBytes(inputs: {
  */
 export function resolveUmbraFeePayerBytes(inputs: {
   fee_payer?: unknown;
+  fee_payer_secret?: unknown;
 }): Uint8Array | undefined {
+  const feePayerSecret = extractSecretKeyBytes(inputs.fee_payer_secret);
+  if (feePayerSecret) return feePayerSecret;
+
   if (inputs.fee_payer === undefined || inputs.fee_payer === null) {
     return undefined;
   }
@@ -264,11 +269,30 @@ export function resolveUmbraFeePayerBytes(inputs: {
   if (adapterPubkeyBytes) return adapterPubkeyBytes;
 
   const pubkeyBytes = extractPubkeyBytes(feePayer);
-  if (pubkeyBytes) return pubkeyBytes;
+  if (pubkeyBytes) {
+    const serverSecret = extractServerSecretForPubkey(pubkeyBytes);
+    if (serverSecret) return serverSecret;
+    return pubkeyBytes;
+  }
 
   throw new Error(
     "Umbra node received an unsupported `fee_payer` input shape. Expected a Solana Keypair, 64-byte secret key, base58 pubkey, or Flow adapter wallet object.",
   );
+}
+
+function extractServerSecretForPubkey(pubkeyBytes: Uint8Array): Uint8Array | null {
+  const expected = new PublicKey(pubkeyBytes).toBase58();
+  for (const envName of ["SERVER_SOLANA_PRIVATE_KEY", "SOLANA_PRIVATE_KEY"]) {
+    const raw = process.env[envName];
+    if (!raw) continue;
+    const secret = extractSecretKeyBytes(raw);
+    if (!secret) continue;
+    const keypair = Keypair.fromSecretKey(secret);
+    if (keypair.publicKey.toBase58() === expected) {
+      return secret;
+    }
+  }
+  return null;
 }
 
 // Accept every shape a `pubkey`-typed or `string`-typed input may take in
@@ -318,8 +342,20 @@ function extractSecretKeyBytes(value: unknown): Uint8Array | null {
   if (Array.isArray(value) && value.length === 64) {
     return new Uint8Array(value as number[]);
   }
+  if (typeof value === "string" && value.length > 0) {
+    try {
+      const decoded = bs58.decode(value);
+      return decoded.length === 64 ? decoded : null;
+    } catch {
+      return null;
+    }
+  }
   if (typeof value === "object") {
     const record = value as Record<string, unknown>;
+    if (typeof record.S === "string" && record.S.length > 0) {
+      const decoded = extractSecretKeyBytes(record.S);
+      if (decoded) return decoded;
+    }
     const nestedSecretKey = record.secretKey;
     if (nestedSecretKey instanceof Uint8Array && nestedSecretKey.length === 64) {
       return nestedSecretKey;
@@ -836,6 +872,55 @@ try {
         feePayer.publicKey.toBase58(),
         user.publicKey.toBase58(),
       ]);
+    });
+
+    test("accepts base58 secret key strings as sponsored fee payers", () => {
+      const feePayer = Keypair.generate();
+      const direct = resolveUmbraFeePayerBytes({
+        fee_payer: bs58.encode(feePayer.secretKey),
+      });
+      const wrapped = resolveUmbraFeePayerBytes({
+        fee_payer: { S: bs58.encode(feePayer.secretKey) },
+      });
+
+      expect(Array.from(direct!)).toEqual(Array.from(feePayer.secretKey));
+      expect(Array.from(wrapped!)).toEqual(Array.from(feePayer.secretKey));
+    });
+
+    test("prefers neutral fee_payer_secret for backend-sponsored flows", () => {
+      const feePayer = Keypair.generate();
+      const result = resolveUmbraFeePayerBytes({
+        fee_payer: { B3: feePayer.publicKey.toBase58() },
+        fee_payer_secret: bs58.encode(feePayer.secretKey),
+      });
+
+      expect(Array.from(result!)).toEqual(Array.from(feePayer.secretKey));
+    });
+
+    test("recovers server secret when Flow materializes fee_payer to pubkey", () => {
+      const feePayer = Keypair.generate();
+      const previousServer = process.env.SERVER_SOLANA_PRIVATE_KEY;
+      const previousSolana = process.env.SOLANA_PRIVATE_KEY;
+      try {
+        process.env.SERVER_SOLANA_PRIVATE_KEY = bs58.encode(feePayer.secretKey);
+        delete process.env.SOLANA_PRIVATE_KEY;
+        const result = resolveUmbraFeePayerBytes({
+          fee_payer: { B3: feePayer.publicKey.toBase58() },
+        });
+
+        expect(Array.from(result!)).toEqual(Array.from(feePayer.secretKey));
+      } finally {
+        if (previousServer === undefined) {
+          delete process.env.SERVER_SOLANA_PRIVATE_KEY;
+        } else {
+          process.env.SERVER_SOLANA_PRIVATE_KEY = previousServer;
+        }
+        if (previousSolana === undefined) {
+          delete process.env.SOLANA_PRIVATE_KEY;
+        } else {
+          process.env.SOLANA_PRIVATE_KEY = previousSolana;
+        }
+      }
     });
 
     test("rejects sponsored rewrites after a non-user signer has signed", () => {
