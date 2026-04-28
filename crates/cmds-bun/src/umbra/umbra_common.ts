@@ -13,8 +13,17 @@ import {
   getUmbraClient,
   getUmbraRelayer,
 } from "@umbra-privacy/sdk";
+import * as umbraCodama from "@umbra-privacy/umbra-codama";
 import * as snarkjs from "snarkjs";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import {
+  Keypair,
+  MessageV0,
+  PublicKey,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { BaseCommand, Value, type Context } from "@space-operator/flow-lib-bun";
 
 export const INDEXER_ENDPOINT_MAINNET =
@@ -229,6 +238,39 @@ export function resolveUmbraSignerBytes(inputs: {
   );
 }
 
+/**
+ * Resolve the optional sponsored fee payer for Umbra nodes.
+ *
+ * When present, transaction fees and any Umbra `feePayer` instruction account
+ * are rewritten to this signer while the user/depositor signer remains the
+ * authority for token movement, account ownership, and Umbra seed derivation.
+ */
+export function resolveUmbraFeePayerBytes(inputs: {
+  fee_payer?: unknown;
+}): Uint8Array | undefined {
+  if (inputs.fee_payer === undefined || inputs.fee_payer === null) {
+    return undefined;
+  }
+
+  const feePayer = inputs.fee_payer;
+  if (feePayer instanceof Uint8Array) {
+    if (feePayer.length === 64 || feePayer.length === 32) return feePayer;
+  }
+
+  const secretKeyBytes = extractSecretKeyBytes(feePayer);
+  if (secretKeyBytes) return secretKeyBytes;
+
+  const adapterPubkeyBytes = extractAdapterWalletPubkeyBytes(feePayer);
+  if (adapterPubkeyBytes) return adapterPubkeyBytes;
+
+  const pubkeyBytes = extractPubkeyBytes(feePayer);
+  if (pubkeyBytes) return pubkeyBytes;
+
+  throw new Error(
+    "Umbra node received an unsupported `fee_payer` input shape. Expected a Solana Keypair, 64-byte secret key, base58 pubkey, or Flow adapter wallet object.",
+  );
+}
+
 // Accept every shape a `pubkey`-typed or `string`-typed input may take in
 // bun nodes: raw 32-byte array-likes (Uint8Array, Array, or index-keyed
 // objects the way the flow runtime serializes pubkeys), IValue wrappers
@@ -339,6 +381,7 @@ export async function createUmbraClient(
   network: string,
   rpcUrl: string,
   ctx?: Context,
+  feePayerKeypairOrPubkey?: Uint8Array,
 ) {
   if (!SUPPORTED_NETWORKS.includes(network as any)) {
     throw new Error(
@@ -347,9 +390,12 @@ export async function createUmbraClient(
   }
 
   const isKeypair = keypairOrPubkey.length === 64;
-  const signer = isKeypair
+  const baseSigner = isKeypair
     ? await createSignerFromPrivateKeyBytes(keypairOrPubkey)
     : createFlowSigner(ctx!, keypairOrPubkey);
+  const signer = feePayerKeypairOrPubkey
+    ? createSponsoredFeePayerSigner(ctx, baseSigner, feePayerKeypairOrPubkey)
+    : baseSigner;
 
   const rpcSubscriptionsUrl = rpcUrl
     .replace(/^https:\/\//, "wss://")
@@ -434,6 +480,198 @@ function createFlowSigner(ctx: Context, pubkeyBytes: Uint8Array) {
       };
     },
   };
+}
+
+const UMBRA_PROGRAM_ADDRESS = "UMBRAkrfUTHuPAjDQXgmpoQjGGyhtqiRqWNrMroEijV";
+
+const UMBRA_FEE_PAYER_ACCOUNT_INDEX_BY_DISCRIMINATOR = new Map<string, number[]>(
+  [
+    // User registration.
+    [umbraDiscriminatorKey(umbraCodama.INITIALISE_ENCRYPTED_USER_ACCOUNT_DISCRIMINATOR), [4]],
+    [umbraDiscriminatorKey(umbraCodama.REGISTER_TOKEN_PUBLIC_KEY_DISCRIMINATOR), [0]],
+    [umbraDiscriminatorKey(umbraCodama.REGISTER_USER_FOR_ANONYMOUS_USAGE_V11_DISCRIMINATOR), [1]],
+
+    // Public balance -> encrypted balance deposits.
+    [umbraDiscriminatorKey(umbraCodama.DEPOSIT_FROM_PUBLIC_BALANCE_INTO_NEW_NETWORK_BALANCE_V11_DISCRIMINATOR), [1]],
+    [umbraDiscriminatorKey(umbraCodama.DEPOSIT_FROM_PUBLIC_BALANCE_INTO_EXISTING_NETWORK_BALANCE_V11_DISCRIMINATOR), [1]],
+    [umbraDiscriminatorKey(umbraCodama.DEPOSIT_FROM_PUBLIC_BALANCE_INTO_NEW_SHARED_BALANCE_V11_DISCRIMINATOR), [1]],
+    [umbraDiscriminatorKey(umbraCodama.DEPOSIT_FROM_PUBLIC_BALANCE_INTO_EXISTING_SHARED_BALANCE_V11_DISCRIMINATOR), [1]],
+    [umbraDiscriminatorKey(umbraCodama.RESET_NETWORK_ENCRYPTED_TOKEN_ACCOUNT_QUEUE_V11_DISCRIMINATOR), [0]],
+    [umbraDiscriminatorKey(umbraCodama.RESET_SHARED_ENCRYPTED_TOKEN_ACCOUNT_QUEUE_V11_DISCRIMINATOR), [0]],
+
+    // Public balance -> receiver-claimable UTXO.
+    [umbraDiscriminatorKey(umbraCodama.CREATE_PUBLIC_STEALTH_POOL_DEPOSIT_INPUT_BUFFER_DISCRIMINATOR), [1]],
+    [umbraDiscriminatorKey(umbraCodama.DEPOSIT_INTO_STEALTH_POOL_FROM_PUBLIC_BALANCE_DISCRIMINATOR), [0]],
+
+    // Encrypted balance -> public balance withdrawals.
+    [umbraDiscriminatorKey(umbraCodama.WITHDRAW_FROM_SHARED_BALANCE_INTO_PUBLIC_BALANCE_V11_DISCRIMINATOR), [1]],
+  ],
+);
+
+function umbraDiscriminatorKey(bytes: Uint8Array): string {
+  return Buffer.from(bytes).toString("hex");
+}
+
+function createSponsoredFeePayerSigner(
+  ctx: Context | undefined,
+  userSigner: any,
+  feePayerKeypairOrPubkey: Uint8Array,
+) {
+  const feePayerPubkey = feePayerKeypairOrPubkey.length === 64
+    ? Keypair.fromSecretKey(feePayerKeypairOrPubkey).publicKey
+    : new PublicKey(feePayerKeypairOrPubkey);
+  const feePayerAddress = feePayerPubkey.toBase58();
+
+  if (feePayerAddress === userSigner.address) {
+    return userSigner;
+  }
+
+  const signFeePayer = async (messageBytes: Uint8Array): Promise<Uint8Array> => {
+    if (feePayerKeypairOrPubkey.length === 64) {
+      const feePayerKeypair = Keypair.fromSecretKey(feePayerKeypairOrPubkey);
+      const tx = new VersionedTransaction(
+        VersionedMessage.deserialize(messageBytes),
+      );
+      tx.sign([feePayerKeypair]);
+      const signature = tx.signatures[0];
+      if (!signature) {
+        throw new Error("Sponsored Umbra fee payer failed to sign transaction");
+      }
+      return signature;
+    }
+
+    if (!ctx) {
+      throw new Error(
+        "Sponsored Umbra fee payer was provided as a pubkey, but no Flow context is available to request its signature.",
+      );
+    }
+
+    const { signature } = await ctx.requestSignature(
+      feePayerPubkey,
+      messageBytes,
+    );
+    return signature;
+  };
+
+  return {
+    ...userSigner,
+    address: userSigner.address,
+
+    async signTransaction(transaction: any) {
+      const rewritten = rewriteTransactionForSponsoredFeePayer(
+        transaction,
+        userSigner.address,
+        feePayerAddress,
+      );
+      const signedByUser = await userSigner.signTransaction(rewritten);
+      const feePayerSignature = await signFeePayer(signedByUser.messageBytes);
+
+      return {
+        ...signedByUser,
+        signatures: {
+          ...signedByUser.signatures,
+          [feePayerAddress]: feePayerSignature,
+        },
+      };
+    },
+
+    async signTransactions(transactions: any[]) {
+      const results: any[] = [];
+      for (const tx of transactions) {
+        results.push(await this.signTransaction(tx));
+      }
+      return results;
+    },
+
+    async signMessage(message: Uint8Array) {
+      return await userSigner.signMessage(message);
+    },
+  };
+}
+
+function rewriteTransactionForSponsoredFeePayer(
+  transaction: any,
+  userAddress: string,
+  feePayerAddress: string,
+) {
+  const message = VersionedMessage.deserialize(transaction.messageBytes);
+  if (message.version !== 0) {
+    throw new Error("Sponsored Umbra fee payer only supports v0 transactions");
+  }
+
+  const userPubkey = new PublicKey(userAddress);
+  const feePayerPubkey = new PublicKey(feePayerAddress);
+  const oldStaticKeys = message.staticAccountKeys;
+  if (!oldStaticKeys[0]?.equals(userPubkey)) {
+    throw new Error(
+      `Sponsored Umbra fee payer expected the original fee payer to be the Umbra signer ${userAddress}`,
+    );
+  }
+
+  assertNoPresignedNonUserSignatures(transaction, userAddress);
+
+  const newMessage = new MessageV0({
+    header: {
+      numRequiredSignatures: message.header.numRequiredSignatures + 1,
+      numReadonlySignedAccounts: message.header.numReadonlySignedAccounts,
+      numReadonlyUnsignedAccounts: message.header.numReadonlyUnsignedAccounts,
+    },
+    staticAccountKeys: [feePayerPubkey, ...oldStaticKeys],
+    recentBlockhash: message.recentBlockhash,
+    compiledInstructions: message.compiledInstructions.map((ix) => {
+      const programIdIndex = ix.programIdIndex + 1;
+      const accountKeyIndexes = ix.accountKeyIndexes.map((index) => index + 1);
+      const originalProgram = oldStaticKeys[ix.programIdIndex];
+
+      if (originalProgram?.toBase58() === UMBRA_PROGRAM_ADDRESS) {
+        const feePayerIndexes = UMBRA_FEE_PAYER_ACCOUNT_INDEX_BY_DISCRIMINATOR
+          .get(umbraDiscriminatorKey(ix.data.slice(0, 8)));
+        for (const feePayerIndex of feePayerIndexes ?? []) {
+          if (feePayerIndex < accountKeyIndexes.length) {
+            accountKeyIndexes[feePayerIndex] = 0;
+          }
+        }
+      }
+
+      return {
+        programIdIndex,
+        accountKeyIndexes,
+        data: ix.data,
+      };
+    }),
+    addressTableLookups: message.addressTableLookups,
+  });
+
+  return {
+    ...transaction,
+    messageBytes: newMessage.serialize(),
+    signatures: {
+      [feePayerAddress]: null,
+      [userAddress]: null,
+    },
+  };
+}
+
+function assertNoPresignedNonUserSignatures(
+  transaction: any,
+  userAddress: string,
+) {
+  const signatures = transaction.signatures as
+    | Record<string, Uint8Array | null>
+    | undefined;
+  if (!signatures) return;
+
+  const presignedNonUser = Object.entries(signatures).find(
+    ([address, signature]) =>
+      address !== userAddress &&
+      signature instanceof Uint8Array &&
+      signature.some((byte) => byte !== 0),
+  );
+  if (presignedNonUser) {
+    throw new Error(
+      `Sponsored Umbra fee payer cannot rewrite a transaction after non-user signer ${presignedNonUser[0]} has already signed it.`,
+    );
+  }
 }
 
 // ── Tests (only run under `bun test`, safe to import elsewhere) ───────
@@ -539,6 +777,127 @@ try {
       expect(new PublicKey(result).toBase58()).toBe(pubkey.toBase58());
     });
   });
+
+  describe("sponsored Umbra fee payer", () => {
+    function createFakeUmbraTransaction(discriminator: Uint8Array) {
+      const user = Keypair.generate();
+      const feePayer = Keypair.generate();
+      const extraAccount = Keypair.generate().publicKey;
+      const instruction = new TransactionInstruction({
+        programId: new PublicKey(UMBRA_PROGRAM_ADDRESS),
+        keys: [
+          { pubkey: user.publicKey, isSigner: true, isWritable: true },
+          { pubkey: user.publicKey, isSigner: true, isWritable: true },
+          { pubkey: extraAccount, isSigner: false, isWritable: true },
+        ],
+        data: Buffer.from([...discriminator, 1, 2, 3]),
+      });
+      const message = new TransactionMessage({
+        payerKey: user.publicKey,
+        recentBlockhash: "11111111111111111111111111111111",
+        instructions: [instruction],
+      }).compileToV0Message();
+
+      return {
+        user,
+        feePayer,
+        transaction: {
+          messageBytes: message.serialize(),
+          signatures: {
+            [user.publicKey.toBase58()]: null,
+          },
+        },
+      };
+    }
+
+    test("rewrites Umbra instruction fee_payer accounts to the sponsor", () => {
+      const { user, feePayer, transaction } = createFakeUmbraTransaction(
+        umbraCodama.CREATE_PUBLIC_STEALTH_POOL_DEPOSIT_INPUT_BUFFER_DISCRIMINATOR,
+      );
+      const rewritten = rewriteTransactionForSponsoredFeePayer(
+        transaction,
+        user.publicKey.toBase58(),
+        feePayer.publicKey.toBase58(),
+      );
+      const message = VersionedMessage.deserialize(rewritten.messageBytes);
+
+      expect(message.version).toBe(0);
+      if (message.version !== 0) return;
+      expect(message.header.numRequiredSignatures).toBe(2);
+      expect(message.staticAccountKeys[0]?.toBase58()).toBe(
+        feePayer.publicKey.toBase58(),
+      );
+      expect(message.staticAccountKeys[1]?.toBase58()).toBe(
+        user.publicKey.toBase58(),
+      );
+      expect(message.compiledInstructions[0]?.accountKeyIndexes.slice(0, 3))
+        .toEqual([1, 0, 2]);
+      expect(Object.keys(rewritten.signatures)).toEqual([
+        feePayer.publicKey.toBase58(),
+        user.publicKey.toBase58(),
+      ]);
+    });
+
+    test("rejects sponsored rewrites after a non-user signer has signed", () => {
+      const { user, feePayer, transaction } = createFakeUmbraTransaction(
+        umbraCodama.DEPOSIT_INTO_STEALTH_POOL_FROM_PUBLIC_BALANCE_DISCRIMINATOR,
+      );
+      const thirdParty = Keypair.generate();
+      const signature = new Uint8Array(64).fill(7);
+
+      expect(() =>
+        rewriteTransactionForSponsoredFeePayer(
+          {
+            ...transaction,
+            signatures: {
+              ...transaction.signatures,
+              [thirdParty.publicKey.toBase58()]: signature,
+            },
+          },
+          user.publicKey.toBase58(),
+          feePayer.publicKey.toBase58(),
+        )
+      ).toThrow("cannot rewrite a transaction after non-user signer");
+    });
+  });
+
+  describe("encodeWireTransaction", () => {
+    test("orders signatures by compiled message signer order", () => {
+      const payer = Keypair.generate();
+      const secondSigner = Keypair.generate();
+      const programId = Keypair.generate().publicKey;
+      const instruction = new TransactionInstruction({
+        programId,
+        keys: [
+          { pubkey: secondSigner.publicKey, isSigner: true, isWritable: false },
+        ],
+        data: Buffer.alloc(0),
+      });
+      const message = new TransactionMessage({
+        payerKey: payer.publicKey,
+        recentBlockhash: "11111111111111111111111111111111",
+        instructions: [instruction],
+      }).compileToV0Message();
+      const payerSignature = new Uint8Array(64).fill(1);
+      const secondSignature = new Uint8Array(64).fill(2);
+
+      const wireBytes = encodeWireTransaction({
+        messageBytes: message.serialize(),
+        signatures: {
+          [secondSigner.publicKey.toBase58()]: secondSignature,
+          [payer.publicKey.toBase58()]: payerSignature,
+        },
+      });
+      const parsed = VersionedTransaction.deserialize(wireBytes);
+
+      expect(Array.from(parsed.signatures[0]!)).toEqual(
+        Array.from(payerSignature),
+      );
+      expect(Array.from(parsed.signatures[1]!)).toEqual(
+        Array.from(secondSignature),
+      );
+    });
+  });
 } catch (_) {
   // Not running under `bun test`
 }
@@ -552,8 +911,11 @@ try {
 function encodeWireTransaction(transaction: any): Buffer {
   const messageBytes: Uint8Array = transaction.messageBytes;
   const signatures: Record<string, Uint8Array | null> = transaction.signatures;
-
-  const sigEntries = Object.values(signatures);
+  const message = VersionedMessage.deserialize(messageBytes) as any;
+  const signerKeys: PublicKey[] = Array.isArray(message.staticAccountKeys)
+    ? message.staticAccountKeys.slice(0, message.header.numRequiredSignatures)
+    : message.accountKeys.slice(0, message.header.numRequiredSignatures);
+  const sigEntries = signerKeys.map((key) => signatures[key.toBase58()] ?? null);
   const numSigs = sigEntries.length;
 
   // Compact-u16 encoding for num_sigs (< 128 = single byte)

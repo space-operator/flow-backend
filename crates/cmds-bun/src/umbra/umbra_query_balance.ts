@@ -1,6 +1,10 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
 import { getEncryptedBalanceQuerierFunction } from "@umbra-privacy/sdk";
-import { createUmbraClient, resolveUmbraSignerBytes } from "./umbra_common.ts";
+import {
+  createUmbraClient,
+  resolveUmbraFeePayerBytes,
+  resolveUmbraSignerBytes,
+} from "./umbra_common.ts";
 
 export default class UmbraQueryBalance extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
@@ -9,6 +13,7 @@ export default class UmbraQueryBalance extends BaseCommand {
       inputs.network,
       inputs.rpc_url,
       ctx,
+      resolveUmbraFeePayerBytes(inputs),
     );
 
     const queryBalance = getEncryptedBalanceQuerierFunction({ client });

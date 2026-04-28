@@ -29,6 +29,17 @@
         "tooltip": "Solana keypair or Flow wallet output. Local wallets sign directly; adapter wallets fall back to connected-wallet signing. Provide either `pubkey` or `keypair`; `keypair` wins if both are set."
       },
       {
+        "name": "fee_payer",
+        "type_bounds": [
+          "keypair",
+          "pubkey",
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Optional sponsored transaction fee payer. The Umbra signer remains the user/depositor, while this signer pays Solana transaction fees and Umbra fee_payer rent accounts when supported."
+      },
+      {
         "name": "network",
         "type_bounds": [
           "string"

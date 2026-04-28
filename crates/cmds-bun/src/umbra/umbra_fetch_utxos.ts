@@ -1,6 +1,10 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
 import { getClaimableUtxoScannerFunction } from "@umbra-privacy/sdk";
-import { createUmbraClient, resolveUmbraSignerBytes } from "./umbra_common.ts";
+import {
+  createUmbraClient,
+  resolveUmbraFeePayerBytes,
+  resolveUmbraSignerBytes,
+} from "./umbra_common.ts";
 
 export default class UmbraFetchUtxos extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
@@ -13,6 +17,7 @@ export default class UmbraFetchUtxos extends BaseCommand {
       inputs.network,
       inputs.rpc_url,
       ctx,
+      resolveUmbraFeePayerBytes(inputs),
     );
 
     const fetchUtxos = getClaimableUtxoScannerFunction({ client });

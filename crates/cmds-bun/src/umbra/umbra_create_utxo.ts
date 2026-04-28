@@ -5,6 +5,7 @@ import {
   createRustProver,
   getPrimarySignature,
   logUmbraError,
+  resolveUmbraFeePayerBytes,
   resolveUmbraSignerBytes,
   safeJsonStringify,
   wrapZkProver,
@@ -18,6 +19,7 @@ export default class UmbraCreateUtxo extends BaseCommand {
       inputs.network,
       inputs.rpc_url,
       ctx,
+      resolveUmbraFeePayerBytes(inputs),
     );
 
     console.log("[create_utxo] phase: prover_init");

@@ -5,6 +5,7 @@ import {
   createRustProver,
   getPrimarySignature,
   logUmbraError,
+  resolveUmbraFeePayerBytes,
   resolveUmbraSignerBytes,
   safeJsonStringify,
   wrapZkProver,
@@ -38,6 +39,7 @@ export default class UmbraRegister extends BaseCommand {
       inputs.network,
       inputs.rpc_url,
       ctx,
+      resolveUmbraFeePayerBytes(inputs),
     );
 
     const confidential = inputs.confidential !== undefined ? inputs.confidential : true;
