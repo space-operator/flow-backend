@@ -8,4 +8,5 @@ cmds-std.workspace = true
 cmds-pdg.workspace = true
 cmds-solana.workspace = true
 cmds-image.workspace = true
+cmds-bun.workspace = true
 flow-rpc.workspace = true

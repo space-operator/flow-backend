@@ -450,6 +450,7 @@ dependencies = [
 name = "all-cmds-server"
 version = "0.1.0"
 dependencies = [
+ "cmds-bun",
  "cmds-image",
  "cmds-pdg",
  "cmds-solana",

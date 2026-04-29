@@ -74,10 +74,17 @@ jobs:
 
           retry 5 kubectl set image statefulset/flow-server flow-server=$ECR/flow-server:$COMMIT
           retry 5 kubectl set image statefulset/deno-server deno-server=$ECR/cmds-server:$COMMIT init=$ECR/cmds-server:$COMMIT
+          retry 5 kubectl set image statefulset/private-cmds-server private-cmds-server=$ECR/cmds-server:$COMMIT init=$ECR/cmds-server:$COMMIT
+          retry 5 kubectl set env statefulset/private-cmds-server DENO_DIR=/data/deno
+          retry 5 kubectl patch statefulset/private-cmds-server --type='json' -p='[
+            {"op":"replace","path":"/spec/template/spec/containers/0/command","value":["all-cmds-server"]},
+            {"op":"replace","path":"/spec/template/spec/initContainers/0/imagePullPolicy","value":"Always"}
+          ]'
           retry 5 kubectl set image deployment/schema-server schema-server=$ECR/schema-server:$COMMIT
 
           retry 5 kubectl rollout status statefulset/flow-server --timeout=10m
           retry 5 kubectl rollout status statefulset/deno-server --timeout=10m
+          retry 5 kubectl rollout status statefulset/private-cmds-server --timeout=10m
           retry 5 kubectl rollout status deployment/schema-server --timeout=10m
 
   integration-test:
