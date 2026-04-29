@@ -544,6 +544,14 @@ const UMBRA_FEE_PAYER_ACCOUNT_INDEX_BY_DISCRIMINATOR = new Map<string, number[]>
   ],
 );
 
+const UMBRA_READONLY_USER_ACCOUNT_INDEX_BY_DISCRIMINATOR = new Map<
+  string,
+  number[]
+>([
+  // depositor is a readonly signer; feePayer is rewritten separately.
+  [umbraDiscriminatorKey(umbraCodama.CREATE_PUBLIC_STEALTH_POOL_DEPOSIT_INPUT_BUFFER_DISCRIMINATOR), [0]],
+]);
+
 function umbraDiscriminatorKey(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString("hex");
 }
@@ -646,35 +654,55 @@ function rewriteTransactionForSponsoredFeePayer(
 
   assertNoPresignedNonUserSignatures(transaction, userAddress);
 
+  const compiledInstructions = message.compiledInstructions.map((ix) => {
+    const programIdIndex = ix.programIdIndex + 1;
+    const accountKeyIndexes = ix.accountKeyIndexes.map((index) => index + 1);
+    const originalProgram = oldStaticKeys[ix.programIdIndex];
+
+    if (originalProgram?.toBase58() === UMBRA_PROGRAM_ADDRESS) {
+      const feePayerIndexes = UMBRA_FEE_PAYER_ACCOUNT_INDEX_BY_DISCRIMINATOR
+        .get(umbraDiscriminatorKey(ix.data.slice(0, 8)));
+      for (const feePayerIndex of feePayerIndexes ?? []) {
+        if (feePayerIndex < accountKeyIndexes.length) {
+          accountKeyIndexes[feePayerIndex] = 0;
+        }
+      }
+    }
+
+    return {
+      programIdIndex,
+      accountKeyIndexes,
+      data: ix.data,
+    };
+  });
+  const userCanBeReadonly = message.header.numRequiredSignatures === 1 &&
+    compiledInstructions.every((ix) => {
+      const userAccountPositions = ix.accountKeyIndexes
+        .map((index, position) => ({ index, position }))
+        .filter(({ index }) => index === 1)
+        .map(({ position }) => position);
+      if (userAccountPositions.length === 0) return true;
+
+      const originalProgram = oldStaticKeys[ix.programIdIndex - 1];
+      if (originalProgram?.toBase58() !== UMBRA_PROGRAM_ADDRESS) return false;
+
+      const readonlyIndexes = UMBRA_READONLY_USER_ACCOUNT_INDEX_BY_DISCRIMINATOR
+        .get(umbraDiscriminatorKey(ix.data.slice(0, 8))) ?? [];
+      return userAccountPositions.every((position) =>
+        readonlyIndexes.includes(position)
+      );
+    });
+
   const newMessage = new MessageV0({
     header: {
       numRequiredSignatures: message.header.numRequiredSignatures + 1,
-      numReadonlySignedAccounts: message.header.numReadonlySignedAccounts,
+      numReadonlySignedAccounts: message.header.numReadonlySignedAccounts +
+        (userCanBeReadonly ? 1 : 0),
       numReadonlyUnsignedAccounts: message.header.numReadonlyUnsignedAccounts,
     },
     staticAccountKeys: [feePayerPubkey, ...oldStaticKeys],
     recentBlockhash: message.recentBlockhash,
-    compiledInstructions: message.compiledInstructions.map((ix) => {
-      const programIdIndex = ix.programIdIndex + 1;
-      const accountKeyIndexes = ix.accountKeyIndexes.map((index) => index + 1);
-      const originalProgram = oldStaticKeys[ix.programIdIndex];
-
-      if (originalProgram?.toBase58() === UMBRA_PROGRAM_ADDRESS) {
-        const feePayerIndexes = UMBRA_FEE_PAYER_ACCOUNT_INDEX_BY_DISCRIMINATOR
-          .get(umbraDiscriminatorKey(ix.data.slice(0, 8)));
-        for (const feePayerIndex of feePayerIndexes ?? []) {
-          if (feePayerIndex < accountKeyIndexes.length) {
-            accountKeyIndexes[feePayerIndex] = 0;
-          }
-        }
-      }
-
-      return {
-        programIdIndex,
-        accountKeyIndexes,
-        data: ix.data,
-      };
-    }),
+    compiledInstructions,
     addressTableLookups: message.addressTableLookups,
   });
 
@@ -860,6 +888,7 @@ try {
       expect(message.version).toBe(0);
       if (message.version !== 0) return;
       expect(message.header.numRequiredSignatures).toBe(2);
+      expect(message.header.numReadonlySignedAccounts).toBe(1);
       expect(message.staticAccountKeys[0]?.toBase58()).toBe(
         feePayer.publicKey.toBase58(),
       );
