@@ -519,6 +519,12 @@ function createFlowSigner(ctx: Context, pubkeyBytes: Uint8Array) {
 }
 
 const UMBRA_PROGRAM_ADDRESS = "UMBRAkrfUTHuPAjDQXgmpoQjGGyhtqiRqWNrMroEijV";
+const UMBRA_DEVNET_PROGRAM_ADDRESS =
+  "UMBRAD2ishebJTcgCLkTkNUx1v3GyoAgpTRPeWoLykh";
+const UMBRA_PROGRAM_ADDRESSES = new Set([
+  UMBRA_PROGRAM_ADDRESS,
+  UMBRA_DEVNET_PROGRAM_ADDRESS,
+]);
 
 const UMBRA_FEE_PAYER_ACCOUNT_INDEX_BY_DISCRIMINATOR = new Map<string, number[]>(
   [
@@ -659,7 +665,10 @@ function rewriteTransactionForSponsoredFeePayer(
     const accountKeyIndexes = ix.accountKeyIndexes.map((index) => index + 1);
     const originalProgram = oldStaticKeys[ix.programIdIndex];
 
-    if (originalProgram?.toBase58() === UMBRA_PROGRAM_ADDRESS) {
+    if (
+      originalProgram &&
+      UMBRA_PROGRAM_ADDRESSES.has(originalProgram.toBase58())
+    ) {
       const feePayerIndexes = UMBRA_FEE_PAYER_ACCOUNT_INDEX_BY_DISCRIMINATOR
         .get(umbraDiscriminatorKey(ix.data.slice(0, 8)));
       for (const feePayerIndex of feePayerIndexes ?? []) {
@@ -684,7 +693,12 @@ function rewriteTransactionForSponsoredFeePayer(
       if (userAccountPositions.length === 0) return true;
 
       const originalProgram = oldStaticKeys[ix.programIdIndex - 1];
-      if (originalProgram?.toBase58() !== UMBRA_PROGRAM_ADDRESS) return false;
+      if (
+        !originalProgram ||
+        !UMBRA_PROGRAM_ADDRESSES.has(originalProgram.toBase58())
+      ) {
+        return false;
+      }
 
       const readonlyIndexes = UMBRA_READONLY_USER_ACCOUNT_INDEX_BY_DISCRIMINATOR
         .get(umbraDiscriminatorKey(ix.data.slice(0, 8))) ?? [];
@@ -843,12 +857,15 @@ try {
   });
 
   describe("sponsored Umbra fee payer", () => {
-    function createFakeUmbraTransaction(discriminator: Uint8Array) {
+    function createFakeUmbraTransaction(
+      discriminator: Uint8Array,
+      programAddress = UMBRA_PROGRAM_ADDRESS,
+    ) {
       const user = Keypair.generate();
       const feePayer = Keypair.generate();
       const extraAccount = Keypair.generate().publicKey;
       const instruction = new TransactionInstruction({
-        programId: new PublicKey(UMBRA_PROGRAM_ADDRESS),
+        programId: new PublicKey(programAddress),
         keys: [
           { pubkey: user.publicKey, isSigner: true, isWritable: true },
           { pubkey: user.publicKey, isSigner: true, isWritable: true },
@@ -901,6 +918,26 @@ try {
         feePayer.publicKey.toBase58(),
         user.publicKey.toBase58(),
       ]);
+    });
+
+    test("rewrites devnet Umbra instruction fee_payer accounts to the sponsor", () => {
+      const { user, feePayer, transaction } = createFakeUmbraTransaction(
+        umbraCodama.CREATE_PUBLIC_STEALTH_POOL_DEPOSIT_INPUT_BUFFER_DISCRIMINATOR,
+        UMBRA_DEVNET_PROGRAM_ADDRESS,
+      );
+      const rewritten = rewriteTransactionForSponsoredFeePayer(
+        transaction,
+        user.publicKey.toBase58(),
+        feePayer.publicKey.toBase58(),
+      );
+      const message = VersionedMessage.deserialize(rewritten.messageBytes);
+
+      expect(message.version).toBe(0);
+      if (message.version !== 0) return;
+      expect(message.header.numRequiredSignatures).toBe(2);
+      expect(message.header.numReadonlySignedAccounts).toBe(1);
+      expect(message.compiledInstructions[0]?.accountKeyIndexes.slice(0, 3))
+        .toEqual([1, 0, 2]);
     });
 
     test("accepts base58 secret key strings as sponsored fee payers", () => {
