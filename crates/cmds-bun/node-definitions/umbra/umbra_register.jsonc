@@ -40,6 +40,15 @@
         "tooltip": "Optional sponsored transaction fee payer. The Umbra signer remains the user/depositor, while this signer pays Solana transaction fees and Umbra fee_payer rent accounts when supported."
       },
       {
+        "name": "fee_payer_secret",
+        "type_bounds": [
+          "string"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Optional sponsored transaction fee payer as a base58 64-byte Solana secret key. Prefer this for backend-sponsored flows because Flow wallet materialization may convert fee_payer into a pubkey."
+      },
+      {
         "name": "network",
         "type_bounds": [
           "string"

@@ -49,6 +49,15 @@
         "tooltip": "Optional sponsored transaction fee payer as a base58 64-byte Solana secret key. Prefer this for backend-sponsored flows because Flow wallet materialization may convert fee_payer into a pubkey."
       },
       {
+        "name": "ensure_registered",
+        "type_bounds": [
+          "bool"
+        ],
+        "required": false,
+        "passthrough": false,
+        "tooltip": "Ensure the depositor is registered for confidential and anonymous Umbra usage before creating the UTXO. Defaults to true."
+      },
+      {
         "name": "network",
         "type_bounds": [
           "string"

@@ -1,5 +1,8 @@
 import { BaseCommand, Context } from "@space-operator/flow-lib-bun";
-import { getPublicBalanceToReceiverClaimableUtxoCreatorFunction } from "@umbra-privacy/sdk";
+import {
+  getPublicBalanceToReceiverClaimableUtxoCreatorFunction,
+  getUserRegistrationFunction,
+} from "@umbra-privacy/sdk";
 import {
   createUmbraClient,
   createRustProver,
@@ -11,6 +14,26 @@ import {
   wrapZkProver,
 } from "./umbra_common.ts";
 
+function createRegistrationCallbacks() {
+  const stepLogger = (step: string) => ({
+    pre: async (ctx: any) => {
+      console.log(`[create_utxo:register] phase: ${step}_start skipped=${Boolean(ctx?.skipped)}`);
+    },
+    post: async (ctx: any) => {
+      const signature = typeof ctx?.signature === "string" ? ` signature=${ctx.signature}` : "";
+      console.log(
+        `[create_utxo:register] phase: ${step}_complete skipped=${Boolean(ctx?.skipped)}${signature}`,
+      );
+    },
+  });
+
+  return {
+    userAccountInitialisation: stepLogger("user_account_initialisation"),
+    registerX25519PublicKey: stepLogger("register_x25519_public_key"),
+    registerUserForAnonymousUsage: stepLogger("register_user_for_anonymous_usage"),
+  };
+}
+
 export default class UmbraCreateUtxo extends BaseCommand {
   override async run(ctx: Context, inputs: any): Promise<any> {
     console.log("[create_utxo] phase: client_creation");
@@ -21,6 +44,33 @@ export default class UmbraCreateUtxo extends BaseCommand {
       ctx,
       resolveUmbraFeePayerBytes(inputs),
     );
+
+    if (inputs.ensure_registered !== false) {
+      console.log("[create_utxo] phase: registration_prover_init");
+      const registrationProver = wrapZkProver(
+        "create_utxo:register",
+        createRustProver("userRegistration"),
+      );
+      const register = getUserRegistrationFunction(
+        { client },
+        { zkProver: registrationProver } as any,
+      );
+
+      try {
+        console.log("[create_utxo] phase: ensure_registration");
+        await register({
+          confidential: true,
+          anonymous: true,
+          callbacks: createRegistrationCallbacks(),
+        } as any);
+        console.log("[create_utxo] phase: ensure_registration_complete");
+      } catch (err: any) {
+        const details = logUmbraError("create_utxo:register", err);
+        throw new Error(
+          `Umbra registration failed (${details.phase}): ${details.message}${details.cause ? ` — cause: ${details.cause}` : ""}`,
+        );
+      }
+    }
 
     console.log("[create_utxo] phase: prover_init");
     let zkProver: any;
