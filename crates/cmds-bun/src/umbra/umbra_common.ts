@@ -13,6 +13,15 @@ import {
   getUmbraClient,
   getUmbraRelayer,
 } from "@umbra-privacy/sdk";
+import {
+  appendTransactionMessageInstructions,
+  createKeyPairSignerFromPrivateKeyBytes,
+  createNoopSigner,
+  createTransactionMessage,
+  partiallySignTransactionMessageWithSigners,
+  setTransactionMessageFeePayerSigner,
+  setTransactionMessageLifetimeUsingBlockhash,
+} from "@solana/kit";
 import * as umbraCodama from "@umbra-privacy/umbra-codama";
 import * as snarkjs from "snarkjs";
 import {
@@ -429,9 +438,11 @@ export async function createUmbraClient(
   const baseSigner = isKeypair
     ? await createSignerFromPrivateKeyBytes(keypairOrPubkey)
     : createFlowSigner(ctx!, keypairOrPubkey);
-  const signer = feePayerKeypairOrPubkey
-    ? createSponsoredFeePayerSigner(ctx, baseSigner, feePayerKeypairOrPubkey)
-    : baseSigner;
+  const signer = baseSigner;
+
+  if (feePayerKeypairOrPubkey) {
+    await attachSponsoredFeePayerSigner(ctx, signer, feePayerKeypairOrPubkey);
+  }
 
   const rpcSubscriptionsUrl = rpcUrl
     .replace(/^https:\/\//, "wss://")
@@ -454,6 +465,74 @@ export async function createUmbraClient(
     } as any,
     transactionForwarder ? { transactionForwarder } as any : undefined,
   );
+}
+
+async function attachSponsoredFeePayerSigner(
+  ctx: Context | undefined,
+  signer: any,
+  feePayerKeypairOrPubkey: Uint8Array,
+) {
+  const feePayerAddress = feePayerKeypairOrPubkey.length === 64
+    ? Keypair.fromSecretKey(feePayerKeypairOrPubkey).publicKey.toBase58()
+    : new PublicKey(feePayerKeypairOrPubkey).toBase58();
+
+  if (feePayerAddress === signer.address) {
+    return;
+  }
+
+  const sponsoredFeePayer = feePayerKeypairOrPubkey.length === 64
+    ? await createKeyPairSignerFromPrivateKeyBytes(
+      feePayerKeypairOrPubkey.slice(0, 32),
+    )
+    : createFlowTransactionPartialSigner(ctx, feePayerKeypairOrPubkey);
+
+  (signer as any).sponsoredFeePayer = sponsoredFeePayer;
+  console.log(
+    `[umbra] sponsored fee payer enabled: ${sponsoredFeePayer.address}`,
+  );
+}
+
+function createFlowTransactionPartialSigner(
+  ctx: Context | undefined,
+  pubkeyBytes: Uint8Array,
+) {
+  if (!ctx) {
+    throw new Error(
+      "Sponsored Umbra fee payer was provided as a pubkey, but no Flow context is available to request its signature.",
+    );
+  }
+
+  const pubkey = new PublicKey(pubkeyBytes);
+  const address = pubkey.toBase58();
+
+  return {
+    address,
+    async signTransactions(transactions: any[]) {
+      const results: Record<string, Uint8Array>[] = [];
+      for (const transaction of transactions) {
+        const messageBytes: Uint8Array = transaction.messageBytes;
+        const { signature, new_message } = await ctx.requestSignature(
+          pubkey,
+          messageBytes,
+        );
+        if (new_message && !bytesEqual(new_message, messageBytes)) {
+          throw new Error(
+            "Sponsored Umbra fee payer signature changed the transaction message.",
+          );
+        }
+        results.push({ [address]: signature });
+      }
+      return results;
+    },
+  };
+}
+
+function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }
 
 /**
@@ -562,6 +641,8 @@ function umbraDiscriminatorKey(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString("hex");
 }
 
+// Legacy late-rewrite path kept covered by tests. Active sponsored Umbra flows
+// attach the fee payer before the SDK builds and partially signs transactions.
 function createSponsoredFeePayerSigner(
   ctx: Context | undefined,
   userSigner: any,
@@ -857,6 +938,77 @@ try {
   });
 
   describe("sponsored Umbra fee payer", () => {
+    test("attaches a sponsored fee payer before SDK transaction signing", async () => {
+      const user = Keypair.generate();
+      const feePayer = Keypair.generate();
+      const signer = await createSignerFromPrivateKeyBytes(user.secretKey);
+
+      await attachSponsoredFeePayerSigner(
+        undefined,
+        signer,
+        feePayer.secretKey,
+      );
+
+      expect((signer as any).sponsoredFeePayer.address).toBe(
+        feePayer.publicKey.toBase58(),
+      );
+      expect(signer.address).toBe(user.publicKey.toBase58());
+    });
+
+    test("Codama Umbra registration accepts a separate sponsored fee payer signer", async () => {
+      const user = Keypair.generate();
+      const feePayer = Keypair.generate();
+      const x25519Prover = Keypair.generate();
+      const feePayerSigner = await createKeyPairSignerFromPrivateKeyBytes(
+        feePayer.secretKey.slice(0, 32),
+      );
+      const x25519ProverSigner = await createKeyPairSignerFromPrivateKeyBytes(
+        x25519Prover.secretKey.slice(0, 32),
+      );
+      const userNoopSigner = createNoopSigner(user.publicKey.toBase58());
+
+      const registerInstruction = await umbraCodama
+        .getRegisterTokenPublicKeyInstructionAsync({
+          feePayer: feePayerSigner,
+          user: userNoopSigner,
+          x25519ProvingSigner: x25519ProverSigner,
+          x25519PublicKey: { first: new Uint8Array(32) },
+          optionalData: { first: new Uint8Array(32) },
+        });
+
+      expect(registerInstruction.accounts[0]?.address).toBe(
+        feePayer.publicKey.toBase58(),
+      );
+      expect(registerInstruction.accounts[1]?.address).toBe(
+        user.publicKey.toBase58(),
+      );
+
+      const latestBlockhash = {
+        blockhash: "11111111111111111111111111111111",
+        lastValidBlockHeight: 1n,
+      };
+      const transactionMessage = appendTransactionMessageInstructions(
+        [registerInstruction],
+        setTransactionMessageLifetimeUsingBlockhash(
+          latestBlockhash,
+          setTransactionMessageFeePayerSigner(
+            feePayerSigner,
+            createTransactionMessage({ version: 0 }),
+          ),
+        ),
+      );
+      const partiallySigned = await partiallySignTransactionMessageWithSigners(
+        transactionMessage,
+      );
+
+      expect(Object.keys(partiallySigned.signatures)).toContain(
+        feePayer.publicKey.toBase58(),
+      );
+      expect(Object.keys(partiallySigned.signatures)).toContain(
+        x25519Prover.publicKey.toBase58(),
+      );
+    });
+
     function createFakeUmbraTransaction(
       discriminator: Uint8Array,
       programAddress = UMBRA_PROGRAM_ADDRESS,

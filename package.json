@@ -6,5 +6,8 @@
     "@space-operator/flow-lib-bun",
     "crates/cmds-bun",
     "tools/loadtest"
-  ]
+  ],
+  "patchedDependencies": {
+    "@umbra-privacy/sdk@4.0.0": "patches/@umbra-privacy%2Fsdk@4.0.0.patch"
+  }
 }

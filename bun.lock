@@ -40,6 +40,9 @@
       "name": "@space-operator/loadtest",
     },
   },
+  "patchedDependencies": {
+    "@umbra-privacy/sdk@4.0.0": "patches/@umbra-privacy%2Fsdk@4.0.0.patch",
+  },
   "packages": {
     "@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.10.1", "", {}, "sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw=="],
 

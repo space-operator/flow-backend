@@ -1,0 +1,664 @@
+diff --git a/dist/index.js b/dist/index.js
+index 5b258cde25a1242182090dfe4e55c6131ad0c489..d60321f11144a31f99f00470e98c110f797872e0 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -22,7 +22,7 @@ import { assertTransactionSignature, assertYear, assertMonth, assertDay, assertH
+ import { assertMasterSeed, assertAesKey, assertX25519PrivateKey, assertU128, assertU256, MathematicsAssertionError, assertU256LeBytes, assertU64, assertBn254FieldElement, assertCurve25519FieldElement, assertRcEncryptionNonce, assertU512BeBytes, assertGroth16ProofA, assertGroth16ProofB, assertGroth16ProofC, assertOptionalData32, assertBase85Limb, assertPoseidonPlaintext, assertPoseidonKey, assertRcPlaintext, assertRcCiphertext, assertRcKey, assertAesPlaintext, assertX25519PublicKey, CURVE25519_FIELD_PRIME } from './chunk-CFTW5WNG.js';
+ import { __name } from './chunk-7QVYU63E.js';
+ import { kmac256 } from '@noble/hashes/sha3-addons.js';
+-import { createSolanaRpcSubscriptions, createSolanaRpc, getAddressDecoder, createKeyPairSignerFromPrivateKeyBytes, createNoopSigner, pipe, createTransactionMessage, setTransactionMessageFeePayer, setTransactionMessageLifetimeUsingBlockhash, appendTransactionMessageInstructions, partiallySignTransactionMessageWithSigners, compressTransactionMessageUsingAddressLookupTables, getSignatureFromTransaction, getAddressEncoder, compileTransaction, fetchEncodedAccount } from '@solana/kit';
++import { createSolanaRpcSubscriptions, createSolanaRpc, getAddressDecoder, createKeyPairSignerFromPrivateKeyBytes, createNoopSigner, pipe, createTransactionMessage, setTransactionMessageFeePayer, setTransactionMessageFeePayerSigner, setTransactionMessageLifetimeUsingBlockhash, appendTransactionMessageInstructions, partiallySignTransactionMessageWithSigners, compressTransactionMessageUsingAddressLookupTables, getSignatureFromTransaction, getAddressEncoder, compileTransaction, fetchEncodedAccount } from '@solana/kit';
+ import { getClaimComputationRentInstruction, decodeComputationAccount, ComputationStatus } from '@umbra-privacy/arcium-codama';
+ import { x25519 } from '@noble/curves/ed25519.js';
+ import { keccak_256 } from '@noble/hashes/sha3.js';
+@@ -4868,10 +4868,10 @@ function getComplianceGrantIssuerFunction(args, deps) {
+       keypairResult.ed25519Keypair.seed
+     );
+     await findEncryptedUserAccountPda(userAddress, programId);
+-    const noopSigner = createNoopSigner(userAddress);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const instruction = await getCreateUserGrantInstructionAsync({
+       granterX25519ProvingSigner: mvkProvingSigner,
+-      feePayer: noopSigner,
++      feePayer: getInstructionFeePayerNoopSigner(signer),
+       nonce: { first: nonce },
+       granterX25519: { first: granterX25519 },
+       receiverX25519: { first: receiverX25519 },
+@@ -4881,14 +4881,11 @@ function getComplianceGrantIssuerFunction(args, deps) {
+     const computeBudgetInstruction = createSetComputeUnitLimitInstruction(12e5);
+     const transactionMessage = pipe(
+       createTransactionMessage({ version: 0 }),
+-      (m) => setTransactionMessageFeePayer(userAddress, m),
++      getSetTransactionMessageFeePayer(signer),
+       (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+       (m) => appendTransactionMessageInstructions([computeBudgetInstruction, instruction], m)
+     );
+-    const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-    const signedTransaction = await signer.signTransaction(
+-      partiallySignedTransaction
+-    );
++    const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+     await callbacks?.pre?.(signedTransaction);
+     const signatures = await transactionForwarder.forwardInParallel([signedTransaction]);
+     const signature = signatures[0];
+@@ -4912,9 +4909,9 @@ function getComplianceGrantRevokerFunction(args, deps) {
+       keypairResult.ed25519Keypair.seed
+     );
+     await findEncryptedUserAccountPda(userAddress, programId);
+-    const noopSigner = createNoopSigner(userAddress);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const instruction = await getDeleteUserGrantInstructionAsync({
+-      feePayer: noopSigner,
++      feePayer: getInstructionFeePayerNoopSigner(signer),
+       granterX25519ProvingSigner: mvkProvingSigner,
+       nonce: { first: nonce },
+       granterX25519: { first: granterX25519 },
+@@ -4925,14 +4922,11 @@ function getComplianceGrantRevokerFunction(args, deps) {
+     const computeBudgetInstruction = createSetComputeUnitLimitInstruction(12e5);
+     const transactionMessage = pipe(
+       createTransactionMessage({ version: 0 }),
+-      (m) => setTransactionMessageFeePayer(userAddress, m),
++      getSetTransactionMessageFeePayer(signer),
+       (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+       (m) => appendTransactionMessageInstructions([computeBudgetInstruction, instruction], m)
+     );
+-    const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-    const signedTransaction = await signer.signTransaction(
+-      partiallySignedTransaction
+-    );
++    const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+     await callbacks?.pre?.(signedTransaction);
+     const signatures = await transactionForwarder.forwardInParallel([signedTransaction]);
+     const signature = signatures[0];
+@@ -4976,11 +4970,11 @@ function getSharedCiphertextReencryptorForUserGrantFunction(args, deps) {
+       BigInt(computationOffset),
+       INSTRUCTION_NAME
+     );
+-    const noopSigner = createNoopSigner(userAddress);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const instruction = await getReencryptUserGrantV11InstructionAsync(
+       {
+         receiver: noopSigner,
+-        feePayer: noopSigner,
++        feePayer: getInstructionFeePayerNoopSigner(signer),
+         mxeAccount: arciumAccounts.mxeAccount,
+         mempoolAccount: arciumAccounts.mempoolAccount,
+         executingPool: arciumAccounts.executingPoolAccount,
+@@ -5007,7 +5001,7 @@ function getSharedCiphertextReencryptorForUserGrantFunction(args, deps) {
+     const latestBlockhash = await getLatestBlockhash();
+     const baseTransactionMessage = pipe(
+       createTransactionMessage({ version: 0 }),
+-      (m) => setTransactionMessageFeePayer(userAddress, m),
++      getSetTransactionMessageFeePayer(signer),
+       (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+       (m) => appendTransactionMessageInstructions([instruction], m)
+     );
+@@ -5016,10 +5010,7 @@ function getSharedCiphertextReencryptorForUserGrantFunction(args, deps) {
+       baseTransactionMessage,
+       buildAltAddressesRecord(altEntry)
+     );
+-    const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-    const signedTransaction = await signer.signTransaction(
+-      partiallySignedTransaction
+-    );
++    const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+     await callbacks?.pre?.(signedTransaction);
+     const signatures = await transactionForwarder.forwardInParallel([signedTransaction]);
+     const signature = signatures[0];
+@@ -5063,11 +5054,11 @@ function getNetworkCiphertextReencryptorForNetworkGrantFunction(args, deps) {
+       BigInt(computationOffset),
+       INSTRUCTION_NAME2
+     );
+-    const noopSigner = createNoopSigner(userAddress);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const instruction = await getReencryptNetworkGrantForNetworkBalanceV11InstructionAsync(
+       {
+         receiver: noopSigner,
+-        feePayer: noopSigner,
++        feePayer: getInstructionFeePayerNoopSigner(signer),
+         mxeAccount: arciumAccounts.mxeAccount,
+         mempoolAccount: arciumAccounts.mempoolAccount,
+         executingPool: arciumAccounts.executingPoolAccount,
+@@ -5093,7 +5084,7 @@ function getNetworkCiphertextReencryptorForNetworkGrantFunction(args, deps) {
+     const latestBlockhash = await getLatestBlockhash();
+     const baseTransactionMessage = pipe(
+       createTransactionMessage({ version: 0 }),
+-      (m) => setTransactionMessageFeePayer(userAddress, m),
++      getSetTransactionMessageFeePayer(signer),
+       (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+       (m) => appendTransactionMessageInstructions([instruction], m)
+     );
+@@ -5102,10 +5093,7 @@ function getNetworkCiphertextReencryptorForNetworkGrantFunction(args, deps) {
+       baseTransactionMessage,
+       buildAltAddressesRecord(altEntry)
+     );
+-    const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-    const signedTransaction = await signer.signTransaction(
+-      partiallySignedTransaction
+-    );
++    const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+     await callbacks?.pre?.(signedTransaction);
+     const signatures = await transactionForwarder.forwardInParallel([signedTransaction]);
+     const signature = signatures[0];
+@@ -5149,10 +5137,10 @@ function getSharedCiphertextReencryptorForNetworkGrantFunction(args, deps) {
+       BigInt(computationOffset),
+       INSTRUCTION_NAME3
+     );
+-    const noopSigner = createNoopSigner(userAddress);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const instruction = await getReencryptNetworkGrantForSharedBalanceV11InstructionAsync({
+       receiver: noopSigner,
+-      feePayer: noopSigner,
++      feePayer: getInstructionFeePayerNoopSigner(signer),
+       mxeAccount: arciumAccounts.mxeAccount,
+       mempoolAccount: arciumAccounts.mempoolAccount,
+       executingPool: arciumAccounts.executingPoolAccount,
+@@ -5177,7 +5165,7 @@ function getSharedCiphertextReencryptorForNetworkGrantFunction(args, deps) {
+     const latestBlockhash = await getLatestBlockhash();
+     const baseTransactionMessage = pipe(
+       createTransactionMessage({ version: 0 }),
+-      (m) => setTransactionMessageFeePayer(userAddress, m),
++      getSetTransactionMessageFeePayer(signer),
+       (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+       (m) => appendTransactionMessageInstructions([instruction], m)
+     );
+@@ -5186,10 +5174,7 @@ function getSharedCiphertextReencryptorForNetworkGrantFunction(args, deps) {
+       baseTransactionMessage,
+       buildAltAddressesRecord(altEntry)
+     );
+-    const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-    const signedTransaction = await signer.signTransaction(
+-      partiallySignedTransaction
+-    );
++    const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+     await callbacks?.pre?.(signedTransaction);
+     const signatures = await transactionForwarder.forwardInParallel([signedTransaction]);
+     const signature = signatures[0];
+@@ -5343,11 +5328,11 @@ function getNetworkEncryptionToSharedEncryptionConverterFunction(args, deps) {
+           BigInt(computationOffset),
+           "convert_network_balance_to_shared_balance_v11"
+         );
+-        const noopSigner = createNoopSigner(userAddress);
++        const noopSigner = getInstructionUserNoopSigner(signer);
+         const instruction = await getConvertNetworkBalanceToSharedBalanceV11InstructionAsync({
+           // Signers (noop signer for instruction building)
+           userAddress: noopSigner,
+-          feePayer: noopSigner,
++          feePayer: getInstructionFeePayerNoopSigner(signer),
+           // Arcium accounts
+           mxeAccount: arciumAccounts.mxeAccount,
+           mempoolAccount: arciumAccounts.mempoolAccount,
+@@ -5369,7 +5354,7 @@ function getNetworkEncryptionToSharedEncryptionConverterFunction(args, deps) {
+         }, { programAddress: client.networkConfig.programId });
+         const baseTransactionMessage = pipe(
+           createTransactionMessage({ version: 0 }),
+-          (m) => setTransactionMessageFeePayer(userAddress, m),
++          getSetTransactionMessageFeePayer(signer),
+           (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+           (m) => appendTransactionMessageInstructions([instruction], m)
+         );
+@@ -5378,10 +5363,7 @@ function getNetworkEncryptionToSharedEncryptionConverterFunction(args, deps) {
+           baseTransactionMessage,
+           buildAltAddressesRecord(altEntry)
+         );
+-        const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-        const signedTransaction = await signer.signTransaction(
+-          partiallySignedTransaction
+-        );
++        const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+         return { mint, signedTransaction };
+       });
+       const signedTransactions = await Promise.all(transactionPromises);
+@@ -5496,11 +5478,11 @@ function getMintEncryptionKeyRotatorFunction(args, deps) {
+       BigInt(computationOffset),
+       "reencrypt_shared_balance_v11"
+     );
+-    const noopSigner = createNoopSigner(userAddress);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const instruction = await getReencryptSharedBalanceV11InstructionAsync({
+       // Signers (noop for instruction building — wallet signs later)
+       userAddress: noopSigner,
+-      feePayer: noopSigner,
++      feePayer: getInstructionFeePayerNoopSigner(signer),
+       // Arcium accounts
+       mxeAccount: arciumAccounts.mxeAccount,
+       mempoolAccount: arciumAccounts.mempoolAccount,
+@@ -5526,7 +5508,7 @@ function getMintEncryptionKeyRotatorFunction(args, deps) {
+     const computeBudgetInstruction = createSetComputeUnitLimitInstruction(12e5);
+     const baseTransactionMessage = pipe(
+       createTransactionMessage({ version: 0 }),
+-      (m) => setTransactionMessageFeePayer(userAddress, m),
++      getSetTransactionMessageFeePayer(signer),
+       (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+       (m) => appendTransactionMessageInstructions([computeBudgetInstruction, instruction], m)
+     );
+@@ -5535,10 +5517,7 @@ function getMintEncryptionKeyRotatorFunction(args, deps) {
+       baseTransactionMessage,
+       buildAltAddressesRecord(altEntry)
+     );
+-    const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-    const signedTransaction = await signer.signTransaction(
+-      partiallySignedTransaction
+-    );
++    const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+     await callbacks?.pre?.(signedTransaction);
+     const signatures = await transactionForwarder.forwardInParallel([signedTransaction]);
+     const signature = signatures[0];
+@@ -5558,7 +5537,7 @@ __name(extractSignatures, "extractSignatures");
+ function buildTransactionMessage(signer, latestBlockhash, instructions, altEntry) {
+   const baseTransactionMessage = pipe(
+     createTransactionMessage({ version: 0 }),
+-    (m) => setTransactionMessageFeePayer(signer.address, m),
++    getSetTransactionMessageFeePayer(signer),
+     (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+     (m) => appendTransactionMessageInstructions([...instructions], m)
+   );
+@@ -5571,6 +5550,32 @@ function buildTransactionMessage(signer, latestBlockhash, instructions, altEntry
+   );
+ }
+ __name(buildTransactionMessage, "buildTransactionMessage");
++function getSponsoredFeePayerSigner(signer) {
++  return signer?.sponsoredFeePayer ?? signer?.__sponsoredFeePayer;
++}
++__name(getSponsoredFeePayerSigner, "getSponsoredFeePayerSigner");
++function getSetTransactionMessageFeePayer(signer) {
++  const sponsoredFeePayer = getSponsoredFeePayerSigner(signer);
++  return sponsoredFeePayer === void 0 ? (m) => setTransactionMessageFeePayer(signer.address, m) : (m) => setTransactionMessageFeePayerSigner(sponsoredFeePayer, m);
++}
++__name(getSetTransactionMessageFeePayer, "getSetTransactionMessageFeePayer");
++function getInstructionFeePayerNoopSigner(signer) {
++  const sponsoredFeePayer = getSponsoredFeePayerSigner(signer);
++  return sponsoredFeePayer ?? getInstructionUserNoopSigner(signer);
++}
++__name(getInstructionFeePayerNoopSigner, "getInstructionFeePayerNoopSigner");
++function getInstructionUserNoopSigner(signer) {
++  const existing = signer?.__umbraUserNoopSigner;
++  if (existing !== void 0) {
++    return existing;
++  }
++  const noopSigner = createNoopSigner(signer.address);
++  if (signer && typeof signer === "object") {
++    signer.__umbraUserNoopSigner = noopSigner;
++  }
++  return noopSigner;
++}
++__name(getInstructionUserNoopSigner, "getInstructionUserNoopSigner");
+ async function signTransactionMessage(signer, transactionMessage) {
+   const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+   return await signer.signTransaction(partiallySignedTransaction);
+@@ -5894,7 +5899,7 @@ function getPublicBalanceToEncryptedBalanceDirectDepositorFunction(args, deps) {
+             );
+             const resetAltEntry = lookupAltEntry(client.networkConfig.addressLookupTables, clusterOffset, resetCompDefName);
+             const resetBaseParams = {
+-              feePayer: createNoopSigner(signer.address),
++              feePayer: getInstructionFeePayerNoopSigner(signer),
+               mxeAccount: resetArciumAccounts.mxeAccount,
+               mempoolAccount: resetArciumAccounts.mempoolAccount,
+               executingPool: resetArciumAccounts.executingPoolAccount,
+@@ -5964,10 +5969,10 @@ function getPublicBalanceToEncryptedBalanceDirectDepositorFunction(args, deps) {
+     const mpcCallbackDataOffset = generateRandomU128();
+     const protocolFeeProvider = getHardcodedDepositProtocolFeeProvider();
+     const protocolFeeConfig = await protocolFeeProvider(depositAmount);
+-    const noopSigner = createNoopSigner(signer.address);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const commonParams = {
+       depositorAddress: noopSigner,
+-      feePayer: noopSigner,
++      feePayer: getInstructionFeePayerNoopSigner(signer),
+       receiverAddress: destinationAddress,
+       mint,
+       tokenProgram: mintOwner,
+@@ -6827,8 +6832,7 @@ function getEncryptedBalanceToSelfClaimableUtxoCreatorFunction(args, deps) {
+           allInstructions,
+           altEntry
+         );
+-        const transaction = compileTransaction(transactionMessage);
+-        const signedTransaction = await client.signer.signTransaction(transaction);
++        const signedTransaction = await signTransactionMessage(client.signer, transactionMessage);
+         if (!isSignedTransaction(signedTransaction)) {
+           throw new TransactionError(`${instructionName}: Transaction was not properly signed`);
+         }
+@@ -6870,7 +6874,7 @@ function getEncryptedBalanceToSelfClaimableUtxoCreatorFunction(args, deps) {
+         if (accountExists) {
+           const closeInstruction = await getCloseStealthPoolDepositInputBufferInstructionAsync(
+             {
+-              depositor: createNoopSigner(client.signer.address),
++              depositor: getInstructionUserNoopSigner(client.signer),
+               offset: {
+                 first: offset
+               }
+@@ -6901,8 +6905,8 @@ function getEncryptedBalanceToSelfClaimableUtxoCreatorFunction(args, deps) {
+       assertU256(rcEncryptedRandomFactorHigh);
+       const proofAccountInstruction = await getCreateStealthPoolDepositInputBufferInstructionAsync(
+         {
+-          depositor: createNoopSigner(client.signer.address),
+-          feePayer: createNoopSigner(client.signer.address),
++          depositor: getInstructionUserNoopSigner(client.signer),
++          feePayer: getInstructionFeePayerNoopSigner(client.signer),
+           offset: { first: proofAccountOffset },
+           rescueEncryptionPublicKey: {
+             first: clientX25519PublicKey
+@@ -6973,8 +6977,8 @@ function getEncryptedBalanceToSelfClaimableUtxoCreatorFunction(args, deps) {
+       );
+       const utxoInstruction = await getDepositIntoStealthPoolFromSharedBalanceV11InstructionAsync(
+         {
+-          depositor: createNoopSigner(client.signer.address),
+-          feePayer: createNoopSigner(client.signer.address),
++          depositor: getInstructionUserNoopSigner(client.signer),
++          feePayer: getInstructionFeePayerNoopSigner(client.signer),
+           mxeAccount: arciumAccounts.mxeAccount,
+           mempoolAccount: arciumAccounts.mempoolAccount,
+           executingPool: arciumAccounts.executingPoolAccount,
+@@ -7819,8 +7823,7 @@ function getEncryptedBalanceToReceiverClaimableUtxoCreatorFunction(args, deps) {
+           allInstructions,
+           altEntry
+         );
+-        const transaction = compileTransaction(transactionMessage);
+-        const signedTransaction = await client.signer.signTransaction(transaction);
++        const signedTransaction = await signTransactionMessage(client.signer, transactionMessage);
+         if (!isSignedTransaction2(signedTransaction)) {
+           throw new TransactionError(`${instructionName}: Transaction was not properly signed`);
+         }
+@@ -7862,7 +7865,7 @@ function getEncryptedBalanceToReceiverClaimableUtxoCreatorFunction(args, deps) {
+         if (accountExists) {
+           const closeInstruction = await getCloseStealthPoolDepositInputBufferInstructionAsync(
+             {
+-              depositor: createNoopSigner(client.signer.address),
++              depositor: getInstructionUserNoopSigner(client.signer),
+               offset: {
+                 first: offset
+               }
+@@ -7893,8 +7896,8 @@ function getEncryptedBalanceToReceiverClaimableUtxoCreatorFunction(args, deps) {
+       assertU256(rcEncryptedRandomFactorHigh);
+       const proofAccountInstruction = await getCreateStealthPoolDepositInputBufferInstructionAsync(
+         {
+-          depositor: createNoopSigner(client.signer.address),
+-          feePayer: createNoopSigner(client.signer.address),
++          depositor: getInstructionUserNoopSigner(client.signer),
++          feePayer: getInstructionFeePayerNoopSigner(client.signer),
+           offset: { first: proofAccountOffset },
+           rescueEncryptionPublicKey: {
+             first: clientX25519PublicKey
+@@ -7965,8 +7968,8 @@ function getEncryptedBalanceToReceiverClaimableUtxoCreatorFunction(args, deps) {
+       );
+       const utxoInstruction = await getDepositIntoStealthPoolFromSharedBalanceV11InstructionAsync(
+         {
+-          depositor: createNoopSigner(client.signer.address),
+-          feePayer: createNoopSigner(client.signer.address),
++          depositor: getInstructionUserNoopSigner(client.signer),
++          feePayer: getInstructionFeePayerNoopSigner(client.signer),
+           mxeAccount: arciumAccounts.mxeAccount,
+           mempoolAccount: arciumAccounts.mempoolAccount,
+           executingPool: arciumAccounts.executingPoolAccount,
+@@ -8431,7 +8434,7 @@ function getPublicBalanceToSelfClaimableUtxoCreatorFunction(args, deps) {
+         ) : void 0;
+         const baseTransactionMessage = pipe(
+           createTransactionMessage({ version: 0 }),
+-          (m) => setTransactionMessageFeePayer(client.signer.address, m),
++          getSetTransactionMessageFeePayer(client.signer),
+           (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhashData, m),
+           (m) => appendTransactionMessageInstructions(instructions, m)
+         );
+@@ -8439,8 +8442,7 @@ function getPublicBalanceToSelfClaimableUtxoCreatorFunction(args, deps) {
+           baseTransactionMessage,
+           buildAltAddressesRecord(altEntry)
+         );
+-        const transaction = compileTransaction(transactionMessage);
+-        const signed = await client.signer.signTransaction(transaction);
++        const signed = await signTransactionMessage(client.signer, transactionMessage);
+         if (!isSignedTransaction3(signed)) {
+           throw new TransactionError(
+             `${instructionName}: Transaction was not properly signed`
+@@ -8475,7 +8477,7 @@ function getPublicBalanceToSelfClaimableUtxoCreatorFunction(args, deps) {
+       if (proofAccountExists) {
+         const closeInstruction = await getClosePublicStealthPoolDepositInputBufferInstructionAsync(
+           {
+-            depositor: createNoopSigner(client.signer.address),
++            depositor: getInstructionUserNoopSigner(client.signer),
+             offset: { first: proofAccountOffset }
+           },
+           { programAddress: client.networkConfig.programId }
+@@ -8488,8 +8490,8 @@ function getPublicBalanceToSelfClaimableUtxoCreatorFunction(args, deps) {
+       }
+       const proofAccountInstruction = await getCreatePublicStealthPoolDepositInputBufferInstructionAsync(
+         {
+-          depositor: createNoopSigner(client.signer.address),
+-          feePayer: createNoopSigner(client.signer.address),
++          depositor: getInstructionUserNoopSigner(client.signer),
++          feePayer: getInstructionFeePayerNoopSigner(client.signer),
+           offset: { first: proofAccountOffset },
+           insertionH2Commitment: { first: h2HashBytes },
+           insertionTimestamp: { first: BigInt(currentTimestamp) },
+@@ -8511,8 +8513,8 @@ function getPublicBalanceToSelfClaimableUtxoCreatorFunction(args, deps) {
+       );
+       const depositInstruction = await getDepositIntoStealthPoolFromPublicBalanceInstructionAsync(
+         {
+-          feePayer: createNoopSigner(client.signer.address),
+-          depositor: createNoopSigner(client.signer.address),
++          feePayer: getInstructionFeePayerNoopSigner(client.signer),
++          depositor: getInstructionUserNoopSigner(client.signer),
+           stealthPool: stealthPoolAddress,
+           mint,
+           tokenProgram: mintTokenProgram,
+@@ -8961,7 +8963,7 @@ function getPublicBalanceToReceiverClaimableUtxoCreatorFunction(args, deps) {
+         ) : void 0;
+         const baseTransactionMessage = pipe(
+           createTransactionMessage({ version: 0 }),
+-          (m) => setTransactionMessageFeePayer(client.signer.address, m),
++          getSetTransactionMessageFeePayer(client.signer),
+           (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhashData, m),
+           (m) => appendTransactionMessageInstructions(instructions, m)
+         );
+@@ -8969,8 +8971,7 @@ function getPublicBalanceToReceiverClaimableUtxoCreatorFunction(args, deps) {
+           baseTransactionMessage,
+           buildAltAddressesRecord(altEntry)
+         );
+-        const transaction = compileTransaction(transactionMessage);
+-        const signed = await client.signer.signTransaction(transaction);
++        const signed = await signTransactionMessage(client.signer, transactionMessage);
+         if (!isSignedTransaction4(signed)) {
+           throw new TransactionError(
+             `${instructionName}: Transaction was not properly signed`
+@@ -9005,7 +9006,7 @@ function getPublicBalanceToReceiverClaimableUtxoCreatorFunction(args, deps) {
+       if (proofAccountExists) {
+         const closeInstruction = await getClosePublicStealthPoolDepositInputBufferInstructionAsync(
+           {
+-            depositor: createNoopSigner(client.signer.address),
++            depositor: getInstructionUserNoopSigner(client.signer),
+             offset: { first: proofAccountOffset }
+           },
+           { programAddress: client.networkConfig.programId }
+@@ -9018,8 +9019,8 @@ function getPublicBalanceToReceiverClaimableUtxoCreatorFunction(args, deps) {
+       }
+       const proofAccountInstruction = await getCreatePublicStealthPoolDepositInputBufferInstructionAsync(
+         {
+-          depositor: createNoopSigner(client.signer.address),
+-          feePayer: createNoopSigner(client.signer.address),
++          depositor: getInstructionUserNoopSigner(client.signer),
++          feePayer: getInstructionFeePayerNoopSigner(client.signer),
+           offset: { first: proofAccountOffset },
+           insertionH2Commitment: { first: h2HashBytes },
+           insertionTimestamp: { first: BigInt(currentTimestamp) },
+@@ -9041,8 +9042,8 @@ function getPublicBalanceToReceiverClaimableUtxoCreatorFunction(args, deps) {
+       );
+       const depositInstruction = await getDepositIntoStealthPoolFromPublicBalanceInstructionAsync(
+         {
+-          feePayer: createNoopSigner(client.signer.address),
+-          depositor: createNoopSigner(client.signer.address),
++          feePayer: getInstructionFeePayerNoopSigner(client.signer),
++          depositor: getInstructionUserNoopSigner(client.signer),
+           stealthPool: stealthPoolAddress,
+           mint,
+           tokenProgram: mintTokenProgram,
+@@ -9346,9 +9347,9 @@ function getStagedSolRecovererFunction(args, deps) {
+     if (amount === 0n) {
+       throw new TransactionError("amount must be greater than zero");
+     }
+-    const noopSigner = createNoopSigner(userAddress);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const instruction = await getClaimStagedSolFromPoolInstructionAsync({
+-      feePayer: noopSigner,
++      feePayer: getInstructionFeePayerNoopSigner(signer),
+       user: noopSigner,
+       mint,
+       destination,
+@@ -9358,14 +9359,11 @@ function getStagedSolRecovererFunction(args, deps) {
+     const latestBlockhash = await getLatestBlockhash();
+     const transactionMessage = pipe(
+       createTransactionMessage({ version: 0 }),
+-      (m) => setTransactionMessageFeePayer(userAddress, m),
++      getSetTransactionMessageFeePayer(signer),
+       (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+       (m) => appendTransactionMessageInstructions([instruction], m)
+     );
+-    const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-    const signedTransaction = await signer.signTransaction(
+-      partiallySignedTransaction
+-    );
++    const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+     await callbacks?.pre?.(signedTransaction);
+     const signatures = await transactionForwarder.forwardInParallel([signedTransaction]);
+     const signature = signatures[0];
+@@ -9385,9 +9383,9 @@ function getStagedSplRecovererFunction(args, deps) {
+     if (amount === 0n) {
+       throw new TransactionError("amount must be greater than zero");
+     }
+-    const noopSigner = createNoopSigner(userAddress);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const instruction = await getClaimStagedSplFromPoolInstructionAsync({
+-      feePayer: noopSigner,
++      feePayer: getInstructionFeePayerNoopSigner(signer),
+       user: noopSigner,
+       mint,
+       destinationAta,
+@@ -9397,14 +9395,11 @@ function getStagedSplRecovererFunction(args, deps) {
+     const latestBlockhash = await getLatestBlockhash();
+     const transactionMessage = pipe(
+       createTransactionMessage({ version: 0 }),
+-      (m) => setTransactionMessageFeePayer(userAddress, m),
++      getSetTransactionMessageFeePayer(signer),
+       (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+       (m) => appendTransactionMessageInstructions([instruction], m)
+     );
+-    const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-    const signedTransaction = await signer.signTransaction(
+-      partiallySignedTransaction
+-    );
++    const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+     await callbacks?.pre?.(signedTransaction);
+     const signatures = await transactionForwarder.forwardInParallel([signedTransaction]);
+     const signature = signatures[0];
+@@ -9532,12 +9527,12 @@ function getUserRegistrationFunction(args, deps) {
+       if (accountExists) {
+       } else {
+         const randomSeed = crypto.getRandomValues(new Uint8Array(32));
+-        const noopSigner = createNoopSigner(signer.address);
++        const noopSigner = getInstructionUserNoopSigner(signer);
+         const createAccountInstruction = await getInitialiseEncryptedUserAccountInstructionAsync(
+           {
+             userAddress: signer.address,
+             signer: noopSigner,
+-            feePayer: noopSigner,
++            feePayer: getInstructionFeePayerNoopSigner(signer),
+             randomGenerationSeed: {
+               first: randomSeed
+             },
+@@ -9562,10 +9557,10 @@ function getUserRegistrationFunction(args, deps) {
+         const x25519KeyMatches = isX25519Registered && localX25519PublicKey.length === tokenPubkey?.length && localX25519PublicKey.every((byte, index) => byte === tokenPubkey[index]);
+         if (x25519KeyMatches) {
+         } else {
+-          const userNoopSigner = createNoopSigner(signer.address);
++          const userNoopSigner = getInstructionUserNoopSigner(signer);
+           const registerX25519Instruction = await getRegisterTokenPublicKeyInstructionAsync(
+             {
+-              feePayer: userNoopSigner,
++              feePayer: getInstructionFeePayerNoopSigner(signer),
+               user: userNoopSigner,
+               x25519ProvingSigner: await createKeyPairSignerFromPrivateKeyBytes(
+                 keypairResult.ed25519Keypair.seed
+@@ -9930,11 +9925,11 @@ function getUserRegistrationFunction(args, deps) {
+             BigInt(computationOffset),
+             "register_user_for_anonymous_usage_v11"
+           );
+-          const userNoopSigner = createNoopSigner(signer.address);
++          const userNoopSigner = getInstructionUserNoopSigner(signer);
+           const registerAnonymousInstruction = await getRegisterUserForAnonymousUsageV11InstructionAsync(
+             {
+               user: userNoopSigner,
+-              feePayer: userNoopSigner,
++              feePayer: getInstructionFeePayerNoopSigner(signer),
+               mxeAccount: arciumAccounts.mxeAccount,
+               mempoolAccount: arciumAccounts.mempoolAccount,
+               executingPool: arciumAccounts.executingPoolAccount,
+@@ -10063,9 +10058,9 @@ function getUserEntropySeedRotatorFunction(args, deps) {
+     if (newSeed.every((b) => b === 0)) {
+       throw new TransactionError("newSeed must not be all zeros");
+     }
+-    const noopSigner = createNoopSigner(userAddress);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const instruction = await getUpdateRandomGenerationSeedInstructionAsync({
+-      feePayer: noopSigner,
++      feePayer: getInstructionFeePayerNoopSigner(signer),
+       user: noopSigner,
+       newSeed: { first: newSeed },
+       optionalData: { first: optionalData ?? DEFAULT_OPTIONAL_DATA_BYTES10 }
+@@ -10073,14 +10068,11 @@ function getUserEntropySeedRotatorFunction(args, deps) {
+     const latestBlockhash = await getLatestBlockhash();
+     const transactionMessage = pipe(
+       createTransactionMessage({ version: 0 }),
+-      (m) => setTransactionMessageFeePayer(userAddress, m),
++      getSetTransactionMessageFeePayer(signer),
+       (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+       (m) => appendTransactionMessageInstructions([instruction], m)
+     );
+-    const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-    const signedTransaction = await signer.signTransaction(
+-      partiallySignedTransaction
+-    );
++    const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+     await callbacks?.pre?.(signedTransaction);
+     const signatures = await transactionForwarder.forwardInParallel([signedTransaction]);
+     const signature = signatures[0];
+@@ -10103,9 +10095,9 @@ function getTokenEntropySeedRotatorFunction(args, deps) {
+     if (newSeed.every((b) => b === 0)) {
+       throw new TransactionError("newSeed must not be all zeros");
+     }
+-    const noopSigner = createNoopSigner(userAddress);
++    const noopSigner = getInstructionUserNoopSigner(signer);
+     const instruction = await getUpdateTokenAccountRandomGenerationSeedInstructionAsync({
+-      feePayer: noopSigner,
++      feePayer: getInstructionFeePayerNoopSigner(signer),
+       user: noopSigner,
+       mint,
+       newSeed: { first: newSeed },
+@@ -10114,14 +10106,11 @@ function getTokenEntropySeedRotatorFunction(args, deps) {
+     const latestBlockhash = await getLatestBlockhash();
+     const transactionMessage = pipe(
+       createTransactionMessage({ version: 0 }),
+-      (m) => setTransactionMessageFeePayer(userAddress, m),
++      getSetTransactionMessageFeePayer(signer),
+       (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+       (m) => appendTransactionMessageInstructions([instruction], m)
+     );
+-    const partiallySignedTransaction = await partiallySignTransactionMessageWithSigners(transactionMessage);
+-    const signedTransaction = await signer.signTransaction(
+-      partiallySignedTransaction
+-    );
++    const signedTransaction = await signTransactionMessage(signer, transactionMessage);
+     await callbacks?.pre?.(signedTransaction);
+     const signatures = await transactionForwarder.forwardInParallel([signedTransaction]);
+     const signature = signatures[0];
+@@ -10328,11 +10317,11 @@ function getEncryptedBalanceToPublicBalanceDirectWithdrawerFunction(args, deps)
+     const protocolFeeProvider = getHardcodedWithdrawalProtocolFeeProvider();
+     const protocolFeeConfig = await protocolFeeProvider(withdrawalAmount);
+     try {
+-      const noopSigner = createNoopSigner(signer.address);
++      const noopSigner = getInstructionUserNoopSigner(signer);
+       instruction = await getWithdrawFromSharedBalanceIntoPublicBalanceV11InstructionAsync({
+         // Signers
+         userAddress: noopSigner,
+-        feePayer: noopSigner,
++        feePayer: getInstructionFeePayerNoopSigner(signer),
+         // Arcium accounts
+         mxeAccount: arciumAccounts.mxeAccount,
+         mempoolAccount: arciumAccounts.mempoolAccount,
