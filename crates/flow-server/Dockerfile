@@ -36,6 +36,7 @@ FROM docker.io/denoland/deno:2.6.4 AS deno
 FROM docker.io/oven/bun:1.2.3 AS bun-deps
 WORKDIR /workspace
 COPY package.json bun.lock ./
+COPY patches ./patches
 COPY @space-operator/bun-command-rpc/package.json ./@space-operator/bun-command-rpc/
 COPY @space-operator/flow-lib-bun/package.json ./@space-operator/flow-lib-bun/
 COPY crates/cmds-bun/package.json ./crates/cmds-bun/
