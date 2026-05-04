@@ -57,7 +57,6 @@
       {
         "name": "signature",
         "type": "signature",
-        "optional": true,
         "tooltip": "Transaction signature"
       },
       {

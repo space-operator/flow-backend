@@ -194,6 +194,7 @@ struct CloneFlowOutputDoc {
 struct StartDeploymentParamsDoc {
     inputs: Option<BTreeMap<String, FlowInputValueDoc>>,
     action_signer: Option<String>,
+    output_instructions: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]

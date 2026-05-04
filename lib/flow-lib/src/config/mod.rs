@@ -205,8 +205,13 @@ pub struct SolanaClientConfig {
 
 impl SolanaClientConfig {
     pub fn build_client(&self, http: Option<reqwest::Client>) -> RpcClient {
+        let url = if self.url.trim().is_empty() {
+            self.cluster.url()
+        } else {
+            self.url.clone()
+        };
         RpcClient::new_sender(
-            HttpSender::new_with_client(self.url.clone(), http.unwrap_or_default()),
+            HttpSender::new_with_client(url, http.unwrap_or_default()),
             RpcClientConfig {
                 commitment_config: CommitmentConfig::finalized(),
                 confirm_transaction_initial_timeout: Some(Duration::from_secs(180)),
