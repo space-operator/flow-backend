@@ -49,6 +49,8 @@ pub struct Input {
 pub struct Output {
     #[serde(default, with = "value::signature::opt")]
     pub signature: Option<Signature>,
+    #[serde(with = "value::pubkey")]
+    pub recipient_token_account: Pubkey,
 }
 
 async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandError> {
@@ -183,7 +185,10 @@ async fn run(mut ctx: CommandContext, input: Input) -> Result<Output, CommandErr
         .await?
         .signature;
 
-    Ok(Output { signature })
+    Ok(Output {
+        signature,
+        recipient_token_account,
+    })
 }
 
 #[cfg(test)]

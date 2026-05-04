@@ -79,6 +79,8 @@ pub struct Params {
     inputs: Option<ValueSet>,
     #[serde_as(as = "Option<AsPubkey>")]
     action_signer: Option<Pubkey>,
+    #[serde(default)]
+    output_instructions: bool,
 }
 
 #[derive(Serialize)]
@@ -148,9 +150,13 @@ async fn start_deployment(
     // tracing::debug!("{}", pretty_print(req.headers()));
 
     let params = optional(params)?.map(|x| x.0);
-    let (action_signer, inputs) = match params {
-        Some(params) => (params.action_signer, params.inputs.unwrap_or_default()),
-        None => (None, Default::default()),
+    let (action_signer, inputs, output_instructions) = match params {
+        Some(params) => (
+            params.action_signer,
+            params.inputs.unwrap_or_default(),
+            params.output_instructions,
+        ),
+        None => (None, Default::default(), false),
     };
     let preserved_bearer_token = match &user {
         AuthEither::One(user) => {
@@ -183,6 +189,9 @@ async fn start_deployment(
         Query::Id { id } => id,
     };
     let mut deployment = conn.get_deployment(&id).await?;
+    if output_instructions {
+        deployment.output_instructions = true;
+    }
 
     let conn = db.get_user_conn(deployment.user_id).await?;
     deployment.flows = conn.get_deployment_flows(&id).await?;

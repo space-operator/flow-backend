@@ -1227,7 +1227,7 @@ impl FlowGraph {
                 {
                     return;
                 }
-                let err_str = error.to_string();
+                let err_str = format!("{error:#}");
                 o.resp.send(Err(execute::Error::from_anyhow(error))).ok();
                 node_error(&s.event_tx, &mut s.result, info.id, info.times, err_str);
             }
