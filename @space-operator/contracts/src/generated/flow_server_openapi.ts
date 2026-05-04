@@ -573,6 +573,7 @@ export interface components {
             inputs?: {
                 [key: string]: components["schemas"]["FlowInputValueDoc"];
             } | null;
+            output_instructions?: boolean | null;
         };
         StartFlowParamsDoc: {
             environment?: {
