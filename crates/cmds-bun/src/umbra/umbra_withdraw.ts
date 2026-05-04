@@ -17,24 +17,57 @@ export default class UmbraWithdraw extends BaseCommand {
     );
 
     const withdraw = getEncryptedBalanceToPublicBalanceDirectWithdrawerFunction({ client });
-    const amount = BigInt(inputs.amount) as any;
+    const amount = BigInt(inputs.amount);
+    const chunkSize = inputs.chunk_size !== undefined
+      ? BigInt(inputs.chunk_size)
+      : 1_000_000n;
     const destination = (inputs.destination || client.signer.address) as any;
 
     console.log(`Withdrawing ${amount} tokens from encrypted balance...`);
+    console.log(`  chunk_size: ${chunkSize}`);
     console.log(`  destination: ${destination}`);
     console.log(`  mint: ${inputs.mint}`);
 
-    const result = await withdraw(destination, inputs.mint as any, amount);
+    if (amount <= 0n) {
+      throw new Error("amount must be greater than zero");
+    }
+    if (chunkSize <= 0n) {
+      throw new Error("chunk_size must be greater than zero");
+    }
 
-    console.log("Withdrawal complete:", JSON.stringify(result, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v));
+    let remaining = amount;
+    const results: any[] = [];
+    while (remaining > 0n) {
+      const nextAmount = remaining > chunkSize ? chunkSize : remaining;
+      console.log(`  withdrawing chunk: ${nextAmount}`);
+      const result = await withdraw(destination, inputs.mint as any, nextAmount as any);
+      results.push({ amount: nextAmount, result });
+      remaining -= nextAmount;
+      console.log("Withdrawal chunk complete:", JSON.stringify(result, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v));
+    }
 
-    const signature = Array.isArray(result)
-      ? result.map(String).join(",")
-      : typeof result === "string"
-        ? result
-        : JSON.stringify(result, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v);
+    console.log("Withdrawal complete:", JSON.stringify(results, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v));
 
-    return { signature };
+    const signature = results
+      .map((entry) => {
+        const result = entry.result;
+        if (typeof result === "string") return result;
+        if (Array.isArray(result)) return result.map(String).join(",");
+        if (result && typeof result === "object") {
+          return result.callbackSignature || result.queueSignature || result.signature || JSON.stringify(result, (_k: string, v: any) => typeof v === "bigint" ? v.toString() : v);
+        }
+        return String(result);
+      })
+      .filter(Boolean)
+      .join(",");
+
+    return {
+      signature,
+      chunks: results.map((entry) => ({
+        amount: entry.amount.toString(),
+        result: entry.result,
+      })),
+    };
   }
 }
 

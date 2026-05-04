@@ -56,21 +56,10 @@ export default class UmbraFetchUtxos extends BaseCommand {
     const myPublicSelfBurnable = publicSelfBurnable.filter(mineOnly);
     const myPublicReceived = publicReceived.filter(mineOnly);
 
-    // `utxos` feeds umbra_claim_utxo, which is wired to the SDK's
-    // getReceiverClaimableUtxoToEncryptedBalanceClaimerFunction. That claimer
-    // consumes the scanner's `received` category (encrypted receiver-claimable
-    // UTXOs). Public-tagged UTXOs have a different on-chain shape and make
-    // the claimer throw byte-size errors, so we expose them via separate
-    // outputs instead and keep `utxos` restricted to what Claim can process.
-    //
-    // SDK 4.0 note: as of @umbra-privacy/sdk@4.0.0, both
-    // getPublicBalanceToReceiverClaimableUtxoCreatorFunction AND
-    // getEncryptedBalanceToReceiverClaimableUtxoCreatorFunction round-trip
-    // through the indexer as `public-received` (not `received`). Until that
-    // upstream behavior changes, end-to-end Create→Fetch→Claim of
-    // receiver-claimable UTXOs on devnet will see the UTXO land in
-    // `publicReceived` and `utxos` stay empty. See docs/issues.md.
-    const claimableByReceiver = [...received];
+    // Receiver-claimable UTXOs created from public balances currently index as
+    // `publicReceived`; include them so treasury claim flows see real inbound
+    // deposits instead of an empty `received` bucket.
+    const claimableByReceiver = [...received, ...myPublicReceived];
     const allUtxos = [
       ...selfBurnable,
       ...received,

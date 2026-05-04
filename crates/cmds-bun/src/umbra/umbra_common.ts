@@ -37,13 +37,13 @@ import { BaseCommand, Value, type Context } from "@space-operator/flow-lib-bun";
 import bs58 from "bs58";
 
 export const INDEXER_ENDPOINT_MAINNET =
-  "https://acqzie0a1h.execute-api.eu-central-1.amazonaws.com";
+  "https://utxo-indexer.api.umbraprivacy.com";
 export const INDEXER_ENDPOINT_DEVNET =
   "https://utxo-indexer.api-devnet.umbraprivacy.com";
 // Backward-compatible alias; prefer the network-specific constants above.
 export const INDEXER_ENDPOINT = INDEXER_ENDPOINT_MAINNET;
 export const RELAYER_ENDPOINT_MAINNET =
-  "https://6yn4ndrv2i.execute-api.eu-central-1.amazonaws.com";
+  "https://relayer.api.umbraprivacy.com";
 // Devnet relayer inferred from the indexer URL pattern
 // (utxo-indexer.api-devnet.umbraprivacy.com → relayer.api-devnet.umbraprivacy.com).
 // If Umbra publishes a different devnet relayer domain, override via env or update here.
@@ -165,9 +165,20 @@ export function getPrimarySignature(result: unknown): string {
 
   if (typeof result === "object" && result !== null) {
     const record = result as Record<string, unknown>;
+    const batches = record.batches;
+    if (batches instanceof Map) {
+      const signatures: string[] = [];
+      for (const value of batches.values()) {
+        const signature = getPrimarySignature(value);
+        if (signature) signatures.push(signature);
+      }
+      if (signatures.length > 0) return signatures.join(",");
+    }
+
     for (
       const key of [
         "signature",
+        "txSignature",
         "createUtxoSignature",
         "callbackSignature",
         "createProofAccountSignature",
@@ -1405,7 +1416,10 @@ async function resolveCircuitAssets(
     );
   }
 
-  const zkeyRel = entry.zkey ?? entry.url ?? entry;
+  const selectedEntry = typeof entry === "object" && entry !== null && !entry.zkey && !entry.url
+    ? entry.n1 ?? Object.values(entry)[0]
+    : entry;
+  const zkeyRel = selectedEntry.zkey ?? selectedEntry.url ?? selectedEntry;
   const wasmRel = (typeof zkeyRel === "string" ? zkeyRel : "").replace(
     ".zkey",
     ".wasm",

@@ -49,7 +49,10 @@ export default class UmbraClaimUtxo extends BaseCommand {
     console.log(`  utxo data: ${safeJsonStringify(inputs.utxo_data).substring(0, 200)}...`);
 
     try {
-      const result = await (claimUtxo as any)(inputs.utxo_data);
+      const utxoBatch = Array.isArray(inputs.utxo_data)
+        ? inputs.utxo_data
+        : [inputs.utxo_data];
+      const result = await (claimUtxo as any)(utxoBatch);
 
       console.log("UTXO claimed:", safeJsonStringify(result, 2));
 
