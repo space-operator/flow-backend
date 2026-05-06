@@ -413,7 +413,7 @@ fn is_allowed_compute_budget_instruction(
         "compute budget instruction must not include accounts"
     );
     let Some((&tag, rest)) = ix.data.split_first() else {
-        return Ok(true);
+        return Ok(false);
     };
     let allowed = match (tag, rest.len()) {
         // RequestUnitsDeprecated { units: u32, additional_fee: u32 }
@@ -442,9 +442,19 @@ fn is_allowed_compute_budget_instruction(
             let bytes = u32::from_le_bytes(rest.try_into().unwrap());
             bytes <= 1_048_576
         }
-        _ => rest.len() <= 16,
+        _ => false,
     };
     Ok(allowed)
+}
+
+fn is_allowed_lighthouse_assertion_instruction(ix: &CompiledInstruction) -> bool {
+    let Some((&tag, _)) = ix.data.split_first() else {
+        return false;
+    };
+
+    // Lighthouse tags 0 and 1 are MemoryWrite/MemoryClose. Wallet-added guards
+    // should only be assertion instructions, which are discriminators 2..=17.
+    (2..=17).contains(&tag)
 }
 
 fn is_allowed_wallet_added_instruction(
@@ -487,7 +497,10 @@ fn is_allowed_wallet_added_instruction(
     }
 
     if program == LIGHTHOUSE_PROGRAM_ID {
-        if ix.data.len() > 512 || ix.accounts.len() > 8 {
+        if ix.data.len() > 512
+            || ix.accounts.len() > 8
+            || !is_allowed_lighthouse_assertion_instruction(ix)
+        {
             return Ok(false);
         }
         let accounts = instruction_accounts(modified, ix)?;
@@ -693,6 +706,10 @@ mod tests {
         solana_pubkey::pubkey!("11111111111111111111111111111114")
     }
 
+    fn lighthouse_assert_account_info_data() -> Vec<u8> {
+        vec![5, 0]
+    }
+
     #[test]
     fn same_message_logic_rejects_swig_data_rewrite() {
         let original = v0::Message {
@@ -831,7 +848,7 @@ mod tests {
                 CompiledInstruction {
                     program_id_index: 2,
                     accounts: vec![0],
-                    data: vec![1],
+                    data: lighthouse_assert_account_info_data(),
                 },
             ],
             address_table_lookups: vec![],
@@ -879,7 +896,7 @@ mod tests {
                 CompiledInstruction {
                     program_id_index: 3,
                     accounts: vec![1],
-                    data: vec![1],
+                    data: lighthouse_assert_account_info_data(),
                 },
             ],
             address_table_lookups: vec![],
@@ -923,7 +940,7 @@ mod tests {
                 CompiledInstruction {
                     program_id_index: 3,
                     accounts: vec![1],
-                    data: vec![1],
+                    data: lighthouse_assert_account_info_data(),
                 },
             ],
             address_table_lookups: vec![],
@@ -937,7 +954,7 @@ mod tests {
     }
 
     #[test]
-    fn same_message_logic_allows_wallet_added_unknown_compute_budget_instruction() {
+    fn same_message_logic_rejects_wallet_added_unknown_compute_budget_instruction() {
         let original = v0::Message {
             header: MessageHeader {
                 num_required_signatures: 1,
@@ -976,7 +993,105 @@ mod tests {
             address_table_lookups: vec![],
         };
 
-        is_same_message_logic(&serialize_message(original), &serialize_message(modified)).unwrap();
+        let error =
+            is_same_message_logic(&serialize_message(original), &serialize_message(modified))
+                .unwrap_err()
+                .to_string();
+        assert!(error.contains("different business instructions count"));
+    }
+
+    #[test]
+    fn same_message_logic_rejects_wallet_added_empty_compute_budget_instruction() {
+        let original = v0::Message {
+            header: MessageHeader {
+                num_required_signatures: 1,
+                num_readonly_signed_accounts: 0,
+                num_readonly_unsigned_accounts: 1,
+            },
+            account_keys: vec![fee_payer(), program()],
+            recent_blockhash: Default::default(),
+            instructions: vec![CompiledInstruction {
+                program_id_index: 1,
+                accounts: vec![],
+                data: vec![1],
+            }],
+            address_table_lookups: vec![],
+        };
+        let modified = v0::Message {
+            header: MessageHeader {
+                num_required_signatures: 1,
+                num_readonly_signed_accounts: 0,
+                num_readonly_unsigned_accounts: 2,
+            },
+            account_keys: vec![fee_payer(), program(), COMPUTE_BUDGET_PROGRAM_ID],
+            recent_blockhash: Default::default(),
+            instructions: vec![
+                CompiledInstruction {
+                    program_id_index: 2,
+                    accounts: vec![],
+                    data: vec![],
+                },
+                CompiledInstruction {
+                    program_id_index: 1,
+                    accounts: vec![],
+                    data: vec![1],
+                },
+            ],
+            address_table_lookups: vec![],
+        };
+
+        let error =
+            is_same_message_logic(&serialize_message(original), &serialize_message(modified))
+                .unwrap_err()
+                .to_string();
+        assert!(error.contains("different business instructions count"));
+    }
+
+    #[test]
+    fn same_message_logic_rejects_wallet_added_lighthouse_memory_instruction() {
+        let original = v0::Message {
+            header: MessageHeader {
+                num_required_signatures: 1,
+                num_readonly_signed_accounts: 0,
+                num_readonly_unsigned_accounts: 1,
+            },
+            account_keys: vec![fee_payer(), program()],
+            recent_blockhash: Default::default(),
+            instructions: vec![CompiledInstruction {
+                program_id_index: 1,
+                accounts: vec![],
+                data: vec![1],
+            }],
+            address_table_lookups: vec![],
+        };
+        let modified = v0::Message {
+            header: MessageHeader {
+                num_required_signatures: 1,
+                num_readonly_signed_accounts: 0,
+                num_readonly_unsigned_accounts: 2,
+            },
+            account_keys: vec![fee_payer(), program(), LIGHTHOUSE_PROGRAM_ID],
+            recent_blockhash: Default::default(),
+            instructions: vec![
+                CompiledInstruction {
+                    program_id_index: 1,
+                    accounts: vec![],
+                    data: vec![1],
+                },
+                CompiledInstruction {
+                    program_id_index: 2,
+                    accounts: vec![0],
+                    data: vec![0, 0, 0, 0],
+                },
+            ],
+            address_table_lookups: vec![],
+        };
+
+        let error =
+            is_same_message_logic(&serialize_message(original), &serialize_message(modified))
+                .unwrap_err()
+                .to_string();
+        assert!(error.contains("different business instructions count"));
     }
 
     #[test]
