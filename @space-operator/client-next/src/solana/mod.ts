@@ -55,7 +55,9 @@ export async function signAndSubmitSignature(
     );
   }
 
-  const transaction = request.buildTransaction();
+  const transaction = request.buildTransaction({
+    includeExistingSignatures: false,
+  });
   const signerPosition = transaction.message.staticAccountKeys.findIndex((
     key,
   ) => key.equals(requestedPublicKey));

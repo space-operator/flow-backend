@@ -9,7 +9,7 @@ use flow_lib::{
     },
     utils::tower_client::CommonErrorExt,
 };
-use futures::{FutureExt, TryStreamExt, future::Either};
+use futures::{FutureExt, future::Either};
 use solana_commitment_config::{CommitmentConfig, CommitmentLevel};
 use solana_compute_budget_interface::ComputeBudgetInstruction;
 use solana_message::{VersionedMessage, v0};
@@ -18,18 +18,23 @@ use solana_program::instruction::{AccountMeta, Instruction};
 use solana_pubkey::Pubkey;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::{
-    config::RpcSendTransactionConfig,
+    config::{RpcSendTransactionConfig, RpcSimulateTransactionConfig},
     response::{RpcResult, RpcSimulateTransactionResult},
 };
 use solana_signature::Signature;
 use solana_signer::{Signer, SignerError, signers::Signers};
 use solana_transaction::{Transaction, versioned::VersionedTransaction};
 use spo_helius::Helius;
-use std::{collections::BTreeSet, time::Duration};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    time::Duration,
+};
 use tower::Service;
 use tower::ServiceExt;
 
 pub const SIGNATURE_TIMEOUT: Duration = Duration::from_secs(90);
+const MAX_SOLANA_TRANSACTION_SIZE: usize = 1232;
+const MAX_WALLET_MESSAGE_REWRITES: usize = 3;
 
 pub mod utils;
 pub use utils::*;
@@ -283,6 +288,100 @@ fn commitment(commitment: CommitmentLevel) -> CommitmentConfig {
     CommitmentConfig { commitment }
 }
 
+fn compact_u16_len(mut value: usize) -> usize {
+    let mut len = 1;
+    while value >= 0x80 {
+        value >>= 7;
+        len += 1;
+    }
+    len
+}
+
+fn serialized_transaction_len(message: &v0::Message) -> usize {
+    let signer_count = message.header.num_required_signatures as usize;
+    compact_u16_len(signer_count) + signer_count * 64 + message.serialize().len()
+}
+
+fn ensure_transaction_size(message: &v0::Message) -> Result<(), Error> {
+    let len = serialized_transaction_len(message);
+    if len > MAX_SOLANA_TRANSACTION_SIZE {
+        return Err(Error::msg(format!(
+            "transaction is too large for wallet signing: {len} bytes > {MAX_SOLANA_TRANSACTION_SIZE} bytes; split it or use address lookup tables"
+        )));
+    }
+    Ok(())
+}
+
+async fn simulate_transaction_message(
+    rpc: &RpcClient,
+    message: &v0::Message,
+    commitment_level: CommitmentLevel,
+) -> RpcResult<RpcSimulateTransactionResult> {
+    rpc.simulate_transaction_with_config(
+        &VersionedTransaction {
+            message: VersionedMessage::V0(message.clone()),
+            signatures: vec![
+                Signature::from([0u8; 64]);
+                message.header.num_required_signatures as usize
+            ],
+        },
+        RpcSimulateTransactionConfig {
+            sig_verify: false,
+            commitment: Some(commitment(commitment_level)),
+            ..<_>::default()
+        },
+    )
+    .await
+}
+
+fn ensure_simulation_success(
+    result: &RpcResult<RpcSimulateTransactionResult>,
+) -> Result<(), Error> {
+    match result {
+        Err(error) => Err(Error::msg(format!(
+            "transaction simulation RPC failed before wallet signing: {error}"
+        ))),
+        Ok(response) => {
+            if let Some(error) = &response.value.err {
+                let logs = response
+                    .value
+                    .logs
+                    .as_ref()
+                    .map(|logs| logs.join("\n"))
+                    .unwrap_or_default();
+                return Err(Error::msg(format!(
+                    "transaction simulation failed before wallet signing: {error}\n{logs}"
+                )));
+            }
+            Ok(())
+        }
+    }
+}
+
+async fn request_transaction_signature(
+    signer: &mut signer::Svc,
+    pubkey: Pubkey,
+    message: Bytes,
+    flow_run_id: Option<FlowRunId>,
+    signatures: Option<Vec<signer::Presigner>>,
+) -> Result<signer::SignatureResponse, Error> {
+    let fut = signer.ready().await?.call(signer::SignatureRequest {
+        id: None,
+        time: Utc::now(),
+        pubkey,
+        token: None,
+        message,
+        timeout: SIGNATURE_TIMEOUT,
+        kind: signer::SignatureRequestKind::TransactionMessage,
+        flow_run_id,
+        signatures,
+    });
+    tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
+        .await
+        .map_err(|_| Error::Timeout)?
+        .map_err(Error::from)
+}
+
 async fn build_message(
     i: &Instructions,
     rpc: &RpcClient,
@@ -385,98 +484,67 @@ async fn build_and_sign_tx(
     }
 
     let mut data: Bytes = message.serialize().into();
-    let fee_payer_signature = {
-        let keypair = i
-            .signers
-            .iter()
-            .find(|w| w.pubkey() == i.fee_payer)
-            .ok_or_else(|| Error::msg("fee payer is not in signers"))?;
-
-        tracing::info!("{} signing", keypair.pubkey());
-        if let Some(keypair) = keypair.keypair() {
-            keypair.sign_message(&data)
-        } else {
-            let fut = signer.ready().await?.call(signer::SignatureRequest {
-                id: None,
-                time: Utc::now(),
-                pubkey: keypair.pubkey(),
-                token: None,
-                message: data.clone(),
-                timeout: SIGNATURE_TIMEOUT,
-                kind: signer::SignatureRequestKind::TransactionMessage,
-                flow_run_id,
-                signatures: None,
-            });
-            let resp = tokio::time::timeout(SIGNATURE_TIMEOUT, fut)
-                .await
-                .map_err(|_| Error::Timeout)??;
-            if let Some(new) = resp.new_message {
-                let new_message = is_same_message_logic(&data, &new).map_err(Error::from_anyhow)?;
-                tracing::info!("updating transaction");
-                message = new_message;
-                data = new;
-            }
-            resp.signature
-        }
-    };
-
-    let wallets = i
+    let adapter_wallets = i
         .signers
         .iter()
-        .filter_map(|k| {
-            if k.is_adapter_wallet() && k.pubkey() != i.fee_payer {
-                Some(k.pubkey())
-            } else {
-                None
-            }
-        })
+        .filter_map(|k| k.is_adapter_wallet().then(|| k.pubkey()))
         .collect::<BTreeSet<_>>();
+    let mut final_simulate_result = simulate_result;
 
-    let reqs = wallets
-        .iter()
-        .map(|&pubkey| signer::SignatureRequest {
-            id: None,
-            time: Utc::now(),
-            pubkey,
-            token: None,
-            message: data.clone(),
-            timeout: SIGNATURE_TIMEOUT,
-            kind: signer::SignatureRequestKind::TransactionMessage,
-            flow_run_id,
-            signatures: Some(
-                [signer::Presigner {
-                    pubkey: i.fee_payer,
-                    signature: fee_payer_signature,
-                }]
-                .into(),
-            ),
-        })
-        .collect::<Vec<_>>();
+    if !adapter_wallets.is_empty() {
+        ensure_transaction_size(&message)?;
+        let result = simulate_transaction_message(rpc, &message, config.tx_commitment_level).await;
+        ensure_simulation_success(&result)?;
+        final_simulate_result = Some(result);
+    }
 
-    let signature_results = tokio::time::timeout(
-        SIGNATURE_TIMEOUT,
-        signer
-            .call_all(futures::stream::iter(reqs))
-            .try_collect::<Vec<_>>(),
-    )
-    .await
-    .map_err(|_| Error::Timeout)??;
+    let mut adapter_signatures = BTreeMap::<Pubkey, Signature>::new();
+    let mut rewrites = 0usize;
+    while adapter_signatures.len() < adapter_wallets.len() {
+        let Some(pubkey) = adapter_wallets
+            .iter()
+            .copied()
+            .find(|pubkey| !adapter_signatures.contains_key(pubkey))
+        else {
+            break;
+        };
+
+        tracing::info!("{} signing with wallet adapter", pubkey);
+        let resp =
+            request_transaction_signature(&mut signer, pubkey, data.clone(), flow_run_id, None)
+                .await?;
+
+        if let Some(new) = resp.new_message {
+            if new != data {
+                if rewrites >= MAX_WALLET_MESSAGE_REWRITES {
+                    return Err(Error::msg(
+                        "wallet changed the transaction message too many times",
+                    ));
+                }
+                let new_message = is_same_message_logic(&data, &new).map_err(Error::from_anyhow)?;
+                ensure_transaction_size(&new_message)?;
+                let result =
+                    simulate_transaction_message(rpc, &new_message, config.tx_commitment_level)
+                        .await;
+                ensure_simulation_success(&result)?;
+
+                tracing::info!("updating transaction after wallet message rewrite");
+                message = new_message;
+                data = new;
+                adapter_signatures.clear();
+                final_simulate_result = Some(result);
+                rewrites += 1;
+            }
+        }
+
+        adapter_signatures.insert(pubkey, resp.signature);
+    }
 
     let tx = {
-        let mut presigners = wallets
+        let presigners = adapter_signatures
             .iter()
-            .zip(signature_results.iter())
-            .map(|(pk, resp)| {
-                (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
-                    .then(|| SdkPresigner::new(pk, &resp.signature))
-                    .ok_or_else(|| {
-                        format!("{pk} signature failed: not allowed to change transaction")
-                    })
-            })
-            .collect::<Result<Vec<_>, String>>()
-            .map_err(Error::msg)?;
-        presigners.push(SdkPresigner::new(&i.fee_payer, &fee_payer_signature));
-
+            .map(|(pk, signature)| SdkPresigner::new(pk, signature))
+            .collect::<Vec<_>>();
         let mut signers = Vec::<&dyn Signer>::with_capacity(i.signers.len());
 
         for p in &presigners {
@@ -484,15 +552,13 @@ async fn build_and_sign_tx(
         }
 
         for k in i.signers.iter().filter_map(|w| w.keypair()) {
-            if k.pubkey() != i.fee_payer {
-                signers.push(k);
-            }
+            signers.push(k);
         }
 
         VersionedTransaction::try_new(VersionedMessage::V0(message), &signers)?
     };
 
-    Ok((tx, inserted, simulate_result))
+    Ok((tx, inserted, final_simulate_result))
 }
 
 async fn execute_current_machine(
@@ -538,6 +604,47 @@ async fn execute_current_machine(
     Ok(signature)
 }
 
+async fn send_solana_action_transaction(
+    rpc: &RpcClient,
+    mut tx: PartialVersionedTransaction,
+    action_signer: Pubkey,
+    response: signer::SignatureResponse,
+    config: &ExecutionConfig,
+    inserted: usize,
+) -> Result<Signature, Error> {
+    if let Some(new) = response.new_message {
+        let old = tx.message.serialize();
+        if new.as_ref() != old.as_slice() {
+            if !tx.signatures.is_empty() {
+                return Err(Error::msg(
+                    "wallet changed the transaction message after existing signatures were collected",
+                ));
+            }
+            let new_message = is_same_message_logic(&old, &new).map_err(Error::from_anyhow)?;
+            ensure_transaction_size(&new_message)?;
+            let result =
+                simulate_transaction_message(rpc, &new_message, config.tx_commitment_level).await;
+            ensure_simulation_success(&result)?;
+            tx.message = VersionedMessage::V0(new_message);
+        }
+    }
+
+    tx.signatures.push(signer::Presigner {
+        pubkey: action_signer,
+        signature: response.signature,
+    });
+    let tx = tx.finalize()?;
+    rpc.send_transaction_with_config(
+        &tx,
+        RpcSendTransactionConfig {
+            preflight_commitment: Some(config.tx_commitment_level),
+            ..<_>::default()
+        },
+    )
+    .await
+    .map_err(move |error| Error::solana(error, inserted))
+}
+
 async fn execute_solana_action(
     i: Instructions,
     rpc: &RpcClient,
@@ -548,7 +655,7 @@ async fn execute_solana_action(
     config: &ExecutionConfig,
     action_config: &SolanaActionConfig,
 ) -> Result<Signature, Error> {
-    let (tx, _, memo) = i
+    let (tx, inserted, memo) = i
         .build_for_solana_action(
             action_config.action_signer,
             Some(action_config.action_identity),
@@ -587,10 +694,23 @@ async fn execute_solana_action(
     let task = futures::future::select(request_signature, confirm);
     match task.await {
         Either::Left((result, task)) => {
-            if let Err(error) = result
-                && !matches!(error, signer::Error::Timeout)
-            {
-                return Err(Error::other(error));
+            match result {
+                Ok(response) => {
+                    send_solana_action_transaction(
+                        rpc,
+                        tx,
+                        action_config.action_signer,
+                        response,
+                        config,
+                        inserted,
+                    )
+                    .await?;
+                }
+                Err(error) => {
+                    if !matches!(error, signer::Error::Timeout) {
+                        return Err(Error::other(error));
+                    }
+                }
             }
             task.await.map_err(Error::from_anyhow)
         }
@@ -714,9 +834,11 @@ impl InstructionsExt for Instructions {
             None
         };
 
-        let message = VersionedMessage::V0(
-            build_message(&self, rpc, network, config, config.tx_commitment_level).await?,
-        );
+        let mut message =
+            build_message(&self, rpc, network, config, config.tx_commitment_level).await?;
+        ensure_transaction_size(&message)?;
+        let result = simulate_transaction_message(rpc, &message, config.tx_commitment_level).await;
+        ensure_simulation_success(&result)?;
 
         // Sign all signatures except for action_signer
         let wallets = self
@@ -725,46 +847,53 @@ impl InstructionsExt for Instructions {
             .filter(|keypair| keypair.is_adapter_wallet() && keypair.pubkey() != action_signer)
             .map(|keypair| keypair.pubkey())
             .collect::<BTreeSet<_>>();
-        let data: Bytes = message.serialize().into();
-        let reqs = wallets
+        let mut data: Bytes = message.serialize().into();
+        let mut adapter_signatures = BTreeMap::<Pubkey, Signature>::new();
+        let mut rewrites = 0usize;
+        while adapter_signatures.len() < wallets.len() {
+            let Some(pubkey) = wallets
+                .iter()
+                .copied()
+                .find(|pubkey| !adapter_signatures.contains_key(pubkey))
+            else {
+                break;
+            };
+
+            let resp =
+                request_transaction_signature(&mut signer, pubkey, data.clone(), flow_run_id, None)
+                    .await?;
+
+            if let Some(new) = resp.new_message {
+                if new != data {
+                    if rewrites >= MAX_WALLET_MESSAGE_REWRITES {
+                        return Err(Error::msg(
+                            "wallet changed the transaction message too many times",
+                        ));
+                    }
+                    let new_message =
+                        is_same_message_logic(&data, &new).map_err(Error::from_anyhow)?;
+                    ensure_transaction_size(&new_message)?;
+                    let result =
+                        simulate_transaction_message(rpc, &new_message, config.tx_commitment_level)
+                            .await;
+                    ensure_simulation_success(&result)?;
+                    message = new_message;
+                    data = new;
+                    adapter_signatures.clear();
+                    rewrites += 1;
+                }
+            }
+
+            adapter_signatures.insert(pubkey, resp.signature);
+        }
+
+        let presigners = adapter_signatures
             .iter()
-            .map(|&pubkey| signer::SignatureRequest {
-                id: None,
-                time: Utc::now(),
-                pubkey,
-                token: None,
-                message: data.clone(),
-                timeout: SIGNATURE_TIMEOUT,
-                kind: signer::SignatureRequestKind::TransactionMessage,
-                flow_run_id,
-                signatures: None,
-            })
+            .map(|(pk, signature)| SdkPresigner::new(pk, signature))
             .collect::<Vec<_>>();
 
-        let signature_results = tokio::time::timeout(
-            SIGNATURE_TIMEOUT,
-            signer
-                .call_all(futures::stream::iter(reqs))
-                .try_collect::<Vec<_>>(),
-        )
-        .await
-        .map_err(|_| Error::Timeout)??;
-
-        let presigners = wallets
-            .iter()
-            .zip(signature_results.iter())
-            .map(|(pk, resp)| {
-                (resp.new_message.is_none() || *resp.new_message.as_ref().unwrap() == data)
-                    .then(|| SdkPresigner::new(pk, &resp.signature))
-                    .ok_or_else(|| {
-                        format!("{pk} signature failed: not allowed to change transaction")
-                    })
-            })
-            .collect::<Result<Vec<_>, String>>()
-            .map_err(Error::msg)?;
-
         let tx = {
-            let mut signers = Vec::<&dyn Signer>::with_capacity(self.signers.len() - 1);
+            let mut signers = Vec::<&dyn Signer>::with_capacity(self.signers.len());
 
             for p in &presigners {
                 signers.push(p);
@@ -776,7 +905,7 @@ impl InstructionsExt for Instructions {
                 }
             }
 
-            PartialVersionedTransaction::try_sign(message, &signers)?
+            PartialVersionedTransaction::try_sign(VersionedMessage::V0(message), &signers)?
         };
 
         Ok((tx, inserted, memo))

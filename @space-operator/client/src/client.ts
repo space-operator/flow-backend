@@ -318,7 +318,7 @@ export class Client {
       );
     }
 
-    const tx = req.buildTransaction();
+    const tx = req.buildTransaction({ includeExistingSignatures: false });
     const signerPosition = tx.message.staticAccountKeys.findIndex((pk) =>
       pk.equals(requestedPublicKey)
     );

@@ -279,6 +279,10 @@ export interface ISignatureRequest {
   signatures?: Array<{ pubkey: string; signature: string }>;
 }
 
+export interface BuildTransactionOptions {
+  includeExistingSignatures?: boolean;
+}
+
 export class SignatureRequest implements ISignatureRequest {
   id: number;
   time: string;
@@ -300,7 +304,9 @@ export class SignatureRequest implements ISignatureRequest {
     this.signatures = value.signatures;
   }
 
-  buildTransaction(): web3.VersionedTransaction {
+  buildTransaction(
+    options: BuildTransactionOptions = {},
+  ): web3.VersionedTransaction {
     if (this.kind !== "transaction_message") {
       throw new Error(
         `signature request ${this.id} is ${this.kind}, not transaction_message`,
@@ -311,7 +317,7 @@ export class SignatureRequest implements ISignatureRequest {
     const solMsg = web3.VersionedMessage.deserialize(buffer);
 
     let sigs: Uint8Array[] | undefined;
-    if (this.signatures) {
+    if (options.includeExistingSignatures !== false && this.signatures) {
       sigs = [];
       const defaultSignature = new Uint8Array(64);
       for (let i = 0; i < solMsg.header.numRequiredSignatures; i += 1) {
