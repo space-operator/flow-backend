@@ -14,7 +14,6 @@ use flow_rpc::flow_side::address_book::BaseAddressBook;
 use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt};
 use iroh::Watcher;
-use n0_watcher::Disconnected;
 use serde::Serialize;
 use std::{
     convert::Infallible,
@@ -88,7 +87,7 @@ pub struct IrohInfo {
 pub struct GetIrohInfo;
 
 impl actix::Message for GetIrohInfo {
-    type Result = Result<IrohInfo, Disconnected>;
+    type Result = anyhow::Result<IrohInfo>;
 }
 
 impl actix::Handler<GetIrohInfo> for DBWorker {
@@ -97,15 +96,18 @@ impl actix::Handler<GetIrohInfo> for DBWorker {
     fn handle(&mut self, _: GetIrohInfo, _: &mut Self::Context) -> Self::Result {
         let endpoint = self.remote_command_address_book.endpoint().clone();
         Box::pin(async move {
+            const IROH_INFO_TIMEOUT: Duration = Duration::from_secs(5);
+
             let node_id = endpoint.node_id().to_string();
-            let relay_url = endpoint.home_relay().initialized().await.to_string();
-            let direct_addresses = endpoint
-                .direct_addresses()
-                .initialized()
-                .await
-                .into_iter()
-                .map(|addr| addr.addr)
-                .collect();
+            let mut home_relay = endpoint.home_relay();
+            let mut direct_addresses = endpoint.direct_addresses();
+            let (relay_url, direct_addresses) = tokio::time::timeout(IROH_INFO_TIMEOUT, async {
+                tokio::join!(home_relay.initialized(), direct_addresses.initialized())
+            })
+            .await
+            .map_err(|_| anyhow::anyhow!("timed out waiting for iroh endpoint info"))?;
+            let relay_url = relay_url.to_string();
+            let direct_addresses = direct_addresses.into_iter().map(|addr| addr.addr).collect();
 
             Ok(IrohInfo {
                 node_id,

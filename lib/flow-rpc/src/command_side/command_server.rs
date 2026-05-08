@@ -19,7 +19,7 @@ use super::{
     command_trait::HTTP_CLIENT,
 };
 
-#[derive(Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Deserialize, schemars::JsonSchema)]
 pub struct FlowServerConfig {
     apikey: Option<String>,
     #[serde(flatten)]
@@ -39,7 +39,7 @@ fn default_url() -> Url {
     "https://dev-api.spaceoperator.com".parse().unwrap()
 }
 
-#[derive(Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Deserialize, schemars::JsonSchema)]
 #[serde(untagged)]
 pub enum FlowServerAddressConfig {
     Info {
@@ -75,7 +75,7 @@ struct ConfigSchema {
     apikey: Option<String>,
 }
 
-#[derive(Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Deserialize, schemars::JsonSchema)]
 pub struct FlowServerAddress {
     #[schemars(schema_with = "String::json_schema")]
     pub node_id: iroh::PublicKey,
@@ -109,44 +109,64 @@ pub fn main() -> Result<(), anyhow::Error> {
     })
 }
 
-async fn ping(client: &address_book::Client) {
+async fn ping(client: &address_book::Client) -> Result<(), anyhow::Error> {
     loop {
         if let Err(error) = client.ping().await {
             tracing::error!("ping failed: {:#}", error);
-            break;
+            return Err(error);
         }
         tokio::time::sleep(Duration::from_secs(30)).await;
     }
 }
 
-pub async fn serve_server(
+async fn sleep_or_cancel(duration: Duration, cancel: &CancellationToken) -> bool {
+    tokio::select! {
+        _ = tokio::time::sleep(duration) => false,
+        _ = cancel.cancelled() => true,
+    }
+}
+
+async fn serve_server_once(
     endpoint: Endpoint,
     config: FlowServerConfig,
     availables: Vec<MatchCommand>,
     cancel: CancellationToken,
 ) -> Result<(), anyhow::Error> {
+    const INFO_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
+    const IROH_INFO_TIMEOUT: Duration = Duration::from_secs(10);
+
     let server_addr = match config.address {
         FlowServerAddressConfig::Info { url } => {
             let info_url = url.join("/info")?;
             tracing::info!("using URL: {}", info_url);
-            let resp = reqwest::get(info_url)
-                .await?
-                .json::<InfoResponse>()
-                .await?
-                .iroh;
+            let resp = tokio::time::timeout(INFO_REQUEST_TIMEOUT, async {
+                HTTP_CLIENT
+                    .get(info_url.clone())
+                    .send()
+                    .await?
+                    .error_for_status()?
+                    .json::<InfoResponse>()
+                    .await
+            })
+            .await
+            .context("timed out fetching flow-server /info")?
+            .context("fetch flow-server /info")?
+            .iroh;
             resp
         }
         FlowServerAddressConfig::Direct(server) => server,
     };
 
-    let direct_addresses: BTreeSet<SocketAddr> = endpoint
-        .direct_addresses()
-        .initialized()
-        .await
-        .into_iter()
-        .map(|addr| addr.addr)
-        .collect();
-    let relay_url: Url = endpoint.home_relay().initialized().await.into();
+    let mut direct_addresses = endpoint.direct_addresses();
+    let mut home_relay = endpoint.home_relay();
+    let (direct_addresses, relay_url) = tokio::time::timeout(IROH_INFO_TIMEOUT, async {
+        tokio::join!(direct_addresses.initialized(), home_relay.initialized())
+    })
+    .await
+    .context("timed out waiting for local iroh endpoint info")?;
+    let direct_addresses: BTreeSet<SocketAddr> =
+        direct_addresses.into_iter().map(|addr| addr.addr).collect();
+    let relay_url: Url = relay_url.into();
 
     let client = address_book::connect_iroh(
         endpoint.clone(),
@@ -171,17 +191,49 @@ pub async fn serve_server(
         .map(|mut watcher| watcher.get());
     tracing::info!("connection type {:?}", conn_type);
 
-    future::select(
-        std::pin::pin!(ping(&client)),
-        std::pin::pin!(cancel.cancelled()),
-    )
-    .await;
+    let ping_result = tokio::select! {
+        result = ping(&client) => result,
+        _ = cancel.cancelled() => Ok(()),
+    };
 
     const LEAVE_TIMEOUT: Duration = Duration::from_secs(3);
     let _ = tokio::time::timeout(LEAVE_TIMEOUT, client.leave()).await;
     tracing::info!("left {}", server_addr.node_id);
 
+    ping_result?;
     Ok(())
+}
+
+pub async fn serve_server(
+    endpoint: Endpoint,
+    config: FlowServerConfig,
+    availables: Vec<MatchCommand>,
+    cancel: CancellationToken,
+) -> Result<(), anyhow::Error> {
+    const RETRY_DELAY: Duration = Duration::from_secs(30);
+
+    loop {
+        match serve_server_once(
+            endpoint.clone(),
+            FlowServerConfig {
+                apikey: config.apikey.clone(),
+                address: config.address.clone(),
+            },
+            availables.clone(),
+            cancel.clone(),
+        )
+        .await
+        {
+            Ok(()) => return Ok(()),
+            Err(error) if cancel.is_cancelled() => return Err(error),
+            Err(error) => {
+                tracing::error!("command server connection failed: {error:#}; retrying");
+                if sleep_or_cancel(RETRY_DELAY, &cancel).await {
+                    return Ok(());
+                }
+            }
+        }
+    }
 }
 
 pub async fn serve(config: Config, logs: TrackFlowRun) -> Result<(), anyhow::Error> {
