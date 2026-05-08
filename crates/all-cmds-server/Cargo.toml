@@ -10,3 +10,4 @@ cmds-solana.workspace = true
 cmds-image.workspace = true
 cmds-bun.workspace = true
 flow-rpc.workspace = true
+tracing = "0.1"

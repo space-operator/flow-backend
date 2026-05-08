@@ -6,7 +6,7 @@ use cmds_std as _;
 
 fn main() {
     if let Err(error) = flow_rpc::command_side::command_server::main() {
-        eprintln!("all-cmds-server exited: {error:#}");
+        tracing::error!("all-cmds-server exited: {error:#}");
         std::process::exit(1);
     }
 }
