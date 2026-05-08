@@ -59,6 +59,26 @@ function getFundedKeypair(): Keypair | null {
   return Keypair.fromSecretKey(bs58.decode(key));
 }
 
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  message: string,
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(message)), ms);
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 // ── Read-only tests (no funds needed) ─────────────────────────────────
 
 describe("Umbra Integration — read-only (mainnet)", () => {
@@ -88,11 +108,17 @@ describe("Umbra Integration — read-only (mainnet)", () => {
   test("fetch_utxos: returns result or throws network error", async () => {
     const cmd = new UmbraFetchUtxos(dummyNd);
     try {
-      const result = await cmd.run(dummyCtx, {
+      const run = cmd.run(dummyCtx, {
         ...baseInputs(freshKp.secretKey),
         tree_index: 0,
         start_index: 0,
       });
+      run.catch(() => {});
+      const result = await withTimeout(
+        run,
+        4_000,
+        "fetch timed out waiting for Umbra indexer",
+      );
       // If indexer is reachable, should return valid structure
       expect(Array.isArray(result.utxos)).toBe(true);
       expect(typeof result.count).toBe("number");

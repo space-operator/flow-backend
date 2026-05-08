@@ -456,6 +456,7 @@ dependencies = [
  "cmds-solana",
  "cmds-std",
  "flow-rpc",
+ "tracing",
 ]
 
 [[package]]

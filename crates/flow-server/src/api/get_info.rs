@@ -1,7 +1,9 @@
 use super::prelude::*;
 use crate::db_worker::{GetIrohInfo, IrohInfo};
 use actix::SystemService;
-use actix_web::{HttpResponseBuilder, dev::ConnectionInfo, http::header::ContentType};
+use actix_web::{
+    HttpResponse, HttpResponseBuilder, dev::ConnectionInfo, http::header::ContentType,
+};
 use url::Url;
 
 #[derive(Serialize)]
@@ -21,7 +23,10 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
 
         async move {
             let db_worker = DBWorker::from_registry();
-            let iroh = db_worker.send(GetIrohInfo).await.unwrap().unwrap();
+            let iroh = db_worker
+                .send(GetIrohInfo)
+                .await?
+                .map_err(|error| Error::custom(StatusCode::SERVICE_UNAVAILABLE, error))?;
             let base_url = format!("{}://{}", info.scheme(), info.host());
             let output = Output {
                 supabase_url,
@@ -30,9 +35,11 @@ pub fn service(config: &Config) -> impl HttpServiceFactory + 'static {
                 base_url,
             };
             let json = simd_json::to_vec(&output).unwrap();
-            HttpResponseBuilder::new(StatusCode::OK)
-                .insert_header(ContentType::json())
-                .body(json)
+            Ok::<HttpResponse, Error>(
+                HttpResponseBuilder::new(StatusCode::OK)
+                    .insert_header(ContentType::json())
+                    .body(json),
+            )
         }
     }))
 }
